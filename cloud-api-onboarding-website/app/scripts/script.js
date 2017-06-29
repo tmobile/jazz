@@ -384,7 +384,7 @@ app.controller('Ctrl', function($scope, $http, $document) {
         var settings = {
             "async": true,
             "crossDomain": true,
-            "url": "https://pkmtwvozkg.execute-api.us-east-2.amazonaws.com/dev/platform/createservice",
+            "url": "https://{inst_API_KEY}.execute-api.{inst_region}.amazonaws.com/dev/platform/createservice",
             "method": "POST",
             "headers": {
                     "content-type": "application/json"                    	
