@@ -167,7 +167,7 @@ node() {
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
 						//sh "aws-api-import --update spwpjuy1cb  --deploy stg swagger/swagger.json --profile cloud-api"
-						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update spwpjuy1cb --deploy stg swagger/swagger.json "
+						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy stg swagger/swagger.json "
 
 
 					}
@@ -226,7 +226,7 @@ node() {
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
 						//sh "aws-api-import --update tutm3gzra5  --deploy prod swagger/swagger.json --profile cloud-api"
-						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update tutm3gzra5 --deploy prod swagger/swagger.json "
+						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy prod swagger/swagger.json "
 
 
 					}
@@ -275,7 +275,7 @@ node() {
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
 						//sh "aws-api-import --update pkmtwvozkg  --deploy dev swagger/swagger.json --profile cloud-api"
-						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update pkmtwvozkg --deploy dev swagger/swagger.json "
+						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json "
 
 
 					}
