@@ -1,0 +1,10 @@
+service : create-serverless-service
+securityGroupIds: sg-aad2ebc3
+subnetIds: subnet-b2ac64ff
+providerRuntime : nodejs4.3
+providerMemorySize : 256
+providerTimeout : 160
+region: us-east-2
+domain : platform
+# Put your custom role here which has the IAM permissions required by your code
+iamRoleARN: arn:aws:iam::682452625784:role/lambda_basic_execution

@@ -1,0 +1,11 @@
+#!groovy
+import groovy.json.JsonOutput
+node {
+
+    echo "Build triggered via branch"
+	echo "params : $params"
+  	def var_job_url = JenkinsLocationConfiguration.get().getUrl() + env.JAVA_BUILD_URI
+  
+    sh "curl -X GET -k -v -u \"admin:admin\"  \"" + var_job_url + "&service_name={service_name}&domain={domain}\""
+  
+}

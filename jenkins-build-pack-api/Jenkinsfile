@@ -1,0 +1,238 @@
+#!groovy
+import groovy.json.JsonOutput
+//definitions
+def Event_Name =[
+	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
+	'CALL_ONBOARDING_WORKFLOW':'CALL_ONBOARDING_WORKFLOW',
+	'RAISE_PR':'RAISE_PR',
+	'VALIDATE_INPUT':'VALIDATE_INPUT',
+	'CALL_ONBOARDING_SERVICE':'CALL_ONBOARDING_SERVICE',
+	'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO':'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO',
+	'CREATE_SERVICE':'CREATE_SERVICE',
+	'BUILD':'BUILD',
+	'CODE_QUALITY_CHECK':'CODE_QUALITY_CHECK',
+	'UNIT_TEST':'UNIT_TEST',
+	'COMMIT_CODE':'COMMIT_CODE',
+	'APPROVE_PR':'APPROVE_PR',
+	'CREATE_SERVICE_REPO':'CREATE_SERVICE_REPO',
+	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
+	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
+	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
+	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
+	'CREATE_ASSET':'CREATE_ASSET',
+	'UPDATE_ASSET':'UPDATE_ASSET'
+]
+
+def Event_Status = [
+	'STARTED':'STARTED',
+	'COMPLETED':'COMPLETED',
+	'FAILED':'FAILED'
+]
+
+node {
+
+    def bitbucket_name = params.service_name
+	def var_credentialsId 			= env.REPO_CREDENTIAL_ID 
+	def var_bitbucket_base			= env.REPO_BASE 
+	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_LOC + "/" 
+	def var_api_key 				= env.API_KEY
+	def domain = params.domain
+	if(params.domain && params.domain.trim() != ""){
+		bitbucket_name = params.domain.trim() + "-" + service_name
+		domain = params.domain.trim()
+	}
+	
+	sh 'rm -rf ' + bitbucket_name
+	sh 'mkdir ' + bitbucket_name
+	
+	dir(bitbucket_name)
+	{
+		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+	}
+	
+	sh 'cd ' + bitbucket_name
+
+       	
+	def config = dir(bitbucket_name)
+	{
+	    return LoadConfiguration()
+	}
+	
+	def runtime = config['providerRuntime'] //"java"
+    def service = params.service_name	
+  	def region = config['region']	
+  	def logStreamer = ""
+    def internalAccess = false
+    def role = config['iamRoleARN'] 
+    echo "selected role" + role
+	   
+    def serviceName = service
+    def cfStackName = service
+	def branch = "master"//env.BRANCH_NAME
+	
+	stage('Build') {
+		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.STARTED, "")
+
+		dir(bitbucket_name)
+		{
+			sh "pwd"
+			sh "mvn package"
+		}
+		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.COMPLETED, "")
+    }
+
+	stage('Deployment to Dev Env') {
+		sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+
+			// Generate serverless yml file with domain added in function name
+			echo "Generate deployment env with domain"
+
+			generateServerlessYml(service, "dev", bitbucket_name, cfStackName)
+			echo "setting lambda execution role as $role";
+			//setLambdaExecutionRole(role);
+			
+			 withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			sh "aws configure set profile.cloud-api.region "+region
+			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+            sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
+			dir(bitbucket_name)
+			{
+				sh "serverless deploy --stage dev -v"
+				// Generate swagger file based on environment
+				if (fileExists('swagger/swagger.json')) {
+					echo "Generating the swagger file for each environment"
+					def apiHostName	= var_api_key+".execute-api."+region+".amazonaws.com"//Development environment
+
+					generateSwaggerEnv(service, "dev", service, apiHostName, domain, serviceName)
+
+					// import swagger api spec
+					echo "Deploying API gateway Endpoints"
+					sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+"  --deploy stg swagger/swagger.json "
+
+				}
+				// reset credentials
+				sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+			}
+			resetCredentials()			
+		}
+			
+	}		
+}
+
+
+/**
+	Reset credentials
+*/
+def resetCredentials() {
+	echo "resetting AWS credentials"
+	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+	sh "aws configure set profile.cloud-api.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+}
+
+
+
+/**
+	Generate the swagger file specific to each environment
+*/
+def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName) {
+        //sh "sed -i -- 's/{lambda_function_name}/" + service + "-" + env + "/g' swagger/swagger.json"
+		sh "sed -i -- 's/{lambda_function_name}/" + service + "/g' swagger/swagger.json"
+        sh "sed -i -- 's/{api_deployment_node_title}/" + deploymentNode + "/g' swagger/swagger.json" // {api_deployment_node_title}
+        sh "sed -i -- 's/{service_name}/" + service + "/g' swagger/swagger.json" // {service_name}
+        sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
+        sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
+}
+
+/**
+	Generate the serverless yml file with domain name in lambda name
+*/
+def generateServerlessYml(service, env, serviceName, cfStackName) {
+	dir(serviceName)
+	{
+
+        sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: " + service + "-" + env + "/g' serverless.yml"
+        sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
+	}        
+}
+
+/**
+	Set the Lambda execution role. If user provided a custom role override the default.
+*/
+def setLambdaExecutionRole(role) {
+	dir(serviceName)
+	{
+    	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#"+role+"#g' serverless.yml"
+	}
+}
+
+
+def LoadConfiguration() {
+	def prop = [:]
+	def result = readFile('deployment-env.yml').trim()
+	echo "result of yaml parsing....$result"
+	def resultList = result.tokenize("\n")
+	// delete commented lines
+	def cleanedList = []
+	for (i in resultList) {
+		if(i.toLowerCase().startsWith("#")) {
+		}else {
+			cleanedList.add(i)
+		}
+		}
+		def newItem = ["subnetIds", ""]
+	for (item in cleanedList) {
+
+		// Clean up to avoid issues with more ":" in the values
+		item = item.replaceAll(" ", "").replaceFirst(":", "#");
+
+		def eachItemList = item.tokenize("#")
+		//handle empty values
+		def value = "";
+		if(eachItemList[1]) {
+			value = eachItemList[1].trim();
+		}
+		if(eachItemList[0].trim() == "securityGroupIds")
+		{
+
+			if(value.indexOf('"') == -1)
+				value = "\"" + value + "\""
+
+			echo value
+		}
+
+		if(eachItemList[0].trim() == "subnetIds1" || eachItemList[0].trim()  == "subnetIds2" || eachItemList[0].trim()  == "subnetIds3")
+		{
+			if(newItem[1].trim()  == "")
+				newItem[1] = "\""  + eachItemList[1].trim()
+
+			else
+				newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
+
+		}
+		else if(eachItemList[0]) {
+			prop.put(eachItemList[0].trim(), value)
+		}
+
+	}
+	if(newItem[1] != "")
+	{
+	 newItem[1] =  newItem[1].trim()  + "\""
+		prop.put(newItem[0].trim(),  newItem[1].trim())
+		def key = newItem[0].trim()
+		def val = newItem[1].trim()
+	}
+	echo "Loaded configurations...$prop"
+	return prop
+}
+
+@NonCPS
+List<List<Object>> get_map_entries(map) {
+    map.collect {k, v -> [k, v]}
+}
+
+
+def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
+	echo "even called"
+}
+
