@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html ng-app="App">
+
+<head>
+    <title>SIGN UP</title>
+    <link rel="stylesheet" type="text/css" href="styles/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="styles/style.css">
+    <link rel="stylesheet" type="text/css" href="styles/media.css">
+    <script src="scripts/jquery.min.js"></script>
+    <script src="scripts/bootstrap.min.js"></script>
+    <script src="scripts/angular.min.js"></script>
+    <script src="scripts/script.js"></script>
+    <!-- <script src="scripts/cron-parser/cron-parser.js"></script> -->
+    <!-- <script src="scripts/cron-parser/moment-timezone.min.js"></script> -->
+</head>
+
+<body ng-controller="Ctrl" class="overflow-scroll">
+    <header class="header row clearfix">
+        <article class="head content clearfix col-xs-12 col-sm-12 col-md-12">
+            <img class="logo" src="images/SLF.png">
+        </article>
+    </header>
+    <content class="contents row clearfix" ng-show="!value">
+        <article class="body main-content col-xs-12 col-sm-8 col-md-8">
+            <section class="signup clearfix">
+                <div class="heading">
+                    CLOUD API SERVICES
+                </div>
+                <div class="choose">I WANT TO CREATE :</div>
+                <!-- <section class="boxes row clearfix">
+					<div class="individual api col-xs-12 col-sm-4 col-md-3" ng-click="changeapi()" ng-class="{changeColor:api}">
+						<div class="context">CREATE API</div>
+					</div>
+					<div class="individual lambda col-xs-12 col-sm-4 col-md-3" ng-click="changelambda()" ng-class="{changeColor:lambda}">
+						<div class="context">CREATE LAMBDA</div>
+					</div>
+					<div class="individual static col-xs-12 col-sm-4 col-md-3" ng-click="changestatic()" ng-class="{changeColor:static}">
+						<div class="context">CREATE STATIC SITE</div>
+					</div>
+				</section> -->
+                <div class="boxes clearfix display-flex">
+                    <div class="individual api" ng-click="changeapi()" ng-class="{changeColor:api}">
+                        <div class="context display-flex">API / MICROSERVICE</div>
+                    </div>
+                    <div class="individual lambda" ng-click="changelambda()" ng-class="{changeColor:lambda}">
+                        <div class="context display-flex">AWS LAMBDA</div>
+                    </div>
+                    <div class="individual static" ng-click="changestatic()" ng-class="{changeColor:static}">
+                        <div class="context display-flex">STATIC WEBSITE</div>
+                    </div>
+                </div>
+                <hr class="hrS">
+                <form class="listFormApi" name='form' ng-submit='initialSubmit(form.$valid);' novalidate>
+                    <div class="form-row">
+                        <div class="text">SERVICE NAME</div>
+                        <div class="input-wrapper">
+                        	<!-- ng-blur="checkNameAvailability()"  -->
+                            <input name="servicename" type="text" class="textForm" ng-model="service" ng-change="validateServiceName()" ng-pattern="serviceNameRegex" required>
+                            <img ng-show="showServiceNameLoader" class="input-loader" src="images/loading.png">
+                        </div>
+                        
+                        <div class="field-subtext success" ng-show="form.servicename.$valid" ng-if="serviceNameAvailable && !isDomainDefined">
+                            Service name is available !
+                        </div>
+                        <div class="field-subtext success" ng-show="form.servicename.$valid" ng-if="serviceNameAvailable && isDomainDefined">
+                            Service name in the specified domain is available!
+                        </div>
+                        <div class="field-subtext failure" ng-show="form.servicename.$valid" ng-if="serviceNameUnavailable && !isDomainDefined">
+                            Service name is not available. Please try another service name.
+                        </div>
+                        <div class="field-subtext failure" ng-show="form.servicename.$valid" ng-if="serviceNameUnavailable && isDomainDefined">
+                            Service name in the specified domain is not available. Please try another combination of domain & service name.
+                        </div>
+                        <div class="field-subtext failure" ng-show="form.servicename.$valid" ng-if="serviceNameError">
+                            Error checking service availability. Please try again or contact administrator.
+                        </div>
+                        <div class="field-subtext failure" ng-show="form.servicename.$invalid && !form.servicename.$pristine">
+                            Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="text">DOMAIN NAME</div>
+                        <input type="text" name="domain" class="textForm" ng-model="domain" ng-pattern="serviceNameRegex" ng-blur="checkDomain()" ng-change="validateDomainName()">
+                        <div class="field-subtext failure" ng-show="form.domain.$invalid && !form.domain.$pristine">
+                            Domain must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
+                        </div>
+                    </div>
+
+                    <div class="form-row" ng-if="api || lambda">
+                        <div class="text" ng-show="api || lambda">RUNTIME</div>
+                        <div class="slct-box" ng-show="api || lambda">
+                            <!-- <select class="textFormRun" ng-model="selectedName" ng-options="x for x in options" required>
+    						</select>
+    						<img src="drop.png"> -->
+                            <div ng-click="toggleOptions($event)" class="slct-bx-wrp" role="button" tabindex="0">
+                                <div class="slct-bx-selected" ng-bind="selectedRuntime">{{selectedRuntime}}</div>
+                                <span class="dropdown-icon">
+    	                            <i aria-hidden="true" class="fa fa-caret-down"></i>
+    	                        </span>
+                                <div ng-class="{open : showSlctBxOptions}"  class="slct-bx-options" aria-hidden="false">
+                                    <div ng-repeat="option in options" class="slct-bx-option" ng-click="groupFunc(option)" role="button" tabindex="0">{{option}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row event-schedule-wrp" ng-if="lambda" ng-init="rateIntervalOptions = ['Minutes','Hours','Days']; rateExpression.interval = 'Minutes'; rateExpression.duration = 5; rateExpression.type = ''; rateExpression.cronObj = {minutes:'0/5', hours : '*', dayOfMonth : '*', month : '*', dayOfWeek : '?', year : '*'}">
+                        <div class="text">EVENT SCHEDULE</div>
+                        <div class="slct-box">
+                            <label>
+                                <input type="radio" ng-model="rateExpression.type" value="">
+                                None
+                            </label>
+                            <label>
+                                <input type="radio" ng-model="rateExpression.type" value="rate">
+                                Fixed Rate Of
+                            </label>
+                            <label>
+                                <input type="radio" ng-model="rateExpression.type" value="cron">
+                                Cron Expression
+                            </label><br/>
+                            <div ng-if="rateExpression.type == 'rate'" class="rate-exp-wrp">
+                                <input type="number" ng-pattern="/^-?[0-9][^\.]*$/" ng-min="1" ng-model="rateExpression.duration" class="textForm rate-duration" placeholder="">
+                                <div ng-click="rateExpression.showDropdown = !rateExpression.showDropdown" class="slct-bx-wrp rate-interval" role="button" tabindex="0">
+                                    <div class="slct-bx-selected" ng-bind="rateExpression.interval">{{rateExpression.interval}}</div>
+                                    <span class="dropdown-icon">
+                                        <i aria-hidden="true" class="fa fa-caret-down"></i>
+                                    </span>
+                                    <div ng-class="{open : rateExpression.showDropdown}"  class="slct-bx-options" aria-hidden="false">
+                                        <div ng-repeat="option in rateIntervalOptions" class="slct-bx-option" ng-click="rateExpression.interval = option" role="button" tabindex="0">{{option}}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div ng-if="rateExpression.type == 'cron'" class="display-flex">
+                                <!-- <input type="text" ng-model="rateExpression.cron" class="textForm" placeholder="0/5 * * * ? *"> -->
+                                <div class="cron-field">
+                                    <div class="cron-field-label">Minutes</div>
+                                    <input type="text" class="textForm" ng-model="rateExpression.cronObj.minutes" name="minutes"/>
+                                </div>
+                                <div class="cron-field">
+                                    <div class="cron-field-label">Hours</div>
+                                    <input type="text" class="textForm" ng-model="rateExpression.cronObj.hours" name="hours"/>
+                                </div>
+                                <div class="cron-field">
+                                    <div class="cron-field-label">Day-of-month</div>
+                                    <input type="text" class="textForm" ng-model="rateExpression.cronObj.dayOfMonth" name="dayOfMonth"/>
+                                </div>
+                                <div class="cron-field">
+                                    <div class="cron-field-label">Month</div>
+                                    <input type="text" class="textForm" ng-model="rateExpression.cronObj.month" name="month"/>
+                                </div>
+                                <div class="cron-field">
+                                    <div class="cron-field-label">Day-of-week</div>
+                                    <input type="text" class="textForm" ng-model="rateExpression.cronObj.dayOfWeek" name="dayOfWeek"/>
+                                </div>
+                                <div class="cron-field">
+                                    <div class="cron-field-label">Year</div>
+                                    <input type="text" class="textForm" ng-model="rateExpression.cronObj.year" name="year"/>
+                                </div>
+                            </div>
+                            <div class="form-error" ng-if="generateExpression(rateExpression) == 'invalid'">
+                                {{rateExpression.error}}
+                            </div>
+                            <div ng-if="rateExpression.type != ''" class="learn-more-link"><a target="_blank" href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html">Learn more</a> about CloudWatch Event schedules</div>
+                        </div>
+                    </div>
+<!--                     <div class="slack-details-wrap" ng-if="api || lambda">
+                        <div class="slack-checkbox custom-cb">
+                            <input type="checkbox" id="checkbox-vpc"  ng-model="parentObject.vpcSelected" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false">
+                            <label for="checkbox-vpc"></label>
+                        </div>
+                        <div class="cb-status-dets">Does your service require access to internal SLF network and resources?</div>
+                    </div>
+                    <div class="slack-details-wrap">
+                        <div class="slack-checkbox custom-cb">
+                            <input type="checkbox" id="checkbox-slack"  ng-model="parentObject.slackSelected" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false">
+                            <label for="checkbox-slack"></label>
+                        </div>
+                        <div class="cb-status-dets">Do you want us to notify you through #Slack?</div>
+                    </div>
+                    <div class="form-row" ng-if="parentObject.slackSelected">
+                        <div class="text">SLACK CHANNEL</div>
+                        <div class="input-wrapper">
+                            <input name="channelname" type="text" class="channel-name textForm" ng-model="parentObject.channelname" ng-blur="checkChannelAvailability()" maxlength="21" ng-change="resetValidation()" required ng-pattern="channelNameRegex">
+                            <img ng-show="validatingChannel" class="input-loader ng-hide" src="images/loading.png">
+                        </div>
+                        <div class="field-subtext failure" ng-show="form.channelname.$invalid && !form.channelname.$pristine">
+                            Slack channel must contain only letters, numbers, hyphens and underscores.
+                        </div>
+                        <div ng-if="form.channelname.$valid && !validationInitiated">
+                            <p class="instruction-text">Please validate slack channel</p>
+                            <p ng-click="checkChannelAvailability()" class="validate-link">Validate</p>
+                        </div>
+                        <p class="validating-link" ng-if="validatingChannel">Validating...</p>
+                        <div class="field-subtext success" ng-show="form.channelname.$valid" ng-if="channelNameAvailable && validationInitiated">
+                            Slack channel is available.
+                        </div>
+                        <div class="field-subtext failure" ng-show="form.channelname.$valid" ng-if="channelNameUnavailable && validationInitiated">
+                            Slack channel is not available. Please provide a valid slack channel.
+                        </div>
+                        <div class="field-subtext failure" ng-show="form.channelname.$valid" ng-if="channelNameError && validationInitiated">
+                            Error in validating Slack Channel name. Please try again or contact administrator.
+                        </div>
+                        <div class="field-subtext failure" ng-show="form.channelname.$invalid && !form.channelname.$pristine && validationInitiated">
+                            Slack channel must contain only letters, numbers, hyphens and underscores.
+                        </div>
+                    </div>
+
+                    <div class="ttl-details-wrap" ng-if="api">
+                        <div class="slack-checkbox custom-cb">
+                            <input type="checkbox" id="checkbox-ttl"  ng-model="parentObject.ttlSelected" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false">
+                            <label for="checkbox-ttl"></label>
+                        </div>
+                        <div class="cb-status-dets">Do you want caching enabled on your API?</div>
+                    </div>
+                    <div class="form-row" ng-if="parentObject.ttlSelected && api">
+                        <div class="text">Cache time-to-live (TTL) in seconds</div>
+                        <input name="ttlDets" type="text" class="textForm" ng-model="parentObject.ttlDet" required numbers-only>
+                        <p class="instruction-text">Maximum value for TTL is 3600 sec</p>
+                    </div>
+
+                    <div class="form-row slack-details-wrap" ng-if="static">
+                        <div class="slack-checkbox custom-cb">
+                            <input type="checkbox" id="checkbox-cloudfront"  ng-model="parentObject.createCloudfrontUrl">
+                            <label for="checkbox-cloudfront"></label>
+                        </div>
+                        <div class="cb-status-dets">Do you need CDN configured for your website?</div>
+                    </div>
+ -->
+                    <div class="form-row">
+                        <!-- <input type="text" class="textForm"> -->
+                        <div class="text">APPROVERS</div>
+                        <div class="position">
+                        	<!-- ng-blur="autoChange()" -->
+                            <input type="text" class="textForm"  ng-model="memberSearch"  ng-style="css">
+                            <div click-anywhere-but-here="hide()" class="typeShow" ng-style="borderCss" ng-show="auto" ng-cloak="" ng-class="{open : auto}">
+                                <div class="typeShowA" ng-repeat="name in Names | filter:memberSearch" ng-click="go(name)">
+                                    {{name.givenName}} <span class="dropdown-option-subtle">({{name.userId}})</span>
+                                </div>
+                            </div>
+                            <div class="periscope">
+                                <div id="per" class="per" ng-repeat="rep in selectedApprovers" ng-click="cut($index,rep)">
+                                    <span>{{rep.givenName}}</span>
+                                    <span class="fa fa-remove"></span>
+                                </div>
+                            </div>
+                            <div class="field-subtext failure" ng-if="!approversAvailble">
+                                Error in finding approvers. Please try again after sometime.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="but">
+                        <button ng-class="{'button-disabled': isFormDisabled(form)}" ng-disabled="isFormDisabled(form)" class="button">SUBMIT</button>
+                    </div>
+                </form>
+            </section>
+        </article>
+        <article class="features col-xs-12 col-sm-4 col-md-4">
+            <div class="text-block" ng-show="api">
+                <div class="service-desc">
+                    <span>Build or prototype an API from well-defined templates in your preferred language. Supported languages include NodeJs, Java & Python. Your API will be deployed and executed in a secure cloud environment adhering to SLF’s security compliance rules & regulations.</span>
+                </div>
+                <div class="service-featues">
+                    <div>We need the following information to continue:</div>
+                    <ul>
+                        <li>
+                            <span class="featues-heading">SERVICE NAME&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Name of your API/Microservice that you want to create.</span>
+                        </li>
+                        <li>
+                            <span class="featues-heading">DOMAIN NAME&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Domain for the API/Microservice. Multiple APIs can be bundled under a single domain. Domains provide easier abstraction to implement similar security & access control on your APIs.</span>
+                        </li>
+                        <li>
+                            <span class="featues-heading">LANGUAGE&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Build your application logic for your APIs using this language.</span>
+                        </li>
+                        <li>
+                            <span class="featues-heading">APPROVERS&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Users or Active Directory group names containing team members who are required to approve code changes, deployment activities etc. Users should be part of CORP AD Domain.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-block" ng-show="static">
+                <div class="service-desc">
+                    <span>You can easily and inexpensively use various cloud provider’s services to host a website that uses client-side technologies (such as HTML, CSS, and JavaScript) and does not require server-side technologies (such as PHP and ASP.NET). This type of site is called a static website, and is used to display content that does not change frequently. Also, you can opt in and out of using content delivery network (CDN) that makes your website content available from data centers around the world.</span>
+                </div>
+                <div class="service-featues">
+                    <div>We need the following information to continue:</div>
+                    <ul>
+                        <li>
+                            <span class="featues-heading">SERVICE NAME&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Name of your website. This is only an internal identifier that we use, this is not related to the DNS for your website.</span>
+                        </li>
+                        <li>
+                            <span class="featues-heading">DOMAIN NAME&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Domain for the website (an internal identifier, this can be your project/team/organization name). This should not be mistaken with the actual DNS for your website. DNS mapping is not supported at this point of time.</span>
+                        </li>
+                        <li>
+                            <span class="featues-heading">APPROVERS&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Users or Active Directory group names containing team members who are required to approve code changes, deployment activities etc. Users should be part of CORP AD Domain.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="text-block" ng-show="lambda">
+                <div class="service-desc">
+                    <span>Run code without thinking about servers! Package your code and deploy as AWS Lambda functions. You can trigger them using AWS SDK/CLI or several AWS service events like S3 upload, Dynamo DB update etc. Start writing your lambda functions in one of these languages - NodeJs, Java & Python.</span>
+                </div>
+                <div class="service-featues">
+                    <div>We need the following information to continue:</div>
+                    <ul>
+                        <li>
+                            <span class="featues-heading">SERVICE NAME&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Name of your Lambda function.</span>
+                        </li>
+                        <li>
+                            <span class="featues-heading">DOMAIN NAME&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Domain for the Lambda function. Multiple Lambda functions and other services that you can create using this website can be bundled under a single domain. Domains provide easier abstraction to implement similar security & access control on your services.</span>
+                        </li>
+                        <li>
+                            <span class="featues-heading">LANGUAGE&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Build your application logic for your Lambda function using this language.</span>
+                        </li>
+                        <li>
+                            <span class="featues-heading">APPROVERS&nbsp;</span>
+                            <span class="featues-text">-&nbsp;Users or Active Directory group names containing team members who are required to approve code changes, deployment activities etc. Users should be part of CORP AD Domain.</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </article>
+    </content>
+    <content class="contentsSuccess row clearfix" ng-show="value">
+        <!-- <article class="bodySuccess col-xs-12 col-sm-12 col-md-12">
+            <section class="signupSuccess clearfix">
+                <div class="headingSuccess">
+                    SIGN UP
+                </div>
+            </section>
+        </article> -->
+        <article class="success row clearfix">
+            <div class="successBlock" ng-hide="loader">
+              <div ng-show="success">
+                <img class="arrow" src="images/Green.png">
+                <div class="center">
+                    SUCCESS!
+                </div>
+
+                <div class="link">
+                  <div class="refer">Your service code will be available shortly at</div>
+                    <a ng-href="{{link}}">{{link}}</a>
+                    <div class="refer">If you do not see the code in the next 15 min, Please contact </div>
+                    <a href = "support@slf.com">support@slf.com</a>
+                    
+                    <div class="refer">You can refer : </div>
+                    <a href = "https://slf.atlassian.net/wiki/display/CLP/Getting+Started+with+Service+Development+using+Serverless+Framework">https://slf.atlassian.net/wiki/display/CLP/Getting+Started+with+Service+Development+using+Serverless+Framework</a>
+                    <!-- http://bitbucket.com/username/link -->
+                </div>
+
+                <div class="butSuccess">
+                    <button class="buttonSuccess" ng-click="reload()">DONE</button>
+                </div>
+              </div>
+              <div class="errorBlock" ng-hide="success">
+
+                  <div class="center">
+                      Error!
+                  </div>
+
+                    <div class="link">
+                        <div class="refer">Error in operation. Please contact your Administrator</div>
+                        <!-- <a ng-href="{{link}}">{{link}}</a>
+                      <div class="refer">You can refer : </div>
+                      <a href = "https://slf.atlassian.net/wiki/display/CLP/Getting+Started+with+Service+Development+using+Serverless+Framework">https://slf.atlassian.net/wiki/display/CLP/Getting+Started+with+Service+Development+using+Serverless+Framework</a> -->
+                      <!-- http://bitbucket.com/username/link -->
+                  </div>
+
+                  <div class="butSuccess">
+                      <button class="buttonSuccess" ng-click="reload()">DONE</button>
+                  </div>
+              </div>
+            </div>
+        </article>
+    </content>
+    <!-- added by hemanth (verify credentials pop-up)-->
+    <div class="transparent-overlay overlay" ng-if="overlayActive" ng-cloak=""></div>
+    <div class="overlay-content overlay" ng-if="overlayActive" ng-cloak="" ng-click="hideOverlay();">
+        <div class="overlay-whitebox" ng-click="$event.stopPropagation();">
+            <p class="verify-title">LOGIN</p>
+            <p class="cred-title">Enter your corporate credentials</p>
+            <form class="listFormApi loginForm" name='credForm' ng-submit='submit(credForm.$valid);' novalidate>
+                <div class="form-row">
+                    <div class="text">CORP ID</div>
+                    <div class="corp-input">
+                        <!-- <span class="corp-title">CORP\</span> -->
+                        <input type="text" class="textForm" ng-model="parentObject.username" ng-blur="hideError()" required>
+                    </div>
+                    <div class="text" >PASSWORD</div>
+                    <input type="password" class="textForm" ng-model="parentObject.userPassword" ng-blur="hideError()" required>
+                    <div class="field-subtext failure" ng-if="showErrorMsg">
+                        Invalid username and password
+                    </div>
+                </div>
+                <div class="but cred">
+                    <button  class="button" ng-if="!processing" ng-class="{'button-disabled': isLoginFormDisabled(credForm)}" ng-disabled="isLoginFormDisabled(credForm)">SUBMIT</button>
+                    <button  class="button button-disabled" ng-disabled="true" ng-if="processing">LOADING</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- <div class="loader" ng-show="loader">
+        <img src="images/loading.gif">
+    </div> -->
+</body>
+
+</html>

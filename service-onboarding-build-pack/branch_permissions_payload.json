@@ -1,0 +1,14 @@
+[
+  {
+    "type": "pull-request-only",
+    "matcher": {
+      "id": "refs/heads/master",
+      "displayId": "refs/heads/master",
+      "type": {
+        "id": "BRANCH",
+        "name": "Branch_Restriction"
+      },
+      "active": true
+    }
+  }
+]

@@ -1,0 +1,24 @@
+{
+    "name": "create-serverless-service",
+    "version": "0.0.1",
+    "description": "API for creating serverless Service",
+    "main": "index.js",
+    "private": true,
+    "author": [],
+    "scripts": {
+        "test": "mocha"
+    },
+    "dependencies": {
+        "deasync": "*",
+        "npm": "^5.0.3"
+    },
+    "devDependencies": {
+        "chai": "^3.5.0",
+        "istanbul": "^0.4.5",
+        "lambda-tester": "^2.6.1",
+        "mocha": "^v3.0.0",
+        "nock": "^9.0.2",
+        "request": "^2.75.0",
+        "https": "*"
+    }
+}

@@ -1,0 +1,16 @@
+@media only screen and (min-width: 768px) and (max-width: 1231px){
+    .features{
+        /*padding: 385px 0;*/
+        position: fixed;
+    }
+    .successBlock{
+        width: 50%;
+        padding: 100px 120px;
+    }
+}
+
+@media only screen and (min-width: 1231px){
+    .boxes{
+        flex-wrap: nowrap;
+    }
+}
