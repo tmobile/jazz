@@ -210,10 +210,10 @@ node  {
 				if (service_type == "api") {
 					// To avoid the swagger errors when loading, we replace placeholder's values here
 					// We need to set these values back in jenkins-build-pack so as to replace them with environment specific values
-					sh "sed -i -- 's/{api_host_name}/" + var_api_host_name + "/g' ./swagger/swagger.json"
-					sh "sed -i -- 's/{domain}/" + domain + "/g' ./swagger/swagger.json"
-					sh "sed -i -- 's/{service_name}/" + service_name + "/g' ./swagger/swagger.json"
-					sh "sed -i -- 's/{api_deployment_node_title}/" + service_name + "/g' ./swagger/swagger.json"
+					// sh "sed -i -- 's/{api_host_name}/" + var_api_host_name + "/g' ./swagger/swagger.json"
+					// sh "sed -i -- 's/{domain}/" + domain + "/g' ./swagger/swagger.json"
+					// sh "sed -i -- 's/{service_name}/" + service_name + "/g' ./swagger/swagger.json"
+					// sh "sed -i -- 's/{api_deployment_node_title}/" + service_name + "/g' ./swagger/swagger.json"
 				}
 
 				if(service_type == 'website') {
