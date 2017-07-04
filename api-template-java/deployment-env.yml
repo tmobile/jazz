@@ -6,7 +6,7 @@ subnetIds: {inst_subnet_ids}
 providerRuntime : java8
 providerMemorySize : 256
 providerTimeout : 160
-region: us-east-2
+region: {inst_region}
 domain: platform
 # Put your custom role here which has the IAM permissions required by your code
-iamRoleARN: {inst_role_lambda_basic_execution} 
+iamRoleARN: {inst_role_lambda_basic_execution}
