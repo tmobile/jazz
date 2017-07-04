@@ -565,16 +565,16 @@ def validateDeploymentConfigurations(def prop) {
         error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
     }
 
-    if (prop.containsKey("region")) {
-        if (prop['region'] == "") {
-            error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-        } else if (prop['region'] != "us-east-2") {
-            error "Wrong configuration. Value for Key 'region' should be us-west-2"
-        }
-
-    } else {
-        error "Wrong configuration. Key 'region' is missing in the configuration"
-    }
+//    if (prop.containsKey("region")) {
+//        if (prop['region'] == "") {
+//            error "Wrong configuration. Value for Key 'region' is missing in the configuration"
+//        } else if (prop['region'] != "us-east-2") {
+//            error "Wrong configuration. Value for Key 'region' should be us-west-2"
+//        }
+//
+//    } else {
+//        error "Wrong configuration. Key 'region' is missing in the configuration"
+//    }
 
     def runtime = prop['providerRuntime']
     if (runtime.indexOf("java") > -1) {
