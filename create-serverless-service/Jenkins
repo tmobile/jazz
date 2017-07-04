@@ -264,5 +264,3 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 	          
 	echo "Send Event Called: "+error
 }
-
-
