@@ -66,7 +66,7 @@ node() {
 	}
 	
 	def domain = config['domain']
-	
+	def roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
 
     //def config = LoadConfiguration()
     def runtime = config['providerRuntime']
@@ -164,7 +164,7 @@ node() {
 						// Generate swagger file based on environment
 						echo "Generating the swagger file for each environment"
 						def apiHostName = "stg-cloud-api.corporate.t-mobile.com" //Staging environment
-						generateSwaggerEnv(service, "stg", service, apiHostName, domain, serviceName)
+						generateSwaggerEnv(service, "stg", service, apiHostName, domain, serviceName, var_api_key, config)
 						//validateSwaggerFile( service, domain, apiHostName )
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
@@ -223,7 +223,7 @@ node() {
 						// Generate swagger file based on environment
 						echo "Generating the swagger file for each environment"
 						def apiHostName = "prod-cloud-api.corporate.t-mobile.com" //Staging environment
-						generateSwaggerEnv(service, "prod", service, apiHostName, domain, serviceName)
+						generateSwaggerEnv(service, "prod", service, apiHostName, domain, serviceName, var_api_key, config)
 						//validateSwaggerFile( service, domain, apiHostName )
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
@@ -272,13 +272,13 @@ node() {
 						// Generate swagger file based on environment
 						echo "Generating the swagger file for each environment"
 						def apiHostName = "dev-cloud-api.corporate.t-mobile.com" //Staging environment
-						generateSwaggerEnv(service, "dev", service, apiHostName, domain, serviceName)
+												
+						generateSwaggerEnv(service, "dev", service, apiHostName, domain, serviceName, var_api_key, config)
 						//validateSwaggerFile( service, domain, apiHostName )
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
 						//sh "aws-api-import --update pkmtwvozkg  --deploy dev swagger/swagger.json --profile cloud-api"
-						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json "
-
+						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json"
 
 					}
 
@@ -485,12 +485,25 @@ def validateUserConfigurationYml() {
 /**
 	Generate the swagger file specific to each environment
 */
-def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName) {
+def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName, var_api_key, config) {
     sh "sed -i -- 's/{lambda_function_name}/" + serviceName + "-" + env + "/g' swagger/swagger.json"
     sh "sed -i -- 's/{api_deployment_node_title}/" + deploymentNode + "/g' swagger/swagger.json" // {api_deployment_node_title}
     sh "sed -i -- 's/{service_name}/" + service + "/g' swagger/swagger.json" // {service_name}
     sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
     sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
+	
+	
+	def region = config['region']
+	def roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
+	def var_api_host_name = var_api_key+".execute-api."+region+".amazonaws.com"
+
+	// TODO: the below couple of statements will be replaced with regular expression in very near future;						
+	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
+	
+	sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
+	sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
+	sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
+						
 }
 
 /**
