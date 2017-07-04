@@ -38,9 +38,9 @@ package:
 
 functions:
   handler:
-    name: ${file(deployment-env.yml):service}
+    name: ${self:service}-${self:custom.myStage}
     handler: ${file(deployment-env.yml):mainClass}
-    role: arn:aws:iam::682452625784:role/lambda_basic_execution
+    role: ${file(deployment-env.yml):iamRoleARN}
     description: ${self:service} Lambda Function
     runtime: ${file(deployment-env.yml):providerRuntime}
     memorySize: ${file(deployment-env.yml):providerMemorySize}
