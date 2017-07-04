@@ -138,12 +138,14 @@ node() {
 
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
-					sh "aws configure set profile.cloud-api.region "+region
-					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 					
-					//sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
-
+                    sh "aws configure set profile.cloud-api.region "+region
+					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
+                    //sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
+					
+					
+                  
 					echo "loadServerlessConfig......."
 	                loadServerlessConfig(runtime)
 
@@ -497,6 +499,7 @@ def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, servic
 def generateServerlessYml(service, env, serviceName, cfStackName) {
     sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: " + serviceName + "-" + env + "/g' serverless.yml"
     sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
+	sh "sed -i -- 's/{env-stage}/" + env + "/g' serverless.yml"
 }
 
 /**
@@ -565,17 +568,7 @@ def validateDeploymentConfigurations(def prop) {
         error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
     }
 
-//    if (prop.containsKey("region")) {
-//        if (prop['region'] == "") {
-//            error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-//        } else if (prop['region'] != "us-east-2") {
-//            error "Wrong configuration. Value for Key 'region' should be us-west-2"
-//        }
-//
-//    } else {
-//        error "Wrong configuration. Key 'region' is missing in the configuration"
-//    }
-
+   
     def runtime = prop['providerRuntime']
     if (runtime.indexOf("java") > -1) {
 
