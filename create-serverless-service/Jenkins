@@ -2,6 +2,7 @@
 import groovy.json.JsonOutput
 
 
+
 def Event_Name =[
 	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
 	'CALL_ONBOARDING_WORKFLOW':'CALL_ONBOARDING_WORKFLOW',
@@ -30,16 +31,16 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
-node  {		
+node("jenkins1") {		
 
 	def service_template = "create-serverless-service"
 	def service_type =  "api"
 	def runtime = "nodejs"
-	def service_name = "createserviceexp"
+	def service_name = "createservice"
 	def admin_group = "admin_group"
 	def bitbucket_name = service_template
-	def domain = "SLFFramework"
-	def region = "us-east-2"
+	def domain = "platform"
+	def region = "us-east-1"
 	def envmnt="dev"
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
 	def var_bitbucket_base			= env.REPO_BASE
@@ -93,6 +94,11 @@ node  {
 
 			dir(service_template)
 			{
+			    
+			    
+				def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
+				
+                sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
 			
 				region = config['region']
 				def var_api_host_name			= var_api_key+".execute-api."+region+".amazonaws.com"
@@ -122,7 +128,7 @@ node  {
 				
 				echo "Updating Serverless configs for dev "			
 				
-				def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")		
+						
 		
 				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/dev-config.json"
 				sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/dev-config.json"
@@ -264,3 +270,4 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 	          
 	echo "Send Event Called: "+error
 }
+
