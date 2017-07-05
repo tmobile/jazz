@@ -129,8 +129,8 @@ module.exports.handler = (event, context, cb) => {
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
         request({
-            url: "http://jenkins-elb-web-193617318.us-east-2.elb.amazonaws.com:8080//job/create-service/buildWithParameters",
-            uri: "http://jenkins-elb-web-193617318.us-east-2.elb.amazonaws.com:8080//job/create-service/buildWithParameters",
+          	url: "{conf-jenkins-host}/job/create-service/buildWithParameters",
+            uri: "{conf-jenkins-host}/job/create-service/buildWithParameters",          
             method: 'POST',
             headers: {
 	            "Authorization": base_auth_token
@@ -153,4 +153,3 @@ module.exports.handler = (event, context, cb) => {
     }
 
 };
-
