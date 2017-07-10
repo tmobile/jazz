@@ -31,7 +31,7 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
-node("jenkins1") {		
+node {		
 
 	def service_template = "create-serverless-service"
 	def service_type =  "api"
