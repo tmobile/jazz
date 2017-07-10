@@ -2,7 +2,7 @@
 import groovy.json.JsonOutput
 node {
 
-withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.REPO_CREDENTIAL_ID, passwordVariable: 'PWD', 
+withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JENKINS_CREDENTIAL_ID, passwordVariable: 'PWD', 
 usernameVariable: 'UNAME']]){
     
    echo "Build triggered via branch::${env.BRANCH_NAME}"
