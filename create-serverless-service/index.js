@@ -59,7 +59,7 @@ module.exports.handler = (event, context, cb) => {
 		}
 
 		*/
-		var base_auth_token = "Basic " + new Buffer("admin:admin").toString("base64");
+		var base_auth_token = "Basic " + new Buffer("jobexec:jenkinsadmin").toString("base64");
 		
         var approvers = event.body.approvers;
         var userlist = "";
