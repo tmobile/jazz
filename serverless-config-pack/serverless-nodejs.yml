@@ -1,0 +1,59 @@
+# Welcome to Serverless!
+# For full config options, check the docs:
+#    docs.serverless.com
+
+service: ${file(deployment-env.yml):service}
+
+provider:
+  name: aws
+  deploymentBucket: oaf-apis-deployment-bucket-${opt:stage}
+  region: ${file(deployment-env.yml):region}
+  stage: dev
+  owner: ""
+  domain: ""
+  stackTags:
+    application: jazz
+    service: jazz::service:${file(deployment-env.yml):service}
+    domain: jazz::domain:${file(deployment-env.yml):domain, self:provider.domain}
+    owner: jazz::owner:${file(deployment-env.yml):owner, self:provider.owner}
+    environment: jazz::environment::${opt:stage, self:provider.stage}
+
+custom:
+  myStage: ${opt:stage, self:provider.stage}
+# This settings will be enabled once we need monitoring enabled across the board.
+# Currently, we have lot of SNS topics & alarms that are being created and not used.
+#  alerts:
+#    topics:
+#      alarm: ${self:service}-${opt:stage}-alerts-alarm
+#    global:
+#      - functionThrottles
+#      - functionErrors
+#      - functionInvocations
+#      - functionDuration
+#
+#plugins:
+#  - serverless-plugin-aws-alerts
+
+functions:
+  handler:
+    name: ${self:service}-${self:custom.myStage}
+    handler: index.handler
+    role: DEFAULT_LAMBDA_EXE_ROLE
+    description: ${self:service} Lambda Function
+    runtime: ${file(deployment-env.yml):providerRuntime}
+    memorySize: ${file(deployment-env.yml):providerMemorySize}
+    timeout: ${file(deployment-env.yml):providerTimeout}
+    eventsDisabled:
+      - schedule:
+          rate: ${file(deployment-env.yml):eventScheduleRate}
+          name: ${self:service}-${self:custom.myStage}-schedule
+          enabled: ${file(deployment-env.yml):eventScheduleEnable}
+    vpcDisabled:
+      securityGroupIds:
+        "Fn::Split":
+          - ","
+          - ${file(deployment-env.yml):securityGroupIds}
+      subnetIds:
+        "Fn::Split":
+          - ","
+          - ${file(deployment-env.yml):subnetIds}
