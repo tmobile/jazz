@@ -141,7 +141,7 @@ module.exports.handler = (event, context, cb) => {
                 logger.error('Error while starting Jenkins job: ' + err);
                 return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
             }else {
-				messageToBeSent = "Your Service Code will be available at "+config.BIT_BUCKET_URL+bitbucketName + "/browse";
+				messageToBeSent = "Your Service Code will be available at http://"+config.BIT_BUCKET_URL+bitbucketName + "/browse";
 				return cb(null, responseObj(messageToBeSent, event.body));
 			}
         });
