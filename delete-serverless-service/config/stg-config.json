@@ -1,0 +1,7 @@
+{
+  "DELETE_SERVICE_JOB_URL":"{conf-jenkins-host}job/delete-service/buildWithParameters",
+  "JOB_TOKEN":"slf-0714-delserv",
+  "SVC_USER":"jobexec",							
+  "SVC_PASWD":"jenkinsadmin",							
+  "SVC_API_TOKEN_SECRET":{"secret_id":"5f067aa0-8ae4-27b4-6d8e-f1f0b3439b59","cipher":"AQECAHhwMpPRJ1SspJl5rEeC76eFvMsoBf9Xxo9P7UAwGQV3kQAAAH4wfAYJKoZIhvcNAQcGoG8wbQIBADBoBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDKaaIbK2wHA1kHrzqQIBEIA7bfAY5Fknr33opnG1c6H0e26Y8I/nhfW9lyiZHXMPlZ8qd+x7Zw+pu0UBBo53wWo4rqsQiF+FLr06Rc0="}
+}
