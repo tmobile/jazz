@@ -124,15 +124,15 @@ node {
 			stage('Undeploy Service') {
 				def path = getResourcePath()
 				cleanUpApiGatewayResources("dev", path, region)
-				cleanUpApiDocs("dev", service_name, domain)
+				//cleanUpApiDocs("dev", service_name, domain)
 				unDeployService('dev', region)
 
 				cleanUpApiGatewayResources("stg", path, region)
-				cleanUpApiDocs("stg", service_name, domain)
+				//cleanUpApiDocs("stg", service_name, domain)
 				unDeployService('stg', region)
 
 				cleanUpApiGatewayResources("prod", path, region)
-				cleanUpApiDocs("prod", service_name, domain)
+				//cleanUpApiDocs("prod", service_name, domain)
 				unDeployService('prod', region)
 
 			}
