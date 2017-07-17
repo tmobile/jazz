@@ -1,0 +1,24 @@
+{
+  "name": "api-nodejs-template",
+  "version": "0.0.1",
+  "description": "Nodejs Template project",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "*",
+    "deasync": "*",
+	"async":"*",
+	"jsonwebtoken": "*",
+	"aws-sdk":"*",
+	"amazon-cognito-identity-js": "^1.19.0"
+  },
+  "devDependencies": {
+    "mocha": "^v3.0.0",
+    "chai": "^3.5.0",
+    "amazon-cognito-identity-js": "^1.19.0"
+  }
+}
