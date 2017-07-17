@@ -32,7 +32,7 @@ module.exports.handler = (event, context, cb) => {
 		var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
 
 		var paramss = {
-			  UserPoolId: 'us-east-1_HQgpgbrGK', /* required */
+			  UserPoolId: config.USER_POOL_ID, /* required */
 			  Username: event.body.username /* required */
 		};
 
