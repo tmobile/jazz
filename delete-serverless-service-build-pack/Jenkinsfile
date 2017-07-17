@@ -64,6 +64,10 @@ node {
 		bitbucket_repo_name = domain + "-" + service_name
 	}
 
+	sh 'rm -rf ' + bitbucket_repo_name
+	sh 'mkdir ' + bitbucket_repo_name
+	
+	
 	stage("Initialization") {
 		//events = loadEventsModule()
 		//if(!events) { error "Can't load events module"	} //Fail here
@@ -76,7 +80,10 @@ node {
 		//events.setDomain(domain)
 
 		checkoutSCM(bitbucket_repo_name, repo_protocol + var_cas_clone_url)
-		config = LoadConfiguration()
+		config = dir(bitbucket_repo_name)
+		{
+			return LoadConfiguration()
+		}
 		runtime = config['providerRuntime']
 		region = config['region']
 		serviceConfig = config['service']
@@ -87,30 +94,33 @@ node {
 		//events.setEnvironment("NA")
 		//events.setRegion(region)
 
-		if (fileExists('build.api')) {
-			flowType = "API"
-			//events.setServiceType("API")
-			//loadServerlessConfig(runtime)//already in project
-			changeServerlessConfig(runtime)
-			updateServiceNameConfig(domain, service_name)
-			updateSwaggerConfig(domain, service_name, env.API_KEY, config)
-		} else if(fileExists('build.lambda')) {
-			flowType = "LAMBDA"
-			//events.setServiceType("LAMBDA")
-			//loadServerlessConfig(runtime)//already in project
-			changeServerlessConfig(runtime)
-			updateServiceNameConfig(domain, service_name)
-		} else if(fileExists('build.website')) {
-			flowType = "WEBSITE"
-			//events.setServiceType("WEBSITE")
-			if(config['create_cloudfront_url']) {
-				cloudfrontEnabled = config['create_cloudfront_url'].trim()
-			}else {
-				cloudfrontEnabled = "false"
-			}
+		dir(bitbucket_repo_name)
+		{
+			if (fileExists('build.api')) {
+				flowType = "API"
+				//events.setServiceType("API")
+				//loadServerlessConfig(runtime)//already in project
+				changeServerlessConfig(runtime)
+				updateServiceNameConfig(domain, service_name)
+				updateSwaggerConfig(domain, service_name, env.API_KEY, config)
+			} else if(fileExists('build.lambda')) {
+				flowType = "LAMBDA"
+				//events.setServiceType("LAMBDA")
+				//loadServerlessConfig(runtime)//already in project
+				changeServerlessConfig(runtime)
+				updateServiceNameConfig(domain, service_name)
+			} else if(fileExists('build.website')) {
+				flowType = "WEBSITE"
+				//events.setServiceType("WEBSITE")
+				if(config['create_cloudfront_url']) {
+					cloudfrontEnabled = config['create_cloudfront_url'].trim()
+				}else {
+					cloudfrontEnabled = "false"
+				}
 
-		} else {
-			error "Invalid project configuration"
+			} else {
+				error "Invalid project configuration"
+			}
 		}
 	}
 
@@ -119,51 +129,58 @@ node {
 		//checkServiceExists(service_name, domain)//is-service-available does not exist
 	}
 
-	switch (flowType) {
-        case "API":
-			stage('Undeploy Service') {
-				def path = getResourcePath()
-				cleanUpApiGatewayResources("dev", path, region)
-				//cleanUpApiDocs("dev", service_name, domain)
-				unDeployService('dev', region)
+	dir(bitbucket_repo_name)
+	{
 
-				cleanUpApiGatewayResources("stg", path, region)
-				//cleanUpApiDocs("stg", service_name, domain)
-				unDeployService('stg', region)
+		switch (flowType) {
+			case "API":
+				stage('Undeploy Service') {
+					def path = getResourcePath()
+					//sh "sed -i -- 's/{opt:stage}/dev/g' serverless.yml"
+					cleanUpApiGatewayResources("dev", path, region)
+					//cleanUpApiDocs("dev", service_name, domain)
+					unDeployService('dev', region)
 
-				cleanUpApiGatewayResources("prod", path, region)
-				//cleanUpApiDocs("prod", service_name, domain)
-				unDeployService('prod', region)
+					//sh "sed -i -- 's/{opt:stage}/stg/g' serverless.yml"
+					cleanUpApiGatewayResources("stg", path, region)
+					//cleanUpApiDocs("stg", service_name, domain)
+					unDeployService('stg', region)
 
-			}
-            break
+					//sh "sed -i -- 's/{opt:stage}/prod/g' serverless.yml"
+					cleanUpApiGatewayResources("prod", path, region)
+					//cleanUpApiDocs("prod", service_name, domain)
+					unDeployService('prod', region)
 
-        case "LAMBDA":
-			stage('Undeploy Service') {
-				unDeployService('dev', region)
-				unDeployService('stg', region)
-				unDeployService('prod', region)
-			}
-            break
-
-        case "WEBSITE":
-			stage('Undeploy Service') {
-				if (cloudfrontEnabled == "true") {
-					cleanupCloudFrontDistribution(service_name, domain, "dev")
 				}
-				unDeployWebsite(service_name, domain, "dev")
+				break
 
-				if (cloudfrontEnabled == "true") {
-					cleanupCloudFrontDistribution(service_name, domain, "stg")
+			case "LAMBDA":
+				stage('Undeploy Service') {
+					unDeployService('dev', region)
+					unDeployService('stg', region)
+					unDeployService('prod', region)
 				}
-				unDeployWebsite(service_name, domain, "stg")
+				break
 
-				if (cloudfrontEnabled == "true") {
-					cleanupCloudFrontDistribution(service_name, domain, "prod")
+			case "WEBSITE":
+				stage('Undeploy Service') {
+					if (cloudfrontEnabled == "true") {
+						cleanupCloudFrontDistribution(service_name, domain, "dev")
+					}
+					unDeployWebsite(service_name, domain, "dev")
+
+					if (cloudfrontEnabled == "true") {
+						cleanupCloudFrontDistribution(service_name, domain, "stg")
+					}
+					unDeployWebsite(service_name, domain, "stg")
+
+					if (cloudfrontEnabled == "true") {
+						cleanupCloudFrontDistribution(service_name, domain, "prod")
+					}
+					unDeployWebsite(service_name, domain, "prod")
 				}
-				unDeployWebsite(service_name, domain, "prod")
-			}
-            break
+				break
+		}
 	}
 /*
 	stage('Backup Service')	{
@@ -205,21 +222,25 @@ def unDeployService(stage, region) {
  * @return
  */
 def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
-	def repo_url = var_cas_clone_url + bitbucket_repo_name+".git"
-	//events.sendStartedEvent('GET_SERVICE_CODE')
-	try {
+	dir(bitbucket_repo_name)
+	{
 
-		checkout([$class: 'GitSCM', branches: [
-			[name: '*/master']
-		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: env.REPO_CREDENTIAL_ID, url: repo_url]
-		]])
-		sh "ls -al"
-		//events.sendCompletedEvent('GET_SERVICE_CODE')
+		def repo_url = var_cas_clone_url + bitbucket_repo_name+".git"
+		//events.sendStartedEvent('GET_SERVICE_CODE')
+		try {
 
-	}catch(ex) {
-		//events.sendFailureEvent('GET_SERVICE_CODE', ex.getMessage())
-		error "checkoutSCM Failed. "+ex.getMessage()
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: env.REPO_CREDENTIAL_ID, url: repo_url]
+			]])
+			sh "ls -al"
+			//events.sendCompletedEvent('GET_SERVICE_CODE')
+
+		}catch(ex) {
+			//events.sendFailureEvent('GET_SERVICE_CODE', ex.getMessage())
+			error "checkoutSCM Failed. "+ex.getMessage()
+		}
 	}
 }
 
@@ -409,7 +430,7 @@ def checkServiceExists(service_name, domain) {
 	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
 	try {
 		def outputStr = sh (
-			script: "curl 'https://cloud-api.corporate.t-mobile.com/api/platform/is-service-available?domain="+domain+"&service="+service_name+"'" ,
+			script: "curl 'https://cloud-api.corporate.com/api/platform/is-service-available?domain="+domain+"&service="+service_name+"'" ,
 			returnStdout: true
 		).trim()
 		echo outputStr
@@ -440,21 +461,21 @@ def backupProject(repoName) {
 	//events.sendStartedEvent('BACKUP_PROJECT')
 	try {
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.BITBUCKET_CREDS_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-			sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\" https://bitbucket.corporate.t-mobile.com/rest/api/1.0/projects/"+env.BACKUP_BITBUCKET_PROJ_KEY+"/repos -d \'{\"name\":\""+ repoName +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
+			sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\" https://bitbucket.corporate.com/rest/api/1.0/projects/"+env.BACKUP_BITBUCKET_PROJ_KEY+"/repos -d \'{\"name\":\""+ repoName +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
 
 			sh "git config --global user.email \"serverlessdev@t-mobile.com\""
 			sh "git config --global user.name $UNAME"
 			sh "git config http.sslVerify \"false\""
 
 			sh "rm -rf ./*"
-			sh "git clone --bare ssh://git@bitbucket.corporate.t-mobile.com/"+env.BITBUCKET_PROJ_KEY+"/"+ repoName +".git"
+			sh "git clone --bare ssh://git@bitbucket.corporate.com/"+env.BITBUCKET_PROJ_KEY+"/"+ repoName +".git"
 
 			dir(repoName+".git") {
-				sh "git push --mirror ssh://git@bitbucket.corporate.t-mobile.com/"+env.BACKUP_BITBUCKET_PROJ_KEY+"/"+ repoName +".git"
+				sh "git push --mirror ssh://git@bitbucket.corporate.com/"+env.BACKUP_BITBUCKET_PROJ_KEY+"/"+ repoName +".git"
 			}
 
 			dir("_tmp") {
-				sh "git clone ssh://git@bitbucket.corporate.t-mobile.com/"+env.BACKUP_BITBUCKET_PROJ_KEY+"/"+ repoName +".git"
+				sh "git clone ssh://git@bitbucket.corporate.com/"+env.BACKUP_BITBUCKET_PROJ_KEY+"/"+ repoName +".git"
 				dir(repoName) {
 					sh "git branch -r | grep -v master | sed 's/origin\\//:/'| xargs git push origin"
 				}
@@ -479,7 +500,7 @@ def deleteProject(repoName) {
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.BITBUCKET_CREDS_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		echo "deleting repository from bitbucket $repoName"
 		def outputStr = sh (
-			script: "curl -X DELETE -k -u \"$UNAME:$PWD\" 'https://bitbucket.corporate.t-mobile.com/rest/api/1.0/projects/"+env.BITBUCKET_PROJ_KEY+"/repos/"+repoName+"'" ,
+			script: "curl -X DELETE -k -u \"$UNAME:$PWD\" 'https://bitbucket.corporate.com/rest/api/1.0/projects/"+env.BITBUCKET_PROJ_KEY+"/repos/"+repoName+"'" ,
 			returnStdout: true
 		).trim()
 		echo outputStr
@@ -628,11 +649,11 @@ def cleanUpApiDocs(stage, service, domain) {
  */
 def getApiDocsFolder(stage) {
 	if(stage == 'dev') {
-		return "dev-cloud-api-doc.corporate.t-mobile.com"
+		return "dev-cloud-api-doc.corporate.com"
 	}else if (stage == 'stg') {
-		return "stg-cloud-api-doc.corporate.t-mobile.com"
+		return "stg-cloud-api-doc.corporate.com"
 	} else if (stage == 'prod') {
-		return "cloud-api-doc.corporate.t-mobile.com"
+		return "cloud-api-doc.corporate.com"
 	}
 }
 
