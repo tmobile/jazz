@@ -1,0 +1,26 @@
+#!groovy
+import groovy.json.JsonOutput
+node {
+
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JENKINS_CREDENTIAL_ID, passwordVariable: 'PWD', 
+	usernameVariable: 'UNAME']]){
+		
+	   echo "Build to deploy all Platform Services"
+	  
+	   def platform_srvc_build_job = "/job/build-deploy-platform-service/buildWithParameters?token=bld-plat-srvs-71717&admin_group=admin_group&region=" + params.region;
+
+	   def var_job_url = JenkinsLocationConfiguration.get().getUrl() + platform_srvc_build_job;
+	  
+       echo "=====" + var_job_url;
+      
+	   //Service 1
+	   def service_name_params = "create-serverless-service";
+       sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params;
+
+	   //Service 2
+	   service_name_params = "delete-serverless-service";
+	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+	   
+	}
+  
+}
