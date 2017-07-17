@@ -53,22 +53,16 @@ module.exports.handler = (event, context, callback) => {
 			var cognitoUser = new AWSCognito.CognitoUser(userData);
 			cognitoUser.authenticateUser(authenticationDetails, {
 				onSuccess: function (result) {
-							console.log('access token + ' + result.getAccessToken().getJwtToken());
+						console.log('access token + ' + result.getAccessToken().getJwtToken());
 						logger.info(" authenticated ");
-						callback(null, responseObj(result, {
-														"username": event.body.username
-												}));
-									},
+						callback(null, responseObj(result.getIdToken().getJwtToken(), {"username": event.body.username}));
+				},
 
 				onFailure: function(err) {
 						logger.error("Error while authenticating: " + err);
-											   callback({
-														"server_error": "Authentication Failed for user: " + event.body.username + " with unknown error."
-												});
+						callback({"server_error": "Authentication Failed for user: " + event.body.username + " with unknown error."});
 				}
-
 			 });
-
 			}else {
 				callback(JSON.stringify(errorHandler.throwInputValidationError("Bad Request")));
 			}
@@ -78,6 +72,3 @@ module.exports.handler = (event, context, callback) => {
 		callback(JSON.stringify(errorHandler.throwInternalServerError("Unknown error occured: " + e.message)));
 	}
 };
-
-
-
