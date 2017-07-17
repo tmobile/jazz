@@ -18,13 +18,18 @@ API Auth Service
 module.exports.handler = (event, context, callback) => {
 
 	var config = configObj(event);
-	
-	logger.info(" Config ***************** "+config);
-	logger.init(event, context);
+  	logger.init(event, context);
+    console.log(" Event** "+JSON.stringify(event));
+
+  	logger.info(" Config ***************** "+JSON.stringify(config));
 	var errorHandler = errorHandlerModule(logger);
 
 	try {
 
+      logger.error(config.USER_POOL_ID+" << ");
+      logger.error(config.CLIENT_ID+" << ");
+      
+      
 		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
 
 			if (event.body.username === undefined || event.body.username === "") {
@@ -36,13 +41,13 @@ module.exports.handler = (event, context, callback) => {
 			}
 
 			var authenticationData = {
-						  Username : event.body.username,
+					  Username : event.body.username,
 					  Password : event.body.password
 					};
 			
 			var poolData = {
-					UserPoolId : 'us-east-1_HQgpgbrGK', // Your user pool id here
-					ClientId : '1ap8ji4fj5kaljrtis91bumpbo' // Your client id here
+					UserPoolId : config.USER_POOL_ID,  
+					ClientId : config.CLIENT_ID
 				};
 			
 			var authenticationDetails = new AWSCognito.AuthenticationDetails(authenticationData);
@@ -59,12 +64,14 @@ module.exports.handler = (event, context, callback) => {
 						logger.info(" authenticated ");
 						callback(null, responseObj(result.getIdToken().getJwtToken(), {"username": event.body.username}));
 				},
-
 				onFailure: function(err) {
-						logger.error("Error while authenticating: " + err);
-						callback({"server_error": "Authentication Failed for user: " + event.body.username + " with unknown error."});
+						logger.error("Error while authenticating: " + err);                        
+				  	    callback({"server_error": "Authentication Failed for user: " + event.body.username + " with unknown error."});
+                        
 				}
+
 			 });
+
 			}else {
 				callback(JSON.stringify(errorHandler.throwInputValidationError("Bad Request")));
 			}
