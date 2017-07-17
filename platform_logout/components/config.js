@@ -7,7 +7,7 @@
 **/
 
 var getStageConfig = (event) => {
-  var stage = event.stage;
+  var stage = 'dev'; //event.stage;
   var configObj = {};
   // Loads the config files based on the env.
   // Please edit the JSON files.
