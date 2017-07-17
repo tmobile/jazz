@@ -18,6 +18,8 @@ API Auth Service
 module.exports.handler = (event, context, callback) => {
 
 	var config = configObj(event);
+	
+	logger.info(" Config ***************** "+config);
 	logger.init(event, context);
 	var errorHandler = errorHandlerModule(logger);
 
