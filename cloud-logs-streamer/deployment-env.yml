@@ -6,3 +6,4 @@ providerMemorySize : 256
 providerTimeout : 160
 region: {inst_region}
 iamRoleARN: {inst_role_lambda_basic_execution}
+domain: platform
