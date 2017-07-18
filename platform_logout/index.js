@@ -30,15 +30,20 @@ module.exports.handler = (event, context, cb) => {
 		
 
 		var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
+          
+          logger.info(" ******************* "+JSON.stringify(cognitoidentityserviceprovider.getUser()))
 
 		var paramss = {
-			  UserPoolId: config.USER_POOL_ID, /* required */
+			  UserPoolId: 'us-east-1_HQgpgbrGK', /* required */
 			  Username: event.body.username /* required */
 		};
 
 		cognitoidentityserviceprovider.adminUserGlobalSignOut(paramss, function(err, data) {
   			if (err) logger.info(" Error "+err+" stack "+ err.stack); // an error occurred
-  			else     logger.info(" kicked out.... "+JSON.stringify(data));           // successful response
+  			else     {
+              logger.info(" kicked out.... "+JSON.stringify(data));           // successful response
+             cb(null, responseObj({"status": "User signed out successfully!"}, {}));
+            }
 		});
 
 		}
