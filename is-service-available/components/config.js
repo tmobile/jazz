@@ -12,11 +12,11 @@ var getStageConfig = (event) => {
     // Loads the config files based on the env.
     // Please edit the JSON files.
     if (stage === 'dev') {
-        configObj = require('./dev-config.json');
+        configObj = require('../config/dev-config.json');
     } else if (stage === 'stg') {
-        configObj = require('./stg-config.json');
+        configObj = require('../config/stg-config.json');
     } else if (stage === 'prod'){
-        configObj = require('./prod-config.json');
+        configObj = require('../config/prod-config.json');
     }
     return configObj;
 };
