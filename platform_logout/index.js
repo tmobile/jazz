@@ -31,14 +31,20 @@ module.exports.handler = (event, context, cb) => {
 
 		var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
           
-          logger.info(" ******************* "+JSON.stringify(cognitoidentityserviceprovider.getUser()))
-
 		var paramss = {
-			  UserPoolId: 'us-east-1_HQgpgbrGK', /* required */
-			  Username: event.body.username /* required */
+			  AccessToken: event.headers.Authorization /* required */
 		};
+          
+          cognitoidentityserviceprovider.getUser(paramss, function(err, data) {
+  			if (err) logger.info(" Couldnot identify user from the available token "+err+" stack "+ err.stack); // an error occurred
+  			else     {
+              logger.info(" Identified User from Token "+JSON.stringify(data.Username));           // successful response
+             
+            }
+		});
+          
 
-		cognitoidentityserviceprovider.adminUserGlobalSignOut(paramss, function(err, data) {
+		cognitoidentityserviceprovider.globalSignOut(paramss, function(err, data) {
   			if (err) logger.info(" Error "+err+" stack "+ err.stack); // an error occurred
   			else     {
               logger.info(" kicked out.... "+JSON.stringify(data));           // successful response
