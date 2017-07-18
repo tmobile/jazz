@@ -31,6 +31,8 @@ def Event_Status = [
 
 node {		
 
+	echo "params : $params"
+
 	def service_template = params.service_name //"create-serverless-service"
 	def service_type =  "api"
 	def runtime = "nodejs"
@@ -55,16 +57,15 @@ node {
 	stage ('Get Serverless Service')
 	{
 		try{
-			sh 'rm -rf *'
-			sh 'rm -rf .*'
+			sh 'rm -rf ' + bitbucket_name + '*'
 		}
 		catch(error){
 			//do nothing
 		}
 
 		try{
-			sh 'mkdir ' + service_template
-			dir(service_template)
+			sh 'mkdir ' + bitbucket_name
+			dir(bitbucket_name)
 			{
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
 			}
@@ -75,7 +76,7 @@ node {
 
 	}
 	
-	def config = dir(service_template)
+	def config = dir(bitbucket_name)
 	{
 	    return LoadConfiguration()
 	}
@@ -91,22 +92,23 @@ node {
 		
 		try{
 
-			dir(service_template)
+			dir(bitbucket_name)
 			{
 			    
 			    
 				def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
 				
-                sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
-			
+				echo "11111111111"
 				region = config['region']
+				
 				def var_api_host_name			= var_api_key+".execute-api."+region+".amazonaws.com"
-
+				
 				// TODO: the below couple of statements will be replaced with regular expression in very near future;
 				// roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
 				def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
-
-   			    // Jazz seds
+				
+   			    echo "111111111116666666"
+				// Jazz seds
 				// This is been handled in generateSwaggerEnv
 				//sh "sed -i -- 's/{api_host_name}/" + var_api_host_name + "/g' ./swagger/swagger.json"
 				
@@ -116,37 +118,46 @@ node {
 				// This is been handled in generateSwaggerEnv
 				// sh "sed -i -- 's/{service_name}/" + service_name + "/g' ./swagger/swagger.json"
 
+				
+				//Swagger SEDs
+				echo "Updating the Swagger SEDs"
 				sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
-
 				sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
-
 				sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
-
 				// This is been handled in generateSwaggerEnv
 				// sh "sed -i -- 's/{lambda_function_name}/" + service_template+ "-" + domain + "/g' ./swagger/swagger.json"
+
+
+				echo "Updating the index.js for create and delete services"
+				if ( (service_name.trim() == "create-serverless-service") || (service_name.trim() == "delete-serverless-service") ) {
+					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
+				}
 				
-				echo "Updating Serverless configs for dev "			
-              
-				sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
-				sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
-              
-				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/dev-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/dev-config.json"
+				if ( (service_name.trim() == "platform_login") || (service_name.trim() == "platform_logout") ) {
+					echo "Updating configs for dev login and logout"
+					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
+					echo "Updating configs for stg"
+					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
+					echo "Updating configs for prod"
+					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
+					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
+				}
 				
-				echo "Updating Serverless configs for stg"
-				sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
-				sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
-              
-				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/stg-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/stg-config.json"
+				if ( (service_name.trim() == "is-service-available") || (service_name.trim() == "create-serverless-service") ) {
+					echo "Updating configs for repo base"
+					sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/prod-config.json"
+				}
 				
-				echo "Updating Serverless configs for prod"
-  				sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
-				sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
-              
-				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/prod-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/prod-config.json"
-				
+				if ( (service_name.trim() == "delete-serverless-service") || (service_name.trim() == "create-serverless-service") ) {
+					echo "Updating configs for jenkins host"
+					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/prod-config.json"
+				}
 			}
 		}
 		catch(error){
@@ -276,5 +287,4 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 	          
 	echo "Send Event Called: "+error
 }
-
 
