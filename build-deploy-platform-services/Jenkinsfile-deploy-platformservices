@@ -37,9 +37,9 @@ node {
 	   service_name_params = "platform_logout";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
 
-	   //Service platform_services
-	   //service_name_params = "platform_logout";
-	   //sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+	   //Service 7 platform_services
+	   service_name_params = "platform_services";
+	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
 
 	}
   
