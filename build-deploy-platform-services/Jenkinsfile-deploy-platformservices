@@ -20,7 +20,27 @@ node {
 	   //Service 2
 	   service_name_params = "delete-serverless-service";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
-	   
+
+	   //Service 3
+	   service_name_params = "cloud-logs-streamer";
+	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+
+	   //Service 4
+	   service_name_params = "is-service-available";
+	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+
+	   //Service 5
+	   service_name_params = "platform_login";
+	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+
+	   //Service 6
+	   service_name_params = "platform_logout";
+	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+
+	   //Service platform_services
+	   //service_name_params = "platform_logout";
+	   //sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+
 	}
   
 }
