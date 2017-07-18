@@ -6,7 +6,7 @@
         "description": "API specification for nodejs template service"
     },
     "host": "{api_host_name}",
-    "basePath": "/",
+    "basePath": "/platform",
     "schemes": [
         "https"
     ],
