@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="81px" height="60px" viewBox="0 0 81 60" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 43.2 (39069) - http://www.bohemiancoding.com/sketch -->
+    <title>icon-deploy</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <linearGradient x1="50%" y1="-23.8026534%" x2="50%" y2="100%" id="linearGradient-1">
+            <stop stop-color="#D6026F" offset="0%"></stop>
+            <stop stop-color="#FF329C" offset="100%"></stop>
+        </linearGradient>
+        <path d="M66.9166667,45.8823529 L66.9166667,0 L6.08333333,0 L6.08333333,45.8823529 L0,45.8823529 L0,52 L73,52 L73,45.8823529 L66.9166667,45.8823529 Z M42.5833333,45.8823529 L30.4166667,45.8823529 L30.4166667,42.8235294 L42.5833333,42.8235294 L42.5833333,45.8823529 Z M60.8333333,36.7058824 L12.1666667,36.7058824 L12.1666667,6.11764706 L60.8333333,6.11764706 L60.8333333,36.7058824 Z" id="path-2"></path>
+        <filter x="-9.6%" y="-9.6%" width="119.2%" height="126.9%" filterUnits="objectBoundingBox" id="filter-3">
+            <feOffset dx="0" dy="2" in="SourceAlpha" result="shadowOffsetOuter1"></feOffset>
+            <feGaussianBlur stdDeviation="2" in="shadowOffsetOuter1" result="shadowBlurOuter1"></feGaussianBlur>
+            <feColorMatrix values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.147616621 0" type="matrix" in="shadowBlurOuter1"></feColorMatrix>
+        </filter>
+    </defs>
+    <g id="Dashboard_v2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="0_Landing" transform="translate(-600.000000, -702.000000)" fill-rule="nonzero">
+            <g id="ic_laptop_chromebook_48px" transform="translate(604.000000, 704.000000)">
+                <g id="icon-deploy">
+                    <use fill="black" fill-opacity="1" filter="url(#filter-3)" xlink:href="#path-2"></use>
+                    <use fill="url(#linearGradient-1)" fill-rule="evenodd" xlink:href="#path-2"></use>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

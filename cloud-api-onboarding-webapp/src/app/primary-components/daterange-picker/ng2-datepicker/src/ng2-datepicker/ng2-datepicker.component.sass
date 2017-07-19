@@ -1,0 +1,244 @@
+$blue: #366AAB
+$black: #000000
+$white: #FFFFFF
+$gray: #ced4da
+$gray-dark: #343a40
+$red: #fa5252
+
+=unselectable
+  -webkit-touch-callout: none
+  -webkit-user-select: none
+  -moz-user-select: none
+  -ms-user-select: none
+  user-select: none
+
+.datepicker-container
+  display: inline-block
+  position: relative
+
+  .datepicker-input-container
+    display: inline-block
+    background: transparent
+
+    .datepicker-input
+      display: inline-block
+      width: 160px
+      margin-right: 10px
+      border: none
+      outline: none
+      border-bottom: 1px solid $gray
+      font-size: 14px
+      color: $black
+      text-align: center
+      &::-webkit-input-placeholder
+        color: $gray-dark
+      &::-moz-placeholder
+        color: $gray-dark
+      &:-ms-input-placeholder
+        color: $gray-dark
+      &:-moz-placeholder
+        color: $gray-dark
+
+    .datepicker-input-icon
+      display: inline-block
+      i
+        cursor: pointer
+
+        svg
+          width: 15px
+          height: 15px
+          g
+            g
+              fill: $black
+
+  .datepicker-calendar
+    +unselectable
+    width: 250px
+    top: 40px
+    position: absolute
+    z-index: 99
+    background: $white
+    border-bottom-left-radius: 4px
+    border-bottom-right-radius: 4px
+    box-shadow: 0 2px 5px rgba($black, 0.5)
+
+    .datepicker-calendar-top
+      width: 100%
+      height: 80px
+      background: $black
+      display: inline-block
+      position: relative
+
+      .year-title
+        display: block
+        margin-top: 12px
+        color: $white
+        font-size: 28px
+        text-align: center
+
+      button
+        width: 200px
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: block
+        margin: 0 auto
+        color: $white
+        text-transform: uppercase
+        background: transparent
+        border: none
+        outline: none
+        font-size: 12px
+        cursor: pointer
+        position: relative
+
+        svg
+          display: block
+          float: left
+          width: 15px
+          height: 15px
+          position: absolute
+          top: 2px
+          left: 12px
+          g
+            fill: $white
+            path
+              fill: $white
+
+      .close
+        position: absolute
+        top: 5px
+        right: 5px
+        font-size: 20px
+        color: $white
+        cursor: pointer
+
+        svg
+          width: 12px
+          height: 12px
+          g
+            path
+              fill: $white
+
+    .datepicker-calendar-container
+      display: inline-block
+      width: 100%
+      padding: 10px
+      background: #222628
+
+      .datepicker-calendar-month-section
+        width: 100%
+        display: flex
+        justify-content: space-between
+        font-size: 14px
+        color: #DDDDDD
+        text-transform: uppercase
+        i
+          cursor: pointer
+          &:first-child
+            margin-left: 12px
+          &:last-child
+            margin-right: 12px
+
+      .datepicker-calendar-day-names
+        width: 230px
+        margin-top: 10px
+        display: inline-block
+        border: 1px solid transparent
+
+        span
+          font-size: 12px
+          display: block
+          float: left
+          width: calc(100% / 7)
+          text-align: center
+
+      .datepicker-calendar-days-container
+        width: 230px
+        margin-top: 5px
+        display: inline-block
+        border: 1px solid transparent
+
+        .day
+          display: flex
+          justify-content: center
+          align-items: center
+          float: left
+          font-size: 14px
+          color: #8E8E8E
+          width: calc(100% / 7)
+          height: 33px
+          text-align: center
+          border-radius: 50%
+          cursor: pointer
+          &:hover:not(.disabled), &.selected
+            background: #222628
+            border: 1px solid #366AAB
+            border-radius: 4px
+          &.disabled
+            pointer-events: none
+          &.today
+            color: #366AAB
+
+      .datepicker-calendar-years-container
+        width: 100%
+        height: 240px
+
+        .year
+          display: flex
+          justify-content: center
+          align-items: center
+          float: left
+          font-size: 14px
+          color: #8E8E8E
+          width: calc(100% / 4)
+          height: 50px
+          text-align: center
+          border-radius: 50%
+          cursor: pointer
+          &:hover, &.selected
+            background: #222628
+            border: 1px solid #366AAB
+            border-radius: 4px
+
+      .datepicker-buttons
+        width: 235px
+        display: flex
+        justify-content: center
+
+        button
+          width: 100%
+          outline: none
+          display: inline-block
+          border: 1px solid $blue
+          background: #099268
+          color: $white
+          margin-right: 5px
+          border-radius: 5px
+          cursor: pointer
+          text-align: center
+          padding: 5px 10px
+          border: 1px solid #366AAB
+          border-radius: 4px
+
+          &.u-is-primary
+            background: #366AAB
+            &:active
+              background: #222628
+
+          &.u-is-secondary
+            background: #222628
+            color: #099268
+            &:active
+              background: #366AAB
+              color: #DDDDDD
+            &:hover
+              color: #FFFFFF
+  svg
+    display: block
+    width: 20px
+    height: 20px
+    g
+      fill: $white
+      g
+        fill: $white

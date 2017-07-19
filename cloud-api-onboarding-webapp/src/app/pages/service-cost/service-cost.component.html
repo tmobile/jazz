@@ -1,0 +1,66 @@
+<div class="row page-section section-top">
+    <div class="col-sm-3">
+        <div class="cost-value">
+            <amount [amount]="cost.perYear"></amount>
+        </div>
+        <div class="cost-label">
+            <div>Cost</div>
+            <div>(Year)</div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="cost-value">
+            <amount [amount]="cost.perDay"></amount>
+        </div>
+        <div class="cost-label">
+            <div>Cost</div>
+            <div>(Per Day)</div>
+        </div>
+    </div>
+    <div class="col-sm-3">
+        <div class="cost-value">
+            <span>{{cost.efficiency}}</span><span>%</span>
+        </div>
+        <div class="cost-label">
+            <div>Cost</div>
+            <div>Efficiency</div>
+        </div>
+    </div>
+</div>
+<div class="row page-section">
+    <div class="cost-category">
+        <div class="filter-wrp">
+            <filters class="filters" [filtersList]="filtersList"></filters>
+            <dropdown [dropdwnContent]="environmentList" [selected]="costGraphData.environment" (onSelected)="onEnvSelected($event)"></dropdown>
+        </div>
+        <div class="graph-wrp">
+            <img class="cost-graph-temp" src="assets/images/cost_graph.png">
+        </div>
+    </div>
+    <div class="cost-category">
+        <div class="filter-wrp">
+            <filters class="filters" [filtersList]="filtersList"></filters>
+            <div class="search-filter-wrap">
+                <search-box (onChange)="onServiceSearch($event)"></search-box>
+                <div class="filter-icon">
+                    <span class="icon-icon-filter-selected" *ngIf="filterSelected" (click)="filterSelected = !filterSelected">
+                    <span class="path1"></span><span class="path2"></span>
+                    </span>
+                    <span class="icon-icon-filter-unselected" *ngIf="!filterSelected" (click)="filterSelected = !filterSelected">
+                </span>
+                </div>
+            </div>
+        </div>
+        <div class="graph-wrp cost-table">
+            <table-template class="table-container" [header]="costTableData.header">
+                <div class="table-row" *ngFor="let row of costTableData.body" (click)="onRowClicked(row)">
+                    <div class="column">{{row.column1}}</div>
+                    <div class="column">{{row.column2}}</div>
+                    <div class="column">{{row.column3}}</div>
+                    <div class="column">{{row.column4}}</div>
+                    <div class="column">{{row.column5}}</div>
+                </div>
+            </table-template>
+        </div>
+    </div>
+</div>

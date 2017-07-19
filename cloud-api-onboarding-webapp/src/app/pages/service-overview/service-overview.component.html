@@ -1,0 +1,97 @@
+<div class="service-details row">
+    <ul class="section-left col-md-7 col-sm-12">
+        <li>
+            <div class="det-label">Description</div>
+            <div class="det-value">{{service.description}}</div>
+        </li>
+        <li>
+            <div class="det-label">Approver(s)</div>
+            <div class="det-value">{{service.approvers}}</div>
+        </li>
+        <li>
+            <div class="det-label">Status</div>
+            <div class="det-value" [ngClass]="service.status">{{service.status}}</div>
+        </li>
+        <li>
+            <div class="det-label">Domain</div>
+            <div class="det-value">{{service.domain}}</div>
+        </li>
+        <li>
+            <div class="det-label">Service Type</div>
+            <div class="det-value">{{service.serviceType}}</div>
+        </li>
+    </ul>
+    <ul class="section-right col-md-5 col-sm-12">
+        <li>
+            <div class="det-label">Email</div>
+            <div class="det-value link">{{service.email}}</div>
+        </li>
+        <li>
+            <div class="det-label">Slack Channel</div>
+            <div class="det-value link">{{service.slackChannel}}</div>
+        </li>
+        <li>
+            <div class="det-label">Repository</div>
+            <div class="det-value link">{{service.repository}}</div>
+        </li>
+        <li>
+            <div class="det-label">Runtime</div>
+            <div class="det-value">{{service.runtime}}</div>
+        </li>
+        <li>
+            <div class="det-label">Tags</div>
+            <div class="det-value">{{service.tags}}</div>
+        </li>
+    </ul>
+</div>
+<div class="separator-row"></div>
+<div class="service-overview-wrp">
+    <div class="stage-wrp" *ngFor="let overview of environments" [ngClass]="overview.stage" [class.active]="activeEnv == overview.stage" (click)="stageClicked(overview.stage)">
+        <div class="stage-title">{{overview.stage}}</div>
+        <div class="stage-overview">
+            <ul class="service-overview">
+                <li class="overview-item health">
+                    <div class="overview-value">
+                        <img *ngIf="overview.serviceHealth == 'good'" src="assets/images/icons/icon-good.png">
+                        <img *ngIf="overview.serviceHealth == 'bad'" src="assets/images/icons/icon-bad.png">
+                    </div>
+                    <div class="overview-label">Service Health</div>
+                </li>
+                <li class="overview-item last-status" *ngIf="overview.serviceHealth == 'good'">
+                    <div class="overview-value">
+                        <div>{{overview.lastSuccess.value}}</div>
+                        <div>{{overview.lastSuccess.unit}} Ago</div>
+                    </div>
+                    <div class="overview-label">Last Successful Deployment</div>
+                </li>
+                <li class="overview-item last-status" *ngIf="overview.serviceHealth == 'bad'">
+                    <div class="overview-value">
+                        <div>{{overview.lastError.value}}</div>
+                        <div>{{overview.lastError.unit}} Ago</div>
+                    </div>
+                    <div class="overview-label">Last Successful Deployment</div>
+                </li>
+                <li class="overview-item deployments-count">
+                    <div class="overview-value">{{overview.deploymentsCount.value}}</div>
+                    <div class="overview-label">
+                        <div># of Deployments </div>
+                        <div>({{overview.deploymentsCount.duration}})</div>
+                    </div>
+                </li>
+                <li class="overview-item cost" [ngClass]="overview.cost.status">
+                    <div class="overview-value">{{overview.cost.value}}</div>
+                    <div class="overview-label">
+                        <div>Cost </div>
+                        <div>({{overview.cost.duration}})</div>
+                    </div>
+                </li>
+                <li class="overview-item code-quality" [ngClass]="overview.codeQuality.status">
+                    <div class="overview-value">{{overview.codeQuality.value}}</div>
+                    <div class="overview-label">
+                        <span>Code Quality</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
