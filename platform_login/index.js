@@ -62,7 +62,7 @@ module.exports.handler = (event, context, callback) => {
 				onSuccess: function (result) {
 						console.log('access token + ' + result.getAccessToken().getJwtToken());
 						logger.info(" authenticated ");
-						callback(null, responseObj({"token": result.getIdToken().getJwtToken()}, {"username": event.body.username}));
+						callback(null, responseObj({"token": result.getAccessToken().getJwtToken()}, {"username": event.body.username}));
 				},
 				onFailure: function(err) {
 						logger.error("Error while authenticating: " + err);                        
