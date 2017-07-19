@@ -182,14 +182,14 @@ node {
 				break
 		}
 	}
-/*
+
 	stage('Backup Service')	{
 		//backupProject(bitbucket_repo_name)
 	}
 	stage('Cleanup') {
 		deleteProject(bitbucket_repo_name)
 	}
-*/
+
 }
 
 /**
@@ -460,7 +460,7 @@ def checkServiceExists(service_name, domain) {
 def backupProject(repoName) {
 	//events.sendStartedEvent('BACKUP_PROJECT')
 	try {
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.BITBUCKET_CREDS_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.REPO_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 			sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\" https://bitbucket.corporate.com/rest/api/1.0/projects/"+env.BACKUP_BITBUCKET_PROJ_KEY+"/repos -d \'{\"name\":\""+ repoName +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
 
 			sh "git config --global user.email \"serverlessdev@t-mobile.com\""
@@ -497,10 +497,12 @@ def backupProject(repoName) {
 def deleteProject(repoName) {
 	//events.sendStartedEvent('DELETE_PROJECT')
 	try {
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.BITBUCKET_CREDS_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.REPO_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		echo "deleting repository from bitbucket $repoName"
+		def repourl = "http://" + env.REPO_BASE + "/rest/api/1.0/projects/CAS/repos/" + repoName;
+		echo repourl
 		def outputStr = sh (
-			script: "curl -X DELETE -k -u \"$UNAME:$PWD\" 'https://bitbucket.corporate.com/rest/api/1.0/projects/"+env.BITBUCKET_PROJ_KEY+"/repos/"+repoName+"'" ,
+			script: "curl -X DELETE -k -u \"$UNAME:$PWD\" '" + repourl +"'" ,
 			returnStdout: true
 		).trim()
 		echo outputStr
