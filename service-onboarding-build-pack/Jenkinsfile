@@ -291,7 +291,8 @@ node  {
 		dir (bitbucket_name)
 		{
 			sh "ls -lart"
-			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.PUSH_TEMPLATE_TO_SERVICE_REPO, Event_Status.STARTED, "")
 				try{
 					sh "git add --all"
@@ -349,14 +350,29 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.FAILED, error.getMessage())
 					echo error
 				}
+              
+				def repo_url = env.REPO_BASE + "/projects/CAS/repos/" + bitbucket_name + "/browse";
+  				def region = "us-east-1"//config['region']
+				echo "Calling add row in db ###################################################"
+				createServiceInDB(service_name, domain, owner, runtime, repo_url, "desc", admin_group, service_type, env.API_KEY, region);              
 			}
 		}
 	}
-	
-	
-	
-	
 }
+
 def sendEvent(service_type, service_name, domain, runtime, admin_group, event_name, event_status, error){
 	echo "send event" + error
+}
+/**
+	Create db entry
+*/
+def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, devApiID, region) {
+  //def service_name = "TestServ"
+  //def domain = "test"
+  //def created_by = "somanchi"
+  //def runtime = "java"
+  //def repo_url = "http://jazz4-bitbucketelb-1017372957.us-east-1.elb.amazonaws.com:7990/scm/cas/slf-jazzjs2.git"
+
+  sh "curl -H \"Content-Type: application/json\" -X POST -k -v -d '{ \"service\": \"" + service_name + "\", \"domain\": \"" + domain + "\", \"type\": \"" + servicetype + "\", \"created_by\": \"" + created_by + "\", \"runtime\": \"" + runtime + "\", \"repository\": \"" + repo_url + "\", \"description\": \"" + desc + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/"
+
 }
