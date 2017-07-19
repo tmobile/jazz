@@ -17,6 +17,8 @@ var getStageConfig = (event) => {
         configObj = require('../config/stg-config.json');
     } else if (stage === 'prod'){
         configObj = require('../config/prod-config.json');
+    } else {
+        configObj = require('../config/dev-config.json');
     }
     return configObj;
 };
