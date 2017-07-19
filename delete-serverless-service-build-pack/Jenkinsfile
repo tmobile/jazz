@@ -11,6 +11,9 @@ import groovy.transform.Field
 
 node {
 
+	echo "Starting delete service job.."
+	echo "params : $params"
+
 	def service_name
 	def domain
 	def version
