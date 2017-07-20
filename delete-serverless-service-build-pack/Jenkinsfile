@@ -209,7 +209,7 @@ def unDeployService(stage, region) {
 			sh "aws configure set profile.cloud-api.region " + region
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			sh "serverless remove --stage "+stage+" --verbose"
+			sh "serverless remove --stage "+stage+" --verbose --env_prefix " + env.env_name_prefix
 			echo "Service undeployed"
 			//events.sendCompletedEvent('UNDEPLOY_LAMBDA', null, null, getEnvKey(stage))
 		}catch(ex) {
