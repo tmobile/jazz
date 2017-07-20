@@ -72,7 +72,7 @@ node() {
     def runtime = config['providerRuntime']
     def service = config['service']
   	def region = config['region']
-  	def logStreamer = env.CLOUDWATCH_LOGS_STREAMER
+  	//def logStreamer = env.CLOUDWATCH_LOGS_STREAMER
     def internalAccess = config['require_internal_access']
   	//def customExeRole = config['iamRoleARN']
     def role;
@@ -84,6 +84,12 @@ node() {
 	} else {
         role = env.DEFAULT_LAMBDA_EXE_ROLE;
 	}
+
+		def roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
+	def var_api_host_name = var_api_key+".execute-api."+region+".amazonaws.com"
+	// TODO: the below couple of statements will be replaced with regular expression in very near future;						
+	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
+  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:cloud-logs-streamer-dev"
 
     echo "selected role" + role
 
@@ -158,7 +164,7 @@ node() {
 
 					echo "serverless deploy......."
 					sh "serverless deploy --stage stg -v --env_prefix " + env.env_name_prefix
-					//createSubscriptionFilters(serviceName, "stg", region, logStreamer);
+					createSubscriptionFilters(serviceName, "stg", region, logStreamer);
 					
 	                if (fileExists('swagger/swagger.json')) {
 						// Generate swagger file based on environment
@@ -217,7 +223,7 @@ node() {
 
 					echo "serverless deploy......."
 					sh "serverless deploy --stage prod -v --env_prefix " + env.env_name_prefix
-					//createSubscriptionFilters(serviceName, "prod", region, logStreamer);
+					createSubscriptionFilters(serviceName, "prod", region, logStreamer);
 					
 	                if (fileExists('swagger/swagger.json')) {
 						// Generate swagger file based on environment
@@ -266,7 +272,7 @@ node() {
 
 					echo "serverless deploy......."
 					sh "serverless deploy --stage dev -v --env_prefix " + env.env_name_prefix
-					//createSubscriptionFilters(serviceName, "dev", region, logStreamer);
+					createSubscriptionFilters(serviceName, "dev", region, logStreamer);
 					
 	                if (fileExists('swagger/swagger.json')) {
 						// Generate swagger file based on environment
