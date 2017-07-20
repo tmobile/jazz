@@ -91,14 +91,14 @@ var formatService = function(service, format) {
 
 // initialize document CLient for dynamodb
 var initDocClient = function() {
-    AWS.config.update({ region: 'us-east-1' });
+    AWS.config.update({ region: '{conf_region}' });
     var docClient = new AWS.DynamoDB.DocumentClient();
 
     return docClient;
 }
 
 var initDynamodb = function() {
-    AWS.config.update({ region: 'us-east-1' });
+    AWS.config.update({ region: '{conf_region}' });
     var dynamodb = new AWS.DynamoDB();
 
     return dynamodb;
