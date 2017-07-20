@@ -188,7 +188,7 @@ node {
 				echo "NPM Build completed"
 				
 				echo "Deploying lambda service"
-				sh "serverless deploy --stage "+envmnt+" -v"
+				sh "serverless deploy --stage "+envmnt+" -v --env_prefix " + env.env_name_prefix
 				echo "Deployed lambda service"
 								
 				// Generate swagger file based on environment
@@ -287,4 +287,3 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 	          
 	echo "Send Event Called: "+error
 }
-
