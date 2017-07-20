@@ -1,10 +1,11 @@
 service : logout
-securityGroupIds: sg-88c7baf9
-subnetIds: subnet-1ca02d46
+securityGroupIds: {inst_security_group_id}
+subnetIds: {inst_subnet_ids}
 providerRuntime : nodejs4.3
 providerMemorySize : 256
 providerTimeout : 160
-region: us-east-1
+region: {inst_region}
 domain : platform
 # Put your custom role here which has the IAM permissions required by your code
-iamRoleARN: arn:aws:iam::682452625784:role/lambda1_basic_execution_1
+iamRoleARN: {inst_role_lambda_basic_execution}
+
