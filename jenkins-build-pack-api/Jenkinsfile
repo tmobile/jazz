@@ -66,7 +66,7 @@ node() {
 	}
 	
 	def domain = config['domain']
-	def roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
+	//def roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
 
     //def config = LoadConfiguration()
     def runtime = config['providerRuntime']
