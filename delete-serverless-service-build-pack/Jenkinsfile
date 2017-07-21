@@ -34,13 +34,14 @@ node {
 	def var_bitbucket_base			= env.REPO_BASE
 	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
 	def var_api_key 				= env.API_KEY
-	def var_api_host_name			= var_api_key+".execute-api.us-east-2.amazonaws.com"
+	//def var_api_host_name			= var_api_key+".execute-api.us-east-2.amazonaws.com"
 
 	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + env.REPO_LOC + "/repos"
 
 	def var_bitbucket_email 		= env.REPO_EMAIL
 	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + env.REPO_LOC + "/"
 	
+	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git" 
 	
 	
 	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/service-onboarding-build-pack.git"
@@ -99,6 +100,9 @@ node {
 
 		dir(bitbucket_repo_name)
 		{
+			echo "loadServerlessConfig......."
+			loadServerlessConfig(runtime, configPackBBURL)
+
 			if (fileExists('build.api')) {
 				flowType = "API"
 				//events.setServiceType("API")
@@ -1013,6 +1017,26 @@ def deleteCloudFrontDistribution(distributionID, _Etag) {
 		error "deleteCloudFrontDistribution. "+e.getMessage()
 	}
 	*/
+}
+
+def loadServerlessConfig(String runtime, String configPackBBURL) {
+
+    dir('_config') {
+        checkout([$class: 'GitSCM', branches: [
+            [name: '*/master']
+        ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+            [credentialsId: env.REPO_CREDENTIAL_ID, url: configPackBBURL]
+        ]])
+    }
+
+    if (runtime.indexOf("nodejs") > -1) {
+        sh "cp _config/serverless-nodejs.yml ./serverless.yml"
+    } else if (runtime.indexOf("java") > -1) {
+        sh "cp _config/serverless-java.yml ./serverless.yml"
+    } else if (runtime.indexOf("python") > -1) {
+        sh "cp _config/serverless-python.yml ./serverless.yml"
+    }
+
 }
 
 
