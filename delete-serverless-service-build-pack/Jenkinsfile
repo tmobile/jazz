@@ -27,6 +27,7 @@ node {
 	def role
 	def cloudfrontEnabled
 	def flowType
+  	def var_db_service_id = params.db_service_id
 
 	def repo_protocol				= "http://"
 
@@ -133,7 +134,7 @@ node {
 
 	stage("Validation") {
 		validateInput(service_name, domain, version)
-		//checkServiceExists(service_name, domain)//is-service-available does not exist
+		checkServiceExists(service_name, domain, region)//is-service-available does not exist
 	}
 
 	dir(bitbucket_repo_name)
@@ -190,11 +191,12 @@ node {
 		}
 	}
 
-	stage('Backup Service')	{
+	//stage('Backup Service')	{
 		//backupProject(bitbucket_repo_name)
-	}
-	stage('Cleanup') {
+	//}
+	stage('Cleanup BitBucket/Catalog') {
 		deleteProject(bitbucket_repo_name)
+		deleteserviceindb(region, var_db_service_id)
 	}
 
 }
@@ -433,11 +435,12 @@ def validateInput(service_name, domain, version) {
  * @throws error when service is invalid
  * @return
  */
-def checkServiceExists(service_name, domain) {
+def checkServiceExists(service_name, domain, region) {
 	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
 	try {
+		//https://2zddgsrjeb.execute-api.us-east-1.amazonaws.com/dev/platform/is-service-available
 		def outputStr = sh (
-			script: "curl 'https://cloud-api.corporate.com/api/platform/is-service-available?domain="+domain+"&service="+service_name+"'" ,
+			script: "curl 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev//platform/is-service-available?domain="+domain+"&service="+service_name+"'" ,
 			returnStdout: true
 		).trim()
 		echo outputStr
@@ -458,6 +461,30 @@ def checkServiceExists(service_name, domain) {
 		}
 	}
 }
+
+
+def deleteserviceindb(region, db_id) {
+	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
+	try {
+		/*def outputStr = sh (
+			script: "curl 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + db_id ,
+			returnStdout: true
+		).trim()
+		echo outputStr
+		*/
+		echo "curl -X DELETE -k -v 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + db_id + "'"
+		sh "curl -X DELETE -k -v 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + db_id + "'"
+		
+		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
+	}catch (ex) {
+		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
+			error "deleteService Failed. "+ex.getMessage()
+		} else {
+			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
+		}
+	}
+}
+
 
 /**
  * Back up the code to the archive project (CAB in bitbucket). Keep only master branch
