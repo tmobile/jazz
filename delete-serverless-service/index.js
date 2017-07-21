@@ -40,7 +40,11 @@ module.exports.handler = (event, context, cb) => {
 	}else if(event.body.domain === undefined) {
 		logger.error("Domain key is missing in the input");
 		return cb(JSON.stringify(errorHandler.throwInputValidationError("Domain key is missing in the input")));		
+	}else if(event.body.id === undefined) {
+		logger.error("DB ID is missing in the input");
+		return cb(JSON.stringify(errorHandler.throwInputValidationError("DB ID is missing in the input")));		
 	}
+
 	var version = "LATEST";
 	if(event.body.version) { // version is optional field
 		version = event.body.version;
@@ -72,6 +76,8 @@ module.exports.handler = (event, context, cb) => {
 		params.service_name = event.body.service_name;
 		params.domain = event.body.domain;
 		params.version = version;
+		params.db_service_id = event.body.id;
+		
 		var tracking_id = Guid.create().value;		
 		params.tracking_id = tracking_id;
 
@@ -101,4 +107,3 @@ module.exports.handler = (event, context, cb) => {
     }
 	
 };
-
