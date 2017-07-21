@@ -1,5 +1,6 @@
 #!groovy.
 import groovy.json.JsonOutput
+//build-deploy-platform-services jenkinsfile
 
 def Event_Name =[
 	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
@@ -47,6 +48,7 @@ node {
 	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
 	def var_api_key 				= env.API_KEY
 	
+	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git" 
 		
 
 	if(params.domain && params.domain.trim() != ""){
@@ -94,7 +96,8 @@ node {
 
 			dir(bitbucket_name)
 			{
-			    
+				echo "loadServerlessConfig......."
+				loadServerlessConfig(runtime, configPackBBURL)
 			    
 				def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
 
@@ -285,6 +288,27 @@ def LoadConfiguration() {
 	echo "Loaded configurations...$prop"
 	return prop
 }
+
+def loadServerlessConfig(String runtime, String configPackBBURL) {
+
+    dir('_config') {
+        checkout([$class: 'GitSCM', branches: [
+            [name: '*/master']
+        ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+            [credentialsId: env.REPO_CREDENTIAL_ID, url: configPackBBURL]
+        ]])
+    }
+
+    if (runtime.indexOf("nodejs") > -1) {
+        sh "cp _config/serverless-nodejs.yml ./serverless.yml"
+    } else if (runtime.indexOf("java") > -1) {
+        sh "cp _config/serverless-java.yml ./serverless.yml"
+    } else if (runtime.indexOf("python") > -1) {
+        sh "cp _config/serverless-python.yml ./serverless.yml"
+    }
+
+}
+
 
 def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
 	          
