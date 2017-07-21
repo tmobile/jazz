@@ -96,13 +96,14 @@ export class ServiceDetailComponent implements OnInit {
     fetchService(id: string){
         this.isLoading = true;
 
-        this.http.get('https://dev-cloud-api.corporate.t-mobile.com/api/platform/services/'+id).subscribe(
+        this.http.get('/platform/services/'+id).subscribe(
           response => {
               //Bind to view
               let service = response.data;
 
               if (service !== undefined && service !== "") {
                 this.service = this.processService(service);
+                this.serviceData.service = this.service;
                 this.isLoading = false;
               } else{
                 this.isLoading = false;
@@ -159,7 +160,8 @@ export class ServiceDetailComponent implements OnInit {
          console.log("welocome to delete section"+ this.serviceData.service.name+"and"+this.serviceData.service.domain);
         var payload = {
                 "service_name": this.serviceData.service.name,
-                "domain": this.serviceData.service.domain
+                "domain": this.serviceData.service.domain,
+                "id" : this.serviceData.service.id
                 // "version": "LATEST"
             };
        this.deleteServiceStatus.emit(this.deleteServiceVal);

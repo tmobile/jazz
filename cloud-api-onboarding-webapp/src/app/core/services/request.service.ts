@@ -38,7 +38,7 @@ export class RequestService {
 
             // if url is a relative url append basepath
             if (!url.startsWith("/")) {
-                url = url + "/"
+                url = "/" + url
             }
             return this.baseurl + url;
         }

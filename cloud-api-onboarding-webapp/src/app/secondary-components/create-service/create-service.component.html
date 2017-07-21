@@ -20,13 +20,13 @@
                             <p>API</p>
                         </div>
                     </section>
-                    <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0">
+                    <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 disable-event">
                         <div class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (click)="changeServiceType('function')">
                             <div class="icon-icon-lambda" [ngClass]="{'selected': typeOfService == 'function'}"></div>
                             <p>FUNCTION</p>
                         </div>
                     </section>
-                    <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0">
+                    <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 disable-event">
                         <div class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'website'}" (click)="changeServiceType('website')">
                             <div class="icon-icon-web" [ngClass]="{'selected': typeOfService == 'function'}"></div>
                             <p>WEBSITE</p>
@@ -78,7 +78,7 @@
                 <div class="col-lg-8 col-md-8">
                     <div class="input-field-container">
                         <section class="col-lg-3 col-md-3 pad-left0">
-                            <div class="radio-container">
+                            <div class="radio-container" class="disable-event">
                                 <input type="radio" name="runtime" id="nodejs" [value]="nodejs" [checked]="runtime == 'nodejs'" (click)="onSelectionChange('nodejs')">
                                 <label for="nodejs"><span></span><span class="background"></span>Nodejs</label>
                             </div>
@@ -90,7 +90,7 @@
                             </div>
                         </section>
                         <section class="col-lg-3 col-md-3 pad-left0">
-                            <div class="radio-container">
+                            <div class="radio-container" class="disable-event">
                                 <input type="radio" name="runtime" id="python" [value]="python" [checked]="runtime == 'python'" (change)="onSelectionChange('python')">
                                 <label for="python"><span></span><span class="background"></span>Python</label>
                             </div>
@@ -122,15 +122,9 @@
                     <div class="col-lg-8 col-md-8">
                         <section class="col-lg-12  pad-left0">
                             <div class="input-field-container">
-                                <div class="input-wrapper" [ngClass]="{'available': serviceAvailable, 'unavailable': serviceNotAvailable || serviceNameError || !serviceName.valid && (serviceName.dirty || serviceName.touched)}">
+                                <div class="input-wrapper" [ngClass]="{'y': serviceAvailable, 'n': serviceNotAvailable || serviceNameError || !serviceName.valid && (serviceName.dirty || serviceName.touched)}">
                                     <input name="serviceName" pattern="^[A-Za-z0-9\-]+$" type="text" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (blur)="serviceNameAvailability()" (ngModelChange)="onServiceChange($event)" #serviceName='ngModel'>
                                     <img class="input-loader ng-hide">
-                                    <p class="termsConditions" *ngIf="!serviceName.valid && (serviceName.dirty || serviceName.touched)">Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && !isDomainDefined">Service name is available !</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && isDomainDefined">Service name in the specified domain is available!</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && !isDomainDefined">Service name is not available. Please try another service name</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && isDomainDefined">Service name in the specified domain is not available. Please try another combination of domain & service name.</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && serviceNameError">Error in validating Slack Channel name. Please try again or contact administrator.</p>
                                     <img *ngIf="serviceName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
                                 </div>
                             </div>
@@ -147,7 +141,7 @@
                     <div class="col-lg-8 col-md-8">
                         <section class="col-lg-12  pad-left0">
                             <div class="input-field-container">
-                                <div class="input-wrapper" [ngClass]="{'unavailable': !domainName.valid && (domainName.dirty || domainName.touched)}">
+                                <div class="input-wrapper" [ngClass]="{'n': !domainName.valid && (domainName.dirty || domainName.touched)}">
                                     <input name="domainName" type="text" class="textForm" placeholder="Enter domain name" id="domainName" [(ngModel)]="model.domainName" pattern="^[A-Za-z0-9\-]+$" #domainName='ngModel' (blur)="serviceNameAvailability()">
                                     <p class="termsConditions" *ngIf="!domainName.valid && (domainName.dirty || domainName.touched)">Domain name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
                                 </div>
@@ -156,7 +150,7 @@
                     </div>
                 </div>
             </section>
-            <section class="each-step-wrap Internal-access" *ngIf="typeOfService != 'website'">
+            <section class="each-step-wrap Internal-access hide" *ngIf="typeOfService != 'website'">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">Access Restrictions</p>
@@ -175,7 +169,7 @@
                     </div>
                 </div>
             </section>
-            <section class="each-step-wrap slack-channel-integration">
+            <section class="each-step-wrap slack-channel-integration hide">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">Slack Channel Integration</p>
@@ -205,7 +199,7 @@
                     </div>
                 </div>
             </section>
-            <section class="each-step-wrap cache-ttl-integration" *ngIf="typeOfService == 'api'">
+            <section class="each-step-wrap cache-ttl-integration hide" *ngIf="typeOfService == 'api'">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">Cache Time-to-Live(TTL)</p>
@@ -318,7 +312,7 @@
                     </div>
                 </div>
             </section>
-            <section class="each-step-wrap approvers">
+            <section class="each-step-wrap approvers hide">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">Approvers</p>

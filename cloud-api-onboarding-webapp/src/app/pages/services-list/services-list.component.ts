@@ -213,8 +213,8 @@ export class ServicesListComponent implements OnInit {
   fetchServices(){
     this.loadingState = 'loading';
 
-    // this.http.get('https://dev-cloud-api.corporate.t-mobile.com/api/platform/services');
-    this.http.get('https://dev-cloud-api.corporate.t-mobile.com/api/platform/services').subscribe(
+    // this.http.get('/platform/services');
+    this.http.get('/platform/services').subscribe(
       response => {
           //Bind to view
           let services = response.data;

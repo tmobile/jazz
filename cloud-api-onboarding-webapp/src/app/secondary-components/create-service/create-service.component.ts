@@ -25,13 +25,13 @@ export class CreateServiceComponent implements OnInit {
   typeOfPlatform:string = "aws";
   disablePlatform = true;
   selected:string = "Minutes";
-  runtime:string = 'nodejs';
+  runtime:string = 'java';
   eventSchedule:string = 'fixedRate';
   private slackSelected: boolean = false;
   private ttlSelected: boolean = false;
   showApproversList: boolean = false;
   approverName:string;
-  approversList;
+  approversList: any = [];
   slackAvailble : boolean = false;
   slackNotAvailble : boolean = false;
   channelNameError : boolean = false;
@@ -127,30 +127,7 @@ export class CreateServiceComponent implements OnInit {
 
   // function to validate slack channel
   public validateChannelName() {
-    this.slackChannelLoader = true;
-    this.http.get('/platform/is-slack-channel-available?slack_channel='+this.model.slackName)
-        .subscribe(
-        (Response) => {
-        var output = Response;
-        this.slackChannelLoader = false;
-        if(output.data.is_available == true){
-          this.slackAvailble = true;
-          this.slackNotAvailble = false;
-        } else if (output.data.is_available == false){
-          this.slackAvailble = false;
-          this.slackNotAvailble = true;
-        } else {
-           this.serviceAvailable = true;
-           this.slackAvailble = false;
-           this.slackNotAvailble = false;
-        }
-
-        console.log("slack"+output)},
-        (error) => {
-          this.slackChannelLoader = false;
-          var err = error;
-        }
-    );
+    // this.slackChannelLoader = true;
   }
 
   // function to restore the slack channel availability when it is changed
@@ -162,36 +139,11 @@ export class CreateServiceComponent implements OnInit {
 
   // check service name availability
   public validateServiceName() {
-    this.showLoader = true;
 
-    this.http.get('/platform/is-service-available?service='+this.model.serviceName+'&domain='+this.model.domainName)
-        .subscribe(
-        (Response) => {
-        var output = Response;
-        this.showLoader = false;
-        if(output.data.available == true){
-          this.serviceAvailable = true;
-          this.serviceNotAvailable = false;
-        } else if (output.data.available == false){
-          this.serviceAvailable = false;
-          this.serviceNotAvailable = true;
-        } else {
-           this.serviceNameError = true;
-           this.serviceAvailable = false;
-           this.serviceNotAvailable = false;
-        }
-        this.checkdomainName();
-        (error) => {
-        this.showLoader = false;
-        this.serviceNameError = true;
-        this.serviceAvailable = false;
-        this.serviceNotAvailable = false;
-        var err = error;
-        this.checkdomainName();
-        
-        }
-      }
-    );
+    this.serviceAvailable = true;
+    this.serviceNotAvailable = false;
+    this.checkdomainName();
+
   }
 
   checkdomainName(){
@@ -254,7 +206,7 @@ export class CreateServiceComponent implements OnInit {
     }
 
     this.isLoading = true;
-    this.http.post('/platform/service-onboarding-facade' , payload)
+    this.http.post('/platform/create-serverless-service' , payload)
         .subscribe(
         (Response) => {
         var output = Response;
@@ -290,7 +242,7 @@ export class CreateServiceComponent implements OnInit {
  // function to create a service
   onSubmit() { 
     this.submitted = true;
-    this.getData();
+    // this.getData();
     this.createService();
   }
 
@@ -359,9 +311,9 @@ export class CreateServiceComponent implements OnInit {
   
   // function disable the submit till all entered datas are valid
   disableForm(){
-    if (this.selectedApprovers === undefined || this.selectedApprovers.length === 0) {
-        return true;
-    }
+    // if (this.selectedApprovers === undefined || this.selectedApprovers.length === 0) {
+    //     return true;
+    // }
     if (!this.serviceAvailable) {
         return true;
     }
@@ -378,7 +330,7 @@ export class CreateServiceComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.getData();
+    // this.getData();
   };
 
   // cron validation related functions // 
