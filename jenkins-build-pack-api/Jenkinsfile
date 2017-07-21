@@ -1,5 +1,6 @@
 #!groovy
 import groovy.json.JsonOutput
+//jenkins-build-pack-api
 //definitions
 def Event_Name =[
 	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
@@ -43,6 +44,8 @@ node() {
 	def var_bitbucket_base			= env.REPO_BASE 
 	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_LOC + "/" 
 	def var_api_key 				= env.API_KEY
+
+	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git" 
 
 	def config
 	
@@ -153,7 +156,7 @@ node() {
 					
                   
 					echo "loadServerlessConfig......."
-	                loadServerlessConfig(runtime)
+	                loadServerlessConfig(runtime, configPackBBURL)
 
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain"
@@ -212,7 +215,7 @@ node() {
 					//sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
 
 					echo "loadServerlessConfig......."
-	                loadServerlessConfig(runtime)
+	                loadServerlessConfig(runtime, configPackBBURL)
 
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain for PRODUCTION"
@@ -261,7 +264,7 @@ node() {
 					//sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
 
 					echo "loadServerlessConfig......."
-	                loadServerlessConfig(runtime)
+	                loadServerlessConfig(runtime, configPackBBURL)
 
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain"
@@ -611,14 +614,32 @@ def validateDeploymentConfigurations(def prop) {
 
 }
 
-def loadServerlessConfig(String runtime) {
-		def config = LoadConfiguration()
-		def subnetIds = config['subnetIds']
-		def securityGroupIds = config['securityGroupIds']
-        def internalAccess = config['require_internal_access']
-		sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
-		sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
-		sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
+def loadServerlessConfig(String runtime, String configPackBBURL) {
+
+	def config = LoadConfiguration()
+	def subnetIds = config['subnetIds']
+	def securityGroupIds = config['securityGroupIds']
+	def internalAccess = config['require_internal_access']
+    dir('_config') {
+        checkout([$class: 'GitSCM', branches: [
+            [name: '*/master']
+        ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+            [credentialsId: env.REPO_CREDENTIAL_ID, url: configPackBBURL]
+        ]])
+    }
+
+    if (runtime.indexOf("nodejs") > -1) {
+        sh "cp _config/serverless-nodejs.yml ./serverless.yml"
+    } else if (runtime.indexOf("java") > -1) {
+        sh "cp _config/serverless-java.yml ./serverless.yml"
+    } else if (runtime.indexOf("python") > -1) {
+        sh "cp _config/serverless-python.yml ./serverless.yml"
+    }
+
+
+	sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
+	sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
+	sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
 
 	echoServerlessFile()
 
