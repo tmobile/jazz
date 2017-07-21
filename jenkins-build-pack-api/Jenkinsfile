@@ -107,6 +107,10 @@ node() {
 
 	dir(bitbucket_name)
 	{
+
+		echo "loadServerlessConfig......."
+		loadServerlessConfig(runtime, configPackBBURL)
+		
 		sh "cp serverless.yml serverless-prod.yml"
 		sh "cp swagger/swagger.json swagger/swagger-prod.json"
 		
@@ -153,10 +157,6 @@ node() {
 					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
                     //sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
 					
-					
-                  
-					echo "loadServerlessConfig......."
-	                loadServerlessConfig(runtime, configPackBBURL)
 
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain"
@@ -200,7 +200,7 @@ node() {
 			stage('Deployment to Production Env') {
 				sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
 				echo "starts Deployment to Production Env"
-
+				
 				sh "cp serverless-prod.yml serverless.yml"
 				sh "cp swagger/swagger-prod.json swagger/swagger.json"
 				sh "rm -rf .serverless"
@@ -213,9 +213,6 @@ node() {
 					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 					
 					//sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
-
-					echo "loadServerlessConfig......."
-	                loadServerlessConfig(runtime, configPackBBURL)
 
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain for PRODUCTION"
