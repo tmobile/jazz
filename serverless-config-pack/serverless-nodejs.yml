@@ -38,7 +38,7 @@ functions:
   handler:
     name: ${self:service}-${self:custom.myStage}
     handler: index.handler
-    role: DEFAULT_LAMBDA_EXE_ROLE
+    role: ${file(deployment-env.yml):iamRoleARN}
     description: ${self:service} Lambda Function
     runtime: ${file(deployment-env.yml):providerRuntime}
     memorySize: ${file(deployment-env.yml):providerMemorySize}
