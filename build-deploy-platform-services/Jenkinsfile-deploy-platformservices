@@ -11,6 +11,8 @@ node {
 
 	   def var_job_url = JenkinsLocationConfiguration.get().getUrl() + platform_srvc_build_job;
 	  
+       def timeout_seconds = 45;
+      
        echo "=====" + var_job_url;
       
 	   //Service 1
@@ -21,6 +23,8 @@ node {
 	   service_name_params = "delete-serverless-service";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
 
+	   sleep(timeout_seconds)
+
 	   //Service 3
 	   service_name_params = "cloud-logs-streamer";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
@@ -29,6 +33,8 @@ node {
 	   service_name_params = "is-service-available";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
 
+	   sleep(timeout_seconds)
+
 	   //Service 5
 	   service_name_params = "platform_login";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
@@ -36,6 +42,8 @@ node {
 	   //Service 6
 	   service_name_params = "platform_logout";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+
+	   sleep(timeout_seconds)
 
 	   //Service 7 platform_services
 	   service_name_params = "platform_services";
