@@ -173,12 +173,18 @@ node() {
 						// Generate swagger file based on environment
 						echo "Generating the swagger file for each environment"
 						def apiHostName = "stg-cloud-api.corporate.t-mobile.com" //Staging environment
+						
+						var_api_key = env.API_ID_STG;
+						
 						generateSwaggerEnv(service, "stg", service, apiHostName, domain, serviceName, var_api_key, config)
 						//validateSwaggerFile( service, domain, apiHostName )
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
 						//sh "aws-api-import --update spwpjuy1cb  --deploy stg swagger/swagger.json --profile cloud-api"
 						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy stg swagger/swagger.json "
+
+						echo "#############################--------Stage Service End point URL--------####################################"
+						echo "Stage URL :https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/stg/" + domain + "/" + params.service_name
 
 
 					}
@@ -228,7 +234,10 @@ node() {
 	                if (fileExists('swagger/swagger.json')) {
 						// Generate swagger file based on environment
 						echo "Generating the swagger file for each environment"
-						def apiHostName = "prod-cloud-api.corporate.t-mobile.com" //Staging environment
+						
+						var_api_key = env.API_ID_PROD;
+						def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
+
 						generateSwaggerEnv(service, "prod", service, apiHostName, domain, serviceName, var_api_key, config)
 						//validateSwaggerFile( service, domain, apiHostName )
 						// import swagger api spec
@@ -236,6 +245,8 @@ node() {
 						//sh "aws-api-import --update tutm3gzra5  --deploy prod swagger/swagger.json --profile cloud-api"
 						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy prod swagger/swagger.json "
 
+						echo "#############################--------PROD Service End point URL--------####################################"
+						echo "PROD URL :https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/stg/" + domain + "/" + params.service_name
 
 					}
 
@@ -277,7 +288,8 @@ node() {
 	                if (fileExists('swagger/swagger.json')) {
 						// Generate swagger file based on environment
 						echo "Generating the swagger file for each environment"
-						def apiHostName = "dev-cloud-api.corporate.t-mobile.com" //Staging environment
+						var_api_key = env.API_ID_DEV;
+						def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
 												
 						generateSwaggerEnv(service, "dev", service, apiHostName, domain, serviceName, var_api_key, config)
 						//validateSwaggerFile( service, domain, apiHostName )
@@ -285,6 +297,9 @@ node() {
 						echo "Deploying to staging API Gateway environment.."
 						//sh "aws-api-import --update pkmtwvozkg  --deploy dev swagger/swagger.json --profile cloud-api"
 						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json"
+
+						echo "#############################--------DEV Service End point URL--------####################################"
+						echo "DEV URL :https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/stg/" + domain + "/" + params.service_name
 
 					}
 
