@@ -44,13 +44,13 @@
                 <div class="col-lg-8 col-md-8">
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0">
                         <div class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
-                            <img src="../assets/images/aws.svg">
+                            <img src="../assets/images/icons/icon-aws@3x.png">
                             <p>AWS</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0">
                         <div class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
-                            <img src="../assets/images/azure.svg">
+                            <img src="../assets/images/icons/icon-azure@3x.png">
                             <p>Azure</p>
                         </div>
                     </section>
@@ -61,8 +61,8 @@
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0">
-                        <div class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'ccp'}" (click)="changePlatformType('ccp')">
-                            <img src="../assets/images/docker.svg">
+                        <div class="service-box disabled-box washed-out" [ngClass]="{'service-box-selected': typeOfPlatform == 'ccp'}" (click)="changePlatformType('ccp')">
+                            <img src="../assets/images/icons/con-ccp@3x-grayscale.png">
                             <p>CCP</p>
                         </div>
                     </section>

@@ -32,6 +32,11 @@
     &.disabled-box {
         cursor: default;
     }
+
+    &.washed-out{
+        opacity: 0.6;
+        filter: grayscale(100%);
+    }
 }
 
 .service-box img {
