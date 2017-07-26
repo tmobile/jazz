@@ -81,7 +81,7 @@ export class ServiceDetailComponent implements OnInit {
                 name: service.service,
                 serviceType: service.type,
                 runtime: service.runtime,
-                status: 'Active',
+                status: service.status,
                 description: service.description,
                 approvers: service.approvers,
                 domain: service.domain,

@@ -200,7 +200,7 @@ export class ServicesListComponent implements OnInit {
         type: service.type,
         domain: service.domain,
         health: 2,
-        status: 'Active',
+        status: service.status,
         lastModified: service.timestamp,
         link: 'services/' + service.id
       };
