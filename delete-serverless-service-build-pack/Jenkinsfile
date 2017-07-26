@@ -95,6 +95,8 @@ node {
 		domainConfig = config['domain']
 		role = config['iamRoleARN']
 		
+		updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "Deleting");
+		
 		//events.setRuntime(runtime)
 		//events.setEnvironment("NA")
 		//events.setRegion(region)
@@ -1064,6 +1066,10 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
 
+}
+
+def updateServiceInDB(service_id_in_db, devApiID, region, statusval) {
+  sh "curl -H \"Content-Type: application/json\" -X PUT -k -v -d '{ \"status\": \"" + statusval + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id_in_db + "/"
 }
 
 

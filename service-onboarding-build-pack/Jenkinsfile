@@ -45,6 +45,10 @@ node  {
 	def service_username
 	def service_password
 	def domain = params.domain
+	def owner = ""
+	if (params.username) {
+		owner = params.username
+	}
 
 	def repo_protocol				= "http://"
 	
@@ -63,7 +67,9 @@ node  {
 
 	echo "Starting new service on-boarding.."
 	echo "params : $params"
+	def repo_url = env.REPO_BASE + "/projects/CAS/repos/" + bitbucket_name + "/browse";
 
+  
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
 		domain = params.domain.trim()
@@ -145,6 +151,8 @@ node  {
 		echo "creator_username: $creator_username"
 	}
 	
+	def service_id_in_db = "";
+	def region = "us-east-1"//default will be replaced below
 
 	stage ('Get Service Template')
 	{
@@ -161,6 +169,12 @@ node  {
 			dir(service_template)
 			{
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
+				
+				config = LoadConfiguration()
+				region = config['region']
+
+				echo "Calling add row in db ###################################################"
+				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, domain + " - " + service_name, admin_group, service_type, env.API_KEY, "us-east-1");   
 			}
 		}
 		catch(error){
@@ -178,10 +192,6 @@ node  {
 			dir(service_template)
 			{
 				// Add service owner in deployment-env.yml
-				def owner = ""
-				if (params.username) {
-					owner = params.username
-				}
 				// adding '\n' to be sure its added in a new line.
 				sh "echo \$'\nowner: $owner' >> ./deployment-env.yml"
 
@@ -288,12 +298,7 @@ node  {
 			//do nothing
 		}
 
-		def config = dir(bitbucket_name)
-		{
-			return LoadConfiguration()
-		}
 
-		
 		dir (bitbucket_name)
 		{
 			sh "ls -lart"
@@ -357,10 +362,8 @@ node  {
 					echo error
 				}
               
-				def repo_url = env.REPO_BASE + "/projects/CAS/repos/" + bitbucket_name + "/browse";
-  				def region = config['region']
-				echo "Calling add row in db ###################################################"
-				createServiceInDB(service_name, domain, owner, runtime, repo_url, "desc", admin_group, service_type, env.API_KEY, region);              
+				echo "Calling update row in db ###################################################"
+				updateServiceInDB(service_id_in_db, env.API_KEY, region, "Active", repo_url);              
 			}
 		}
 	}
@@ -372,7 +375,7 @@ def sendEvent(service_type, service_name, domain, runtime, admin_group, event_na
 /**
 	Create db entry
 */
-def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, devApiID, region) {
+def createServiceInDBOLD(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, devApiID, region) {
   //def service_name = "TestServ"
   //def domain = "test"
   //def created_by = "somanchi"
@@ -381,6 +384,35 @@ def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc,
 
   sh "curl -H \"Content-Type: application/json\" -X POST -k -v -d '{ \"service\": \"" + service_name + "\", \"domain\": \"" + domain + "\", \"type\": \"" + servicetype + "\", \"created_by\": \"" + created_by + "\", \"runtime\": \"" + runtime + "\", \"repository\": \"" + repo_url + "\", \"description\": \"" + desc + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/"
 
+}
+
+def updateServiceInDB(service_id_in_db, devApiID, region, statusval, repo_url) {
+  sh "curl -H \"Content-Type: application/json\" -X PUT -k -v -d '{ \"status\": \"" + statusval + "\", \"repository\": \"" + repo_url + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id_in_db + "/"
+}
+
+def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, devApiID, region) {
+
+	try {
+		def outputStr = sh (
+			script: "curl -H \"Content-Type: application/json\" -X POST -k -v -d '{ \"service\": \"" + service_name + "\", \"status\":\"Creating..\", \"domain\": \"" + domain + "\", \"type\": \"" + servicetype + "\", \"created_by\": \"" + created_by + "\", \"runtime\": \"" + runtime + "\", \"repository\": \"" + repo_url + "\", \"description\": \"" + domain + " - " + service_name + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/",
+			returnStdout: true
+		).trim()
+		echo "outputStr===============" + outputStr
+		def jsonParser = new groovy.json.JsonSlurper()
+		def resultJson = jsonParser.parseText(outputStr)
+		if(resultJson == null || resultJson.data == null || resultJson.data.service_id == null) {
+			error "platform/services/ Insert failed"
+		}
+		return resultJson.data.service_id;
+	}catch (ex) {
+		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
+			//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage())
+			error "createServiceInDB Failed. "+ex.getMessage()
+		} else {
+			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
+		}
+	}
+	
 }
 
 def LoadConfiguration() {
@@ -442,4 +474,3 @@ def LoadConfiguration() {
 
 	return prop
 }
-
