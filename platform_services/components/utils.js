@@ -31,7 +31,7 @@ var formatService = function(service, format) {
     if (service === undefined || service === null) {
         return {};
     }
-    var keys_list = ['service', 'domain', 'type', 'created_by', 'runtime', 'description', 'region', 'repository', 'email', 'slack_channel', 'tags'];
+    var keys_list = ['service', 'domain', 'type', 'created_by', 'runtime', 'description', 'region', 'repository', 'email', 'slack_channel', 'tags', 'status'];
     var service_obj;
 
     if (format !== undefined) {
