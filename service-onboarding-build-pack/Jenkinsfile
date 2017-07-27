@@ -67,14 +67,14 @@ node  {
 
 	echo "Starting new service on-boarding.."
 	echo "params : $params"
-	def repo_url = env.REPO_BASE + "/projects/CAS/repos/" + bitbucket_name + "/browse";
-
-  
+	  
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
 		domain = params.domain.trim()
 	}
-
+	
+	def repo_url = env.REPO_BASE + "/projects/CAS/repos/" + bitbucket_name + "/browse";
+	
 	stage('Input Validation')
 	{
 		sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.VALIDATE_INPUT, Event_Status.STARTED, "")
