@@ -1,0 +1,19 @@
+{
+    "name": "cognito-authorizer",
+    "version": "0.0.1",
+    "description": "Cognito custom authorizer",
+    "main": "index.js",
+    "private": true,
+    "author": [],
+    "dependencies": {
+        "https": "*",
+        "request": "^2.75.0",
+        "jwk-to-pem": "^1.2.5",
+        "jsonwebtoken": "^7.0.0"
+    },
+    "devDependencies": {
+        "https": "*",
+        "request": "^2.75.0",
+        "jsonwebtoken": "^7.0.0"
+    }
+}

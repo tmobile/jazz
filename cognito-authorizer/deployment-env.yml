@@ -1,0 +1,10 @@
+service: cognito-authorizer
+securityGroupIds: sg-c29aa1b3
+subnetIds: subnet-3127b16b
+providerRuntime : nodejs4.3
+providerMemorySize : 256
+providerTimeout : 160
+region: us-east-1
+domain: platform
+# Put your custom role here which has the IAM permissions required by your code
+iamRoleARN: arn:aws:iam::682452625784:role/lambda_basic_execution
