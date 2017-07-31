@@ -15,7 +15,7 @@ var pems;
 module.exports.handler = function(event, context) {
 
     var config = configObj(event);
-    loggger.init(event, context);
+    logger.init(event, context);
     var errorHandler = errorHandlerModule(logger);
     userPoolId = config.USER_POOL_ID; 
     region = config.REGION;
