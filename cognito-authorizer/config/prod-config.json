@@ -1,5 +1,4 @@
 {
-  "USER_POOL_ID":"us-east-1_HQgpgbrGK",
-  "REGION": "us-east-1"
+  "USER_POOL_ID":"{conf-user-pool-id}",
+  "REGION": "{conf-region}"
 }
-
