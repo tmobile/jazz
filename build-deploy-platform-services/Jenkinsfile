@@ -186,7 +186,7 @@ node {
 			sh "aws configure set profile.cloud-api.region "+region
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-            sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
+                        sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
 			dir(bitbucket_name)
 			{
 				echo "NPM Build initiated"
@@ -194,7 +194,7 @@ node {
 				echo "NPM Build completed"
 				
 				echo "Deploying lambda service"
-				sh "serverless deploy --stage "+envmnt+" -v --env_prefix " + env.env_name_prefix
+				sh "serverless deploy --stage "+envmnt+" -v --bucket " + env.jazz_bucket_dev
 				echo "Deployed lambda service"
 								
 				// Generate swagger file based on environment
