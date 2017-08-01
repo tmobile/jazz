@@ -173,7 +173,7 @@ node() {
 					setLambdaExecutionRole(role);
 
 					echo "serverless deploy......."
-					sh "serverless deploy --stage stg -v --env_prefix " + env.env_name_prefix
+					sh "serverless deploy --stage stg -v --bucket " + env.jazz_bucket_stg
 					createSubscriptionFilters(serviceName, "stg", region, logStreamer);
 					
 	                if (fileExists('swagger/swagger.json')) {
@@ -235,7 +235,7 @@ node() {
 					setLambdaExecutionRole(role);
 
 					echo "serverless deploy......."
-					sh "serverless deploy --stage prod -v --env_prefix " + env.env_name_prefix
+					sh "serverless deploy --stage prod -v --bucket " + env.jazz_bucket_prod
 					createSubscriptionFilters(serviceName, "prod", region, logStreamer);
 					
 	                if (fileExists('swagger/swagger.json')) {
@@ -289,7 +289,7 @@ node() {
 					setLambdaExecutionRole(role);
 
 					echo "serverless deploy......."
-					sh "serverless deploy --stage dev -v --env_prefix " + env.env_name_prefix
+					sh "serverless deploy --stage dev -v --bucket " + env.jazz_bucket_dev
 					createSubscriptionFilters(serviceName, "dev", region, logStreamer);
 					
 	                if (fileExists('swagger/swagger.json')) {
