@@ -134,16 +134,19 @@ node {
 					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
 				}
 				
-				if ( (service_template.trim() == "platform_login") || (service_template.trim() == "platform_logout") ) {
+				if ( (service_template.trim() == "platform_login") || (service_template.trim() == "platform_logout") || (service_template.trim() == "cognito-authorizer")) {
 					echo "Updating configs for dev login and logout"
 					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
 					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
+                    			sh "sed -i -- 's/{conf-region}/" + env.region + "/g' ./config/dev-config.json"
 					echo "Updating configs for stg"
 					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
 					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
+                    			sh "sed -i -- 's/{conf-region}/" + env.region + "/g' ./config/stg-config.json"
 					echo "Updating configs for prod"
 					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
 					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
+                    			sh "sed -i -- 's/{conf-region}/" + env.region + "/g' ./config/prod-config.json"
 				}
 				
                 if ( (service_template.trim() == "is-service-available") || (service_template.trim() == "create-serverless-service") ) {
