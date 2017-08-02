@@ -6,7 +6,7 @@ service: ${file(deployment-env.yml):service}
 
 provider:
   name: aws
-  deploymentBucket: ${opt:env_prefix}-apis-deployment-${opt:stage}
+  deploymentBucket: ${opt:bucket}
   region: ${file(deployment-env.yml):region}
   stage: dev
   owner: ""
