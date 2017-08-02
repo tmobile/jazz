@@ -1,4 +1,4 @@
-#!groovy​
+#!groovy.
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
@@ -217,7 +217,7 @@ def unDeployService(stage, region) {
 			sh "aws configure set profile.cloud-api.region " + region
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			sh "serverless remove --stage "+stage+" --verbose --env_prefix " + env.env_name_prefix
+			sh "serverless remove --stage "+stage+" --verbose --bucket " + getServiceBucket(stage)
 			echo "Service undeployed"
 			//events.sendCompletedEvent('UNDEPLOY_LAMBDA', null, null, getEnvKey(stage))
 		}catch(ex) {
@@ -638,6 +638,22 @@ def parseJson(jsonString) {
     m.putAll(lazyMap)
     return m
 }
+
+/**
+ * Get the API Id of the gateway specific to an environment. The values will be pulled ENV vars set
+ * @param  stage the environment
+ * @return  api Id
+ */
+def getServiceBucket(stage) {
+	if(stage == 'dev') {
+		return env.jazz_bucket_dev
+	}else if (stage == 'stg') {
+		return env.jazz_bucket_stg
+	} else if (stage == 'prod') {
+		return env.jazz_bucket_prod
+	}
+}
+
 
 /**
  * Get the API Id of the gateway specific to an environment. The values will be pulled ENV vars set
