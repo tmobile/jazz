@@ -119,15 +119,15 @@ node {
 				// This is been handled in generateSwaggerEnv
 				// sh "sed -i -- 's/{service_name}/" + service_name + "/g' ./swagger/swagger.json"
 
-				
-				//Swagger SEDs
-				echo "Updating the Swagger SEDs"
-				sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
-				sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
-				sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
-				// This is been handled in generateSwaggerEnv
-				// sh "sed -i -- 's/{lambda_function_name}/" + service_template+ "-" + domain + "/g' ./swagger/swagger.json"
-
+				 if (fileExists('swagger/swagger.json')){
+					//Swagger SEDs
+					echo "Updating the Swagger SEDs"
+					sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
+					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
+					// This is been handled in generateSwaggerEnv
+					// sh "sed -i -- 's/{lambda_function_name}/" + service_template+ "-" + domain + "/g' ./swagger/swagger.json"
+				 }
 
 				echo "Updating the index.js for create and delete services"
 				if ( (service_template.trim() == "create-serverless-service") || (service_template.trim() == "delete-serverless-service") ) {
