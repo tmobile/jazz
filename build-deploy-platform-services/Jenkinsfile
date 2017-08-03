@@ -85,6 +85,8 @@ node {
 	
 	def roleARN						= config['iamRoleARN'].replaceAll("/", "\\\\/")
     service_name					= config['service']
+	// TODO: the below couple of statements will be replaced with regular expression in very near future;
+	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 	
 	stage ('Update Service Template')
 	{
@@ -105,9 +107,6 @@ node {
 				
 				def var_api_host_name			= var_api_key+".execute-api."+region+".amazonaws.com"
 				
-				// TODO: the below couple of statements will be replaced with regular expression in very near future;
-				// roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
-				def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 				
 				// Jazz seds
 				// This is been handled in generateSwaggerEnv
@@ -189,13 +188,18 @@ node {
 			sh "aws configure set profile.cloud-api.region "+region
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-                        sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
+            
+			sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
+			
 			dir(bitbucket_name)
 			{
 				echo "NPM Build initiated"
 				sh "npm install --save"
 				echo "NPM Build completed"
 				
+				//Change lambda service name to add stack prefix name
+				sh "sed -i -- 's/" + service_name + "/" + env.env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
+
 				echo "Deploying lambda service"
 				sh "serverless deploy --stage "+envmnt+" -v --bucket " + env.jazz_bucket_dev
 				echo "Deployed lambda service"
@@ -206,7 +210,7 @@ node {
 					def apiHostName	= var_api_key+".execute-api."+region+".amazonaws.com"//Development environment
 					echo apiHostName+" #################################################### "
 
-					generateSwaggerEnv(service_name, envmnt, service_name, apiHostName, domain, service_name)
+					generateSwaggerEnv(service_name, envmnt, service_name, apiHostName, domain, service_name, env.env_name_prefix)
 
 					echo " generated #################################################### "
 					
@@ -215,6 +219,20 @@ node {
 					sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+"  --deploy "+envmnt+" swagger/swagger.json "
 
 				}
+              
+				echo "completed deployment........."
+				if (service_template.trim() == "cloud-logs-streamer") {
+				    echo "set permission for cloud-logs-streamer"
+					try {
+						 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev --statement-id lambdaFxnPermission --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
+						 echo "set permission for cloud-logs-streamer - success"
+					 }catch(ss) {
+						//ignore if already registered permissions
+               			echo(ss)
+						 echo "set permission for cloud-logs-streamer - ok np"
+					 }
+				}
+
 				//sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 			}
@@ -224,8 +242,8 @@ node {
 	
 }
 
-def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName) {
-    sh "sed -i -- 's/{lambda_function_name}/" + serviceName + "-" + env + "/g' swagger/swagger.json"
+def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName, env_name_prefix) {
+    sh "sed -i -- 's/{lambda_function_name}/" +env_name_prefix + "-" + serviceName + "-" + env + "/g' swagger/swagger.json"
     sh "sed -i -- 's/{api_deployment_node_title}/" + deploymentNode + "/g' swagger/swagger.json" // {api_deployment_node_title}
     sh "sed -i -- 's/{service_name}/" + service + "/g' swagger/swagger.json" // {service_name}
     sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
