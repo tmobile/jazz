@@ -334,7 +334,7 @@ def updateServiceNameConfig(domain, serviceName) {
 	def cfStackName = service_name
 	if(domain && domain!= ""){
 		fullServiceName = domain+ "_" + service_name
-		cfStackName = serviceName + "--" + domain //sets CF Stack name as service--domain-env
+		cfStackName = serviceName + "-" + domain //sets CF Stack name as service--domain-env
 	}
 	try {
 		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
