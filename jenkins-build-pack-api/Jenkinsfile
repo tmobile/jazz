@@ -99,13 +99,13 @@ node() {
 	def var_api_host_name = var_api_key+".execute-api."+region+".amazonaws.com"
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;						
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
-  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:cloud-logs-streamer-dev"
+  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev"
 
     echo "selected role" + role
 
     if (domain  && domain.trim()!="") {
         serviceName = domain.trim() + "_" + serviceName
-        cfStackName = cfStackName + "--" + domain.trim() //sets CF Stack name as service--domain-env
+        cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service--domain-env
 	 }else{
         domain = ""
     }
