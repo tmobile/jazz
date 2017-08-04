@@ -137,11 +137,13 @@ node {
 					echo "Updating configs for dev login and logout"
 					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
 					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
-                    			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+                    sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+                  
 					echo "Updating configs for stg"
 					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
 					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
-                    			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+                    sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+                  
 					echo "Updating configs for prod"
 					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
 					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
@@ -210,13 +212,15 @@ node {
 					def apiHostName	= var_api_key+".execute-api."+region+".amazonaws.com"//Development environment
 					echo apiHostName+" #################################################### "
 
-					generateSwaggerEnv(service_name, envmnt, service_name, apiHostName, domain, service_name, env.env_name_prefix)
+					generateSwaggerEnv(service_name, envmnt, env.env_name_prefix+"-"+envmnt, apiHostName, domain, service_name, env.env_name_prefix)
 
 					echo " generated #################################################### "
 					
 					// import swagger api spec
 					echo "Deploying API gateway Endpoints"
-					sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+"  --deploy "+envmnt+" swagger/swagger.json "
+					// sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+"  --deploy "+envmnt+" swagger/swagger.json "
+                    sh "aws apigateway put-rest-api --rest-api-id "+var_api_key+" --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
+                    sh "aws apigateway create-deployment --rest-api-id "+var_api_key+" --stage-name "+envmnt+" --profile cloud-api"
 
 				}
               
@@ -234,6 +238,7 @@ node {
 				}
 
 				//sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+                resetCredentials();
 				sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 			}
 		}
@@ -248,8 +253,17 @@ def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, servic
     sh "sed -i -- 's/{service_name}/" + service + "/g' swagger/swagger.json" // {service_name}
     sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
     sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
+    sh "sed -i -- 's/{envPrefix}/" + env_name_prefix + "/g' swagger/swagger.json" // {domain}
 }
 
+/**
+	Reset credentials
+*/
+def resetCredentials() {
+    echo "resetting AWS credentials"
+    sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+    sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXX"
+}
 
 def LoadConfiguration() {
 	def prop = [:]
