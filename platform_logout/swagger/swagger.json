@@ -3,7 +3,7 @@
   "info": {
     "version": "2017-01-30T23:30:18Z",
     "title": "{api_deployment_node_title}",
-    "description": "T-Mobile Cloud API Logout service"
+    "description": "Jazz Logout service"
   },
   "host": "{api_host_name}",
   "basePath": "/{domain}",
@@ -11,7 +11,7 @@
     "https"
   ],
   "paths": {
-    "/{service_name}": {
+    "/{domain}/{service_name}": {
       "options": {
         "description": "CORS Support",
         "consumes": [
@@ -210,6 +210,11 @@
             }
           }
         },
+       "security": [
+          {
+            "{envPrefix}-cognito-authorizer": []
+          }
+        ],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -290,6 +295,20 @@
         }
       }
     }
+  },
+  "securityDefinitions": {
+      "{envPrefix}-cognito-authorizer": {
+        "type": "apiKey",
+        "name": "Authorization",
+        "in": "header",
+        "x-amazon-apigateway-authtype": "custom",
+        "x-amazon-apigateway-authorizer": {
+          "authorizerCredentials": "{conf-role}",
+          "authorizerResultTtlInSeconds": 300,
+          "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-cognito-authorizer-dev/invocations",
+          "type": "token"
+        }
+      }
   },
   "definitions": {
     "200SuccessResponse": {
