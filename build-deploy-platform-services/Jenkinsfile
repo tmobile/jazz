@@ -238,7 +238,7 @@ node {
 				}
 
 				//sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-                resetCredentials();
+                                 // resetCredentials();
 				sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 			}
 		}
