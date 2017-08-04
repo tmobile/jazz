@@ -1,8 +1,0 @@
-<div class="search-wrp">
-    <div class="input-wrp" [ngClass]="{'expand':searchActive}">
-        <input name="searchBar" id="searchbar" type="text" class="textForm" [(ngModel)]="searchbar" (ngModelChange)="onServiceSearch($event)">
-        <span class="search-icon-wrp">
-		  <span class="icon-icon-search-unselected" [class.selected]="searchActive" (click)="searchActive = !searchActive"></span>
-        </span>
-    </div>
-</div>
