@@ -48,6 +48,10 @@ node {
 	   //Service 7 platform_services
 	   service_name_params = "platform_services";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+       
+	   //Service 8 platform_services
+	   service_name_params = "cognito-authorizer";
+	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params       
 
 	}
   
