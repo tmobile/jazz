@@ -26,8 +26,7 @@ module.exports.handler = (event, context, cb) => {
 			if (event.headers.Authorization === undefined || event.headers.Authorization === "") {
 				logger.error('No session token to sign-out');
 				return cb(JSON.stringify(errorHandler.throwInputValidationError('Authorization token not provided.')));
-			}
-		
+			}		
 
 		var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
           
@@ -35,24 +34,24 @@ module.exports.handler = (event, context, cb) => {
 			  AccessToken: event.headers.Authorization /* required */
 		};
           
-          cognitoidentityserviceprovider.getUser(paramss, function(err, data) {
-  			if (err) logger.info(" Couldnot identify user from the available token "+err+" stack "+ err.stack); // an error occurred
-  			else     {
-              logger.info(" Identified User from Token "+JSON.stringify(data.Username));           // successful response
-             
-            }
-		});
-          
+		cognitoidentityserviceprovider.getUser(paramss, function(err, data) {
+		     if (err) 
+			logger.info(" Couldnot identify user from the available token "+err+" stack "+ err.stack); // an error occurred
+		     else     {
+		      	logger.info(" Identified User from Token "+JSON.stringify(data.Username));           // successful response
+		     }
+		});         
 
 		cognitoidentityserviceprovider.globalSignOut(paramss, function(err, data) {
-  			if (err) logger.info(" Error "+err+" stack "+ err.stack); // an error occurred
-  			else     {
-              logger.info(" kicked out.... "+JSON.stringify(data));           // successful response
-             cb(null, responseObj({"status": "User signed out successfully!"}, {}));
-            }
+			if (err) 
+			   logger.info(" Error "+err+" stack "+ err.stack); // an error occurred
+			else     {
+			   logger.info(" Signed out "+JSON.stringify(data));           // successful response
+			   cb(null, responseObj({"status": "User signed out successfully!"}, {}));
+			}
 		});
 
-		}
+	}
 
 	} catch (e) {
 		cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown error occured. Could not signout user! "+e)));
