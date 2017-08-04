@@ -382,19 +382,19 @@ def createServiceInDBOLD(service_name, domain, created_by, runtime, repo_url, de
   //def runtime = "java"
   //def repo_url = "http://jazz4-bitbucketelb-1017372957.us-east-1.elb.amazonaws.com:7990/scm/cas/slf-jazzjs2.git"
 
-  sh "curl -H \"Content-Type: application/json\" -X POST -k -v -d '{ \"service\": \"" + service_name + "\", \"domain\": \"" + domain + "\", \"type\": \"" + servicetype + "\", \"created_by\": \"" + created_by + "\", \"runtime\": \"" + runtime + "\", \"repository\": \"" + repo_url + "\", \"description\": \"" + desc + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/"
+  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: "+params.auth_token+"\" -X POST -k -v -d '{ \"service\": \"" + service_name + "\", \"domain\": \"" + domain + "\", \"type\": \"" + servicetype + "\", \"created_by\": \"" + created_by + "\", \"runtime\": \"" + runtime + "\", \"repository\": \"" + repo_url + "\", \"description\": \"" + desc + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/"
 
 }
 
 def updateServiceInDB(service_id_in_db, devApiID, region, statusval, repo_url) {
-  sh "curl -H \"Content-Type: application/json\" -X PUT -k -v -d '{ \"status\": \"" + statusval + "\", \"repository\": \"" + repo_url + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id_in_db + "/"
+  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: "+params.auth_token+"\" -X PUT -k -v -d '{ \"status\": \"" + statusval + "\", \"repository\": \"" + repo_url + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id_in_db + "/"
 }
 
 def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, devApiID, region) {
 
 	try {
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -X POST -k -v -d '{ \"service\": \"" + service_name + "\", \"status\":\"Creating..\", \"domain\": \"" + domain + "\", \"type\": \"" + servicetype + "\", \"created_by\": \"" + created_by + "\", \"runtime\": \"" + runtime + "\", \"repository\": \"" + repo_url + "\", \"description\": \"" + domain + " - " + service_name + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: "+params.auth_token+"\" -X POST -k -v -d '{ \"service\": \"" + service_name + "\", \"status\":\"Creating..\", \"domain\": \"" + domain + "\", \"type\": \"" + servicetype + "\", \"created_by\": \"" + created_by + "\", \"runtime\": \"" + runtime + "\", \"repository\": \"" + repo_url + "\", \"description\": \"" + domain + " - " + service_name + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
