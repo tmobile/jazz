@@ -14,10 +14,16 @@ node {
        def timeout_seconds = 45;
       
        echo "=====" + var_job_url;
+		
+           //Service 0 platform_services
+	   service_name_params = "cognito-authorizer";
+	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params       
+
+	   sleep(timeout_seconds)
       
 	   //Service 1
 	   def service_name_params = "create-serverless-service";
-       sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params;
+           sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params;
 
 	   //Service 2
 	   service_name_params = "delete-serverless-service";
@@ -49,10 +55,7 @@ node {
 	   service_name_params = "platform_services";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
        
-	   //Service 8 platform_services
-	   service_name_params = "cognito-authorizer";
-	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params       
-
+	  
 	}
   
 }
