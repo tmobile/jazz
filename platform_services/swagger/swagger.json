@@ -2,16 +2,16 @@
     "swagger": "2.0",
     "info": {
         "version": "2017-01-30T23:30:18Z",
-        "title": "Service Catalog APIs",
+        "title": "{api_deployment_node_title}",
         "description": "CRUD APIs for service Catalog"
     },
-    "host": "dev-cloud-api.corporate.t-mobile.com",
-    "basePath": "/platform",
+    "host": "{api_host_name}",
+    "basePath": "/{domain}",
     "schemes": [
         "https"
     ],
     "paths": {
-        "/services": {
+        "/{domain}/services": {
             "options": {
                 "description": "CORS Support",
                 "consumes": [
@@ -215,6 +215,11 @@
                         }
                     }
                 },
+                "security": [
+                  {
+                    "{envPrefix}-cognito-authorizer": []
+                  }
+                ],				
                 "x-amazon-apigateway-integration": {
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
                     "passthroughBehavior": "when_no_templates",
@@ -419,6 +424,11 @@
                         }
                     }
                 },
+                "security": [
+                  {
+                    "{envPrefix}-cognito-authorizer": []
+                  }
+                ],				
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -689,6 +699,11 @@
                         }
                     }
                 },
+                "security": [
+                  {
+                    "{envPrefix}-cognito-authorizer": []
+                  }
+                ],				
                 "x-amazon-apigateway-integration": {
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
                     "passthroughBehavior": "when_no_templates",
@@ -898,6 +913,11 @@
                         }
                     }
                 },
+                "security": [
+                  {
+                    "{envPrefix}-cognito-authorizer": []
+                  }
+                ],				
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -1097,6 +1117,11 @@
                         }
                     }
                 },
+                "security": [
+                  {
+                    "{envPrefix}-cognito-authorizer": []
+                  }
+                ],				
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -1178,6 +1203,20 @@
             }
         }
     },
+  	"securityDefinitions": {
+		"{envPrefix}-cognito-authorizer": {
+		  "type": "apiKey",
+		  "name": "Authorization",
+		  "in": "header",
+		  "x-amazon-apigateway-authtype": "custom",
+		  "x-amazon-apigateway-authorizer": {
+			"authorizerCredentials": "{conf-role}",
+			"authorizerResultTtlInSeconds": 300,
+			"authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-cognito-authorizer-dev/invocations",
+			"type": "token"
+		  }
+		}
+	},
     "definitions": {
         "400ErrorResponse": {
             "type": "object",
