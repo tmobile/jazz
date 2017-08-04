@@ -198,7 +198,7 @@ node() {
 
 
 					// reset Credentials
-					resetCredentials()
+					// resetCredentials()
 					sendEvent(service, branch, runtime, "STAGING", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}
 			}
@@ -259,7 +259,7 @@ node() {
 
 
 					// reset Credentials
-					resetCredentials()
+					// resetCredentials()
 					sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}
 			}//stage to prod ends here
@@ -311,7 +311,7 @@ node() {
 					}
 
 					// reset Credentials
-					resetCredentials()
+					// resetCredentials()
 					sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}
 			} //Stage to deploy ends here
