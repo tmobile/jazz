@@ -1,0 +1,7 @@
+export var BodyOutputType;
+(function (BodyOutputType) {
+    BodyOutputType[BodyOutputType["Default"] = 0] = "Default";
+    BodyOutputType[BodyOutputType["TrustedHtml"] = 1] = "TrustedHtml";
+    BodyOutputType[BodyOutputType["Component"] = 2] = "Component";
+})(BodyOutputType || (BodyOutputType = {}));
+//# sourceMappingURL=bodyOutputType.js.map

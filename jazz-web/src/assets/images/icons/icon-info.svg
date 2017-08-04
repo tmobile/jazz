@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="12px" height="12px" viewBox="0 0 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 43.2 (39069) - http://www.bohemiancoding.com/sketch -->
+    <title>icon-info</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Dashboard_v2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="3_CreateService" transform="translate(-773.000000, -563.000000)" fill-rule="nonzero" fill="#ED0295">
+            <g id="Group-4" transform="translate(0.000000, 56.000000)">
+                <g id="ic_info_outline_48px" transform="translate(773.000000, 507.000000)">
+                    <path d="M5.4,9 L6.6,9 L6.6,5.4 L5.4,5.4 L5.4,9 Z M6,0 C2.685,0 0,2.685 0,6 C0,9.315 2.685,12 6,12 C9.315,12 12,9.315 12,6 C12,2.685 9.315,0 6,0 Z M6,10.8 C3.354,10.8 1.2,8.646 1.2,6 C1.2,3.354 3.354,1.2 6,1.2 C8.646,1.2 10.8,3.354 10.8,6 C10.8,8.646 8.646,10.8 6,10.8 Z M5.4,4.2 L6.6,4.2 L6.6,3 L5.4,3 L5.4,4.2 Z" id="icon-info"></path>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

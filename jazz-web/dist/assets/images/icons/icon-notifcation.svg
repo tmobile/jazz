@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="19px" viewBox="0 0 16 19" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 43.2 (39069) - http://www.bohemiancoding.com/sketch -->
+    <title>icon-notifcation</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Dashboard_v2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="2_Services" transform="translate(-1184.000000, -19.000000)" fill-rule="nonzero" fill="#FFFFFF">
+            <g id="Group">
+                <path d="M1192,37.8235294 C1193.04,37.8235294 1193.88235,36.9811765 1193.88235,35.9411765 L1190.11765,35.9411765 C1190.11765,36.9811765 1190.96,37.8235294 1192,37.8235294 Z M1198.11765,32.1764706 L1198.11765,27 C1198.11765,24.1058824 1196.10824,21.6917647 1193.41176,21.0517647 L1193.41176,20.4117647 C1193.41176,19.6305882 1192.78118,19 1192,19 C1191.21882,19 1190.58824,19.6305882 1190.58824,20.4117647 L1190.58824,21.0517647 C1187.89176,21.6917647 1185.88235,24.1058824 1185.88235,27 L1185.88235,32.1764706 L1184,34.0588235 L1184,35 L1200,35 L1200,34.0588235 L1198.11765,32.1764706 Z" id="icon-notifcation"></path>
+            </g>
+        </g>
+    </g>
+</svg>

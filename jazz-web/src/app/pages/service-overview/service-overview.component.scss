@@ -1,0 +1,94 @@
+@import './../../../main-styles';
+.stage-wrp {
+    position: relative;
+    background: #fff;
+    margin-right: 2rem;
+    cursor: pointer;
+    flex-grow: 1;
+    @media (max-width: $screen-lg) {
+        margin-right: 0rem;
+        margin-bottom: 2rem;
+    }
+}
+
+.stage-wrp:last-child {
+    margin-right: 0;
+    @media (max-width: $screen-sm) {}
+    @media (max-width: $screen-md) {}
+    @media (max-width: $screen-lg) {
+        margin-right: 0rem;
+        margin-bottom: 0rem;
+    }
+}
+
+.stage-wrp::before {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 5px;
+    border-radius: 3px 3px 0px 0px;
+}
+
+.stage-wrp.dev::before {
+    background-color: #1fa6ce;
+}
+
+.stage-wrp.stg::before {
+    background-color: #f6a623;
+}
+
+.stage-wrp.prd::before {
+    background-color: #ed008c;
+}
+
+.stage-wrp .overview-item {
+    display: none;
+    @media (max-width: $screen-lg) {
+        display: block;
+    }
+}
+
+.stage-wrp .overview-item.health {
+    display: flex;
+    width: 100%;
+    @media(max-width: $screen-lg) {
+        width: 33.33%;
+    }
+}
+
+
+/*.stage-wrp.active{
+    cursor: default;
+}*/
+
+.stage-wrp.active .overview-item.health {
+    display: flex;
+    width: 20%;
+    @media(max-width: $screen-lg) {
+        width: 33.33%;
+    }
+}
+
+.stage-wrp.active .overview-item {
+    display: flex;
+}
+
+.service-details.row {
+    margin: 0;
+}
+
+.overview-item {
+    &:nth-child(1),
+    &:nth-child(2),
+    &:nth-child(3) {
+        @media (max-width: $screen-lg) {
+            width: 33.33%!important;
+        }
+    }
+    &:nth-child(4),
+    &:nth-child(5) {
+        @media (max-width: $screen-lg) {
+            display: none!important;
+        }
+    }
+}

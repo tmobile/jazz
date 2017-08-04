@@ -1,0 +1,51 @@
+<tmobile-mob-header (addClick)='showService(true)' [icon]="'add'" [headText]="'Services'" [status]="'none'"></tmobile-mob-header>
+<section class="table-wrap">
+    <navigation-bar [links]="breadcrumbs"></navigation-bar>
+    <div class="page-title-wrap hide-for-mobile">
+        <h1 class="header1 bold-title">Services</h1>
+        <div class="delete-msg-wrapper" *ngIf="message.body == 'success' ">
+            <div class="delete-msg-inner-wrapper">
+                <div class="success left">
+                    <div class="icon-icon-success"></div>
+                </div>
+                <div class="delete-msg left">
+                    <span class="bold">Success ! </span>
+                    <span class="">{{message.type}}</span>
+                </div>
+                <div class="delete-close right" (click)="closeDetelePopup()">
+                    <div class="icon-icon-close"></div>
+                </div>
+            </div>
+        </div>
+        <btn-primary-with-icon text="CREATE SERVICE" (click)="showService(true)"></btn-primary-with-icon>
+    </div>
+    <div class="table-filter-wrap table-mob-view">
+        <section class="page-filter-wrap">
+            <filters class="filters" [filtersList]="tabData" (onSelected)="onFilterSelected($event)"></filters>
+            <div class="search-filter-wrap">
+                <search-box (onChange)="onServiceSearch($event)"></search-box>
+                <div class="filter-icon">
+                    <span class="icon-icon-filter-unselected" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
+                        </span>
+                </div>
+            </div>
+        </section>
+        <!-- <tmobile-table [serviceList]="serviceList" [backupData]="backupData" [tableHeader]="tableHeader" [showFilterHeader]="filterSelected" [state]="loadingState"></tmobile-table> -->
+        <table-template class="table-container service-list-table" [state]="loadingState" [header]="tableHeader2" [showFilters]="filterSelected" (onFilter)="onFilter($event)" (onSort)="onSort($event)">
+            <div class="table-row" *ngFor="let row of serviceList; let i = index" (click)="onRowClicked(row, i)">
+                <div class="column">{{row.name}}</div>
+                <div class="column">{{row.type}}</div>
+                <div class="column">{{row.domain}}</div>
+                <div class="column">{{row.lastModified}}</div>
+                <!-- <div class="column">{{row.lastModified | amDateFormat: 'YYYY-MM-DD HH:mm:ss'}}</div> -->
+                <div class="column">
+                    <span class="health" [ngClass]="('state-' + row.health)"></span>
+                </div>
+                <div class="column" [ngClass]="'status ' + row.status">{{row.status}}</div>
+            </div>
+        </table-template>
+    </div>
+</section>
+<sidebar [show]="showAddService" (onClose)="showService(false)">
+    <create-service (onClose)="showService(false)"></create-service>
+</sidebar>

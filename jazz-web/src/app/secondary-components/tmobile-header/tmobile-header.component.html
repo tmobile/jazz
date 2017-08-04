@@ -1,0 +1,92 @@
+<header class="tmobile-header">
+    <!-- <div class="header-section left logo-wrp">
+        <img (click)="goToAbout('landing')" src="assets/images/icons/tmobile-logo.svg">
+    </div> -->
+    <div *ngIf="type == 'landing'" class="header-section right">
+        <ul class="dashboardLinks">
+            <li (click)="goToAbout('features')"> Features</li>
+            <li (click)="goToAbout('releaseCalendars')"> Release Calendar</li>
+            <li (click)="goToAbout('about')">About Us</li>
+            <li [class.hide]="isLoggedIn">
+                <div class="login">
+                    <btn-tmobile-primary newclass="login" text="LOGIN" (click)="toggleLoginPanel()"></btn-tmobile-primary>
+                </div>
+            </li>
+            <li [class.hide]="!isLoggedIn">
+                <div class="header-section right">
+                    <div class="header-profile-section">
+                        <div class="notification" [ngClass]="{'active': notificationsAvailable}">
+                            <img src="assets/images/icons/icon-notifcation.png">
+                        </div>
+                        <div class="profile" (clickOutside)="profileClicked = false">
+                            <img (click)="profileClick()" src="assets/images/profile.jpg">
+                            <div class="profile-options" [ngClass]="{'fade': profileClicked , 'fade-out': !profileClicked}">
+                                <ul>
+                                    <li (click)="profileClicked = !profileClicked">
+                                        <div class="profile-list"><span class="icon-icon-settings"></span> Settings
+                                        </div>
+                                    </li>
+                                    <li (click)="profileClicked = !profileClicked">
+                                        <div class="profile-list"><span class="icon-icon-feedback"></span>Feedback</div>
+                                    </li>
+                                    <li (click)="profileClicked = !profileClicked">
+                                        <div class="profile-list"><span class="icon-icon-help"></span>Help</div>
+                                    </li>
+                                    <li (click)="profileClicked = !profileClicked;logout()">
+                                        <div class="profile-list"><span class="icon-icon-logout"></span>Logout</div>
+                                    </li>
+                                </ul>
+                                <div class="white-triangle"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+        </ul>
+        <div class="dashboardLinksMobileView" (click)="openSection()">
+            <ul id="mobileLinks">
+                <li (click)="goToAbout('features')"> Features</li>
+                <li (click)="goToAbout('releaseCalendars')"> Release Calendar</li>
+                <li (click)="goToAbout('about')">About Us</li>
+                <li [class.hide]="isLoggedIn" (click)="toggleLoginPanel()"> Login</li>
+                <li [class.hide]="!isLoggedIn" (click)="logout()">Logout</li>
+            </ul>
+        </div>
+    </div>
+    <div *ngIf="type == 'default'" class="header-section main">
+        <div class="header-section left">
+            <div class="header-tabs">
+                <div class="header-tab" [ngClass]="{'active': selectedTab == 'dashboard'}">Dashboard</div>
+                <div class="header-tab" [ngClass]="{'active': selectedTab == 'services'}">Services</div>
+            </div>
+        </div>
+        <div class="header-section right">
+            <div class="header-profile-section">
+                <div class="notification" [ngClass]="{'active': notificationsAvailable}">
+                    <img src="assets/images/icons/icon-notifcation.png">
+                </div>
+                <div class="profile" (clickOutside)="profileClicked = false">
+                    <img (click)="profileClick()" src="assets/images/profile.jpg">
+                    <div class="profile-options" [ngClass]="{'fade': profileClicked , 'fade-out': !profileClicked}">
+                        <ul>
+                            <li (click)="profileClicked = !profileClicked">
+                                <div class="profile-list"><span class="icon-icon-settings"></span> Settings
+                                </div>
+                            </li>
+                            <li (click)="profileClicked = !profileClicked">
+                                <div class="profile-list"><span class="icon-icon-feedback"></span>Feedback</div>
+                            </li>
+                            <li (click)="profileClicked = !profileClicked">
+                                <div class="profile-list"><span class="icon-icon-help"></span>Help</div>
+                            </li>
+                            <li (click)="profileClicked = !profileClicked;logout()">
+                                <div class="profile-list"><span class="icon-icon-logout"></span>Logout</div>
+                            </li>
+                        </ul>
+                        <div class="white-triangle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

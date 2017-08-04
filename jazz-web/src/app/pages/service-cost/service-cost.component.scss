@@ -1,0 +1,110 @@
+@import './../../../main-styles';
+.section-top {
+    padding: 10px 5px;
+}
+
+.cost-value {
+    font-size: 36px;
+    color: #5cae01;
+    display: inline-block;
+    padding-right: 8px;
+}
+
+.cost-label {
+    display: inline-block;
+}
+
+.cost-category {
+    border-bottom: 2px solid #ddd;
+    padding: 1.6rem;
+    &:last-child {
+        border-bottom: none;
+    }
+}
+
+.filter-wrp {
+    display: flex;
+    text-align: right;
+    flex-wrap: wrap;
+    align-items: center;
+    dropdown {
+        display: block;
+        margin-left: auto;
+        float: right;
+        height: 32px;
+    }
+}
+
+.filter-icon {
+    display: inline-block;
+    margin:0 1rem;
+    span {
+        cursor: pointer;
+        font-size: 16px;
+        display: inline-block;
+        vertical-align: middle;
+        &.icon-icon-filter-selected {
+            font-size: 24px;
+            margin-top: -4px;
+            display: inline-block;
+            span {
+                padding-top: 0;
+            }
+        }
+    }
+}
+
+.cost-table {
+    .column,
+    /deep/ .column {
+        &:nth-child(1) {
+            flex-basis: 20%;
+        }
+        &:nth-child(2) {
+            flex-basis: 20%;
+        }
+        &:nth-child(3) {
+            flex-basis: 20%;
+        }
+        &:nth-child(4) {
+            flex-basis: 20%;
+            @media(max-width: $screen-sm){
+                display: none;
+            }
+            // @media(max-width: $screen-md){
+            //     display: none;
+            // }
+        }
+        &:nth-child(5) {
+            flex-basis: 20%;
+            @media(max-width: $screen-sm){
+                display: none;
+            }
+            @media(max-width: $screen-md){
+                display: none;
+            }
+        }
+    }
+}
+
+search-box {
+    display: inline-block;
+    margin-left: auto;
+}
+
+.graph-wrp {}
+
+.cost-graph-temp {
+    width: 100%;
+    margin-top: 1.5rem;
+}
+
+.table-container {
+    margin-top: 2rem;
+}
+.search-filter-wrap{
+    margin-left:auto;
+    @media(max-width:$screen-md){
+        padding-top: 1rem;
+    }
+}

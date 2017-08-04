@@ -1,0 +1,23 @@
+<tmobile-mob-header [icon]="'notification'" [headText]="'Service One'" [status]="'green'"></tmobile-mob-header>
+<section class="page-container">
+    <navigation-bar [links]="breadcrumbs"></navigation-bar>
+    <div class="content">
+        <div class="page-title-wrap hide-for-mobile">
+            <h1 class="page-hdr bold-title">{{environment.name}}</h1>
+            <span class="page-sub-title">{{service.name}}</span>
+        </div>
+        <div class="page-status-row  hide-for-mobile">
+            <div class="page-status" [ngClass]="service.status"><span>Status</span></div>
+        </div>
+        <tabs [tabData]="tabData" [selectedTab]="selectedTab" (onSelected)="onTabSelected($event)"></tabs>
+        <section class="page-content" *ngIf="selectedTab == 0">
+            <env-assets-section [service]="service"></env-assets-section>
+        </section>
+        <section class="page-content" *ngIf="selectedTab == 1">
+            <env-logs-section [service]="service"></env-logs-section>
+        </section>
+        <section class="page-content" *ngIf="selectedTab == 2">
+            <env-details-section [service]="service"></env-details-section>
+        </section>
+    </div>
+</section>
