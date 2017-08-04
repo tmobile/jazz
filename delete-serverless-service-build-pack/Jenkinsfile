@@ -442,7 +442,7 @@ def checkServiceExists(service_name, domain, region) {
 	try {
 		//https://2zddgsrjeb.execute-api.us-east-1.amazonaws.com/dev/platform/is-service-available
 		def outputStr = sh (
-			script: "curl 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev//platform/is-service-available?domain="+domain+"&service="+service_name+"'" ,
+			script: "curl -H \"Authorization: "+params.auth_token+"\" 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev//platform/is-service-available?domain="+domain+"&service="+service_name+"'" ,
 			returnStdout: true
 		).trim()
 		echo outputStr
@@ -474,8 +474,7 @@ def deleteserviceindb(region, db_id) {
 		).trim()
 		echo outputStr
 		*/
-		echo "curl -X DELETE -k -v 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + db_id + "'"
-		sh "curl -X DELETE -k -v 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + db_id + "'"
+        sh "curl -X DELETE -k -v -H \"Authorization: "+params.auth_token+"\" 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + db_id + "'"
 		
 		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 	}catch (ex) {
@@ -859,8 +858,10 @@ def cleanupS3BucketPolicy(service, domain, stage) {
 			
 			def bucketName = getBucket(stage)
 			updateBucketPolicy(policy_json, bucketName)
+            resetCredentials()
 			//events.sendCompletedEvent('DELETE_S3BUCKET_POLICY', null, null, getEnvKey(stage))
 		} catch(ex) {
+            resetCredentials()
 			if(ex.getMessage().indexOf("groovy.json.internal.LazyMap") < 0) {
 				//events.sendFailureEvent('DELETE_S3BUCKET_POLICY', ex.getMessage(), null, getEnvKey(stage))
 				error "cleanupS3BucketPolicy Failed. "+ex.getMessage()
@@ -871,6 +872,16 @@ def cleanupS3BucketPolicy(service, domain, stage) {
 	}
 
 }
+
+/**
+	Reset credentials
+*/
+def resetCredentials() {
+    echo "resetting AWS credentials"
+    sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+    sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXX"
+}
+
 
 @NonCPS
 def updateBucketPolicy(policy_json, bucketName){
@@ -1085,7 +1096,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
 }
 
 def updateServiceInDB(service_id_in_db, devApiID, region, statusval) {
-  sh "curl -H \"Content-Type: application/json\" -X PUT -k -v -d '{ \"status\": \"" + statusval + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id_in_db + "/"
+  sh "curl -H \"Content-Type: application/json\"  -H \"Authorization: "+params.auth_token+"\" -X PUT -k -v -d '{ \"status\": \"" + statusval + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id_in_db + "/"
 }
 
 
