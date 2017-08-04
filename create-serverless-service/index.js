@@ -81,7 +81,8 @@ module.exports.handler = (event, context, cb) => {
             service_name: event.body.service_name,
             username: event.body.username,
             admin_group: userlist,
-            domain: event.body.domain
+            domain: event.body.domain,
+            auth_token: event.headers.Authorization
         };
         
         // create-serverless-service API to take slack-channel as one more parameter(optional)
