@@ -509,7 +509,7 @@
                 }
             }
         },
-        "/services/{id}": {
+        "{domain}/services/{id}": {
             "options": {
                 "description": "CORS Support",
                 "consumes": [
