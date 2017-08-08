@@ -10,7 +10,7 @@ const logger = require("./components/logger.js");
 
 /**
 	Serverless create service 
-    @author: 
+    @author: UST-Global/Somanchi
     @version: 1.0
 **/
 
@@ -34,6 +34,8 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Type not defined")));
         } else if (event.body.service_name === undefined || event.body.service_name === "" || !isValidName(event.body.service_name)) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Name not defined or approriate")));
+        } else if (event.headers.Authorization === undefined || event.headers.Authorization === "") {
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization not defined or approriate")));
         } else if (event.body.service_type !== "website" && (event.body.runtime === undefined || event.body.runtime === "")) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Runtime not defined")));
         } else if (event.body.approvers === undefined || event.body.approvers === "") {
@@ -45,22 +47,9 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Creator not defined")));
         }
 		
-		/*
-		var decryptObj = secretHandler.decryptSecret(config.SVC_AUTH_SECRET);
-		var base_auth_token = "";
-		var svc_user_password = "";
-		var decryptionerror = "";
-		if (decryptObj.error !== undefined && decryptObj.error === true) {
-			decryptionerror = decryptObj.message;
-			return cb(JSON.stringify(errorHandler.throwInternalServerError(decryptionerror)));
-		} else {
-			svc_user_password = decryptObj.message;
-			base_auth_token = "Basic " + new Buffer(config.SVC_USER + ":" + svc_user_password).toString("base64");
-		}
+		//var base_auth_token = "Basic " + new Buffer("jobexec:jenkinsadmin").toString("base64");
+		var base_auth_token = "Basic " + new Buffer(config.SVC_USER + ":" + config.SVC_PASWD).toString("base64");
 
-		*/
-		var base_auth_token = "Basic " + new Buffer("jobexec:jenkinsadmin").toString("base64");
-		
         var approvers = event.body.approvers;
         var userlist = "";
         var domain = (event.body.domain || "").toLowerCase();
@@ -101,32 +90,6 @@ module.exports.handler = (event, context, cb) => {
             var create_cloudfront_url = event.body.create_cloudfront_url || false;
             propertiesObject.create_cloudfront_url = create_cloudfront_url;
         }
-/*
-        // Add rate expression to the propertiesObject;
-        if (event.body.service_type === "lambda") {
-            if (event.body.rateExpression !== undefined) {
-                var cronExpValidator = CronParser.validateCronExpression(event.body.rateExpression);
-
-                // Validate cron expression. If valid add it to propertiesObject, else throw error
-                if (cronExpValidator.result === 'valid') {
-                    propertiesObject['rateExpression'] = event.body.rateExpression;
-
-                    // enableEventSchedule is added here as an additional feature. It will be passed on to deployment-env.yml
-                    // If it is set as false it will be picked by serverless and event schedule will be disabled.
-                    // If the user chooses to stop the cron event, he can just disable and then re-enable it instead of deleting.
-                    if (event.body.enableEventSchedule === false) {
-                        propertiesObject['enableEventSchedule'] = event.body.enableEventSchedule;
-                    } else {
-                        // enable by default
-                        propertiesObject['enableEventSchedule'] = true;
-                    }
-                } else {
-                    logger.error('cronExpValidator : ', cronExpValidator);
-                    return cb(JSON.stringify(errorHandler.throwInternalServerError(cronExpValidator.message)));
-                }
-            }
-        }
-*/
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
         request({
