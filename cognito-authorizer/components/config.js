@@ -1,14 +1,17 @@
 /**
-  Nodejs Template Project
-  @module: config.js
-  @description: Defines variables/functions to retrieve environment related data
-  @author:
-  @version: 1.0
-**/
+ * Nodejs Template Project
+ * 
+ * @module: config.js
+ * @description: Defines variables/functions to retrieve environment related
+ *               data
+ * @author:
+ * @version: 1.0
+ */
 
 var getStageConfig = (event) => {
-    var stage = 'dev';
-//event.stage;
+	
+	// TODO: Hardcoded to dev needs to be removed
+    var stage = 'dev'; // event.stage;
     var configObj = {};
     // Loads the config files based on the env.
     // Please edit the JSON files.

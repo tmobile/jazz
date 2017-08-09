@@ -8,6 +8,3 @@ region: {inst_region}
 domain : platform
 # Put your custom role here which has the IAM permissions required by your code
 iamRoleARN: {inst_role_lambda_basic_execution}
-
-owner: vinay
-require_internal_access: true

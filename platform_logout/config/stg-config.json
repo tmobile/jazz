@@ -1,5 +1,4 @@
 {
-  "TOKEN_TABLE":"JAZZ_USER_TOKENS_META_DEV",
   "USER_POOL_ID":"{conf-user-pool-id}",
   "CLIENT_ID":"{conf-client-id}"
 }

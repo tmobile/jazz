@@ -54,16 +54,8 @@ module.exports = function() {
     var setRequestDetails = function(someContextSpecificId) {
         return;
 
-        // Timestamp and requestID are prepended in cloudwatch log by default; If any other details are required it can be done here.
-
-        /*
-        if (someContextSpecificId != undefined && someContextSpecificId != '') {
-            config.someContextSpecificId = someContextSpecificId;
-            config.requestDetails = 'someContextSpecificId : ' + someContextSpecificId + ' =>\t'
-        } else{
-            config.requestDetails = ''
-        };
-        */
+        // @TODO: Timestamp and requestID are prepended in cloudwatch log by default; If any other details are required it can be done here.
+        
     };
 
     // set current logLevel; Only logs which are above the curLogLevel will be logged;

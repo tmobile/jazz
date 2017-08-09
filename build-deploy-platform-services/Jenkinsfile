@@ -1,5 +1,6 @@
-#!groovy.
+#!groovy
 import groovy.json.JsonOutput
+
 //build-deploy-platform-services jenkinsfile
 
 def Event_Name =[
@@ -34,15 +35,15 @@ node {
 
 	echo "params : $params"
 
-	def service_template = params.service_name //"create-serverless-service"
+	def service_template = params.service_name
 	def service_type =  "api"
 	def runtime = "nodejs"
-	def service_name = params.service_name //"createservice"
-	def admin_group = params.admin_group //"admin_group"
+	def service_name = params.service_name
+	def admin_group = params.admin_group
 	def bitbucket_name = service_template
 	def domain = "platform"
-	def region = params.region //"us-east-1"
-	def envmnt = params.deploy_env //"dev"
+	def region = params.region
+	def envmnt = params.deploy_env
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
 	def var_bitbucket_base			= env.REPO_BASE
 	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
@@ -78,6 +79,7 @@ node {
 
 	}
 	
+	// Need to be refactored
 	def config = dir(bitbucket_name)
 	{
 	    return LoadConfiguration()
@@ -85,17 +87,19 @@ node {
 	
 	def roleARN						= config['iamRoleARN'].replaceAll("/", "\\\\/")
     service_name					= config['service']
-	// TODO: the below couple of statements will be replaced with regular expression in very near future;
+	
+	// @TODO : the below couple of statements will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 	
 	stage ('Update Service Template')
 	{
+	    // @TODO : Send Event feature coming soon
 		//sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
-		  sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
+		sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 		echo "Inside Update service template"
 		
 		try{
-
+		
 			dir(bitbucket_name)
 			{
 				echo "loadServerlessConfig......."
@@ -108,31 +112,23 @@ node {
 				def var_api_host_name			= var_api_key+".execute-api."+region+".amazonaws.com"
 				
 				
-				// Jazz seds
-				// This is been handled in generateSwaggerEnv
-				//sh "sed -i -- 's/{api_host_name}/" + var_api_host_name + "/g' ./swagger/swagger.json"
-				
-				// This is been handled in generateSwaggerEnv
-				// sh "sed -i -- 's/{domain}/" + domain + "/g' ./swagger/swagger.json"
-				
-				// This is been handled in generateSwaggerEnv
-				// sh "sed -i -- 's/{service_name}/" + service_name + "/g' ./swagger/swagger.json"
-
-				 if (fileExists('swagger/swagger.json')){
+				// @TODO : Swagger sed's needs to be refactored
+  			    if (fileExists('swagger/swagger.json')){
 					//Swagger SEDs
 					echo "Updating the Swagger SEDs"
 					sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
 					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
 					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
-					// This is been handled in generateSwaggerEnv
-					// sh "sed -i -- 's/{lambda_function_name}/" + service_template+ "-" + domain + "/g' ./swagger/swagger.json"
 				 }
 
 				echo "Updating the index.js for create and delete services"
+				
+				// @TODO : These conditional statements could be removed and needs to be refactored
 				if ( (service_template.trim() == "create-serverless-service") || (service_template.trim() == "delete-serverless-service") ) {
 					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
 				}
 				
+				// @TODO : These conditional statements could be removed and needs to be refactored
 				if ( (service_template.trim() == "platform_login") || (service_template.trim() == "platform_logout") || (service_template.trim() == "cognito-authorizer")) {
 					echo "Updating configs for dev login and logout"
 					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
@@ -150,6 +146,7 @@ node {
                     			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
 				}
 				
+				// @TODO : These conditional statements could be removed and needs to refactored
                 if ( (service_template.trim() == "is-service-available") || (service_template.trim() == "create-serverless-service") ) {
 					echo "Updating configs for repo base"
 					sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/dev-config.json"
@@ -157,12 +154,15 @@ node {
 					sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/prod-config.json"
 				}
 				
+				// @TODO : These conditional statements could be removed and needs to refactored
 				if ( (service_template.trim() == "delete-serverless-service") || (service_template.trim() == "create-serverless-service") ) {
 					echo "Updating configs for jenkins host"
 					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/dev-config.json"
 					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/stg-config.json"
 					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/prod-config.json"
 				}
+				
+				// @TODO : These conditional statements could be removed and needs to refactored
                 if (service_template.trim() == "platform_services") {
 					echo "Updating parameter specific to platform-services"
 					sh "sed -i -- 's/{conf_region}/" + region + "/g' ./components/utils.js"
@@ -171,7 +171,9 @@ node {
 			}
 		}
 		catch(error){
+		    // @TODO : Send Event feature coming soon
 			//sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.MODIFY_TEMPLATE, Event_Status.FAILED, error.getMessage())
+			// @TODO : Send Event feature coming soon
 			sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, error.getMessage())
 			echo(error)
 		}
@@ -179,71 +181,69 @@ node {
 	
 	
 	stage('Deployment to Dev Env') {
-		//sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+		// @TODO : Send Event feature coming soon
 		sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 		
 		// Generate serverless yml file with domain added in function name
-			echo "Generate deployment env with domain"
+		echo "Generate deployment env with domain"
 
 			
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-			sh "aws configure set profile.cloud-api.region "+region
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-            
-			sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
+		withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+		sh "aws configure set profile.cloud-api.region "+region
+		sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+		sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+		
+		sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
+		
+		dir(bitbucket_name)
+		{
+			echo "NPM Build initiated"
+			sh "npm install --save"
+			echo "NPM Build completed"
 			
-			dir(bitbucket_name)
-			{
-				echo "NPM Build initiated"
-				sh "npm install --save"
-				echo "NPM Build completed"
+			//Change lambda service name to add stack prefix name
+			sh "sed -i -- 's/" + service_name + "/" + env.env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
+
+			echo "Deploying lambda service"
+			sh "serverless deploy --stage "+envmnt+" -v --bucket " + env.jazz_bucket_dev
+			echo "Deployed lambda service"
+							
+			// Generate swagger file based on environment
+			if (fileExists('swagger/swagger.json')) {
+				echo "Generating the swagger file for each environment"
+				def apiHostName	= var_api_key+".execute-api."+region+".amazonaws.com" //Development environment
 				
-				//Change lambda service name to add stack prefix name
-				sh "sed -i -- 's/" + service_name + "/" + env.env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
+				generateSwaggerEnv(service_name, envmnt, env.env_name_prefix+"-"+envmnt, apiHostName, domain, service_name, env.env_name_prefix)
+				
+				// import swagger api spec
+				echo "Deploying API gateway Endpoints"
+				sh "aws apigateway put-rest-api --rest-api-id "+var_api_key+" --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
+				sh "aws apigateway create-deployment --rest-api-id "+var_api_key+" --stage-name "+envmnt+" --profile cloud-api"
 
-				echo "Deploying lambda service"
-				sh "serverless deploy --stage "+envmnt+" -v --bucket " + env.jazz_bucket_dev
-				echo "Deployed lambda service"
-								
-				// Generate swagger file based on environment
-				if (fileExists('swagger/swagger.json')) {
-					echo "Generating the swagger file for each environment"
-					def apiHostName	= var_api_key+".execute-api."+region+".amazonaws.com"//Development environment
-					echo apiHostName+" #################################################### "
-
-					generateSwaggerEnv(service_name, envmnt, env.env_name_prefix+"-"+envmnt, apiHostName, domain, service_name, env.env_name_prefix)
-
-					echo " generated #################################################### "
-					
-					// import swagger api spec
-					echo "Deploying API gateway Endpoints"
-					// sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+"  --deploy "+envmnt+" swagger/swagger.json "
-                    sh "aws apigateway put-rest-api --rest-api-id "+var_api_key+" --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
-                    sh "aws apigateway create-deployment --rest-api-id "+var_api_key+" --stage-name "+envmnt+" --profile cloud-api"
-
-				}
-              
-				echo "completed deployment........."
-				if (service_template.trim() == "cloud-logs-streamer") {
-				    echo "set permission for cloud-logs-streamer"
-					try {
-						 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev --statement-id lambdaFxnPermission --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
-						 echo "set permission for cloud-logs-streamer - success"
-					 }catch(ss) {
-						//ignore if already registered permissions
-               			echo(ss)
-						 echo "set permission for cloud-logs-streamer - ok np"
-					 }
-				}
-
-				//sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-                                 // resetCredentials();
-				sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 			}
-		}
 			
-	}	
+			echo "completed deployment........."
+			if (service_template.trim() == "cloud-logs-streamer") {
+				echo "set permission for cloud-logs-streamer"
+				try {
+					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev --statement-id lambdaFxnPermission --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
+					 echo "set permission for cloud-logs-streamer - success"
+				 }catch(ss) {
+					//ignore if already registered permissions
+					echo(ss)
+					 echo "set permission for cloud-logs-streamer - ok np"
+				 }
+			}
+
+			// @TODO : Resetting the credentials needs to be introduced. (Re-use of same profile on Async calls needs to be considered)
+			// resetCredentials();
+			
+			// @TODO : Send Event feature coming soon
+			sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
+		}
+	    }
+			
+    }	
 	
 }
 
@@ -265,6 +265,11 @@ def resetCredentials() {
     sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXX"
 }
 
+
+/**
+	Reads deployment-env.yml.
+    Returns Property Map
+*/
 def LoadConfiguration() {
 	def prop = [:]
 	def result = readFile('deployment-env.yml').trim()

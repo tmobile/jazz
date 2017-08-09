@@ -67,7 +67,7 @@ node() {
 		
 		sh 'cd ' + bitbucket_name
 
-			
+		// @TODO: dir can be removed, needs to be refactored	
 		config = dir(bitbucket_name)
 		{
 			return LoadConfiguration()
@@ -76,16 +76,11 @@ node() {
 	}
 	
 	def domain = config['domain']
-	//def roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
-
-    //def config = LoadConfiguration()
     def runtime = config['providerRuntime']
     def service = config['service']
   	def region = config['region']
-  	//def logStreamer = env.CLOUDWATCH_LOGS_STREAMER
-    def internalAccess = config['require_internal_access']
-  	//def customExeRole = config['iamRoleARN']
-    def role;
+  	def internalAccess = config['require_internal_access']
+  	def role;
 
     if (config['iamRoleARN'] != null && !config['iamRoleARN'].equals("")) {
 		role = config['iamRoleARN'];
@@ -95,13 +90,15 @@ node() {
         role = env.DEFAULT_LAMBDA_EXE_ROLE;
 	}
 
-		def roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
+	def roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
 	def var_api_host_name = var_api_key+".execute-api."+region+".amazonaws.com"
-	// TODO: the below couple of statements will be replaced with regular expression in very near future;						
+	
+	// @TODO: the below statement will be replaced with regular expression in very near future;						
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
+	
   	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev"
 
-    echo "selected role" + role
+    echo "Role:: " + role
 
     if (domain  && domain.trim()!="") {
         serviceName = domain.trim() + "_" + serviceName
@@ -129,8 +126,9 @@ node() {
 
 			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_INPUT, Event_Status.COMPLETED, "")
 		}
-	/*
+	/*  @TODO :  Code Quality Check and other features are coming soon
 		stage('Code Quality Check') {
+		    // @TODO : Send Event feature coming soon
 			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.CODE_QUALITY_CHECK, Event_Status.STARTED, "")
 			clearVirtualEnv()
 			runValidation(runtime)
@@ -138,15 +136,19 @@ node() {
 		}
 	*/
 		stage('Build') {
+		   // @TODO : Send Event feature coming soon
 			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.STARTED, "")
 			buildLambda(runtime)
 			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.COMPLETED, "")
 		}
 
 		stage('Test') {
+		    // @TODO : Send Event feature coming soon
 			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.UNIT_TEST, Event_Status.STARTED, "")
 			runTestCases(runtime)
+			// @TODO : Resetting Virtual Env is coming soon
 			//clearVirtualEnv()
+			// @TODO : Send Event feature coming soon
 			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.UNIT_TEST, Event_Status.COMPLETED, "")
 		}
 		
@@ -157,50 +159,49 @@ node() {
 				echo "starts Deployment to Staging Env"
 
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-					echo "AWS Configure ......."
+				echo "AWS Configure ......."
+				
+                sh "aws configure set profile.cloud-api.region "+region
+				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
+                
 					
-                    sh "aws configure set profile.cloud-api.region "+region
-					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
-                    //sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
+
+				// Generate serverless yml file with domain added in function name
+				echo "Generate deployment env with domain"
+
+				generateServerlessYml(service, "stg", serviceName, cfStackName)
+				echo "setting lambda execution role as $role";
+				setLambdaExecutionRole(role);
+
+				echo "serverless deploy......."
+				sh "serverless deploy --stage stg -v --bucket " + env.jazz_bucket_stg
+				createSubscriptionFilters(serviceName, "stg", region, logStreamer);
+				
+                if (fileExists('swagger/swagger.json')) {
+					// Generate swagger file based on environment
+					echo "Generating the swagger file for each environment"
+					def apiHostName = "stg-cloud-api.corporate.t-mobile.com" //Staging environment
 					
-
-					// Generate serverless yml file with domain added in function name
-					echo "Generate deployment env with domain"
-
-					generateServerlessYml(service, "stg", serviceName, cfStackName)
-					echo "setting lambda execution role as $role";
-					setLambdaExecutionRole(role);
-
-					echo "serverless deploy......."
-					sh "serverless deploy --stage stg -v --bucket " + env.jazz_bucket_stg
-					createSubscriptionFilters(serviceName, "stg", region, logStreamer);
+					var_api_key = env.API_ID_STG;
 					
-	                if (fileExists('swagger/swagger.json')) {
-						// Generate swagger file based on environment
-						echo "Generating the swagger file for each environment"
-						def apiHostName = "stg-cloud-api.corporate.t-mobile.com" //Staging environment
-						
-						var_api_key = env.API_ID_STG;
-						
-						generateSwaggerEnv(service, "stg", service, apiHostName, domain, serviceName, var_api_key, config)
-						//validateSwaggerFile( service, domain, apiHostName )
-						// import swagger api spec
-						echo "Deploying to staging API Gateway environment.."
-						//sh "aws-api-import --update spwpjuy1cb  --deploy stg swagger/swagger.json --profile cloud-api"
-						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy stg swagger/swagger.json "
+					generateSwaggerEnv(service, "stg", service, apiHostName, domain, serviceName, var_api_key, config)
+					
+					// import swagger api spec
+					echo "Deploying to staging API Gateway environment.."
+					sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy stg swagger/swagger.json "
 
-						echo "#############################--------Stage Service End point URL--------####################################"
-						echo "Stage URL :https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/stg/" + domain + "/" + params.service_name
-
-
-					}
-
-
-					// reset Credentials
-					// resetCredentials()
-					sendEvent(service, branch, runtime, "STAGING", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					echo "#############################--------Stage Service End point URL--------####################################"
+					echo "Stage URL :https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/stg/" + domain + "/" + params.service_name
 				}
+
+
+				// @TODO : Resetting the credentials needs to be introduced. (Re-use of same profile on Async calls needs to be considered)
+				// resetCredentials()
+				
+				// @TODO : Send Event feature coming soon
+				sendEvent(service, branch, runtime, "STAGING", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+			 }
 			}
 			
 	        stage('Approval for Production Deployment') {
@@ -271,49 +272,49 @@ node() {
 				echo "starts Deployment to Development Env"
 
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-					echo "AWS Configure ......."
-					sh "aws configure set profile.cloud-api.region "+region
-					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+				echo "AWS Configure ......."
+				sh "aws configure set profile.cloud-api.region "+region
+				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 					
-					//sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
+				echo "loadServerlessConfig......."
+                loadServerlessConfig(runtime, configPackBBURL)
 
-					echo "loadServerlessConfig......."
-	                loadServerlessConfig(runtime, configPackBBURL)
+				// Generate serverless yml file with domain added in function name
+				echo "Generate deployment env with domain"
 
-					// Generate serverless yml file with domain added in function name
-					echo "Generate deployment env with domain"
+				generateServerlessYml(service, "dev", serviceName, cfStackName)
+				echo "setting lambda execution role as $role";
+				setLambdaExecutionRole(role);
 
-					generateServerlessYml(service, "dev", serviceName, cfStackName)
-					echo "setting lambda execution role as $role";
-					setLambdaExecutionRole(role);
-
-					echo "serverless deploy......."
-					sh "serverless deploy --stage dev -v --bucket " + env.jazz_bucket_dev
-					createSubscriptionFilters(serviceName, "dev", region, logStreamer);
+				echo "serverless deploy......."
+				sh "serverless deploy --stage dev -v --bucket " + env.jazz_bucket_dev
+				createSubscriptionFilters(serviceName, "dev", region, logStreamer);
 					
-	                if (fileExists('swagger/swagger.json')) {
-						// Generate swagger file based on environment
-						echo "Generating the swagger file for each environment"
-						var_api_key = env.API_ID_DEV;
-						def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
-												
-						generateSwaggerEnv(service, "dev", service, apiHostName, domain, serviceName, var_api_key, config)
-						//validateSwaggerFile( service, domain, apiHostName )
-						// import swagger api spec
-						echo "Deploying to staging API Gateway environment.."
-						//sh "aws-api-import --update pkmtwvozkg  --deploy dev swagger/swagger.json --profile cloud-api"
-						sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json"
+                if (fileExists('swagger/swagger.json')) {
+					// Generate swagger file based on environment
+					echo "Generating the swagger file for each environment"
+					var_api_key = env.API_ID_DEV;
+					def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
+											
+					generateSwaggerEnv(service, "dev", service, apiHostName, domain, serviceName, var_api_key, config)
+					//validateSwaggerFile( service, domain, apiHostName )
+					// import swagger api spec
+					echo "Deploying to staging API Gateway environment.."
+					//sh "aws-api-import --update pkmtwvozkg  --deploy dev swagger/swagger.json --profile cloud-api"
+					sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json"
 
-						echo "#############################--------DEV Service End point URL--------####################################"
-						echo "DEV URL :https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/dev/" + domain + "/" + params.service_name
+					echo "#############################--------DEV Service End point URL--------####################################"
+					echo "DEV URL :https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/dev/" + domain + "/" + params.service_name
 
-					}
-
-					// reset Credentials
-					// resetCredentials()
-					sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}
+
+				// @TODO : Resetting the credentials needs to be introduced. (Re-use of same profile on Async calls needs to be considered)
+				// resetCredentials()
+				
+				// @TODO : Send Event feature coming soon
+				sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+			  }
 			} //Stage to deploy ends here
 			
 		}//if branch name ends here

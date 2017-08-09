@@ -10,19 +10,17 @@ const moment = require('moment');
 const AWSCognito = require('amazon-cognito-identity-js');
 
 /**
-API Auth Service
-@author: Deepak Babu
-@version: 1.0
- **/
+ * API Auth Service
+ * 
+ * @author: 
+ * @version: 
+ */
 
 module.exports.handler = (event, context, callback) => {
 
 	var config = configObj(event);
   	logger.init(event, context);
-    console.log(" Event** "+JSON.stringify(event));
-
-  	logger.info(" Config ***************** "+JSON.stringify(config));
-	var errorHandler = errorHandlerModule(logger);
+    var errorHandler = errorHandlerModule(logger);
 
 	try {
 
