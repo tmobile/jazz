@@ -181,9 +181,9 @@ node() {
                 if (fileExists('swagger/swagger.json')) {
 					// Generate swagger file based on environment
 					echo "Generating the swagger file for each environment"
-					def apiHostName = "stg-cloud-api.corporate.t-mobile.com" //Staging environment
 					
 					var_api_key = env.API_ID_STG;
+					def apiHostName = var_api_key + ".execute-api." + region + ".amazonaws.com" //Staging environment
 					
 					generateSwaggerEnv(service, "stg", service, apiHostName, domain, serviceName, var_api_key, config)
 					
