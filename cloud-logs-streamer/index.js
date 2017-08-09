@@ -4,12 +4,11 @@ var https = require('https');
 var zlib = require('zlib');
 var crypto = require('crypto');
 
-//var endpoint = 'search-jazz-es-su4xnqe77gepeefnqn4ttd7tnq.us-east-1.es.amazonaws.com';
 var endpoint = '{inst_elastic_search_hostname}';
 
 /**
 	Custom Cloud logs Streamer (to ES)
-	@author: T-Mobile/DSundar3
+	@author: T-Mobile/DSundar3, UST-Global/Somanchi
 	@version: 1.0
 **/
 

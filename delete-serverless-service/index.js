@@ -11,7 +11,7 @@ var payloads = formats('apis');
 
 /**
 	Delete Serverless Service
-	@author: DSundar3
+	@author: DSundar3/Somanchi
 	@version: 1.0
  **/
 
@@ -37,7 +37,10 @@ module.exports.handler = (event, context, cb) => {
 	} else if(!event.body.service_name) {
 		logger.error("Service Name is missing in the input");
 		return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Name is missing in the input")));		
-	}else if(event.body.domain === undefined) {
+	} else if (event.headers.Authorization === undefined || event.headers.Authorization === "") {
+		logger.error("headers Authorization is missing in the input");
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization not defined in header or approriate")));
+    }else if(event.body.domain === undefined) {
 		logger.error("Domain key is missing in the input");
 		return cb(JSON.stringify(errorHandler.throwInputValidationError("Domain key is missing in the input")));		
 	}else if(event.body.id === undefined) {
@@ -52,20 +55,6 @@ module.exports.handler = (event, context, cb) => {
 		
     try {
 
-		/*
-		var decryptObj = secretHandler.decryptSecret(config.SVC_API_TOKEN_SECRET);
-		var base_auth_token = "";
-		var decryptionerror = "";
-		var svc_user_password = "";		
-		if (decryptObj.error !== undefined && decryptObj.error === true) {
-			decryptionerror = decryptObj.message;
-			logger.error("decryptionerror..: "+decryptionerror);
-			return cb(JSON.stringify(errorHandler.throwInternalServerError(decryptionerror)));			
-		} else {
-			svc_user_password = decryptObj.message;			
-			base_auth_token = "Basic " + new Buffer(config.SVC_USER + ":" + svc_user_password).toString("base64");
-		}
-		*/
 		var base_auth_token = "Basic " + new Buffer(config.SVC_USER + ":" + config.SVC_PASWD).toString("base64");
 
 		var req = payloads.requestLoad;

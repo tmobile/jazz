@@ -32,12 +32,6 @@ module.exports.handler = (event, context, cb) => {
         PASSWORD = config.bitbucket_service_login_password;
 
         // Validate configurations
-        /*
-		if (password_encrypted === undefined || password_encrypted === "") {
-            logger.error("Error in configurations file. bitbucket_service_login_password is required");
-            cb(JSON.stringify(errorHandler.throwInternalServerError("Internal Error")));
-        }
-		*/
 		if (PASSWORD === undefined || PASSWORD === "") {
             logger.error("Error in configurations file. bitbucket_service_login_password is required");
             cb(JSON.stringify(errorHandler.throwInternalServerError("Internal Error")));
@@ -55,17 +49,6 @@ module.exports.handler = (event, context, cb) => {
             cb(JSON.stringify(errorHandler.throwInternalServerError("Internal Error")));
         }
 
-        // decrypt the password
-		/*
-        var decryptObj = secretHandler.decryptSecret(password_encrypted);
-        if (decryptObj.error !== undefined && decryptObj.error === true) {
-            var decryptionerror = decryptObj.message;
-            cb(JSON.stringify(errorHandler.throwInternalServerError("Error decrypting the credentials for bitbucket service. " + decryptionerror)));
-        } else {
-            PASSWORD = decryptObj.message;
-        }
-		*/
-		
         // GET method should be handled here
         if (event !== undefined && event.method !== undefined && event.method === 'GET') {
             if (event.query === undefined || event.query.service === undefined || event.query.service === "") {
