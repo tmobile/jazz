@@ -671,7 +671,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
 def validateSwaggerSpec() {
     echo "================================ validating swagger spec ================================"
         // generating swagger with dummy values for validation
-    def apiHostName = "test-cloud-api.corporate.t-mobile.com"
+    //def apiHostName = "test-cloud-api.corporate.xxxxxxxx.com"
     //generateSwaggerEnv("test-service-for-validation", "test", "test-cloud-api", apiHostName, "domain", "test-service-for-validation")
     //sh "swagger-tools validate swagger/swagger.json"
     echo "================================ validating swagger spec ================================"
