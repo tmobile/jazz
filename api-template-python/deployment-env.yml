@@ -1,0 +1,10 @@
+service: api-template-python
+securityGroupIds: {inst_security_group_id}
+subnetIds: {inst_subnet_ids}
+providerRuntime : python2.7
+providerMemorySize : 256
+providerTimeout : 160
+region: {inst_region}
+domain: platform
+# Put your custom role here which has the IAM permissions required by your code
+iamRoleARN: {inst_role_lambda_basic_execution}

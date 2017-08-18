@@ -1,0 +1,7 @@
+{
+  "configKey": "ConfigValueProd",
+  "mysecret": {
+    "secret_id": "045d6a79-d731-fa58-dd03-0e29886c2a4d",
+    "cipher": "AQECAHhwMpPRJ1SspJl5rEeC76eFvMsoBf9Xxo9P7UAwGQV3kQAAAHIwcAYJKoZIhvcNAQcGoGMwYQIBADBcBgkqhkiG9w0BBwEwHgYJYIZIAWUDBAEuMBEEDGTqU1eFweggt8plmgIBEIAvgmGo7/TY/TQriofoq10oaawRw/gF5Ub8feAqQ+yejFcxNKg7/Y1Pc1PQ8jTNax4="
+  }
+}

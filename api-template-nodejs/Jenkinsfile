@@ -1,0 +1,21 @@
+#!groovy
+import groovy.json.JsonOutput
+node {
+
+withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JENKINS_CREDENTIAL_ID, passwordVariable: 'PWD', 
+usernameVariable: 'UNAME']]){
+    
+   echo "Build triggered via branch::${env.BRANCH_NAME}"
+   echo "params : $params"
+  
+   def build_job = env.JAVA_BUILD_URI_DEV
+    if ( env.BRANCH_NAME == 'master') {
+      build_job = env.JAVA_BUILD_URI
+    }  
+   def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+  
+    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name={service_name}&domain={domain}&scm_branch=${env.BRANCH_NAME}\""
+}
+    
+  
+}
