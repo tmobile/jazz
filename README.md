@@ -1,7 +1,7 @@
 # Jazz Serverless Platform
 **Seamlessly build, deploy & manage cloud-native applications.**
 
-Jazz addresses gaps and pain points with serverless, particularly for production applications. It is not another FaaS implementation. Rather, it enhances the usability of existing FaaS platforms. Jazz has a beautiful UI designed to let devs quickly self-start and focus on code. Its modular design makes it easy to add new integrations:
+Jazz addresses gaps and pain points with serverless, particularly for production applications. It is not another FaaS implementation. Rather, it enhances the usability of existing FaaS systems. Jazz has a beautiful UI designed to let devs quickly self-start and focus on code. Its modular design makes it easy to add new integrations:
 
 * **Services** - Today devs can build functions, APIs and static websites. The template-based system makes it easy to define new ones.
 * **Deployment Targets** - Currently we deploy to AWS (Lambda, API gateway and S3). We plan to support Azure Functions and Docker containers in the near future.
