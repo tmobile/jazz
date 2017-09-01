@@ -1,5 +1,5 @@
 # Jazz Serverless
-**Seamlessly build, deploy & manage cloud-native applications**
+**Seamlessly build, deploy & manage cloud-native applications.**
 
 Jazz addresses gaps and pain points with serverless, particularly for production applications. Jazz has a beautiful UI designed to let devs quickly self-start and focus on code. Its modular design makes it easy to add new integrations:
 
