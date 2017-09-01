@@ -8,7 +8,11 @@ Jazz addresses gaps and pain points with serverless, particularly for production
 * **Features** - Services seamlessly integrate features like monitoring (CloudWatch), logging (ElasticSearch), authentication (Cognito) and secret management (KMS, Vault coming soon).
 * **Deployment & CI/CD** - We leverage [Serverless Framework](http://www.serverless.com) and Git/Artifactory/Jenkins.
 
-Jazz is [open-sourced](http://opensource.corporate.t-mobile.com) and under active development by T-Mobile's Cloud Center of Excellence. You can [try the Developer Preview](https://github.com/tmobile/jazz-installer) by using the automated installer.
+Jazz is [open-sourced](http://opensource.corporate.t-mobile.com) and under active development by T-Mobile's Cloud Center of Excellence. 
+
+## Installation
+
+You can [try the Developer Preview](https://github.com/tmobile/jazz-installer) by using the automated installer.
 
 ## User Guide
 
