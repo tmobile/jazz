@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="14px" height="11px" viewBox="0 0 14 11" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 43.2 (39069) - http://www.bohemiancoding.com/sketch -->
+    <title>icon-merge</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Dashboard_v2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" opacity="0.45">
+        <g id="2_Services" transform="translate(-1050.000000, -127.000000)" fill-rule="nonzero" fill="#60B602">
+            <g id="Group-4" transform="translate(1020.000000, 56.000000)">
+                <g id="Group-10" transform="translate(16.000000, 52.000000)">
+                    <g id="Group-11" transform="translate(14.000000, 16.000000)">
+                        <path d="M3.10333333,7.66666667 L0,10.7777778 L3.10333333,13.8888889 L3.10333333,11.5555556 L8.55555556,11.5555556 L8.55555556,10 L3.10333333,10 L3.10333333,7.66666667 Z M14,6.11111111 L10.8966667,3 L10.8966667,5.33333333 L5.44444444,5.33333333 L5.44444444,6.88888889 L10.8966667,6.88888889 L10.8966667,9.22222222 L14,6.11111111 Z" id="icon-merge"></path>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

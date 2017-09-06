@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="12px" height="12px" viewBox="0 0 12 12" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 43.2 (39069) - http://www.bohemiancoding.com/sketch -->
+    <title>icon-back</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Dashboard_v2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="2_Services" transform="translate(-13.000000, -68.000000)" fill-rule="nonzero" fill="#ED008C">
+            <polygon id="icon-back" points="25 73.25 15.8725 73.25 20.065 69.0575 19 68 13 74 19 80 20.0575 78.9425 15.8725 74.75 25 74.75"></polygon>
+        </g>
+    </g>
+</svg>
