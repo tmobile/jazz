@@ -1,0 +1,671 @@
+#!groovy​
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+
+//definitions
+def Event_Name = [
+	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
+	'CALL_ONBOARDING_WORKFLOW':'CALL_ONBOARDING_WORKFLOW',
+	'RAISE_PR':'RAISE_PR',
+	'VALIDATE_PRE_BUILD_CONF':'VALIDATE_PRE_BUILD_CONF',
+	'CALL_ONBOARDING_SERVICE':'CALL_ONBOARDING_SERVICE',
+	'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO':'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO',
+	'CREATE_SERVICE':'CREATE_SERVICE',
+	'BUILD':'BUILD',
+	'CODE_QUALITY_CHECK':'CODE_QUALITY_CHECK',
+	'UNIT_TEST':'UNIT_TEST',
+	'COMMIT_CODE':'COMMIT_CODE',
+	'APPROVE_PR':'APPROVE_PR',
+	'CREATE_SERVICE_REPO':'CREATE_SERVICE_REPO',
+	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
+	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
+	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
+	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
+	'CREATE_ASSET':'CREATE_ASSET',
+	'UPDATE_ASSET':'UPDATE_ASSET'
+]
+
+def Event_Status = [
+	'STARTED':'STARTED',
+	'COMPLETED':'COMPLETED',
+	'FAILED':'FAILED'
+]
+node ()  {
+    echo "Build Pack website params: " + params
+
+///////////////////////////////////
+	
+    echo "Build triggered via branch: " + params.scm_branch
+    echo "start"
+
+    def service = params.service_name
+	def branch = params.scm_branch
+	def domain = params.domain
+    
+
+    def bitbucket_name = params.service_name
+
+	def var_bitbucket_framework_url = "http://" + env.REPO_BASE + "/scm/" + params.scm_project + "/" 
+	
+	def config
+	
+    stage('Checkout code base') {
+		
+		if (domain  && domain.trim()!="") {
+			bitbucket_name = params.domain + "-" + service
+		 }else{
+			domain = ""
+		}
+
+		sh 'rm -rf ' + bitbucket_name
+		sh 'mkdir ' + bitbucket_name
+		
+		dir(bitbucket_name)
+		{
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+		}
+		
+		// @TODO: dir can be removed, needs to be refactored	
+		config = dir(bitbucket_name)
+		{
+			return LoadConfiguration()
+		}
+
+	}
+
+///////////////////////////////////	
+	
+	
+
+  	def region = config['region']
+	if (region && region.trim() == "")
+	    region = "us-east-1"
+
+	def create_cloudfront_url
+
+	dir(bitbucket_name)
+	{
+		stage ('Pre-Build Validation'){
+
+			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
+			try {
+				service = config['service']
+				domain = config['domain']
+
+				if(domain != '' && domain != null ){
+					service = domain + '-' + service
+				}
+
+				create_cloudfront_url = false
+
+				if (config['create_cloudfront_url'] == true || config['create_cloudfront_url'] == "true") {
+					create_cloudfront_url = true
+				}
+
+				//branch = env.BRANCH_NAME
+				validateTemplate()
+				validateDeploymentConfigurations(config)
+			}catch(ex) {
+				sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
+				error ex.getMessage()
+			}
+			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
+		}
+
+	  def s3StgBucket  = env.WEBSITE_STG_S3BUCKET;
+	  def s3ProdBucket = env.WEBSITE_PROD_S3BUCKET;
+	  def s3DevBucket  = env.WEBSITE_DEV_S3BUCKET;
+
+	  if (env.BRANCH_NAME == 'master'){
+		stage ('Deployment to Staging Env'){
+		  sendEvent(service, branch, "STAGING", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			echo "AWS Configure ......."
+			
+			sh "aws configure set profile.cloud-api.region "+region
+			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
+			sh "aws configure set preview.cloudfront true"
+
+			def assetInfo = "S3 Folder - /" + s3StgBucket + "/"+service
+			 try
+			 {
+				try {
+					echo "Checking if the website already exists.."
+					sh "aws s3 ls s3://" + s3StgBucket + "/$service"
+				}catch(ex) {
+					error ex.getMessage()
+				}
+
+				sendEvent(service, branch, "STAGING", Event_Name.UPDATE_ASSET , Event_Status.STARTED, assetInfo)
+				try {
+					echo "website with name $service already exists, syncing new files"
+					sh "aws s3 sync ./app s3://" + s3StgBucket + "/$service --exclude \".git/*\" --exclude \".gitignore\" "
+
+					if (create_cloudfront_url == true) {
+						updateCloudFrontPolicy(service, s3StgBucket)
+						echo "Please find the website deployed at the following cloudfront location"
+						sh "aws  cloudfront list-distributions --output json --query \"DistributionList.Items[?Origins.Items[?Id=='stg-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\""
+					} else{
+						def url = updateS3BucketPolicy(service, s3StgBucket)
+						echo "You can access your website using following link : $url"
+					}
+
+					sendEvent(service, branch, "STAGING", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
+					sendEvent(service, branch, "STAGING", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+				}catch(ex) {
+					sendEvent(service, branch, "STAGING", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
+					sendEvent(service, branch, "STAGING", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
+				}
+			 }
+			 catch (error)
+			 {
+				echo "uploading a new website with name $service"
+				sendEvent(service, branch, "STAGING", Event_Name.CREATE_ASSET , Event_Status.STARTED, assetInfo)
+				try {
+					sh "aws s3 sync ./app s3://" + s3StgBucket + "/$service --exclude \".git/*\" --exclude \".gitignore\" "
+					if (create_cloudfront_url == true) {
+						loadDistributionConfig()
+						generateDistributionConfig(service,'stg',config)
+						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
+
+
+						updateCloudFrontPolicy(service, s3StgBucket)
+						echo "Please find the website deployed at the following cloudfront location"
+						sh "aws  cloudfront list-distributions --output json --query \"DistributionList.Items[?Origins.Items[?Id=='stg-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\""
+
+					}else{
+						def url = updateS3BucketPolicy(service, s3StgBucket)
+						echo "You can access your website using following link : $url"
+					}
+					sendEvent(service, branch, "STAGING", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
+					sendEvent(service, branch, "STAGING", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+				}catch(ex) {
+					sendEvent(service, branch, "STAGING", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
+					sendEvent(service, branch, "STAGING", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, "")
+				}
+			 }
+			// reset Credentials
+			resetCredentials()
+
+		  }
+		}
+
+		stage ('Approval for Production Deployment'){
+		  timeout(time:5, unit:'MINUTES') {
+			input message:'Approve PRODUCTION DEPLOYMENT?'
+		  }
+		}
+
+		stage ('Deployment to Production Env'){
+		  sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			echo "AWS Configure ......."
+			
+			sh "aws configure set profile.cloud-api.region "+region
+			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
+			sh "aws configure set preview.cloudfront true"
+
+			def assetInfo = "S3 Folder - /" + s3ProdBucket + "/"+service
+			 try
+			 {
+				try {
+					echo "Checking if the website already exists.."
+					sh "aws s3 ls s3://" + s3ProdBucket + "/$service"
+				}catch(ex) {
+					error ex.getMessage()
+				}
+
+				sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.STARTED, assetInfo)
+				try {
+					echo "website with name $service already exists, syncing new files"
+					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" "
+
+					if (create_cloudfront_url == true) {
+						updateCloudFrontPolicy(service, s3ProdBucket)
+						echo "Please find the website deployed at the following cloudfront location"
+						sh "aws  cloudfront list-distributions --output json --query \"DistributionList.Items[?Origins.Items[?Id=='prd-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\""
+					} else{
+						def url = updateS3BucketPolicy(service, s3ProdBucket)
+						echo "You can access your website using following link : $url"
+					}
+
+					sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
+					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+				}catch(ex) {
+					sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
+					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
+				}
+
+			 }
+			 catch (error)
+			 {
+				echo "uploading a new website with name $service"
+				sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.STARTED, assetInfo)
+				try {
+					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" "
+					if (create_cloudfront_url == true) {
+						loadDistributionConfig()
+						generateDistributionConfig(service, 'prd', config)
+						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
+
+						updateCloudFrontPolicy(service, s3ProdBucket)
+						echo "Please find the website deployed at the following cloudfront location"
+						sh "aws  cloudfront list-distributions --output json --query \"DistributionList.Items[?Origins.Items[?Id=='prd-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\""
+					}else{
+						def url = updateS3BucketPolicy(service, s3ProdBucket)
+						echo "You can access your website using following link : $url"
+					}
+					sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
+					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+				}catch(ex) {
+					sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
+					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, "")
+				}
+
+			 }
+			// reset Credentials
+			resetCredentials()
+		  }
+		}
+	  }
+	  else {
+		stage ('Deployment to Dev Env'){
+		  sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			echo "AWS Configure ......."
+			
+			sh "aws configure set profile.cloud-api.region "+region
+			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
+			sh "aws configure set preview.cloudfront true"
+
+			def assetInfo = "S3 Folder - /" + s3DevBucket + "/"+service
+			 try
+			 {
+				try {
+					sh "serverless -v"
+					echo "Checking if the website already exists.."
+					sh "aws s3 ls s3://" + s3DevBucket + "/$service"
+				}catch(ex) {
+					error ex.getMessage()
+				}
+
+				sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.STARTED, assetInfo)
+				try {
+					echo "website with name $service already exists, syncing new files"
+					sh "aws s3 sync ./app s3://" + s3DevBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" "
+
+					if (create_cloudfront_url == true) {
+						updateCloudFrontPolicy(service, s3DevBucket)
+						echo "Please find the website deployed at the following cloudfront location"
+						sh "aws  cloudfront list-distributions --output json --query \"DistributionList.Items[?Origins.Items[?Id=='dev-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\""
+					} else{
+						def url = updateS3BucketPolicy(service, s3DevBucket)
+						echo "You can access your website using following link : $url"
+					}
+
+					sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
+					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+				}catch(ex) {
+					sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
+					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
+				}
+
+			 }
+			 catch (error)
+			 {
+				echo "error $error"
+				echo "uploading a new website with name $service"
+
+				sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.STARTED, assetInfo)
+				try {
+					sh "aws s3 sync ./app s3://" + s3DevBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" "
+					if (create_cloudfront_url == true) {
+						echo "Deployement to staRT"
+						loadDistributionConfig()
+						generateDistributionConfig(service,'dev',config)
+						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
+
+						updateCloudFrontPolicy(service, s3DevBucket)
+						echo "Please find the website deployed at the following cloudfront location"
+						sh "aws  cloudfront list-distributions --output json --query \"DistributionList.Items[?Origins.Items[?Id=='dev-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\""
+
+					}else{
+						def url = updateS3BucketPolicy(service, s3DevBucket)
+						echo "You can access your website using following link : $url"
+					}
+					sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
+					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+				}catch(ex) {
+					sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
+					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
+				}
+			 }
+			// reset Credentials
+			resetCredentials()
+		  }
+		}
+	  }
+	}
+}
+
+
+def LoadConfiguration() {
+	def prop = [:]
+	def result = readFile('deployment-env.yml').trim()
+	echo "result of yaml parsing....$result"
+	def resultList = result.tokenize("\n")
+	// delete commented lines
+	def cleanedList = []
+	for (i in resultList) {
+		if(i.toLowerCase().startsWith("#")) {
+		}else {
+			cleanedList.add(i)
+		}
+    }
+
+	for (item in cleanedList) {
+		def eachItemList = item.tokenize(":")
+		//handle empty values
+		def value = "";
+		if(eachItemList[1]) {
+			value = eachItemList[1].trim();
+		}
+
+		if(eachItemList[0]) {
+			prop.put(eachItemList[0].trim(), value)
+		}
+	}
+
+	echo "Loaded configurations...$prop"
+	return prop
+}
+
+
+/**
+	Reset credentials
+*/
+def resetCredentials() {
+	echo "resetting AWS credentials"
+	sh "aws configure set profile.tmoDevOps.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+	sh "aws configure set profile.tmoDevOps.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+}
+
+/**
+	Generate the distribution config file
+*/
+def generateDistributionConfig(service, env, config) {
+	sh "sed -i -- 's/{service_name}/"+service+"/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{env}/"+env+"/g' distribution_config_with_tags.json"
+
+	def owner = ''
+	try{
+		if (config['owner']) {
+			owner = config['owner']
+		}
+	}
+	catch(Exception e) { }
+
+	def domain = ''
+	try{
+		if (config['domain']) {
+			domain = config['domain']
+		}
+	}
+	catch(Exception e) { }
+	sh "sed -i -- 's/{owner}/"+owner+"/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{domain_name}/"+domain+"/g' distribution_config_with_tags.json"
+	def distribution_config_with_tags = readFile('distribution_config_with_tags.json').trim()
+	echo(distribution_config_with_tags)
+}
+
+
+
+/**
+	Validate basic configurations in the deployment yaml file and error if any keys are
+	missing.
+*/
+def validateDeploymentConfigurations(def prop) {
+
+	if(prop.containsKey("service")) {
+		if(prop['service'] == "") {
+			error "Wrong configuration. Value for Key 'service' is missing in the configuration"
+		}
+
+	}else {
+		error "Wrong configuration. Key 'service' is missing in the configuration"
+	}
+}
+
+
+/**
+	Validate template for all necessary files. Ex: index.html
+*/
+def validateTemplate() {
+	if (fileExists('app/index.html')) {
+
+          echo "index.html is present"
+        }
+		else {
+			error "index.html is not available."
+		}
+
+	if (fileExists('deployment-env.yml')) {
+
+          echo "deployment-env.yml is present"
+        }
+		else {
+			error "deployment-env.yml is not available."
+		}
+
+}
+
+def loadDistributionConfig() {
+
+	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + env.REPO_BASE + '/scm/' + env.REPO_CORE + '/website-distribution-pack.git']]])
+
+}
+
+def loadBucketPolicy(String s3Bucket){
+	// fetch current policy and save to > bucket-policy.json
+	sh "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text > bucket-policy.json"
+	def bucketPolicy = readFile('bucket-policy.json').trim()
+	def jsonSlurper = new JsonSlurper()
+	def policyLazyMap = jsonSlurper.parseText(bucketPolicy)
+
+	// return bucketPolicy
+
+	def jsonMap = [:]
+
+    jsonMap.putAll(policyLazyMap)
+    def policyObject = [:]
+
+    def statementsList = []
+
+    // convert bucketPolicy from groovy.json.internal.LazyMap to normal map
+    try {
+	    policyObject["Id"] = jsonMap["Id"]
+	    policyObject["Version"] = jsonMap["Version"]
+	    for(st in jsonMap["Statement"]) {
+	    	statement = [:]
+	    	for ( e in st ) {
+	    		if (e.key == "Principal") {
+	    			principal = [:]
+	    			for ( p in e.value ) {
+	    				principal.put(p.key, p.value)
+	    			}
+	    			statement.put("Principal", principal)
+	    		} else if (e.key == "Condition") {
+	    			condition = [:]
+					// // Mapping
+					// "Condition" (e.key): { (e.value)
+					//     "IpAddress" (f.key): { (f.value)
+					//         "aws:SourceIp" (src.key): [ "xxx.xx.xx.xxx" ] (src.value)
+					//     }
+					// }
+	    			for ( f in e.value ) {
+	    				f_value = [:]
+	    				for ( src in f.value ) {
+	    					src_list = []
+	    					f_value.put(src.key, src.value)
+	    				}
+	    				condition.put(f.key, f_value)
+	    			}
+	    			statement.put("Condition", condition)
+	    		} else{
+	    			statement.put(e.key, e.value)
+	    		}
+	    	}
+	    	statementsList << statement
+	    }
+	    policyObject["Statement"] = statementsList
+    }
+    catch(Exception e) {
+    	echo "error occured while parsing bucketPolicy"
+    }
+
+    echo "policyObject : $policyObject"
+	return policyObject
+}
+
+def loadIPList() {
+
+  dir('_jenkins_buildpack') {
+  
+		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + env.REPO_BASE + '/scm/' + env.REPO_CORE + '/jenkins-build-pack-website.git']]])
+
+	}
+
+}
+
+/*
+*	returns ip_restrictions in format required by policy statement
+*/
+def getIpRestrictions(){
+
+	echo "getIpRestrictions"
+	loadIPList()
+	sh "ls"
+	echo "test read ip_list.json"
+	def ip_list_json = readFile("_jenkins_buildpack/ip_list.json").trim()
+	echo "test read ip_list.json success"
+	echo "ip_list_json $ip_list_json"
+
+	// def ip_list = [ "206.29.176.51/32", "206.29.176.52/32", "206.29.176.53/32", "54.70.109.48/32", "52.37.141.85/32", "52.32.92.167/32", "52.33.201.129/32", "52.26.185.244/32"]
+	def jsonSlurper = new JsonSlurper()
+	def ip_list_Lazy_map = jsonSlurper.parseText(ip_list_json)
+	def ip_list = ip_list_Lazy_map.allow
+
+	echo "ip_list $ip_list"
+
+	def ip_address = ["aws:SourceIp":ip_list]
+	def ip_restrictions = ["IpAddress":ip_address]
+	echo "ip_restrictions => $ip_restrictions"
+	return ip_restrictions
+}
+
+/*
+*	add restrictions so that Cloudfront endpoint can access S3
+*/
+def updateS3BucketPolicy(String service, String s3Bucket){
+	echo "updateS3BucketPolicy"
+
+	def policy_filedata
+	def url
+	def new_policy
+	def isPolicyExists = false
+
+	def bucketPolicy = loadBucketPolicy(s3Bucket)
+	def statements = bucketPolicy.Statement
+	def principal = ["AWS": "*"]
+
+	for(st in statements) {
+		if(st['Sid'] == "$service") {
+			isPolicyExists = true
+			new_policy = st
+		}
+	}
+	if (isPolicyExists == false) {
+		// create new policy statement
+		new_policy = [:]
+		new_policy.put('Sid', "$service")
+		new_policy.put('Effect', "Allow")
+		new_policy.put('Action', "s3:GetObject")
+		new_policy.put('Principal', principal)
+		new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
+	}
+
+	// add ip restrictions
+	new_policy["Condition"] = getIpRestrictions()
+
+	if (isPolicyExists == false) {
+		// add new policy statement to
+		statements << new_policy
+	}
+
+
+	// return updated policy statements
+	echo "updated PolicyStatement : $statements"
+
+	url = "https://s3-us-west-2.amazonaws.com/" + s3Bucket + "/$service/index.html"
+
+	policy_filedata = JsonOutput.prettyPrint(JsonOutput.toJson(bucketPolicy))
+
+	sh "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${policy_filedata}\'"
+
+	return url
+}
+
+/*
+*	add restrictions so that Cloudfront endpoint can access S3
+*/
+def updateCloudFrontPolicy(String service, String s3Bucket){
+	echo "updateCloudFrontPolicy"
+
+	def json_string
+	def isPolicyExists = false
+	def new_policy
+
+	def bucketPolicy = loadBucketPolicy(s3Bucket)
+	def statements = bucketPolicy.Statement
+
+	def principal = ["AWS": env.CLOUDFRONT_OAI]
+
+	for(st in statements) {
+		if(st['Sid'] == "$service") {
+			isPolicyExists = true
+			new_policy = st
+		}
+	}
+	if (isPolicyExists == false) {
+		// create new policy statement
+		new_policy = [:]
+		new_policy.put('Sid',"$service")
+		new_policy.put('Effect',"Allow")
+		new_policy.put('Action',"s3:GetObject")
+		new_policy.put('Principal', principal)
+		new_policy.put('Resource',"arn:aws:s3:::$s3Bucket/$service/*")
+	}
+
+	// add ip restrictions
+	new_policy["Condition"] = getIpRestrictions()
+
+	if (isPolicyExists == false) {
+		// add new policy statement to
+		statements << new_policy
+	}
+
+
+	def jsonMap = [:]
+
+	json_string = JsonOutput.prettyPrint(JsonOutput.toJson(bucketPolicy))
+
+	sh "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${json_string}\'"
+}
+
+def sendEvent(service_name, branch, environment, event_name, event_status, message){
+    echo "send event " + event_status + " message::" + message;
+}
+

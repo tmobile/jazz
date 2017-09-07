@@ -1,0 +1,82 @@
+{
+  "DistributionConfig": {
+    "CallerReference": "{env}-static-website-distribution-{service_name}",
+    "Aliases": {
+      "Quantity": 0
+    },
+    "Origins": {
+      "Quantity": 1,
+      "Items": [{
+        "Id": "{env}-static-website-origin-{service_name}",
+        "DomainName": "{env}-serverless-static-website.s3.amazonaws.com",
+        "OriginPath": "/{service_name}",
+        "S3OriginConfig": {
+          "OriginAccessIdentity": "origin-access-identity/cloudfront/E2RDPPU55OWXHG"
+        }
+      }]
+    },
+    "DefaultRootObject": "index.html",
+    "DefaultCacheBehavior": {
+      "TargetOriginId": "{env}-static-website-origin-{service_name}",
+      "ForwardedValues": {
+        "QueryString": true,
+        "Cookies": {
+          "Forward": "none"
+        }
+      },
+      "TrustedSigners": {
+        "Enabled": false,
+        "Quantity": 0
+      },
+      "SmoothStreaming": true,
+      "Compress": true,
+      "ViewerProtocolPolicy": "allow-all",
+      "MinTTL": 3600
+    },
+    "CacheBehaviors": {
+      "Quantity": 0
+    },
+    "CustomErrorResponses": {
+      "Quantity": 1,
+      "Items": [{
+        "ErrorCode": 404,
+        "ResponsePagePath": "/index.html",
+        "ResponseCode": "200",
+        "ErrorCachingMinTTL": 300
+      }]
+    },
+    "Comment": "",
+    "Logging": {
+      "Enabled": false,
+      "IncludeCookies": true,
+      "Bucket": "",
+      "Prefix": ""
+    },
+    "PriceClass": "PriceClass_All",
+    "Enabled": true
+  },
+  "Tags": {
+    "Items": [
+      {
+        "Key": "application",
+        "Value": "jazz"
+      },
+      {
+        "Key": "service",
+        "Value": "jazz::service:{service_name}"
+      },
+      {
+        "Key": "domain",
+        "Value": "jazz::domain:{domain_name}"
+      },
+      {
+        "Key": "environment",
+        "Value": "jazz::environment:{env}"
+      },
+      {
+        "Key": "owner",
+        "Value": "jazz::owner:{owner}"
+      }
+    ]
+  }
+}
