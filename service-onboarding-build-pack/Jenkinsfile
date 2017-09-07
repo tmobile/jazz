@@ -235,17 +235,24 @@ node  {
 				}
 
 				if(service_type == 'lambda') {
-					def rate_expression = varrateExpression //params.rateExpression
-					def enable_eventschedule = varenableEventSchedule //params.enableEventSchedule
+					def rate_expression = params.rateExpression
+					def enable_eventschedule = params.enableEventSchedule
 
 					if(rate_expression && rate_expression.trim() != ""){
 						// Using echo commands to write to deployment-env.yml
 						sh "echo \$'\neventScheduleRate: cron($rate_expression)' >> ./deployment-env.yml"
 					}
-					if(enable_eventschedule && enable_eventschedule.trim() != ""){
+					def var_enable_eventschedule;
+					if (enable_eventschedule)
+					   if (enable_eventschedule == true)
+					      var_enable_eventschedule = "true";
+					   else if (enable_eventschedule == false)
+					      var_enable_eventschedule = "false";
+
+					if(var_enable_eventschedule && var_enable_eventschedule.trim() != ""){
 						sh "echo \$'eventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
 					}
-
+					
 					/*
 					// Using yaml_command plugin (Tested working in terminal)
 
