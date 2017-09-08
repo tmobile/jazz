@@ -105,20 +105,22 @@ node {
 		{
 			echo "loadServerlessConfig......."
 			loadServerlessConfig(runtime, configPackBBURL)
+			
+			sh "cp serverless.yml serverless-temp.yml"
 
 			if (fileExists('build.api')) {
 				flowType = "API"
 				//events.setServiceType("API")
 				//loadServerlessConfig(runtime)//already in project
 				changeServerlessConfig(runtime)
-				updateServiceNameConfig(domain, service_name)
-				updateSwaggerConfig(domain, service_name, env.API_KEY, config)
+				//updateServiceNameConfig(domain, service_name)
+				updateSwaggerConfig(domain, params.service_name.trim(), env.API_KEY, config)
 			} else if(fileExists('build.lambda')) {
 				flowType = "LAMBDA"
 				//events.setServiceType("LAMBDA")
 				//loadServerlessConfig(runtime)//already in project
 				changeServerlessConfig(runtime)
-				updateServiceNameConfig(domain, service_name)
+				//updateServiceNameConfig(domain, service_name)
 			} else if(fileExists('build.website')) {
 				flowType = "WEBSITE"
 				//events.setServiceType("WEBSITE")
@@ -145,17 +147,20 @@ node {
 		switch (flowType) {
 			case "API":
 				stage('Undeploy Service') {
+					updateServiceNameConfig(domain, service_name, "dev")
 					def path = getResourcePath()
 					//sh "sed -i -- 's/{opt:stage}/dev/g' serverless.yml"
 					cleanUpApiGatewayResources("dev", path, region)
 					//cleanUpApiDocs("dev", service_name, domain)
 					unDeployService('dev', region)
 
+					updateServiceNameConfig(domain, service_name, "stg")
 					//sh "sed -i -- 's/{opt:stage}/stg/g' serverless.yml"
 					cleanUpApiGatewayResources("stg", path, region)
 					//cleanUpApiDocs("stg", service_name, domain)
 					unDeployService('stg', region)
 
+					updateServiceNameConfig(domain, service_name, "prod")
 					//sh "sed -i -- 's/{opt:stage}/prod/g' serverless.yml"
 					cleanUpApiGatewayResources("prod", path, region)
 					//cleanUpApiDocs("prod", service_name, domain)
@@ -166,8 +171,11 @@ node {
 
 			case "LAMBDA":
 				stage('Undeploy Service') {
+					updateServiceNameConfig(domain, service_name, "dev")
 					unDeployService('dev', region)
+					updateServiceNameConfig(domain, service_name, "stg")
 					unDeployService('stg', region)
+					updateServiceNameConfig(domain, service_name, "prod")
 					unDeployService('prod', region)
 				}
 				break
@@ -328,14 +336,21 @@ def echoServerlessFile() {
  * @param  serviceName
  * @return
  */
-def updateServiceNameConfig(domain, serviceName) {
+def updateServiceNameConfig(domain, serviceName, envval) {
+	sh "rm serverless.yml"
+	sh "cp serverless-temp.yml serverless.yml"
+
 	//events.sendStartedEvent('UPDATE_DEPLOYMENT_CONF')
 	def fullServiceName = service_name
 	def cfStackName = service_name
 	if(domain && domain!= ""){
-		fullServiceName = domain+ "_" + service_name
+		fullServiceName = domain+ "-" + service_name
 		cfStackName = serviceName + "-" + domain //sets CF Stack name as service--domain-env
 	}
+
+	fullServiceName = env.env_name_prefix + "-" + fullServiceName
+	cfStackName = fullServiceName
+
 	try {
 		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
 		sh "sed -i -- 's/name: \${self:service}/name: " + fullServiceName+"/g' serverless.yml"
@@ -354,6 +369,7 @@ def updateServiceNameConfig(domain, serviceName) {
  */
 def updateSwaggerConfig(domain, serviceName, api_key, config) {
 	//events.sendStartedEvent('UPDATE_SWAGGER')
+
 	try {
 		if (fileExists('swagger/swagger.json')) {
 			sh "sed -i -- 's/{service_name}/" + serviceName + "/g' swagger/swagger.json"
@@ -680,7 +696,7 @@ def cleanUpApiDocs(stage, service, domain) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region us-west-2"
+			sh "aws configure set profile.cloud-api.region us-east-1"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			def apiRootFolder = getApiDocsFolder(stage)
