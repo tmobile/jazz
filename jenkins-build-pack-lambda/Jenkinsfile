@@ -113,9 +113,13 @@ node ()  {
 	def domain = config['domain']
 
 	if (domain  && domain.trim()!="") {
-			serviceName = env.env_name_prefix + "-"+domain.trim() + "-" + service
-			cfStackName = env.env_name_prefix+"-"+cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
+			serviceName = domain.trim() + "-" + service
+			cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
 	}
+	
+	serviceName = env.env_name_prefix + "-" + serviceName
+	cfStackName = serviceName
+	
     //serviceName = env.env_name_prefix + "-" + serviceName + "-"+"dev"
     echo serviceName+"******************************************************* "
   
