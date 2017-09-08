@@ -91,12 +91,17 @@ node {
 		}
 		runtime = config['providerRuntime']
 		region = config['region']
+		if (region == null) {
+			region = "us-east-1"
+		}
 		serviceConfig = config['service']
 		domainConfig = config['domain']
+		
 		role = config['iamRoleARN']
+
 		
 		updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "Deleting");
-		
+
 		//events.setRuntime(runtime)
 		//events.setEnvironment("NA")
 		//events.setRegion(region)
@@ -104,24 +109,23 @@ node {
 		dir(bitbucket_repo_name)
 		{
 			echo "loadServerlessConfig......."
-			loadServerlessConfig(runtime, configPackBBURL)
-			
-			sh "cp serverless.yml serverless-temp.yml"
-
+				
 			if (fileExists('build.api')) {
 				flowType = "API"
 				//events.setServiceType("API")
-				//loadServerlessConfig(runtime)//already in project
+				loadServerlessConfig(runtime, configPackBBURL)
 				changeServerlessConfig(runtime)
 				//updateServiceNameConfig(domain, service_name)
 				updateSwaggerConfig(domain, params.service_name.trim(), env.API_KEY, config)
 			} else if(fileExists('build.lambda')) {
 				flowType = "LAMBDA"
 				//events.setServiceType("LAMBDA")
-				//loadServerlessConfig(runtime)//already in project
+				loadServerlessConfig(runtime, configPackBBURL)
 				changeServerlessConfig(runtime)
 				//updateServiceNameConfig(domain, service_name)
 			} else if(fileExists('build.website')) {
+				echo " 11111 "
+
 				flowType = "WEBSITE"
 				//events.setServiceType("WEBSITE")
 				if(config['create_cloudfront_url']) {
@@ -254,6 +258,7 @@ def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
 				[credentialsId: env.REPO_CREDENTIAL_ID, url: repo_url]
 			]])
 			sh "ls -al"
+
 			//events.sendCompletedEvent('GET_SERVICE_CODE')
 
 		}catch(ex) {
@@ -270,6 +275,7 @@ def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
  */
 def loadServerlessConfig(runtime) {
 	//events.sendStartedEvent('GET_SERVERLESS_CONF')
+	echo "loadServerlessConfig::" + runtime
 	try {
 		dir('_config') {
 			checkout([$class: 'GitSCM', branches: [
@@ -285,6 +291,7 @@ def loadServerlessConfig(runtime) {
 		} else if (runtime.indexOf("python") > -1) {
 			sh "cp _config/serverless-python.yml ./serverless.yml"
 		}
+
 		//events.sendCompletedEvent('GET_SERVERLESS_CONF')
 	}catch(ex) {
 		//events.sendFailureEvent('GET_SERVERLESS_CONF', ex.getMessage())
@@ -773,12 +780,14 @@ def getResourcePath() {
  * @return
  */
 def unDeployWebsite(service, domain, stage) {
+    echo "unDeployWebsite::" + service + "::" + domain + "::" + stage
+	
 	//events.sendStartedEvent('UNDEPLOY_WEBSITE', null, null, getEnvKey(stage))
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region us-west-2"
+			sh "aws configure set profile.cloud-api.region us-east-1"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -821,11 +830,11 @@ def checkIfWebsiteExists(stage, folderName) {
  */
 def getBucket(stage) {
 	if(stage == 'dev') {
-		return "dev-serverless-static-website"
+		return env.WEBSITE_DEV_S3BUCKET //"dev-serverless-static-website"
 	}else if (stage == 'stg') {
-		return "stg-serverless-static-website"
+		return env.WEBSITE_STG_S3BUCKET //"stg-serverless-static-website"
 	} else if (stage == 'prod') {
-		return "prod-serverless-static-website"
+		return env.WEBSITE_PROD_S3BUCKET //"prod-serverless-static-website"
 	}
 }
 
@@ -842,7 +851,7 @@ def cleanupS3BucketPolicy(service, domain, stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region us-west-2"
+			sh "aws configure set profile.cloud-api.region us-east-1"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -851,7 +860,7 @@ def cleanupS3BucketPolicy(service, domain, stage) {
 			//def folderName = domain+"_"+service // @TODO: enable after bug fix CAPI 344
 
 			def bucketPolicy = sh (
-				script: "aws s3api get-bucket-policy --bucket "+getBucket(stage)+" --output json",
+				script: "aws s3api get-bucket-policy --bucket " + getBucket(stage) + " --output json",
 				returnStdout: true
 			).trim()
 
@@ -923,7 +932,7 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region us-west-2"
+			sh "aws configure set profile.cloud-api.region us-east-1"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -1093,6 +1102,8 @@ def deleteCloudFrontDistribution(distributionID, _Etag) {
 
 def loadServerlessConfig(String runtime, String configPackBBURL) {
 
+	echo "loadServerlessConfig::" + runtime + "::" + configPackBBURL
+	
     dir('_config') {
         checkout([$class: 'GitSCM', branches: [
             [name: '*/master']
@@ -1108,10 +1119,14 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
     } else if (runtime.indexOf("python") > -1) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
+	sh "cp serverless.yml serverless-temp.yml"
 
 }
 
 def updateServiceInDB(service_id_in_db, devApiID, region, statusval) {
+  if (region == null)
+      region = "us-east-1"
+
   sh "curl -H \"Content-Type: application/json\"  -H \"Authorization: "+params.auth_token+"\" -X PUT -k -v -d '{ \"status\": \"" + statusval + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id_in_db + "/"
 }
 
