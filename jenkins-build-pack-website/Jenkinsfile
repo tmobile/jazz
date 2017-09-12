@@ -78,7 +78,7 @@ node ()  {
 	
 
   	def region = config['region']
-	if (region && region.trim() == "")
+	//if (region && region.trim() == "")
 	    region = "us-east-1"
 
 	def create_cloudfront_url
@@ -101,6 +101,8 @@ node ()  {
 				if (config['create_cloudfront_url'] == true || config['create_cloudfront_url'] == "true") {
 					create_cloudfront_url = true
 				}
+				
+				echo "create_cloudfront_url====" + create_cloudfront_url
 
 				//branch = env.BRANCH_NAME
 				validateTemplate()
@@ -116,7 +118,7 @@ node ()  {
 	  def s3ProdBucket = env.WEBSITE_PROD_S3BUCKET;
 	  def s3DevBucket  = env.WEBSITE_DEV_S3BUCKET;
 
-	  if (env.BRANCH_NAME == 'master'){
+	  if (branch == 'masterDDDD'){
 		stage ('Deployment to Staging Env'){
 		  sendEvent(service, branch, "STAGING", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
@@ -300,7 +302,7 @@ node ()  {
 					if (create_cloudfront_url == true) {
 						updateCloudFrontPolicy(service, s3DevBucket)
 						echo "Please find the website deployed at the following cloudfront location"
-						sh "aws  cloudfront list-distributions --output json --query \"DistributionList.Items[?Origins.Items[?Id=='dev-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\""
+						sh "aws  cloudfront list-distributions --output json --query \"DistributionList.Items[?Origins.Items[?Id=='" + s3DevBucket + "-$service']].{Distribution:DomainName, Id:Id}\""
 					} else{
 						def url = updateS3BucketPolicy(service, s3DevBucket)
 						echo "You can access your website using following link : $url"
@@ -352,6 +354,19 @@ node ()  {
 }
 
 
+def getS3BucketName(String envname) {
+
+	if (envname == "dev") {
+		return env.WEBSITE_DEV_S3BUCKET;
+	} else if (envname == "stg") {
+		return env.WEBSITE_STG_S3BUCKET;
+	} else if (envname == "prod") {
+		return env.WEBSITE_PROD_S3BUCKET;
+	}
+	
+	return env.WEBSITE_DEV_S3BUCKET;
+}
+
 def LoadConfiguration() {
 	def prop = [:]
 	def result = readFile('deployment-env.yml').trim()
@@ -396,10 +411,14 @@ def resetCredentials() {
 /**
 	Generate the distribution config file
 */
-def generateDistributionConfig(service, env, config) {
+def generateDistributionConfig(service, envname, config) {
 	sh "sed -i -- 's/{service_name}/"+service+"/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's/{env}/"+env+"/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{env}/"+envname+"/g' distribution_config_with_tags.json"
 
+	sh "sed -i -- 's/{conf_s3bucketname}/" + getS3BucketName(envname) + "/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{conf_origin_id}/" + env.CLOUDFRONT_ORIGIN_ID + "/g' distribution_config_with_tags.json"
+	
 	def owner = ''
 	try{
 		if (config['owner']) {
@@ -631,7 +650,8 @@ def updateCloudFrontPolicy(String service, String s3Bucket){
 	def bucketPolicy = loadBucketPolicy(s3Bucket)
 	def statements = bucketPolicy.Statement
 
-	def principal = ["AWS": env.CLOUDFRONT_OAI]
+//	def principal = ["AWS": env.CLOUDFRONT_OAI]
+	def principal = ["AWS": "*"]
 
 	for(st in statements) {
 		if(st['Sid'] == "$service") {
@@ -650,7 +670,7 @@ def updateCloudFrontPolicy(String service, String s3Bucket){
 	}
 
 	// add ip restrictions
-	new_policy["Condition"] = getIpRestrictions()
+	//new_policy["Condition"] = getIpRestrictions()
 
 	if (isPolicyExists == false) {
 		// add new policy statement to
@@ -668,4 +688,3 @@ def updateCloudFrontPolicy(String service, String s3Bucket){
 def sendEvent(service_name, branch, environment, event_name, event_status, message){
     echo "send event " + event_status + " message::" + message;
 }
-
