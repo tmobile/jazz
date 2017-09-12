@@ -417,7 +417,7 @@ def generateDistributionConfig(service, envname, config) {
 
 	sh "sed -i -- 's/{conf_s3bucketname}/" + getS3BucketName(envname) + "/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's/{conf_origin_id}/" + env.CLOUDFRONT_ORIGIN_ID + "/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's:{conf_origin_id}:" + env.CLOUDFRONT_ORIGIN_ID + ":g' distribution_config_with_tags.json"
 	
 	def owner = ''
 	try{
