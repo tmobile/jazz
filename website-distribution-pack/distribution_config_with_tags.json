@@ -11,7 +11,7 @@
         "DomainName": "{conf_s3bucketname}.s3.amazonaws.com",
         "OriginPath": "/{service_name}",
         "S3OriginConfig": {
-          "OriginAccessIdentity": "origin-access-identity/cloudfront/{conf_origin_id}"
+          "OriginAccessIdentity": "{conf_origin_id}"
         }
       }]
     },
