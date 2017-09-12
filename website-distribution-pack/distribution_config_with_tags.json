@@ -1,23 +1,23 @@
 {
   "DistributionConfig": {
-    "CallerReference": "{env}-static-website-distribution-{service_name}",
+    "CallerReference": "{conf_stack_prefix}-{env}-static-website-distribution-{service_name}",
     "Aliases": {
       "Quantity": 0
     },
     "Origins": {
       "Quantity": 1,
       "Items": [{
-        "Id": "{env}-static-website-origin-{service_name}",
-        "DomainName": "{env}-serverless-static-website.s3.amazonaws.com",
+        "Id": "{conf_stack_prefix}-{env}-static-website-origin-{service_name}",
+        "DomainName": "{conf_s3bucketname}.s3.amazonaws.com",
         "OriginPath": "/{service_name}",
         "S3OriginConfig": {
-          "OriginAccessIdentity": "origin-access-identity/cloudfront/E2RDPPU55OWXHG"
+          "OriginAccessIdentity": "origin-access-identity/cloudfront/{conf_origin_id}"
         }
       }]
     },
     "DefaultRootObject": "index.html",
     "DefaultCacheBehavior": {
-      "TargetOriginId": "{env}-static-website-origin-{service_name}",
+      "TargetOriginId": "{conf_stack_prefix}-{env}-static-website-origin-{service_name}",
       "ForwardedValues": {
         "QueryString": true,
         "Cookies": {
