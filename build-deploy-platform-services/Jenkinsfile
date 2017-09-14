@@ -258,7 +258,7 @@ node {
 
 			if ( (service_template.trim() == "platform-services-handler") ) {
           
-				sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + env.env_name_prefix + "-events-hub-dev --function-name arn:aws:lambda:$region:$roleId:function:" + env.env_name_prefix + "-hndlr-dev --starting-position LATEST -region " + region
+				sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + env.env_name_prefix + "-events-hub-dev --function-name arn:aws:lambda:$region:$roleId:function:" + env.env_name_prefix + "-hndlr-dev --starting-position LATEST --region " + region
 			}
 
 			
