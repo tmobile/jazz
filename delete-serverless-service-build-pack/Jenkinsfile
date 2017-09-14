@@ -668,11 +668,11 @@ def parseJson(jsonString) {
  */
 def getServiceBucket(stage) {
 	if(stage == 'dev') {
-		return env.jazz_bucket_dev
+		return env.WEBSITE_DEV_S3BUCKET;
 	}else if (stage == 'stg') {
-		return env.jazz_bucket_stg
+		return env.WEBSITE_STG_S3BUCKET;
 	} else if (stage == 'prod') {
-		return env.jazz_bucket_prod
+		return env.WEBSITE_PROD_S3BUCKET;
 	}
 }
 
@@ -794,9 +794,9 @@ def unDeployWebsite(service, domain, stage) {
 
 			def folderName = service // temporary fix
 			//def folderName = domain+"_"+service // @TODO: enable after bug fix CAPI 344
-			def _exists = checkIfWebsiteExists(stage, folderName)
+			def _exists = checkIfWebsiteExists(stage, domain + "-" + folderName)
 			if(_exists) {
-				sh "aws s3 rm s3://"+getBucket(stage)+"/"+folderName+" --recursive"
+				sh "aws s3 rm s3://"+getBucket(stage)+"/" + domain + "-" + folderName+" --recursive"
 				cleanupS3BucketPolicy(service, domain, stage)
 			}
 			//events.sendCompletedEvent('UNDEPLOY_WEBSITE', null, null, getEnvKey(stage))
@@ -847,6 +847,9 @@ def getBucket(stage) {
  */
 def cleanupS3BucketPolicy(service, domain, stage) {
 	//events.sendStartedEvent('DELETE_S3BUCKET_POLICY', null, null, getEnvKey(stage))
+	
+	echo "cleanupS3BucketPolicy called"
+	
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
@@ -856,7 +859,7 @@ def cleanupS3BucketPolicy(service, domain, stage) {
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
-			def folderName = service // temporary fix
+			def folderName = domain + "-" + service // temporary fix
 			//def folderName = domain+"_"+service // @TODO: enable after bug fix CAPI 344
 
 			def bucketPolicy = sh (
@@ -940,7 +943,7 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 			def distributionID
 			def _Etag
 
-			distributionID = getDistributionId(stage, service)
+			distributionID = getDistributionId(stage, domain, service)
 			def distributionConfig = getDistributionConfig(distributionID)
 			_Etag = generateDistributionConfigForDisable(distributionConfig)
 			_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
@@ -965,16 +968,19 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
  * @param stage
  * @return
  */
-def getDistributionId(stage, service) {
+def getDistributionId(stage, domain, service) {
 	def distributionID
 	def outputStr
 	try {
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[?Origins.Items[?Id=='$stage-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\"",
+				--query \"DistributionList.Items[?Origins.Items[?Id=='$env.env_name_prefix-$stage-static-website-origin-$domain-$service']].{Distribution:DomainName, Id:Id}\"",
 			returnStdout: true
 		)
+		
+		//sudo aws cloudfront list-distributions --output json --query "DistributionList.Items[?Origins.Items[?Id=='jazz463-dev-static-website-origin-slf-testwebsite']].{Distribution:DomainName, Id:Id}"
+
 		if(outputStr) {
 			def outputObj = new JsonSlurper().parseText(outputStr)
 			distributionID = outputObj[0].Id
