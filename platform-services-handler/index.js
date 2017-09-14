@@ -1,7 +1,7 @@
 /*jshint loopfunc:true */
 /**
 This Handler looks for Service Creation events and updates Service Catalog
-@Author: Deepak Babu
+@Author: Deepak Babu, Somanchi
 @version: 1.0
  **/
 
@@ -242,7 +242,7 @@ module.exports.handler = (event, context, cb) => {
 										"status": "STARTED"
 									};
                               
-                               logger.info("svcPayload:::::" + configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE);
+                                logger.info("svcPayload:::::" + configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE);
                                 logger.info("svcPayload::uri:::" + JSON.stringify(req));
                               
 								// call services post with status started
@@ -260,8 +260,7 @@ module.exports.handler = (event, context, cb) => {
                                   
                                     //logger.info(" >> "+JSON.stringify(svcPayload.json));
                                   
-									logger.info("errrrrrrr:::" + error);
-                                  logger.info("errrrrrrr:::" + response.statusCode);
+                                logger.info("response.statusCode:" + response.statusCode);
 									
 									if (response.statusCode === 200) {
 										if (body.data === null || body.data === "") {
@@ -348,6 +347,7 @@ module.exports.handler = (event, context, cb) => {
 								//call services put with status completed
 								svcGetPayload = {
 									uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
+									url: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
 									method: 'GET',
 									rejectUnauthorized: false
 								};
@@ -391,6 +391,7 @@ module.exports.handler = (event, context, cb) => {
 
 											var svcPayload = {
 												uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "/" + output.data[0].id,
+												url: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "/" + output.data[0].id,
 												method: 'PUT',
 												json: {
 													"service": payload.SERVICE_NAME.S,
@@ -525,6 +526,7 @@ module.exports.handler = (event, context, cb) => {
 								//call services put with status failed
 								svcGetPayload = {
 									uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
+									url: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
 									method: 'GET',
 									rejectUnauthorized: false
 								};
@@ -566,6 +568,7 @@ module.exports.handler = (event, context, cb) => {
 											//call put
 											var svcPayload = {
 												uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "/" + output.data[0].id,
+												url: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "/" + output.data[0].id,
 												method: 'PUT',
 												json: {
 													"service": payload.SERVICE_NAME.S,
