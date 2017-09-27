@@ -2,7 +2,7 @@
 import groovy.json.JsonOutput
 import java.text.SimpleDateFormat
 
-/**Process**
+/**Process** of service-onboarding-build-pack
 -identify service type
 -identify runtime
 -checkout template
@@ -172,6 +172,8 @@ node  {
 				
 				config = LoadConfiguration()
 				region = config['region']
+				if ( (config['region'] != null) && (config['region'] != "") )
+					region = config['region']
 
 				echo "Calling add row in db ###################################################"
 				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, domain + " - " + service_name, admin_group, service_type, env.API_KEY, "us-east-1");   
@@ -235,17 +237,24 @@ node  {
 				}
 
 				if(service_type == 'lambda') {
-					def rate_expression = varrateExpression //params.rateExpression
-					def enable_eventschedule = varenableEventSchedule //params.enableEventSchedule
+					def rate_expression = params.rateExpression
+					def enable_eventschedule = params.enableEventSchedule
 
 					if(rate_expression && rate_expression.trim() != ""){
 						// Using echo commands to write to deployment-env.yml
 						sh "echo \$'\neventScheduleRate: cron($rate_expression)' >> ./deployment-env.yml"
 					}
-					if(enable_eventschedule && enable_eventschedule.trim() != ""){
+					def var_enable_eventschedule;
+					if (enable_eventschedule)
+					   if (enable_eventschedule == true)
+					      var_enable_eventschedule = "true";
+					   else if (enable_eventschedule == false)
+					      var_enable_eventschedule = "false";
+
+					if(var_enable_eventschedule && var_enable_eventschedule.trim() != ""){
 						sh "echo \$'eventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
 					}
-
+					
 					/*
 					// Using yaml_command plugin (Tested working in terminal)
 
@@ -387,6 +396,9 @@ def createServiceInDBOLD(service_name, domain, created_by, runtime, repo_url, de
 }
 
 def updateServiceInDB(service_id_in_db, devApiID, region, statusval, repo_url) {
+	if ( (region == null) || (region != "") )
+		region = "us-east-1"
+
   sh "curl -H \"Content-Type: application/json\" -H \"Authorization: "+params.auth_token+"\" -X PUT -k -v -d '{ \"status\": \"" + statusval + "\", \"repository\": \"" + repo_url + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id_in_db + "/"
 }
 

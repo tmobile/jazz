@@ -1,0 +1,27 @@
+{
+    "name": "nodejs-template-demo",
+    "version": "0.0.1",
+    "description": "Nodejs Template project",
+    "main": "handler.js",
+    "private": true,
+    "author": [],
+    "scripts": {
+        "test": "mocha"
+    },
+    "dependencies": {
+		"json-query":"*",
+		"request":"*",
+		"aws-sdk": "*",
+		"uuid": "*",
+		"async":"*",
+		"deasync":"*",
+		"moment":"*"
+		
+    },
+    "devDependencies": {
+        "chai": "^3.5.0",
+        "istanbul": "^0.4.5",
+        "mocha": "^v3.0.0",
+        "nock": "^9.0.2"
+    }
+}

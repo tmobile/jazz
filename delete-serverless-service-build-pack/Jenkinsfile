@@ -91,12 +91,17 @@ node {
 		}
 		runtime = config['providerRuntime']
 		region = config['region']
+		if (region == null) {
+			region = "us-east-1"
+		}
 		serviceConfig = config['service']
 		domainConfig = config['domain']
+		
 		role = config['iamRoleARN']
+
 		
 		updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "Deleting");
-		
+
 		//events.setRuntime(runtime)
 		//events.setEnvironment("NA")
 		//events.setRegion(region)
@@ -104,22 +109,23 @@ node {
 		dir(bitbucket_repo_name)
 		{
 			echo "loadServerlessConfig......."
-			loadServerlessConfig(runtime, configPackBBURL)
-
+				
 			if (fileExists('build.api')) {
 				flowType = "API"
 				//events.setServiceType("API")
-				//loadServerlessConfig(runtime)//already in project
+				loadServerlessConfig(runtime, configPackBBURL)
 				changeServerlessConfig(runtime)
-				updateServiceNameConfig(domain, service_name)
-				updateSwaggerConfig(domain, service_name, env.API_KEY, config)
+				//updateServiceNameConfig(domain, service_name)
+				updateSwaggerConfig(domain, params.service_name.trim(), env.API_KEY, config)
 			} else if(fileExists('build.lambda')) {
 				flowType = "LAMBDA"
 				//events.setServiceType("LAMBDA")
-				//loadServerlessConfig(runtime)//already in project
+				loadServerlessConfig(runtime, configPackBBURL)
 				changeServerlessConfig(runtime)
-				updateServiceNameConfig(domain, service_name)
+				//updateServiceNameConfig(domain, service_name)
 			} else if(fileExists('build.website')) {
+				echo " 11111 "
+
 				flowType = "WEBSITE"
 				//events.setServiceType("WEBSITE")
 				if(config['create_cloudfront_url']) {
@@ -145,17 +151,20 @@ node {
 		switch (flowType) {
 			case "API":
 				stage('Undeploy Service') {
+					updateServiceNameConfig(domain, service_name, "dev")
 					def path = getResourcePath()
 					//sh "sed -i -- 's/{opt:stage}/dev/g' serverless.yml"
 					cleanUpApiGatewayResources("dev", path, region)
 					//cleanUpApiDocs("dev", service_name, domain)
 					unDeployService('dev', region)
 
+					updateServiceNameConfig(domain, service_name, "stg")
 					//sh "sed -i -- 's/{opt:stage}/stg/g' serverless.yml"
 					cleanUpApiGatewayResources("stg", path, region)
 					//cleanUpApiDocs("stg", service_name, domain)
 					unDeployService('stg', region)
 
+					updateServiceNameConfig(domain, service_name, "prod")
 					//sh "sed -i -- 's/{opt:stage}/prod/g' serverless.yml"
 					cleanUpApiGatewayResources("prod", path, region)
 					//cleanUpApiDocs("prod", service_name, domain)
@@ -166,8 +175,11 @@ node {
 
 			case "LAMBDA":
 				stage('Undeploy Service') {
+					updateServiceNameConfig(domain, service_name, "dev")
 					unDeployService('dev', region)
+					updateServiceNameConfig(domain, service_name, "stg")
 					unDeployService('stg', region)
+					updateServiceNameConfig(domain, service_name, "prod")
 					unDeployService('prod', region)
 				}
 				break
@@ -246,6 +258,7 @@ def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
 				[credentialsId: env.REPO_CREDENTIAL_ID, url: repo_url]
 			]])
 			sh "ls -al"
+
 			//events.sendCompletedEvent('GET_SERVICE_CODE')
 
 		}catch(ex) {
@@ -262,6 +275,7 @@ def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
  */
 def loadServerlessConfig(runtime) {
 	//events.sendStartedEvent('GET_SERVERLESS_CONF')
+	echo "loadServerlessConfig::" + runtime
 	try {
 		dir('_config') {
 			checkout([$class: 'GitSCM', branches: [
@@ -277,6 +291,7 @@ def loadServerlessConfig(runtime) {
 		} else if (runtime.indexOf("python") > -1) {
 			sh "cp _config/serverless-python.yml ./serverless.yml"
 		}
+
 		//events.sendCompletedEvent('GET_SERVERLESS_CONF')
 	}catch(ex) {
 		//events.sendFailureEvent('GET_SERVERLESS_CONF', ex.getMessage())
@@ -328,14 +343,21 @@ def echoServerlessFile() {
  * @param  serviceName
  * @return
  */
-def updateServiceNameConfig(domain, serviceName) {
+def updateServiceNameConfig(domain, serviceName, envval) {
+	sh "rm serverless.yml"
+	sh "cp serverless-temp.yml serverless.yml"
+
 	//events.sendStartedEvent('UPDATE_DEPLOYMENT_CONF')
 	def fullServiceName = service_name
 	def cfStackName = service_name
 	if(domain && domain!= ""){
-		fullServiceName = domain+ "_" + service_name
+		fullServiceName = domain+ "-" + service_name
 		cfStackName = serviceName + "-" + domain //sets CF Stack name as service--domain-env
 	}
+
+	fullServiceName = env.env_name_prefix + "-" + fullServiceName
+	cfStackName = fullServiceName
+
 	try {
 		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
 		sh "sed -i -- 's/name: \${self:service}/name: " + fullServiceName+"/g' serverless.yml"
@@ -354,6 +376,7 @@ def updateServiceNameConfig(domain, serviceName) {
  */
 def updateSwaggerConfig(domain, serviceName, api_key, config) {
 	//events.sendStartedEvent('UPDATE_SWAGGER')
+
 	try {
 		if (fileExists('swagger/swagger.json')) {
 			sh "sed -i -- 's/{service_name}/" + serviceName + "/g' swagger/swagger.json"
@@ -645,11 +668,11 @@ def parseJson(jsonString) {
  */
 def getServiceBucket(stage) {
 	if(stage == 'dev') {
-		return env.jazz_bucket_dev
+		return env.WEBSITE_DEV_S3BUCKET;
 	}else if (stage == 'stg') {
-		return env.jazz_bucket_stg
+		return env.WEBSITE_STG_S3BUCKET;
 	} else if (stage == 'prod') {
-		return env.jazz_bucket_prod
+		return env.WEBSITE_PROD_S3BUCKET;
 	}
 }
 
@@ -680,7 +703,7 @@ def cleanUpApiDocs(stage, service, domain) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region us-west-2"
+			sh "aws configure set profile.cloud-api.region us-east-1"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			def apiRootFolder = getApiDocsFolder(stage)
@@ -757,21 +780,23 @@ def getResourcePath() {
  * @return
  */
 def unDeployWebsite(service, domain, stage) {
+    echo "unDeployWebsite::" + service + "::" + domain + "::" + stage
+	
 	//events.sendStartedEvent('UNDEPLOY_WEBSITE', null, null, getEnvKey(stage))
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region us-west-2"
+			sh "aws configure set profile.cloud-api.region us-east-1"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
 			def folderName = service // temporary fix
 			//def folderName = domain+"_"+service // @TODO: enable after bug fix CAPI 344
-			def _exists = checkIfWebsiteExists(stage, folderName)
+			def _exists = checkIfWebsiteExists(stage, domain + "-" + folderName)
 			if(_exists) {
-				sh "aws s3 rm s3://"+getBucket(stage)+"/"+folderName+" --recursive"
+				sh "aws s3 rm s3://"+getBucket(stage)+"/" + domain + "-" + folderName+" --recursive"
 				cleanupS3BucketPolicy(service, domain, stage)
 			}
 			//events.sendCompletedEvent('UNDEPLOY_WEBSITE', null, null, getEnvKey(stage))
@@ -805,11 +830,11 @@ def checkIfWebsiteExists(stage, folderName) {
  */
 def getBucket(stage) {
 	if(stage == 'dev') {
-		return "dev-serverless-static-website"
+		return env.WEBSITE_DEV_S3BUCKET //"dev-serverless-static-website"
 	}else if (stage == 'stg') {
-		return "stg-serverless-static-website"
+		return env.WEBSITE_STG_S3BUCKET //"stg-serverless-static-website"
 	} else if (stage == 'prod') {
-		return "prod-serverless-static-website"
+		return env.WEBSITE_PROD_S3BUCKET //"prod-serverless-static-website"
 	}
 }
 
@@ -822,20 +847,23 @@ def getBucket(stage) {
  */
 def cleanupS3BucketPolicy(service, domain, stage) {
 	//events.sendStartedEvent('DELETE_S3BUCKET_POLICY', null, null, getEnvKey(stage))
+	
+	echo "cleanupS3BucketPolicy called"
+	
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region us-west-2"
+			sh "aws configure set profile.cloud-api.region us-east-1"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
-			def folderName = service // temporary fix
+			def folderName = domain + "-" + service // temporary fix
 			//def folderName = domain+"_"+service // @TODO: enable after bug fix CAPI 344
 
 			def bucketPolicy = sh (
-				script: "aws s3api get-bucket-policy --bucket "+getBucket(stage)+" --output json",
+				script: "aws s3api get-bucket-policy --bucket " + getBucket(stage) + " --output json",
 				returnStdout: true
 			).trim()
 
@@ -907,7 +935,7 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region us-west-2"
+			sh "aws configure set profile.cloud-api.region us-east-1"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -915,7 +943,7 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 			def distributionID
 			def _Etag
 
-			distributionID = getDistributionId(stage, service)
+			distributionID = getDistributionId(stage, domain, service)
 			def distributionConfig = getDistributionConfig(distributionID)
 			_Etag = generateDistributionConfigForDisable(distributionConfig)
 			_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
@@ -940,16 +968,19 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
  * @param stage
  * @return
  */
-def getDistributionId(stage, service) {
+def getDistributionId(stage, domain, service) {
 	def distributionID
 	def outputStr
 	try {
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[?Origins.Items[?Id=='$stage-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\"",
+				--query \"DistributionList.Items[?Origins.Items[?Id=='$env.env_name_prefix-$stage-static-website-origin-$domain-$service']].{Distribution:DomainName, Id:Id}\"",
 			returnStdout: true
 		)
+		
+		//sudo aws cloudfront list-distributions --output json --query "DistributionList.Items[?Origins.Items[?Id=='jazz463-dev-static-website-origin-slf-testwebsite']].{Distribution:DomainName, Id:Id}"
+
 		if(outputStr) {
 			def outputObj = new JsonSlurper().parseText(outputStr)
 			distributionID = outputObj[0].Id
@@ -1077,6 +1108,8 @@ def deleteCloudFrontDistribution(distributionID, _Etag) {
 
 def loadServerlessConfig(String runtime, String configPackBBURL) {
 
+	echo "loadServerlessConfig::" + runtime + "::" + configPackBBURL
+	
     dir('_config') {
         checkout([$class: 'GitSCM', branches: [
             [name: '*/master']
@@ -1092,10 +1125,14 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
     } else if (runtime.indexOf("python") > -1) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
+	sh "cp serverless.yml serverless-temp.yml"
 
 }
 
 def updateServiceInDB(service_id_in_db, devApiID, region, statusval) {
+  if (region == null)
+      region = "us-east-1"
+
   sh "curl -H \"Content-Type: application/json\"  -H \"Authorization: "+params.auth_token+"\" -X PUT -k -v -d '{ \"status\": \"" + statusval + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id_in_db + "/"
 }
 

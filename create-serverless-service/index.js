@@ -46,7 +46,9 @@ module.exports.handler = (event, context, cb) => {
             // Check if Service Creator (username) exists
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Creator not defined")));
         }
-		
+	
+	logger.info("Request event: "+JSON.stringify(event));
+	
 		//var base_auth_token = "Basic " + new Buffer("jobexec:jenkinsadmin").toString("base64");
 		var base_auth_token = "Basic " + new Buffer(config.SVC_USER + ":" + config.SVC_PASWD).toString("base64");
 
@@ -90,6 +92,33 @@ module.exports.handler = (event, context, cb) => {
             var create_cloudfront_url = event.body.create_cloudfront_url || false;
             propertiesObject.create_cloudfront_url = create_cloudfront_url;
         }
+	
+        // Add rate expression to the propertiesObject;
+        if (event.body.service_type === "lambda") {
+            if (event.body.rateExpression !== undefined) {
+                var cronExpValidator = CronParser.validateCronExpression(event.body.rateExpression);
+
+                // Validate cron expression. If valid add it to propertiesObject, else throw error
+                if (cronExpValidator.result === 'valid') {
+                    propertiesObject['rateExpression'] = event.body.rateExpression;
+
+                    // enableEventSchedule is added here as an additional feature. It will be passed on to deployment-env.yml
+                    // If it is set as false it will be picked by serverless and event schedule will be disabled.
+                    // If the user chooses to stop the cron event, he can just disable and then re-enable it instead of deleting.
+                    if (event.body.enableEventSchedule === false) {
+                        propertiesObject['enableEventSchedule'] = event.body.enableEventSchedule;
+                    } else {
+                        // enable by default
+                        propertiesObject['enableEventSchedule'] = true;
+                    }
+                } else {
+                    logger.error('cronExpValidator : ', cronExpValidator);
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError(cronExpValidator.message)));
+                }
+            }
+        }
+	
+	
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
         request({

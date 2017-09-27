@@ -101,12 +101,15 @@ node() {
     echo "Role:: " + role
 
     if (domain  && domain.trim()!="") {
-        serviceName = domain.trim() + "_" + serviceName
+        serviceName = domain.trim() + "-" + serviceName
         cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service--domain-env
 	 }else{
         domain = ""
     }
 
+	serviceName = env.env_name_prefix + "-" + serviceName
+	cfStackName = serviceName
+	
 	sh 'cd ' + bitbucket_name
 
 	dir(bitbucket_name)

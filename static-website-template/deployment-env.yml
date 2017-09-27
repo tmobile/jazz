@@ -1,0 +1,3 @@
+service: static-website-template
+domain: platform
+create_cloudfront_url : false

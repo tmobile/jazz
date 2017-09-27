@@ -10,7 +10,7 @@ node {
 
 	   def var_job_url = JenkinsLocationConfiguration.get().getUrl() + platform_srvc_build_job;
 	  
-       def timeout_seconds = 45;
+       def timeout_seconds = 55;
       
        echo "Job URL:: " + var_job_url;
 		
@@ -54,6 +54,16 @@ node {
 
 	   //Service 7 platform_services
 	   service_name_params = "platform_services";
+	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+       
+	   sleep(timeout_seconds)
+
+	   //Service 8 platform_services
+	   service_name_params = "platform_events";
+	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+       
+	   //Service 9 platform_services
+	   service_name_params = "platform-services-handler";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
        
 	  

@@ -215,11 +215,6 @@
                         }
                     }
                 },
-                "security": [
-                  {
-                    "{envPrefix}-cognito-authorizer": []
-                  }
-                ],				
                 "x-amazon-apigateway-integration": {
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
                     "passthroughBehavior": "when_no_templates",
@@ -424,11 +419,6 @@
                         }
                     }
                 },
-                "security": [
-                  {
-                    "{envPrefix}-cognito-authorizer": []
-                  }
-                ],				
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -699,11 +689,6 @@
                         }
                     }
                 },
-                "security": [
-                  {
-                    "{envPrefix}-cognito-authorizer": []
-                  }
-                ],				
                 "x-amazon-apigateway-integration": {
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
                     "passthroughBehavior": "when_no_templates",
@@ -913,11 +898,6 @@
                         }
                     }
                 },
-                "security": [
-                  {
-                    "{envPrefix}-cognito-authorizer": []
-                  }
-                ],				
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -1117,11 +1097,6 @@
                         }
                     }
                 },
-                "security": [
-                  {
-                    "{envPrefix}-cognito-authorizer": []
-                  }
-                ],				
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",

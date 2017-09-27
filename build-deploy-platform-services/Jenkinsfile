@@ -128,6 +128,27 @@ node {
 					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
 				}
 				
+				if ( (service_template.trim() == "platform_events") ) {
+					sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' ./components/dev-config.json"
+					sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' ./components/stg-config.json"
+					sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' ./components/prod-config.json"
+				}
+				
+				if ( (service_template.trim() == "platform-services-handler") ) {
+					sh "sed -i -- 's/{conf-apikey}/" + env.API_ID_DEV + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-apikey}/" + env.API_ID_STG + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-apikey}/" + env.API_ID_PROD + "/g' ./config/prod-config.json"
+					
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+					
+					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/prod-config.json"
+					
+				}
+				
 				// @TODO : These conditional statements could be removed and needs to be refactored
 				if ( (service_template.trim() == "platform_login") || (service_template.trim() == "platform_logout") || (service_template.trim() == "cognito-authorizer")) {
 					echo "Updating configs for dev login and logout"
@@ -235,6 +256,12 @@ node {
 				 }
 			}
 
+			if ( (service_template.trim() == "platform-services-handler") ) {
+          
+				sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + env.env_name_prefix + "-events-hub-dev --function-name arn:aws:lambda:$region:$roleId:function:" + env.env_name_prefix + "-hndlr-dev --starting-position LATEST --region " + region
+			}
+
+			
 			// @TODO : Resetting the credentials needs to be introduced. (Re-use of same profile on Async calls needs to be considered)
 			// resetCredentials();
 			
