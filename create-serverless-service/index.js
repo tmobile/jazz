@@ -47,22 +47,16 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Creator not defined")));
         }
 	
-	logger.info("Request event: "+JSON.stringify(event));
+	    logger.info("Request event: "+JSON.stringify(event));
 	
 		//var base_auth_token = "Basic " + new Buffer("jobexec:jenkinsadmin").toString("base64");
 		var base_auth_token = "Basic " + new Buffer(config.SVC_USER + ":" + config.SVC_PASWD).toString("base64");
 
         var approvers = event.body.approvers;
-        var userlist = "";
         var domain = (event.body.domain || "").toLowerCase();
         var bitbucketName = event.body.service_name.toLowerCase();
         if (domain.length) {
             bitbucketName = domain + "-" + bitbucketName;
-        }
-
-		var i = 0;
-        for (i; approvers.length > i; i += 1) {
-            userlist = userlist + "name=" + approvers[i] + "&";
         }
 
         var propertiesObject = {
@@ -71,7 +65,6 @@ module.exports.handler = (event, context, cb) => {
             runtime: event.body.runtime,
             service_name: event.body.service_name,
             username: event.body.username,
-            admin_group: userlist,
             domain: event.body.domain,
             auth_token: event.headers.Authorization
         };
@@ -118,12 +111,10 @@ module.exports.handler = (event, context, cb) => {
             }
         }
 	
-	
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
         request({
-          	url: "{conf-jenkins-host}/job/create-service/buildWithParameters",
-            uri: "{conf-jenkins-host}/job/create-service/buildWithParameters",          
+          	uri: "{conf-jenkins-host}/job/create-service/buildWithParameters",          
             method: 'POST',
             headers: {
 	            "Authorization": base_auth_token
@@ -138,11 +129,8 @@ module.exports.handler = (event, context, cb) => {
 				return cb(null, responseObj(messageToBeSent, event.body));
 			}
         });
-
-
     } catch (e) {
         logger.error('Error : ', e.message);
         cb(JSON.stringify(errorHandler.throwInternalServerError(e.message)));
     }
-
 };
