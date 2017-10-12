@@ -1,4 +1,4 @@
-## Platform API Sign out Service. 
-Provides an API for authenticating a user against AD service. 
+## Platform API  - user logout service
+Provides an API for logging a user out of Jazz.
 
-#### Send JWT Auth token is required to logout
+#### JWT Auth token is required for successful user logout operation.

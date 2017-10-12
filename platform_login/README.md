@@ -1,5 +1,5 @@
-## Platform API Service authentication. 
-Provides an API for authenticating a user against AD service. 
+## Platform API for Service authentication.
+Provides an API for authenticating a user against authentication backend.
 
 #### Request format in JSON
 ```

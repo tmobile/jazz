@@ -34,7 +34,7 @@ def Event_Status = [
 
 
 node  {
-	
+
 	def service_type =  params.service_type
 	def runtime = params.runtime
 	def service_name = params.service_name
@@ -51,7 +51,7 @@ node  {
 	}
 
 	def repo_protocol				= "http://"
-	
+
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
 	def var_bitbucket_base			= env.REPO_BASE
 	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
@@ -67,14 +67,14 @@ node  {
 
 	echo "Starting new service on-boarding.."
 	echo "params : $params"
-	  
+
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
 		domain = params.domain.trim()
 	}
-	
+
 	def repo_url = env.REPO_BASE + "/projects/CAS/repos/" + bitbucket_name + "/browse";
-	
+
 	stage('Input Validation')
 	{
 		sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.VALIDATE_INPUT, Event_Status.STARTED, "")
@@ -150,7 +150,7 @@ node  {
 		echo admin_group
 		echo "creator_username: $creator_username"
 	}
-	
+
 	def service_id_in_db = "";
 	def region = "us-east-1"//default will be replaced below
 
@@ -169,14 +169,14 @@ node  {
 			dir(service_template)
 			{
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
-				
+
 				config = LoadConfiguration()
 				region = config['region']
 				if ( (config['region'] != null) && (config['region'] != "") )
 					region = config['region']
 
 				echo "Calling add row in db ###################################################"
-				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, domain + " - " + service_name, admin_group, service_type, env.API_KEY, "us-east-1");   
+				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, domain + " - " + service_name, admin_group, service_type, env.API_KEY, "us-east-1");
 			}
 		}
 		catch(error){
@@ -184,8 +184,8 @@ node  {
 		}
 
 	}
-	
-	
+
+
 	stage ('Update Service Template')
 	{
 		sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
@@ -210,7 +210,7 @@ node  {
 				    sh "echo \$'require_internal_access: $require_internal_access' >> ./deployment-env.yml"
 				}
 				echo "vpc access func ends"
-				
+
 
 				sh "sed -i -- 's/service:.*/service : " + service_name +"/g' deployment-env.yml"
 				sh "sed -i -- 's/domain:.*/domain : "+ domain +"/g' deployment-env.yml"
@@ -254,7 +254,7 @@ node  {
 					if(var_enable_eventschedule && var_enable_eventschedule.trim() != ""){
 						sh "echo \$'eventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
 					}
-					
+
 					/*
 					// Using yaml_command plugin (Tested working in terminal)
 
@@ -370,9 +370,9 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.FAILED, error.getMessage())
 					echo error
 				}
-              
+
 				echo "Calling update row in db ###################################################"
-				updateServiceInDB(service_id_in_db, env.API_KEY, region, "Active", repo_url);              
+				updateServiceInDB(service_id_in_db, env.API_KEY, region, "Active", repo_url);
 			}
 		}
 	}
@@ -424,7 +424,7 @@ def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc,
 			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 		}
 	}
-	
+
 }
 
 def LoadConfiguration() {

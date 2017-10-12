@@ -1,8 +1,8 @@
 {
-    "name": "nodejs-template-demo",
+    "name": "platform_events",
     "version": "0.0.1",
-    "description": "Nodejs Template project",
-    "main": "handler.js",
+    "description": "platform events service",
+    "main": "index.js",
     "private": true,
     "author": [],
     "scripts": {
@@ -16,7 +16,7 @@
 		"async":"*",
 		"deasync":"*",
 		"moment":"*"
-		
+
     },
     "devDependencies": {
         "chai": "^3.5.0",

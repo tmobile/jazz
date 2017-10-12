@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,28 +21,17 @@
 **/
 
 const config = require('./components/config.js'); //Import the environment data.
-const secretHandlerModule = require("./components/secret-handler.js"); //Import the secret-handler module.
 const logger = require("./components/logger.js"); //Import the logging module.
+const responseObj = require("./components/response.js"); //Import the response module.
 
 module.exports.handler = (event, context, cb) => {
 
   //Initializations
   var configData = config(context);
-  var secretHandler = secretHandlerModule();
+  logger.init(event, context);
 
-
-  //Following is a code snippet to fetch plaintext for your secret:
-  /*
-  var decryptObj = secretHandler.decryptSecret(config.mysecret);
-  var plaintext = "";
-  var decryptionerror = "";
-  if (decryptObj.error !== undefined && decryptObj.error == true) {
-  	decryptionerror = decryptObj.message;
-  } else {
-
-  	plaintext = decryptObj.message;
-  }
-  */
+  //Following is a code snippet to fetch values from config file:
+  //var myVal = configData.configKey;
 
   //Following code snippet describes how to log messages within your code:
   /*
@@ -53,8 +42,10 @@ module.exports.handler = (event, context, cb) => {
   logger.debug('Detailed information on the flow through the system.');
   */
 
-  cb(null, {
-    message: 'Your Hello World lambda function executed successfully!',
-    input: event
-  });
+  var sampleResponse = {
+    "foo": "foo-value",
+    "bar": "bar-value"
+  };
+
+  cb(null, responseObj(sampleResponse, event));
 };

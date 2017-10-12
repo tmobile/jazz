@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,7 +24,6 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const secretHandlerModule = require("./components/secret-handler.js"); //Import the secret-handler module.
 
 const AWS = require('aws-sdk');
 const async = require('async');
@@ -38,7 +37,7 @@ module.exports.handler = (event, context, cb) => {
 	logger.init(event, context);
 	const dynamodb = new AWS.DynamoDB();
 	const kinesis = new AWS.Kinesis();
-	
+
 	try {
 		//GET Handler
 		if (event !== undefined && event.method !== undefined && event.method === 'GET') {
@@ -104,7 +103,7 @@ module.exports.handler = (event, context, cb) => {
 					if (results.get_events !== undefined && results.get_events !== "" && results.get_events.Items !== undefined && results.get_events.Items !== "") {
 						results.get_events.Items.forEach(function (item) {
 							var event = {};
-							
+
 							Object.keys(item).forEach(function (key) {
 								if (key === "SERVICE_CONTEXT" ){
 									event.service_context = item.SERVICE_CONTEXT.S;
@@ -382,10 +381,10 @@ module.exports.handler = (event, context, cb) => {
 
 							}
 						});
-						
+
 						var stream_params = {
-						  Data: JSON.stringify(event_params), 
-						  PartitionKey: event.body.event_name, 
+						  Data: JSON.stringify(event_params),
+						  PartitionKey: event.body.event_name,
 						  StreamName: config.event_hub
 						};
 						kinesis.putRecord(stream_params, function(err, data) {
@@ -401,7 +400,7 @@ module.exports.handler = (event, context, cb) => {
 								});
 							}
 						});
-						
+
 					}
 				]
 			}, function (err, results) {

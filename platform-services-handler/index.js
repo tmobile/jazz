@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -61,9 +61,9 @@ module.exports.handler = (event, context, cb) => {
 		eventVersion: '1.0',
 		eventID: 'shardId-000000000000:49574219880753003597816065353678073460941546253285588994',
 		eventName: 'aws:kinesis:record',
-		invokeIdentityArn: 'arn:aws:iam::302890901340:role/lambda_basic_execution',
+		invokeIdentityArn: 'arn:aws:iam::xxx:role/lambda_basic_execution',
 		awsRegion: 'us-west-2',
-		eventSourceARN: 'arn:aws:kinesis:us-west-2:302890901340:stream/serverless-events-hub-dev'
+		eventSourceARN: 'arn:aws:kinesis:us-west-2:xxx:stream/serverless-events-hub-dev'
 		}
 		 ************************************************
 
@@ -257,10 +257,10 @@ module.exports.handler = (event, context, cb) => {
 										"tags": tags,
 										"status": "STARTED"
 									};
-                              
+
                                 logger.info("svcPayload:::::" + configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE);
                                 logger.info("svcPayload::uri:::" + JSON.stringify(req));
-                              
+
 								// call services post with status started
 								var svcPayload = {
 									uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE,
@@ -270,14 +270,14 @@ module.exports.handler = (event, context, cb) => {
 									rejectUnauthorized: false
 								};
 
-                               
+
 
 								request(svcPayload, function (error, response, body) {
-                                  
+
                                     //logger.info(" >> "+JSON.stringify(svcPayload.json));
-                                  
+
                                 logger.info("response.statusCode:" + response.statusCode);
-									
+
 									if (response.statusCode === 200) {
 										if (body.data === null || body.data === "") {
 											failedEvents.push({
@@ -370,7 +370,7 @@ module.exports.handler = (event, context, cb) => {
 								console.log(svcGetPayload.uri);
 
 								request(svcGetPayload, function (error, response, body) {
-									
+
 									if (response.statusCode === 200) {
 										var output = JSON.parse(body);
 										if (output.data === null || output.data === "" || output.data === undefined || output.data.length === undefined || output.data.length === 0 ) {
@@ -548,7 +548,7 @@ module.exports.handler = (event, context, cb) => {
 								};
 								logger.info("Catalog GET Payload: " + svcGetPayload);
 								request(svcGetPayload, function (error, response, body) {
-									
+
 
 									if (response.statusCode === 200) {
 										var output = JSON.parse(body);
@@ -741,7 +741,7 @@ module.exports.handler = (event, context, cb) => {
 						Entries: failedEvents,
 						QueueUrl: failureQueue
 					};
-					
+
 					if (failedEvents.length > 0) {
 						logger.error(JSON.stringify(failedEvents));
 						sqs.sendMessageBatch(sqsparams, function (err, data) {

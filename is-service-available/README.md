@@ -29,24 +29,3 @@ A example request payload format is given below, where 'service-name' is the nam
     }
 }
 ```
-
-#### Request Format as a Endpoint
-Consider requesting the endpoint with service 'service-name'.
-```
-API endpoint: https://cloud-api.corporate.t-mobile.com/api/platform/is-service-available/?service=service-name&domain=domain-name
-```
-
-#### Service Details
-
-###### Development Environment
-```
-API endpoint: https://dev-cloud-api.corporate.t-mobile.com/api/platform/is-service-available
-```
-###### Stage Environment
-```
-API endpoint: https://stg-cloud-api.corporate.t-mobile.com/api/platform/is-service-available
-```
-###### Production Environment
-```
-API endpoint: https://cloud-api.corporate.t-mobile.com/api/platform/is-service-available
-```

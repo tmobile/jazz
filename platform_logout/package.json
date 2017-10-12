@@ -1,7 +1,7 @@
 {
-  "name": "api-nodejs-template",
+  "name": "platform_logout",
   "version": "0.0.1",
-  "description": "Nodejs Template project",
+  "description": "Jazz logout service",
   "main": "index.js",
   "private": true,
   "author": [],
@@ -11,10 +11,10 @@
   "dependencies": {
     "request": "*",
     "deasync": "*",
-	"async":"*",
-	"jsonwebtoken": "*",
-	"aws-sdk":"*",
-	"amazon-cognito-identity-js": "^1.19.0"
+    "async": "*",
+    "jsonwebtoken": "*",
+    "aws-sdk": "*",
+    "amazon-cognito-identity-js": "^1.19.0"
   },
   "devDependencies": {
     "mocha": "^v3.0.0",

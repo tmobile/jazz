@@ -1,7 +1,3 @@
-# Welcome to Serverless!
-# For full config options, check the docs:
-#    docs.serverless.com
-
 service: ${file(deployment-env.yml):service}
 
 provider:
@@ -13,13 +9,14 @@ provider:
   domain: ""
   stackTags:
     application: jazz
-    service: jazz::service:${file(deployment-env.yml):service}
-    domain: jazz::domain:${file(deployment-env.yml):domain, self:provider.domain}
-    owner: jazz::owner:${file(deployment-env.yml):owner, self:provider.owner}
-    environment: jazz::environment::${opt:stage, self:provider.stage}
+    service: ${file(deployment-env.yml):service}
+    domain: ${file(deployment-env.yml):domain, self:provider.domain}
+    owner: ${file(deployment-env.yml):owner, self:provider.owner}
+    environment: ${opt:stage, self:provider.stage}
 
 custom:
   myStage: ${opt:stage, self:provider.stage}
+# This settings will be enabled once equivalent python plugin is added.
 #  alerts:
 #    topics:
 #      alarm: ${self:service}-${opt:stage}-alerts-alarm

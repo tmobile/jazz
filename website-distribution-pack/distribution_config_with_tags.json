@@ -63,19 +63,19 @@
       },
       {
         "Key": "service",
-        "Value": "jazz::service:{service_name}"
+        "Value": "{service_name}"
       },
       {
         "Key": "domain",
-        "Value": "jazz::domain:{domain_name}"
+        "Value": "{domain_name}"
       },
       {
         "Key": "environment",
-        "Value": "jazz::environment:{env}"
+        "Value": "{env}"
       },
       {
         "Key": "owner",
-        "Value": "jazz::owner:{owner}"
+        "Value": "{owner}"
       }
     ]
   }

@@ -1,1 +1,1 @@
-This is a sample NodeJs template project
+Event Handler to handler events related to jazz service catalog updates.

@@ -1,6 +1,6 @@
 # =========================================================================
-# Copyright © 2017 T-Mobile USA, Inc.
-# 
+# Copyright ï¿½ 2017 T-Mobile USA, Inc.
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -22,7 +22,6 @@ from components.errors import CustomErrors  # noqa
 from components.response import CustomResponse
 from components.logger import Logger
 from components.config import Config
-from components.secret_handler import SecretHandler
 
 
 def handler(event, context):
@@ -31,21 +30,8 @@ def handler(event, context):
         # initialze logger module
         logger = Logger(event, context)
 
-        # Load config handler & SecretHandler.
+        # Load config handler.
         config = Config(event)
-        secret_handler = SecretHandler()
-
-        # get secret information(mysecret) from the config
-        encrypted_secret = config.get_config('mysecret1')
-
-        # Decrypt the secret.
-        secret_res = secret_handler.decrypt_secret(encrypted_secret)
-
-        # Check if error exists & if not get the decrypted secret
-        if 'error' in secret_res and secret_res['error'] is not None:
-            decryptionerror = secret_res['message']
-        else:
-            plaintext = secret_res['message']
 
         logger.error('Runtime errors or unexpected conditions.')
         logger.warn('Runtime situations that are undesirable, but not wrong')

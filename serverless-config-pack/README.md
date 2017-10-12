@@ -1,3 +1,3 @@
-## Serverless Configuration files
+## Serverless configuration files
 
-Thes are the Serverless Configuration files for different runtime environments to be used in the Jenkins CI/CD for building respective projects types.
+Serverless configuration files for different runtime environments to be used in the CI/CD workflow for building respective services.

@@ -1,8 +1,8 @@
 {
-    "name": "nodejs-template-demo",
+    "name": "cloud-logs-streamer",
     "version": "0.0.1",
-    "description": "Nodejs Template project",
-    "main": "handler.js",
+    "description": "cloud-logs-streamer",
+    "main": "index.js",
     "private": true,
     "author": [],
     "scripts": {
