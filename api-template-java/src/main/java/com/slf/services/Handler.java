@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ public class Handler implements RequestHandler<Request, Response> {
 		// For example, for development environment specific details, add configurations as key,value pairs in 'dev.properties'
 		EnvironmentConfig configObject = null;
 		try {
-				configObject = new EnvironmentConfig(context);
+				configObject = new EnvironmentConfig(input);
 		    String config_value = configObject.getConfig("config_key");
 		    logger.info("You are using the env key: " + config_value);
 		} catch (Exception ex) {
