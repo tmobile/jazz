@@ -44,6 +44,7 @@ public class Handler implements RequestHandler<Request, Response> {
 
 		// Initialize the environment specific variables. Each environment has different properties files to store env specific data.
 		// For example, for development environment specific details, add configurations as key,value pairs in 'dev.properties'
+		/*
 		EnvironmentConfig configObject = null;
 		try {
 				configObject = new EnvironmentConfig(input);
@@ -52,6 +53,7 @@ public class Handler implements RequestHandler<Request, Response> {
 		} catch (Exception ex) {
 				throw new InternalServerErrorException("Could not load env properties file: "+ex.getMessage());
 		}
+		*/
 
 		HashMap<String, String> data = new HashMap<String, String>();
 		if ((input == null) || (input.getMethod() == null)) {

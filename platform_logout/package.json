@@ -13,12 +13,11 @@
     "deasync": "*",
     "async": "*",
     "jsonwebtoken": "*",
-    "aws-sdk": "*",
     "amazon-cognito-identity-js": "^1.19.0"
   },
   "devDependencies": {
     "mocha": "^v3.0.0",
     "chai": "^3.5.0",
-    "amazon-cognito-identity-js": "^1.19.0"
+    "aws-sdk": "*"
   }
 }

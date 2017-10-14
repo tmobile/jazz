@@ -273,7 +273,7 @@ node ()  {
 	  else {
 
 
-		stage ('Deployment to Deployement Env'){
+		stage ('Deployment to Deployment Env'){
 		  sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."

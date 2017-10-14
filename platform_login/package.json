@@ -9,25 +9,20 @@
     "test": "mocha"
   },
   "dependencies": {
-    "chai": "^3.5.0",
-    "mocha": "^v3.0.0",
     "deasync": "*",
     "async": "*",
     "jsonwebtoken": "*",
     "request": "*",
-    "aws-sdk": "*",
     "moment": "*",
     "amazon-cognito-identity-js": "^1.19.0"
   },
   "devDependencies": {
-    "activedirectory": "*",
     "deasync": "*",
     "async": "*",
     "jsonwebtoken": "*",
     "request": "*",
     "aws-sdk": "*",
     "moment": "*",
-    "amazon-cognito-identity-js": "^1.19.0",
     "chai": "^3.5.0",
     "mocha": "^v3.0.0"
   }
