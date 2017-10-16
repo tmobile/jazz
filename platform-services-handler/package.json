@@ -1,7 +1,7 @@
 {
-  "name": "lambda-nodejs-template",
+  "name": "platform_services-handler",
   "version": "0.0.1",
-  "description": "Nodejs Lambda Template project",
+  "description": "Event Handler to handler events related to jazz service catalog updates.",
   "main": "index.js",
   "private": true,
   "author": [],
@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "request": "*",
-    "deasync": "*", 
-	"async": "*"
+    "deasync": "*",
+    "async": "*"
   },
   "devDependencies": {
     "chai": "^3.5.0",

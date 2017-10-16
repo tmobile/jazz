@@ -6,7 +6,7 @@ import groovy.transform.Field
 
 /**
  * The Service delete workflow for service Types: API, LAMBDA & Website
- * @author: DSundar3
+ * @author:
 */
 
 node {
@@ -41,17 +41,17 @@ node {
 
 	def var_bitbucket_email 		= env.REPO_EMAIL
 	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + env.REPO_LOC + "/"
-	
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git" 
-	
-	
+
+	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git"
+
+
 	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/service-onboarding-build-pack.git"
 	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
 
-	
-	
+
+
 	if (params.service_name) {
 		service_name =  params.service_name.trim()
 	}
@@ -71,8 +71,8 @@ node {
 
 	sh 'rm -rf ' + bitbucket_repo_name
 	sh 'mkdir ' + bitbucket_repo_name
-	
-	
+
+
 	stage("Initialization") {
 		//events = loadEventsModule()
 		//if(!events) { error "Can't load events module"	} //Fail here
@@ -96,10 +96,10 @@ node {
 		}
 		serviceConfig = config['service']
 		domainConfig = config['domain']
-		
+
 		role = config['iamRoleARN']
 
-		
+
 		updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "Deleting");
 
 		//events.setRuntime(runtime)
@@ -109,7 +109,7 @@ node {
 		dir(bitbucket_repo_name)
 		{
 			echo "loadServerlessConfig......."
-				
+
 			if (fileExists('build.api')) {
 				flowType = "API"
 				//events.setServiceType("API")
@@ -381,19 +381,19 @@ def updateSwaggerConfig(domain, serviceName, api_key, config) {
 		if (fileExists('swagger/swagger.json')) {
 			sh "sed -i -- 's/{service_name}/" + serviceName + "/g' swagger/swagger.json"
 			sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json"
-			
+
 			def region = config['region']
 			def roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
 			def var_api_host_name = api_key +".execute-api."+region+".amazonaws.com"
 
-			// TODO: the below couple of statements will be replaced with regular expression in very near future;						
+			// TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
-			
+
 			sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
 			sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
 
-			
+
 		}
 		//events.sendCompletedEvent('UPDATE_SWAGGER')
 	}catch(ex) {
@@ -498,7 +498,7 @@ def deleteserviceindb(region, db_id) {
 		echo outputStr
 		*/
         sh "curl -X DELETE -k -v -H \"Authorization: "+params.auth_token+"\" 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + db_id + "'"
-		
+
 		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
@@ -608,7 +608,7 @@ def cleanUpApiGatewayResources(stage, path, region) {
 				error "findResourceId Failed"+ex.getMessage()
 			}
 
-			
+
 			if(resource_id != null && resource_id != ""){
 				def status_json = sh (
 					script: "aws apigateway delete-resource --rest-api-id "+getApiId(stage)+"  --region " + region + " --resource-id "+resource_id+" --output json" ,
@@ -781,7 +781,7 @@ def getResourcePath() {
  */
 def unDeployWebsite(service, domain, stage) {
     echo "unDeployWebsite::" + service + "::" + domain + "::" + stage
-	
+
 	//events.sendStartedEvent('UNDEPLOY_WEBSITE', null, null, getEnvKey(stage))
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
@@ -847,9 +847,9 @@ def getBucket(stage) {
  */
 def cleanupS3BucketPolicy(service, domain, stage) {
 	//events.sendStartedEvent('DELETE_S3BUCKET_POLICY', null, null, getEnvKey(stage))
-	
+
 	echo "cleanupS3BucketPolicy called"
-	
+
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
@@ -871,7 +871,7 @@ def cleanupS3BucketPolicy(service, domain, stage) {
 			def policyObjectUpdated = [:]
 			policyObjectUpdated.Version = policyObject.Version
 			policyObjectUpdated.Id = policyObject.Id
-			
+
 			def statements = []
 			def resourcePattern = getBucket(stage)+"/"+folderName+"/"
 			for (items in policyObject.Statement) {
@@ -883,7 +883,7 @@ def cleanupS3BucketPolicy(service, domain, stage) {
 			}
 			policyObjectUpdated.Statement = statements
 			def policy_json = JsonOutput.toJson(policyObjectUpdated)
-			
+
 			def bucketName = getBucket(stage)
 			updateBucketPolicy(policy_json, bucketName)
             resetCredentials()
@@ -978,7 +978,7 @@ def getDistributionId(stage, domain, service) {
 				--query \"DistributionList.Items[?Origins.Items[?Id=='$env.env_name_prefix-$stage-static-website-origin-$domain-$service']].{Distribution:DomainName, Id:Id}\"",
 			returnStdout: true
 		)
-		
+
 		//sudo aws cloudfront list-distributions --output json --query "DistributionList.Items[?Origins.Items[?Id=='jazz463-dev-static-website-origin-slf-testwebsite']].{Distribution:DomainName, Id:Id}"
 
 		if(outputStr) {
@@ -1109,7 +1109,7 @@ def deleteCloudFrontDistribution(distributionID, _Etag) {
 def loadServerlessConfig(String runtime, String configPackBBURL) {
 
 	echo "loadServerlessConfig::" + runtime + "::" + configPackBBURL
-	
+
     dir('_config') {
         checkout([$class: 'GitSCM', branches: [
             [name: '*/master']

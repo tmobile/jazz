@@ -8,9 +8,3 @@ region: {inst_region}
 domain : jazz
 # Put your custom role here which has the IAM permissions required by your code
 iamRoleARN: {inst_role_lambda_basic_execution}
-
-#owner: ust-somanchi
-
-#require_internal_access: true
-#event_source_stream: arn:aws:kinesis:us-east-1:682452625784:stream/jazmrginstag14-jazz-events-hub-dev
-#event_action_stream: GetRecord

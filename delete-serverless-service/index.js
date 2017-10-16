@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,7 +20,6 @@ const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
-const secretHandlerModule = require("./components/secret-handler.js");
 const formats = require('./jenkins-json.js');
 const Guid = require('guid');
 var payloads = formats('apis');
@@ -32,43 +31,38 @@ var payloads = formats('apis');
  **/
 
 module.exports.handler = (event, context, cb) => {
-	
+
 	var errorHandler = errorHandlerModule();
 	var config = configObj(event);
-	//var secretHandler = secretHandlerModule();
 	logger.init(event, context);
-	
+
 	if(!config.DELETE_SERVICE_JOB_URL) {
-		logger.error("Service configuration missing JOB URL" + JSON.stringify(event));				
-		return cb(JSON.stringify(errorHandler.throwInternalServerError("Service configuration missing JOB URL")));				
-	}	
-	if(!config.SVC_API_TOKEN_SECRET) {
-		logger.error("Service configuration missing the Auth token config for Jenkins");
-		return cb(JSON.stringify(errorHandler.throwInternalServerError("Service configuration missing the Auth token config for Jenkins")));				
+		logger.error("Service configuration missing JOB URL" + JSON.stringify(event));
+		return cb(JSON.stringify(errorHandler.throwInternalServerError("Service configuration missing JOB URL")));
 	}
-	
+
 	if (!event.body) {
 		logger.error("Service inputs not defined");
 		return cb(JSON.stringify(errorHandler.throwInputValidationError("Service inputs not defined")));
 	} else if(!event.body.service_name) {
 		logger.error("Service Name is missing in the input");
-		return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Name is missing in the input")));		
+		return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Name is missing in the input")));
 	} else if (event.headers.Authorization === undefined || event.headers.Authorization === "") {
 		logger.error("headers Authorization is missing in the input");
         return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization not defined in header or approriate")));
     }else if(event.body.domain === undefined) {
 		logger.error("Domain key is missing in the input");
-		return cb(JSON.stringify(errorHandler.throwInputValidationError("Domain key is missing in the input")));		
+		return cb(JSON.stringify(errorHandler.throwInputValidationError("Domain key is missing in the input")));
 	}else if(event.body.id === undefined) {
 		logger.error("DB ID is missing in the input");
-		return cb(JSON.stringify(errorHandler.throwInputValidationError("DB ID is missing in the input")));		
+		return cb(JSON.stringify(errorHandler.throwInputValidationError("DB ID is missing in the input")));
 	}
 
 	var version = "LATEST";
 	if(event.body.version) { // version is optional field
 		version = event.body.version;
 	}
-		
+
     try {
 
 		var base_auth_token = "Basic " + new Buffer(config.SVC_USER + ":" + config.SVC_PASWD).toString("base64");
@@ -76,15 +70,15 @@ module.exports.handler = (event, context, cb) => {
 		var req = payloads.requestLoad;
 		req.url = config.DELETE_SERVICE_JOB_URL + "?token=" + config.JOB_TOKEN;
 		req.headers.Authorization = base_auth_token;
-		
+
 		var params = payloads.buildParams;
 		params.service_name = event.body.service_name;
 		params.domain = event.body.domain;
 		params.version = version;
 		params.db_service_id = event.body.id;
         params.auth_token = event.headers.Authorization
-		
-		var tracking_id = Guid.create().value;		
+
+		var tracking_id = Guid.create().value;
 		params.tracking_id = tracking_id;
 
 		req.qs = params;
@@ -98,18 +92,18 @@ module.exports.handler = (event, context, cb) => {
 					payloads.responseLoad.request_id = tracking_id;
 					return cb(null, responseObj(payloads.responseLoad, event.body));
 				} else if(response.statusCode === 401){
-					logger.error("Failed..: "+JSON.stringify(response));				
+					logger.error("Failed..: "+JSON.stringify(response));
 					return cb(JSON.stringify(errorHandler.throwInternalServerError("Not authorized")));
 				}else {
-					logger.error("Failed..: "+JSON.stringify(response));				
+					logger.error("Failed..: "+JSON.stringify(response));
 					return cb(JSON.stringify(errorHandler.throwInternalServerError("Internal error occurred")));
 				}
 			}
-		});		
-		
+		});
+
 	}catch(ex) {
         logger.error('Error : ', ex.message);
         cb(JSON.stringify(errorHandler.throwInternalServerError("Internal error occurred")));
     }
-	
+
 };

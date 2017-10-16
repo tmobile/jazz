@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -20,24 +20,21 @@ const responseObj = require("./components/response.js");
 const CronParser = require("./components/cron-parser.js");
 const https = require('https');
 const request = require('request');
-const secretHandlerModule = require("./components/secret-handler.js");
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 
 /**
-	Serverless create service 
-    @author: UST-Global/Somanchi
+	  @author:
     @version: 1.0
 **/
 
 
 module.exports.handler = (event, context, cb) => {
-    
+
     var errorHandler = errorHandlerModule();
-	var config = configObj(event);
-	var secretHandler = secretHandlerModule();
-	logger.init(event, context);
-	
+  	var config = configObj(event);
+  	logger.init(event, context);
+
     var messageToBeSent;
     var isValidName = function(name) {
         return /^[A-Za-z0-9\-]+$/.test(name);
@@ -62,9 +59,9 @@ module.exports.handler = (event, context, cb) => {
             // Check if Service Creator (username) exists
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Creator not defined")));
         }
-	
+
 	logger.info("Request event: "+JSON.stringify(event));
-	
+
 		//var base_auth_token = "Basic " + new Buffer("jobexec:jenkinsadmin").toString("base64");
 		var base_auth_token = "Basic " + new Buffer(config.SVC_USER + ":" + config.SVC_PASWD).toString("base64");
 
@@ -91,7 +88,7 @@ module.exports.handler = (event, context, cb) => {
             domain: event.body.domain,
             auth_token: event.headers.Authorization
         };
-        
+
         // create-serverless-service API to take slack-channel as one more parameter(optional)
         if(event.body.slack_channel) {
             propertiesObject.slack_channel = event.body.slack_channel;
@@ -101,14 +98,14 @@ module.exports.handler = (event, context, cb) => {
         if((event.body.service_type === "api" || event.body.service_type === "lambda") && (event.body.require_internal_access !== null)) {
             propertiesObject.require_internal_access = event.body.require_internal_access;
         }
-        
+
         // allowing service creators to opt in/out of creating Cloudfront url.
         if (event.body.service_type === "website") {
             // by default Cloudfront url will not be created from now on.
             var create_cloudfront_url = event.body.create_cloudfront_url || false;
             propertiesObject.create_cloudfront_url = create_cloudfront_url;
         }
-	
+
         // Add rate expression to the propertiesObject;
         if (event.body.service_type === "lambda") {
             if (event.body.rateExpression !== undefined) {
@@ -133,13 +130,13 @@ module.exports.handler = (event, context, cb) => {
                 }
             }
         }
-	
-	
+
+
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
         request({
           	url: "{conf-jenkins-host}/job/create-service/buildWithParameters",
-            uri: "{conf-jenkins-host}/job/create-service/buildWithParameters",          
+            uri: "{conf-jenkins-host}/job/create-service/buildWithParameters",
             method: 'POST',
             headers: {
 	            "Authorization": base_auth_token

@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,9 +16,9 @@
 
 /**
     Helper functions for Service-Catalog
-  @module: utils.js
-  @description: Defines functions like format the output as per Service-Catalog schema etc.
-    @author: 
+    @module: utils.js
+    @description: Defines functions like format the output as per Service-Catalog schema etc.
+    @author:
     @version: 1.0
 **/
 

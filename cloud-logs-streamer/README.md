@@ -1,1 +1,1 @@
-This is a sample NodeJs template project
+Function to stream cloudwatch logs to Elasticsearch service.

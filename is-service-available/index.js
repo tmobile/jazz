@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -21,7 +21,6 @@
  * @version: 1.2
  */
 'use strict';
-const secretHandlerModule = require("./components/secret-handler.js"); //Import the secret-handler module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
 
@@ -32,7 +31,6 @@ const responseObj = require("./components/response.js"); //Import the response m
 
 module.exports.handler = (event, context, cb) => {
     var errorHandler = errorHandlerModule();
-    var secretHandler = secretHandlerModule();
     logger.init(event, context);
 
     try {

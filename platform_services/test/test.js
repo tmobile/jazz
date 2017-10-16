@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -19,23 +19,7 @@ const index = require('../index');
 
 describe('Sample', function() {
     it('tests handler', function(done) {
-        this.timeout(15000);
-        // var event = {
-        //     method: 'GET',
-        //     stage: 'dev',
-        //     query: {},
-        //     path: {
-        //         // serviceId: 'asdaksdnlakndlknaldkn'
-        //     },
-        //     body: {}
-        // };
-        // var context = {};
-        // index.handler(event, context, function() {
-        //     // Add your test cases here.
-        //     assert(true);
-        //     done();
-        // })
-
+        // this.timeout(1000);
         done();
     });
 });

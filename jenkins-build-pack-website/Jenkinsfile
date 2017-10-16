@@ -33,24 +33,22 @@ def Event_Status = [
 node ()  {
     echo "Build Pack website params: " + params
 
-///////////////////////////////////
-	
     echo "Build triggered via branch: " + params.scm_branch
     echo "start"
 
     def service = params.service_name
 	def branch = params.scm_branch
 	def domain = params.domain
-    
+
 
     def bitbucket_name = params.service_name
 
-	def var_bitbucket_framework_url = "http://" + env.REPO_BASE + "/scm/" + params.scm_project + "/" 
-	
+	def var_bitbucket_framework_url = "http://" + env.REPO_BASE + "/scm/" + params.scm_project + "/"
+
 	def config
-	
+
     stage('Checkout code base') {
-		
+
 		if (domain  && domain.trim()!="") {
 			bitbucket_name = params.domain + "-" + service
 		 }else{
@@ -59,13 +57,13 @@ node ()  {
 
 		sh 'rm -rf ' + bitbucket_name
 		sh 'mkdir ' + bitbucket_name
-		
+
 		dir(bitbucket_name)
 		{
 			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
 		}
-		
-		// @TODO: dir can be removed, needs to be refactored	
+
+		// @TODO: dir can be removed, needs to be refactored
 		config = dir(bitbucket_name)
 		{
 			return LoadConfiguration()
@@ -73,9 +71,9 @@ node ()  {
 
 	}
 
-///////////////////////////////////	
-	
-	
+///////////////////////////////////
+
+
 
   	def region = config['region']
 	//if (region && region.trim() == "")
@@ -101,7 +99,7 @@ node ()  {
 				if (config['create_cloudfront_url'] == true || config['create_cloudfront_url'] == "true") {
 					create_cloudfront_url = true
 				}
-				
+
 				echo "create_cloudfront_url====" + create_cloudfront_url
 
 				//branch = env.BRANCH_NAME
@@ -123,10 +121,10 @@ node ()  {
 		  sendEvent(service, branch, "STAGING", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
-			
+
 			sh "aws configure set profile.cloud-api.region "+region
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
 			def assetInfo = "S3 Folder - /" + s3StgBucket + "/"+service
@@ -203,10 +201,10 @@ node ()  {
 		  sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
-			
+
 			sh "aws configure set profile.cloud-api.region "+region
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
 			def assetInfo = "S3 Folder - /" + s3ProdBucket + "/"+service
@@ -273,16 +271,16 @@ node ()  {
 		}
 	  }
 	  else {
-	  
-	  
-		stage ('Deployment to Deployement Env'){
+
+
+		stage ('Deployment to Deployment Env'){
 		  sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
-			
+
 			sh "aws configure set profile.cloud-api.region "+region
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
 			def assetInfo = "S3 Folder - /" + s3DevBucket + "/"+service
@@ -348,7 +346,7 @@ node ()  {
 
 		  }
 		}
-		
+
 	  }
 	}
 }
@@ -363,7 +361,7 @@ def getS3BucketName(String envname) {
 	} else if (envname == "prod") {
 		return env.WEBSITE_PROD_S3BUCKET;
 	}
-	
+
 	return env.WEBSITE_DEV_S3BUCKET;
 }
 
@@ -418,7 +416,7 @@ def generateDistributionConfig(service, envname, config) {
 	sh "sed -i -- 's/{conf_s3bucketname}/" + getS3BucketName(envname) + "/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's:{conf_origin_id}:" + env.CLOUDFRONT_ORIGIN_ID + ":g' distribution_config_with_tags.json"
-	
+
 	def owner = ''
 	try{
 		if (config['owner']) {
@@ -552,7 +550,7 @@ def loadBucketPolicy(String s3Bucket){
 def loadIPList() {
 
   dir('_jenkins_buildpack') {
-  
+
 		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + env.REPO_BASE + '/scm/' + env.REPO_CORE + '/jenkins-build-pack-website.git']]])
 
 	}

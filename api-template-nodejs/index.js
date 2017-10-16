@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -24,37 +24,18 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const secretHandlerModule = require("./components/secret-handler.js"); //Import the secret-handler module.
-
 
 module.exports.handler = (event, context, cb) => {
 
   //Initializations
   var errorHandler = errorHandlerModule();
   var config = configObj(event);
-  var secretHandler = secretHandlerModule();
   logger.init(event, context);
 
   try {
 
     //Following is a code snippet to fetch values from config file:
     //var myVal = config.configKey;
-
-    //Following is a code snippet to fetch plaintext for your secret:
-    /*
-		logger.info("config.mysecret: " + JSON.stringify(config.mysecret));
-    var decryptObj = secretHandler.decryptSecret(config.mysecret);
-    var plaintext = "";
-    var decryptionerror = "";
-    if (decryptObj.error !== undefined && decryptObj.error === true) {
-      decryptionerror = decryptObj.message;
-      logger.info("decryptionerror: " + decryptionerror);
-
-    } else {
-      plaintext = decryptObj.message;
-      logger.info("plaintext: " + plaintext);
-    }
-		*/
 
 
     //Following code snippet describes how to log messages within your code:
@@ -73,17 +54,12 @@ module.exports.handler = (event, context, cb) => {
 
     //Your GET method should be handled here
     if (event !== undefined && event.method !== undefined && event.method === 'GET') {
-      //sampleResponse.message = "Your Node Template GET Method executed successfully";
-      logger.info(event);
-      logger.info(context);
-
       logger.verbose(sampleResponse);
       cb(null, responseObj(sampleResponse, event.query));
     }
 
 		//Your POST method should be handled here
     if (event !== undefined && event.method !== undefined && event.method === 'POST') {
-      //sampleResponse.message = "Your Node Template POST Method executed successfully";
       cb(null, responseObj(sampleResponse, event.body));
     }
 

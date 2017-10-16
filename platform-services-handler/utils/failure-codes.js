@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,7 +16,7 @@
 
 
 var failureCodeENUM = {
-    DB_ERROR_1 : {type: "DB_ERROR", code: "DB_WRITE", message: "Error storing data in database"},
+  DB_ERROR_1 : {type: "DB_ERROR", code: "DB_WRITE", message: "Error storing data in database"},
 	DB_ERROR_2 : {type: "DB_ERROR", code: "DB_LOOKUP", message: "Error reading database"},
 	PR_ERROR_1 : {type: "PROCESSING_ERROR", code: "SCHEMA_VALIDATION", message: "Unable to process event data"},
 	PR_ERROR_2 : {type: "PROCESSING_ERROR", code: "UNKNOWN", message: "Unknown error"},

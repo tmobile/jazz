@@ -1,1 +1,1 @@
-This is a sample NodeJs template project
+Service to trigger new Jazz service creation
