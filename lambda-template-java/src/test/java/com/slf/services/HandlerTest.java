@@ -23,6 +23,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.slf.model.Response;
 import com.slf.model.Request;
+import com.slf.services.Handler;
 
 public class HandlerTest {
 

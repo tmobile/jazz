@@ -7,3 +7,13 @@ node_modules
 .settings/
 target/
 .vscode/
+## IDE ##
+*/.classpath
+*/.project
+*/.settings
+*/RemoteSystemsTempFiles/
+.metadata/
+.recommenders/
+*/target/
+
+
