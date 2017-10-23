@@ -14,7 +14,7 @@
 // limitations under the License.
 // =========================================================================
 
-package com.slf.services;
+package com.tmobile.services;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
@@ -23,6 +23,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.slf.model.Response;
 import com.slf.model.Request;
+import com.slf.services.Handler;
 
 public class HandlerTest {
 
