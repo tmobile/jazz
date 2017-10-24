@@ -6,19 +6,5 @@
   "username": "DSundar3",
   "approvers": [
     "DSundar3"
-  ],
-  "stage": "dev",
-  "body": {
-    "service_type": "api",
-    "service_name": "test-secret-management-1",
-    "runtime": "nodejs",
-    "domain": "platform",
-    "username": "DSundar3",
-    "approvers": [
-      "DSundar3"
-    ]
-  },
-  "headers" : {
-    "Authorization": "xyz"
-  }
+  ]
 }

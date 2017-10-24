@@ -1,7 +1,7 @@
 {
     "name": "create-serverless-service",
     "version": "0.0.1",
-    "description": "API for creating serverless Service",
+    "description": "API for creating jazz service",
     "main": "index.js",
     "private": true,
     "author": [],
@@ -10,14 +10,22 @@
     },
     "dependencies": {
         "deasync": "*",
+        "npm": "^5.0.3",
+        "chai": "^3.5.0",
+        "istanbul": "^0.4.5",
+        "lambda-tester": "^2.6.1",
+        "mocha": "^v3.0.0",
+        "nock": "^9.0.2",
         "request": "^2.75.0",
         "https": "*"
     },
     "devDependencies": {
         "chai": "^3.5.0",
         "istanbul": "^0.4.5",
-        "lambda-local": "^1.4.2",
+        "lambda-tester": "^2.6.1",
         "mocha": "^v3.0.0",
-        "nock": "^9.0.2"
+        "nock": "^9.0.2",
+        "request": "^2.75.0",
+        "https": "*"
     }
 }
