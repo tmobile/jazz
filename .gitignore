@@ -5,9 +5,7 @@ node_modules
 .classpath
 .project
 .settings/
-target/
 .vscode/
-## IDE ##
 */.classpath
 */.project
 */.settings
@@ -15,5 +13,3 @@ target/
 .metadata/
 .recommenders/
 */target/
-
-
