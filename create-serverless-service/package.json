@@ -1,7 +1,7 @@
 {
     "name": "create-serverless-service",
     "version": "0.0.1",
-    "description": "API for creating jazz service",
+    "description": "API for creating serverless Service",
     "main": "index.js",
     "private": true,
     "author": [],
