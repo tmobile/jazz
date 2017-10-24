@@ -106,6 +106,24 @@ public class HandlerTest {
 		assertTrue(bool);
 	}
 	
+	/*
+	 * The response from the handleRequest() method should contain a map from input.body
+	 * method input - request object containing some message in the body field; context
+	 * method output - response object with a copy of the request's body field
+	 */
+	@Test
+	public void handleRequestReturnsInputBody(){
+		//setting an initial body map for the input request
+		Map<String,String> body = new HashMap<String, String>();
+		body.put("k", "success");
+		input.setBody(body);
+		Response handlerResponse = handler.handleRequest(input, context);
+		HashMap<String,String> responseInput = (HashMap) handlerResponse.getInput();
+		String bodyValue = responseInput.get("k");
+		boolean bool = bodyValue.equals("success");
+		assertTrue(bool);
+	}
+	
 	@Test
 	public void handler200Response() {
 		//Request input = new Request();
