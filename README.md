@@ -10,6 +10,8 @@ Jazz addresses gaps and pain points with serverless, particularly for production
 
 Jazz is [open-sourced](http://opensource.t-mobile.com) and under active development by T-Mobile's Cloud Center of Excellence.
 
+[Watch the video preview here](https://www.youtube.com/watch?v=6Kp1yxMjn1k)
+
 ## Installation
 
 You can [try the Developer Preview](https://github.com/tmobile/jazz-installer) by using the automated installer.
