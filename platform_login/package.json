@@ -1,7 +1,7 @@
 {
     "name": "auth",
     "version": "0.0.1",
-    "description": "Authentication and Token Service",
+    "description": "Login service for Jazz",
     "main": "handler.js",
     "private": true,
     "author": [],
@@ -9,26 +9,17 @@
         "test": "mocha"
     },
     "dependencies": {
-		"chai": "^3.5.0",
-		"mocha": "^v3.0.0",
-		"deasync":"*",
-		"async":"*",
-		"jsonwebtoken": "*",
-		"request":"*",
-		"aws-sdk":"*",
-		"moment":"*",
-		"amazon-cognito-identity-js": "^1.19.0"
+        "deasync": "*",
+        "async": "*",
+        "jsonwebtoken": "*",
+        "request": "*",
+        "moment": "*",
+        "amazon-cognito-identity-js": "^1.19.0"
     },
     "devDependencies": {
-                "activedirectory":"*",
-                "deasync":"*",
-                "async":"*",
-                "jsonwebtoken": "*",
-                "request":"*",
-                "aws-sdk":"*",
-                "moment":"*",
-                "amazon-cognito-identity-js": "^1.19.0",
-                "chai": "^3.5.0",
-                "mocha": "^v3.0.0"		
+        "aws-sdk": "*",
+        "chai": "^3.5.0",
+        "mocha": "^v3.0.0",
+        "lambda-local": "^1.4.2"
     }
 }

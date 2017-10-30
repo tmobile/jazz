@@ -7,7 +7,7 @@
 **/
 
 var getStageConfig = (event) => {
-    var stage =  'dev'  // event.stage;
+    var stage = event.stage;
     
     var configObj = {};
     // Loads the config files based on the env.
@@ -18,6 +18,8 @@ var getStageConfig = (event) => {
         configObj = require('../config/stg-config.json');
     } else if (stage === 'prod'){
         configObj = require('../config/prod-config.json');
+    }else {
+        configObj = require('../config/' + stage + '-config.json')
     }
     return configObj;
 };
