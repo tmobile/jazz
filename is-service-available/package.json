@@ -9,14 +9,12 @@
         "test": "mocha"
     },
     "dependencies": {
-        "deasync":"*",
+        "deasync": "*",
         "request": "^2.75.0"
     },
     "devDependencies": {
         "chai": "^3.5.0",
-        "istanbul": "^0.4.5",
-        "lambda-tester": "^2.6.1",
-        "mocha": "^v3.0.0",
-        "nock": "^9.0.2"
+        "lambda-local": "^1.4.2",
+        "aws-sdk": "*"
     }
 }
