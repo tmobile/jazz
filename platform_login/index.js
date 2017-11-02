@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,9 +27,9 @@ const AWSCognito = require('amazon-cognito-identity-js');
 
 /**
  * API Auth Service
- * 
- * @author: 
- * @version: 
+ *
+ * @author:
+ * @version:
  */
 
 module.exports.handler = (event, context, callback) => {
@@ -39,6 +39,11 @@ module.exports.handler = (event, context, callback) => {
     var errorHandler = errorHandlerModule(logger);
 
 	try {
+
+      logger.error(config.USER_POOL_ID+" << ");
+      logger.error(config.CLIENT_ID+" << ");
+
+
 		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
 
 			if (event.body.username === undefined || event.body.username === "") {
@@ -50,15 +55,15 @@ module.exports.handler = (event, context, callback) => {
 			}
 
 			var authenticationData = {
-				Username : event.body.username,
-				Password : event.body.password
-			};
-			
+					  Username : event.body.username,
+					  Password : event.body.password
+					};
+
 			var poolData = {
-					UserPoolId : config.USER_POOL_ID,  
+					UserPoolId : config.USER_POOL_ID,
 					ClientId : config.CLIENT_ID
 				};
-			
+
 			var authenticationDetails = new AWSCognito.AuthenticationDetails(authenticationData);
 			var userPool = new AWSCognito.CognitoUserPool(poolData);
 			var userData = {

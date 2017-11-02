@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,13 +15,39 @@
 // =========================================================================
 
 const assert = require('chai').assert;
+const expect = require('chai').expect;
+const awsContext = require('aws-lambda-mock-context');
+const AWSCognito = require('amazon-cognito-identity-js');
+const sinon = require('sinon');
 const index = require('../index');
 
-describe('Sample', function() {
-  it('tests handler', function(done) {
+var event, context, stub, spy;
 
-    // Add your test cases here.
-    assert(true);
-    done();
+//Setting up a spy to wrap mocked cognito functions (stubs) for each test scenario
+spy = sinon.spy();
+
+describe('Login handler', function() {
+
+  //Setting up default values for the aws event and context needed for handler params
+  beforeEach(function(){
+    event = { "method" : "",
+              "stage" : "",
+              "body" : ""
+            };
+    context = awsContext();
+  });
+
+  it('should pass in user data for authentication', function() {
+    //mocking "authenticateUser" function
+    stub = sinon.stub(AWSCognito.CognitoUser.prototype, "authenticateUser", spy);
+    event.method = "POST";
+    event.stage = "test";
+    event.body = { "username" : "whatTimeIsIt",
+                   "password" : "AdventureT1me!"
+                 };
+    var returned = index.handler(event,context);
+    stub.restore();
+    assert.isTrue(spy.called);
+    //expect(() => index.handler(event,context)).to.throw();
   });
 });

@@ -17,9 +17,11 @@
         "amazon-cognito-identity-js": "^1.19.0"
     },
     "devDependencies": {
+        "aws-lambda-mock-context": "^3.1.1",
         "aws-sdk": "*",
         "chai": "^3.5.0",
-        "mocha": "^v3.0.0",
-        "lambda-local": "^1.4.2"
+        "mocha": "^3.5.3",
+        "lambda-local": "^1.4.2",
+        "sinon": "1.17.7"
     }
 }
