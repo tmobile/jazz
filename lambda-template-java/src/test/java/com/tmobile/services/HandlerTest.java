@@ -14,41 +14,23 @@
 // limitations under the License.
 // =========================================================================
 
-package com.tmobile.services;
+package com.slf.services;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.*;
-
-import org.junit.Before;
 import org.junit.Test;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.slf.model.Response;
 import com.slf.model.Request;
-import com.slf.services.Handler;
 
 public class HandlerTest {
 
 	private Handler handler = new Handler();
 
-	public Context context;
-	Request input;
-	
-	@Before
-	public void setup(){
-		input = new Request();
-	}
-	
-	/*
-	 * The handleRequest() method should return a response object regardless of the request
-	 * method input - default request and context objects
-	 * method output - response object with two hashmap fields, "data," and "input"
-	 */
-	@Test
-	public void handleRequestReturnsResponse(){
-		boolean bool = handler.handleRequest(input, context) instanceof Response; 
-		assertTrue(bool);
-	}
+	// private input = Request;
+	 public  Context context;
+	 public  Request request;
 
 	@Test
 	public void handlerSaysHello() {
