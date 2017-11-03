@@ -15,7 +15,15 @@
 // =========================================================================
 
 var getStageConfig = (event) => {
-    var stage = event.stage || 'dev'; // default to dev
+    var stage;
+    
+    if (event && event.awslogs && event.awslogs.data) {
+        // cw events default to dev
+        stage = 'dev';
+    }else {
+        stage = event.stage
+    } 
+    
     var configObj = {};
     // Loads the config files based on the env.
     // Please edit the JSON files.
