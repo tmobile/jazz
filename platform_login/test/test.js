@@ -21,7 +21,7 @@ const AWSCognito = require('amazon-cognito-identity-js');
 const sinon = require('sinon');
 const index = require('../index');
 
-var event, context, stub, spy;
+var event, context, stub, spy, callback;
 
 //Setting up a spy to wrap mocked cognito functions (stubs) for each test scenario
 spy = sinon.spy();
@@ -30,21 +30,34 @@ describe('Login handler', function() {
 
   //Setting up default values for the aws event and context needed for handler params
   beforeEach(function(){
-    event = { "method" : "",
-              "stage" : "",
-              "body" : ""
+    event = { "method" : "POST",
+              "stage" : "test",
+              "body" : { "username" : "whatTimeIsIt",
+                             "password" : "AdventureT1me!"
+                       }
             };
     context = awsContext();
+    callback = (value) => {
+      return value;
+    };
+  });
+
+  /*
+  * Given an event with no method, handler() shows that a Bad Request has been made
+  * @param {object} event containing only stage and body attributes
+  * @param {object} aws context
+  * @param {function} callback function that returns what was passed
+  * @returns {string} callback function showing error type of badrequest has occured
+  */
+  it("should throw a BadRequest error for undefined method", function(){
+    event.method = undefined;
+    var bool = index.handler(event,context,callback).includes("Bad Request");
+    assert.isTrue(bool);
   });
 
   it('should pass in user data for authentication', function() {
     //mocking "authenticateUser" function
     stub = sinon.stub(AWSCognito.CognitoUser.prototype, "authenticateUser", spy);
-    event.method = "POST";
-    event.stage = "test";
-    event.body = { "username" : "whatTimeIsIt",
-                   "password" : "AdventureT1me!"
-                 };
     var returned = index.handler(event,context);
     stub.restore();
     assert.isTrue(spy.called);
