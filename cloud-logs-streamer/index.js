@@ -32,7 +32,6 @@ const responseObj = require("./components/response.js");
 
 module.exports.handler = (input, context, cb) => {
     
-    console.log(JSON.stringify(input));
     logger.init(input, context);
     var config = configObj(input);
 
