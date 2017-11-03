@@ -33,7 +33,7 @@ describe('Login handler', function() {
     event = { "method" : "POST",
               "stage" : "test",
               "body" : { "username" : "whatTimeIsIt",
-                             "password" : "AdventureT1me!"
+                         "password" : "AdventureT1me!"
                        }
             };
     context = awsContext();
@@ -52,6 +52,53 @@ describe('Login handler', function() {
   it("should throw a BadRequest error for undefined method", function(){
     event.method = undefined;
     var bool = index.handler(event,context,callback).includes("Bad Request");
+    assert.isTrue(bool);
+  });
+
+  /*
+  * Given an event with non POST method, handler() shows that a Bad Request has been made
+  * @param {object} event containing a non POST method
+  * @param {object} aws context
+  * @param {function} callback function that returns what was passed
+  * @returns {string} callback function showing error type of badrequest has occured
+  */
+  it("should throw a BadRequest error for method other than POST", function(){
+    var methods = ["PUT","GET","HEAD","OPTIONS","DELETE"];
+    var badRequestBool = true;
+    //check if BadRequest occurs for each http method, if one passes without a bad request error
+    //have the above bool value be false
+    for(var i=0; i < methods.length; i++){
+      event.method = methods[i];
+      if(!index.handler(event,context,callback).includes("Bad Request")){
+        badRequestBool = false;
+      }
+    }
+    assert.isTrue(badRequestBool);
+  });
+
+  /*
+  * Given an event with no username, handler() shows that a 101 error has been made
+  * @param {object} event without username information
+  * @param {object} aws context
+  * @param {function} callback function that returns what was passed
+  * @returns {string} callback function showing username was not provided
+  */
+  it("should throw a 101 error for missing username", function(){
+    event.body.username = undefined;
+    var bool = index.handler(event,context,callback).includes("101");
+    assert.isTrue(bool);
+  });
+
+  /*
+  * Given an event with no password, handler() shows that a 102 error has been made
+  * @param {object} event without password information
+  * @param {object} aws context
+  * @param {function} callback function that returns what was passed
+  * @returns {string} callback function showing password was not provided for given user
+  */
+  it("should throw a 102 error for missing password", function(){
+    event.body.password = undefined;
+    var bool = index.handler(event,context,callback).includes("102");
     assert.isTrue(bool);
   });
 
