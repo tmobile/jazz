@@ -186,7 +186,7 @@ node {
 					
 					// import swagger api spec
 					echo "Deploying API gateway Endpoints"
-					sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+"  --deploy "+envmnt+" swagger/swagger.json "
+					sh "/var/lib/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+"  --deploy "+envmnt+" swagger/swagger.json "
 
 				}
 				//sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
