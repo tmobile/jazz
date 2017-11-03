@@ -1,1 +1,1 @@
-Function to stream cloudwatch logs to Elasticsearch service.
+Service to stream cloudwatch logs to Elasticsearch service.
