@@ -2,8 +2,11 @@
 .serverless
 node_modules
 .DS_Store
-.classpath
-.project
-.settings/
-target/
 .vscode/
+*/.classpath
+*/.project
+*/.settings
+*/RemoteSystemsTempFiles/
+.metadata/
+.recommenders/
+*/target/

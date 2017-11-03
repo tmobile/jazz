@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,9 +27,9 @@ const AWSCognito = require('amazon-cognito-identity-js');
 
 /**
  * API Auth Service
- * 
- * @author: 
- * @version: 
+ *
+ * @author:
+ * @version:
  */
 
 module.exports.handler = (event, context, callback) => {
@@ -42,8 +42,8 @@ module.exports.handler = (event, context, callback) => {
 
       logger.error(config.USER_POOL_ID+" << ");
       logger.error(config.CLIENT_ID+" << ");
-      
-      
+
+
 		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
 
 			if (event.body.username === undefined || event.body.username === "") {
@@ -58,12 +58,12 @@ module.exports.handler = (event, context, callback) => {
 					  Username : event.body.username,
 					  Password : event.body.password
 					};
-			
+
 			var poolData = {
-					UserPoolId : config.USER_POOL_ID,  
+					UserPoolId : config.USER_POOL_ID,
 					ClientId : config.CLIENT_ID
 				};
-			
+
 			var authenticationDetails = new AWSCognito.AuthenticationDetails(authenticationData);
 			var userPool = new AWSCognito.CognitoUserPool(poolData);
 			var userData = {
@@ -79,17 +79,14 @@ module.exports.handler = (event, context, callback) => {
 						callback(null, responseObj({"token": result.getAccessToken().getJwtToken()}, {"username": event.body.username}));
 				},
 				onFailure: function(err) {
-						logger.error("Error while authenticating: " + err);                        
+						logger.error("Error while authenticating: " + err);
 				  	    callback({"server_error": "Authentication Failed for user: " + event.body.username + " with unknown error."});
-                        
 				}
-
 			 });
-
 			}else {
 				callback(JSON.stringify(errorHandler.throwInputValidationError("Bad Request")));
 			}
-				
+
 
 	} catch (e) {
 		callback(JSON.stringify(errorHandler.throwInternalServerError("Unknown error occured: " + e.message)));
