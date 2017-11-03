@@ -14,18 +14,22 @@
 // limitations under the License.
 // =========================================================================
 
-/**
-	Nodejs Template Project
-  @module: response.js
-  @description: Defines response object
-	@author:
-	@version: 1.0
-**/
+var getStageConfig = (event) => {
+    var stage = event.stage || 'dev'; // default to dev
+    var configObj = {};
+    // Loads the config files based on the env.
+    // Please edit the JSON files.
+    if (stage === 'dev') {
+        configObj = require('../config/dev-config.json');
+    } else if (stage === 'stg') {
+        configObj = require('../config/stg-config.json');
+    } else if (stage === 'prod'){
+        configObj = require('../config/prod-config.json');
+    }
+    return configObj;
+};
 
-module.exports = (response, input) => {
-  var output = {
-    "data": response,
-    "input": input
-  };
-  return output;
+module.exports = (event) => {
+    var config = getStageConfig(event);
+    return config;
 };

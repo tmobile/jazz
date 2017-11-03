@@ -1,8 +1,8 @@
 {
-  "name": "login",
+  "name": "auth",
   "version": "0.0.1",
-  "description": "Authentication and Token Service",
-  "main": "index.js",
+  "description": "Login service for Jazz",
+  "main": "handler.js",
   "private": true,
   "author": [],
   "scripts": {
@@ -17,15 +17,11 @@
     "amazon-cognito-identity-js": "^1.19.0"
   },
   "devDependencies": {
-    "async": "*",
     "aws-lambda-mock-context": "^3.1.1",
     "aws-sdk": "*",
     "chai": "^3.5.0",
-    "deasync": "*",
-    "jsonwebtoken": "*",
-    "mocha": "^3.5.3",
-    "moment": "*",
-    "request": "*",
-    "sinon": "1.17.7"
+    "lambda-local": "^1.4.2",
+    "mocha": "^v3.0.0",
+    "sinon": "^1.17.7"
   }
 }

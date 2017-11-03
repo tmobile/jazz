@@ -37,6 +37,9 @@ describe('Login handler', function() {
     context = awsContext();
   });
 
+  /*
+  * Given a valid event object, handler() should invoke cognito's authenticateUser()
+  */
   it('should pass in user data for authentication', function() {
     //mocking "authenticateUser" function
     stub = sinon.stub(AWSCognito.CognitoUser.prototype, "authenticateUser", spy);

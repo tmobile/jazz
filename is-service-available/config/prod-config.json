@@ -1,6 +1,4 @@
 {
-  "bitbucket_service_host" : "http://{conf-repo-base}",
-  "bitbucket_service_path" : "/rest/api/1.0/projects/CAS/repos/",
-  "bitbucket_service_login_username" : "jenkins1",
-  "bitbucket_service_login_password" : "jenkinsadmin"
+  "SERVICES_TABLE": "{inst_stack_prefix}_services-prod",
+  "REGION": "{conf-region}"
 }
