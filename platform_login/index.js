@@ -80,7 +80,7 @@ module.exports.handler = (event, context, callback) => {
           		}
 			});
 		}else {
-			return callback(JSON.stringify(errorHandler.throwInputValidationError("Bad Request")));
+			return callback(JSON.stringify(errorHandler.throwInputValidationError("100", "Bad Request")));
 		}
 	} catch (e) {
 		return callback(JSON.stringify(errorHandler.throwInternalServerError("103", "Unknown error occured: " + e.message)));
