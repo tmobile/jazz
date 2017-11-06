@@ -20,8 +20,9 @@ const awsContext = require('aws-lambda-mock-context');
 const AWSCognito = require('amazon-cognito-identity-js');
 const sinon = require('sinon');
 const index = require('../index');
+const logger = require("../components/logger.js");
 
-var event, context, stub, spy, callback;
+var event, context, spy, callback, stub;
 
 //Setting up a spy to wrap mocked cognito functions (stubs) for each test scenario
 spy = sinon.spy();
@@ -51,7 +52,8 @@ describe('Login handler', function() {
   */
   it("should throw a BadRequest error for undefined method", function(){
     event.method = undefined;
-    var bool = index.handler(event,context,callback).includes("Bad Request");
+    var bool = index.handler(event,context,callback).includes("Bad Request") &&
+                index.handler(event,context,callback).includes("100");
     assert.isTrue(bool);
   });
 
@@ -69,7 +71,8 @@ describe('Login handler', function() {
     //have the above bool value be false
     for(var i=0; i < methods.length; i++){
       event.method = methods[i];
-      if(!index.handler(event,context,callback).includes("Bad Request")){
+      if(!(index.handler(event,context,callback).includes("Bad Request") &&
+          index.handler(event,context,callback).includes("100"))){
         badRequestBool = false;
       }
     }
@@ -85,7 +88,8 @@ describe('Login handler', function() {
   */
   it("should throw a 101 error for missing username", function(){
     event.body.username = undefined;
-    var bool = index.handler(event,context,callback).includes("101");
+    var bool = index.handler(event,context,callback).includes("101") &&
+                index.handler(event,context,callback).includes("Username not provided");
     assert.isTrue(bool);
   });
 
@@ -98,7 +102,34 @@ describe('Login handler', function() {
   */
   it("should throw a 102 error for missing password", function(){
     event.body.password = undefined;
-    var bool = index.handler(event,context,callback).includes("102");
+    var bool = index.handler(event,context,callback).includes("102") &&
+                index.handler(event,context,callback).includes("No password provided for user: ");
+    assert.isTrue(bool);
+  });
+
+  /*
+  * Given information that isn't authenticatable, handler() throws BadRequest Error with info
+  * @param {object} event with non-valid user information
+  * @param {object} aws context
+  * @param {function} callback function that returns what was passed
+  * @returns {string} callback function showing error occured with descriptive message
+  */
+  it("should throw a descriptive error when cognito fails to authenticate", function(){
+    //have the authenticateUser() Cognito function trigger the callback failure logic in index
+    stub = sinon.stub(AWSCognito.CognitoUser.prototype, "authenticateUser", (authDetails, cb) => {
+      var err = {
+        "code" : "000",
+        "message" : "some error occurred as expected"
+      }
+      return cb.onFailure(err);
+    });
+    var callFunction = index.handler(event,context, callback);
+    //get the value of the onFailure() method from index after the stub was triggered
+    var returnValues = stub.returnValues[0];
+    var bool = returnValues.includes("BadRequest") && returnValues.includes("000") &&
+                returnValues.includes("some error occurred as expected");
+    //un-wrap the function from the stub/spy
+    AWSCognito.CognitoUser.prototype.authenticateUser.restore();
     assert.isTrue(bool);
   });
 
@@ -111,6 +142,5 @@ describe('Login handler', function() {
     var returned = index.handler(event,context);
     stub.restore();
     assert.isTrue(spy.called);
-    //expect(() => index.handler(event,context)).to.throw();
   });
 });
