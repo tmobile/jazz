@@ -1,3 +1,19 @@
+// =========================================================================
+// Copyright � 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
 'use strict';
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
@@ -10,6 +26,7 @@ const AWS = require('aws-sdk');
 const _ = require('lodash');
 
 var pems;
+var cognitoUserPoolEndpoint;
 
 module.exports.handler = function(event, context, cb) {
 
@@ -22,13 +39,13 @@ module.exports.handler = function(event, context, cb) {
         return cb("Unauthorized");
     }
 
-    var iss = 'https://cognito-idp.' + config.REGION + '.amazonaws.com/' + config.USER_POOL_ID;
+    cognitoUserPoolEndpoint = `https://cognito-idp.${config.REGION}.amazonaws.com/${config.USER_POOL_ID}`;
 
     //Download PEM for your UserPool if not already downloaded
     if (!pems) {
         //Download the JWKs and save it as PEM
         request({
-            url: iss + '/.well-known/jwks.json',
+            url: cognitoUserPoolEndpoint + '/.well-known/jwks.json',
             json: true
         }, function (error, response, body) {
             if (!error && response.statusCode === 200) {
@@ -67,7 +84,7 @@ function ValidateToken(pems, event, context, cb) {
     }
 
     //Fail if token is not from your UserPool
-    if (decodedJwt.payload.iss != iss) {
+    if (decodedJwt.payload.iss != cognitoUserPoolEndpoint) {
         logger.error("invalid issuer");
         return cb("Unauthorized");
     }
@@ -87,8 +104,7 @@ function ValidateToken(pems, event, context, cb) {
     }
 
     //Verify the signature of the JWT token to ensure it's really coming from your User Pool
-
-    jwt.verify(token, pem, { issuer: iss }, function(err, payload) {
+    jwt.verify(token, pem, { issuer: cognitoUserPoolEndpoint }, function(err, payload) {
         if(err) {
             logger.error(JSON.stringify(err));
             
@@ -132,6 +148,7 @@ function ValidateToken(pems, event, context, cb) {
             cognito.getUser(params, function(err, data) {
                 if (err) { 
                     logger.error(JSON.stringify(err)); 
+                    return cb("Unauthorized");
                 }
                 else {
                     var emailAddress = _.find(data.UserAttributes, {"Name": "email"});
