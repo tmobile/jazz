@@ -37,41 +37,40 @@ module.exports.handler = (event, context, cb) => {
 
 	try {
 
-		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
+		if (!event || !event.method || event.method != 'POST') {
+			logger.error("Invalid input parameters " + JSON.stringify(event));
+			return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input parameters.')));
+		}
 
-			if (event.headers.Authorization === undefined || event.headers.Authorization === "") {
-				logger.error('No session token to sign-out');
-				return cb(JSON.stringify(errorHandler.throwInputValidationError('Authorization token not provided.')));
-			}
+		if (!event.headers.Authorization) {
+			logger.error('No session token to sign-out');
+			return cb(JSON.stringify(errorHandler.throwInputValidationError('Authorization token not provided.')));
+		}
 
 		var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
 
-		var paramss = {
-			  AccessToken: event.headers.Authorization /* required */
+		var cognitoParams = {
+			AccessToken: event.headers.Authorization
 		};
 
-		cognitoidentityserviceprovider.getUser(paramss, function(err, data) {
-		     if (err) 
-			logger.info(" Couldnot identify user from the available token "+err+" stack "+ err.stack); // an error occurred
-		     else     {
-		      	logger.info(" Identified User from Token "+JSON.stringify(data.Username));           // successful response
-		     }
-		});
-
-		cognitoidentityserviceprovider.globalSignOut(paramss, function(err, data) {
-			if (err)
-			   logger.info(" Error "+err+" stack "+ err.stack); // an error occurred
+		cognitoidentityserviceprovider.getUser(cognitoParams, function(err, data) {
+			if (err) 
+				logger.info("Couldnot identify user from the available token " + JSON.stringify(err));
 			else     {
-			   logger.info(" Signed out "+JSON.stringify(data));           // successful response
-			   cb(null, responseObj({"status": "User signed out successfully!"}, {}));
+				logger.info("Identified user from Token "+JSON.stringify(data.Username));
+
+				cognitoidentityserviceprovider.globalSignOut(cognitoParams, function(err, data) {
+					if (err)
+						logger.info(" Error "+err+" stack "+ err.stack); 
+					else     {
+						logger.info(" Signed out "+JSON.stringify(data));
+						cb(null, responseObj({"status": "User signed out successfully!"}, {}));
+					}
+				});
 			}
 		});
-
-	}
-
 	} catch (e) {
+		logger.error("Unknown error occured. Could not signout user! "+ JSON.stringify(e));
 		cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown error occured. Could not signout user! "+e)));
-
 	}
-
 };
