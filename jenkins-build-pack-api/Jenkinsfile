@@ -253,14 +253,13 @@ node() {
 						//validateSwaggerFile( service, domain, apiHostName )
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
-						//sh "aws-api-import --update tutm3gzra5  --deploy prod swagger/swagger.json --profile cloud-api"
+						
 						sh "/var/lib/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy prod swagger/swagger.json "
 
 						echo "#############################--------PROD Service End point URL--------####################################"
 						echo "PROD URL :https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/prod/" + domain + "/" + params.service_name
 
 					}
-
 
 					// reset Credentials
 					// resetCredentials()
@@ -304,7 +303,7 @@ node() {
 					//validateSwaggerFile( service, domain, apiHostName )
 					// import swagger api spec
 					echo "Deploying to staging API Gateway environment.."
-					//sh "aws-api-import --update pkmtwvozkg  --deploy dev swagger/swagger.json --profile cloud-api"
+					
 					sh "/var/lib/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json"
 
 					echo "#############################--------DEV Service End point URL--------####################################"
