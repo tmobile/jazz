@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,9 +27,9 @@ const AWSCognito = require('amazon-cognito-identity-js');
 
 /**
  * API Auth Service
- * 
- * @author: 
- * @version: 
+ *
+ * @author:
+ * @version:
  */
 
 module.exports.handler = (event, context, callback) => {
@@ -53,19 +53,19 @@ module.exports.handler = (event, context, callback) => {
 				Username : event.body.username,
 				Password : event.body.password
 			};
-			
+
 			var poolData = {
-					UserPoolId : config.USER_POOL_ID,  
+					UserPoolId : config.USER_POOL_ID,
 					ClientId : config.CLIENT_ID
 				};
-			
+
 			var authenticationDetails = new AWSCognito.AuthenticationDetails(authenticationData);
 			var userPool = new AWSCognito.CognitoUserPool(poolData);
 			var userData = {
 				Username : event.body.username,
 				Pool : userPool
 			};
-		
+
 			logger.info("Authenticate against cognito for " + event.body.username);
 
 			var cognitoUser = new AWSCognito.CognitoUser(userData);
@@ -75,12 +75,12 @@ module.exports.handler = (event, context, callback) => {
 					return callback(null, responseObj({"token": result.getAccessToken().getJwtToken()}, {"username": event.body.username}));
 				},
 				onFailure: function(err) {
-					logger.error("Error while authenticating: " + JSON.stringify(err));   
+					logger.error("Error while authenticating: " + JSON.stringify(err));
 					return callback(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
           		}
 			});
 		}else {
-			return callback(JSON.stringify(errorHandler.throwInputValidationError("Bad Request")));
+			return callback(JSON.stringify(errorHandler.throwInputValidationError("100", "Bad Request")));
 		}
 	} catch (e) {
 		return callback(JSON.stringify(errorHandler.throwInternalServerError("103", "Unknown error occured: " + e.message)));
