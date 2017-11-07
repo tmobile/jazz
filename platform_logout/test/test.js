@@ -21,6 +21,7 @@ const AWSCognito = require('amazon-cognito-identity-js');
 const AWS = require('aws-sdk-mock');
 const sinon = require('sinon');
 const index = require('../index');
+const logger = require('../components/logger.js');
 
 var event, context, spy, callback;
 
@@ -52,6 +53,38 @@ describe('Logout handler', function() {
   it("should throw an inputValidation error for missing AuthorizationToken", function(){
     event.headers.Authorization = undefined;
     var bool = index.handler(event,context,callback).includes("Authorization token not provided.");
+    assert.isTrue(bool);
+  });
+
+  /*
+  * Upon unsuccesfful user lookup, handler() throws an Error with stack info
+  * @param {object} event with Authorization token
+  * @param {object} aws context
+  * @param {function} callback function that returns what was passed
+  * @returns {string} callback function showing error and the stack property from error
+  */
+  it("should show error information upon unsuccessful user lookup", function(){
+    //mocking the CognitoIdentityServiceProvider functionality
+    var mock = AWS.mock("CognitoIdentityServiceProvider","getUser", (paramss, cb) => {
+      var err = {
+        "name" : "SomeError",
+        "stack" : "stack object to elaborate on error"
+      }
+      //logic in index is expecting a callback with (error object, user data)
+      //in this scenario user data will not be provided due to error being made
+      return cb(err, null);
+    });
+    //wrap the logged output with a spy to test if error message is received
+    var stub = sinon.stub(logger,"info",spy);
+    //trigger the mocked service which will trigger the logged output
+    var callFunction = index.handler(event,context, callback);
+    stub.restore();
+    //the error message should be received as an input paramter for the logger.info
+    var returnValues = stub.args[0][0];
+    console.log(returnValues);
+    AWS.restore("CognitoIdentityServiceProvider");
+    var bool = returnValues.includes("Couldnot identify user from the available token") &&
+                returnValues.includes("stack object to elaborate on error");
     assert.isTrue(bool);
   });
 

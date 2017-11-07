@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -42,24 +42,24 @@ module.exports.handler = (event, context, cb) => {
 			if (event.headers.Authorization === undefined || event.headers.Authorization === "") {
 				logger.error('No session token to sign-out');
 				return cb(JSON.stringify(errorHandler.throwInputValidationError('Authorization token not provided.')));
-			}		
+			}
 
 		var cognitoidentityserviceprovider = new AWS.CognitoIdentityServiceProvider();
-          
+
 		var paramss = {
 			  AccessToken: event.headers.Authorization /* required */
 		};
-          
+
 		cognitoidentityserviceprovider.getUser(paramss, function(err, data) {
 		     if (err) 
 			logger.info(" Couldnot identify user from the available token "+err+" stack "+ err.stack); // an error occurred
 		     else     {
 		      	logger.info(" Identified User from Token "+JSON.stringify(data.Username));           // successful response
 		     }
-		});         
+		});
 
 		cognitoidentityserviceprovider.globalSignOut(paramss, function(err, data) {
-			if (err) 
+			if (err)
 			   logger.info(" Error "+err+" stack "+ err.stack); // an error occurred
 			else     {
 			   logger.info(" Signed out "+JSON.stringify(data));           // successful response
