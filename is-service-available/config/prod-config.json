@@ -1,4 +1,4 @@
 {
-  "SERVICES_TABLE": "{inst_stack_prefix}_services-prod",
+  "SERVICES_TABLE": "{inst_stack_prefix}_services_prod",
   "REGION": "{conf-region}"
 }
