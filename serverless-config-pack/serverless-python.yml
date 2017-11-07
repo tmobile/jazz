@@ -8,7 +8,7 @@ provider:
   owner: jazz
   domain: ""
   stackTags:
-    application: jazz
+    application: {inst_stack_prefix}
     service: ${file(deployment-env.yml):service}
     domain: ${file(deployment-env.yml):domain, self:provider.domain}
     owner: ${file(deployment-env.yml):owner, self:provider.owner}

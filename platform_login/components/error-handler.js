@@ -31,28 +31,28 @@ module.exports = (logger) => {
                 message: errorMessage.toString()
             };
         },
-        throwForbiddenError: function(errorCode, errorMessage) { //Raise not found exceptions
+        throwForbiddenError: function(errorCodeNum, errorMessage) { //Raise not found exceptions
             return {
                 errorCode: errorCodeNum.toString(),
                 errorType: "Forbidden",
                 message: errorMessage.toString()
             };
         },
-        throwUnauthorizedError: function(errorCode, errorMessage) { //Raise not found exceptions
+        throwUnauthorizedError: function(errorCodeNum, errorMessage) { //Raise not found exceptions
             return {
                 errorCode: errorCodeNum.toString(),
                 errorType: "Unauthorized",
                 message: errorMessage.toString()
             };
         },
-        throwNotFoundError: function(errorCode, errorMessage) { //Raise not found exceptions
+        throwNotFoundError: function(errorCodeNum, errorMessage) { //Raise not found exceptions
             return {
                 errorCode: errorCodeNum.toString(),
                 errorType: "NotFound",
                 message: errorMessage.toString()
             };
         },
-        throwInternalServerError: function(errorCode, errorMessage) { //Raise internal server exceptions
+        throwInternalServerError: function(errorCodeNum, errorMessage) { //Raise internal server exceptions
             return {
                 errorCode: errorCodeNum.toString(),
                 errorType: "InternalServerError",
