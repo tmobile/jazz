@@ -106,7 +106,7 @@ describe('Logout handler', function() {
   it('should attempt to signout user from all devices', function() {
     //mocking multiple CognitoIdentityServiceProvider functionalities
     AWS.mock("CognitoIdentityServiceProvider","getUser", (paramss, cb) => {
-      cb(null, "successfully identified user");
+      cb(null, { Username: "ThisisMe" } );
     });
     AWS.mock("CognitoIdentityServiceProvider","globalSignOut",spy);
     var returned = index.handler(event,context,callback);
