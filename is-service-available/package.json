@@ -15,6 +15,7 @@
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",
     "aws-sdk": "*",
+    "aws-sdk-mock": "^1.7.0",
     "chai": "^3.5.0",
     "lambda-local": "^1.4.2",
     "mocha": "^4.0.1",
