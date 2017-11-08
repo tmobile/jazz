@@ -17,7 +17,7 @@ node {
 	   // @TODO: Timeout's has to be removed and refactored 
 		
        //Service 0 platform_services
-	   service_name_params = "cognito-authorizer";
+	   service_name_params = "platform_cognito_authorizer";
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params       
 
 	   sleep(timeout_seconds)
