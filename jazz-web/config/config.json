@@ -1,3 +1,3 @@
 {
-    "baseurl": "https://{API_GATEWAY_KEY_DEV}.execute-api.{inst_region}.amazonaws.com/dev"
+  "baseurl": "https://{API_GATEWAY_KEY_DEV}.execute-api.{inst_region}.amazonaws.com/dev"
 }

@@ -10,3 +10,4 @@ node_modules
 .metadata/
 .recommenders/
 */target/
+.nyc_output/
