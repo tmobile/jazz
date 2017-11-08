@@ -21,6 +21,7 @@ const awsContext = require('aws-lambda-mock-context');
 const AWS = require('aws-sdk-mock');
 const sinon = require('sinon');
 const utils = require("../components/utils.js")();
+const logger = require("../components/logger.js");
 
 var event, context, callback, spy, stub, checkCase;
 
@@ -219,18 +220,17 @@ describe('is-service-available', function() {
       assert.isTrue(bool);
     });
 
-    /*TODO 
+    /*
     * Given valid input params, handler() should attempt to lookup service in database
     * @param {object} event - default event object
     * @param {object} context - default mock aws context
     * @param {function} callback - return the given input value
     */
-    it("should call utils.isServiceExists() if a proper input is made", function(){
-      stub = sinon.stub(utils, "isServiceExists", spy);
+    it("should attempt to utilize the dynamodb service if a proper input is made", function(){
+      AWS.mock("DynamoDB", "scan", spy)
       var callFunction = index.handler(event,context,callback);
-      var bool = spy.called;
-      stub.restore();
-      assert.isTrue(true);
+      AWS.restore("DynamoDB");
+      assert.isTrue(spy.called);
     });
 
     /*
@@ -238,11 +238,27 @@ describe('is-service-available', function() {
     * @param {object} event - default event object
     * @param {object} context - default mock aws context
     * @param {function} callback - return the given input value
-    * @returns {string} callback returning an informative 104 error message
     */
-    it("should throw an InternalServerError 104 if utils.isServiceExists fails", function(){
-      //some functionality
-      assert.isTrue(true);
+    it("should notify user of error when utils.isServiceExists fails", function(){
+      //mock the scan() dynamodb function within utils.isServiceExists and have it return error
+      AWS.mock("DynamoDB", "scan", (paramss,cb) => {
+        var err = {
+          "name" : "SomeError",
+          "stack" : "stack object to elaborate on error"
+        }
+        //logic in dynamodb is expecting a callback with (error object, data object)
+        //in this scenario data will not be provided due to error being made
+        return cb(err, null);
+      });
+      //wrap the logged message from handler() to check for expected response
+      stub = sinon.stub(logger,"error",spy);
+      //triger the two mocked functions above by calling handler()
+      var callFunction = index.handler(event,context,callback);
+      var loggedError = stub.args[0][0];
+      var bool = loggedError.includes("Error occured while fetching from service catalog: ");
+      AWS.restore("DynamoDB");
+      stub.restore();
+      assert.isTrue(bool);
     });
 
     /*
@@ -253,7 +269,30 @@ describe('is-service-available', function() {
     * @returns {string} callback returning response information
     */
     it("should return response object as data upon successful utils.isServiceExists call", function(){
-      //some functionality
+      //mock the scan() dynamodb function within utils.isServiceExists and have it return error
+      AWS.mock("DynamoDB", "scan", (paramss,cb) => {
+        var someData = {
+          "username" : "We Are",
+          "password" : "theCryst@1Gems"
+        }
+        //expecting a callback return of (error obj, data obj), in this case, no error
+        return cb(null, data);
+      });
+
+      stub = sinon.stub(utils, "isServiceExists", (obj,cb) => {
+        var someData = {
+          "username" : "We Are",
+          "password" : "theCryst@1Gems"
+        }
+        return cb(null, someData);
+      })
+
+      var callFunction = index.handler(event,context,callback);
+      console.log(callFunction);
+      console.log(stub.called);
+
+      AWS.restore("DynamoDB");
+      stub.restore();
       assert.isTrue(true);
     });
 
