@@ -42,14 +42,14 @@ var isServiceExists = function(query, onComplete) {
     scanparams.FilterExpression = filter;
     scanparams.ExpressionAttributeValues = attributeValues;
 
-    dynamodb.scan(scanparams, function(err, items) {
-        if (err) {
-            onComplete(err);
+    dynamodb.scan(scanparams, function(error, items) {
+        if (error) {
+            return onComplete(error);
         } else {
             var obj = {};
             obj.isExists = items.Items.length > 0;
-            
-            onComplete(null, obj);
+
+            return onComplete(null, obj);
         }
     });
 };
