@@ -80,7 +80,7 @@ describe('is-service-available', function() {
     var errMess = "Service isn't invoked as a GET API.";
     var errType = "BadRequest";
     var bothCases = checkCase(null, context, callback, null, null, null, "101", errType, errMess) &&
-                    checkCase(null, context, callback, null, null, null, "101", errType, errMess);
+                    checkCase(undefined, context, callback, null, null, null, "101", errType, errMess);
     assert.isTrue(bothCases);
   });
 
