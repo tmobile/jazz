@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,26 +15,129 @@
 // =========================================================================
 
 const assert = require('chai').assert;
+const expect = require('chai').expect;
 const index = require('../index');
+const awsContext = require('aws-lambda-mock-context');
+const sinon = require('sinon');
+
+var event, context, callback, spy, stub;
+
+//setup a spy to wrap around async logic/logic that need extraneous sources
+spy = sinon.spy();
 
 describe('Sample', function() {
-    it('tests handler', function(done) {
 
-    	var event = {
-    		body : {
-	            "serviceName"	: "test-service",
-	            "serviceType"	: "lambda",
-	            "domain"		: "test-domain",
-	            "runtime"		: "nodejs",
-	            "approvers"		: ['aanand12'],
-	            "rateExpression": "1/4 * * * ? *"
-	        }
-    	};
+  //set up for default valid values to pass into handler()
+  beforeEach(function(){
+    event = {
+      "stage" : "test",
+      "header" : {
+        "Authorization" : "fr1end$hip_1s_mAg1c"
+      },
+      "body" : {
+        "service_name"	: "test-service",
+        "service_type"	: "lambda",
+        "domain"		: "test-domain",
+        "runtime"		: "nodejs",
+        "approvers"		: ['tw1light_$pArkle'],
+        "rateExpression": "1/4 * * * ? *",
+        "slack_channel" : "mlp_fim",
+        "require_internal_access" : false,
+        "create_cloudfront_url" : false, //?
+        "enableEventSchedule" : false
+      }
+    };
+    context = awsContext();
+    callback = (err, responseObj) => {
+      if (err){
+        return err;
+      }
+      else{
+        return JSON.stringify(responseObj);
+      }
+    };
+  });
 
-    	index.handler(event, context, function(argument) {})
+  /*
+  * Given no event object, handler() throws an InternalServerError
+  */
+  it("should throw an InternalServerError if given no event", function(){
+    //some functionality
+    assert.isTrue(true);
+  });
 
-        //Test cases to be added here.
-        assert(true);
-        done();
-    });
+  /*
+  * Given an event object with no event.body, handler() should indicate service inputs are missing
+  */
+  it("should inform user of error if given an event with no body property", function(){
+    //some functionality
+    assert.isTrue(true);
+  });
+
+  /*
+  * Given an event object with missing body.service_type, handler() should indicate missing service_type
+  */
+  it("should inform user of error if given an event with no body.service_type", function(){
+    //some functionality
+    assert.isTrue(true);
+  });
+
+  /*
+  * Given an event with missing body.service_name, handler() should indicate service name is missing
+  */
+  it("should inform user of error if given an event with no body.service_name", function(){
+    //some functionality
+    assert.isTrue(true);
+  });
+
+  /*
+  * Given an event with no headers, handler() should throw InternalServerError
+  */
+  it("should throw an InternalServerError error if missing event.headers", function(){
+    //some functionality
+    assert.isTrue(true);
+  });
+
+  /*
+  * Given an event with invalid headers.Authorization, handler() should inform of inappropriate Authorization
+  */
+  it("should inform of error if given an event with in-valid headers.Authorization", ()=>{
+    //some functionality
+    assert.isTrue(true);
+  });
+
+  /*
+  * Given an event indicating a lambda or api service but no runtime, handler() informs of missing Runtime
+  */
+  it("should inform of error if given no event.body.runtime for a service other than website", ()=>{
+    //some functionality
+    assert.isTrue(true);
+  });
+
+  /*
+  * Given an event with no body.approvers, handler() indicates approvers are missing
+  */
+  it("should inform user of error if given no event.approvers", function(){
+    //some functionality
+    assert.isTrue(true);
+  });
+
+  /*
+  * Given an event with an invalid body.domain, handler informs of inappropriate domain
+  */
+  it("should inform user of error if invalid domain value", function(){
+    //some functionality
+    assert.isTrue(true);
+  });
+
+  /*
+  * Given an event with no username provided, handler() indicates creator is not defined
+  */
+  it("should inform user the username isn't set if no username is given", function(){
+    //some functionality
+    assert.isTrue(true);
+  });
+
+
+
 });

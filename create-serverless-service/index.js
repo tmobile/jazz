@@ -43,19 +43,19 @@ module.exports.handler = (event, context, cb) => {
     try {
         if (event.body === undefined) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service inputs not defined")));
-        } else if (event.body.service_type === undefined || event.body.service_type === "") {
+        } else if (!event.body.service_type || event.body.service_type === "") {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Type not defined")));
-        } else if (event.body.service_name === undefined || event.body.service_name === "" || !isValidName(event.body.service_name)) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Name not defined or approriate")));
-        } else if (event.headers.Authorization === undefined || event.headers.Authorization === "") {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization not defined or approriate")));
-        } else if (event.body.service_type !== "website" && (event.body.runtime === undefined || event.body.runtime === "")) {
+        } else if (!event.body.service_name || event.body.service_name === "" || !isValidName(event.body.service_name)) {
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Name not defined or appropriate")));
+        } else if (!event.headers.Authorization || event.headers.Authorization === "") {
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization not defined or appropriate")));
+        } else if (event.body.service_type !== "website" && (!event.body.runtime || event.body.runtime === "")) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Runtime not defined")));
-        } else if (event.body.approvers === undefined || event.body.approvers === "") {
+        } else if (!event.body.approvers || event.body.approvers === "") {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Approvers not defined")));
-        } else if (event.body.domain && !isValidName(event.body.domain)) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Domain Name is not approriate")));
-        } else if (event.body.username === undefined || event.body.username === "") {
+        } else if (!event.body.domain || !isValidName(event.body.domain)) {
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Domain Name is not appropriate")));
+        } else if (!event.body.username || event.body.username === "") {
             // Check if Service Creator (username) exists
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Creator not defined")));
         }

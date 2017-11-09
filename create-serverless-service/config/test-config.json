@@ -1,0 +1,7 @@
+{
+  "JOB_BUILD_URL":"{conf-jenkins-host}/job/create-service/buildWithParameters",
+  "BUILD_TOKEN":"tst-testing-@T-Mo",
+  "SVC_USER":"jobexec",
+  "SVC_PASWD":"jenkinsadmin",
+  "BIT_BUCKET_URL":"http://{conf-repo-base}/projects/CAS/repos/"
+}
