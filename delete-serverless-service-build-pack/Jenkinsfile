@@ -35,8 +35,6 @@ node {
 	def var_bitbucket_base			= env.REPO_BASE
 	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
 	def var_api_key 				= env.API_KEY
-	//def var_api_host_name			= var_api_key+".execute-api.us-east-2.amazonaws.com"
-
 	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + env.REPO_LOC + "/repos"
 
 	def var_bitbucket_email 		= env.REPO_EMAIL
@@ -46,6 +44,7 @@ node {
 
 
 	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/service-onboarding-build-pack.git"
+	
 	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
@@ -74,16 +73,7 @@ node {
 
 
 	stage("Initialization") {
-		//events = loadEventsModule()
-		//if(!events) { error "Can't load events module"	} //Fail here
-		//events.setRole(env.CAS_SERVICE_ACCOUNT)
-		//events.setEventHandler("JENKINS")
-		//events.setEventType("SERVICE_DELETION")
-		//events.setRequestId(tracking_id)
-		//events.setServiceName(service_name)
-		//events.setBranch("NA")
-		//events.setDomain(domain)
-
+		
 		checkoutSCM(bitbucket_repo_name, repo_protocol + var_cas_clone_url)
 		config = dir(bitbucket_repo_name)
 		{
@@ -102,32 +92,22 @@ node {
 
 		updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "Deleting");
 
-		//events.setRuntime(runtime)
-		//events.setEnvironment("NA")
-		//events.setRegion(region)
-
 		dir(bitbucket_repo_name)
 		{
 			echo "loadServerlessConfig......."
 
 			if (fileExists('build.api')) {
 				flowType = "API"
-				//events.setServiceType("API")
 				loadServerlessConfig(runtime, configPackBBURL)
 				changeServerlessConfig(runtime)
-				//updateServiceNameConfig(domain, service_name)
+				
 				updateSwaggerConfig(domain, params.service_name.trim(), env.API_KEY, config)
 			} else if(fileExists('build.lambda')) {
 				flowType = "LAMBDA"
-				//events.setServiceType("LAMBDA")
 				loadServerlessConfig(runtime, configPackBBURL)
 				changeServerlessConfig(runtime)
-				//updateServiceNameConfig(domain, service_name)
 			} else if(fileExists('build.website')) {
-				echo " 11111 "
-
 				flowType = "WEBSITE"
-				//events.setServiceType("WEBSITE")
 				if(config['create_cloudfront_url']) {
 					cloudfrontEnabled = config['create_cloudfront_url'].trim()
 				}else {
@@ -142,7 +122,7 @@ node {
 
 	stage("Validation") {
 		validateInput(service_name, domain, version)
-		checkServiceExists(service_name, domain, region)//is-service-available does not exist
+		checkServiceExists(service_name, domain, region)
 	}
 
 	dir(bitbucket_repo_name)
@@ -189,25 +169,22 @@ node {
 					if (cloudfrontEnabled == "true") {
 						cleanupCloudFrontDistribution(service_name, domain, "dev")
 					}
-					unDeployWebsite(service_name, domain, "dev")
+					unDeployWebsite(service_name, domain, "dev", region)
 
 					if (cloudfrontEnabled == "true") {
 						cleanupCloudFrontDistribution(service_name, domain, "stg")
 					}
-					unDeployWebsite(service_name, domain, "stg")
+					unDeployWebsite(service_name, domain, "stg", region)
 
 					if (cloudfrontEnabled == "true") {
 						cleanupCloudFrontDistribution(service_name, domain, "prod")
 					}
-					unDeployWebsite(service_name, domain, "prod")
+					unDeployWebsite(service_name, domain, "prod", region)
 				}
 				break
 		}
 	}
 
-	//stage('Backup Service')	{
-		//backupProject(bitbucket_repo_name)
-	//}
 	stage('Cleanup BitBucket/Catalog') {
 		deleteProject(bitbucket_repo_name)
 		deleteserviceindb(region, var_db_service_id)
@@ -231,9 +208,7 @@ def unDeployService(stage, region) {
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "serverless remove --stage "+stage+" --verbose --bucket " + getServiceBucket(stage)
 			echo "Service undeployed"
-			//events.sendCompletedEvent('UNDEPLOY_LAMBDA', null, null, getEnvKey(stage))
 		}catch(ex) {
-			//events.sendFailureEvent('UNDEPLOY_LAMBDA', ex.getMessage(), null, getEnvKey(stage))
 			error ex.getMessage()
 		}
 	}
@@ -247,7 +222,6 @@ def unDeployService(stage, region) {
 def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
 	dir(bitbucket_repo_name)
 	{
-
 		def repo_url = var_cas_clone_url + bitbucket_repo_name+".git"
 		//events.sendStartedEvent('GET_SERVICE_CODE')
 		try {
@@ -257,10 +231,6 @@ def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
 			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
 				[credentialsId: env.REPO_CREDENTIAL_ID, url: repo_url]
 			]])
-			sh "ls -al"
-
-			//events.sendCompletedEvent('GET_SERVICE_CODE')
-
 		}catch(ex) {
 			//events.sendFailureEvent('GET_SERVICE_CODE', ex.getMessage())
 			error "checkoutSCM Failed. "+ex.getMessage()
@@ -291,8 +261,6 @@ def loadServerlessConfig(runtime) {
 		} else if (runtime.indexOf("python") > -1) {
 			sh "cp _config/serverless-python.yml ./serverless.yml"
 		}
-
-		//events.sendCompletedEvent('GET_SERVERLESS_CONF')
 	}catch(ex) {
 		//events.sendFailureEvent('GET_SERVERLESS_CONF', ex.getMessage())
 		error "loadServerlessConfig Failed. "+ex.getMessage()
@@ -447,10 +415,8 @@ def LoadConfiguration() {
 def validateInput(service_name, domain, version) {
 	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Input validation")
 	if(service_name == null || service_name.equals("")) {
-		//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', "Invalid service")
 		error "Service Name is invalid"
 	}
-	//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Valid inputs")
 }
 
 /**
@@ -463,7 +429,6 @@ def validateInput(service_name, domain, version) {
 def checkServiceExists(service_name, domain, region) {
 	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
 	try {
-		//https://2zddgsrjeb.execute-api.us-east-1.amazonaws.com/dev/platform/is-service-available
 		def outputStr = sh (
 			script: "curl -H \"Authorization: "+params.auth_token+"\" 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev//platform/is-service-available?domain="+domain+"&service="+service_name+"'" ,
 			returnStdout: true
@@ -489,61 +454,14 @@ def checkServiceExists(service_name, domain, region) {
 
 
 def deleteserviceindb(region, db_id) {
-	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
+	
 	try {
-		/*def outputStr = sh (
-			script: "curl 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + db_id ,
-			returnStdout: true
-		).trim()
-		echo outputStr
-		*/
-        sh "curl -X DELETE -k -v -H \"Authorization: "+params.auth_token+"\" 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + db_id + "'"
-
-		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
+		sh "curl -X DELETE -k -v -H \"Authorization: "+params.auth_token+"\" 'https://" + env.API_ID_DEV + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + db_id + "'"
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
 			error "deleteService Failed. "+ex.getMessage()
 		} else {
-			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 		}
-	}
-}
-
-
-/**
- * Back up the code to the archive project (CAB in bitbucket). Keep only master branch
- * @param  repoName
- * @return
- */
-def backupProject(repoName) {
-	//events.sendStartedEvent('BACKUP_PROJECT')
-	try {
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.REPO_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-			sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\" https://bitbucket.corporate.com/rest/api/1.0/projects/"+env.BACKUP_BITBUCKET_PROJ_KEY+"/repos -d \'{\"name\":\""+ repoName +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
-
-			sh "git config --global user.email \"serverlessdev@t-mobile.com\""
-			sh "git config --global user.name $UNAME"
-			sh "git config http.sslVerify \"false\""
-
-			sh "rm -rf ./*"
-			sh "git clone --bare ssh://git@bitbucket.corporate.com/"+env.BITBUCKET_PROJ_KEY+"/"+ repoName +".git"
-
-			dir(repoName+".git") {
-				sh "git push --mirror ssh://git@bitbucket.corporate.com/"+env.BACKUP_BITBUCKET_PROJ_KEY+"/"+ repoName +".git"
-			}
-
-			dir("_tmp") {
-				sh "git clone ssh://git@bitbucket.corporate.com/"+env.BACKUP_BITBUCKET_PROJ_KEY+"/"+ repoName +".git"
-				dir(repoName) {
-					sh "git branch -r | grep -v master | sed 's/origin\\//:/'| xargs git push origin"
-				}
-			}
-		}
-		//events.sendCompletedEvent('BACKUP_PROJECT')
-
-	} catch (ex) {
-		//events.sendFailureEvent('BACKUP_PROJECT', ex.getMessage())
-		error "Backup failed. "+ex.getMessage()
 	}
 }
 
@@ -779,7 +697,7 @@ def getResourcePath() {
  * @param stage
  * @return
  */
-def unDeployWebsite(service, domain, stage) {
+def unDeployWebsite(service, domain, stage, region) {
     echo "unDeployWebsite::" + service + "::" + domain + "::" + stage
 
 	//events.sendStartedEvent('UNDEPLOY_WEBSITE', null, null, getEnvKey(stage))
@@ -787,7 +705,7 @@ def unDeployWebsite(service, domain, stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region us-east-1"
+			sh "aws configure set profile.cloud-api.region $region"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -978,9 +896,7 @@ def getDistributionId(stage, domain, service) {
 				--query \"DistributionList.Items[?Origins.Items[?Id=='$env.env_name_prefix-$stage-static-website-origin-$domain-$service']].{Distribution:DomainName, Id:Id}\"",
 			returnStdout: true
 		)
-
-		//sudo aws cloudfront list-distributions --output json --query "DistributionList.Items[?Origins.Items[?Id=='jazz463-dev-static-website-origin-slf-testwebsite']].{Distribution:DomainName, Id:Id}"
-
+		
 		if(outputStr) {
 			def outputObj = new JsonSlurper().parseText(outputStr)
 			distributionID = outputObj[0].Id
