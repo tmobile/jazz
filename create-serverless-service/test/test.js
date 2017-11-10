@@ -138,6 +138,35 @@ describe('Sample', function() {
     assert.isTrue(true);
   });
 
+  /*
+  * Given an event with an invalid rateExpression, handler() indicates the expression is invalid
+  */
+  it("should inform the user the rateExpression is invalid if given a faulty rateExpression", ()=>{
+    //some functionality
+    assert.isTrue(true);
+  });
 
+  /*
+  * Given successful parameters and setup, handler() should send a POST http request
+  */
+  it("should sent an http POST given valid input parameters", function(){
+    //some functionality
+    assert.isTrue(true);
+  });
 
+  /*
+  * Given a failed http Post attempt, handler() indicates there was an error with the Jenkins job
+  */
+  it("should indicate an error occured with Jenkins setup if the POST attempt fails", () => {
+    //some functionality
+    assert.isTrue(true);
+  });
+
+  /*
+  * Upon successful http POST, handler() informs that build was successful with added info
+  */
+  it("should indicate the Jenkins setup was a success and provides info for created service", ()=>{
+    //some functionality
+    assert.isTrue(true);
+  });
 });
