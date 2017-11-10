@@ -1,0 +1,6 @@
+{
+  "USER_POOL_ID":"ap-northeast-1_2x3yztest",
+  "CLIENT_ID":"conf-client-id-tests",
+  "SERVICES_TABLE" : "testing",
+  "REGION" : "us-east-TEST"
+}
