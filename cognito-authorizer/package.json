@@ -1,6 +1,6 @@
 {
-    "name": "cognito-authorizer",
-    "version": "0.0.1",
+    "name": "cognito_authorizer",
+    "version": "1.0",
     "description": "Cognito custom authorizer",
     "main": "index.js",
     "private": true,
@@ -9,11 +9,10 @@
         "https": "*",
         "request": "^2.75.0",
         "jwk-to-pem": "^1.2.5",
-        "jsonwebtoken": "^7.0.0"
+        "jsonwebtoken": "^7.0.0",
+        "lodash": "*"
     },
     "devDependencies": {
-        "https": "*",
-        "request": "^2.75.0",
-        "jsonwebtoken": "^7.0.0"
+        "lambda-local": "^1.4.2"
     }
 }
