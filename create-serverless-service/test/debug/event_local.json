@@ -1,0 +1,18 @@
+{
+    "stage" : "dev",
+    "body":{
+        "service_type": "api",
+        "service_name": "test-api",
+        "runtime": "nodejs",
+        "domain": "platform",
+        "username": "foo",
+        "approvers": [
+        "bar",
+        "testapprover2"
+    ]},
+    "headers": {
+        "Authorization": "xyz"
+    },
+    "method":"POST",
+    "principalId": "sjakhot1"
+}
