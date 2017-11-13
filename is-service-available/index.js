@@ -22,13 +22,13 @@
  */
 
 'use strict';
-const configObj = require("./components/config.js"); 
-const logger = require("./components/logger.js"); 
+const configObj = require("./components/config.js");
+const logger = require("./components/logger.js");
 
 const request = require('request');
 
-const errorHandlerModule = require("./components/error-handler.js"); 
-const responseObj = require("./components/response.js"); 
+const errorHandlerModule = require("./components/error-handler.js");
+const responseObj = require("./components/response.js");
 const utils = require("./components/utils.js")();
 
 module.exports.handler = (event, context, cb) => {
@@ -46,20 +46,20 @@ module.exports.handler = (event, context, cb) => {
 
     if (!event.query || !event.query.service || !event.query.domain) {
         logger.error("Invalid parameters sent " + JSON.stringify(event.query));
-        cb(JSON.stringify(errorHandler.throwInputValidationError("103", "Service name and namespace are required")));
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("103", "Service name and namespace are required")));
     }
 
     try {
         var config = configObj(event);
         global.config = config;
-        
+
         var service = event.query.service.trim().toLowerCase();
         var domain = event.query.domain.trim().toLowerCase();
         var input = {
             service: service,
             domain: domain
         };
-        
+
         logger.info("Checking service availability with input: " + JSON.stringify(input));
         utils.isServiceExists({
             service: input.service,
@@ -74,6 +74,6 @@ module.exports.handler = (event, context, cb) => {
         });
     } catch (e) {
         logger.error("Unknown error occured during execution: " + JSON.stringify(e));
-        cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Internal Error")));
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Internal Error")));
     }
 };

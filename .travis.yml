@@ -1,0 +1,6 @@
+language: node_js
+node_js:
+ - "node"
+env:
+ - PLATFORM_SERVICE=platform_login
+script: cd $PLATFORM_SERVICE && npm install && npm test
