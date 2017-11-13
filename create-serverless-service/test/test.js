@@ -25,7 +25,7 @@ var event, context, callback, spy, stub;
 //setup a spy to wrap around async logic/logic that need extraneous sources
 spy = sinon.spy();
 
-describe('Sample', function() {
+describe('create-serverless-service', function() {
 
   //set up for default valid values to pass into handler()
   beforeEach(function(){

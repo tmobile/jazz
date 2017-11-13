@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,83 +22,77 @@ const logger = require("./components/logger.js");
 const jwt = require("jsonwebtoken");
 const request = require('request'); 
 const jwkToPem = require('jwk-to-pem');
+const AWS = require('aws-sdk');
+const _ = require('lodash');
 
-var userPoolId = "us-east-1_HQgpgbrGK";
-var region = "us-east-1";
-var iss = 'https://cognito-idp.' + region + '.amazonaws.com/' + userPoolId;
 var pems;
+var cognitoUserPoolEndpoint;
 
-module.exports.handler = function(event, context) {
+module.exports.handler = function(event, context, cb) {
 
     var config = configObj(event);
     logger.init(event, context);
     var errorHandler = errorHandlerModule(logger);
-    userPoolId = config.USER_POOL_ID; 
-    region = config.REGION;
-    iss = 'https://cognito-idp.' + region + '.amazonaws.com/' + userPoolId;
+    
+    if (!event || !event.authorizationToken) {
+        logger.error('No access token, Request will be denied!');
+        return cb("Unauthorized");
+    }
 
-    logger.info(" ISS URL "+iss);
-
-
+    cognitoUserPoolEndpoint = `https://cognito-idp.${config.REGION}.amazonaws.com/${config.USER_POOL_ID}`;
 
     //Download PEM for your UserPool if not already downloaded
     if (!pems) {
-    //Download the JWKs and save it as PEM
-    request({
-       url: iss + '/.well-known/jwks.json',
-       json: true
-     }, function (error, response, body) {
-        if (!error && response.statusCode === 200) {
-            pems = {};
-            var keys = body['keys'];
-            for(var i = 0; i < keys.length; i++) {
-                //Convert each key to PEM
-                var key_id = keys[i].kid;
-                var modulus = keys[i].n;
-                var exponent = keys[i].e;
-                var key_type = keys[i].kty;
-                var jwk = { kty: key_type, n: modulus, e: exponent};
-                var pem = jwkToPem(jwk);
-                pems[key_id] = pem;
+        //Download the JWKs and save it as PEM
+        request({
+            url: cognitoUserPoolEndpoint + '/.well-known/jwks.json',
+            json: true
+        }, function (error, response, body) {
+            if (!error && response.statusCode === 200) {
+                pems = {};
+                var keys = body.keys;
+                for(var i = 0; i < keys.length; i++) {
+                    //Convert each key to PEM
+                    var key_id = keys[i].kid;
+                    var modulus = keys[i].n;
+                    var exponent = keys[i].e;
+                    var key_type = keys[i].kty;
+                    var jwk = { kty: key_type, n: modulus, e: exponent};
+                    var pem = jwkToPem(jwk);
+                    pems[key_id] = pem;
+                }
+                //Now continue with validating the token
+                ValidateToken(pems, event, context, cb);
+            } else {
+                //Unable to download JWKs, fail the call
+                context.fail("error");
             }
-            //Now continue with validating the token
-            ValidateToken(pems, event, context);
-        } else {
-            //Unable to download JWKs, fail the call
-            context.fail("error");
-        }
-    });
+        });
     } else {
         //PEMs are already downloaded, continue with validating the token
-        ValidateToken(pems, event, context);
-    };
+        ValidateToken(pems, event, context, cb);
+    }
 	
-	
-	
-	
-function ValidateToken(pems, event, context) {
+function ValidateToken(pems, event, context, cb) {
      
     var token = event.authorizationToken;
     //Fail if the token is not jwt
     var decodedJwt = jwt.decode(token, {complete: true});
     if (!decodedJwt) {
         logger.error("Not a valid JWT token");
-        context.fail("Unauthorized");
-        return;
+        return cb("Unauthorized");
     }
 
     //Fail if token is not from your UserPool
-    if (decodedJwt.payload.iss != iss) {
+    if (decodedJwt.payload.iss != cognitoUserPoolEndpoint) {
         logger.error("invalid issuer");
-        context.fail("Unauthorized");
-        return;
+        return cb("Unauthorized");
     }
 
     //Reject the jwt if it's not an 'Access Token'
     if (decodedJwt.payload.token_use != 'access') {
         logger.error("Not an access token");
-        context.fail("Unauthorized");
-        return;
+        return cb("Unauthorized");
     }
 
     //Get the kid from the token and retrieve corresponding PEM
@@ -106,39 +100,78 @@ function ValidateToken(pems, event, context) {
     var pem = pems[kid];
     if (!pem) {
         logger.error('Invalid access token');
-        context.fail("Unauthorized");
-        return;
+        return cb("Unauthorized");
     }
 
     //Verify the signature of the JWT token to ensure it's really coming from your User Pool
+    jwt.verify(token, pem, { issuer: cognitoUserPoolEndpoint }, function(err, payload) {
+        if(err) {
+            logger.error(JSON.stringify(err));
+            
+            // Authorizer cannot send options headers, so we will fake that auth succeeded to lambda's w/o principal id
+            // which will then send back unauthorized error to user
+            if (err && err.name && err.name === 'TokenExpiredError') {
+                
+                //Get AWS AccountId and API Options
+                var apiOptions = {};
+                var tmp = event.methodArn.split(':');
+                var apiGatewayArnTmp = tmp[5].split('/');
+                var awsAccountId = tmp[4];
+                apiOptions.region = tmp[3];
+                apiOptions.restApiId = apiGatewayArnTmp[0];
+                apiOptions.stage = apiGatewayArnTmp[1];
+                var method = apiGatewayArnTmp[2];
+                var resource = '/'; // root resource
+                if (apiGatewayArnTmp[3]) {
+                    resource += apiGatewayArnTmp[3];
+                }
+                //fake that auth succeeded to lambda's w/o principal id
+                var policy = new AuthPolicy("", awsAccountId, apiOptions);
+                policy.allowAllMethods();
+                context.succeed(policy.build());
+                return;
+            } else {
+                return cb("Unauthorized");
+            }
+        } else {
+            logger.info(JSON.stringify(payload));
+            //Valid token. Generate the API Gateway policy for the user
+            //Always generate the policy on value of 'sub' claim and not for 'username' because username is reassignable
+            //sub is UUID for a user which is never reassigned to another user.
+            
+            const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
+            
+            var params = {
+                AccessToken: token
+            };
 
-    jwt.verify(token, pem, { issuer: iss }, function(err, payload) {
-      if(err) {
-        context.fail("Unauthorized");
-      } else {
-        //Valid token. Generate the API Gateway policy for the user
-        //Always generate the policy on value of 'sub' claim and not for 'username' because username is reassignable
-        //sub is UUID for a user which is never reassigned to another user.
-        var principalId = payload.sub;
-
-        //Get AWS AccountId and API Options
-        var apiOptions = {};
-        var tmp = event.methodArn.split(':');
-        var apiGatewayArnTmp = tmp[5].split('/');
-        var awsAccountId = tmp[4];
-        apiOptions.region = tmp[3];
-        apiOptions.restApiId = apiGatewayArnTmp[0];
-        apiOptions.stage = apiGatewayArnTmp[1];
-        var method = apiGatewayArnTmp[2];
-        var resource = '/'; // root resource
-        if (apiGatewayArnTmp[3]) {
-            resource += apiGatewayArnTmp[3];
-        }
-        //For more information on specifics of generating policy, refer to blueprint for API Gateway's Custom authorizer in Lambda console
-        var policy = new AuthPolicy(principalId, awsAccountId, apiOptions);
-        policy.allowAllMethods();
-        context.succeed(policy.build());
-      }
+            cognito.getUser(params, function(err, data) {
+                if (err) { 
+                    logger.error(JSON.stringify(err)); 
+                    return cb("Unauthorized");
+                }
+                else {
+                    var emailAddress = _.find(data.UserAttributes, {"Name": "email"});
+                    //Get AWS AccountId and API Options
+                    var apiOptions = {};
+                    var tmp = event.methodArn.split(':');
+                    var apiGatewayArnTmp = tmp[5].split('/');
+                    var awsAccountId = tmp[4];
+                    apiOptions.region = tmp[3];
+                    apiOptions.restApiId = apiGatewayArnTmp[0];
+                    apiOptions.stage = apiGatewayArnTmp[1];
+                    var method = apiGatewayArnTmp[2];
+                    var resource = '/'; // root resource
+                    if (apiGatewayArnTmp[3]) {
+                        resource += apiGatewayArnTmp[3];
+                    }
+                    //For more information on specifics of generating policy, refer to blueprint for API Gateway's Custom authorizer in Lambda console
+                    var policy = new AuthPolicy(emailAddress.Value, awsAccountId, apiOptions);
+                    policy.allowAllMethods();
+                    context.succeed(policy.build());
+                }
+            });
+	    }
     });
 }
 
@@ -222,7 +255,7 @@ function AuthPolicy(principal, awsAccountId, apiOptions) {
     } else {
         this.stage = apiOptions.stage;
     }
-};
+}
 
 /**
  * A set of existing HTTP verbs supported by API Gateway. This property is here
@@ -286,7 +319,7 @@ AuthPolicy.prototype = (function() {
             this.denyMethods.push({
                 resourceArn: resourceArn,
                 conditions: conditions
-            })
+            });
         }
     };
 
