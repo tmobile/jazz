@@ -1,6 +1,6 @@
 {
     "name": "cognito_authorizer",
-    "version": "1.0",
+    "version": "1.0.0",
     "description": "Cognito custom authorizer",
     "main": "index.js",
     "private": true,
