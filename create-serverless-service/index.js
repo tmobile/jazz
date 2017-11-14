@@ -22,6 +22,7 @@ const https = require('https');
 const request = require('request');
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
+const util = require('util');
 
 /**
 	Serverless create service
@@ -49,8 +50,8 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service name is not defined or has invalid characters")));
         } else if (!event.headers || !event.headers.Authorization) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization header is missing")));
-        } else if (event.body.service_type !== "website" && (!event.body.runtime || event.body.runtime === "")) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Runtime not defined")));
+        } else if (event.body.service_type !== "website" && (!event.body.runtime)) {
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service runtime is not defined")));
         } else if (event.body.domain && !isValidName(event.body.domain)) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Namespace is not appropriate")));
         }
@@ -61,9 +62,9 @@ module.exports.handler = (event, context, cb) => {
           return cb(JSON.stringify(errorHandler.throwUnAuthorizedError("User is not authorized to access this service")));
         }
 
-	    logger.info("Request event: "+JSON.stringify(event));
+	    logger.info("Request event: " + JSON.stringify(event));
 
-		var base_auth_token = "Basic " + new Buffer(config.SVC_USER + ":" + config.SVC_PASWD).toString("base64");
+		var base_auth_token = "Basic " + new Buffer("{config.SVC_USER}:{config.SVC_PASWD}").toString("base64");
 
         var approvers = event.body.approvers;
         var userlist = "";
@@ -73,10 +74,9 @@ module.exports.handler = (event, context, cb) => {
             bitbucketName = domain + "-" + bitbucketName;
         }
 
-		var i = 0;
-        for (i; approvers.length > i; i += 1) {
-            userlist = userlist + "name=" + approvers[i] + "&";
-        }
+		var userlist = approvers.reduce(function(stringSoFar, approver){
+            return stringSoFar + util.format("name=%s&", approver);
+        }, "");
 
         var propertiesObject = {
             token: config.BUILD_TOKEN,
@@ -150,7 +150,7 @@ module.exports.handler = (event, context, cb) => {
 			}
         });
     } catch (e) {
-        logger.error('Error : ', e.message);
+        logger.error('Error : ' + e.message);
         cb(JSON.stringify(errorHandler.throwInternalServerError(e.message)));
     }
 };
