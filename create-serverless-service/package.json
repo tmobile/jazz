@@ -6,7 +6,7 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "mocha"
+    "test": "nyc mocha"
   },
   "dependencies": {
     "deasync": "*",
@@ -19,6 +19,6 @@
     "istanbul": "^0.4.5",
     "mocha": "^v3.0.0",
     "nock": "^9.0.2",
-    "sinon": "^4.1.2"
+    "sinon": "1.17.7"
   }
 }

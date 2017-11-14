@@ -17,8 +17,10 @@
 const assert = require('chai').assert;
 const expect = require('chai').expect;
 const index = require('../index');
+const request = require('request');
 const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon');
+const logger = require("../components/logger.js");
 const CronParser = require("../components/cron-parser.js");
 
 var event, context, callback, spy, stub, checkCase;
@@ -61,11 +63,6 @@ describe('create-serverless-service', function() {
       };
       assert.isTrue(bool);
     });
-
-    it("should do something", function(){
-     //other tests
-     assert.isTrue(true);
-    });
   });
 
   describe("index.handler", function(){
@@ -84,7 +81,7 @@ describe('create-serverless-service', function() {
           "domain"		: "test-domain",
           "runtime"		: "nodejs",
           "approvers"		: ['tw1light_$pArkle'],
-          "rateExpression": "12 03 24 12 07 2017",
+          "rateExpression": "12 03 24 12 4 7",
           "slack_channel" : "mlp_fim",
           "require_internal_access" : false,
           "create_cloudfront_url" : false, //?
@@ -234,26 +231,33 @@ describe('create-serverless-service', function() {
 
     /*
     * Given successful parameters and setup, handler() should send a POST http request
+    * @params {object, object, function} default event, aws context, callback
+    * @returns index.handler() should attempt an http POST if given valid paramters
     */
-    it("should sent an http POST given valid input parameters", function(){
-      //some functionality
-      assert.isTrue(true);
+    it("should send an http POST given valid input parameters", function(){
+      //wrapping the Request() method that gets internally called by node request.js for any http method
+      stub = sinon.stub(request, "Request", spy);
+      //trigger the spy wrapping the request by calling handler() with valid params
+      var callFunction = index.handler(event, context, callback);
+      stub.restore();
+      assert.isTrue(spy.called);
     });
 
     /*
     * Given a failed http Post attempt, handler() indicates there was an error with the Jenkins job
+    * @params {object, object, function} default event, aws context, callback
+    * @returns index.handler() should return a descriptive error message concerning a failed Jenkins Job
     */
     it("should indicate an error occured with Jenkins setup if the POST attempt fails", () => {
-      //some functionality
-      assert.isTrue(true);
-    });
-
-    /*
-    * Upon successful http POST, handler() informs that build was successful with added info
-    */
-    it("should indicate the Jenkins setup was a success and provides info for created service", ()=>{
-      //some functionality
-      assert.isTrue(true);
+      //wrapping the logger messages to console to check for error message
+      stub = sinon.stub(logger, "error", spy);
+      //trigger the spy wrapping the logger by calling handler() with valid params
+      var callFunction = index.handler(event, context, callback);
+      stub.restore();
+      //spy has already been called for previous case, so the arguments passed to the logger.error()
+      //are contained in an array at spy.args[1]
+      var bool = spy.args[1][0].includes("Error while starting Jenkins job: ");
+      assert.isTrue(bool);
     });
   })
 });
