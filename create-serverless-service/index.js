@@ -47,9 +47,9 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service type is not defined")));
         } else if (!event.body.service_name || !isValidName(event.body.service_name)) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service name is not defined or has invalid characters")));
-        } else if (!event.headers.Authorization) {
+        } else if (!event.headers || !event.headers.Authorization) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization header is missing")));
-        } else if (event.body.service_type !== "website" && (event.body.runtime === undefined || event.body.runtime === "")) {
+        } else if (event.body.service_type !== "website" && (!event.body.runtime || event.body.runtime === "")) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Runtime not defined")));
         } else if (event.body.domain && !isValidName(event.body.domain)) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Namespace is not appropriate")));
