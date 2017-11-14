@@ -6,7 +6,7 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "nyc mocha"
+    "test": "mocha"
   },
   "dependencies": {
     "deasync": "*",
