@@ -295,8 +295,9 @@ node  {
 			}
 		}
 
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-			sh "git clone http://$UNAME:$PWD@" + var_cas_clone_url + bitbucket_name +".git"
+		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD1', usernameVariable: 'UNAME']]) {
+			def encoded_password = URLEncoder.encode(PWD1, "utf-8")
+                        sh "git clone http://$UNAME:$encoded_password@" + var_cas_clone_url + bitbucket_name +".git"
 		}
 		try{
 			sh "mv -nf " + service_template + "/* " + bitbucket_name + "/"
