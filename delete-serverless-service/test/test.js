@@ -100,10 +100,11 @@ describe('delete-serverless-service', function() {
     * @returns {string} error notification indicating there was an InputValidationError
     */
     it("should inform user of missing service name if given an event with no body.service_name", ()=>{
-      var errMessage = "";
-      var errType = "";
-      var bothCases = null;
-      assert.isTrue(true);
+      var errMessage = "Service Name is missing in the input";
+      var errType = "BadRequest";
+      var bothCases = checkCase("body", "service_name", null, errMessage, errType) &&
+                      checkCase("body", "service_name", undefined, errMessage, errType);
+      assert.isTrue(bothCases);
     });
 
     /*
@@ -113,10 +114,13 @@ describe('delete-serverless-service', function() {
     * @returns {string} error notification indicating there was an InternalServerError
     */
     it("should inform user of missing Authorization if given an event with no headers or Authorization", ()=>{
-      var errMessage = "";
-      var errType = "";
-      var bothCases = null;
-      assert.isTrue(true);
+      var errMessage = "Authorization not defined in header or approriate";
+      var errType = "InternalServerError";
+      var allCases = checkCase("headers", "Authorization", null, errMessage, errType) &&
+                      checkCase("headers", "Authorization", undefined, errMessage, errType) &&
+                      checkCase("headers", null, null, errMessage, errType) &&
+                      checkCase("headers", null, undefined, errMessage, errType);
+      assert.isTrue(allCases);
     });
 
     /*
@@ -126,10 +130,11 @@ describe('delete-serverless-service', function() {
     * @returns {string} error notification indicating there was an InputValidationError
     */
     it("should inform user of missing domain if given an event with no body.domain", () => {
-      var errMessage = "";
-      var errType = "";
-      var bothCases = null;
-      assert.isTrue(true);
+      var errMessage = "Domain key is missing in the input";
+      var errType = "BadRequest";
+      var bothCases = checkCase("body", "domain", null, errMessage, errType) &&
+                      checkCase("body", "domain", undefined, errMessage, errType);
+      assert.isTrue(bothCases);
     });
 
     /*
@@ -139,10 +144,11 @@ describe('delete-serverless-service', function() {
     * @returns {string} error notification indicating there was an InputValidationError
     */
     it("should inform user of missing DB id if given an event with no body.id", () => {
-      var errMessage = "";
-      var errType = "";
-      var bothCases = null;
-      assert.isTrue(true);
+      var errMessage = "DB ID is missing in the input";
+      var errType = "BadRequest";
+      var bothCases = checkCase("body", "id", null, errMessage, errType) &&
+                      checkCase("body", "id", undefined, errMessage, errType);
+      assert.isTrue(bothCases);
     });
 
     /*
