@@ -1,23 +1,24 @@
 {
-    "name": "delete-serverless-service",
-    "version": "0.0.1",
-    "description": "API for deleting a serverless service",
-    "main": "handler.js",
-    "private": true,
-    "author": [],
-    "scripts": {
-        "test": "mocha"
-    },
-    "dependencies": {
-		"request":"*",
-		"deasync":"*",
-		"guid": "0.0.12"
-    },
-    "devDependencies": {
-        "chai": "^3.5.0",
-        "istanbul": "^0.4.5",
-        "mocha": "^v3.0.0",
-        "nock": "^9.0.2",
-        "request": "^2.75.0"
-    }
+  "name": "delete-serverless-service",
+  "version": "0.0.1",
+  "description": "API for deleting a serverless service",
+  "main": "handler.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "*",
+    "deasync": "*",
+    "guid": "0.0.12"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.5.3",
+    "nock": "^9.0.2",
+    "request": "^2.75.0",
+    "sinon": "^1.17.7"
+  }
 }
