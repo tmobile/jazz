@@ -1,0 +1,6 @@
+{
+  "DELETE_SERVICE_JOB_URL":"http://localhost:2024/validTest/job/delete-service/buildWithParameters",
+  "JOB_TOKEN":"tst-4444-iceKing",
+  "SVC_USER":"finnHumano",
+  "SVC_PASWD":"jakeDog"
+}
