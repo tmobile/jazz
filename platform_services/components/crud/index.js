@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 
 /**
 	CRUD functions for service catalog
-  @module: index.js
-  @description: create, get by id, get all, filter, update, delete.
-	@author: Sunil Fernandes
+    @module: index.js
+    @description: create, get by id, get all, filter, update, delete.
+	@author: 
 	@version: 1.0
 **/
 

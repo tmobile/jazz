@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 
 /**
     Update Service-Catalog by SERVICE_ID
-  @module: update.js
-  @description: CRUD functions for service catalog
-    @author: Sunil Fernandes
+    @module: update.js
+    @description: CRUD functions for service catalog
+    @author: 
     @version: 1.0
 **/
 
-const utils = require("../utils.js")(); //Import the utils module.
-
+const utils = require("../utils.js")(); 
 
 module.exports = (service_id, update_data, onComplete) => {
     // initialize docCLient
@@ -36,8 +35,6 @@ module.exports = (service_id, update_data, onComplete) => {
         }
     };
 
-    // var unchangeable_keys_list = ['service', 'domain', 'type', 'created_by', 'runtime', 'region']; //these fields cant be changed
-    // var keys_list = ['description', 'email', 'slack_channel', 'tags', 'repository'];
     var keys_list = global.config.service_update_fields;
 
     var update_exp = "";
