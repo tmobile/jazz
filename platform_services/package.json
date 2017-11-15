@@ -11,14 +11,15 @@
     "dependencies": {
         "json-query": "*",
         "request": "*",
-        "aws-sdk": "*",
         "guid": "0.0.12",
         "async": "*",
         "deasync": "*",
         "moment": "*"
     },
     "devDependencies": {
+        "aws-sdk": "*",
         "mocha": "^v3.0.0",
-        "chai": "^3.5.0"
+        "chai": "^3.5.0",
+        "lambda-local": "^1.4.2"
     }
 }
