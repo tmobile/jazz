@@ -40,7 +40,7 @@ node  {
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
-	def creator_username = "name=jenkins1"
+	def creator_username = env.BITBUCKET_USERNAME 
 	def service_template
 	def service_username
 	def service_password
@@ -295,8 +295,9 @@ node  {
 			}
 		}
 
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-			sh "git clone http://$UNAME:$PWD@" + var_cas_clone_url + bitbucket_name +".git"
+		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD1', usernameVariable: 'UNAME']]) {
+			def encoded_password = URLEncoder.encode(PWD1, "utf-8")
+                        sh "git clone http://$UNAME:$encoded_password@" + var_cas_clone_url + bitbucket_name +".git"
 		}
 		try{
 			sh "mv -nf " + service_template + "/* " + bitbucket_name + "/"
@@ -334,7 +335,7 @@ node  {
 					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + var_cas_rest_repo + ""+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN&" + admin_group + "\" &"
 
 					echo "providing repository write permissions to the service creator"
-					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + var_cas_rest_repo + "/"+ bitbucket_name +"/permissions/users?permission=REPO_WRITE&" + creator_username + "\" &"
+					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + var_cas_rest_repo + "/"+ bitbucket_name +"/permissions/users?permission=REPO_WRITE&name=" + creator_username + "\" &"
 
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.COMPLETED, "")
