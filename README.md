@@ -1,3 +1,4 @@
+![Jazz Logo](Jazz_Logo%401x.png)
 # Jazz Serverless Platform
 **Seamlessly build, deploy & manage cloud-native applications.**
 
