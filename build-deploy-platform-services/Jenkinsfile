@@ -212,7 +212,9 @@ node {
 				// @TODO : These conditional statements could be removed and needs to refactored
                 if (service_template.trim() == "platform_services") {
 					echo "Updating parameter specific to platform-services"
-					sh "sed -i -- 's/{conf_region}/" + region + "/g' ./components/utils.js"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
                 }
               
 			}
