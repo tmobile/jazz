@@ -45,15 +45,15 @@ describe('delete-serverless-service', function() {
     beforeEach(function(){
       context = awsContext();
       event = {
-        "stage" : "test",
+        "stage" : "validTest",
         "headers" : {
-          "Authorization" : ""
+          "Authorization" : "pr!ncessBubb1eGum"
         },
         "body" : {
-          "service_name" : "",
-          "domain" : "",
-          "id" : "",
-          "version" : ""
+          "service_name" : "candyKingdom",
+          "domain" : "landOfOOO",
+          "id" : "marcyAbadeer",
+          "version" : "4.1.4"
         }
       };
       callback = (err,responseObj) => {
@@ -66,8 +66,100 @@ describe('delete-serverless-service', function() {
       }
     });
 
-    it('should do something', function() {
-        //some logic
-        assert(true);
+    /*
+    * Given a config json without a "DELETE_SERVICE_JOB_URL", handler() gives error message
+    * @param {object} event, event.stage is assigned the name reference for the invalidTest config
+    * @params {object, function} default aws-context object and callback function
+    * @returns {string} error notification indicating there was an InternalServerError
+    */
+    it('should inform user of error if using a config json with no DELETE_SERVICE_JOB_URL', ()=>{
+      var errMessage = "Service configuration missing JOB URL";
+      var errType = "InternalServerError";
+      var invalidConfigBool = checkCase("stage", null, "invalidTest", errMessage, errType);
+      assert.isTrue(invalidConfigBool);
     });
+
+    /*
+    * Given an event with no event.body, handler() informs of invalid inputs
+    * @param {object} event, containing no event.body
+    * @params {object, function} default aws-context object and callback function
+    * @returns {string} error notification indicating there was an InputValidationError
+    */
+    it("should inform user of missing inputs if given an event with no event.body", () => {
+      var errMessage = "Service inputs not defined";
+      var errType = "BadRequest";
+      var bothCases = checkCase("body", null, null, errMessage, errType) &&
+                      checkCase("body", null, undefined, errMessage, errType);
+      assert.isTrue(bothCases);
+    });
+
+    /*
+    * Given an event with no body.service_name, handler() informs service name is missing
+    * @param {object} event, containing no body.service_name
+    * @params {object, function} default aws-context object and callback function
+    * @returns {string} error notification indicating there was an InputValidationError
+    */
+    it("should inform user of missing service name if given an event with no body.service_name", ()=>{
+      var errMessage = "";
+      var errType = "";
+      var bothCases = null;
+      assert.isTrue(true);
+    });
+
+    /*
+    * Given an event with no headers or headers.Authorization, handler() informs authorization is missing
+    * @param {object} event, containing no headers or headers.Authorization
+    * @params {object, function} default aws-context object and callback function
+    * @returns {string} error notification indicating there was an InternalServerError
+    */
+    it("should inform user of missing Authorization if given an event with no headers or Authorization", ()=>{
+      var errMessage = "";
+      var errType = "";
+      var bothCases = null;
+      assert.isTrue(true);
+    });
+
+    /*
+    * Given an event with no body.domain, handler() informs service domain is missing
+    * @param {object} event, containing no body.doamin
+    * @params {object, function} default aws-context object and callback function
+    * @returns {string} error notification indicating there was an InputValidationError
+    */
+    it("should inform user of missing domain if given an event with no body.domain", () => {
+      var errMessage = "";
+      var errType = "";
+      var bothCases = null;
+      assert.isTrue(true);
+    });
+
+    /*
+    * Given an event with no body.id, handler() informs that database id is missing
+    * @param {object} event, containing no body.id
+    * @params {object, function} default aws-context object and callback function
+    * @returns {string} error notification indicating there was an InputValidationError
+    */
+    it("should inform user of missing DB id if given an event with no body.id", () => {
+      var errMessage = "";
+      var errType = "";
+      var bothCases = null;
+      assert.isTrue(true);
+    });
+
+    /*
+    * Given valid input paramters, handler() should create a tracking_id as a Guid
+    */
+    it("should create a new GUID value if given valid inputs", function(){
+      //do something
+      assert.isTrue(true);
+    });
+
+    /*
+    * Given valid input parameters, handler() should attempt to send an http request
+    */
+    it("should attempt to make an http request if given valid inputs", function(){
+      //do something
+      assert.isTrue(true);
+    });
+
+    //option for testing http response status codes and respective messages
 });

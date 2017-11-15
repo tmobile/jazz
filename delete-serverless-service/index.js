@@ -47,7 +47,7 @@ module.exports.handler = (event, context, cb) => {
 	} else if(!event.body.service_name) {
 		logger.error("Service Name is missing in the input");
 		return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Name is missing in the input")));
-	} else if (event.headers.Authorization === undefined || event.headers.Authorization === "") {
+	} else if (!event.headers || !event.headers.Authorization) {
 		logger.error("headers Authorization is missing in the input");
         return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization not defined in header or approriate")));
     }else if(event.body.domain === undefined) {
