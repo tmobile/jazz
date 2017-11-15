@@ -176,7 +176,7 @@ describe('create-serverless-service', function() {
     it("should inform of error if given no event.body.runtime for a service other than website", ()=>{
       var runtime = "";
       var errType = "InternalServerError";
-      var errMessage = "Service Runtime not defined";
+      var errMessage = "Service runtime is not defined";
       var allCases = checkCase("body","runtime",runtime,errMessage,errType) &&
                       checkCase("body", "runtime", null, errMessage, errType) &&
                       checkCase("body", "runtime", undefined, errMessage, errType);
