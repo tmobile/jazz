@@ -211,8 +211,8 @@ node ()  {
 						generateDistributionConfig(service, 'prod', config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3ProdBucket)
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='jazz-training-prod-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						updateCloudFrontPolicy(service, s3ProdBucket)                                                                     
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-$env-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', "prod", "http://" + url.replaceAll("[\n\r]", ""))
@@ -315,7 +315,7 @@ node ()  {
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
 						updateCloudFrontPolicy(service, s3DevBucket)
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='jazz-training-dev-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-$env-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', "dev", "http://" + url.replaceAll("[\n\r]", ""))
