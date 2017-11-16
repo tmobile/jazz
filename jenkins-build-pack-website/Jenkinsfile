@@ -41,16 +41,15 @@ def Event_Status = [
 @Field def created_by = ''
 @Field def current_environment = ''
 @Field def env_prefix = ''
-@Field def region = 'us-east-1'
+@Field def region = env.jazz_region
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
+	g_base_url = "https://" + env.API_KEY + ".execute-api.us-east-1.amazonaws.com/dev"
+
     echo "Build Pack website params: " + params
 
-	g_base_url = "https://" + env.API_KEY + ".execute-api.us-east-1.amazonaws.com/dev"
-    
     echo "Build triggered via branch: " + params.scm_branch
-    echo "start"
 
     def service = params.service_name
 	def branch = params.scm_branch
@@ -91,7 +90,6 @@ node ()  {
 		{
 			return LoadConfiguration()
 		}
-
 	}
 
 	def create_cloudfront_url
@@ -171,7 +169,7 @@ node ()  {
 							echo "id is ${cfDetails[0]}, domain: ${cfDetails[1]}"
 						}
 						
-						updateEnableCompressConfig("prod", service, cfDetails[0])
+						updateEnableCompressConfig(current_environment, service, cfDetails[0])
 						
 						invalidateCloudFrontCache(cfDetails[0], service)
 
@@ -211,8 +209,8 @@ node ()  {
 						generateDistributionConfig(service, current_environment, config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3ProdBucket)                                                                     
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-$current_environment-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						updateCloudFrontPolicy(service, s3ProdBucket)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, "http://" + url.replaceAll("[\n\r]", ""))
@@ -311,11 +309,11 @@ node ()  {
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
 						loadDistributionConfig()
-						generateDistributionConfig(service,'dev',config)
+						generateDistributionConfig(service,current_environment,config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
 						updateCloudFrontPolicy(service, s3DevBucket)
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-$current_environment-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, "http://" + url.replaceAll("[\n\r]", ""))
@@ -346,7 +344,6 @@ node ()  {
 	  }
 	}
 }
-
 
 def getS3BucketName(String envname) {
 
@@ -515,12 +512,7 @@ def loadBucketPolicy(String s3Bucket){
 	    			}
 	    		} else if (e.key == "Condition") {
 	    			condition = [:]
-					// // Mapping
-					// "Condition" (e.key): { (e.value)
-					//     "IpAddress" (f.key): { (f.value)
-					//         "aws:SourceIp" (src.key): [ "xxx.xx.xx.xxx" ] (src.value)
-					//     }
-					// }
+					
 	    			for ( f in e.value ) {
 	    				f_value = [:]
 	    				for ( src in f.value ) {
@@ -819,7 +811,6 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 			}
 		}
  	}
-
 }
 
 /**
