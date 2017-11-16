@@ -1,5 +1,8 @@
 #!groovy
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+import groovy.transform.Field
+
 //definitions
 def Event_Name = [
 	'GENERATE_API_DOC':'GENERATE_API_DOC',
@@ -37,14 +40,26 @@ def Event_Status = [
 	'COMPLETED':'COMPLETED',
 	'FAILED':'FAILED'
 ]
+
+@Field def g_login_token = ''
+@Field def g_base_url = ''
+@Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
+@Field def service_id = ''
+@Field def created_by = ''
+
+@Field def role = ''
+@Field def current_environment = ''
+@Field def region = ''
+@Field def jq = '/usr/local/bin/jq'
+
 node ()  {
-  
-   echo "Jobs Params: " + params
-   echo "Build triggered via branch: " + params.scm_branch
+	region = env.jazz_region
+	g_base_url = "https://" + env.API_KEY + ".execute-api.${region}.amazonaws.com/dev"
+	role = env.jazz_roleId
+   	echo "Jobs Params: " + params
+   	echo "Build triggered via branch: " + params.scm_branch
 	def _event = ""
-	
-	
-	//checkout scm
+
     echo "start"
 
     def serviceName = params.service_name
@@ -52,43 +67,45 @@ node ()  {
 	def branch = params.scm_branch
 
     def bitbucket_name = params.service_name
-	def var_credentialsId 			= env.REPO_CREDENTIAL_ID 
-	def var_bitbucket_base			= env.REPO_BASE 
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/"+env.REPO_LOC+"/" 
+	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
+	def var_bitbucket_base			= env.REPO_BASE
+	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/"+env.REPO_LOC+"/"
 	def var_api_key 				= env.API_KEY
     def config
 
-	
+
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name.trim()
 		domain = params.domain.trim()
 	}
-	
-    stage('Checkout code base') {
-		
 
+	if (params.scm_branch == 'master') {
+		current_environment = 'prod'
+	}else {
+		current_environment = 'dev'
+	}
+
+    stage('Checkout code base') {
 
 		sh 'rm -rf ' + bitbucket_name
 		sh 'mkdir ' + bitbucket_name
         sh 'pwd'
-		
-		
-		
+
 		dir(bitbucket_name)
-		{            
+		{
 			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
 		}
-		
+
 		sh 'cd ' + bitbucket_name
-		// @TODO: dir can be removed, needs to be refactored	
+		// @TODO: dir can be removed, needs to be refactored
 		config = dir(bitbucket_name)
 		{
 			return LoadConfiguration()
 		}
 
 	}
-	
-	
+
+
 	def runtime = config['providerRuntime']
 	def service = config['service']
 	def isScheduleEnabled = isEnabled(config, "eventScheduleRate")
@@ -97,33 +114,29 @@ node ()  {
 	def isS3EventEnabled = isEnabled(config, "event_source_s3")
 	def isEc2EventEnabled = isEnabled(config, "event_source_ec2")
 	def isEventSchdld = false
-	def region = config['region']
-	def logStreamer = env.CLOUDWATCH_LOGS_STREAMER
 	def internalAccess = config['require_internal_access']
-	//def customExeRole = config['iamRoleARN']
-	def role;
-	if (config['iamRoleARN'] != null && !config['iamRoleARN'].equals("")) {
-		role = config['iamRoleARN'];
-	} else if (internalAccess != null && internalAccess.equals('false')){
-				role = env.DEFAULT_BASIC_EXE_ROLE;
-	} else {
-				role = env.DEFAULT_LAMBDA_EXE_ROLE;
-	}
 
+	def roleARN = role.replaceAll("/", "\\\\/")
+	
+	// @TODO: the below statement will be replaced with regular expression in very near future;
+	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
+
+  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev"
+	
+	echo "logStreamer:: " + logStreamer
+	
 	def domain = config['domain']
 
 	if (domain  && domain.trim()!="") {
 			serviceName = domain.trim() + "-" + service
 			cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
 	}
-	
+
 	serviceName = env.env_name_prefix + "-" + serviceName
 	cfStackName = serviceName
-	
-    //serviceName = env.env_name_prefix + "-" + serviceName + "-"+"dev"
+
     echo serviceName+"******************************************************* "
-  
-  
+
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
 		isEventSchdld = true
 	}
@@ -135,28 +148,22 @@ node ()  {
 	stage ('Pre-Build Validation'){
 		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
 		try {
+			loadServiceInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment)
+
+			send_status_email(created_by, 'STARTED', params.service_name, '')
+
 			clearVirtualEnv()
 			validateDeploymentConfigurations(config)
 			if (isEventSchdld == true){
               	// validateUserConfigurationYml()
 			}
 		}catch(ex) {
+			send_status_email(created_by, 'FAILED', params.service_name, '')
 			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
 			error ex.getMessage()
 		}
 
 		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
-	}
-
-	stage ('Code Quality Check'){
-		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.CODE_QUALITY_CHECK, Event_Status.STARTED, "")
-		try {
-			runValidation(runtime)
-		}catch(ex) {
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.CODE_QUALITY_CHECK, Event_Status.FAILED, ex.getMessage())
-			error ex.getMessage()
-		}
-		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.CODE_QUALITY_CHECK, Event_Status.COMPLETED, "")
 	}
 
 	stage ('Build') {
@@ -166,89 +173,21 @@ node ()  {
 				buildLambda(runtime)
 			}
 		}catch(ex) {
+			send_status_email(created_by, 'FAILED', params.service_name, '')
 			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.FAILED, ex.getMessage())
 			error ex.getMessage()
 		}
 		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.COMPLETED, "")
 	}
 
-/*	stage ('Test') {
-		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.UNIT_TEST, Event_Status.STARTED, "")
-		try {
-			runTestCases(runtime)
-			// clear virtual environment once tests are run, so that virtual envirinment is not included in deployment-package
-			clearVirtualEnv()
-		}catch(ex) {
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.UNIT_TEST, Event_Status.FAILED, ex.getMessage())
-			error ex.getMessage()
-		}
-		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.UNIT_TEST, Event_Status.COMPLETED, "")
-
-	} */
-	
 	if (params.scm_branch == 'master') {
-		stage ('Deployment to Staging Env'){
-			sendEvent(service, branch, runtime, "STAGING", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-
-			dir(bitbucket_name){
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-					try {
-						// initialize aws credentials
-						sh "aws configure set profile.cloud-api.region us-east-1"
-						sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-						sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
-
-						_event = Event_Name.GET_DEPLOYMENT_CONF
-						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.STARTED, "")
-						loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
-						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.COMPLETED, "")
-
-
-						// Generate serverless yml file with domain added in function name
-						echo "Generate deployment env with domain"
-						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
-						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.STARTED, "")
-						generateServerlessYml(service, "stg", serviceName, cfStackName)
-						echo "setting lambda execution role as $role";
-						setLambdaExecutionRole(role);
-						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.COMPLETED, "")
-
-						sh "serverless deploy --stage stg -v --bucket " + env.jazz_bucket_stg
-
-						_event = Event_Name.UPDATE_LOGGING_CONF
-						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.STARTED, "")
-						createSubscriptionFilters(serviceName, "stg", region, logStreamer);
-						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.COMPLETED, "")
-
-						// reset Credentials
-						resetCredentials()
-
-						// echo status
-						echoServiceInfo("stg")
-					}catch(ex) {
-						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.FAILED, ex.getMessage())
-						error ex.getMessage()
-					}
-					sendEvent(service, branch, runtime, "STAGING", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-				}//end of withCredentials
-				
-			}//end of dir
-		}//end of stage deployment
-		
-		stage ('Approval for Production Deployment'){
-			timeout(time:5, unit:'MINUTES') {
-				input message:'Approve PRODUCTION DEPLOYMENT?'
-			}
-		}
-
 		stage ('Deployment to Production Env'){
 			sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			dir(bitbucket_name){
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					try {
 						// initialize aws credentials
-						sh "aws configure set profile.cloud-api.region us-east-1"
+						sh "aws configure set profile.cloud-api.region ${region}"
 						sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 						sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -274,32 +213,35 @@ node ()  {
 						createSubscriptionFilters(serviceName, "prod", region, logStreamer);
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
 
-
 						// reset Credentials
 						resetCredentials()
 
 						// echo status
-						echoServiceInfo("prod")
+						def svc_response = echoServiceInfo("prod")
+						send_status_email(created_by, 'COMPLETED', params.service_name, svc_response)
+
 					}catch(ex) {
+						send_status_email(created_by, 'FAILED', params.service_name, '')
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.FAILED, ex.getMessage())
 						error ex.getMessage()
 					}
+					updateServiceInDB(service_id, domain, var_api_key, region, "active")
 					sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}//end of withCredentials
 			}//end of dir
 		}//end of stage to production
-	
+
 	}//end of stage using master
 	else {
 		stage ('Deployment to Dev Env'){
 			sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			
 			dir(bitbucket_name){
-			
+
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					try {
 						// initialize aws credentials
-						sh "aws configure set profile.cloud-api.region us-east-1"
+						sh "aws configure set profile.cloud-api.region ${region}"
 						sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 						sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -313,12 +255,12 @@ node ()  {
 						echo "Generate deployment env with domain"
 						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.STARTED, "")
-						
+
 						sh "pwd"
-						
+
 						generateServerlessYml(service, "dev", serviceName, cfStackName)
 
-						
+
 						echo "setting lambda execution role as $role";
 						setLambdaExecutionRole(role);
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.COMPLETED, "")
@@ -334,12 +276,15 @@ node ()  {
 						resetCredentials()
 
 						// echo status
-						echoServiceInfo("dev")
+						def svc_response = echoServiceInfo("dev")
+						send_status_email(created_by, 'COMPLETED', params.service_name, svc_response)
 					}catch(ex) {
+						send_status_email(created_by, 'FAILED', params.service_name, '')
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.FAILED, ex.getMessage())
 						error ex.getMessage()
 					}
-					sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+					updateServiceInDB(service_id, domain, var_api_key, region, "active")
+					sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}//end of withCredentials
 			}//end of dir
 		}//end of stage to dev
@@ -453,23 +398,6 @@ def LoadConfiguration() {
 */
 def runValidation(String runtime) {
 
-/*
-	if(runtime.indexOf("nodejs") > -1) {
-		echo "running validations for $runtime"
-		sh "jshint *.js"
-	}else if(runtime.indexOf("java") > -1) {
-		echo "running validations for $runtime"
-		dir('_java') {
-			sh 'wget -q $CHECKSTYLE_LIB'
-		}
-
-		sh 'java -cp _java/checkstyle-7.6-all.jar com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src'
-
-	}else if(runtime.indexOf("python") > -1) {
-		echo "running validations for $runtime"
-
-	}
-*/
 
 }
 
@@ -625,8 +553,8 @@ def validateDeploymentConfigurations(def prop) {
 	if(prop.containsKey("region")) {
 		if(prop['region'] == "") {
 			error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-		}else if(prop['region'] != "us-east-1") {
-			error "Wrong configuration. Value for Key 'region' should be us-west-2"
+		}else if(prop['region'] != region) {
+			error "Wrong configuration. Value for Key 'region' should be ${region}"
 		}
 
 	}else {
@@ -658,18 +586,18 @@ def validateDeploymentConfigurations(def prop) {
 
 
 def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isStreamEnabled, def isDynamoDbEnabled){
-  
-        echo " load serverless...."
+
+    echo " load serverless...."
 		def config = LoadConfiguration()
-		def subnetIds = config['subnetIds']
-		def securityGroupIds = config['securityGroupIds']
-		def internalAccess = config['require_internal_access']
-		sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
-		sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
-		sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
-		
-		def configPackBBURL = "http://" + env.REPO_BASE + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git" 
-		
+		//def subnetIds = config['subnetIds']
+		//def securityGroupIds = config['securityGroupIds']
+		//def internalAccess = config['require_internal_access']
+		//sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
+		//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
+		//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
+
+		def configPackBBURL = "http://" + env.REPO_BASE + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git"
+
 		dir('_config') {
 			checkout([$class: 'GitSCM', branches: [
 				[name: '*/master']
@@ -677,7 +605,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 				[credentialsId: env.REPO_CREDENTIAL_ID, url: configPackBBURL]
 			]])
 		}
-		
+
 	echo "isEventSchdld: $isEventSchdld,isScheduleEnabled: $isScheduleEnabled, isEc2EventEnabled: $isEc2EventEnabled,  isS3EventEnabled: $isS3EventEnabled, isStreamEnabled: $isStreamEnabled, isDynamoDbEnabled: $isDynamoDbEnabled"
 
 	if(runtime.indexOf("nodejs") > -1) {
@@ -694,9 +622,9 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 	}
 
 	/*Based on the require_internal_access flag in deployment-env.yml enabling  vpn*/
-	if ((internalAccess != null && internalAccess.equals('true')) || internalAccess == null) {
-		addVpnDetails()
-	}
+	//if ((internalAccess != null && internalAccess.equals('true')) || internalAccess == null) {
+	//	addVpnDetails()
+	// }
 	echoServerlessFile()
 	/**sh "cp _config/$serverlessFileName ./serverless.yml"*/
 }
@@ -705,19 +633,25 @@ def echoServiceInfo(String env) {
 	echo "Deployment info:"
 	sh "serverless --stage $env info -v > deploy-info.txt"
 
-	def arn = ""
+	def arn = "unknown"
+	def svc_response = "unknown"
 	def result = readFile('deploy-info.txt').trim()
 	def resultList = result.tokenize("\n")
 
 	for (item in resultList) {
-		if(item.startsWith("HandlerLambdaFunctionArn")) {
-			arn = item.trim().substring(26)
+		if(item.startsWith("HandlerLambdaFunctionQualifiedArn")) {
+			arn = item.trim().substring(35)
+			version = arn.tokenize(':').last()
+			arn = arn.substring(0, arn.length()-version.length()-1)
+
+			svc_response = "Your service endpoint: " + arn
 		}
 	}
 
 	echo "==============================================================================================="
-	echo "Service Deployed: $arn"
+	echo svc_response
 	echo "==============================================================================================="
+	return svc_response
 
 }
 
@@ -725,7 +659,27 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(String service, String env, String region, String logStreamer) {
+	def lambda = "/aws/lambda/"+service+"-"+env
+	def cloudLogsStreamer = logStreamer
+	try {
+		sh "aws logs create-log-group --log-group-name "+lambda+" --region "+region
+	}catch(Exception ex) {}// ignore if already existing
 
+	try {
+		filter_json = sh (
+			script: "aws logs describe-subscription-filters --output json --log-group-name \""+lambda+"\" --region "+region ,
+			returnStdout: true
+		).trim()
+		echo "${filter_json}"
+		def describeJson = new groovy.json.JsonSlurper()
+		def resultJson = describeJson.parseText(filter_json)
+        filtername = resultJson.subscriptionFilters[0].filterName
+		echo "removing existing filter... $filtername"
+		if(filtername != "" && !filtername.equals(lambda)) {
+			sh "aws logs delete-subscription-filter --output json --log-group-name \""+lambda+"\" --filter-name \""+filtername+"\" --region "+region
+		}
+	}catch(Exception ex) {}// ignore error if not created yet
+	sh "aws logs put-subscription-filter --output json --log-group-name \""+lambda+"\" --filter-name \""+lambda+"\" --filter-pattern \"\" --destination-arn \""+cloudLogsStreamer+"\" --region "+region
 }
 /**
 	Generate the serverless yml file with domain name in lambda name
@@ -753,4 +707,112 @@ def clearVirtualEnv() {
 
 def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
 
+}
+
+def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
+
+	setCredentials(g_base_url + '/platform/login')
+
+	def url = "$serviceUrl?domain=$domain&service=$service"
+
+	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
+			-H \"Authorization: $g_login_token\" \"$url\" | $jq -r '.data[0] | [.id, .created_by] | join(\",\")'", returnStdout: true)
+
+	def values = curlOutput.split(',')
+
+	if (values[0]) {
+		service_id = values[0].replaceAll("[\n\r]", "")
+	}
+
+	if (values[1]) {
+		created_by = values[1].replaceAll("[\n\r]", "")
+	}
+}
+
+/**
+ * For getting token to access catalog APIs.
+ * Must be a service account which has access to all services
+ */
+ def setCredentials(loginUrl) {
+
+	if (g_login_token == '') {
+
+		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+			echo "user name is $UNAME"
+
+			def login_json = []
+
+			login_json = [
+				'username': UNAME,
+				'password': PWD
+			]
+
+			def payload = JsonOutput.toJson(login_json)
+
+			try {
+				g_login_token = sh (script: "curl --silent -X POST -k -v \
+					-H \"Content-Type: application/json\" \
+					 $loginUrl \
+					-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
+
+				g_login_token = g_login_token.replaceAll("[\n\r]", "")
+			}
+			catch(e){
+				echo "error occured: " + e.getMessage()
+				error "error occured: " + e.getMessage()
+			}
+		}
+ 	}
+}
+
+/**
+* Send email to the recipient with the build status and any additional text content
+* Supported build status values = STARTED, FAILED & COMPLETED
+* @return
+*/
+def send_status_email (email_id, build_status, service, email_content) {
+   	echo "Sending build notification to " + email_id
+   	body = ""
+   	bcc_email = ""
+   	if (build_status == 'STARTED') {
+        body = "Build/deploy process just STARTED for service: " + service
+   	} else if (build_status == 'FAILED') {
+		build_url = env.BUILD_URL + 'console'
+        body = "Build/deploy process FAILED for service: " + service
+        body = body + "\n\nFor more details, please click this link: $build_url"
+   	} else if (build_status == 'COMPLETED'){
+        body = "Build/deploy process COMPLETED successfully for service: $service"
+   	} else {
+        echo "Unsupported build status, nothing to email.."
+        return
+   	}
+
+   	if (email_content != ''){
+        body = body + "\n\n" + email_content
+	}
+
+   	try{
+        mail (to: email_id, bcc: bcc_email,
+         subject: "Jazz Build Notification: Deployment $build_status for $service ($current_environment)",
+         body: body
+        );
+        echo "Sent email to " + email_id + " successfully!"
+   	} catch (e){
+       echo "Failed while sending build status notification"
+   	}
+}
+
+def updateServiceInDB(service_id, domain, devApiID, region, status) {
+
+	try {
+		echo "svc id ===============" + service_id
+		echo "domain ===============" + domain
+		def outputStr = sh (
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: "+g_login_token+"\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id + "/",
+			returnStdout: true
+		).trim()
+		echo "outputStr===============" + outputStr
+	}catch (ex) {
+		error "updateServiceInDB Failed. "+ex.getMessage()
+	}
 }
