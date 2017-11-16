@@ -25,17 +25,17 @@ const logger = require("./components/logger.js");
 const util = require('util');
 
 /**
-	Serverless create service 
-    @author: 
+	Serverless create service
+    @author:
     @version: 1.0
 **/
 
 module.exports.handler = (event, context, cb) => {
-    
+
     var errorHandler = errorHandlerModule();
 	var config = configObj(event);
 	logger.init(event, context);
-	
+
     var messageToBeSent;
     var isValidName = function(name) {
         return /^[A-Za-z0-9\-]+$/.test(name);
@@ -53,8 +53,8 @@ module.exports.handler = (event, context, cb) => {
         } else if (event.body.service_type !== "website" && (!event.body.runtime)) {
             return cb(JSON.stringify(errorHandler.throwInternalServerError("Service runtime is not defined")));
         } else if (event.body.domain && !isValidName(event.body.domain)) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Namespace is not approriate")));
-        } 
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Namespace is not appropriate")));
+        }
 
         var user_id = event.principalId;
         if (!user_id) {
@@ -63,8 +63,8 @@ module.exports.handler = (event, context, cb) => {
         }
 
 	    logger.info("Request event: " + JSON.stringify(event));
-	
-		var base_auth_token = "Basic " + new Buffer("{config.SVC_USER}:{config.SVC_PASWD}").toString("base64");
+
+		var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
 
         var approvers = event.body.approvers;
         var userlist = "";
@@ -88,7 +88,7 @@ module.exports.handler = (event, context, cb) => {
             domain: event.body.domain,
             auth_token: event.headers.Authorization
         };
-        
+
         // create-serverless-service API to take slack-channel as one more parameter(optional)
         if(event.body.slack_channel) {
             propertiesObject.slack_channel = event.body.slack_channel;
@@ -98,14 +98,14 @@ module.exports.handler = (event, context, cb) => {
         if((event.body.service_type === "api" || event.body.service_type === "lambda") && (event.body.require_internal_access !== null)) {
             propertiesObject.require_internal_access = event.body.require_internal_access;
         }
-        
+
         // allowing service creators to opt in/out of creating Cloudfront url.
         if (event.body.service_type === "website") {
             // by default Cloudfront url will not be created from now on.
             var create_cloudfront_url = event.body.create_cloudfront_url || false;
             propertiesObject.create_cloudfront_url = create_cloudfront_url;
         }
-	
+
         // Add rate expression to the propertiesObject;
         if (event.body.service_type === "lambda") {
             if (event.body.rateExpression !== undefined) {
@@ -130,24 +130,29 @@ module.exports.handler = (event, context, cb) => {
                 }
             }
         }
-	
+
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
         request({
-          	url: config.JOB_BUILD_URL,       
+            url: config.JOB_BUILD_URL,       
             method: 'POST',
             headers: {
-	            "Authorization": base_auth_token
-	    },
+                "Authorization": base_auth_token
+            },
             qs: propertiesObject
-        }, function(err, response, body) {
-            if (err) {
-                logger.error('Error while starting Jenkins job: ' + err);
-                return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
-            }else {
-				messageToBeSent = "Your service code will be available at "+config.BIT_BUCKET_URL+bitbucketName + "/browse";
-				return cb(null, responseObj(messageToBeSent, event.body));
-			}
+            }, function(err, response, body) {
+                if (err) {
+                    logger.error('Error while starting Jenkins job: ' + err);
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                }else {
+                    if (response.statusCode <= 299) { // handle all 2xx response codes as success
+                        messageToBeSent = "Your service code will be available at "+config.BIT_BUCKET_URL+bitbucketName + "/browse";
+                        return cb(null, responseObj(messageToBeSent, event.body));
+                    } else {
+                        logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
+                        return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to kick off service creation job")));
+                    }
+                }
         });
     } catch (e) {
         logger.error('Error : ' + e.message);

@@ -157,63 +157,6 @@ node() {
 		
 		
 		if (params.scm_branch == 'master') {
-			stage('Deployment to Staging Env') {
-				sendEvent(service, branch, runtime, "STAGING", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
-				echo "starts Deployment to Staging Env"
-
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-				echo "AWS Configure ......."
-				
-                sh "aws configure set profile.cloud-api.region "+region
-				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
-                
-					
-
-				// Generate serverless yml file with domain added in function name
-				echo "Generate deployment env with domain"
-
-				generateServerlessYml(service, "stg", serviceName, cfStackName)
-				echo "setting lambda execution role as $role";
-				setLambdaExecutionRole(role);
-
-				echo "serverless deploy......."
-				sh "serverless deploy --stage stg -v --bucket " + env.jazz_bucket_stg
-				createSubscriptionFilters(serviceName, "stg", region, logStreamer);
-				
-                if (fileExists('swagger/swagger.json')) {
-					// Generate swagger file based on environment
-					echo "Generating the swagger file for each environment"
-					
-					var_api_key = env.API_ID_STG;
-					def apiHostName = var_api_key + ".execute-api." + region + ".amazonaws.com" //Staging environment
-					
-					generateSwaggerEnv(service, "stg", service, apiHostName, domain, serviceName, var_api_key, config)
-					
-					// import swagger api spec
-					echo "Deploying to staging API Gateway environment.."
-					sh "/var/lib/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+" --deploy stg swagger/swagger.json "
-
-					echo "#############################--------Stage Service End point URL--------####################################"
-					echo "Stage URL :https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/stg/" + domain + "/" + params.service_name
-				}
-
-
-				// @TODO : Resetting the credentials needs to be introduced. (Re-use of same profile on Async calls needs to be considered)
-				// resetCredentials()
-				
-				// @TODO : Send Event feature coming soon
-				sendEvent(service, branch, runtime, "STAGING", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-			 }
-			}
-			
-	        stage('Approval for Production Deployment') {
-				timeout(time: 5, unit: 'MINUTES') {
-					input message: 'Approve PRODUCTION DEPLOYMENT?'
-				}
-			}
-			
-
 			stage('Deployment to Production Env') {
 				sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
 				echo "starts Deployment to Production Env"
@@ -265,9 +208,7 @@ node() {
 					// resetCredentials()
 					sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}
-			}//stage to prod ends here
-
-			
+			}
 		} else {
 			stage('Deployment to Dev Env') {
 				sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")

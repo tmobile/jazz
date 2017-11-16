@@ -25,8 +25,6 @@
 
 const AWS = require('aws-sdk');
 
-// Helper functions
-
 // function to convert key name in schema to database column name
 var getDatabaseKeyName = function(key) {
     // Some of the keys in schema may be reserved keywords, so it may need some manipulation
@@ -47,7 +45,6 @@ var formatService = function(service, format) {
     if (service === undefined || service === null) {
         return {};
     }
-    var keys_list = ['service', 'domain', 'type', 'created_by', 'runtime', 'description', 'region', 'repository', 'email', 'slack_channel', 'tags', 'status'];
     var service_obj;
 
     if (format !== undefined) {
@@ -62,7 +59,6 @@ var formatService = function(service, format) {
         };
     }
 
-
     var parseValue = function(value) {
         var type = Object.keys(value)[0];
         var parsed_value = value[type];
@@ -76,6 +72,14 @@ var formatService = function(service, format) {
             return parsed_value;
         } else if (type === 'SS') {
             return parsed_value;
+        } else if (type === 'M') {
+            var parsed_value_map = {};
+            try {
+                Object.keys(parsed_value).forEach(function(key) {
+                    parsed_value_map[key] =  parseValue(parsed_value[key]);
+                });
+            } catch (e) {}
+            return parsed_value_map;
         } else if (type === 'L') {
             var parsed_value_list = [];
             try {
@@ -90,7 +94,7 @@ var formatService = function(service, format) {
         }
     };
 
-    keys_list.forEach(function(key) {
+    global.config.service_return_fields.forEach(function(key) {
         var key_name = getDatabaseKeyName(key);
         var value = service[key_name];
         if (value !== null && value !== undefined) {
@@ -107,18 +111,18 @@ var formatService = function(service, format) {
 
 // initialize document CLient for dynamodb
 var initDocClient = function() {
-    AWS.config.update({ region: '{conf_region}' });
+    AWS.config.update({ region: global.config.ddb_region });
     var docClient = new AWS.DynamoDB.DocumentClient();
 
     return docClient;
-}
+};
 
 var initDynamodb = function() {
-    AWS.config.update({ region: '{conf_region}' });
+    AWS.config.update({ region: global.config.ddb_region });
     var dynamodb = new AWS.DynamoDB();
 
     return dynamodb;
-}
+};
 
 
 module.exports = () => {
