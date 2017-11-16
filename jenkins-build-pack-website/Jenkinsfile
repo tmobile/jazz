@@ -165,7 +165,7 @@ node ()  {
 					if (create_cloudfront_url == true) {
 						updateCloudFrontPolicy(service, s3ProdBucket)
 						
-						def cfDetails = getCloudFrontDetails("prod", service)
+						def cfDetails = getCloudFrontDetails(current_environment, service)
 
 						if (cfDetails) {
 							echo "id is ${cfDetails[0]}, domain: ${cfDetails[1]}"
@@ -177,11 +177,11 @@ node ()  {
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', "prod", url)
+							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, url)
 						}
 					} else{
 						def siteUrl = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', "prod", siteUrl)
+						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, siteUrl)
 
 						url = updateS3BucketPolicy(service, s3ProdBucket)
 					}
@@ -208,18 +208,18 @@ node ()  {
 					def url = ''
 					if (create_cloudfront_url == true) {
 						loadDistributionConfig()
-						generateDistributionConfig(service, 'prod', config)
+						generateDistributionConfig(service, current_environment, config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
 						updateCloudFrontPolicy(service, s3ProdBucket)                                                                     
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-$env-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-$current_environment-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', "prod", "http://" + url.replaceAll("[\n\r]", ""))
+							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, "http://" + url.replaceAll("[\n\r]", ""))
 						}
 					}else{
 						def siteUrl = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', "prod", siteUrl)
+						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, siteUrl)
 
 						url = updateS3BucketPolicy(service, s3ProdBucket)
 					}
@@ -270,23 +270,23 @@ node ()  {
 					if (create_cloudfront_url == true) {
 						updateCloudFrontPolicy(service, s3DevBucket)
 						
-						def cfDetails = getCloudFrontDetails("dev", service)
+						def cfDetails = getCloudFrontDetails(current_environment, service)
 
 						if (cfDetails) {
 							echo "id is ${cfDetails[0]}, domain: ${cfDetails[1]}"
 						}
 						
-						updateEnableCompressConfig("dev", service, cfDetails[0])
+						updateEnableCompressConfig(current_environment, service, cfDetails[0])
 						
 						invalidateCloudFrontCache(cfDetails[0], service)
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', "dev", url)
+							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, url)
 						}
 					} else{
 						def siteUrl = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', "dev", siteUrl)
+						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, siteUrl)
 
 						url = updateS3BucketPolicy(service, s3DevBucket)
 					}
@@ -315,14 +315,14 @@ node ()  {
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
 						updateCloudFrontPolicy(service, s3DevBucket)
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-$env-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-$current_environment-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', "dev", "http://" + url.replaceAll("[\n\r]", ""))
+							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, "http://" + url.replaceAll("[\n\r]", ""))
 						}
 					}else{
 						def siteUrl = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', "dev", siteUrl)
+						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, siteUrl)
 
 						url = updateS3BucketPolicy(service, s3DevBucket)
 					}
