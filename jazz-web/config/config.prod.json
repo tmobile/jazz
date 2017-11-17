@@ -1,4 +1,4 @@
 {
     "baseurl": "https://{API_GATEWAY_KEY_DEV}.execute-api.{inst_region}.amazonaws.com/dev",
-    "api_doc_name": "{api_doc_name}"
+    "api_doc_name" : "https://{API_DOC_NAME}.s3.amazonaws.com"
 }
