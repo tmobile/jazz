@@ -16,10 +16,59 @@
 
 const assert = require('chai').assert;
 const index = require('../index');
+const awsContext = require('aws-lambda-mock-context');
+const sinon = require('sinon');
+const logger = require("../components/logger.js");
+const AWS = require("aws-sdk-mock");
+const utils = require('../components/utils.js')();
 
-describe('Sample', function() {
-    it('tests handler', function(done) {
-        // this.timeout(1000);
-        done();
+//all tests
+describe('platform_services', function() {
+    var spy, stub, errMessage, errType;
+
+    //setup spy to wrap async/extraneous functions
+    spy = sinon.spy();
+
+    //utils tests
+    describe('utils.js', function() {
+      it("should do something", function(){
+        console.log(typeof utils);
+        assert.isTrue(true);
+      });
+    });
+
+    //handler tests
+    describe('index.handler()', function(){
+      var event, context, callback;
+
+      beforeEach(function(){
+        event = {
+          "stage" : "test",
+          "method" : "",
+          "path" : {
+            "id" : null
+          }
+          "query" : {
+            "foo" : null
+          };
+          "body" : {
+            "bar" : null
+          };
+        };
+        context = awsContext();
+        callback = (err, responseObj) => {
+          if(err){
+            return JSON.stringify(err);
+          }
+          else{
+            return JSON.stringify(responseObj);
+          }
+        };
+      });
+
+      it("should do something", function(){
+        //do something
+        assert.isTrue(true);
+      });
     });
 });

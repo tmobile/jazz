@@ -42,13 +42,13 @@ module.exports.handler = (event, context, cb) => {
         global.services_table = config.services_table;
 
         // event.method cannot be empty, throw error
-        if (event === undefined || event.method === undefined) {
+        if (!event || !event.method) {
             cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
         }
 
         // get service_id from the path
         var service_id;
-        if (event !== undefined && event.path !== undefined && event.path.id !== undefined && event.path.id !== "") {
+        if (event && event.path && event.path.id) {
             service_id = event.path.id;
         }
 
