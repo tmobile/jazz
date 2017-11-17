@@ -17,7 +17,7 @@ Jazz is [open-sourced](http://opensource.t-mobile.com) and under active developm
 
 You can [try the Developer Preview](https://github.com/tmobile/jazz-installer) by using the automated installer.
 
-## Try
+## Try Jazz
 You can try out Jazz by registering with your email address [here](http://try.tmo-jazz.net). You will need a registration code which can be requested by joining [slack](https://tmo-oss-getinvite.herokuapp.com/). Once in slack, go to `#jazz-serverless` channel to get a working registration code.
     
 ## User Guide
