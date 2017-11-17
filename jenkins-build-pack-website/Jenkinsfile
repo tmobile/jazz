@@ -1,4 +1,4 @@
-#!groovy​
+#!groovy
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
@@ -41,15 +41,16 @@ def Event_Status = [
 @Field def created_by = ''
 @Field def current_environment = ''
 @Field def env_prefix = ''
-@Field def region = env.jazz_region
+@Field def region = ''
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	g_base_url = "https://" + env.API_KEY + ".execute-api.us-east-1.amazonaws.com/dev"
+	region = env.jazz_region
+	g_base_url = "https://" + env.API_KEY + ".execute-api.${region}.amazonaws.com/dev"
 
-    echo "Build Pack website params: " + params
+	echo "Build Pack website params: " + params
 
-    echo "Build triggered via branch: " + params.scm_branch
+	echo "start"
 
     def service = params.service_name
 	def branch = params.scm_branch
@@ -90,6 +91,7 @@ node ()  {
 		{
 			return LoadConfiguration()
 		}
+
 	}
 
 	def create_cloudfront_url
@@ -209,7 +211,7 @@ node ()  {
 						generateDistributionConfig(service, current_environment, config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3ProdBucket)
+						updateCloudFrontPolicy(service, s3ProdBucket)                                                                     
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
@@ -344,6 +346,7 @@ node ()  {
 	  }
 	}
 }
+
 
 def getS3BucketName(String envname) {
 
@@ -512,7 +515,7 @@ def loadBucketPolicy(String s3Bucket){
 	    			}
 	    		} else if (e.key == "Condition") {
 	    			condition = [:]
-					
+
 	    			for ( f in e.value ) {
 	    				f_value = [:]
 	    				for ( src in f.value ) {
@@ -811,6 +814,7 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 			}
 		}
  	}
+
 }
 
 /**
