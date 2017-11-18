@@ -25,7 +25,6 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const secretHandlerModule = require("./components/secret-handler.js"); //Import the secret-handler module.
 const request = require('request');
 const formats = require('./utils.js');
 var utils = formats('apis');
@@ -35,7 +34,6 @@ module.exports.handler = (event, context, cb) => {
 	//Initializations
 	var errorHandler = errorHandlerModule();
 	var config = configObj(event);
-	var secretHandler = secretHandlerModule();
 	logger.init(event, context);
   
 	try {
