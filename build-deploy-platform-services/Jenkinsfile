@@ -50,7 +50,8 @@ node {
 	def var_api_key 				= env.API_KEY
 	
 	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git" 
-		
+	
+	def es_hostname = env.jazz_es_hostname
 
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
@@ -216,7 +217,24 @@ node {
 					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
 					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
                 }
-              
+
+			  	if (service_template.trim() == "platform_logs") {
+					echo "Updating parameter specific to platform_logs"
+					sh "sed -i -- 's/{env-prefix}/" + env.env_name_prefix + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{env-prefix}/" + env.env_name_prefix + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{env-prefix}/" + env.env_name_prefix + "/g' ./config/prod-config.json"
+
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/prod-config.json"
+                }
+
+				if (service_template.trim() == "cloud-logs-streamer") {
+					echo "Updating parameter specific to cloud-logs-streamer"
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/prod-config.json"
+                }
 			}
 		}
 		catch(error){
