@@ -1,5 +1,5 @@
 {
-	"BASE_URL" :"{es-base-url}",
+	"BASE_URL" :"https://{inst_elastic_search_hostname}/",
 	"DEFALT_SIZE" : 1000,
 	"DEFAULT_TIME_IN_DAYS" : 7,
 	"ENV" : ["prod", "stg", "dev"],
