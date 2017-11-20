@@ -69,17 +69,17 @@ module.exports.handler = (event, context, cb) => {
             }, function(error, data) {
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
-                    cb(JSON.stringify(errorHandler.throwInternalServerError('Unexpected Error occured.')));
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError('Unexpected Error occured.')));
                 }
                 var service_obj = data.getServiceByID;
 
                 // throw error if no service exists with given service_id
                 if (Object.keys(service_obj).length === 0 && service_obj.constructor === Object) {
                     logger.error('Cannot find service with id: ' + service_id);
-                    cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
+                    return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
                 }
                 logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
-                cb(null, responseObj(data.getServiceByID, event.path));
+                return cb(null, responseObj(data.getServiceByID, event.path));
             });
         }
 
@@ -98,10 +98,10 @@ module.exports.handler = (event, context, cb) => {
                 // Handle error
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
-                    cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured')));
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured')));
                 }
 
-                cb(null, responseObj(result.fetchServices, event.query));
+                return cb(null, responseObj(result.fetchServices, event.query));
             });
         }
 
