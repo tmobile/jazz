@@ -155,39 +155,6 @@ describe('platform_services', function() {
   });
 
   /*
-  * Given a service id that points to existing service, handler() indicates successful get
-  * @param {object} event -> event.method is defined to be "GET", event.path.id is truthy
-  * @params {object, function} default aws context, and callback function as defined in beforeEach
-  * @returns {string} should return the callback response which is an error message
-  */
-/*  it("should indicate getting service was a success if service found with matching id", (done)=>{
-    event.method = "GET";
-    logMessage = "Get Success.";
-    var dataObj = {
-      "getServiceByID" : {
-        "k!ngd0m_0f_Mewni" : {},
-        1 : "b",
-        2 : "c"
-      }
-    };
-    //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
-    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
-      return cb(null, dataObj);
-    });
-    //wrapping the logger to check for response messages
-    logStub = sinon.stub(logger, "verbose", spy);
-    //trigger the mocked logic by calling handler()
-    var callFunction = index.handler(event, context, callback);
-    console.log(logStub.called);
-    //var logResponse = logStub.args[0][0];
-    //var logCheck = logResponse.includes(logMessage);
-    AWS.restore("DynamoDB.DocumentClient");
-    logStub.restore();
-    assert.isTrue(true);
-    done();
-  }); */
-
-  /*
   * Given an event.method = "GET" and invalid service_id, handler() attempts to get all items that match
   * @param {object} event -> event.method is defined to be "GET", event.path.id is undefined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
