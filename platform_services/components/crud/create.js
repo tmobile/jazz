@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@
     Create a Service-Catalog entry in dynamodb table
     @module: create.js
     @description: CRUD functions for service catalog
-    @author: Sunil Fernandes
+    @author: 
     @version: 1.0
 **/
 
-const utils = require("../utils.js")(); //Import the utils module.
+const utils = require("../utils.js")();
 const Guid = require("guid");
 const moment = require('moment');
 

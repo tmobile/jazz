@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,12 +18,12 @@
 	Get List of Service-Catalogs
     @module: getList.js
     @description: CRUD functions for service catalog
-	@author: Sunil Fernandes
+	@author:
 	@version: 1.0
 **/
 
-const utils = require("../utils.js")(); //Import the utils module.
-
+const utils = require("../utils.js")(); 
+const _ = require("lodash");
 
 module.exports = (query, onComplete) => {
     // initialize dynamodb
@@ -31,6 +31,7 @@ module.exports = (query, onComplete) => {
 
     var filter = "";
     var attributeValues = {};
+    var insertAnd = " AND ";
 
     var scanparams = {
         "TableName": global.services_table,
@@ -38,27 +39,66 @@ module.exports = (query, onComplete) => {
         "Limit": "500"
     };
 
+    var filter_key = utils.getDatabaseKeyName(global.config.service_filter_key);
+    
     if (query !== undefined && query !== null) {
-        // var keys_list = ['service', 'domain', 'region', 'type', 'runtime', 'created_by'];
+        
         var keys_list = global.config.service_filter_params;
 
-        // Generate filter string
-        keys_list.forEach(function(key) {
-            var key_name = utils.getDatabaseKeyName(key);
+        keys_list.forEach(function (key) {
+            
+			var key_name = utils.getDatabaseKeyName(key);
 
-            if (query[key] !== undefined) {
-                filter = filter + key_name + " = :" + key_name + " AND ";
-                attributeValues[(":" + key_name)] = {
-                    'S': query[key]
-                };
-            }
-        });
+			if (key_name == "SERVICE_TIMESTAMP" && (query.last_updated_after !== undefined || query.last_updated_before !== undefined)) {
+				filter = filter + key_name + " BETWEEN :BEFORE" + " AND :AFTER " + insertAnd;
+				attributeValues[(":BEFORE")] = {
+					'S': query.last_updated_before
+				};
+				attributeValues[(":AFTER")] = {
+					'S': query.last_updated_after
+				};
+			} else if (key_name == "SERVICE_STATUS" && query.status !== undefined){
+				var status = query.status;
+				var array = status.split(',');
+				var obj= {};
 
+				var filterString = "( ";
+				array.forEach(function(value){
+					filterString += " :"+value + " , ";
+				});
+				filterString = filterString.substring(0, filterString.length - 3);
+				filterString += " )";
 
-        if (filter !== "") {
-            scanparams.FilterExpression = filter.substring(0, filter.length - 5); // remove the " AND " at the end
-            scanparams.ExpressionAttributeValues = attributeValues;
-        }
+				filter = filter + key_name + " IN " + filterString  + " AND ";
+				array.forEach(function(value){
+					attributeValues[(":"+value)] = {
+						'S': value
+					};
+				});
+			}else if (query[key]) {
+                filter = filter + key_name + " = :" + key_name + insertAnd;
+				attributeValues[(":" + key_name)] = {
+					'S': query[key]
+				};
+			}   
+		});
+    }
+
+    if (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase())) {
+        var ddb_created_by = utils.getDatabaseKeyName("created_by");
+
+        // filter for services created by current user
+        filter = filter + ddb_created_by + " = :" + ddb_created_by + insertAnd;
+        attributeValues[(":" + ddb_created_by)] = {
+            'S': global.userId
+        };
+    }
+
+    if (filter !== "") {
+        filter = filter.substring(0, filter.length - insertAnd.length); // remove insertAnd at the end
+
+        scanparams.FilterExpression = filter;
+        scanparams.ExpressionAttributeValues = attributeValues;
     }
 
     dynamodb.scan(scanparams, function(err, items) {

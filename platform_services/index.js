@@ -16,19 +16,18 @@
 
 /**
   CRUD APIs for Service Catalog
-  @author: Sunil Fernandes & Somanchi
+  @author: 
   @version: 1.0
 **/
 
-const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
-const responseObj = require("./components/response.js"); //Import the response module.
-const configObj = require("./components/config.js"); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
-const utils = require("./components/utils.js")(); //Import the utils module.
-const crud = require("./components/crud")(); //Import the utils module.
+const errorHandlerModule = require("./components/error-handler.js");
+const responseObj = require("./components/response.js"); 
+const configObj = require("./components/config.js"); 
+const logger = require("./components/logger.js"); 
+const utils = require("./components/utils.js")(); 
+const crud = require("./components/crud")(); 
 
 const async = require('async');
-
 
 module.exports.handler = (event, context, cb) => {
 
@@ -267,11 +266,10 @@ module.exports.handler = (event, context, cb) => {
         if (event.method === 'POST' && service_id === undefined) {
             logger.info('Create new service');
             var service_data = event.body;
-            logger.info('1111');
+            
             async.series({
                 // Validate service_data for adding new service
                 validateServiceData: function(onComplete) {
-                    logger.info('2222');
                     // validate if input data is empty
                     if (service_data === undefined || service_data === null || service_data === {}) {
                         // return inputError
@@ -280,11 +278,11 @@ module.exports.handler = (event, context, cb) => {
                             "message": "Service Data cannot be empty"
                         });
                     }
-                    logger.info('22333333');
+                    
                     // validate required fields
                     var required_fields = config.service_required_fields;
                     var field;
-                    logger.info('44444');
+                    
                     for (var i = required_fields.length - 1; i >= 0; i--) {
                         field = required_fields[i];
                         var value = service_data[field];
@@ -296,11 +294,9 @@ module.exports.handler = (event, context, cb) => {
                             });
                         }
                     }
-                    logger.info('555555');
-                    // allowed_fields = required_fields + optional_fields
+                    
                     var allowed_fields = required_fields.concat(config.service_optional_fields);
-                    logger.info('6666');
-
+                    
                     // check if input contains fields other than allowed fields
                     for (field in service_data) {
                         if (service_data.hasOwnProperty(field)) {
@@ -313,9 +309,6 @@ module.exports.handler = (event, context, cb) => {
                         }
                     }
 
-                    // add more validations here...
-
-                    // return on successfull validation
                     onComplete(null, {
                         "result": "success",
                         "input": service_data

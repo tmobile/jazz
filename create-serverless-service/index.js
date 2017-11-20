@@ -64,7 +64,7 @@ module.exports.handler = (event, context, cb) => {
 
 	    logger.info("Request event: " + JSON.stringify(event));
 
-		var base_auth_token = "Basic " + new Buffer("{config.SVC_USER}:{config.SVC_PASWD}").toString("base64");
+		var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
 
         var approvers = event.body.approvers;
         var userlist = "";
@@ -134,20 +134,25 @@ module.exports.handler = (event, context, cb) => {
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
         request({
-          	url: config.JOB_BUILD_URL,
+            url: config.JOB_BUILD_URL,
             method: 'POST',
             headers: {
-	            "Authorization": base_auth_token
-	    },
+                "Authorization": base_auth_token
+            },
             qs: propertiesObject
-        }, function(err, response, body) {
-            if (err) {
-                logger.error('Error while starting Jenkins job: ' + err);
-                return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
-            }else {
-				messageToBeSent = "Your service code will be available at "+config.BIT_BUCKET_URL+bitbucketName + "/browse";
-				return cb(null, responseObj(messageToBeSent, event.body));
-			}
+            }, function(err, response, body) {
+                if (err) {
+                    logger.error('Error while starting Jenkins job: ' + err);
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                }else {
+                    if (response.statusCode <= 299) { // handle all 2xx response codes as success
+                        messageToBeSent = "Your service code will be available at "+config.BIT_BUCKET_URL+bitbucketName + "/browse";
+                        return cb(null, responseObj(messageToBeSent, event.body));
+                    } else {
+                        logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
+                        return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to kick off service creation job")));
+                    }
+                }
         });
     } catch (e) {
         logger.error('Error : ' + e.message);
