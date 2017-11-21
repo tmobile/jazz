@@ -24,7 +24,7 @@ You can try out public preview version of Jazz by registering with your email ad
 
 ## User Guide
 
-For more details, see the [Wiki](https://github.com/tmobile/jazz-core/wiki).
+For more details, see the [Wiki](https://github.com/tmobile/jazz/wiki).
 
 ## License
 
