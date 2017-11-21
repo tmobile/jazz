@@ -21,11 +21,13 @@ API to get the application logs
  **/
 
 'use strict';
-const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
-const responseObj = require("./components/response.js"); //Import the response module.
-const configObj = require("./components/config.js"); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
+const _ = require("lodash");
 const request = require('request');
+
+const errorHandlerModule = require("./components/error-handler.js"); 
+const responseObj = require("./components/response.js");
+const configObj = require("./components/config.js"); 
+const logger = require("./components/logger.js");
 const formats = require('./utils.js');
 var utils = formats('apis');
 
@@ -57,28 +59,27 @@ module.exports.handler = (event, context, cb) => {
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter category.")));
 			}
 			
-			var environments = config.ENV,
-			hasEnumEnv = false;
-
-			for (var idx in environments ){
-				if (event.body.environment.toLowerCase() == environments[idx]){
-					hasEnumEnv = true;
-				}
+			if (!_.includes(config.VALID_ENVIRONMENTS, event.body.environment.toLowerCase())){
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for environment - " + config.VALID_ENVIRONMENTS.join(", "))));
 			}
-			
-			if(!hasEnumEnv){
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values can be allowed for Environment - " + environments.join(", "))));
+
+			if (!event.body.type || !_.includes(config.VALID_LOGTYPES, event.body.type.toLowerCase())){
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + config.VALID_LOGTYPES.join(", "))));
+			}
+
+			if (!event.body.category || !_.includes(config.VALID_CATEGORIES, event.body.category.toLowerCase())){
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for category - " + config.VALID_CATEGORIES.join(", "))));
 			}
 
 			var service = event.body.service,
 				domain = event.body.domain,
 				env = event.body.environment.toLowerCase(),
-				categoryType = event.body.category,
-				logType = event.body.type,
-				page = (event.body.offset !== undefined && event.body.offset !== '') ? event.body.offset : 0,
-				startTime = (event.body.start_time !== undefined && event.body.start_time !== '') ? event.body.start_time : utils.setStartDate(config.DEFAULT_TIME_IN_DAYS),
-				endTime = (event.body.end_time !== undefined && event.body.end_time !== '') ? event.body.end_time : new Date(),
-				size = (event.body.size !== undefined && event.body.size !== '') ? event.body.size : config.DEFAULT_SIZE,
+				categoryType = event.body.category.toLowerCase(),
+				logType = event.body.type.toLowerCase(),
+				page = event.body.offset ? event.body.offset : 0,
+				startTime = event.body.start_time ? event.body.start_time : utils.setStartDate(config.DEFAULT_TIME_IN_DAYS),
+				endTime = event.body.end_time ? event.body.end_time : new Date(),
+				size = event.body.size ? event.body.size : config.DEFAULT_SIZE,
 				querys = [];
 			
 			//Appending service name with Domain, Env and Jazz_type
@@ -97,35 +98,11 @@ module.exports.handler = (event, context, cb) => {
 			querys.push(utils.setQuery("!message", "END*"));
 			querys.push(utils.setQuery("!message", "REPORT*"));
 			
-			if(logType){
-				var loggerType = config.TYPE, 
-					hasEnumLogtype = false;
-				for (var logId in loggerType ){
-					if (logType.toLowerCase() == loggerType[logId].toLowerCase()){
-						hasEnumLogtype = true;
-					}
-				}
-				if(hasEnumLogtype){
-					querys.push(utils.setQuery("log_level", logType));
-				} else {
-					logger.info("Only following values can be allowed for Logger type - " + loggerType.join(", "));
-				}
-			} 
-			
 			logger.info("QueryObj: "+ JSON.stringify(querys));
 			
-			var categoryList = config.CATEGORY, 
-				hasEnumValue = false;
-			for (var id in categoryList ){
-				if (categoryType.toLowerCase() == categoryList[id].toLowerCase()){
-					hasEnumValue = true;
-				}
-			}
 			var servCategory = [];
 			
-			if(!hasEnumValue){
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values can be allowed for service category - " + categoryList.join(", "))));
-			} else if (categoryType.toLowerCase() == 'api'){
+			if (categoryType.toLowerCase() == 'api'){
 				servCategory = ["apilogs","applicationlogs"];
 			} else if (categoryType.toLowerCase() == 'function'){
 				servCategory = ["applicationlogs"];
@@ -183,7 +160,7 @@ module.exports.handler = (event, context, cb) => {
 		}
 	} catch (e) {
 		//Sample Error response for internal server error
-		cb(JSON.stringify(errorHandler.throwInternalServerError("Exception occured while processing the request : "+ JSON.stringify(e))));
+		return cb(JSON.stringify(errorHandler.throwInternalServerError("Exception occured while processing the request : "+ JSON.stringify(e))));
 	}
 	
 	function setRequestBody(category, querys, startTime, endTime, size, page){
