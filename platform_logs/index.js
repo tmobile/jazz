@@ -37,30 +37,29 @@ module.exports.handler = (event, context, cb) => {
 	logger.init(event, context);
   
 	try {
-		//Your POST method should be handled here
-		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
+		
+		if (event && event.method && event.method === 'POST') {
 		  
-		  	// if (!event.principalId) {
-        	// 	return cb(JSON.stringify(errorHandler.throwUnauthorizedError("You aren't authorized to access this service. Please login with your credentials.")));
-    		// }
-    		
-			if(event === undefined && event.body === undefined  ){
+			if(!event.body){
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("Service inputs not defined!")));
 			} 
-			if(event.body.service === undefined){
+
+			if(!event.body.service){
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter service name.")));
 			}			
-			if(event.body.domain === undefined){
+			if(!event.body.domain){
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter domain.")));
 			} 			
-			if(event.body.environment === undefined){
+			if(!event.body.environment){
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter environment.")));
 			} 
-			if(event.body.category === undefined){
+			if(!event.body.category){
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter category.")));
 			}
+			
 			var environments = config.ENV,
-				hasEnumEnv = false;			
+			hasEnumEnv = false;
+
 			for (var idx in environments ){
 				if (event.body.environment.toLowerCase() == environments[idx]){
 					hasEnumEnv = true;
@@ -68,7 +67,7 @@ module.exports.handler = (event, context, cb) => {
 			}
 			
 			if(!hasEnumEnv){
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values can be allowed for Envirnoment - " + environments.join(", "))));
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values can be allowed for Environment - " + environments.join(", "))));
 			}
 
 			var service = event.body.service,
@@ -79,18 +78,18 @@ module.exports.handler = (event, context, cb) => {
 				page = (event.body.offset !== undefined && event.body.offset !== '') ? event.body.offset : 0,
 				startTime = (event.body.start_time !== undefined && event.body.start_time !== '') ? event.body.start_time : utils.setStartDate(config.DEFAULT_TIME_IN_DAYS),
 				endTime = (event.body.end_time !== undefined && event.body.end_time !== '') ? event.body.end_time : new Date(),
-				size = (event.body.size !== undefined && event.body.size !== '') ? event.body.size : config.DEFALT_SIZE,
+				size = (event.body.size !== undefined && event.body.size !== '') ? event.body.size : config.DEFAULT_SIZE,
 				querys = [];
 			
 			//Appending service name with Domain, Env and Jazz_type
 			service = domain + "-" + service + "-" + env;			
-			if(config.JAZZ_TYPE !== undefined && config.JAZZ_TYPE !== null){
-				service = config.JAZZ_TYPE + service
+			if(config.ENV_PREFIX){
+				service = config.ENV_PREFIX + "-" + service
 			}
+
 			logger.info("Service name to fetch logs :" + service);
 			
 			querys.push(utils.setQuery("servicename", service));		
-			//querys.push(utils.setQuery("domain", domain));
 			querys.push(utils.setQuery("environment", env));
 			
 			//Query to filter Control messages
@@ -179,6 +178,8 @@ module.exports.handler = (event, context, cb) => {
 					}
 				}
 			});
+		} else {
+			return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid request to process for logs API")));
 		}
 	} catch (e) {
 		//Sample Error response for internal server error
