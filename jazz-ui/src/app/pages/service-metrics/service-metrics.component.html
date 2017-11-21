@@ -1,0 +1,24 @@
+<div class="row page-section section-top">
+    <div class="filter-wrp">
+        <filters class="filters" [selectedList]="['DAY']" [filtersList]="filtersList" [multiple]="false" (onSelected)="onFilterSelected($event)"></filters>
+        <div class="filter-section-right">
+            <dropdown class="dropdown-1" [dropdwnContent]="graphTypeList" [selected]="'Line'" (onSelected)="onTypeSelected($event)"></dropdown>
+            <dropdown class="dropdown-2" [dropdwnContent]="environmentList" [selected]="'Environment'" (onSelected)="onEnvSelected($event)"></dropdown>
+        </div>
+        <!-- <search-box (onChange)="onServiceSearch($event)"></search-box> -->
+        <!-- <div class="filter-icon">
+        <span class="icon-icon-filter-unselected" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
+        </span>
+    </div> -->
+    </div>
+    <div class="graph-section-container">
+        <div class="graph-wrp" *ngFor="let graph of graphsList; let i=index">
+            <div class="line-graph-wrp">
+                <div class="line-graph-inr">
+                    <div class="graph-title">{{graph.title}}</div>
+                    <line-graph [id]="graph.id" [graphData]="graph.data" [graphDataOld]="graph.dataOld" (render)="triggerRenderGraph(graph.data)"></line-graph>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

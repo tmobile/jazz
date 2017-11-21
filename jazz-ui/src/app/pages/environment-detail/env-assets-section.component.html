@@ -1,0 +1,34 @@
+<div class="page-section">
+    <div class="asset-wrp" *ngFor="let asset of assetsList">
+        <div class="asset-title-row">
+            <img src="{{asset.imgUrl}}">
+            <span class="asset-title">{{asset.name}}</span><span class="asset-subtitle">{{asset.type}}</span>
+        </div>
+        <div class="asset-content-row row">
+            <ul class="section-left col-md-7 col-sm-12">
+                <li>
+                    <div class="det-label">Description</div>
+                    <div class="det-value">{{asset.description}}</div>
+                </li>
+                <li>
+                    <div class="det-label">Gateway</div>
+                    <div class="det-value">{{asset.gateway}}</div>
+                </li>
+                <li>
+                    <div class="det-label">Alarms</div>
+                    <div class="det-value" [ngClass]="asset.alarms">{{asset.alarms}}</div>
+                </li>
+            </ul>
+            <ul class="section-right col-md-5 col-sm-12">
+                <li>
+                    <div class="det-label">Rules</div>
+                    <div class="det-value link">{{asset.rules}}</div>
+                </li>
+                <li>
+                    <div class="det-label">Title</div>
+                    <div class="det-value link">{{asset.title}}</div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>

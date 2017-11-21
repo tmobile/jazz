@@ -1,0 +1,42 @@
+:host {
+    display: block;
+    margin-top: 5px;
+    position: relative;
+}
+
+.form-label {
+    opacity: 0.8;
+    font-size: 1.3rem;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+}
+
+input {
+    width: 90%; //fallback
+    width: calc(100% - 20px);
+    margin-top: 5px;
+    height: 32px;
+    border-radius: 3px;
+    background-color: rgba(216, 216, 216, 0.2);
+    outline: none;
+    border: none;
+    padding: 0px 10px;
+    color: #fff;
+    font-size: 14px;
+}
+
+input.error {
+    border: 1px solid #d0021b;
+    color: #d0021b;
+    background-color: #6c5c5c;
+}
+
+.error-msg {
+    color: #ff213c;
+    font-size: 1.2rem;
+    letter-spacing: 0.25px;
+    padding-top: 5px;
+    position: absolute;
+    width: 100%;
+    top: 100%;
+}

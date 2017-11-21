@@ -1,0 +1,16 @@
+<div class='recent-acts' [class.show-act]='actState==2'>
+    <tmobile-mob-header [hideBack]='true' class='show-for-mobile' [icon]="'notification'" [headText]="'Activity'" [status]="'none'"></tmobile-mob-header>
+    <section class='recent-acts-mob'>
+        <div>
+            <h4 class="section-header">Recent activities</h4>
+            <div class="overlay-msg"><p>COMING SOON</p></div>
+                <div class="recent-act-box" *ngFor="let data of inputData">
+                    <img src="{{data.path}}">
+                    <p class="activity-header">{{data.title}}</p>
+                    <p class="activity-details">{{data.details}}</p>
+                    <p class="activity-time">{{data.time}}</p>
+                </div>
+            
+        </div>
+    </section>
+</div>

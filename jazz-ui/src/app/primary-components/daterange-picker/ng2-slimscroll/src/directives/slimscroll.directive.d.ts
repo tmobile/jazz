@@ -1,0 +1,38 @@
+import { ViewContainerRef, OnInit, Renderer } from '@angular/core';
+import { SlimScrollOptions } from '../classes/slimscroll-options.class';
+export declare class SlimScrollDirective implements OnInit {
+    private viewContainer;
+    private renderer;
+    options: SlimScrollOptions;
+    el: HTMLElement;
+    wrapper: HTMLElement;
+    grid: HTMLElement;
+    bar: HTMLElement;
+    body: HTMLElement;
+    pageY: number;
+    top: number;
+    dragging: boolean;
+    mutationThrottleTimeout: number;
+    mutationObserver: MutationObserver;
+    lastTouchPositionY: number;
+    constructor(viewContainer: ViewContainerRef, renderer: Renderer);
+    ngOnInit(): void;
+    setElementStyle(): void;
+    onMutation(): void;
+    wrapContainer(): void;
+    initGrid(): void;
+    initBar(): void;
+    getBarHeight(): void;
+    attachWheel(target: HTMLElement): void;
+    onWheel: (e: WheelEvent) => void;
+    onTouchStart: (e: TouchEvent) => void;
+    onTouchMove: (e: TouchEvent) => void;
+    onTouchEnd: (e: TouchEvent) => void;
+    scrollContent(y: number, isWheel: boolean, isJump: boolean): void;
+    makeBarDraggable: () => void;
+    preventDefaultEvent: (e: MouseEvent) => void;
+    barDraggableListener: (e: MouseEvent) => void;
+    destroy(): void;
+    unwrap(wrapper: HTMLElement): void;
+    onResize(): void;
+}
