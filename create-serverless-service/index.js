@@ -22,18 +22,19 @@ const https = require('https');
 const request = require('request');
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
+const util = require('util');
 
 /**
-	  @author:
+	Serverless create service
+    @author:
     @version: 1.0
 **/
-
 
 module.exports.handler = (event, context, cb) => {
 
     var errorHandler = errorHandlerModule();
-  	var config = configObj(event);
-  	logger.init(event, context);
+	var config = configObj(event);
+	logger.init(event, context);
 
     var messageToBeSent;
     var isValidName = function(name) {
@@ -41,29 +42,29 @@ module.exports.handler = (event, context, cb) => {
     };
 
     try {
-        if (event.body === undefined) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service inputs not defined")));
-        } else if (event.body.service_type === undefined || event.body.service_type === "") {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Type not defined")));
-        } else if (event.body.service_name === undefined || event.body.service_name === "" || !isValidName(event.body.service_name)) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Name not defined or approriate")));
-        } else if (event.headers.Authorization === undefined || event.headers.Authorization === "") {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization not defined or approriate")));
-        } else if (event.body.service_type !== "website" && (event.body.runtime === undefined || event.body.runtime === "")) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Runtime not defined")));
-        } else if (event.body.approvers === undefined || event.body.approvers === "") {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Approvers not defined")));
+        if (!event.body) {
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service inputs are not defined")));
+        } else if (!event.body.service_type) {
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service type is not defined")));
+        } else if (!event.body.service_name || !isValidName(event.body.service_name)) {
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service name is not defined or has invalid characters")));
+        } else if (!event.headers || !event.headers.Authorization) {
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization header is missing")));
+        } else if (event.body.service_type !== "website" && (!event.body.runtime)) {
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service runtime is not defined")));
         } else if (event.body.domain && !isValidName(event.body.domain)) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Domain Name is not approriate")));
-        } else if (event.body.username === undefined || event.body.username === "") {
-            // Check if Service Creator (username) exists
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service Creator not defined")));
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Namespace is not appropriate")));
         }
 
-	logger.info("Request event: "+JSON.stringify(event));
+        var user_id = event.principalId;
+        if (!user_id) {
+          logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
+          return cb(JSON.stringify(errorHandler.throwUnAuthorizedError("User is not authorized to access this service")));
+        }
 
-		//var base_auth_token = "Basic " + new Buffer("jobexec:jenkinsadmin").toString("base64");
-		var base_auth_token = "Basic " + new Buffer(config.SVC_USER + ":" + config.SVC_PASWD).toString("base64");
+	    logger.info("Request event: " + JSON.stringify(event));
+
+		var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
 
         var approvers = event.body.approvers;
         var userlist = "";
@@ -73,17 +74,16 @@ module.exports.handler = (event, context, cb) => {
             bitbucketName = domain + "-" + bitbucketName;
         }
 
-		var i = 0;
-        for (i; approvers.length > i; i += 1) {
-            userlist = userlist + "name=" + approvers[i] + "&";
-        }
+		var userlist = approvers.reduce(function(stringSoFar, approver){
+            return stringSoFar + util.format("name=%s&", approver);
+        }, "");
 
         var propertiesObject = {
             token: config.BUILD_TOKEN,
             service_type: event.body.service_type,
             runtime: event.body.runtime,
             service_name: event.body.service_name,
-            username: event.body.username,
+            username: user_id,
             admin_group: userlist,
             domain: event.body.domain,
             auth_token: event.headers.Authorization
@@ -131,31 +131,31 @@ module.exports.handler = (event, context, cb) => {
             }
         }
 
-
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
         request({
-          	url: "{conf-jenkins-host}/job/create-service/buildWithParameters",
-            uri: "{conf-jenkins-host}/job/create-service/buildWithParameters",
+            url: config.JOB_BUILD_URL,       
             method: 'POST',
             headers: {
-	            "Authorization": base_auth_token
-	    },
+                "Authorization": base_auth_token
+            },
             qs: propertiesObject
-        }, function(err, response, body) {
-            if (err) {
-                logger.error('Error while starting Jenkins job: ' + err);
-                return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
-            }else {
-				messageToBeSent = "Your Service Code will be available at "+config.BIT_BUCKET_URL+bitbucketName + "/browse";
-				return cb(null, responseObj(messageToBeSent, event.body));
-			}
+            }, function(err, response, body) {
+                if (err) {
+                    logger.error('Error while starting Jenkins job: ' + err);
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                }else {
+                    if (response.statusCode <= 299) { // handle all 2xx response codes as success
+                        messageToBeSent = "Your service code will be available at "+config.BIT_BUCKET_URL+bitbucketName + "/browse";
+                        return cb(null, responseObj(messageToBeSent, event.body));
+                    } else {
+                        logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
+                        return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to kick off service creation job")));
+                    }
+                }
         });
-
-
     } catch (e) {
-        logger.error('Error : ', e.message);
+        logger.error('Error : ' + e.message);
         cb(JSON.stringify(errorHandler.throwInternalServerError(e.message)));
     }
-
 };

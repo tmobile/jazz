@@ -1,0 +1,50 @@
+<div class="table-wrp" [ngClass]="type">
+    <!-- Table Header -->
+    <div class="table-header">
+        <div *ngFor="let column of header" class="column" [class.sortable]="column.sort" (click)="onSortColumn(column)">
+            <span>{{column.label}}</span>
+            <div class="arrow-wrap" [ngClass]="{'sort-down': column._reverse == true, 'sort-up': column._reverse == false}">
+                <div class="upper-arrow" (click)="onSortColumn(column.key , false)"></div>
+                <div class="lower-arrow" (click)="onSortColumn(column.key , true)"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Filter Row -->
+    <div class="table-filters-row" [class.open]="showFilters">
+        <div *ngFor="let column of header" class="column">
+            <div [ngSwitch]="getFilterType(column)">
+                <div class="input-wrapper" *ngSwitchCase="'input'">
+                    <input class="textForm" type="string" placeholder="{{column.label}}" [(ngModel)]="column.filter.value" (ngModelChange)="onFilterApplied($event, column)">
+                </div>
+                <div class="dropdown-wrapper" *ngSwitchCase="'dropdown'">
+                    <dropdown [dropdwnContent]="column.filter.data" [selected]="column.filter.value" (onSelected)="onFilterApplied($event, column)"></dropdown>
+                </div>
+                <div class="daterange-wrapper" *ngSwitchCase="'dateRange'">
+                    <daterange-picker [range]="column.filter.range" (onChange)="onFilterApplied($event, column)"></daterange-picker>
+                    <span class="icon-icon-calendar2"></span>
+                </div>
+                <div *ngSwitchDefault></div>
+            </div>
+        </div>
+    </div>
+    <!-- Table Body -->
+    <div class="table-body" *ngIf="type=='accordian'">
+        <ng-content select=".table-row-wrp"></ng-content>
+    </div>
+    <div class="table-body" *ngIf="type!='accordian'">
+        <ng-content select=".table-row"></ng-content>
+    </div>
+    <!-- Table Notification -->
+    <div class="table-notification">
+        <div class="loading-row" [class.show]="state=='loading'">
+            <div class="loading-circle"></div>
+            <div class="loading-text">Loading Data...</div>
+        </div>
+        <!-- <div class="error-row" [class.show]="state=='error'">
+            <div>Error Loading Data!!</div>
+        </div> -->
+        <div class="empty-row" [class.show]="state=='empty'">
+            <div>No Data Available</div>
+        </div>
+    </div>
+</div>

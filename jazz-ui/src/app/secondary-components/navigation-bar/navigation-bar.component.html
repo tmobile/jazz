@@ -1,0 +1,12 @@
+<div class="navigation-bar-wrp row hide-for-mobile">
+    <div class="navigation-item" (click)="goToLink('/landing')">
+        <img src="assets/images/icons/icon-back.png">
+        <a href="/landing">Home</a>
+    </div>
+    <div class="navigation-item" *ngFor="let item of links">
+        <div class="navigation-separator">/</div>
+        <div class="navigation-separator">
+            <a [href]="item.link" (click)="goToLink(item.link)">{{item.name}}</a>
+        </div>
+    </div>
+</div>

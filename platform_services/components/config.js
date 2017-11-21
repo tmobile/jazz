@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ var getStageConfig = (event) => {
   } else if (stage === 'prod') {
     configObj = require('../config/prod-config.json');
   } else {
-    configObj = require('../config/dev-config.json');
+    configObj = require('../config/' + stage + '-config.json');
   }
   return configObj;
 };

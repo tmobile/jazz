@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -27,9 +27,9 @@ const AWSCognito = require('amazon-cognito-identity-js');
 
 /**
  * API Auth Service
- * 
- * @author: 
- * @version: 
+ *
+ * @author:
+ * @version:
  */
 
 module.exports.handler = (event, context, callback) => {
@@ -39,59 +39,49 @@ module.exports.handler = (event, context, callback) => {
     var errorHandler = errorHandlerModule(logger);
 
 	try {
-
-      logger.error(config.USER_POOL_ID+" << ");
-      logger.error(config.CLIENT_ID+" << ");
-      
-      
 		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
 
 			if (event.body.username === undefined || event.body.username === "") {
-				return callback(JSON.stringify(errorHandler.throwInputValidationError("Username not provided")));
+				return callback(JSON.stringify(errorHandler.throwInputValidationError("101", "Username not provided")));
 			}
 
 			if (event.body.password === undefined || event.body.password === "") {
-				return callback(JSON.stringify(errorHandler.throwInputValidationError("Authentication Failed for user: " + event.body.username + ". Password not provided")));
+				return callback(JSON.stringify(errorHandler.throwInputValidationError("102", "No password provided for user: " + event.body.username + ".")));
 			}
 
 			var authenticationData = {
-					  Username : event.body.username,
-					  Password : event.body.password
-					};
-			
+				Username : event.body.username,
+				Password : event.body.password
+			};
+
 			var poolData = {
-					UserPoolId : config.USER_POOL_ID,  
+					UserPoolId : config.USER_POOL_ID,
 					ClientId : config.CLIENT_ID
 				};
-			
+
 			var authenticationDetails = new AWSCognito.AuthenticationDetails(authenticationData);
 			var userPool = new AWSCognito.CognitoUserPool(poolData);
 			var userData = {
-					Username : event.body.username,
-					Pool : userPool
-				};
+				Username : event.body.username,
+				Pool : userPool
+			};
+			logger.info("Authenticate against cognito for " + event.body.username);
 
 			var cognitoUser = new AWSCognito.CognitoUser(userData);
 			cognitoUser.authenticateUser(authenticationDetails, {
 				onSuccess: function (result) {
-						console.log('access token + ' + result.getAccessToken().getJwtToken());
-						logger.info(" authenticated ");
-						callback(null, responseObj({"token": result.getAccessToken().getJwtToken()}, {"username": event.body.username}));
+					logger.info("successfully authenticated");
+					return callback(null, responseObj({"token": result.getAccessToken().getJwtToken()}, {"username": event.body.username}));
 				},
 				onFailure: function(err) {
-						logger.error("Error while authenticating: " + err);                        
-				  	    callback({"server_error": "Authentication Failed for user: " + event.body.username + " with unknown error."});
-                        
-				}
-
-			 });
-
-			}else {
-				callback(JSON.stringify(errorHandler.throwInputValidationError("Bad Request")));
-			}
-				
-
+					logger.error("Error while authenticating: " + JSON.stringify(err));
+					return callback(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+          		}
+			});
+		}else {
+			return callback(JSON.stringify(errorHandler.throwInputValidationError("100", "Bad Request")));
+		}
 	} catch (e) {
-		callback(JSON.stringify(errorHandler.throwInternalServerError("Unknown error occured: " + e.message)));
+		return callback(JSON.stringify(errorHandler.throwInternalServerError("103", "Unknown error occured: " + e.message)));
 	}
 };

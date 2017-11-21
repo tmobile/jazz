@@ -1,0 +1,147 @@
+@import './../../../main-styles';
+button.btn-default {
+    // font-family: $font-family-sans-serif;
+    // letter-spacing: 0.1rem;
+    // border-color: $font-family-sans-serif;
+    padding: 10px 16px;
+}
+
+$break-small: 840px;
+$break-mobile: 600px;
+button:hover,
+button:focus {
+    outline: none;
+}
+
+.btnT-radial-in {
+    display: inline-block;
+    vertical-align: middle;
+    // -webkit-transform: perspective(1px) translateZ(0);
+    // transform: perspective(1px) translateZ(0);
+    box-shadow: none;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    background: #eee;
+    border-radius: 30px;
+    // -webkit-transition-property: color;
+    // transition-property: color;
+    // -webkit-transition-duration: 0.5s;
+    // transition-duration: 0s;
+}
+
+[class^="btnT-"] {
+    margin: .4em;
+    padding: 1em;
+    cursor: pointer;
+    background: #fff;
+    text-decoration: none;
+    color: rgb(252, 47, 152);
+    -webkit-tap-highlight-color: rgb(198, 39, 112);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+// .buttonPaddinghover:before {
+//     content: "";
+//     position: absolute;
+//     z-index: -1;
+//     top: 0;
+//     left: 0;
+//     right: 0;
+//     bottom: 0;
+//     border-radius: 30px;
+//     background: #fff;
+//     border-radius: 100%;
+//     -webkit-transform: scale(2);
+//     transform: scale(2);
+//     -webkit-transition-property: transform;
+//     transition-property: transform;
+//     -webkit-transition-duration: 0.3s;
+//     transition-duration: 0.3s;
+//     -webkit-transition-timing-function: ease-out;
+//     transition-timing-function: ease-out;
+// }
+
+.buttonAbout:hover,
+.buttonAbout:active,
+.buttonAbout:focus {
+    background-color: #2B343E !important;
+    color: #fff;
+}
+
+.btnT-radial-in:hover,
+.btnT-radial-in:active,
+.btnT-radial-in:focus {
+    outline: none;
+    background-color: #c62770;
+    color: #fff;
+    border-color: #c62770;
+}
+
+.buttonPaddinghover:hover,
+.buttonPaddinghover:active,
+.buttonPaddinghover:focus {
+    color: #fff;
+}
+
+// .buttonPaddinghover:before {
+//     content: "";
+//     position: absolute;
+//     z-index: -1;
+//     top: 0;
+//     left: 0;
+//     right: 0;
+//     bottom: 0;
+//     background: #fff;
+//     border-radius: 100%;
+//     border-radius: 30px;
+//     -webkit-transform: scale(0);
+//     transform: scale(0);
+//     -webkit-transition-property: transform;
+//     transition-property: transform;
+//     -webkit-transition-duration: 0s;
+//     transition-duration: 0.5s;
+//     -webkit-transition-timing-function: ease-out;
+//     transition-timing-function: ease-out;
+// }
+
+// .buttonPaddinghover:hover:before {
+//     -webkit-transform: scale(2);
+//     transform: scale(2);
+//     background: rgb(198, 39, 112);
+// }
+
+.buttonPadding {
+    width: 150px;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    @media screen and (max-width: $break-small) {
+        width: 24vw;
+        font-size: 2vh !important;
+    }
+    @media screen and (max-width: $break-mobile) {
+        width: 40vw;
+        font-size: 2vh !important;
+    }
+}
+
+.buttonPaddinghover {
+    font-size: 1.2rem !important;
+}
+
+.slackIcon {
+    background-image: url("/assets/landing/slack_only_icon.png");
+    background-repeat: no-repeat;
+    background-position: 31% center;
+    background-size: 10%;
+    padding-left: 35px;
+    padding-right: 20px;
+}
+
+.nolandscape {
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        display: none;
+    }
+}

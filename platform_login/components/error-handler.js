@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,40 +22,40 @@
 **/
 
 module.exports = (logger) => {
-    
+
 	var errorObj = {
-        throwInputValidationError: function(errorMessage) { //Raise a  bad requests exception
-            logger.error(errorMessage);
-			return {
+        throwInputValidationError: function(errorCodeNum, errorMessage) { //Raise a  bad requests exception
+            return {
+                errorCode: errorCodeNum.toString(),
                 errorType: "BadRequest",
                 message: errorMessage.toString()
             };
         },
-        throwNotFoundError: function(errorMessage) { //Raise not found exceptions
-            logger.error(errorMessage);
-			return {
-                errorType: "NotFound",
+        throwForbiddenError: function(errorCodeNum, errorMessage) { //Raise not found exceptions
+            return {
+                errorCode: errorCodeNum.toString(),
+                errorType: "Forbidden",
                 message: errorMessage.toString()
             };
         },
-        throwInternalServerError: function(errorMessage) { //Raise internal server exceptions
-            logger.error(errorMessage);
-			return {
-                errorType: "InternalServerError",
-                message: errorMessage.toString()
-            };
-        },
-		throwUnauthorizedError: function(errorMessage) { //Raise Authentication Failure exceptions
-            logger.error(errorMessage);
-			return {
+        throwUnauthorizedError: function(errorCodeNum, errorMessage) { //Raise not found exceptions
+            return {
+                errorCode: errorCodeNum.toString(),
                 errorType: "Unauthorized",
                 message: errorMessage.toString()
             };
         },
-		throwForbiddenError: function(errorMessage) { //Raise Access Denied exceptions
-            logger.error(errorMessage);
-			return {
-                errorType: "Forbidden",
+        throwNotFoundError: function(errorCodeNum, errorMessage) { //Raise not found exceptions
+            return {
+                errorCode: errorCodeNum.toString(),
+                errorType: "NotFound",
+                message: errorMessage.toString()
+            };
+        },
+        throwInternalServerError: function(errorCodeNum, errorMessage) { //Raise internal server exceptions
+            return {
+                errorCode: errorCodeNum.toString(),
+                errorType: "InternalServerError",
                 message: errorMessage.toString()
             };
         }

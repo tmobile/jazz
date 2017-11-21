@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
+// Copyright ï¿½ 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,23 +13,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // =========================================================================
+'use strict';
 
-const errorHandlerModule = require("./components/error-handler.js"); 
-const responseObj = require("./components/response.js");
 var https = require('https');
 var zlib = require('zlib');
 var crypto = require('crypto');
 
-var endpoint = '{inst_elastic_search_hostname}';
+const configObj = require("./components/config.js"); 
+const logger = require("./components/logger.js"); 
+
+const responseObj = require("./components/response.js");
 
 /**
 	Custom Cloud logs Streamer (to ES)
-	@author: T-Mobile/DSundar3, UST-Global/Somanchi
+	@author:
 	@version: 1.0
 **/
 
 module.exports.handler = (input, context, cb) => {
-	
+    
+    logger.init(input, context);
+    var config = configObj(input);
+
     // decode input from base64
     var zippedInput = new Buffer(input.awslogs.data, 'base64');
 
@@ -45,28 +50,25 @@ module.exports.handler = (input, context, cb) => {
 
         // skip control messages
         if (!elasticsearchBulkData) {
-            console.log('Received a control message');
+            logger.debug('Received a control message');
             context.succeed('Control message handled successfully');
             return;
         }
 
         // post documents to the Amazon Elasticsearch Service
-        post(elasticsearchBulkData, function(error, success, statusCode, failedItems) {
-            console.log('Response: ' + JSON.stringify({ 
-                "statusCode": statusCode 
-            }));
+        post(config, elasticsearchBulkData, function(error, success, statusCode, failedItems) {
+            logger.debug('Response: statusCode: ' +  statusCode);
 
             if (error) { 
-                console.log('Error: ' + JSON.stringify(error, null, 2));
+                logger.error('Error: ' + JSON.stringify(error, null, 2));
 
                 if (failedItems && failedItems.length > 0) {
-                    console.log("Failed Items: " +
-                        JSON.stringify(failedItems, null, 2));
+                    logger.error("Failed Items: " + JSON.stringify(failedItems, null, 2));
                 }
 
                 context.fail(JSON.stringify(error));
             } else {
-                console.log('Success: ' + JSON.stringify(success));
+                logger.info('Success: ' + JSON.stringify(success));
                 context.succeed('Success');
             }
         });
@@ -80,7 +82,7 @@ function transform(payload) {
     if (payload.messageType === 'CONTROL_MESSAGE') {
         return null;
     }
-	console.log("Raw payload..:"+JSON.stringify(payload));
+	logger.info("Raw payload..:"+JSON.stringify(payload));
 	var bulkRequestBody = '';	
 	var data = {};
 	if(payload.logGroup.indexOf("API-Gateway-Execution-Logs") === 0) { // API logs goes here
@@ -89,7 +91,7 @@ function transform(payload) {
 		data.timestamp = new Date();
 		//data.account = payload.owner; // as per review comments
 		data.platform_log_group = payload.logGroup;
-		data.platform_log_stream = payload.logStream;	
+		data.platform_log_stream = payload.logStream;
 		data.environment = getSubInfo(payload.logGroup,getPatterns().environment,2);
 		data.request_id = getInfo(payload.logEvents,getPatterns().request_id);
 		data.method = getInfo(payload.logEvents,getPatterns().method);
@@ -99,7 +101,7 @@ function transform(payload) {
 		data.path = getInfo(payload.logEvents,getPatterns().path); 
 		data.application_logs_id = getInfo(payload.logEvents,getPatterns().lambda_ref_id);
 		var method_req_headers = getInfo(payload.logEvents,getPatterns().method_req_headers);
-		console.log("method_req_headers..:"+method_req_headers);
+		logger.debug("method_req_headers..:"+method_req_headers);
 		data.origin = getSubInfo(method_req_headers, getPatterns().origin, 1);
 		data.host = getSubInfo(method_req_headers, getPatterns().host, 1);
 		data.user_agent = getSubInfo(method_req_headers, getPatterns().user_agent, 1);
@@ -108,8 +110,9 @@ function transform(payload) {
 		data.x_amzn_trace_id = getSubInfo(method_req_headers, getPatterns().x_amzn_trace_id, 1);
 		data.content_type = getSubInfo(method_req_headers, getPatterns().content_type, 1);
 		data.cache_control = getSubInfo(method_req_headers, getPatterns().cache_control, 1);
+		data.log_level = "INFO"; // Default to INFO for apilogs
 		data.status = getInfo(payload.logEvents,getPatterns().status);
-		
+
 		var action = { "index": {} };
 		action.index._index = indexName;
 		action.index._type = data.environment;
@@ -120,14 +123,14 @@ function transform(payload) {
 			JSON.stringify(data),
 		].join('\n') + '\n';
 			
-		console.log("bulkRequestBody-API-Gateway_exe..:"+bulkRequestBody);
+		logger.debug("bulkRequestBody-API-Gateway_exe..:"+bulkRequestBody);
 		return bulkRequestBody;
-		
+
 	} else if(payload.logGroup.indexOf("/aws/lambda/") === 0) { // Lambda logs goes here
-		console.log("Lambda Payload..:"+JSON.stringify(payload));
-		data = {};
+        
+        data = {};
 		data.request_id = getInfo(payload.logEvents,getPatterns().Lambda_request_id);
-		
+
 		if(data.request_id) {
 			data.environment = getSubInfo(payload.logGroup,getPatterns().Lambda_environment,2);
 			data.servicename = getSubInfo(payload.logGroup,getPatterns().Lambda_function,1);
@@ -137,6 +140,7 @@ function transform(payload) {
 				data.platform_log_stream = payload.logStream;
 				data.timestamp = new Date(1 * logEvent.timestamp).toISOString();			
 				data.message = logEvent.message;
+				data.log_level = getLogLevel(logEvent.message);
 				
 				var indexName = "applicationlogs";
 				var action = { "index": {} };
@@ -150,13 +154,13 @@ function transform(payload) {
 				].join('\n') + '\n';
 			});
 			
-			console.log("bulkRequestBody-/aws/lambda/..:"+bulkRequestBody);
+			logger.debug("bulkRequestBody-/aws/lambda/..:"+bulkRequestBody);
 			return bulkRequestBody;	
 			
 		}else 
 			return null;
 	}
-	
+
 	return null;
 }
 
@@ -165,7 +169,7 @@ function buildSource(message, extractedFields) {
         var source = {};
 
         for (var key in extractedFields) {
-			console.log("key from buildSource..:"+JSON.stringify(key));
+			logger.debug("key from buildSource..:"+JSON.stringify(key));
             if (extractedFields.hasOwnProperty(key) && extractedFields[key]) {
                 var value = extractedFields[key];
 
@@ -174,7 +178,7 @@ function buildSource(message, extractedFields) {
                     continue;
                 }
 
-                jsonSubString = extractJson(value);
+                var jsonSubString = extractJson(value);
                 if (jsonSubString !== null) {
                     source['$' + key] = JSON.parse(jsonSubString);
                 }
@@ -185,9 +189,9 @@ function buildSource(message, extractedFields) {
         return source;
     }
 
-    jsonSubString = extractJson(message);
-    if (jsonSubString !== null) { 
-        return JSON.parse(jsonSubString); 
+    var jsonMessage = extractJson(message);
+    if (jsonMessage !== null) {
+        return JSON.parse(jsonMessage);
     }
 
     return {};
@@ -211,26 +215,26 @@ function isNumeric(n) {
     return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
-function post(body, callback) {
-    var requestParams = buildRequest(endpoint, body);
+function post(config, body, callback) {
+    var requestParams = buildRequest(config.ES_ENDPOINT, body);
 
     var request = https.request(requestParams, function(response) {
         var responseBody = '';
         response.on('data', function(chunk) {
             responseBody += chunk;
         });
-		console.log("response from post..:"+JSON.stringify(responseBody));		
+		logger.debug("response from post..:"+JSON.stringify(responseBody));		
         response.on('end', function() {
             var info = JSON.parse(responseBody);
             var failedItems;
             var success;
-            
+
             if (response.statusCode >= 200 && response.statusCode < 299) {
                 failedItems = info.items.filter(function(x) {
                     return x.index.status >= 300;
                 });
 
-                success = { 
+                success = {
                     "attemptedItems": info.items.length,
                     "successfulItems": info.items.length - failedItems.length,
                     "failedItems": failedItems.length
@@ -260,13 +264,13 @@ function buildRequest(endpoint, body) {
     var kRegion = hmac(kDate, region);
     var kService = hmac(kRegion, service);
     var kSigning = hmac(kService, 'aws4_request');
-    
+
     var request = {
         host: endpoint,
         method: 'POST',
         path: '/_bulk',
         body: body,
-        headers: { 
+        headers: {
             'Content-Type': 'application/json',
             'Host': endpoint,
             'Content-Length': Buffer.byteLength(body),
@@ -308,7 +312,7 @@ function buildRequest(endpoint, body) {
         'Signature=' + hmac(kSigning, stringToSign, 'hex')
     ].join(', ');
 
-	console.log("request from build request"+JSON.stringify(request));
+	logger.debug("request from build request " + JSON.stringify(request));
     return request;
 }
 
@@ -327,7 +331,7 @@ function getInfo(messages, patternStr) {
 		for (var i = 0, len = messages.length; i < len; i++) {
 			var _tmp = pattern.exec(messages[i].message);
 			if(_tmp && _tmp[1]) {
-				console.log("found match..:"+_tmp[1]);
+				logger.debug("found match..:"+_tmp[1]);
 				result = _tmp[1];
 				break;
 			}
@@ -342,13 +346,32 @@ function getSubInfo(message, patternStr, index) {
 	if(message){
 		var _tmp = pattern.exec(message);
 		if(_tmp && _tmp[index]) {
-			console.log("found match..:"+_tmp[index]);
+			logger.debug("found match..:"+_tmp[index]);
 			result = _tmp[index];
 		}
 	}
 	return result;
 }
 
+function getLogLevel(message) {
+	if (/Z FATAL /i.test(message)) {
+		return "FATAL";
+	}else if(/Z ERROR /i.test(message)) {
+		return "ERROR";
+	}else if(/Z WARN /i.test(message)) {
+		return "WARN";
+	}else if(/Z INFO /i.test(message)) {
+		return "INFO";
+	}else if(/Z VERBOSE /i.test(message)) {
+		return "VERBOSE";
+	}else if(/Z DEBUG /i.test(message)) {
+		return "DEBUG";
+	}else if(/Z TRACE /i.test(message)) {
+		return "TRACE";
+	}else {
+		return "INFO"; // Set INFO as default
+	}
+}
 
 function getPatterns() {
 	  return {

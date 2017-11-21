@@ -1,0 +1,43 @@
+/deep/ .bar-graph-svg{
+  overflow: visible !important;
+  width:100%;
+  height:100%;
+  position: relative;
+  
+  .bar{
+    fill: #ed008c;
+  }
+
+  .axis {
+      font: 10px Lato;
+  }
+  .axis text.axis-title{
+    stroke:#000;
+    font: 10px Lato;
+    fill:#000;
+    letter-spacing: 1px;
+  }
+  .axis path,
+  .axis line {
+      fill: none;
+      stroke: #ccc;
+      shape-rendering: geometricPrecision;
+  }
+  .y.axis path.domain{
+    stroke: transparent;
+  }
+
+
+  .hover-y {
+    font-size: 10px;
+    fill: #ed008c;
+    // font-weight: bold;
+    text-align: center;
+  }
+  .hover-x {
+      fill: #000;
+      font-size: 10px;
+      // font-weight: bold;
+      text-align: center;
+  }
+}

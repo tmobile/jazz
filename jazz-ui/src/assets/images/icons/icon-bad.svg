@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 43.2 (39069) - http://www.bohemiancoding.com/sketch -->
+    <title>icon-bad</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Dashboard_v2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="4_ServiceOverview" transform="translate(-897.000000, -561.000000)">
+            <g id="Group-3-Copy" transform="translate(834.000000, 490.000000)">
+                <g id="Group-23">
+                    <g id="icon-bad" transform="translate(63.000000, 71.000000)">
+                        <circle id="Oval-Copy-4" fill="#D0011B" cx="12" cy="12" r="12"></circle>
+                        <polygon id="Shape" fill="#FFFFFF" fill-rule="nonzero" points="18 7.20857143 16.7914286 6 12 10.7914286 7.20857143 6 6 7.20857143 10.7914286 12 6 16.7914286 7.20857143 18 12 13.2085714 16.7914286 18 18 16.7914286 13.2085714 12"></polygon>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>
