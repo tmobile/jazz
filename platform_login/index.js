@@ -39,11 +39,6 @@ module.exports.handler = (event, context, callback) => {
     var errorHandler = errorHandlerModule(logger);
 
 	try {
-
-      logger.error(config.USER_POOL_ID+" << ");
-      logger.error(config.CLIENT_ID+" << ");
-
-
 		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
 
 			if (event.body.username === undefined || event.body.username === "") {
@@ -55,9 +50,9 @@ module.exports.handler = (event, context, callback) => {
 			}
 
 			var authenticationData = {
-					  Username : event.body.username,
-					  Password : event.body.password
-					};
+				Username : event.body.username,
+				Password : event.body.password
+			};
 
 			var poolData = {
 					UserPoolId : config.USER_POOL_ID,
@@ -70,7 +65,6 @@ module.exports.handler = (event, context, callback) => {
 				Username : event.body.username,
 				Pool : userPool
 			};
-		
 			logger.info("Authenticate against cognito for " + event.body.username);
 
 			var cognitoUser = new AWSCognito.CognitoUser(userData);
@@ -80,7 +74,7 @@ module.exports.handler = (event, context, callback) => {
 					return callback(null, responseObj({"token": result.getAccessToken().getJwtToken()}, {"username": event.body.username}));
 				},
 				onFailure: function(err) {
-					logger.error("Error while authenticating: " + JSON.stringify(err));   
+					logger.error("Error while authenticating: " + JSON.stringify(err));
 					return callback(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
           		}
 			});
