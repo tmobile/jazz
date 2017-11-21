@@ -27,7 +27,30 @@ const AWS = require("aws-sdk-mock");
 
 
 describe('platform_services', function() {
-  var spy, stub, errMessage, errType, event, context, callback, logMessage, logStub;
+  var spy, stub, err, errMessage, errType, event, context, callback, callbackObj, logMessage, logStub;
+
+  /*
+  * helper function for determining if dynamoDB service is used during function call
+  * @param{string} dynamoMethod, determines whether to mock DocumentClient or a direct dynamo method
+  * @param{object} sinonSpy, provide a wrapper to be used with the mocked service
+  * @returns{boolean} bool, true if service was used, false otherwise
+  */
+  var dynamoCheck = function(dynamoMethod, sinonSpy){
+    var serviceName;
+    if(dynamoMethod == "get"){
+      serviceName = "DynamoDB.DocumentClient";
+    }
+    else if(dynamoMethod == "scan"){
+      serviceName = "DynamoDB";
+    }
+    //mocking DocumentClient from DynamoDB and wrapping with predefined spy
+    AWS.mock(serviceName, dynamoMethod, sinonSpy);
+    //trigger the spy by calling handler()
+    var callFunction = index.handler(event, context, callback);
+    AWS.restore(serviceName);
+    var bool = sinonSpy.called;
+    return bool;
+  };
 
   beforeEach(function(){
     //setup spy to wrap async/extraneous functions
@@ -60,42 +83,86 @@ describe('platform_services', function() {
         return JSON.stringify(responseObj);
       }
     };
+    err = {
+      "errorType" : "svtfoe",
+      "message" : "starco"
+    };
+    //creating an object with the callback function in order to wrap and test callback parameters
+    callbackObj = {
+      "callback" : callback
+    };
+  });
+
+  /*
+  * Given an event with no event.method, handler() informs of missing input error
+  * @params{object} event -> event.method is null, undefined, or empty
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} callback response containing error message with details
+  */
+  it("should indicate that method is missing when given an event with no event.method", function(){
+    errType = "BadRequest";
+    errMessage = "method cannot be empty";
+    var invalidArray = ["", null, undefined];
+    var bool = true;
+    //handler should indicate the above error information for method equaling any of the values in
+    //"invalidArray", otherwise have bool be false
+    for(i in invalidArray){
+      event.method = invalidArray[i];
+      returnMessage = index.handler(event, context, callback);
+      if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
+        bool = false;
+      }
+    };
+    assert.isTrue(bool);
+  });
+
+  /*
+  * Given a PUT/DELETE method and no path.id, handler informs of missing id
+  * @params{object} event -> event.method is PUT/DELETE, event.path.id is undefined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} callback response containing error message with details
+  */
+  it("should indicate id is missing if given a PUT/DELETE method and no service id", ()=>{
+    event.path.id = undefined;
+    errType = "BadRequest";
+    errMessage = "service id is required";
+    var methodArray = ["PUT", "DELETE"];
+    var returnMessage;
+    var bool = true;
+    //handler should indicate the above error information for method equaling any of the values in
+    //"methodArray", otherwise have bool be false
+    for(i in methodArray){
+      event.method = methodArray[i];
+      returnMessage = index.handler(event, context, callback);
+      if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
+        bool = false;
+      }
+    };
+    assert.isTrue(bool);
   });
 
   /*
   * Given an event.method = "GET" and valid service_id, handler() attempts to get item info from DynamoDB
-  * @param {object} event -> event.method is defined to be "GET", event.path.id is truthy
+  * @param {object} event -> event.method is defined to be "GET", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   */
   it("should attempt to get item data from dynamoDB by id if 'GET' method and id are defined", function(){
     event.method = "GET";
-    //mocking DocumentClient from DynamoDB and wrapping with predefined spy
-    AWS.mock("DynamoDB.DocumentClient", "get", spy);
-    //trigger the spy by calling index.handler() with desired params
-    var callFunction = index.handler(event, context, callback);
-    AWS.restore("DynamoDB.DocumentClient");
-    assert.isTrue(spy.called);
+    var attemptBool = dynamoCheck("get",spy);
+    assert.isTrue(attemptBool);
   });
 
   /*
   * Given a failed attempt at fetching data from DynamoDB, handler() should inform of error
-  * @param {object} event -> event.method is defined to be "GET", event.path.id is truthy
+  * @param {object} event -> event.method is defined to be "GET", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   * @returns {string} should return the callback response which is an error message
   */
   it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.get fails", ()=>{
-    //creating an object with the callback function in order to wrap and test callback parameters
-    var callbackObj = {
-      "callback" : callback
-    };
     event.method = "GET";
     errType = "InternalServerError";
     errMessage = "Unexpected Error occured.";
     logMessage = "Error occured.";
-    var err = {
-      "errorType" : "svtfoe",
-      "message" : "starco"
-    };
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
       return cb(err, null);
@@ -118,15 +185,11 @@ describe('platform_services', function() {
 
   /*
   * Given a service id that doesn't point to an existing service, handler() indicates service not found
-  * @param {object} event -> event.method is defined to be "GET", event.path.id is truthy
+  * @param {object} event -> event.method is defined to be "GET", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   * @returns {string} should return the callback response which is an error message
   */
   it("should indicate a NotFoundError occured if no service with specified id is found", ()=>{
-    //creating an object with the callback function in order to wrap and test callback parameters
-    var callbackObj = {
-      "callback" : callback
-    };
     event.method = "GET";
     errType = "NotFound";
     errMessage = "Cannot find service with id: ";
@@ -162,34 +225,22 @@ describe('platform_services', function() {
   it("should attempt to get all/filtered items from dynamoDB if 'GET' method and no id are defined", function(){
     event.method = "GET";
     event.path.id = undefined;
-    //mocking DynamoDB's scan function and wrapping with predefined spy
-    var mockDynamo = AWS.mock("DynamoDB", "scan", spy);
-    //trigger the spy by calling index.handler() with desired params
-    var callFunction = index.handler(event, context, callback);
-    AWS.restore("DynamoDB");
-    assert.isTrue(spy.called);
+    var attemptBool = dynamoCheck("scan",spy);
+    assert.isTrue(attemptBool);
   });
 
   /*
   * Given a failed attempt at fetching data from DynamoDB, handler() should inform of error
-  * @param {object} event -> event.method is defined to be "GET", event.path.id is truthy
+  * @param {object} event -> event.method is defined to be "GET", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   * @returns {string} should return the callback response which is an error message
   */
   it("should indicate an InternalServerError occured if DynamoDB.scan fails", ()=>{
-    //creating an object with the callback function in order to wrap and test callback parameters
-    var callbackObj = {
-      "callback" : callback
-    };
     event.method = "GET";
     event.path.id = undefined;
     errType = "InternalServerError";
     errMessage = "unexpected error occured";
     logMessage = "Error occured. ";
-    var err = {
-      "errorType" : "svtfoe",
-      "message" : "starco"
-    };
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB", "scan", (params, cb) => {
       return cb(err);
@@ -208,5 +259,48 @@ describe('platform_services', function() {
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
+  });
+
+  /*
+  * Given an event.method = "PUT" and valid service_id, handler() attempts to get item info from DynamoDB
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should attempt to get item data from dynamoDB by id if 'PUT' method and id are defined", function(){
+    event.method = "PUT";
+    var attemptBool = dynamoCheck("get",spy);
+    assert.isTrue(attemptBool);
+  });
+
+  /*
+  * Given a failed attempt at updating data in DynamoDB, handler() should inform of error
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} should return the callback response which is an error message
+  */
+  it("should inform of InternalServerError error if updating with dynamoDB.DocClient.get fails", ()=>{
+    event.method = "PUT";
+    errType = "InternalServerError";
+    errMessage = "unexpected error occured";
+    logMessage = "error occured while updating service";
+    //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(err, null);
+    });
+    //wrapping the logger and callback function to check for response messages
+    stub = sinon.stub(callbackObj,"callback",spy);
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[0][0];
+    console.log(logResponse);
+    var cbResponse = stub.args[0][0];
+    console.log(cbResponse);
+    var logCheck = logResponse.includes(logMessage);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    stub.restore();
+    assert.isTrue(cbCheck && logCheck);
   });
 });
