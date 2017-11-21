@@ -1,4 +1,4 @@
-#!groovy​
+#!groovy
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
@@ -41,15 +41,14 @@ def Event_Status = [
 @Field def created_by = ''
 @Field def current_environment = ''
 @Field def env_prefix = ''
-@Field def region = env.jazz_region
+@Field def region = ''
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	g_base_url = "https://" + env.API_KEY + ".execute-api.us-east-1.amazonaws.com/dev"
+	region = env.jazz_region
+	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/dev"
 
-    echo "Build Pack website params: " + params
-
-    echo "Build triggered via branch: " + params.scm_branch
+	echo "Build Pack website params: " + params
 
     def service = params.service_name
 	def branch = params.scm_branch
@@ -57,7 +56,7 @@ node ()  {
 
     def bitbucket_name = params.service_name
 
-	def var_bitbucket_framework_url = "http://" + env.REPO_BASE + "/scm/" + params.scm_project + "/"
+	def var_bitbucket_framework_url = "http://${env.REPO_BASE}/scm/${params.scm_project}/"
 
 	def config
 
@@ -71,7 +70,7 @@ node ()  {
 
     stage('Checkout code base') {
 
-		if (domain  && domain.trim()!="") {
+		if (domain && domain.trim()!="") {
 			bitbucket_name = params.domain + "-" + service
 		 }else{
 			domain = ""
@@ -139,12 +138,12 @@ node ()  {
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
-			sh "aws configure set profile.cloud-api.region "+region
+			sh "aws configure set profile.cloud-api.region ${region}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
-			def assetInfo = "S3 Folder - /" + s3ProdBucket + "/"+service
+			def assetInfo = "S3 Folder - /${s3ProdBucket}/${service}"
 			try
 			{
 				try {
@@ -209,7 +208,7 @@ node ()  {
 						generateDistributionConfig(service, current_environment, config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3ProdBucket)
+						updateCloudFrontPolicy(service, s3ProdBucket)                                                                     
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
@@ -255,7 +254,7 @@ node ()  {
 			 {
 				try {
 					echo "Checking if the website already exists.."
-					sh "aws s3 ls s3://" + s3DevBucket + "/$service"
+					sh "aws s3 ls s3://${s3DevBucket}/$service"
 				}catch(ex) {
 					error ex.getMessage()
 				}
@@ -263,16 +262,12 @@ node ()  {
 				sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.STARTED, assetInfo)
 				try {
 					echo "website with name $service already exists, syncing new files"
-					sh "aws s3 sync ./app s3://" + s3DevBucket + "/$service --exclude \".git/*\" --exclude \".gitignore\" "
+					sh "aws s3 sync ./app s3://${s3DevBucket}/$service --exclude \".git/*\" --exclude \".gitignore\" "
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
 						updateCloudFrontPolicy(service, s3DevBucket)
 						
 						def cfDetails = getCloudFrontDetails(current_environment, service)
-
-						if (cfDetails) {
-							echo "id is ${cfDetails[0]}, domain: ${cfDetails[1]}"
-						}
 						
 						updateEnableCompressConfig(current_environment, service, cfDetails[0])
 						
@@ -280,15 +275,15 @@ node ()  {
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, url)
+							updateServiceWithEndpointInfo(params.service_name, domain, "${g_base_url}/platform/services", current_environment, url)
 						}
 					} else{
-						def siteUrl = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, siteUrl)
+						def siteUrl = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
+						updateServiceWithEndpointInfo(params.service_name, domain, "${g_base_url}/platform/services", current_environment, siteUrl)
 
 						url = updateS3BucketPolicy(service, s3DevBucket)
 					}
-					def svc_status = 'You can access your website using following link: ' + url
+					def svc_status = "You can access your website using following link: ${url}"
 					echo svc_status
 
 					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
@@ -395,8 +390,8 @@ def LoadConfiguration() {
 */
 def resetCredentials() {
 	echo "resetting AWS credentials"
-	sh "aws configure set profile.tmoDevOps.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-	sh "aws configure set profile.tmoDevOps.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+	sh "aws configure set profile.cloud-api.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
 }
 
 /**
@@ -512,7 +507,7 @@ def loadBucketPolicy(String s3Bucket){
 	    			}
 	    		} else if (e.key == "Condition") {
 	    			condition = [:]
-					
+
 	    			for ( f in e.value ) {
 	    				f_value = [:]
 	    				for ( src in f.value ) {
@@ -811,6 +806,7 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 			}
 		}
  	}
+
 }
 
 /**
