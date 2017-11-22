@@ -1,2 +1,2 @@
 This is the NOTICE.txt file for jazz, per the terms and conditions under the Apache License Version 2.0, dated January 2004.  See the license at http://www.apache.org/licenses/ for more details.  Attributions and additional notices pertaining to the source code are to be documented here.
-The original version of jazz was created by T-Mobile US released on 9th October 2017.
+The original version of jazz was created by © T-Mobile USA, Inc., & released on 9th October 2017.
