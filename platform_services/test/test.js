@@ -383,4 +383,38 @@ describe('platform_services', function() {
     stub.restore();
     assert.isTrue(cbCheck && logCheck);
   });
+
+  /*
+  * Given a service id that doesn't point to an existing service to update, handler() indicates service not found
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} should return the callback response which is an error message
+  */
+  it("should indicate a NotFoundError occured if no service with specified id is found", ()=>{
+    event.method = "PUT";
+    errType = "NotFound";
+    errMessage = "Cannot find service with id: ";
+    logMessage = "Cannot find service with id: ";
+    //define an object to be returned with empty serviceCatalog
+    var dataObj = {
+      "getServiceByID" : {}
+    };
+    //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    //wrapping the logger and callback function to check for response messages
+    stub = sinon.stub(callbackObj,"callback",spy);
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[0][0];
+    var cbResponse = stub.args[0][0];
+    var logCheck = logResponse.includes(logMessage);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    stub.restore();
+    assert.isTrue(logCheck && cbCheck);
+  });
 });
