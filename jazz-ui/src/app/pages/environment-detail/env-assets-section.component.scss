@@ -42,7 +42,7 @@
 .det-label {
     width: 10rem;
     flex-shrink: 0;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: bold;
     color: #000000;
 }
@@ -55,3 +55,16 @@
 .section-left {
     padding-right: 3rem;
 }
+.mask-wrap{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    left:0;
+    background-color: #343f4b;
+    opacity: 0.9;
+    z-index: 1;
+    background-image: url("/assets/images/mask-image.png");
+    background-repeat: no-repeat;
+    background-size: 20rem auto;
+    background-position: center;
+} 

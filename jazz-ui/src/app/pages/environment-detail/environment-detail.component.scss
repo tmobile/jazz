@@ -1,1 +1,91 @@
 @import './../../../main-styles';
+.page-title-wrap {
+    overflow: hidden;
+    padding: 26px 0 0 0;
+    .header1 {
+        float: left;
+    }
+    btn-jazz-secondary {
+        float: right;
+    }
+}
+/deep/ .page-title-wrap button.btnT-radial-in {
+    margin: 0px;
+    border-radius: 30px;
+    padding: 7px 16px;
+    background: transparent;
+    letter-spacing: .3px;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+    font-size: 12px;
+    vertical-align: middle;
+    font-weight: 700;
+    border: 1px solid;
+}
+.page-title-wrap {
+    min-height: 5.65rem; // setting min-height coz, alignment breaks when jquery isnt loaded
+}
+
+.testApiBtn{
+    /deep/ .btnT-radial-in{
+        outline: none;
+        /* background-color: #c62770; */
+        color: #c62770;
+        border-color: #c62770;
+        box-shadow: none;
+        &:hover, &:active, &:focus{
+            color: #fff;
+        }
+    }
+}
+
+.content{
+    /deep/ .tabs-wrap   li:last-child{
+        cursor: not-allowed;
+        &.active {
+            color: #aaaaaa;
+            }
+            &:hover {
+            color: #aaaaaa;
+        }
+    }
+}
+
+#copyapi{
+    opacity: 0;
+    position: absolute;
+    z-index: -100000;
+}
+
+.appa:hover .tooltip-content{
+    visibility: visible;
+}
+
+.appa{
+    position: relative;
+}
+
+.appa .tooltip-content {
+    visibility: hidden;
+    width: 160px;
+    background-color: #D5D7D9;
+    color: #4a4a4a;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px 4px;
+    position: absolute;
+    z-index: 1;
+    bottom: 115%;
+    left: 50%;
+    margin-left: -75px;
+    font-size: 12px;
+  }
+  .appa .tooltip-content::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #D5D7D9 transparent transparent transparent;
+}

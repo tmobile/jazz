@@ -1,43 +1,82 @@
-<div class="row page-section section-top">
-    <div class="col-sm-3">
-        <div class="cost-value">
-            <amount [amount]="cost.perYear"></amount>
-        </div>
-        <div class="cost-label">
-            <div>Cost</div>
-            <div>(Year)</div>
+<div class="disclaimer-static-data"><i>This data is for representational purpose only and may not be accurate</i></div>
+<div class="row page-section section-top relative" [class.show]="">
+    <div class="loading-row" [class.show]="isGraphLoading">
+        <div class="loading-circle"></div>
+    </div>
+    <div class="loading-row" [class.show]="isDataNotAvailable">
+        <div class="error-text">No Data Found</div>
+    </div>
+    <div class="loading-row" [class.show]="loadingState=='error'">
+        <div class="empty-row with-refresh relative">
+            <div>Something went wrong while fetching your data!</div>
         </div>
     </div>
-    <div class="col-sm-3">
-        <div class="cost-value">
-            <amount [amount]="cost.perDay"></amount>
+    <div [class.show]="loadingState!='error' && !isDataNotAvailable">
+        <div class="col-sm-3">
+            <div class="cost-value">
+                <amount [amount]="cost.perYear"></amount>
+            </div>
+            <div class="cost-label">
+                <div>Cost</div>
+                <div>({{cost.perYear.date}})</div>
+            </div>
         </div>
-        <div class="cost-label">
-            <div>Cost</div>
-            <div>(Per Day)</div>
+
+        <div class="col-sm-3">
+            <div class="cost-value">
+                <amount [amount]="cost.perMonth"></amount>
+            </div>
+            <div class="cost-label">
+                <div>Monthly Cost</div>
+                <div>({{cost.perMonth.date}})</div>
+            </div>
         </div>
-    </div>
-    <div class="col-sm-3">
-        <div class="cost-value">
-            <span>{{cost.efficiency}}</span><span>%</span>
+        <div class="col-sm-3">
+            <div class="cost-value">
+                <amount [amount]="cost.perWeek"></amount>
+            </div>
+            <div class="cost-label">
+                <div>Weekly Cost</div>
+                <div>(Till {{cost.perWeek.date}})</div>
+            </div>
         </div>
-        <div class="cost-label">
-            <div>Cost</div>
-            <div>Efficiency</div>
+        <div class="col-sm-3">
+            <div class="cost-value">
+                <amount [amount]="cost.perDay"></amount>
+            </div>
+            <div class="cost-label">
+                <div>Daily Cost</div>
+                <div>({{cost.perDay.date}})</div>
+            </div>
         </div>
     </div>
 </div>
 <div class="row page-section">
     <div class="cost-category">
         <div class="filter-wrp">
-            <filters class="filters" [filtersList]="filtersList"></filters>
+            <filters class="filters" [multiple]="false" [selectedList]="selected" [filtersList]="filtersList" (onSelected)="onFilterSelected($event)"></filters>
             <dropdown [dropdwnContent]="environmentList" [selected]="costGraphData.environment" (onSelected)="onEnvSelected($event)"></dropdown>
         </div>
         <div class="graph-wrp">
-            <img class="cost-graph-temp" src="assets/images/cost_graph.png">
+             <div class="loading-row" [class.show]="isGraphLoading">
+                <div class="loading-circle"></div>
+            </div>
+            <div class="loading-row" [class.show]="isDataNotAvailable">
+                <div class="empty-row nodata with-refresh relative">
+                    <img src="assets/images/no-data-icon.png" alt="noData" width="100">
+                    <div><b>Oops, No Data Found</b><br>Looks like there is no data available here.</div>
+                </div>
+            </div>
+            <div class="loading-row" [class.show]="loadingState=='error'">
+                <div class="empty-row with-refresh relative">
+                    <img src="assets/images/refresh.png" alt="errorimg" width="100">
+                    <div>{{errMessage}}<br><a (click)="refreshCostData($event)">REFRESH</a> to give it another try.</div>
+                </div>
+            </div>
+            <bar-graph [graphData]="serviceCostList" [class.show]="loadingState!='error' && !isDataNotAvailable"></bar-graph>
         </div>
     </div>
-    <div class="cost-category">
+    <div class="cost-category" [class.hide]="true">
         <div class="filter-wrp">
             <filters class="filters" [filtersList]="filtersList"></filters>
             <div class="search-filter-wrap">

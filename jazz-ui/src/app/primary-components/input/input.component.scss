@@ -9,6 +9,10 @@
     font-size: 1.3rem;
     color: #ffffff;
     letter-spacing: 0.5px;
+    /deep/ .popover{
+        color: #000 !important;
+        max-width: 20rem;
+    }
 }
 
 input {
@@ -27,16 +31,24 @@ input {
 
 input.error {
     border: 1px solid #d0021b;
-    color: #d0021b;
     background-color: #6c5c5c;
 }
 
+.icon-icon-alert {
+    display: inline-block;
+    padding-right: 6px;
+    vertical-align: middle;
+}
 .error-msg {
-    color: #ff213c;
-    font-size: 1.2rem;
+    color: #fff;
+    font-size: 1.15rem;
     letter-spacing: 0.25px;
     padding-top: 5px;
     position: absolute;
     width: 100%;
     top: 100%;
+}
+.icon-info-wrap{
+    padding:0 5px;
+    cursor: pointer;
 }

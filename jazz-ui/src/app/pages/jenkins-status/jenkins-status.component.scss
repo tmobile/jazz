@@ -1,0 +1,100 @@
+@import './../../../main-styles';
+
+:host{
+	display: block;
+	min-height: 100vh;
+	background-color: #f3f3f3;
+	padding-bottom: 56px;
+}
+.page-hdr-wrp{
+	margin-bottom: 56px;
+}
+.page-body{
+	margin: 0 1.5rem;
+	height: 100%;
+	height: calc(100vh - 168px);
+	min-height: 20rem;
+	position: relative;
+
+	text-align: center;
+
+    @media (min-width: $screen-sm) {}
+    @media (min-width: $screen-md) {}
+    @media (min-width: $screen-lg) {}
+}
+.content-wrp{
+	max-height: 100%;
+	max-width: 100%;
+	width: 100%;
+	overflow-x: hidden;
+	overflow-y: scroll;
+	position: absolute;
+	top: 48%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	border-radius: 3px;
+	background-color: #ffffff;
+	    margin: 0 auto;
+	box-shadow: 0 2px 4px 0 rgba(180, 180, 211, 0.4);
+
+    @media (min-width: $screen-sm) {
+    	width: 90%;
+    }
+    @media (min-width: $screen-md) {
+    	width: 80%;
+    }
+    @media (min-width: $screen-lg) {
+    	width: 60%;
+    	max-width: 50rem;
+    }
+}
+.content-section{
+	min-height: 30rem;
+	padding: 4rem 2rem;
+    @media (min-width: $screen-md) {
+    	padding: 4rem 5rem;
+    }
+}
+.status-row{
+	font-size: 24px;
+	font-weight: bold;
+	img{
+		height: 64px;
+		margin-bottom: 1rem;
+	}
+	p{
+		margin-bottom: 1.5rem;
+	}
+}
+.success-text{
+	color: #81c92e;
+}
+.error-text{
+	color: #d0021b;
+}
+.details-row{
+	font-size: 16px;
+}
+.action-row{
+	color: #ed008c;
+	font-size: 16px;
+	font-weight: bold;
+	max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 3rem 0 5rem;
+}
+.loading-screen{
+	display: none;
+}
+.loading-circle{
+	height: 3rem;
+	width: 100%;
+    top: calc(50% - 1.5rem);
+
+    left: 0;
+    position: absolute;
+}
+.status-row{
+	padding-top: 4rem;
+}

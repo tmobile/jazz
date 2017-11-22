@@ -22,7 +22,8 @@ export class TabsComponent implements OnInit {
 
   onDropdownClick(index){
     this.onSelected.emit(index)
-    this.selectedTab = index;
+    if(index !== 4 && index !== 3 && index !== 2 && index != 1)
+      this.selectedTab = index;
   }
 
   ngOnInit() {

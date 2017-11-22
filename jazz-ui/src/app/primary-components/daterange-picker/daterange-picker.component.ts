@@ -1,23 +1,36 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { DatePickerOptions, DateModel } from './ng2-datepicker';
 import * as $ from 'jquery';
+import * as moment from 'moment';
+
+const Moment: any = (<any>moment).default || moment;
+
+export interface IDateModel {
+  day: string;
+  month: string;
+  year: string;
+  formatted: string;
+  momentObj: moment.Moment;
+}
 
 @Component({
   selector: 'daterange-picker',
   templateUrl: './daterange-picker.component.html',
   styleUrls: ['./daterange-picker.component.scss']
 })
-// var $:any;
 
 export class DaterangePickerComponent implements OnInit {
 
 	@Input() range: any = {};
+	@Input() datePickerOpen: any = {};
   	@Output() onChange:EventEmitter<any> = new EventEmitter<any>();
 	@Input() options1: DatePickerOptions;
 	@Input() options2: DatePickerOptions;
+	@Input() openClose: any = {};
 
   dateRangeString: string = "";
     showCalendar: boolean;
+    forceshowCalendar : boolean;
 	momentValue1:any;
 	momentValue2:any;
 
@@ -26,6 +39,10 @@ export class DaterangePickerComponent implements OnInit {
 
 	date1: DateModel;
 	date2: DateModel;
+	dateModel:DateModel = new DateModel();
+
+	oldDate1:DateModel;
+	oldDate2:DateModel;
 
 	date3:any;
 	date4:any;
@@ -108,12 +125,44 @@ export class DaterangePickerComponent implements OnInit {
 		
 	}
 
-  constructor() { 
-  	this.options1 = new DatePickerOptions({
-  		autoApply : true,
-  	});
-  	this.options2 = new DatePickerOptions();
-  	// this.showCalendar = false;
+	ngDoCheck() {
+		var olddateComb1 = this.oldDate1.month + '/' + this.oldDate1.day + '/'+ this.oldDate1.year;
+		var dateComb1 = this.date1.month + '/' + this.date1.day + '/'+ this.date1.year;
+		var olddateComb2 = this.oldDate2.month + '/' + this.oldDate2.day + '/'+ this.oldDate2.year;
+		var dateComb2 = this.date2.month + '/' + this.date2.day + '/'+ this.date2.year;
+		var todayDate = new Date();
+
+				
+		if(this.date1 != undefined && this.oldDate1 != undefined){
+			var date1Formatted = new Date(dateComb1);
+			if ( dateComb1 !== olddateComb1 ) {
+				this.oldDate1 = this.date1;
+			  	this.options2 = new DatePickerOptions({
+			  		autoApply : true,
+			  		minDate: date1Formatted,
+			  		maxDate: todayDate,
+			  		format: 'DD-MM-YYYY',
+			  	});
+			}
+		}
+
+		if(this.date2 != undefined && this.oldDate2 != undefined){
+			var date2Formatted = new Date(dateComb2);
+
+			if (olddateComb2 !== dateComb2) {
+				this.oldDate2 = this.date2;
+				this.options1 = new DatePickerOptions({
+					autoApply : true,
+			  		format: 'DD-MM-YYYY',
+			  		maxDate: date2Formatted
+			  	});
+			}
+		}
+		
+
+}
+
+  constructor() {
   }
     public setMoment1(moment1: any): any {
 		this.momentValue1 = moment1;
@@ -124,24 +173,59 @@ export class DaterangePickerComponent implements OnInit {
 	    // Do whatever you want to the return object 'moment'
 	}
 
+	getTodayDate(){
+		var today = new Date();
+		var dd = today.getDate();
+		var mm = (today.getMonth()+1); //January is 0!
+
+		var yyyy = today.getFullYear().toString();
+		if(dd<10){
+		    var newdd = '0'+ dd.toString();
+		} 
+		else{
+			var newdd = dd.toString();
+		}
+		if(mm<10){
+		    var newmm = '0'+ mm.toString();
+		} 
+		else{
+			var newmm = mm.toString();
+		}
+		var newtoday = newmm + '-' + newdd + '-' + yyyy;
+		return { fullDate : newtoday, date : newdd, month : newmm, year : yyyy};
+	}
+
   ngOnInit() {
 
-  	if (this.range) {
-  		// try{
-  		// 	this.momentValue1 = new Date(this.range['from']);
-  		// } catch(e){
-  		// 	this.momentValue1 = new Date();
-  		// 	this.momentValue1.setDate(this.momentValue1.getDate() - 1);
-				// this.time1 = {hour:this.momentValue1.getHours(), minute:this.momentValue1.getMinutes(), second:this.momentValue1.getSeconds()};
-  		// }
-  		// try{
-  		// 	this.momentValue2 = new Date(this.range['to']);
-  		// } catch(e){
-  		// 	this.momentValue2 = new Date();
-				// this.time2 = {hour:this.momentValue2.getHours(), minute:this.momentValue2.getMinutes(), second:this.momentValue2.getSeconds()};
+  	var todayDateSring = this.getTodayDate().fullDate;
+  	var todayDate = new Date();
 
-  		// }
-	  }
+  	
+	let momentObj = moment(todayDateSring, "MM-DD-YYYY");
+	this.dateModel.day = this.getTodayDate().date;
+	this.dateModel.month = this.getTodayDate().month;
+	this.dateModel.year = this.getTodayDate().year;
+	this.dateModel.momentObj = momentObj;
+	this.dateModel.formatted = momentObj.format();
+
+	this.options1 = new DatePickerOptions({
+  		autoApply : true,
+  		format: 'DD-MM-YYYY',
+  		maxDate: todayDate,
+  		initialDate : todayDate
+  	});
+  	this.options2 = new DatePickerOptions({
+  		maxDate: todayDate,
+  		format: 'DD-MM-YYYY',
+  		initialDate : todayDate
+  	});
+
+	this.date1 = this.dateModel;
+	this.date2 = this.dateModel;
+	this.oldDate1 = this.dateModel;
+	this.oldDate2 = this.dateModel;
+
+  	if (this.range) {}
   }
 
 }

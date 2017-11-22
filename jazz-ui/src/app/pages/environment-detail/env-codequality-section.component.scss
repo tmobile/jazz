@@ -1,0 +1,253 @@
+@import './../../../main-styles';
+.top-row
+{
+    display:flex;
+    flex-direction: row;
+    @media(max-width: $screen-sm){
+        flex-direction: column;
+    }
+}
+
+.graph-cover
+{
+    background-color: white;
+    margin:1rem;
+   position: relative;
+    width:65%;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+    border-radius:3px; 
+    @media(max-width: $screen-sm){
+        width:100%;
+    }
+}
+
+canvas{
+    margin:auto;
+   
+
+}
+
+.graph-wrp
+{
+    width: 85%;
+    margin: auto;
+    height: 180px;
+}
+.details
+{
+    margin:1rem;
+    width:100%;
+    background-color: white;
+    padding:1rem;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+    border-radius:3px;
+    @media(max-width: $screen-sm){
+        width:100%;
+    }   
+    
+}
+
+.stage-title-left {
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 1.3rem;;
+    font-weight: bold;
+    color: #aaaaaa;
+    
+}
+.stage-title-right {
+    padding: 0.5rem;
+    text-align: center;
+    font-size: 12px;
+    
+    color: #aaaaaa;
+    text-transform: uppercase;
+}
+
+
+.det-list
+{
+    list-style: none;
+    padding-left: 0;
+    margin:2rem 1rem 4rem 1rem;
+}
+
+.det-list li{
+    display: flex;
+    margin-top:1rem;
+}
+
+.det-label
+{
+    font-weight: bold;
+    width: 50%;
+}
+
+.det-value
+{
+    padding-left:1rem;
+}
+
+
+.service-overview-wrp {
+    display: flex;
+    @media (max-width: $screen-sm) {
+    flex-direction: column;
+    }
+}
+.stage-wrp {
+    width:50%;
+    position: relative;
+    background: #fff;
+    margin:1rem;
+    padding: 0;
+       
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+    
+    @media (max-width: $screen-sm) {
+        width:100%;
+    }
+}
+
+.separator-row {
+    height: 2px;
+    margin: 1rem 0;
+}
+
+.service-overview
+{
+    margin:2rem 0;
+}
+.stage-title {
+    padding: 1.5rem;
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: #aaaaaa;
+    text-transform: uppercase;
+}
+
+.service-overview {
+    display: flex;
+    padding: 0 2rem 1rem 2rem;
+    min-height: 106px; //alignment breaks for font-size changes
+}
+
+.overview-item {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    padding: 0 1rem;
+    width: 33%;
+}
+
+.overview-item.last-status,
+.overview-item.deployments-count {
+    width: 30%;
+}
+
+.overview-value {
+    height: 4rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #000000;
+}
+
+.overview-label {
+    justify-content: flex-start;
+    font-size: 12px;
+    margin-top: 1rem;
+    color: #000000;
+}
+
+.overview-value {
+    font-size: 36px;
+}
+
+.last-status .overview-value {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.bottom-right
+{
+    width: 40%;
+}
+.reliability
+{
+    background-color: #5cae01;
+    border-radius: 50%;
+    color:white;
+    width: 35px;
+    height: 35px;
+    font-size: 2.2rem;
+}
+
+.security-maintainibility
+{
+    background-color: #F5A623;
+    border-radius: 50%;
+    color:white;
+    width: 35px;
+    height: 35px;
+    font-size: 2.2rem;
+}
+
+.bad-value
+{
+    color: #d0021b;
+    
+}
+
+.settings-icon
+{
+    position: absolute;
+    top:10px;
+    right: 10px;
+    cursor: pointer;
+}
+
+.good-value
+{
+    color: #5dae02;
+    
+}
+
+.overview-value span{
+    font-size: 1rem;
+    margin-top: 1rem;
+    margin-left: 0.2rem;
+}
+
+.right-item li{
+width: 24%;
+}
+
+.more-details:hover
+{
+    
+    background-color:#444444;
+    
+}
+
+.more-details
+{
+    background-color: #555555;
+    padding:1rem;
+    text-align: center;
+    color:white;
+    cursor: pointer; 
+    font-weight: bold;
+    /deep/ .icon-icon-back:before{
+        color:white;   
+        
+    }
+
+    /deep/ .back-icon{
+        margin-left: 10px;
+        transform: rotate(180deg);
+        display: inline-block
+    }
+}

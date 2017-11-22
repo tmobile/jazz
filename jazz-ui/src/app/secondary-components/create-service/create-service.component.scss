@@ -1,12 +1,10 @@
 @import './../../../main-styles';
 .create-service-wrap {
     background-color: white;
-    //width:70vw;
-    //min-width: 83rem;
-    max-width: 1080px;
+    max-width: 980px;
     width: 100vw;
     padding: 0 3.5rem;
-    height: 100vh;
+    height: 100%;
     overflow: auto;
     @media(max-width: 853px) {
         padding: 0 1.5rem;
@@ -16,6 +14,7 @@
 .termsConditions {
     padding: 5px 0;
     margin: 0;
+    font-size: 1rem;
 }
 
 .create-service-wrap .bold-title {
@@ -31,6 +30,12 @@
         padding-bottom: 20px;
         min-width: 167px;
     }
+    .service-box:focus{
+        outline: none !important;
+
+        border-color:#ed008c;
+
+    }
 }
 .type-of-platform, .type-of-service{
     padding-bottom: 0;
@@ -45,10 +50,8 @@
     &.disabled-box {
         cursor: default;
     }
-
-    &.washed-out{
-        opacity: 0.6;
-        filter: grayscale(100%);
+    &.disabled-box:focus{
+      border-color: #cccccc !important;
     }
 }
 
@@ -56,7 +59,6 @@
     height: 3.33rem;
     width: 88%;
     max-width: 70px;
-    /*width: 40px;*/
 }
 
 .service-box p {
@@ -73,7 +75,7 @@
 }
 
 .service-box.service-box-selected {
-    border: solid 2px #ed008c;
+    border: solid 2px #ed008c !important;
 }
 
 .service-box {
@@ -96,8 +98,8 @@
     }
 }
 .service-box .icon-logo-aws,
-.service-box .icon-logo-azure, 
-.service-box .icon-logo-googleCloud, 
+.service-box .icon-logo-azure,
+.service-box .icon-logo-googleCloud,
 .service-box .icon-logo-docker{
     position: relative;
     span{
@@ -106,9 +108,9 @@
     span:first-child{
         position: relative;
     }
-} 
-.service-box .icon-logo-azure, 
-.service-box .icon-logo-googleCloud, 
+}
+.service-box .icon-logo-azure,
+.service-box .icon-logo-googleCloud,
 .service-box .icon-logo-docker{
     span:before{
         color: #ccc !important;
@@ -120,7 +122,10 @@
 .custom-cb {
     position: relative;
     margin-bottom: .85rem;
+    display: flex;
 }
+
+
 
 .custom-cb label {
     cursor: pointer;
@@ -156,7 +161,7 @@
 }
 
 .custom-cb input[type=checkbox] {
-    visibility: hidden;
+    opacity: 0;
 }
 
 .custom-cb input[type=checkbox]:checked + label {
@@ -176,7 +181,7 @@
     line-height: 1.5rem;
     vertical-align: top;
     font-size: 1rem;
-    padding-left: .666rem;
+    padding-left: 1rem;
     margin-top: 1px;
     max-width: 92%;
 }
@@ -212,33 +217,74 @@
 }
 
 .input-field-container {
-    /*margin-top: 20px;*/
     position: relative;
 }
 
 .form-error {
     color: #d0021b;
     margin-left: 1.25rem;
+    font-size: 1rem;
 }
 
 .zero-padding {
     padding: 0 !important;
     background-color: transparent;
 }
+.arrow_box {
+	position: relative;
+}
+.arrow_box:after {
+	bottom: 100%;
+	left: 0;
+	border: solid transparent;
+	content: " ";
+	height: 0;
+	width: 0;
+	position: absolute;
+	pointer-events: none;
+	border-color: rgba(243, 243, 243, 0);
+	border-bottom-color: lightgray;
+	border-width: 25px;
+	margin-left: -20px;
+}
 
 .cron-fields {
     &.row {
         margin-left: 10px;
         margin-right: 10px;
+        padding: 0 10px;
     }
     .col-lg-2 {
         padding-left: 5px;
         padding-right: 5px;
     }
+    &.arrow_box:after{
+        left:50%;
+        margin-left: -7px;
+    }
+}
+.rate-field.arrow_box:after{
+    left:25%;
+    margin-left: -12px;
+}
+.dynamodb-fields.arrow_box:after{
+    left:25%;
+    margin-left: -12px;
+    margin-bottom: -15px;
+}
+.kinesis-fields.arrow_box:after{
+    left:50%;
+    margin-left: -7px;
+    margin-bottom: -15px;
+}
+.s3-fields.arrow_box:after{
+    left:75%;
+    margin-left: -3px;
+    margin-bottom: -15px;
 }
 
 .submit-form {
-    padding: 3rem 0;
+    padding: 3rem 0 7rem 0;
     text-align: center;
     @media(max-width: 853px) {
         position: fixed;
@@ -248,13 +294,11 @@
         right: 0;
         background: #fff;
         box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.28);
-        z-index: 1;
     }
     a {
         display: block;
         padding-top: 1.25rem;
         cursor: pointer;
-        font-size: 16px;
     }
     button.btn-primary {
         border-radius: 30px;
@@ -313,21 +357,28 @@
 .disable-event {
     pointer-events: none;
     input[type="radio"] + label {
+        opacity: 0.3;
+    }
+    input[type="checkbox"] + label + div {
         color: #ddd;
+        border-color: #ddd;
+    }
+    /deep/input[type="checkbox"] label{
+                border-color: #dddd;
+
     }
 }
 
 .learn-more {
     margin-bottom: 0;
-    a {
-        margin-left: 5px;
-    }
+    font-size: 1rem;
 }
 
-.event-schedule-fields {
+.event-schedule-fields, .aws-event-fields .row{
     padding-top: 1.25rem;
     padding-bottom: 1.25rem;
     background-color: lightgray;
+    margin-left: 15px;
 }
 
 .zero-margin.row {
@@ -354,16 +405,17 @@
 
 .sm-input-label {
     margin-bottom: 0;
+    font-size: 1rem;
 }
 
 .selected-approvers {
     border: 1px solid #ccc;
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
     transition: border linear .2s, box-shadow linear .2s;
+    height: auto;
     ul {
         padding-left: 0;
         margin-bottom: 0;
-        height: 3.333rem;
     }
     li {
         list-style-type: none;
@@ -396,15 +448,14 @@
         border: none;
         margin-bottom: 0;
         margin-top: 0;
-        height: 3rem;
+        height: 2.75rem;
+        &:focus{
+            outline: none !important;
+        }
     }
-}
-.slack-channel-integration{
-    position: relative;
 }
 
 .approvers {
-    position: relative;
     .input-field-container {
         .step-title {
             padding-top: 0px;
@@ -416,11 +467,17 @@
         }
     }
 }
+.step-title span{
+    color: #ed0295;
+}
 
 .approvers-list-wrap {
     position: relative;
 }
-
+.input-wrapper input[type="text"], 
+.input-wrapper input[type="number"]{
+    margin-bottom: 0;
+}
 .input-wrapper .input-loader {
     animation-name: rotate;
     animation-duration: 0.8s;
@@ -433,6 +490,11 @@
     transform: scale(0.7);
     margin: 0.666rem 1rem;
 }
+.input-wrapper textarea{
+    padding: 10px 10px;
+    max-width: 100%;
+    height: auto;
+}
 
 .success-screen {
     text-align: center;
@@ -441,6 +503,9 @@
     margin: auto;
     @media(max-width: 853px) {
         padding-top: 25vh;
+    }
+    img{
+        width:150px;
     }
     p {
         margin: 0;
@@ -463,7 +528,8 @@
             font-size: 1.5rem;
             word-wrap: break-word;
             padding-top: .5rem;
-            display: block;
+            display: inline;
+            cursor: pointer;
         }
         &.footer-btn {
             padding-top: 4.16rem;
@@ -482,6 +548,9 @@
     margin: auto;
     @media(max-width: 853px) {
         padding-top: 25vh;
+    }
+    img{
+        width:150px;
     }
     p {
         margin: 0;
@@ -541,11 +610,6 @@
 }
 
 .btn[disabled] {
-    // border-radius: 30px;
-    // padding: 10px 16px;
-    // background-color: #ed008c;
-    // box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
-    // border: none;
     opacity: .5;
 }
 
@@ -563,7 +627,7 @@
 
 .mob-form-pad {
     @media(max-width: 853px) {
-        padding-bottom: 10rem;
+        padding-bottom: 7rem;
     }
 }
 
@@ -572,34 +636,98 @@
     position: absolute;
     top: 0;
     left: 0;
-    width: calc(100% - 20px);
+    width: 100%;
     height: 100%;
     background: rgba(54, 69, 85, 0.9);
     z-index: 2;
 }
+.aws-events-fxd-blk {
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 10px;
+}
+.aws-events-left-block{
+    border: 1px solid #ccc;
+    border-right: 0;
+    float: left;
+    width: 315px;
+    padding-right: 0 !important;
+    border-radius: 2px 0 0 2px !important;
+}
+.aws-events-left-block.stream{
+    width: 300px;
+}
+.aws-events-right-block{
+    border: 1px solid #ccc;
+    border-left: 0;
+    float: left;
+    width: calc(100% - 315px);
+    border-radius: 0 2px 2px 0 !important;
+    padding-left: 0 !important;
+}
+.aws-events-right-block.stream{
+    width: calc(100% - 300px);
+}
+p.learn-more {
+    padding: 0 15px;
+}
+.slct-bx-wrp{
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 10px;
+    width: 100%;
+    border: 1px solid #ccc;
+    height: 40px;
+    line-height: 40px;
+    background: #fff;
+    padding: 0 10px;
+    border-radius: 2px;
+}
 
-.mask-disable{
-    color:#ddd !important;
-    cursor: auto !important;
-    &:before{
-        color:#ddd;
+.slct-bx-selected.disabled {
+    color: #999;
+    cursor: default;
+    font-size: 14px;
+}
+.aws-event-fields .text {
+    margin-bottom: 10px;
+}
+.slct-bx-selected input {
+    font-size: 13px !important;
+}
+.body-fix{
+    margin: 0;
+    height: 100%;
+    overflow: hidden;
+}
+.body-auto{
+
+}
+.requiredInfo{
+    padding:20px 0;
+    font-weight: bold;
+    color: #222222;
+    font-size: 12px;
+    span{
+        color: #ed0295;
     }
 }
-.overlay-msg{
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    z-index: 1;
-    opacity: 0.8;
-    top:0;
-    background-color: #424f5d;
-    text-align: center;
+
+.pinkfocus
+{
+    background-color: #ed008c;
     color: #fff;
-    font-size: 2rem;
-    p{
-        top: 40%;
-        margin: 0 auto;
-        position: relative;
-        text-align: center;
+}
+.each-step-wrap{
+    /deep/ input[type="radio"] + label{
+        margin-left:-15px;
     }
-}  
+}
+.padding-right-0{
+    padding-right:0;
+}
+
+.disble{
+    border-color: #ddd !important;   
+    opacity: 0.5 !important; 
+}

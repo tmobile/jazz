@@ -6,7 +6,6 @@
 
 body {
     transform-style: preserve-3d;
-    //line-height: 1 !important;
 }
 
 //Parallex Mixins
@@ -41,8 +40,6 @@ $break-mobile: 600px;
 
 @mixin parallax( $distance: 0, $perspective: $parallax-perspective) {
     transform: translateZ($distance);
-    /*transform:perspective($distance * 10) translateZ($distance);*/
-    //   z-index: $distance * 1000;
 }
 
 //End Parallex Mixins
@@ -76,13 +73,12 @@ $break-mobile: 600px;
 
 .header-section {
     background-image: url("/assets/landing/jpg/BG-Header@1x.png.jpg");
+    
     background-repeat: no-repeat;
     background-position: left top;
     background-size: 100%;
     color: #fff;
     padding-bottom: 25rem;
-    // height: 20rem;
-    // height: calc(100% - 3.5vh);
     @media screen and (max-width: $break-medium) {
         background-size: 250%;
         background-position: 70% 0%;
@@ -166,24 +162,16 @@ $break-mobile: 600px;
 
 .features {
     height: auto;
-    // @media screen and (max-width: $break-mobile) {
-    //     height: calc(100% + 25vh);
-    // }
     .section-content:last-child {
         padding-top: 0vh !important;
         padding-bottom: 10.5rem !important;
-         @media screen and (max-width: $break-mobile) {
-           padding-bottom: 2.5rem !important;
-        }
     }
 }
 
 .feature-wrp {
     width: 33.33%;
-    /* border: 1px solid #e6e6e6;*/
     border-radius: 3px;
     padding: 3vh;
-    /* box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.5);*/
     margin-right: 3vh;
     text-align: center;
     &:last-child {
@@ -216,6 +204,7 @@ $break-mobile: 600px;
     color: #555555;
     display: inline-block;
     margin-top: 3rem;
+    vertical-align: top;
     @media screen and (max-width: $break-mobile) {
         width: 100%;
         margin-left: 0%;
@@ -227,12 +216,13 @@ $break-mobile: 600px;
         }
     }
     span {
-        font-size: 1.2rem;
+        font-size: 1.3rem;
+        line-height: 1.3;
         @media screen and (max-width: $break-small) {
             font-size: 1rem;
         }
         @media screen and (max-width: $break-mobile) {
-            font-size: 0.9rem;
+            // font-size: 0.9rem;
         }
         @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
             font-size: 1rem !important;
@@ -253,26 +243,24 @@ $break-mobile: 600px;
 }
 
 .pre-image-container {
-    width: 22%;
-    vertical-align: 4vh;
-    vertical-align: middle;
-    @media screen and (max-width: $break-mobile) {
-        vertical-align: middle;
-    }
-    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
-        vertical-align: middle;
-    }
+    width: auto;
+    height: 4.5rem;
+    margin: auto;
+    display:block !important;
 }
 
 .post-image-container {
-    width: 75%;
+    width: 100%;
     vertical-align: middle;
     line-height: 1;
+    text-align: center;
+    margin-top: 20px;
     h5 {
-        font-size: 1.6rem;
+        font-size: 1.8rem;
         margin: 0;
         font-weight: 600;
         padding-bottom: 0.5rem;
+        line-height: 1.4;
         @media screen and (max-width: $break-medium) {
             font-size: 1.3rem;
         }
@@ -283,8 +271,10 @@ $break-mobile: 600px;
 }
 
 .pre-image {
-    width: 75%;
-    height: 75%;
+    height: 100%;
+    margin: 0 auto;
+    width: auto;
+    display: inherit;
 }
 
 ul.section-content {
@@ -326,7 +316,6 @@ ul.section-content {
 }
 
 .card-container {
-    // @include clearfix;
     width: auto;
     margin: auto;
     text-align: center;
@@ -340,11 +329,8 @@ ul.section-content {
 .shift-left {
     margin: 0 2rem;
     font-size: 5rem;
-    // @include clearfix;
     cursor: pointer;
     display: inline-block;
-    // width: 0;
-    // height: 0;
     position: relative;
     vertical-align: middle;
     @media screen and (max-width: $break-medium) {
@@ -364,79 +350,17 @@ ul.section-content {
     transform: rotate(180deg);
 }
 
-// .shift-right {
-//     top: 0vh;
-//     left: 0vw;
-//     border-top: 26px solid transparent;
-//     border-bottom: 27px solid transparent;
-//     border-right: 26px solid #fff;
-//     @media screen and (max-width: $break-medium) {
-//         top: 0vh;
-//         left: 0vw;
-//         border-top: 26px solid transparent;
-//         border-bottom: 27px solid transparent;
-//         border-right: 26px solid #fff;
-//     }
-//     @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
-//         top: 0vh;
-//     }
-// }
-
-// .shift-right::after {
-//     display: block;
-//     margin-top: -21.5px;
-//     margin-left: 7px;
-//     content: "";
-//     border-top: 22px solid transparent;
-//     border-bottom: 22px solid transparent;
-//     border-right: 22px solid #28303a;
-// }
-
-// .shift-left {
-//     top: 0vh;
-//     left: 0vw;
-//     border-top: 26px solid transparent;
-//     border-bottom: 27px solid transparent;
-//     border-left: 26px solid white;
-//     @media screen and (max-width: $break-medium) {
-//         top: 0vh;
-//         left: 0vw;
-//         border-top: 26px solid transparent;
-//         border-bottom: 27px solid transparent;
-//         border-left: 26px solid white;
-//     }
-//     @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
-//         top: 0vh;
-//     }
-// }
-
-// .shift-left::after {
-//     display: block;
-//     margin-top: -21.5px;
-//     margin-left: -30px;
-//     content: "";
-//     border-top: 22px solid transparent;
-//     border-bottom: 22px solid transparent;
-//     border-left: 22px solid #28303a;
-// }
 
 .scroll-me {
-    // -webkit-transition: translateX  700ms ease-in-out;
-    // -moz-transition: translateX  700 ease-in-out;
-    // -ms-transition: translateX  700ms ease-in-out;
-    // transition: translateX 1s ease-in-out;
     transition-duration: 500ms;
     transition-property: transform;
     width: auto;
-    // overflow: hidden;
-    // white-space: nowrap;
     height: 100%;
     @media screen and (max-width: $break-medium) {
         width: auto;
     }
     @media screen and (max-width: $break-small) {
         width: auto;
-        // margin-left: -144vw;
     }
     @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
         width: auto;
@@ -444,9 +368,6 @@ ul.section-content {
     }
 }
 
-// .scroll-me div:first-child{
-// 	@extend .card-active;
-// }
 .scroll-me>div {
     width: 18.7vw;
     height: 32vh;
@@ -470,11 +391,7 @@ ul.section-content {
     }
     @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
         width: 52vw;
-        // height: 52vh;
     }
-    // :active{
-    // 	@extend .card-active;
-    // }
 }
 
 .card-bg {
@@ -539,23 +456,20 @@ ul.section-content {
         margin: 2.3vh auto;
         display: block;
         color: #fff;
-        font-size: 1.6vh;
+        font-size: 1rem;
         line-height: 1.5;
         font-weight: 300;
         letter-spacing: 0.5px;
         @media screen and (max-width: $break-medium) {
             margin: 1.5vh auto;
             font-size: 1rem;
-            // line-height: 2vh;
         }
         @media screen and (max-width: $break-small) {
             margin: 1.5vh auto;
             font-size: 1rem;
-            // line-height: 1.5;
         }
         @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
             font-size: 1rem;
-            // line-height: 1.5;
         }
     }
 }
@@ -622,7 +536,7 @@ img:hover {
 }
 
 .footer li {
-    width: 25% !important;
+    width: 33% !important;
     float: left;
     margin: 0px !important;
     padding: 0px !important;
@@ -635,38 +549,13 @@ img:hover {
     @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
         font-size: 1.5vw;
     }
-}
-
-.footer li:first-child {
-    @media screen and (max-width: $break-mobile) {
-        display: none;
+    a{
+      margin-top: .5rem;
+      display: inline-block;
     }
 }
 
-.mobile-logo-footer {
-    display: none;
-   // background-image: url("/assets/landing/TMO Black@1x.png.png");
-    background-repeat: no-repeat;
-    background-position: 50%;
-    margin-top: -2.25rem;
-    background-size: 30%;
-    height: 6.5rem;
-    @media screen and (max-width: $break-mobile) {
-        display: block;
-    }
-}
 
-.home-footer {
-    width: 70%;
-    height: 1.5rem;
-//  background-image: url("/assets/landing/TMO Black@1x.png.png");
-    background-repeat: no-repeat;
-    background-position: left center;
-    background-size: 100%;
-    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
-        height: 16px;
-    }
-}
 
 @mixin dark($color) {
     background-color: darken($color, 10%);
@@ -683,8 +572,8 @@ img:hover {
 }
 
 .parallax-0 {
-    width: 70vw;
-    height: 40rem;
+    width: 60vw;
+    height: 36rem;
     top: -25vh;
     right: -15vw;
     background-image: url("/assets/landing/Pattern-Header-01@1x.png.png");
@@ -696,12 +585,13 @@ img:hover {
     @include parallax(-0.3px);
     @media screen and (max-width: $break-medium) {
        width:55vw;
+       height:17rem;
        top:-8vh;
        right:-5vw;
        @include parallax(-0.1px);
     }
     @media screen and (max-width: $break-mobile) {
-        
+
         width: 80vw;
         top:-12vh;
         right: -5vw;
@@ -709,7 +599,7 @@ img:hover {
     @media screen and (max-width: $break-small) {
         width: 80vw;
         top:-10vh;
-        
+
     }
 }
 
@@ -739,17 +629,15 @@ img:hover {
 }
 
 .parallax-2 {
-    width: 33.3vw;
-    // max-width: 48.5rem;
-    height: 40vw;
-    // max-height: 48.5rem;
+    width: 35rem;
+    height: 40rem;
     background-image: url("/assets/landing/self-service-3@1x.png");
     background-repeat: no-repeat;
     background-position: left top;
     position: absolute;
     background-size: 100%;
     top: 35rem;
-    left: 34vw;
+    left: calc(50% - 18.5rem);
     transform-style: preserve-3d;
     @include parallax(0.3px);
     z-index: 3;
@@ -762,30 +650,26 @@ img:hover {
     transition: background 300ms ease-in;
     transition-delay: 100ms;
     @media screen and (max-width: $break-medium) {
-        width: 40vw;
-        left: 29vw;
+        width: 47%;
+        left: calc(50% - 25%);
         top: 33rem;
-    }
-    @media screen and (max-width: $break-small) {
-        width: 44vw;
-        left: 29vw;
     }
     @media screen and (max-width: $break-mobile) {
         @include parallax(0.3px);
-        width: 55vw;
-        left: 25vw;
+        width: 58%;
+        left: calc(50% - 30%);
         top: 29rem;
     }
     @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
         top: 29rem;
     }
+    @media screen and (min-width: 1440px){
+        top: 38rem;
+    }
 }
 
 .landscapepadding {
     padding-top: 6rem;
-    @media screen and (max-width: $break-mobile) {
-        // padding-top: 0vh;
-    }
     @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
         padding-top: 4rem;
     }
@@ -839,35 +723,33 @@ img:hover {
 }
 
 .parallax-3 {
-    width: 36vw;
-    // max-width: 53rem;
-    height: 40vw;
-    background-image: url("/assets/landing/SS IMG-bottom@1x.png.png");
+    width: 38rem;
+    height: 40rem;
+    background-image: url('/assets/landing/SSIMG-bottom@1x.png.png');
     background-repeat: no-repeat;
     background-position: left top;
     position: absolute;
     background-size: 100%;
     top: 36rem;
-    left: 33vw;
+    left: calc(50% - 19rem);
     transform-style: preserve-3d;
     @include parallax(0.25px);
     z-index: 2;
     @media screen and (max-width: $break-medium) {
-        width: 43vw;
-        left: 28vw;
+        width: 50%;
+        left: calc(50% - 25%);
         top: 34rem;
     }
-    @media screen and (max-width: $break-small) {
-        width: 48vw;
-        left: 28vw;
-    }
     @media screen and (max-width: $break-mobile) {
-        width: 60vw;
+        width: 50%;
         top: 30rem;
-        left: 24vw;
+        left: calc(50% - 25%);
     }
     @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
         top: 30rem;
+    }
+    @media screen and (min-width: 1440px){
+        top: 39rem;
     }
 }
 
@@ -887,14 +769,12 @@ img:hover {
     @media screen and (max-width: $break-medium) {
         width: 52vh;
         right: 4vh;
-       
+
     }
     @media screen and (max-width: $break-small) {
         bottom: -8rem;
     }
     @media screen and (max-width: $break-mobile) {
-        // bottom: -8rem;
-        // right: 0vh;
         width: 80vw;
         top:calc(100% - 3rem);
         right:0;
@@ -902,7 +782,7 @@ img:hover {
 }
 
 .parallax-6 {
-    
+
     width: 50vw;
     height: 40rem;
     background-image: url("/assets/landing/Pattern-4@2x.png.png");
@@ -915,30 +795,19 @@ img:hover {
     transform-style: preserve-3d;
     @include parallax(-0.1px);
     z-index: 0;
-    // transform:translateZ(1px);
     @media screen and (max-width: $break-medium) {
         top: 35vh;
         background-size: 100%;
-        // left: -100vh;
         width:50vw;
     }
     @media screen and (max-width: $break-small) {
-        // left: -20.5vw;
-        // height: 20vh;
         width: 65vw;
-        // background-size: 70%;
         top:50vh;
-        // @include parallax(-0.4px);
-        // transform: rotate3d(1,0,0,180deg);
     }
     @media screen and (max-width: $break-mobile) {
         width:90vw;
         top: 50vh;
-        // height: 20vh;
-        // left:-5vw;
-        // background-size: 60%;
         @include parallax(-0.1px);
-        // transform: rotate3d(1,0,0,180deg);
     }
 }
 
@@ -955,18 +824,14 @@ img:hover {
     z-index: 0;
     @include parallax(-0.1px);
     @media screen and (max-width: $break-medium) {
-        // top: -9rem;
         background-size: 75%;
         width: 72vw;
     }
     @media screen and (max-width: $break-small) {
-        // top: -8rem;
         width: 90vw;
         @include parallax(0px);
     }
     @media screen and (max-width: $break-mobile) {
-        // top: -8rem;
-        // height: 20vh;
         background-size: 100%;
         @include parallax(-0.01px);
     }
@@ -987,10 +852,6 @@ img:hover {
 
 .grey-section {
     height: auto;
-    // @media screen and (max-width: $break-mobile) {
-    //     height: auto;
-    // }
-    // background-color: rgba(40,48,58,1);
     background-color:transparent;
     color: #fff;
     padding-bottom: 30px;
@@ -1021,10 +882,6 @@ img:hover {
 }
 
 .about-section {
-    // background-image: url("/assets/landing/BG-About Us@1x.png.png");
-    // background-repeat: no-repeat;
-    // background-position: left top;
-    // background-size: 100%;
     color: #fff;
     .pattern-parallax{
         position: absolute;
@@ -1045,7 +902,6 @@ img:hover {
         }
     }
     .features-section{
-        // margin-top: 5.5rem;
         transform: translateZ(0.1px);
     }
     .feature-title {
@@ -1055,6 +911,11 @@ img:hover {
     .section-content-small {
         @include parallax(-0.2px);
         padding: 2rem 0rem;
+        span a{
+            color: #fff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
     }
     .actions {
         @include parallax(0.1px);
@@ -1062,7 +923,7 @@ img:hover {
             width: 60% !important;
         }
     }
-    padding-bottom: 20px;  
+    padding-bottom: 20px;
 }
 
 .section-content-small {
@@ -1172,33 +1033,26 @@ a:hover {
 .minnum {
     cursor: auto;
     opacity: 0.3;
-    // visibility: hidden;
 }
 
 .maxnum {
     cursor: pointer;
     opacity: 1;
-    // visibility: visible;
 }
 
-// .card-active{
-// 	width:21vw !important;
-// 	full{
-// 		filter:brightness(125%);
-// 	}
-// }
-// .card-inactive{
-// 	width:17.25vw;
-// 	-webkit-transition: width 400ms ease-in-out;
-// 	-moz-transition: width 400ms ease-in-out;
-// 	-ms-transition: width 400ms ease-in-out;
-// 	transition: width 400ms ease-in-out;
-// 	full{
-// 		filter:brightness(100%);
-// 	}
-// }
 .transform-parallax{
     -moz-transform-style:preserve-3d;
     -webkit-transform-style: preserve-3d;
     transform-style: preserve-3d;
+}
+/deep/ .sidebar-wrp{
+    top:56px !important;
+}
+.section-content.actions{
+    padding-top: 0 !important;
+}
+.landing-action-btn-wrap {
+  .btn-primary{
+    letter-spacing: .4rem;
+  }
 }

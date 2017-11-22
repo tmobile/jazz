@@ -26,6 +26,7 @@
         height: auto;
         opacity: 1;
         transform: translateY(0px);
+        right:-188px;
         .dt-content {
             opacity: 1;
         }
@@ -160,7 +161,7 @@
 .btn-wrp {
     width: 100%;
     text-align: center;
-    padding: 20px 0 5px 0;
+    padding: 50px 0 5px 0;
 }
 
 // new
@@ -204,7 +205,10 @@
     color: #fff !important;
     border-radius: 50% !important;
 }
-
+/deep/ .datepicker-container .datepicker-calendar .datepicker-calendar-container .datepicker-calendar-days-container .day.disabled {
+    pointer-events: none;
+    color: rgba(153, 153, 153, 0.79) !important;
+}
 /deep/ .datepicker-container .datepicker-calendar .datepicker-calendar-container .datepicker-calendar-days-container .day {
     color: #333 !important;
 }
@@ -239,7 +243,7 @@
 
 /deep/ span.month-title {
     position: relative !important;
-    left: -43px !important;
+    left: -28px !important;
 }
 
 /deep/ .datepicker-container .datepicker-calendar {
@@ -261,12 +265,13 @@
     top: -2px !important;
     width: 65px !important;
     height: 26px !important;
-    left: 123px !important;
+    left: 125px !important;
 }
 
 /deep/ .datepicker-container .datepicker-calendar .datepicker-calendar-top button {
     margin-top: -22px !important;
     opacity: 0 !important;
+    width: 70px !important;
 }
 
 /deep/ .datepicker-input-container {
@@ -276,4 +281,7 @@
 /deep/ .slimscroll-wrapper {
     top: 30px !important;
     background: #fff !important;
+}
+/deep/ .daterange-wrapper .input-wrapper input{
+    padding-right: 28px;
 }

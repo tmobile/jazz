@@ -20,7 +20,7 @@ export class SidebarComponent implements OnInit {
 
     public closeOverlay () {
     	if (this.closeClick == true) {
-	        this.onClose.emit(false);
+          this.onClose.emit(false);
     	}
     }
     stopPropagation(event) {

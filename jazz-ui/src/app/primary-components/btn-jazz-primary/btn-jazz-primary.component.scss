@@ -1,0 +1,51 @@
+@import './../../../main-styles';
+button.btn-primary {
+    border-radius: 30px;
+    padding: 0px 23px;
+    letter-spacing: .5px;
+    background-color: #ed008c;
+    border: 1px solid #ed008c;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+    font-size: 13px;
+    font-weight: 500;
+}
+
+button.btn-primary:hover,
+button.btn-primary:focus,
+button.btn-primary:active {
+    outline: none !important;
+    background-color: #ffffff;
+    color: #ed008c;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+    border: 1px solid #ffffff;
+}
+button.btn-primary[disabled]:hover{
+    color: #fff;
+}
+.buttonPadding {
+    width: 20rem;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+    font-size: 1.4rem !important;
+    line-height: 2rem;
+    font-weight: 400 !important;
+    padding: 12px 16px !important;
+}
+
+.loginbutton {
+    width: 10rem;
+    height: 4rem;
+}
+
+.login {
+    border-radius: 20px !important;
+    background-color: #ed008c;
+    height: 34px;
+    line-height: 33px;
+}
+.savechangesbtn{
+    width:10rem;
+    height:3rem;
+    padding: 0 !important;
+    vertical-align: middle;
+    display: inline-block;
+}
