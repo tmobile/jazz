@@ -19,13 +19,9 @@
     @media(max-width: $screen-sm){
         width:100%;
     }
-    
-    // background-image: url("/assets/images/cost-graph.png");
-    // background-size: cover;
 }
 
 canvas{
-    // width: 85%;
     margin:auto;
    
 
@@ -34,7 +30,6 @@ canvas{
 .graph-wrp
 {
     width: 85%;
-    // border:1px solid black;
     margin: auto;
     height: 180px;
 }
@@ -117,7 +112,6 @@ canvas{
 .separator-row {
     height: 2px;
     margin: 1rem 0;
-    // border: solid 1px #dddddd;
 }
 
 .service-overview

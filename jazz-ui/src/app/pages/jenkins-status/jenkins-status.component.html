@@ -1,5 +1,5 @@
 <div class="page-hdr-wrp" >
-	<tmobile-header type="landing" (loginClick) = "onLoginClicked($event)" noLink = 'noLink' [closed]="closed"></tmobile-header>
+	<jazz-header type="landing" (loginClick) = "onLoginClicked($event)" noLink = 'noLink' [closed]="closed"></jazz-header>
 </div>
 <div class="page-body">
 	<div class="content-wrp">
@@ -7,7 +7,6 @@
     <section class="loading-screen content-section" [class.show]="status == 'loading'">
       <div class="loading-circle"></div>
     </section>
-		<!-- <section class="success-screen" *ngIf='serviceRequestSuccess'  *ngIf='serviceRequestFailure'> -->
 		<section class="success-screen content-section" *ngIf="status == 'success'">
 			<div class="status-row">
 				<img src="../assets/images/icons/icon-good@3x.png">
@@ -38,7 +37,7 @@
 	      <p class="error-text">Oops!</p>
 	    </div>
       <div class="details-row">
-        <p>Error while performing user action. Please email us at <a href="mailto:serverlessdev@t-mobile.com">serverlessdev@t-mobile.com</a></p>
+        <p>Error while performing user action. Please email us at <a href="mailto:mail@tmail.com">email@mail.com</a></p>
       </div>
       <div class="action-row">
         <a target="_blank" href=""></a>

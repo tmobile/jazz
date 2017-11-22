@@ -21,7 +21,6 @@
     width:50%;
     position: relative;
     background: #fff;
-    // margin:1rem;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
     cursor: pointer;  
     @media (max-width:1056px)
@@ -41,18 +40,11 @@
 
 .service-overview-wrp
 {
-
     display: flex;
     flex-direction: row;
     @media(max-width: $screen-sm){
         flex-direction: column;
     }
-    // border-radius: 3px;
-    // margin: 0;
-   
-    // padding: 0 1.6rem;
-    // background-color: #ffffff;
-    // box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
 }
 
 .service-overview

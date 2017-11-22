@@ -7,7 +7,6 @@ import { Http, Headers, Response } from '@angular/http';
 import { Component, OnInit , Output, EventEmitter } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SharedService } from "../../SharedService.service";
-// import { RequestService, DataCacheService } from "../../core/services";
 import { ToasterService} from 'angular2-toaster';
 import { BarGraphComponent} from '../../secondary-components/bar-graph/bar-graph.component';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
@@ -73,8 +72,8 @@ export class ServiceDetailComponent implements OnInit {
                 status : 'Active',
                 description : 'Sample Description',
                 approvers : 'Jane Smith',
-                domain : 'tmo.com',
-                email : 'api@tmo.com',
+                domain : 'jazz.com',
+                email : 'api@jazz.com',
                 slackChannel : 'Cloud Notifications',
                 repository : 'View on BitBucket',
                 tags : 'Pacman, MyService'
@@ -171,7 +170,6 @@ export class ServiceDetailComponent implements OnInit {
 
     statusFilter(item){
         this.selected = item;
-        // this.filterByStatus();
     };
 
     deleteService(x){
@@ -213,7 +211,6 @@ export class ServiceDetailComponent implements OnInit {
                 "service_name": this.service.name,
                 "domain": this.service.domain,
                 "id" : this.service.id
-                // "version": "LATEST"
             };
        this.deleteServiceStatus.emit(this.deleteServiceVal);
        this.subscription = this.http.post('/platform/delete-serverless-service' , payload)
@@ -257,11 +254,6 @@ export class ServiceDetailComponent implements OnInit {
             this.isLoading = false;
         }
         );
-
-
-    //    var msg = this.serviceData.service.name +" has been successfully created"
-    //    this.setMessage("success",msg);
-
     };
 
 

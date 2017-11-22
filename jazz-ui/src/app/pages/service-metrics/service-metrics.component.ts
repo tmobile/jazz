@@ -4,8 +4,6 @@ import { AfterViewInit, ViewChild } from '@angular/core';
 import { ToasterService} from 'angular2-toaster';
 import { RequestService, MessageService } from '../../core/services/index';
 
-// import { LineGraphComponent }  from './../../secondary-components/line-graph/line-graph.component';
-
 @Component({
   selector: 'service-metrics',
   templateUrl: './service-metrics.component.html',
@@ -16,7 +14,6 @@ export class ServiceMetricsComponent implements OnInit {
 
 	// @ViewChild(LineGraphComponent)
 
-	// public lineGraph: LineGraphComponent;
   @Input() service: any = {};
   private subscription:any;
 
@@ -48,7 +45,6 @@ export class ServiceMetricsComponent implements OnInit {
 
   graphTypeList: Array<string> = ['Line'];
   environmentList: Array<string> = ['prod', 'dev'];
-  // serviceTypeList : Array<string> = ['api', 'lambda', 'website'];
   statisticList: Array<string> = ['Average', 'Sum', 'SampleCount','Maximun','Minimum'];
   viewBox = "0 0 300 150";
   today = new Date();
@@ -84,31 +80,16 @@ export class ServiceMetricsComponent implements OnInit {
   }
 
   ngOnInit() {
-    // below hardcoding for serviceType :: hotfix for Tech Training - Aug 31.. to be removed later
-		// if(this.service.serviceType === 'function' || this.service.serviceType === 'lambda'){
-		// 	var serviceName = "custom-ad-authorizer"
-		// } else if(this.service.serviceType === 'api'){
-		// var serviceName = "events"
-		// }else if(this.service.serviceType === 'website'){
-		// var serviceName = " service-onboarding"
-		// }
-    console.log("this.service ", this.service);
-    this.resetPeriodList(this.selected); //  to set periodListValue such that total num of datapoints < 1440 .. http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricStatistics.html
+    this.resetPeriodList(this.selected); 
     this.payload = {
-        "service":this.service.name || "events",// this.service.name,//hotfix for Tech Training - Aug 31
-        "domain": this.service.domain || "platform",//this.service.domain,//hotfix for Tech Training - Aug 31
-        "environment": this.environmentList[0],//hotfix for Tech Training - Aug 21this.environmentList[0],
+        "service":this.service.name || "events",
+        "domain": this.service.domain || "platform",
+        "environment": this.environmentList[0],
         "end_time": (new Date().toISOString()).toString(),
         "start_time": this.getStartDate(this.selected),
         "interval": this.periodListSeconds[this.periodList.indexOf(this.periodList[0])],
         "statistics": this.statisticList[0]
     };
-    // console.log("this.payload.interval ", this.payload.interval);
-    //     - services (API)
-    // - events(API)
-    // - service-onboarding(Website)
-    // - custom-ad-authorizer(Function)
-    // below hardcoding for serviceType :: hotfix for Tech Training - Aug 31.. to be removed later
     if(!this.service.serviceType){
       if(this.payload.service == "services"){
         this.service.serviceType = "api"; 
@@ -124,7 +105,6 @@ export class ServiceMetricsComponent implements OnInit {
       }
     }
     else{
-      console.log("this.service.serviceType is defined as ", this.service.serviceType);
     }
     this.callMetricsFunc();
   }
@@ -158,7 +138,6 @@ export class ServiceMetricsComponent implements OnInit {
     };
 
     serviceMetric.assets.forEach(function(eachAsset){
-      // temporary fix as /platform/services backfilling is not done due to which we will not get proper value in of service.serviceType
 
       if( (_this.service.serviceType == "api" && eachAsset.type == "apigateway" )|| ((_this.service.serviceType == "function" || _this.service.serviceType == "lambda") && eachAsset.type == "lambda" ) || (_this.service.serviceType == "website" && eachAsset.type == "cloudfront" ) ){
         var eachAssetMetric = [];
@@ -174,22 +153,16 @@ export class ServiceMetricsComponent implements OnInit {
         });
         eachAsset.metrics.forEach(function(eachMetric){
           var eachMetricDatapoint = [];
-          // var oldGraphObj = this.serviceMetricsList ? this.serviceMetricsList.assets[eachAsset].metrics[eachMetric] : [];
-          // var oldGraphObj = [];
           var datapointArray = eachMetric.datapoints.sort(compare);
-          // console.log("datapointArray",datapointArray);
           eachAssetMetric.push({
             metric_name : eachMetric.metric_name,
             xAxis: { label: 'TIME', range: selectedTimeRange.toLowerCase() },
-            // yAxis: { label: datapointArray.length > 0 ? datapointArray[0].Unit : "-"}, // commenting metrics y axis label
             yAxis: { label: datapointArray.length > 0 ? "" : "-"},
             data : eachMetricDatapoint,
-            // dataOld: [] // TODO oldGraphObj ? oldGraphObj.datapoints || eachMetricDatapoint : []
           });
           if(datapointArray && datapointArray.length > 0){
             datapointArray.forEach(function(eachDatapoint){
               var modifiedkey = eachDatapoint.Timestamp;
-              // modifiedkey = modifiedkey.replace(/[-]/g, '/');
               var eachDate=new Date(modifiedkey);
               var monthIndex=eachDate.getMonth();
               let graphDataDate="";
@@ -204,23 +177,14 @@ export class ServiceMetricsComponent implements OnInit {
             }); // end of datapointArray
           }
           else{
-            // let serviceRow = {
-            //   date: "", // graphDataDate
-            //   value: "",
-            //   unit: ""
-            // };
-            // eachMetricDatapoint.push(serviceRow);
+           
             eachMetricDatapoint = [];
           }
         }); // end of eachAsset.metrics
       }       // ***** uncomment
       else{
-        console.log(" *** unmatched this.service.serviceType and eachAsset.type *** ");
-        console.log("_this.service.serviceType ", _this.service.serviceType);
-        console.log(" eachAsset.type", eachAsset.type);
       }
     }); // end of serviceMetric.assets
-    // console.log("_serviceMetricList ",_serviceMetricList);
       if(_serviceMetricList.length > 0){
         this.isDataNotAvailable = false;
       }
@@ -233,20 +197,15 @@ export class ServiceMetricsComponent implements OnInit {
   }
 
   callMetricsFunc(){
-
-    // console.log(" in callMetricsFunc ");
     this.isGraphLoading=true;
     this.isDataNotAvailable = false;
     this.isError = false;
-    //this.payload = {"service":"events","domain":"platform","environment":"prod","end_time":"2017-08-30T09:28:42.279Z","start_time":"2017-08-24T09:28:42.279Z","interval":"900","statistics":"Average"}
     	 if ( this.subscription ) {
       this.subscription.unsubscribe();
     }
 		this.subscription = this.http.post('/platform/metrics', this.payload).subscribe(
-    // this.http.post('/platform/metrics', this.payload).subscribe(
       response => {
           //Bind to view
-          // console.log("response ",response);
         let serviceMetrics = response.data;
 
         // let serviceInput = response.input;
@@ -255,13 +214,11 @@ export class ServiceMetricsComponent implements OnInit {
         } else if(serviceMetrics !== undefined && serviceMetrics === "" || serviceMetrics.assets.length == 0 ){
           this.isGraphLoading = false;
           this.isDataNotAvailable = true;
-          // this.loadingState = 'error';
           if(serviceMetrics === ""){
             let errorMessage = this.toastmessage.successMessage(response,"serviceMetrics");
             this.popToast('error', 'Oops!', errorMessage)
           }
         } else{
-          // console.log("unknown case ",response);
           this.isGraphLoading = false;
           this.isDataNotAvailable = true;
           this.isError = true;
@@ -269,7 +226,6 @@ export class ServiceMetricsComponent implements OnInit {
       },
       err => {
         this.isError=true;
-        console.log("err",err);   
         this.isDataNotAvailable = true;
         this.isGraphLoading = false;
         this.errBody = err._body;
@@ -285,16 +241,11 @@ export class ServiceMetricsComponent implements OnInit {
 
         // Log errors if any
         let errorMessage;
-        // console.log("err ",err);
-        // console.log("err.status ",err.status);
-        // console.log("err._body ",err._body);
         errorMessage=this.toastmessage.errorMessage(err,"serviceMetrics");
-        // this.popToast('error', 'Oops!', errorMessage);
     })
   }
 
   onTypeSelected(type){
-    // console.log("graph type",type);
   }
 
   onPeriodSelected(period){
@@ -303,20 +254,17 @@ export class ServiceMetricsComponent implements OnInit {
   }
 
   onEnvSelected(environment){
-    // console.log("environment",environment);
     this.payload.environment = environment;
     this.callMetricsFunc();
   }
 
   onStatisticSelected(statistics){
-    // console.log("statistics",statistics);
     this.payload.statistics = statistics;
     this.callMetricsFunc();
   }
 
   getStartDate(filter){
     var todayDate = new Date();
-    // console.log("todayDate ",todayDate);
     switch(filter){
       case "1 day":
         var resetdate = new Date(todayDate.setDate(todayDate.getDate()-1)).toISOString();
@@ -340,7 +288,6 @@ export class ServiceMetricsComponent implements OnInit {
         var newStartDateString = resetYear.toString()+"/"+resetMonth.toString()+"/"+"1";
         var newStartDate = new Date(newStartDateString);
         var resetdate = newStartDate.toISOString();
-        // var resetdate = resetYear+"-"+resetMonth+"-01 00:00:00"
         break;
       case "1 Year":
         var currentYear = new Date((todayDate).toISOString()).getFullYear();
@@ -368,20 +315,15 @@ export class ServiceMetricsComponent implements OnInit {
     this.periodList = [];
     this.periodListSeconds = [];
 
-    // console.log("allPeriodList", this.allPeriodList);
     var _this = this;
     this.allPeriodList.forEach(function(obj){
-      // console.log("obj ", obj);
       if(limitDatapoints < parseInt(obj.sec) ){
         _this.periodList.push(obj.min);
         _this.periodListSeconds.push(obj.sec);
       }
     });
-    // console.log("resetPeriodList this.periodList ",this.periodList );
-    // console.log("resetPeriodList this.periodListSeconds ",this.periodListSeconds);
     if(this.payload != undefined && this.payload.interval != undefined){
       this.payload.interval = this.periodListSeconds[this.periodList.indexOf(this.periodList[0])];
-      // console.log("resetPeriodList this.payload.interval ", this.payload.interval);
     }
   }
 
@@ -392,11 +334,8 @@ export class ServiceMetricsComponent implements OnInit {
     }
 
     this.selectedTimeRange = filter;
-    // console.log("filter",filter);
-
     var resetdate = this.getStartDate(filter);
     this.resetPeriodList(filter);
-    // console.log("resetdate",resetdate);
     this.payload.start_time = resetdate;
     this.callMetricsFunc();
   }

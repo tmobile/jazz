@@ -6,8 +6,8 @@
 
 import { Component, OnInit, EventEmitter, Output} from '@angular/core';
 import { ToasterService} from 'angular2-toaster';
-import { Filter } from '../../secondary-components/tmobile-table/tmobile-filter';
-import { Sort } from '../../secondary-components/tmobile-table/tmobile-table-sort';
+import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
+import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
 import { SharedService } from "../../SharedService.service";
 import { RequestService, DataCacheService, MessageService ,AuthenticationService} from "../../core/services";
 import { Router, ActivatedRoute } from '@angular/router';
@@ -31,7 +31,6 @@ export class ServicesListComponent implements OnInit {
 	parsedErrBody: any;
   errMessage: any;
   selectedList:string='all';
-  // @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
 
   constructor(private sharedService: SharedService,
             private router: Router,
@@ -61,10 +60,6 @@ export class ServicesListComponent implements OnInit {
   showAddService: boolean = false;
   selected:string = "Status (All)";
   thisIndex: number = 0;
-  // breadcrumbs = [{
-  //   'name' : 'Services',
-  //   'link' : 'services'
-  // }]
   serviceList = [];
 
   tableHeader2 = [
@@ -96,13 +91,6 @@ export class ServicesListComponent implements OnInit {
       filter: {
         type: 'dateRange'
       }
-    // },{
-    //   label: 'Health',
-    //   key: 'health',
-    //   sort: true,
-    //   filter: {
-    //     type: ''
-    //   }
     },{
       label: 'Status',
       key: 'status',
@@ -229,8 +217,6 @@ export class ServicesListComponent implements OnInit {
     return _serviceList;
   };
   serviceCall(){
-    // console.log("relative url", this.relativeUrl);
-
     this.serviceList = [];
     this.loadingState = 'loading';
     if(this.relativeUrl.indexOf('status=') == -1)
@@ -243,8 +229,6 @@ export class ServicesListComponent implements OnInit {
     }
     this.subscription = this.http.get(this.relativeUrl).subscribe(
       response => {
-
-        // console.log("service call response",response);
           let services = response.data.services;
           if(!services){
             services = response.data;
@@ -252,7 +236,6 @@ export class ServicesListComponent implements OnInit {
           if (services !== undefined && services !== "" && services.length !== undefined) {
             if (services.length == 0) {
               this.serviceListEmpty = true;
-             // this.tableEmptyMessage = this.toastMessage.successMessage(response,"serviceList");
               this.totalPagesTable = 0;
               this.loadingState = 'empty';
             } else{
@@ -271,10 +254,7 @@ export class ServicesListComponent implements OnInit {
 
           } else{
             this.loadingState = 'error';
-            // let errorMessage = this.toastMessage.successMessage(response,"serviceList");
-            // this.popToast('error', 'Oops!', errorMessage);
           }
-          // console.log("loadingState ",this.loadingState);
         },
         err => {
             this.loadingState = 'error';
@@ -288,12 +268,6 @@ export class ServicesListComponent implements OnInit {
               } catch(e) {
                 console.log('JSON Parse Error', e);
               }
-
-
-
-            // let errorMessage = this.toastMessage.errorMessage(err,"serviceList");
-            // this.popToast('error', 'Oops!', errorMessage);
-            // Log errors if any
         }
     );
   }
@@ -302,7 +276,6 @@ export class ServicesListComponent implements OnInit {
   };
   onRowClicked (rowData){
       if (rowData != undefined) {
-        // console.log("rowdata", rowData);
         this.cache.set(rowData.id, rowData.data);
           if (rowData.link != undefined) {
               this.router.navigateByUrl(rowData.link);
@@ -321,7 +294,6 @@ export class ServicesListComponent implements OnInit {
         string = string + param.key + "=" + param.value + "&"
       }
     });
-    // console.log("formStringFrmObj ", string);
     return string;
   }
   replaceIfKeyExists(array, newkey, newvalue){
@@ -330,7 +302,6 @@ export class ServicesListComponent implements OnInit {
         param.value = newvalue;
       }
     });
-    // console.log("replaceIfKeyExists old ", array);
     return array;
   }
   formKeyValuePairFrmUrl(){
@@ -351,13 +322,9 @@ export class ServicesListComponent implements OnInit {
         }
       }
     });
-    // console.log("formKeyValuePairFrmUrl ", array);
     return array;
   }
   addQueryParam(queryParamKey, queryParamValue, makeCall){
-    // console.log("queryParamKey ", queryParamKey);
-    // console.log("queryParamValue ", queryParamValue);
-
     if( this.relativeUrl.indexOf('?') == -1 ){
         this.relativeUrl += '?';
       }
@@ -376,7 +343,6 @@ export class ServicesListComponent implements OnInit {
       }
 
       if(makeCall){
-        // console.log("relativeUrl"+this.relativeUrl);
         this.serviceCall();
       }
   }
@@ -403,16 +369,10 @@ export class ServicesListComponent implements OnInit {
 
 
         } else if( col.filter['type'] == 'dropdown' || (event.filter['type'] === 'input' && (event.keyCode === 13)) ){
-
-          // console.log("event ",event);
-          // console.log("col ",col);
-
           var queryParamKey = 'offset=';
           var offsetValue = 0;
           var queryParamValue = offsetValue;
           $(".pagination.justify-content-center li:nth-child(2)")[0].click();
-          // this.pageSelected = 1;
-
           this.addQueryParam(queryParamKey, queryParamValue, false );
 
           if(event.key == col.key){
@@ -424,8 +384,6 @@ export class ServicesListComponent implements OnInit {
               queryParamKey = "timestamp=";
             }
             queryParamValue = colFilterVal;
-            // console.log("queryParamKey onFilter******",queryParamKey);
-            // console.log("queryParamValue onFilter*******",queryParamValue);
             this.addQueryParam(queryParamKey, queryParamValue, true );
           }
 
@@ -435,21 +393,9 @@ export class ServicesListComponent implements OnInit {
   };
   onFilterSelected(selectedList){
     this.selectedListData = selectedList;
-    // this.serviceList = this.filter.filterListFunction('type' , this.selectedListData , this.backupdata);
-    //   this.serviceList  = this.filter.searchFunction("any" , this.searchbar , this.serviceList);
-
-    // this.relativeUrl = '/platform/services?filter_by='+this.selectedListData;
-
-    // if( this.relativeUrl.indexOf('?') > -1 ){
-    //   this.relativeUrl += '?';
-    // }
-
-    // this.relativeUrl += 'filter='+ this.selectedListData + '&';
-    // this.serviceCall();
     var queryParamKey = 'offset=';
     var offsetValue = 0;
     $(".pagination.justify-content-center li:nth-child(2)")[0].click();
-    // this.pageSelected = 1;
     this.addQueryParam(queryParamKey, offsetValue, false );
 
     queryParamKey = 'type=';
@@ -457,7 +403,6 @@ export class ServicesListComponent implements OnInit {
     if(queryParamValue == "all"){
       queryParamValue = "";
     }
-    // console.log("this.selectedListData onFilterSelected********", this.selectedListData)
     this.addQueryParam(queryParamKey, queryParamValue,  true);
   }
   statusFilter(item){
@@ -472,8 +417,6 @@ export class ServicesListComponent implements OnInit {
       reverse = true;
       sort_dir = "asc";
     }
-    // this.serviceList = this.sort.sortByColumn(col , reverse , function(x:any){return x;}, this.serviceList);
-
     var queryParamKey = 'sort_by=';
     var queryParamValue = col;
     if(queryParamValue == "name"){
@@ -482,7 +425,6 @@ export class ServicesListComponent implements OnInit {
     else if(queryParamValue == "lastModified"){
       queryParamValue = "timestamp";
     }
-    // console.log("sortData*******");
     this.addQueryParam(queryParamKey, queryParamValue,  false);
     queryParamKey = 'sort_direction=';
     queryParamValue = sort_dir;
@@ -502,14 +444,7 @@ export class ServicesListComponent implements OnInit {
 
 
       var queryParamKey = 'offset=';
-      // console.log("this.limitValue",this.limitValue);
-      // console.log("currentlyActivePage",currentlyActivePage);
-      // console.log("this.limitValue * currentlyActivePage ",this.limitValue * currentlyActivePage);
-
       var offsetValue = (this.limitValue * (currentlyActivePage-1));
-
-      // console.log("offsetValue paginatePage ******",offsetValue);
-
       var queryParamValue = offsetValue;
       this.addQueryParam(queryParamKey, queryParamValue, true );
       /*
@@ -519,30 +454,20 @@ export class ServicesListComponent implements OnInit {
       */
     }
     else{
-      console.log("page not changed");
     }
   }
   onServiceSearch(searchbar){
-      // this.serviceList = this.backupdata;
       this.searchbar = searchbar;
-      // console.log("searchbar onServiceSearch********", searchbar);
-      // this.onFilterSelected(this.selectedListData);
       if(searchbar.keyCode == 13){
         var queryParamKey = 'offset=';
         $(".pagination.justify-content-center li:nth-child(2)")[0].click();
-        // this.pageSelected = 1;
         var offsetValue = 0;
         var queryParamValue = offsetValue;
         this.addQueryParam(queryParamKey, queryParamValue, false );
         queryParamKey = 'filter=';
         queryParamValue = searchbar.searchString;
-        // console.log("queryParamKey onServiceSearch********", queryParamKey);
-        // console.log("queryParamValue onServiceSearch********", queryParamValue);
         this.addQueryParam(queryParamKey, queryParamValue,  true);
       }
-
-
-      // this.serviceList  = this.filter.searchFunction("any" , searchbar , this.serviceList);
   };
   tabChanged (i){
     this.selectedTab = i;
@@ -639,11 +564,4 @@ export class ServicesListComponent implements OnInit {
       this.intervalSubscription.unsubscribe();
     }
   }
-  ngOnChange(){
-  }
-
-
 }
-
-// $( document ).ready(function() {
-// });

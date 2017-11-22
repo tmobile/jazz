@@ -90,7 +90,6 @@ export class EnvironmentDetailComponent implements OnInit {
     } else{
       this.isLoadingService = false;
       let errorMessage = this.messageservice.successMessage(service,"serviceDetail");
-     // this.tst.classList.add('toast-anim');
      this.toast_pop('error', 'Error', errorMessage)
     }
   }
@@ -127,8 +126,6 @@ export class EnvironmentDetailComponent implements OnInit {
     {
         switch(type){
             case 'api':          
-            // window.open('/test-api?service=' + this.service.name + '&domain='+ this.service.domain + '&env=' +this.envSelected);
-            // this.api_doc_name="http://jazz-training-api-doc.s3-website-us-east-1.amazonaws.com"
             this.swaggerUrl="http://editor.swagger.io/?url="+this.api_doc_name+"/"+this.service.domain +"/"+ this.service.name +"/"+this.envSelected+"/swagger.json"
             window.open(this.swaggerUrl);
             break;
@@ -159,7 +156,6 @@ export class EnvironmentDetailComponent implements OnInit {
     this.sub = this.route.params.subscribe(params => {
       let id = params['id'];
       this.envSelected = params['env'];
-      console.log('env', this.envSelected)
       this.fetchService(id);
   });
 

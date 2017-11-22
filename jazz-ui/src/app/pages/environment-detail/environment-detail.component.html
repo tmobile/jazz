@@ -1,4 +1,4 @@
-<tmobile-mob-header [icon]="'notification'" [headText]="'Service One'" [status]="'green'"></tmobile-mob-header>
+<jazz-mob-header [icon]="'notification'" [headText]="'Service One'" [status]="'green'"></jazz-mob-header>
 <section class="page-container">
     <navigation-bar [links]="breadcrumbs"></navigation-bar>
     <div class="content">
@@ -6,14 +6,10 @@
             <h1 class="page-hdr bold-title">{{envSelected}}</h1>
             <span class="page-sub-title">{{service.name}}</span>
             <div class="det-value align-slf">
-            <btn-tmobile-secondary *ngIf="service.serviceType=='api' " [disablebtn]='service.endpoints === undefined' class="testApiBtn" text="TEST API" (click)="testApi('api')"></btn-tmobile-secondary>
-            <btn-tmobile-secondary *ngIf="service.serviceType=='website' " [disablebtn]='service.endpoints === undefined' class="testApiBtn" text="GO TO WEBSITE" (click)="testApi('website')"></btn-tmobile-secondary>
+            <btn-jazz-secondary *ngIf="service.serviceType=='api' " [disablebtn]='service.endpoints === undefined' class="testApiBtn" text="TEST API" (click)="testApi('api')"></btn-jazz-secondary>
+            <btn-jazz-secondary *ngIf="service.serviceType=='website' " [disablebtn]='service.endpoints === undefined' class="testApiBtn" text="GO TO WEBSITE" (click)="testApi('website')"></btn-jazz-secondary>
         </div>
-            <!--<btn-tmobile-secondary *ngIf="selectedTab == 13" class="testApiBtn" text="SONAR PROJECT"></btn-tmobile-secondary>-->
         </div>
-        <!-- <div class="page-status-row  hide-for-mobile">
-            <div class="page-status" [ngClass]="service.status"><span>Status</span></div>
-        </div> -->
         <tabs [tabData]="tabData" [selectedTab]="selectedTab" (onSelected)="onSelectedDr($event)"></tabs>
         <section class="page-content" *ngIf="selectedTab == 0">
             <env-overview-section [service]="service" [env]='envSelected'></env-overview-section>

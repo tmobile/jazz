@@ -13,7 +13,6 @@ import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms'
 
 
 @Component({
-    // moduleId: module.id,
     selector: 'login',
     templateUrl: './login.component.html',
     providers: [RequestService, MessageService],
@@ -28,7 +27,6 @@ export class LoginComponent implements OnInit {
     tst:any;
     error_disp:boolean=false;
     err_brd:boolean=false;
-    // popoverContent:string="Lorem ipsum dolor sit amet,consectetur adipiscing elit";
     popoverContent:string="";
     toast : any;
     id: string;
@@ -72,32 +70,11 @@ export class LoginComponent implements OnInit {
         this.model.password=this.password;
     }
     ngOnInit() {
-        // to reset login status
-      //  this.model.username = "CORP\\";
-
-
         //to add animation class
         this.tst = document.getElementById('toast-container');
 
 
     }
-    // errormessagedispuser(){
-    //     if (this.model.username.length != 0) {
-    //         this.error_disp = false;
-    //         this.err_brd = false;
-    //     }
-    // }
-    //     errormessagedisppass(){
-    //         if (this.model.password.length != 0) {
-    //             this.error_disp = false;
-    //             this.err_brd = false;
-    //         }
-    //     }
-        // if (this.model.usercode.length != 0) {
-        //     this.error_disp = false;
-        //     this.err_brd = false;
-        // }
-    
 
     public goToService () {
         this.router.navigateByUrl('/services');
@@ -145,7 +122,6 @@ export class LoginComponent implements OnInit {
     }
 
     login() {
-        // alert('login');
         if(this.register || this.forgot_password)
         return;
         //clear error first
@@ -155,14 +131,12 @@ export class LoginComponent implements OnInit {
         if (!this.model.username && !this.register) {
             this.error_username_disp = true;
             this.err_username_brd = true;
-            console.log("username-empty");
             this.error.username = 'Username cannot be empty';
         }
         // validate password
         if (!this.model.password && !this.register) {
             this.error_password_disp= true;
             this.err_password_brd = true;
-            console.log("password-empty");
             this.error.password = 'Password cannot be empty';
             this.register=false;
         }
@@ -188,29 +162,20 @@ export class LoginComponent implements OnInit {
                     let errorMessage=this.toastmessage.errorMessage(error,"login");
                     if (error !== undefined && error.status !== undefined) {
                         if (error.status == 0) {
-
-                            //add animation class before the toast pop
-                            //this.tst.classList.add('toaster-anim');
                             this.toast_pop('error', 'Oops!', errorMessage);
                         } else if(error.status == 401){
-
-
-                         //   this.tst.classList.add('toaster-anim');
                             this.error.username = '  ';
                             this.error.password=errorMessage;
                             this.error_password_disp=true;
                             this.err_username_brd=true;
                             this.err_password_brd=true;
-                            //this.toasterService.pop('error', 'Oops!', errorMessage);
                         }else{
-                        //this.tst.classList.add('toaster-anim');
                         let errorbody = JSON.parse(error._body);
                         this.toast_pop('error', 'Oops!', errorbody.message);
 
                     }
                         // code...
                     } else{
-                        //this.tst.classList.add('toaster-anim');
                         this.toast_pop('error', 'Oops!', errorMessage);
 
                     }
@@ -229,26 +194,10 @@ export class LoginComponent implements OnInit {
         }
 
         registerUser(e){
-            // alert('registerUser')
-            if (e.keyCode == 13) {               
+            if (e.keyCode == 13) {
                 e.preventDefault();
                 return false;
             }
-
-            // if (!this.model.username && !this.register) {
-            //     this.error_username_disp = true;
-            //     this.err_username_brd = true;
-            //     // console.log("username-empty");
-            //     this.error.username = 'Username cannot be empty';
-            // }
-            // // validate password
-            // if (!this.model.password && !this.register) {
-            //     this.error_password_disp= true;
-            //     this.err_password_brd = true;
-            //     // console.log("password-empty");
-            //     this.error.password = 'Password cannot be empty';
-            //     this.register=false;
-            // }
             if (!this.model.usercode) {
                 this.error_disp = true;
                 this.error.usercode = 'Usercode cannot be empty';
@@ -258,8 +207,6 @@ export class LoginComponent implements OnInit {
                             "userpassword":this.model.password,
                             "usercode":this.model.usercode
                         }
-            // console.log(payload,'payload');
-            // console.log(this.model,'this.model');
             this.http.post('/platform/usermgmt', payload).subscribe(
                 response => { 
                     //Registration changes here
@@ -268,16 +215,13 @@ export class LoginComponent implements OnInit {
                     this.clearRegForm();
                     this.toggleReg('register');
                 },
-            err => {
-                let error = JSON.parse(err._body);
-                let errorMessage=this.toastmessage.errorMessage(err,"register");
-                this.toast_pop('error', 'Oops!', error.message);
-                // this.clearRegForm();
-                
-            })
+        err => {
+            let error = JSON.parse(err._body);
+            let errorMessage=this.toastmessage.errorMessage(err,"register");
+            this.toast_pop('error', 'Oops!', error.message);
+        });
         }
         resetPassword(e){
-            // alert('resetPassword');
             this.http.get('/platform/usermgmt/reset?email=' + this.model.username).subscribe(
                 response =>{
                     console.log(response);

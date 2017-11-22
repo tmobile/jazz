@@ -1,5 +1,5 @@
 <div class="landing-hdr-wrp" >
-	<tmobile-header type="landing" (loginClick) = "onLoginClicked($event)" [closed]="closed"></tmobile-header>
+	<jazz-header type="landing" (loginClick) = "onLoginClicked($event)" [closed]="closed"></jazz-header>
 </div>
 <main class="landing-main-wrp" [style.overflow-y]="goToLogin ? 'hidden':'auto'">
 	<div id="landing" class="header-section">
@@ -15,22 +15,11 @@
 				<div class = "center"> Jazz lets you seamlessly build, deploy and manage cloud native applications using serverless technology.</div>
 			</div>
 			<div class = "center top-parallax-margin landing-action-btn-wrap">
-				<btn-tmobile-primary newclass="buttonPadding" text="{{buttonText}}" (click)="getStartedNow()"></btn-tmobile-primary>
+				<btn-jazz-primary newclass="buttonPadding" text="{{buttonText}}" (click)="getStartedNow()"></btn-jazz-primary>
 			</div>
 			<div class = "parallax-0"></div>
-			<!--<div class = "parallax-1"></div>-->
-			<div class = "parallax-2">
-				<!-- <div class = "parallax-text bg1">Donec facilisis tortor ut augue lacinia, at viverra. Donec facilisis tortor</div>
-				<div class = "parallax-text bg2">ut augue lacinia, at viverra. Donec facilisis tortor</div>
-				<div class = "parallax-text bg3">Donec facilisis tortor ut augue lacinia, at viverra. </div> -->
-			</div>
-
+			<div class = "parallax-2"></div>
 			<div class = "parallax-3"></div>
-			<!--<div class = "parallax-4"></div>-->
-
-			<!--<div class = "parallax-6"></div>-->
-			<!--<div class = "parallax-7"></div>-->
-
 		</section>
 	</div>
 	<section id="features"  class="section features-section features relative transform-parallax">
@@ -131,10 +120,10 @@
 					<span class = "center"> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
 			</div>
 			<div class="center top-parallax-margin relative">
-				<btn-tmobile-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="All"></btn-tmobile-secondary>
-				<btn-tmobile-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="Future Releases"></btn-tmobile-secondary>
-				<btn-tmobile-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="Past Releases"></btn-tmobile-secondary>
-				<btn-tmobile-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="Events"></btn-tmobile-secondary>
+				<btn-jazz-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="All"></btn-jazz-secondary>
+				<btn-jazz-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="Future Releases"></btn-jazz-secondary>
+				<btn-jazz-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="Past Releases"></btn-jazz-secondary>
+				<btn-jazz-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="Events"></btn-jazz-secondary>
 
 			</div>
 			<div class="card-container relative">
@@ -213,34 +202,15 @@
 			</div>
 			<div class="section-content actions">
 				<span class = "center">
-					<btn-tmobile-secondary newclass="buttonPadding buttonAbout" text="E-MAIL US"></btn-tmobile-secondary>
-					<btn-tmobile-secondary text="SLACK" newclass="slackIcon buttonPadding buttonAbout"></btn-tmobile-secondary>
-					<btn-tmobile-secondary newclass="buttonPadding buttonAbout" text="MORE"></btn-tmobile-secondary>
+					<btn-jazz-secondary newclass="buttonPadding buttonAbout" text="E-MAIL US"></btn-jazz-secondary>
+					<btn-jazz-secondary text="SLACK" newclass="slackIcon buttonPadding buttonAbout"></btn-jazz-secondary>
+					<btn-jazz-secondary newclass="buttonPadding buttonAbout" text="MORE"></btn-jazz-secondary>
 					
 				</span>
 			</div>
 		</section>
 	</div>
 	<section  class="section features-section top-parallax-margin-half">
-
-		<div class="section-content section-content-small footer hide">
-			<span class = "center">
-				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam sit amet porttitor mauris, fringilla feugiat ex. Cras facilisis ultricies porttitor. Curabitur nec nunc vehicula, interdum metus eget, maximus nulla. Sed tempor massa id justo consequat dapibus.
-			</span>
-		</div>
-		<div class="section-content hidden">
-
-
-				<ul class="footer">
-					<li><div class ="home-footer"></div></li>
-					<li><a class="center" (click)='onNavigate($event)'>Privacy</a></li>
-					<li><a class="center hide">Blog</a></li>
-					<li><a class="center" (click)='onNavigate($event)'>Docs</a></li>
-				</ul>
-
-
-		</div>
-		<div class ="mobile-logo-footer"></div>
 		<div class="section-content-text bottom-parallax-padding copyright">
 			<span class=" center">Copyright 2017. All rights reserved.</span>
 		</div>

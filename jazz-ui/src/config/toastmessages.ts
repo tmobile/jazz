@@ -44,6 +44,7 @@ export const toastMessage = {
         "error500":"Something went wrong while we were fetching your services!"
     },
     "createService":{
+        "dataNull":"Your service will be available shortly. You can track the progress on service page ",
         "success":"Your service will be available shortly. You can track the progress on service page ",
         "error400":"Looks like we couldn't create your service. Please try again.",
         "error401":"Token expired",

@@ -1,7 +1,7 @@
 import { Component, OnInit, ElementRef ,EventEmitter, Output, Inject, Input} from '@angular/core';
 import { ToasterService} from 'angular2-toaster';
-import { Filter } from '../../secondary-components/tmobile-table/tmobile-filter';
-import { Sort } from '../../secondary-components/tmobile-table/tmobile-table-sort';
+import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
+import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
 import { RequestService, MessageService } from '../../core/services/index';
 import { Router } from '@angular/router';
 
@@ -107,19 +107,14 @@ export class ServiceCostComponent implements OnInit {
 
 	}
 	onEnvSelected(env){
-		// console.log('onEnvSelected',env);
-		// this.isDataNotAvailable=false;
-		// this.isGraphLoading=true;
 		this.env = env;
 		this.collectInputData(env);
 	}
 
 	onRowClicked(row){
-		// console.log('onRowClicked',row);
 	}
 
   onServiceSearch(searchString){
-  	// console.log("onServiceSearch", searchString)
     this.costTableData.body  = this.filter.searchFunction("any" , searchString);
   };
 	root:any;
@@ -184,98 +179,88 @@ export class ServiceCostComponent implements OnInit {
 			"interval": inputParams[0].setInterval,
 			"group_by":["environments"]
 		};
-  		//TODO: Remove call to dev after TECH training
-	// 	  	 if ( this.subscription ) {
-    //   this.subscription.unsubscribe();
-    // }
-		// this.subscription = this.http.post('/jazz/service-cost', payload).subscribe(
-      	// response => {
-
-          //Bind to view
-		 
-		  let mockCost:any = {
-    "data": {
-        "totalCostYear": {
-            "key": "2017-04-01 00:00:00",
-            "cost": 0.36712248072083753
-        },
-        "totalCostMonth": {
-            "key": "2017-10-01 00:00:00",
-            "cost": 0.014299193244525554
-        },
-        "totalCostWeek": {
-            "key": "2017-10-09 00:00:00",
-            "cost": 0.008796081443250614
-        },
-        "totalCostDay": {
-            "key": "2017-10-09 00:00:00",
-            "cost": 0.0018929634201185763
-        },
-        "cost": [
-            {
-                "key": "2017-07-31 00:00:00",
-                "cost": 0.015356270021641194
-            },
-            {
-                "key": "2017-08-07 00:00:00",
-                "cost": 0.01665646010008004
-            },
-            {
-                "key": "2017-08-14 00:00:00",
-                "cost": 0.027630850040580412
-            },
-            {
-                "key": "2017-08-21 00:00:00",
-                "cost": 0.018311100101826128
-            },
-            {
-                "key": "2017-08-28 00:00:00",
-                "cost": 0.016806625976300893
-            },
-            {
-                "key": "2017-09-04 00:00:00",
-                "cost": 0.00019572208466726693
-            },
-            {
-                "key": "2017-09-11 00:00:00",
-                "cost": 0.0029940571347196965
-            },
-            {
-                "key": "2017-09-18 00:00:00",
-                "cost": 0.00015370311081682075
-            },
-            {
-                "key": "2017-09-25 00:00:00",
-                "cost": 0.0001795176893706696
-            },
-            {
-                "key": "2017-10-02 00:00:00",
-                "cost": 0.00011646751236042974
-            },
-            {
-                "key": "2017-10-09 00:00:00",
-                "cost": 0.000018929634201185763
-            }
-        ]
-    },
-    "input": {
-        "start_date": "2017-08-01",
-        "end_date": "2017-10-10",
-        "service": "events",
-        "environments": [
-            "prod"
-        ],
-        "domain": "platform",
-        "interval": "Weekly",
-        "group_by": [
-            "environments"
-        ]
-    }
-};
+		let mockCost:any = {
+			"data": {
+				"totalCostYear": {
+					"key": "2017-04-01 00:00:00",
+					"cost": 0.36712248072083753
+				},
+				"totalCostMonth": {
+					"key": "2017-10-01 00:00:00",
+					"cost": 0.014299193244525554
+				},
+				"totalCostWeek": {
+					"key": "2017-10-09 00:00:00",
+					"cost": 0.008796081443250614
+				},
+				"totalCostDay": {
+					"key": "2017-10-09 00:00:00",
+					"cost": 0.0018929634201185763
+				},
+				"cost": [
+					{
+						"key": "2017-07-31 00:00:00",
+						"cost": 0.015356270021641194
+					},
+					{
+						"key": "2017-08-07 00:00:00",
+						"cost": 0.01665646010008004
+					},
+					{
+						"key": "2017-08-14 00:00:00",
+						"cost": 0.027630850040580412
+					},
+					{
+						"key": "2017-08-21 00:00:00",
+						"cost": 0.018311100101826128
+					},
+					{
+						"key": "2017-08-28 00:00:00",
+						"cost": 0.016806625976300893
+					},
+					{
+						"key": "2017-09-04 00:00:00",
+						"cost": 0.00019572208466726693
+					},
+					{
+						"key": "2017-09-11 00:00:00",
+						"cost": 0.0029940571347196965
+					},
+					{
+						"key": "2017-09-18 00:00:00",
+						"cost": 0.00015370311081682075
+					},
+					{
+						"key": "2017-09-25 00:00:00",
+						"cost": 0.0001795176893706696
+					},
+					{
+						"key": "2017-10-02 00:00:00",
+						"cost": 0.00011646751236042974
+					},
+					{
+						"key": "2017-10-09 00:00:00",
+						"cost": 0.000018929634201185763
+					}
+				]
+			},
+			"input": {
+				"start_date": "2017-08-01",
+				"end_date": "2017-10-10",
+				"service": "events",
+				"environments": [
+					"prod"
+				],
+				"domain": "platform",
+				"interval": "Weekly",
+				"group_by": [
+					"environments"
+				]
+			}
+		};
 				let serviceCost:any = mockCost.data;
 				let serviceInput:any = mockCost.input;
 			
-			// console.log("serviceCost response:",serviceCost);
 			if(serviceCost.totalCostDay !== undefined && serviceCost.totalCostMonth !== "" && serviceCost.totalCostWeek !== "" && serviceCost.totalCostYear !== "" && serviceCost.totalCostDay !== undefined && serviceCost.totalCostMonth !== undefined && serviceCost.totalCostWeek !== undefined && serviceCost.totalCostYear !== undefined){
 				this.cost.perDay.value = serviceCost.totalCostDay.cost.toFixed(2).toString();
 				this.cost.perDay.date = serviceCost.totalCostDay.key.substring(0,10);;
@@ -302,34 +287,10 @@ export class ServiceCostComponent implements OnInit {
 			this.isGraphLoading=false;
 			this.isDataNotAvailable=true;
 			this.loadingState = 'default';
-			// this.loadingState = 'error';
-			// let errorMessage = this.toastmessage.successMessage(response,"serviceCost");
-            // this.popToast('error', 'Oops!', errorMessage)
           } else{
 			this.noTotalCost = true;
 			this.isGraphLoading=true;
 		  }
-        // },
-        // err => {
-		// 	this.noTotalCost = true;
-		// 	// this.isDataNotAvailable=true;
-		// 	this.isGraphLoading=false;
-		// 	// Log errors if any
-		// 	this.loadingState = 'error';
-        //     this.errBody = err._body;
-        //     this.errMessage = 'OOPS! something went wrong while fetching data';
-        //     try {
-		// 		this.parsedErrBody = JSON.parse(this.errBody);
-		// 		if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
-		// 		  this.errMessage = this.parsedErrBody.message;
-		// 		}
-		// 	  } catch(e) {
-		// 		  console.log('JSON Parse Error', e);
-		// 	  }
-
-		// 	// let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
-        //     // this.popToast('error', 'Oops!', errorMessage);
-		// })
 	};
 	refreshCostData(event){
 		this.isGraphLoading=true;
@@ -338,68 +299,9 @@ export class ServiceCostComponent implements OnInit {
 		this.fetchGraphData('Day');
 	}
 
-	
-
-	// getCostDetails(startDate, endDate,field){
-	// 	var payload = {
-	// 		"start_date": startDate,
-	// 		"end_date": endDate,
-	// 		"service":"events",
-	// 		"environments":["dev","stg","prod"],
-	// 		"domain":"platform",
-	// 		"interval": "Daily",
-	// 		"group_by":["environments"]
-	// 	};
-	// 	this.http.post('/jazz/service-cost', payload).subscribe(
-	// 		response => {
-	// 			let totalCost = 0;
-	// 			let dailydata = response.data.cost;
-	// 			if(dailydata !== undefined){
-	// 				dailydata.forEach(function(data){
-	// 					totalCost +=data.cost;
-	// 				});
-	// 				switch(field){
-	// 					case "daycost":
-	// 						this.noDailyCost=false;
-	// 						this.cost.perDay.value = totalCost.toFixed(2).toString();
-	// 						break;
-	// 					case "yearcost":
-	// 						this.noYearlyCost=false;
-	// 						this.cost.perYear.value = totalCost.toFixed(2).toString();
-	// 						break;
-	// 				}
-	// 			} else{
-	// 			}
-	// 		},
-	// 		err => {
-	// 			switch(field){
-	// 				case "daycost":
-	// 					this.noYearlyCost=true;
-	// 					break;
-	// 				case "yearcost":
-	// 					this.noDailyCost=true;
-	// 					break;
-	// 				}
-	// 		});
-	// }
-
-	// dayCost(){
-	// 	let lastDate = new Date(this.yesterday).toISOString().substring(0,10);
-	// 	let startDate=lastDate+" 00:00:00", endDate=lastDate+" 23:59:59";
-	// 	this.getCostDetails(startDate, endDate, "daycost");
-	// }
-	// yearlyCost(){
-	// 	let thisyear = new Date(this.today).toISOString().substring(0,4);
-	// 	let startDate=thisyear+"-01-01 00:00:00", endDate=this.today.toISOString().substring(0,10);
-	// 	this.getCostDetails(startDate, endDate, "yearcost");
-	// }
-
 	ngOnInit() {
 		this.filter = new Filter(this.costTableData.body);
 		this.sort = new Sort(this.costTableData.body);
-		// Draw graph for for day interval on init
-		// this.dayCost();
-		// this.yearlyCost();
 		this.fetchGraphData("Day");
 	}
 	collectInputData(input){
@@ -425,9 +327,8 @@ export class ServiceCostComponent implements OnInit {
 	}
 
     fetchGraphData(range){
-		//Based on filter selected geerate start date and interval params for payload
-		// this.isDataNotAvailable=false;
-		// this.isGraphLoading=true;
+		//Based on filter selected generate start date and interval params for payload
+		
 		var graphDataInterval =[];
 		var todayDate = new Date();
 		var graphDataList = ["Daily", "Weekly", "Monthly",  "Yearly"];

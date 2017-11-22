@@ -24,10 +24,6 @@ export class EnvCodequalitySectionComponent implements OnInit {
     scales : {
       yAxes: [{
          ticks: {
-            // steps : 2,
-            // stepValue : 10,
-            // max : 20,
-            // min : 0
           }
       }] 
     },

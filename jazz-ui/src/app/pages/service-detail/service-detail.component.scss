@@ -22,7 +22,6 @@
     text-transform: uppercase;
 }
 
-// /deep/ .service-title-wrap button.btn-default{
 /deep/ .page-title-wrap button.btn-default {
     background-color: transparent;
     float: right;
@@ -50,14 +49,13 @@
     position: relative;
 }
 
-// .service-title-wrap {
 .page-title-wrap {
     overflow: hidden;
     padding: 26px 0 0 0;
     .header1 {
         float: left;
     }
-    btn-tmobile-secondary {
+    btn-jazz-secondary {
         float: right;
     }
 }
@@ -96,7 +94,6 @@
 
 .service-status-row {
     margin-bottom: 1.5rem;
-    /*font-weight: 700;*/
 }
 
 .service-content {
@@ -126,8 +123,6 @@
     padding-right: 3rem;
 }
 
-.section-right {}
-
 .det-label {
     width: 10rem;
     flex-shrink: 0;
@@ -135,8 +130,6 @@
     font-weight: bold;
     color: #000000;
 }
-
-.det-value {}
 
 .det-value.link {
     color: #1495bb;
@@ -146,7 +139,6 @@
 .separator-row {
     height: 2px;
     margin: 2rem 0;
-    // border: solid 1px #dddddd;
 }
 
 .service-overview-wrp {
@@ -204,8 +196,6 @@
     justify-content: center;
     align-items: center;
 }
-
-.last-status .overview-value div:first-child {}
 
 .last-status .overview-value div:last-child {
     width: 3rem;
@@ -276,7 +266,7 @@
             font-weight: bold;
             margin-right: 1.5rem;
         }
-        btn-tmobile-primary {
+        btn-jazz-primary {
             float: right;
             /deep/ .delete-btn {
                 height: 3.5rem;
@@ -331,7 +321,6 @@
 
 .loading-circle {
     position: relative;
-    // height: 3rem;
     &:before,
     &:after {
         content: "";

@@ -5,8 +5,6 @@ import * as d3Scale from "d3-scale";
 import * as d3Array from "d3-array";
 import * as d3Axis from "d3-axis";
 
-import { STATISTICS } from '../../pages/service-cost/costdata';
-
 @Component({
   selector: 'bar-graph',
   templateUrl: './bar-graph.component.html',
@@ -15,7 +13,6 @@ import { STATISTICS } from '../../pages/service-cost/costdata';
 export class BarGraphComponent implements OnInit {
 
   @Input() graphData: any;
-  // @Input() render: Function;
 
   root:any;
   private width: number;
@@ -33,7 +30,7 @@ export class BarGraphComponent implements OnInit {
     var el:HTMLElement = elementRef.nativeElement;
     this.root = d3.select(el);
     this.width = 630 + this.margin.left + this.margin.right,
-            this.height = 240 + this.margin.top + this.margin.bottom;
+    this.height = 240 + this.margin.top + this.margin.bottom;
   }
 
   ngOnInit() {
@@ -42,18 +39,6 @@ export class BarGraphComponent implements OnInit {
   ngOnChanges(x:any){
     this.onGraphRender();
   }
-
-  // public renderGraph(data){
-  //   this.clearGraph(this.onGraphRender());
-  // }
-
-  // private clearGraph(onComplete) {
-  //   this.root.select("svg").remove();
-  //   console.log("typeof onComplete:",typeof onComplete)
-  //   if(typeof onComplete === "function"){
-  //     onComplete()
-  //   }
-  // }
 
   private onGraphRender(){
     d3.selectAll("svg > *").remove();
@@ -89,7 +74,7 @@ export class BarGraphComponent implements OnInit {
       .attr("class", "x axis")
       .attr("transform", "translate(0," + this.height + ")")
       .call(d3Axis.axisBottom(this.x).tickSize(0));
-      
+
       this.xAxis.selectAll("text")
       .attr("x",12)
       .attr("y",10)
@@ -114,7 +99,7 @@ export class BarGraphComponent implements OnInit {
       .attr("text-anchor", "start")
       .text("COST")
       .attr("x",-(this.height/2));
-             
+
     this.drawBars();
 
   }
@@ -162,9 +147,7 @@ export class BarGraphComponent implements OnInit {
   }
 
   private drawBars() {
-    
-    
-    
+
     var sel = this.svg.selectAll(".bar")
       .data(this.graphData)
       .enter();
@@ -184,7 +167,6 @@ export class BarGraphComponent implements OnInit {
        .on("mousemove", function(d){
           var x0 = d3.select(this).attr("x")-10;
       var y0 = d3.select(this).attr("y")-self.svg.select(".rect-outer").attr("height")-10;
-      
       var tooltip = self.svg.select(".tool-tip");
      tooltip.attr("transform", "translate(" + (x0) + "," +y0 + ")");
 
@@ -194,6 +176,6 @@ export class BarGraphComponent implements OnInit {
 
 
      var self = this;
-    this.toolTip();      
+    this.toolTip();
   }
 }

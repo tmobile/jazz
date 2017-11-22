@@ -34,19 +34,6 @@ export class FiltersComponent implements OnInit {
     	}
     }
     this.selectedList = selectedList;
-    // for (var i = 0; i < this.filters.length; ++i) {
-    // 	let item = this.filters[i]
-    // 	if (i == index) {
-	   //  	if (item.selected == true) {
-	   //  		item.selected = false;
-	   //  	} else{
-	   //  		item.selected = true;
-	   //  	}
-    // 	}
-    // 	if (item.selected == true) {
-    // 		selectedList.push(item.label)
-    // 	}
-    // }
     this.onSelected.emit(this.selectedList);
   }
 

@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, ElementRef, Renderer, Output, EventEmitter } from '@angular/core';
-// import { Sort } from './tmobile-table-sort';
+// import { Sort } from './jazz-table-sort';
 
 @Component({
   selector: 'table-template',
@@ -72,8 +72,6 @@ export class TableTemplateComponent implements OnInit {
   onSortColumn(col, rev){
     for (var i = 0; i < this.header.length; i++) {
       var colSort = this.header[i];
-      // console.log("colSort.label",colSort.label);
-      // console.log("col.label",col.label);
       if (colSort.label == col.label) {
         colSort._reverse = this.mySort(col, rev);
         col._reverse = colSort._reverse;
@@ -104,10 +102,6 @@ export class TableTemplateComponent implements OnInit {
      }
      this.paginatePage.emit(this.currentlyActive);
    }
-  // onSortColumn(key, reverse){
-  // 	this.onSort.emit({key:key, reverse: (reverse || false)})
-  // };
-
   constructor(elementRef: ElementRef, renderer: Renderer) { }
 
   ngOnInit() {

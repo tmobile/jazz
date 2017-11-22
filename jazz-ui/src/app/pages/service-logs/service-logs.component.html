@@ -1,7 +1,6 @@
  <!-- TODO: Remove disclaimer after techtraining -->
  <div class="disclaimer-static-data hide">
     <i>This data is for representational purpose only and may not be accurate</i>
-    <div>Meanwhile you can access logs <a (click)="navigateTo($event)">here</a></div>
 </div>
 <div class="row page-section section-top">
     <div class="filter-wrp">
@@ -20,11 +19,6 @@
         </div>
     </div>
     <div class="relative">
-        <!-- <div class="mask-wrp">
-            <img src="/assets/images/mask-image.png"/>
-            <div>Oops, we're still working.</div>
-            <div>Meanwhile you can access logs <a (click)="navigateTo($event)">here</a></div>
-        </div> -->
         <table-template class="table-container log-table-container relative" [message]="errMessage" [state]="loadingState" (refreshData)="refreshData($event)" [type]="'accordian'" [header]="tableHeader" [showFilters]="filterSelected" (onFilter)="onFilter($event)" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected"  (paginatePage)="paginatePage($event)" [totalPageNum]="totalPagesTable">
             <div class="table-row-wrp" *ngFor="let row of logs; let i = index" [class.expanded]="row.expanded">
                 <div class="table-row" (click)="onRowClicked(row, i)">

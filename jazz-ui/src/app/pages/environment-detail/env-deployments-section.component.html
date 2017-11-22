@@ -1,4 +1,3 @@
-<!-- TODO: Remove disclaimer after techtraining -->
 <div class="disclaimer-static-data"><i>This data is for representational purpose only and may not be accurate</i></div>
 <div class='row'>
         <div class='widget-cover-outer col-sm-12'>
@@ -23,23 +22,8 @@
 
                             <div class='widget-status'>
                                 {{stages.status}} 
-                            </div>  
-                            
+                            </div>
                         </li> 
-
-                        <!-- <li class='widget-box last-widget' >
-
-                            <div class='widget-stage'>
-                                <div class='stage-label'>Production Deployment</div>
-                                
-                            </div>
-                            <div class='widget-buttons'>
-                                <btn-tmobile-secondary newclass='btn' text='REJECT'></btn-tmobile-secondary>
-                                <btn-tmobile-primary newclass='btn' text='APPROVE'></btn-tmobile-primary>
-                                
-                            </div>
-                        </li> -->
-                    
                     </ul>
                 </div>
                 <div *ngIf='show_icon' class='right-arrow' (click)='move("right")' [class.hide]='hide_both'>
@@ -52,8 +36,8 @@
            
             <div class='widget-ft Deployed'>
                 <div class='widget-buttons'>
-                    <btn-tmobile-secondary newclass='btn' text='REJECT'></btn-tmobile-secondary>
-                    <btn-tmobile-primary newclass='btn' text='APPROVE'></btn-tmobile-primary>
+                    <btn-jazz-secondary newclass='btn' text='REJECT'></btn-jazz-secondary>
+                    <btn-jazz-primary newclass='btn' text='APPROVE'></btn-jazz-primary>
                 </div>
                 <div class='hide'>Deployment Approved</div>
             </div>
@@ -72,7 +56,6 @@
             </div>
             <div id='slid-table'>
             <table-template class="table-container env-deployment-log"  [header]="tableHeader2"  >
-                <!-- <div class="table-row table-empty" [class.hide]="!serviceListEmpty">{{tableEmptyMessage}}</div> -->
                 <div class="table-row" [class.hide]="serviceListEmpty" *ngFor="let row of deployedList; let i = index" (click)="onRowClicked()" >
                     <div class="column primary-txt-color">{{row.name}}</div>
                     <div class="column primary-txt-color">{{row.commitDetails}}</div>
@@ -82,11 +65,8 @@
                         <div>{{row.status}}</div>
                     </div>
                     <div class="column">
-                        <div><btn-tmobile-primary newclass='retry-btn' text='RETRY'></btn-tmobile-primary></div>
+                        <div><btn-jazz-primary newclass='retry-btn' text='RETRY'></btn-jazz-primary></div>
                     </div>
-                    <!-- <div class='column'>
-                        <btn-tmobile-primary newclass='retry-btn' text='RETRY'></btn-tmobile-primary>
-                    </div> -->
                 </div>
             </table-template></div>
     </div>

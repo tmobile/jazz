@@ -5,7 +5,7 @@
     .header1 {
         float: left;
     }
-    btn-tmobile-secondary {
+    btn-jazz-secondary {
         float: right;
     }
 }
@@ -38,12 +38,6 @@
     }
 }
 
-/deep/ footer
-{
-    section{
-        // width:107% !important;
-    }
-}
 .content{
     /deep/ .tabs-wrap   li:last-child{
         cursor: not-allowed;

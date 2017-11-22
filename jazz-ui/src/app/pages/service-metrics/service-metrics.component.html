@@ -4,28 +4,11 @@
     <div class="filter-wrp">
         <filters class="filters" [selectedList]="selected" [filtersList]="filtersList" [multiple]="false" (onSelected)="onFilterSelected($event)"></filters>
         <div class="filter-section-right">
-            <!-- <dropdown class="dropdown-1" [dropdwnContent]="graphTypeList" [selected]="'Line'" (onSelected)="onTypeSelected($event)"></dropdown> -->
             <dropdown class="dropdown-1" [dropdwnContent]="periodList" [selected]="periodList[0]" (onSelected)="onPeriodSelected($event)"></dropdown>
             <dropdown class="dropdown-2" [dropdwnContent]="statisticList" [selected]="statisticList[0]" (onSelected)="onStatisticSelected($event)"></dropdown>
             <dropdown class="dropdown-3" [dropdwnContent]="environmentList" [selected]="environmentList[0]" (onSelected)="onEnvSelected($event)"></dropdown>
         </div>
-        <!-- <search-box (onChange)="onServiceSearch($event)"></search-box> -->
-        <!-- <div class="filter-icon">
-        <span class="icon-icon-filter-unselected" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
-        </span>
-    </div> -->
     </div>
-
-    <!-- <div class="graph-section-container">
-        <div class="graph-wrp" *ngFor=" let graph of graphsList; let i=index ">
-            <div class="line-graph-wrp">
-                <div class="line-graph-inr">
-                    <div class="graph-title">{{graph.title}}</div>
-                    <line-graph [id]="graph.id" [graphData]="graph.data" [graphDataOld]="graph.dataOld" (render)="triggerRenderGraph(graph.data)"></line-graph>
-                </div>
-            </div>
-        </div>
-    </div> -->
 
     <div class="graph-section-container">
         <div *ngIf=" isGraphLoading || isDataNotAvailable || isError" class='display-widget'>
@@ -33,7 +16,6 @@
                 <div class="loading-circle"></div>
             </div>
             <div class="loading-row" [class.show]=" !isGraphLoading && isDataNotAvailable && !isError">
-                <!-- <div class="error-text">Data not available</div> -->
                 <div class="empty-row nodata with-refresh relative">
                     <img src="assets/images/no-data-icon.png" alt="noData" width="100">
                     <div><b>Oops, No Data Found</b><br>Looks like there is no data available here.</div>

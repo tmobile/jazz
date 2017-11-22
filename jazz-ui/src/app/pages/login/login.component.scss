@@ -3,7 +3,6 @@
     height: auto;
     text-align: center;
     padding: 2rem 0rem;
-    // width: 430px;
     width: 100%;
     position: relative;
     @media (min-width: $screen-sm) {
@@ -45,10 +44,6 @@
     text-transform: uppercase;
 }
 
-.sign-in-form {
-    // margin-top: 60px;
-}
-
 .form-row {
     text-align: left;
     margin-bottom: 3rem;
@@ -58,7 +53,7 @@
     margin-top: 4.5rem auto;
 }
 
-.btn-wrp btn-tmobile-primary >>> button {
+.btn-wrp btn-jazz-primary >>> button {
     width: 10rem;
 }
 
@@ -109,11 +104,14 @@
     width: 98%;
     vertical-align: middle;
     padding: 0 4rem;
+    input[type="text"], input[type="password"]{
+    // input[type='text'], input[type='password']{
+        margin-bottom: 5px;
+    }
 }
 
 :host {
     display: block;
-    // margin-top: 5px;
     position: relative;
 }
 
@@ -151,9 +149,11 @@ input {
 
 .hide-er
 {
+    display: none;
     opacity:0;
 }
 .error-msg {
+    display: block;
     color: #fff ;
     font-size: 1.15rem;
     letter-spacing: 0.25px;
@@ -185,9 +185,9 @@ input {
     overflow-y: hidden;
     height: calc(100vh - 56px);
 }
-.bottom-2{
-  margin-bottom: 2rem;
-}
+// .bottom-2{
+//   margin-bottom: 2rem;
+// }
 
 .login-form-errmsg
 {

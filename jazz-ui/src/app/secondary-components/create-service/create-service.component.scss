@@ -1,8 +1,6 @@
 @import './../../../main-styles';
 .create-service-wrap {
     background-color: white;
-    //width:70vw;
-    //min-width: 83rem;
     max-width: 980px;
     width: 100vw;
     padding: 0 3.5rem;
@@ -61,7 +59,6 @@
     height: 3.33rem;
     width: 88%;
     max-width: 70px;
-    /*width: 40px;*/
 }
 
 .service-box p {
@@ -164,11 +161,7 @@
 }
 
 .custom-cb input[type=checkbox] {
-    // visibility: hidden;
     opacity: 0;
-    // &:focus{
-    //     outline-color: #aaaaaa;//border color need to be changed
-    // }
 }
 
 .custom-cb input[type=checkbox]:checked + label {
@@ -224,7 +217,6 @@
 }
 
 .input-field-container {
-    /*margin-top: 20px;*/
     position: relative;
 }
 
@@ -240,7 +232,6 @@
 }
 .arrow_box {
 	position: relative;
-	// background: #f3f3f3;
 }
 .arrow_box:after {
 	bottom: 100%;
@@ -381,9 +372,6 @@
 .learn-more {
     margin-bottom: 0;
     font-size: 1rem;
-    a {
-        // margin-left: 5px;
-    }
 }
 
 .event-schedule-fields, .aws-event-fields .row{
@@ -622,11 +610,6 @@
 }
 
 .btn[disabled] {
-    // border-radius: 30px;
-    // padding: 10px 16px;
-    // background-color: #ed008c;
-    // box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
-    // border: none;
     opacity: .5;
 }
 
@@ -735,9 +718,6 @@ p.learn-more {
     background-color: #ed008c;
     color: #fff;
 }
-// /deep/ .sidebar-inr{
-//         overflow-y: hidden;
-//     }
 .each-step-wrap{
     /deep/ input[type="radio"] + label{
         margin-left:-15px;

@@ -24,21 +24,21 @@ export class LandingComponent implements OnInit {
 
     private IDLE_TIMEOUT = 60*10; //seconds
 
-    features = [
-        {
-            'title' : 'Create',
-            'description' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, dolore magna aliqua.',
-            'imageSrc' : 'assets/images/icons/icon-create.png'
-        }, {
-            'title' : 'Deploy',
-            'description' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit,',
-            'imageSrc' : 'assets/images/icons/icon-deploy.png'
-        }, {
-            'title' : 'Manage',
-            'description' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-            'imageSrc' : 'assets/images/icons/icon-manage.png'
-        }
-      ];
+    // features = [
+    //     {
+    //         'title' : 'Create',
+    //         'description' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, dolore magna aliqua.',
+    //         'imageSrc' : 'assets/images/icons/icon-create.png'
+    //     }, {
+    //         'title' : 'Deploy',
+    //         'description' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit,',
+    //         'imageSrc' : 'assets/images/icons/icon-deploy.png'
+    //     }, {
+    //         'title' : 'Manage',
+    //         'description' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
+    //         'imageSrc' : 'assets/images/icons/icon-manage.png'
+    //     }
+    //   ];
 
     public getStartedNow(){
 
@@ -58,14 +58,6 @@ export class LandingComponent implements OnInit {
     public closeSidebar (eve){
         this.goToLogin = false;
         this.closed = true;
-    }
-    onNavigate(event){
-        if(event.target.innerText === "Privacy"){
-            window.open('https://www.t-mobile.com/company/website/privacypolicy.aspx');
-        } else if(event.target.innerText === "Docs"){
-            window.open('https://github.com/tmobile/jazz/wiki');        
-
-        }
     }
     public shiftLeft(){
         var visibleWindow = document.getElementById('scroll-me').offsetLeft;

@@ -19,13 +19,6 @@ import { ConfigService } from '../../app.config';
     styleUrls: ['../service-detail/service-detail.component.scss','./service-overview.component.scss']
 })
 
-// export class SomeComponent {
-//     private dom: Document;
-
-//     constructor(@Inject(DOCUMENT) dom: Document) {        
-//        this.dom = dom;
-//     }
-
 export class ServiceOverviewComponent implements OnInit {
 
     @Input() service: any = {};
@@ -57,15 +50,10 @@ export class ServiceOverviewComponent implements OnInit {
     islink:boolean = true;
     copylinkmsg: any = "COPY LINK TO CLIPBOARD";
     private toastmessage:any = '';
-    // mod_status:string;
     private http:any;
     swaggerUrl:string='';
     api_doc_name:string='';
     copyapi: any;
-
-    // constructor(@Inject(DOCUMENT) dom: Document) {        
-    //     this.dom = dom;
-    //  }
 
     constructor(
         private router: Router,
@@ -111,28 +99,6 @@ export class ServiceOverviewComponent implements OnInit {
                 'status': 'good'
             }
         },
-        // {
-        //     stage : 'stg',
-        //     serviceHealth : 'good',
-        //     lastSuccess : {
-        //         value: 3,
-        //         unit: 'Days'
-        //     },
-        //     lastError : {},
-        //     deploymentsCount : {
-        //         'value':'5',
-        //         'duration':'Last 24 hours'
-        //     },
-        //     cost : {
-        //         'value': '$2.94',
-        //         'duration': 'Per Day',
-        //         'status': 'good'
-        //     },
-        //     codeQuality : {
-        //         'value': '83%',
-        //         'status': 'good'
-        //     }
-        // },
         {
             stage : 'prd',
             serviceHealth : 'bad',
@@ -201,13 +167,11 @@ export class ServiceOverviewComponent implements OnInit {
             this.validateChannelName();
 
             var payload = {
-                
                 "email": this.service.email || "",
                 "slack_channel": this.service.slackChannel || "",
                 "tags": this.service.tags || "",
                 "description": this.service.description  || ""
             };
-            // console.log("payload:",payload);
             this.http.put('/platform/services/'+this.service.id, payload)
             .subscribe(
                 (Response)=>{
@@ -225,8 +189,7 @@ export class ServiceOverviewComponent implements OnInit {
                     this.edit_save='SAVE';
                     let errorMessage = this.toastmessage.errorMessage(Error,"updateObj");
                     this.toast_pop('error', 'Oops!', errorMessage)
-                    // this.toast_pop('error','Oops!', "Data cannot be updated. Service Error.");
-                    console.log(Error);}
+                }
             );
         }
     }
@@ -243,10 +206,8 @@ export class ServiceOverviewComponent implements OnInit {
     {
         switch(type){
             case 'api':
-            // this.api_doc_name="http://jazz-training-api-doc.s3-website-us-east-1.amazonaws.com"
             this.swaggerUrl = "http://editor.swagger.io/?url="+this.api_doc_name+"/"+this.service.domain +"/"+ this.service.name +"/"+stg+"/swagger.json";
             window.open(this.swaggerUrl);
-            // window.open('/test-api?service=' + this.service.name + '&domain='+ this.service.domain + '&env=' +stg);
             break;
             case 'website' : window.open(this.service.endpoints[stg]);
             break;
@@ -266,15 +227,14 @@ export class ServiceOverviewComponent implements OnInit {
            document.getSelection().removeAllRanges;
         }
      }
-     
+
     myFunction() {
         setTimeout( this.resetCopyValue(), 3000);
      }
-     
+
      resetCopyValue(){
         this.copylinkmsg = "COPY LINK TO CLIPBOARD";
      }
-     
 
     checkSlackNameAvailability()
     {
@@ -328,16 +288,9 @@ export class ServiceOverviewComponent implements OnInit {
             this.http.get('/platform/is-slack-channel-available?slack_channel='+this.slackChannel_temp)
             .subscribe(
                 (Response) => {
-                    // alert("res")
-                    // console.log('',Response)
                     let isAvailable = Response.data.is_available;
-                    // this.response_json = Response;
-                    // var output_body = JSON.parse(this.response_json._body);
-                    // console.log(output_body);
-                    // var is_slack_valid = output_body.data.is_available;
                     if(isAvailable)//if valid
                     {
-                        // alert("res valid")
                         this.hide_slack_error=true;
                         this.button_unclickable=false;
                         this.service.slackChannel=this.slackChannel_temp;
@@ -345,7 +298,6 @@ export class ServiceOverviewComponent implements OnInit {
                     }
                     else
                     {
-                        // alert("res invalid")
                         this.hide_slack_error=false;
                         this.button_unclickable=true;
                     }
@@ -353,7 +305,6 @@ export class ServiceOverviewComponent implements OnInit {
                 },
                 (error) => {
                     var err = error;
-                    // console.log(err);
                     this.show_loader=false;
 
                 }
@@ -424,8 +375,6 @@ export class ServiceOverviewComponent implements OnInit {
         else{this.tags_empty=false;}
     }
     ngOnInit() {
-        // console.log(this.service.endpoints.dev);
-        // this.mod_status=this.service.status.replace('_',' ');
     }
     ngOnChanges(x:any){
 
@@ -450,7 +399,6 @@ export class ServiceOverviewComponent implements OnInit {
         }else if(this.service.status == 'deletion completed'){
             statusprogress = 100;
         }
-            document.getElementById('current-status-val').setAttribute("style","width:"+statusprogress+'%');            
-        
+            document.getElementById('current-status-val').setAttribute("style","width:"+statusprogress+'%');
     }
 }

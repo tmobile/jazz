@@ -2,47 +2,18 @@
 <div class="disclaimer-static-data"><i>This data is for representational purpose only and may not be accurate</i></div>
 <div class="service-details row">
         
-    <ul class="section-left col-md-7 col-sm-12">
-        
+    <ul class="section-left col-md-7 col-sm-12">  
         <li>
             <div class="det-label">Description</div>
             <div class="det-value desc" >{{services.description || 'Give me the details for your services'}}</div>
         </li>
-        <!--li>
-                <div class="det-label">Branch Name</div>
-                <div class="det-value">{{services.branchname}}</div>
-        </li>
-        
-        <li>
-            <div class="det-label">Last Commit</div>
-            <div class="det-value time" >{{services.lastcommit}}</div>
-        </li-->
-
-       
-       
     </ul>
     
     <ul class="section-right col-md-5 col-sm-12">
         <li>
             <div class="det-label">Endpoint</div>
             <div [class.link]='endPoint!="NA"' class="det-value">{{endPoint}}</div>
-            
         </li>
-       
-        <!--li>
-            <div class="det-label">Repository</div>
-            <div class="det-value link" >{{services.repository}}</div> 
-            <!-[ngClass]="islink ? 'link':''" (click)="openLink(repositorylink)" ->
-            
-        </li>
-        <li>
-            <div class="det-label">Runtime</div>
-            <div class="det-value" >{{services.runtime}}</div>
-        </li>
-        <li>
-            <div class="det-label">Tags</div>
-            <div class="det-value" >{{services.tags || 'Services are cooler with tags'}}</div>
-        </li-->
     </ul>
 </div>
           
@@ -91,7 +62,6 @@
                         </li>
                         <li class="overview-item">
                             <div class="overview-value javascript">NA
-                                <!-- 480<span>(XS)</span> -->
                             </div>
                             <div class="overview-label">
                                 <span>JavaScript</span>
@@ -110,17 +80,14 @@
                                     NA
                                 </div>
                                 <div class="overview-label"># of Deployments<br>(Last 24 hours)</div>
-                                <!-- <div class="overview-label"></div> -->
                             </li>
                             <li class="overview-item" >
                                 <div class="overview-value">NA
-                                   <!-- 3<span>Hours<br>Ago</span> -->
                                 </div>
                                 <div class="overview-label">Last Successful Deployment</div>
                             </li>
                             <li class="overview-item">
                                 <div class="overview-value">NA
-                                    <!-- 8<span>Hours<br>Ago</span> -->
                                 </div>
                                 <div class="overview-label">Last Failed Deployment</div>
                             </li>
@@ -131,9 +98,7 @@
                                 <div class="overview-label"></div>
                             </li>
                             <li class="overview-item bottom-right">
-                                <div class="overview-value">NA
-                                    <!-- <img src='assets\images\icons\icon-good@2x.png' height='30px' title='Success' > -->
-                                    
+                                <div class="overview-value">NA                                    
                                 </div>
                                 <div class="overview-label">
                                     Last Deployment Status
@@ -146,8 +111,6 @@
                                 </div>
                             </li>
                         </ul>
-                
-    
             </div>
         </div>
 </div>

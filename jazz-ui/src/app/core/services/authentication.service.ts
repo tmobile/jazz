@@ -58,7 +58,6 @@ export class AuthenticationService {
             }).catch(this.handleError);
     }
         private handleError(error: any) {
-            console.log(error);
             return Observable.throw(error);
         }
 

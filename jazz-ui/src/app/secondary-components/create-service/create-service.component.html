@@ -1,4 +1,4 @@
-<tmobile-mob-header (backClick)='closeCreateService(serviceRequestSuccess)' class='show-for-mobile' [icon]="'notification'" [headText]="'Create a Service'" [status]="'none'"></tmobile-mob-header>
+<jazz-mob-header (backClick)='closeCreateService(serviceRequestSuccess)' class='show-for-mobile' [icon]="'notification'" [headText]="'Create a Service'" [status]="'none'"></jazz-mob-header>
 <div class="create-service-wrap" (click)="closeDropdowns()" [ngClass]="isLoading ? 'body-fix':'body-auto'">
     <section class="each-step-wrap create-service-header hide-for-mobile">
         <h4 class="bold-title">
@@ -11,7 +11,6 @@
             <div class="row">
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title">Choose the type of service you want to create<span>*</span></p>
-                    <!-- <p class="step-details">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p> -->
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
@@ -39,12 +38,10 @@
             <div class="row">
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title">Choose what platform you would like to use<span>*</span></p>
-                    <!-- <p class="step-details">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p> -->
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
-                            <!-- <img src="../assets/images/aws.svg"> -->
                             <div class="icon-logo-aws">
                                 <span class="path1"></span>
                                 <span class="path2"></span>
@@ -59,7 +56,6 @@
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
                         <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
-                            <!-- <img src="../assets/images/azure.svg"> -->
                             <div class="icon-logo-azure">
                                 <span class="path1"></span>
                                 <span class="path2"></span>
@@ -69,7 +65,6 @@
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
                         <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
-                            <!-- <img src="../assets/images/icons/icon-googlecloud@3x.png"> -->
                             <div class="icon-logo-googleCloud">
                                 <span class="path1"></span>
                                 <span class="path2"></span>
@@ -79,30 +74,6 @@
                             <p>Google Cloud</p>
                         </div>
                     </section>
-                    <!-- <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'ccp'}" (click)="changePlatformType('ccp')">
-                            <img src="../assets/images/docker.svg">
-                            <div class="icon-logo-docker">
-                                <span class="path1"></span>
-                                <span class="path2"></span>
-                                <span class="path3"></span>
-                                <span class="path4"></span>
-                                <span class="path5"></span>
-                                <span class="path6"></span>
-                                <span class="path7"></span>
-                                <span class="path8"></span>
-                                <span class="path9"></span>
-                                <span class="path10"></span>
-                                <span class="path11"></span>
-                                <span class="path12"></span>
-                                <span class="path13"></span>
-                                <span class="path14"></span>
-                                <span class="path15"></span>
-                                <span class="path16"></span>
-                            </div>
-                            <p>CCP</p>
-                        </div>
-                    </section> -->
                 </div>
             </div>
         </section>
@@ -110,7 +81,6 @@
             <div class="row">
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title">Choose your runtime<span>*</span></p>
-                    <!-- <p class="step-details">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p> -->
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <div class="input-field-container">
@@ -167,7 +137,6 @@
                                     <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && isDomainDefined && !invalidServiceName && !invalidDomainName">Service name in the specified namespace is available!</p>
                                     <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && !isDomainDefined">Service name is not available. Please try another service name</p>
                                     <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && isDomainDefined">Service name in the specified namespace is not available. Please try another combination of namespace & service name.</p>
-                                    <!-- <p class="termsConditions" *ngIf="serviceName.valid && serviceNameError">Error in validating Slack Channel name. Please try again or contact administrator.</p> -->
                                     <p class="termsConditions" *ngIf="serviceName.valid && invalidServiceName">Service name should not start or end with hyphens</p>                                                                        
                                     <img *ngIf="serviceName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
                                 </div>
@@ -213,30 +182,10 @@
                     </div>
                 </div>
             </section>
-            <section class="each-step-wrap Internal-access hide" *ngIf="typeOfService != 'website'">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Access Restrictions</p>
-                        <!-- <p class="step-details">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p> -->
-                    </div>
-                    <div class="col-lg-8 col-md-8">
-                        <section class="col-lg-12  pad-left0">
-                            <div class="input-field-container">
-                                <div class="slack-checkbox custom-cb">
-                                    <input type="checkbox" id="checkbox-vpc" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="vpcSelected" (change)="vpcSelected = !vpcSelected">
-                                    <label for="checkbox-vpc"></label>
-                                    <div class="cb-status-dets"> Does your service require access to internal T-Mobile network and resources?</div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </section>
             <section class="each-step-wrap slack-channel-integration">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">Slack Channel Integration</p>
-                        <!-- <p class="step-details">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p> -->
                     </div>
                     <div class="col-lg-8 col-md-8">
                         <section class="col-lg-12  pad-left0">
@@ -266,7 +215,6 @@
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">Cache Time-to-Live (TTL)</p>
-                        <!-- <p class="step-details">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p> -->
                     </div>
                     <div class="col-lg-8 col-md-8">
                         <section class="col-lg-12  pad-left0">
@@ -292,7 +240,6 @@
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">Event Schedule</p>
-                        <!-- <p class="step-details">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p> -->
                     </div>
                     <div class="col-lg-8 col-md-8">
                         <div class="input-field-container event-schedule-radio row zero-margin">
@@ -486,41 +433,6 @@
                     </div>
                 </div>
             </section>
-
-            <section class="each-step-wrap approvers hide">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Approvers<span>*</span></p>
-                        <p class="step-details">User(s) who are required to approve code changes, deployment activities etc. They should be part of CORP AD Namespace.</p>
-                    </div>
-                    <div class="col-lg-8 col-md-8">
-                        <section class="col-lg-12  pad-left0">
-                            <div class="input-field-container">
-                                <p class="step-title">
-                                    Users
-                                </p>
-                                <div class="selected-approvers">
-                                    <ul (click)='focusInput($event)'>
-                                        <li *ngFor="let selected of selectedApprovers;let i=index" >
-                                            {{selected.displayName}} ({{selected.userId}})
-                                            <img (click)="removeApprover(i, selected)" src="../assets/images/icons/icon-close@3x.png">
-                                        </li>
-                                        <input (keydown)="keypress($event);" autocomplete="off" id="approverName" name="approverName" type="text" class="textForm" [(ngModel)]="approverName" (ngModelChange)="onApproverChange($event)">
-
-                                    </ul>
-                                </div>
-                                <div [hidden]="!showApproversList" class="approvers-list-wrap">
-                                    <div class="approvers-list typeShow open">
-                                        <div class="approvers-dets" *ngFor="let approvers of approversList | myfilter:approverName;let i = index;" (focus)=" i==focusindex " [ngClass]="{pinkfocus : i==focusindex }" [ngStyle]="scrollList" >
-                                            <div  (click)="selectApprovers( approvers);$event.stopPropagation();" index="{i}" [attr.displayName]='approvers.displayName' [attr.givenName]='approvers.givenName' [attr.userId]='approvers.userId' [attr.userEmail]='approvers.userEmail'>{{approvers.displayName || approvers.givenName}} ({{approvers.userId}})</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </section>
             <p class="requiredInfo"><span>*</span>Indicates required fields</p>
             <section class="submit-form">
                 <button type="submit" [disabled]="!serviceForm.valid || (disableForm())" class="btn btn-primary">SUBMIT</button>
@@ -539,7 +451,7 @@
 
                 </section>
             <section class="footer-btn">
-                <btn-tmobile-primary text="DONE" newclass="back-btn" (click)="closeCreateService(serviceRequestSuccess)"></btn-tmobile-primary>
+                <btn-jazz-primary text="DONE" newclass="back-btn" (click)="closeCreateService(serviceRequestSuccess)"></btn-jazz-primary>
             </section>
         </section>
         <section class="error-screen" *ngIf='serviceRequestFailure'>
@@ -550,7 +462,7 @@
                 <p class="refer">If the issue persists, please contact us </p>
             </section>
             <section class="footer-btn">
-                <btn-tmobile-primary text="BACK" newclass="back-btn" (click)="backToCreateService()"></btn-tmobile-primary>
+                <btn-jazz-primary text="BACK" newclass="back-btn" (click)="backToCreateService()"></btn-jazz-primary>
             </section>
         </section>
     </div>

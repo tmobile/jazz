@@ -6,7 +6,6 @@
 import { Http, Headers, Response } from '@angular/http';
 import { Component, Input, OnInit, Output, EventEmitter, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-// import { FORM_DIRECTIVES, ControlGroup, Control, Validators, FormBuilder, Validator, } from '@angular/common';
 import { ServiceFormData, RateExpression, CronObject, EventExpression } from './service-form-data';
 import { FocusDirective} from './focus.directive';
 import {CronParserService} from '../../core/helpers';
@@ -48,7 +47,6 @@ export class CreateServiceComponent implements OnInit {
   slackChannelLoader: boolean = false;
   serviceAvailable : boolean = false;
   serviceNotAvailable : boolean = false;
-  // serviceNameError : boolean = false;
   isDomainDefined : boolean = false;
   invalidttl : boolean = false;
   serviceRequested = false;
@@ -83,7 +81,6 @@ export class CreateServiceComponent implements OnInit {
   
 
   constructor (
-    // private http: Http,
     private toasterService: ToasterService,
     private cronParserService: CronParserService,
     private http: RequestService,
@@ -94,12 +91,6 @@ export class CreateServiceComponent implements OnInit {
   ) {
     this.toastmessage = messageservice;
   }
-
-  serviceTypeData = [
-    {'name':'api','path':'../assets/images/icons/icon-api@3x.png'},
-    {'name':'function','path':'../assets/images/icons/icon-function@3x.png'},
-    {'name':'website','path':'../assets/images/icons/icon-function@3x.png'}
-  ];
 
   public focusDynamo = new EventEmitter<boolean>();
   public focusKinesis = new EventEmitter<boolean>();
@@ -201,9 +192,7 @@ export class CreateServiceComponent implements OnInit {
         (error) => {
           this.slackChannelLoader = false;
           var err = error;
-          // this.channelNameError = true;
           this.resMessage=this.toastmessage.errorMessage(error, 'slackChannel');
-          // alert(this.resMessage);
           this.toast_pop('error', 'Oops!', this.resMessage);
         }
     );
@@ -234,20 +223,17 @@ export class CreateServiceComponent implements OnInit {
           this.serviceAvailable = false;
           this.serviceNotAvailable = true;
         } else {
-          //  this.serviceNameError = true;
            this.serviceAvailable = false;
            this.serviceNotAvailable = false;
         }
         this.checkdomainName();
         (error) => {
         this.showLoader = false;
-        // this.serviceNameError = true;
         this.serviceAvailable = false;
         this.serviceNotAvailable = false;
         var err = error;
         this.checkdomainName();
-
-        }
+      }
       },
       (error)=>{
         this.showLoader = false;
@@ -279,7 +265,6 @@ export class CreateServiceComponent implements OnInit {
   // function to restore the service channel availability to false when it is changed
   onServiceChange(){
     this.isDomainDefined = false;
-    // this.serviceNameError = false;
     this.serviceAvailable = false;
     this.serviceNotAvailable = false;
   }
@@ -306,7 +291,6 @@ export class CreateServiceComponent implements OnInit {
     }
     else if(this.typeOfService == 'function'){
       payload["runtime"] = this.runtime;
-      // payload.service_type = 'lambda';
       payload["require_internal_access"] = this.vpcSelected;
       if(this.rateExpression.type != 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
@@ -357,15 +341,12 @@ export class CreateServiceComponent implements OnInit {
           var index = output.data.indexOf("https://");
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
-          // this.toasterService.pop('success', 'Success!!', output.data.create_service.data);
-          //this.toasterService.pop('success', resMessage);
        },
         (error) => {
           this.isLoading = false;
           this.serviceRequested = true;
           this.serviceRequestSuccess = false;
           this.serviceRequestFailure = true;
-          console.log('', error);
           this.errBody = error._body;
           this.errMessage = this.toastmessage.errorMessage(error, 'createService');
           try {
@@ -413,11 +394,6 @@ export class CreateServiceComponent implements OnInit {
     let thisclass : any = this;
     this.showApproversList = false;
     thisclass.approverName = '';
-    // for (var i = 0; i < this.selectedApprovers.length; i++) {
-    //     if(this.selectedApprovers[i].displayName === approver.displayName){
-    //       return;
-    //     }
-    // }
     this.selectedApprovers.push(approver);
     for(var i = 0; i < this.approversList.length; i++){
       if(this.approversList[i].displayName === approver.displayName){
@@ -482,11 +458,6 @@ export class CreateServiceComponent implements OnInit {
 
   // function disable the submit till all entered datas are valid
   disableForm(){
-
-    // if (this.selectedApprovers === undefined || this.selectedApprovers.length === 0) {
-    //   console.log("selectedApprovers");
-    //     return true;
-    // }
     if (!this.serviceAvailable) {
         return true;
     }
@@ -511,10 +482,6 @@ export class CreateServiceComponent implements OnInit {
     if(this.invalidServiceName || this.invalidDomainName){
       return true
     }
-    // this.approverName = '';
-    // if(this.approverName != ''){
-    //   return true;
-    // }
     return false;
   }
 
@@ -531,13 +498,7 @@ export class CreateServiceComponent implements OnInit {
         {
           this.focusindex = 0;
         }
-
-      // var id=pinkElements.children[0].innerHTML;
     }
-
-     // console.log(pinkElements);
-
-      // console.log(this.focusindex);
       if(this.focusindex>2)
       {
         this.scrollList = { 'position': 'relative', 'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem' };

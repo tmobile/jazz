@@ -33,18 +33,11 @@
 .log-table-container{
     .column,
     /deep/ .column {
-            // overflow: hidden;
-            // white-space: nowrap;
-            // text-overflow: ellipsis;
         &:nth-child(1) {
             width: 15rem;
         }
         &:nth-child(2) {
-            // display: none;
             width: 30%;
-            // overflow: hidden;
-            // white-space: nowrap;
-            // text-overflow: ellipsis;
             @media(max-width: $screen-sm){
                 display: none;
             }
@@ -57,9 +50,6 @@
             white-space: nowrap;
             @media(max-width: $screen-sm){
                 display: none;
-            }
-            @media(max-width: $screen-md    ){
-                // display: none;
             }
         }
         &:nth-child(4) {

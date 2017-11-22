@@ -78,9 +78,7 @@ export class LineGraphComponent implements OnInit {
     this.y = d3Scale.scaleLinear().range([this.height, 0]);
     this.x.domain(d3Array.extent(this.graphData.data, (d) => d.date ));
     var yAxisRange = d3Array.extent(this.graphData.data, (d) => parseFloat(d.value));
-    // if (yAxisRange[1] < 1) {
-    //   yAxisRange[1] = 0;
-    // }
+
     if(!yAxisRange[0] && !yAxisRange[1]){
       yAxisRange = [0 , 0]
     }
@@ -88,14 +86,8 @@ export class LineGraphComponent implements OnInit {
   }
 
   private drawAxis() {
-    // console.log("this.x ", this.x);
-    // console.log("this.y ", this.y);
-
   	this.xAxis = d3Axis.axisBottom(this.x).ticks(5);
   	this.yAxis = d3Axis.axisLeft(this.y).ticks(5);
-
-    // console.log("this.xAxis ", this.xAxis);
-    // console.log("this.yAxis ", this.yAxis);
 
     this.svg.append("g")
       .attr("class", "axis axis--x")
@@ -137,7 +129,6 @@ export class LineGraphComponent implements OnInit {
       .attr("dy", "1.71em")
       .style("text-anchor", "end")
       .text(this.graphData.xAxis.label);
-    // .attr("transform", "translate(" + (this.axes.left / 2) + ",0)");
     this.root.select('g.axis.axis--x').call(this.xAxis).attr("transform", "translate(0," + this.height + ")");
 
     this.root.select('g.base-group').attr("transform", "translate(" + (this.axes.left/2 + this.margin.left) + "," + (this.axes.bottom/2  + this.margin.top) + ")");
@@ -181,15 +172,11 @@ export class LineGraphComponent implements OnInit {
       .attr("fill","#333")
       .attr("d", "M 0 0 L " + (trnglW) + " 0 L " + (trnglW/2) + " " + trnglH + " Z")
       .attr("transform","translate(" + (rectW - trnglW)/2 + "," + (rectH) + ")");
-      // .attr("d", "M 0 " + (-trnglH/3) + " L " + (-trnglW/3) + " " + (trnglH/3) + "L " + (trnglW/3) + " " + (trnglH/3) + " Z")
 
     tooltip.append("path")
       .attr("fill","#fff")
       .attr("d", "M 0 0 L " + (trnglW) + " 0 L " + (trnglW/2) + " " + trnglH + " Z")
       .attr("transform","translate(" + (rectW - trnglW)/2 + "," + (rectH - 2) + ")");
-       // + (-trnglH/3) + " L " + (-trnglW/3) + " " + (trnglH/3) + "L " + (trnglW/3) + " " + (trnglH/3) + " Z")
-
-      // var x0 = x.invert(d3.mouse(this)[0])
   }
 
   private drawLine() {
@@ -203,49 +190,12 @@ export class LineGraphComponent implements OnInit {
     }
     var d0;
     var d1 = this.line(this.graphDataOld.data);
-    // console.log("this.graphData.data ",this.graphData.data);
     if(this.graphData.data.length > 0){
       d0 = this.line(this.graphData.data);
-    // var t = d3.transition()
-    // .duration(750)
-    // .ease(d3.easeLinear);
 
-    // function transition(path, d0, d1) {
-    //   path.transition()
-    //       .duration(2000)
-    //       .attrTween("d", pathTween(d1, 4))
-    //       .each("end", function() { d3.select(this).call(transition, d1, d0); });
-    // }
-
-    // function pathTween(d1, precision) {
-    //   return function() {
-    //     var path0 = this,
-    //         path1 = path0.cloneNode(),
-    //         n0 = path0.getTotalLength(),
-    //         n1 = (path1.setAttribute("d", d1), path1).getTotalLength();
-
-    //     // Uniform sampling of distance based on specified precision.
-    //     var distances = [0], i = 0, dt = precision / Math.max(n0, n1);
-    //     while ((i += dt) < 1) distances.push(i);
-    //     distances.push(1);
-
-    //     // Compute point-interpolators at each distance.
-    //     var points = distances.map(function(t) {
-    //       var p0 = path0.getPointAtLength(t * n0),
-    //           p1 = path1.getPointAtLength(t * n1);
-    //       return d3.interpolate([p0.x, p0.y], [p1.x, p1.y]);
-    //     });
-
-    //     return function(t) {
-    //       return t < 1 ? "M" + points.map(function(p) { return p(t); }).join("L") : d1;
-    //     };
-    //   };
-    // }
-      // console.log("d0 ",d0);
       this.svg.append("path")
       .attr("class", "line line-plot")
       .attr("d", d0)
-      // .call(transition, d0, d1);
 
 
       this.svg.append("path")
@@ -268,7 +218,6 @@ export class LineGraphComponent implements OnInit {
 
     var range = this.graphData.xAxis.range;
     var self = this;
-    // var formatDate = d3Format("");
 
     var timeFormat = {
       '1 day' : '%I %p',
@@ -281,34 +230,12 @@ export class LineGraphComponent implements OnInit {
       '1 year' : '%b %y',
       '6 years' : '%Y'
     }
-    // var formatMillisecond = d3Format.timeFormat(".%L"),
-    //   formatSecond = d3Format.timeFormat(":%S"),
-    //   formatMinute = d3Format.timeFormat("%I:%M"),
-    //   formatHour = d3Format.timeFormat("%I %p"),
-    //   formatDay = d3Format.timeFormat("%a %d"),
-    //   formatWeek = d3Format.timeFormat("%b %d"),
-    //   formatMonth = d3Format.timeFormat("%B"),
-    //   formatYear = d3Format.timeFormat("%Y");
-
-    // function multiFormat(date) {
-    //   return (d3Time.timeSecond(date) < date ? formatMillisecond
-    //       : d3Time.timeMinute(date) < date ? formatSecond
-    //       : d3Time.timeHour(date) < date ? formatMinute
-    //       : d3Time.timeDay(date) < date ? formatHour
-    //       : d3Time.timeMonth(date) < date ? (d3Time.timeWeek(date) < date ? formatDay : formatWeek)
-    //       : d3Time.timeYear(date) < date ? formatMonth
-    //       : formatYear)(date);
-    // }
-
+    
     function formatDate(date, range) {
-      // console.log(" formatDate date", date);
-      // console.log(" formatDate range", range);
-
       if (range == undefined) {
         range = 'day';
       }
       range = range.toLowerCase();
-      // var dateFormat = d3Format.timeFormat("%H:%M:%S");
       var dateFormat = d3Format.timeFormat(timeFormat[range]);
       return dateFormat(date);
     }
@@ -332,29 +259,17 @@ export class LineGraphComponent implements OnInit {
     function mousemove() {
       var x0 = d3.mouse(this)[0];
       var y0 = d3.mouse(this)[1];
-      // var hoverX = formatDate(self.x.invert(x0), range);
-      // var hoverY = parseFloat(self.y.invert(y0));
       var value = getGraphValue(self.x.invert(x0), self.graphData.data);
 
       var hoverX = formatDate(value.date, range);
       var hoverY = parseFloat(value.value).toFixed(2);
 
       var tooltip = self.svg.select(".tool-tip");
-      
+
       tooltip.attr("transform", "translate(" + (x0 - 40) + "," + (y0 - 80) + ")");
-
-      // console.log("range ", range);
-      // console.log("value ", value);
-      // console.log("value.date ", value.date);
-      // console.log("hoverX ", hoverX);
-
-
       tooltip.select('.hover-x').text(hoverX);
       tooltip.select('.hover-y').text(hoverY);
     }
-
     this.toolTip()
-
   }
-
 }

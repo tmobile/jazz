@@ -42,11 +42,6 @@
         font-size: 1.33rem;
         cursor: pointer;
     }
-    &.read-only {
-        span {
-            //bottom: 1rem;
-        }
-    }
 }
 
 .header-sec {
@@ -67,7 +62,7 @@
 }
 
 .access-control-wrap{
-    /deep/ btn-tmobile-primary button.btn {
+    /deep/ btn-jazz-primary button.btn {
         float: right;
         padding: .66rem 1.25rem;
         font-size: 1rem;

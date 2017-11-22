@@ -1,15 +1,12 @@
-<tmobile-mob-header [icon]="'notification'" [headText]="service.name" [status]="'green'"></tmobile-mob-header>
+<jazz-mob-header [icon]="'notification'" [headText]="service.name" [status]="'green'"></jazz-mob-header>
 <section class="page-container service-detail-page">
     <navigation-bar [links]="breadcrumbs"></navigation-bar>
     <div class="content">
         <div class="page-title-wrap hide-for-mobile">
             <h1 class="page-hdr bold-title">{{service.name}}</h1>
             <span class="page-sub-title"><span class="service-type">{{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
-            <btn-tmobile-secondary class="delete-service-btn" text="DELETE SERVICE" [class.disabled]="!service.status || service.status == 'deletion_completed' || service.status == 'deletion_started'" (click)="deleteService(true)"></btn-tmobile-secondary>
+            <btn-jazz-secondary class="delete-service-btn" text="DELETE SERVICE" [class.disabled]="!service.status || service.status == 'deletion_completed' || service.status == 'deletion_started'" (click)="deleteService(true)"></btn-jazz-secondary>
         </div>
-        <!-- <div class="page-status-row hide-for-mobile">
-            <div class="page-status" [ngClass]="service.status"><span>Status</span></div>
-        </div> -->
         <tabs [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
         <section class="page-content" *ngIf="selectedTab == 0">
             <service-overview [service]="service" [isLoadingService]="isLoadingService"></service-overview>
@@ -41,7 +38,7 @@
                     <input name="serviceName" type="text" class="textForm" placeholder="Service Name" id="service-name-search" [(ngModel)]="ServiceName" (ngModelChange)="onServiceNameChange()">
                 </div>
                 <div class="footer-btns" [class.invisible]="isLoading">
-                    <btn-tmobile-primary text="DELETE" (click)="deleteServiveInit()" newclass="delete-btn" [disablePrimaryBtn]="disblebtn"></btn-tmobile-primary>
+                    <btn-jazz-primary text="DELETE" (click)="deleteServiveInit()" newclass="delete-btn" [disablePrimaryBtn]="disblebtn"></btn-jazz-primary>
                     <a (click)="hideDeletePopup()">CANCEL</a>
                 </div>
             </div>

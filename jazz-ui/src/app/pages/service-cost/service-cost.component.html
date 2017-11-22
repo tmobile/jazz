@@ -1,9 +1,5 @@
-<!-- TODO: Remove disclaimer after techtraining -->
 <div class="disclaimer-static-data"><i>This data is for representational purpose only and may not be accurate</i></div>
 <div class="row page-section section-top relative" [class.show]="">
-    <!-- <div class="total-amnt">
-        <div class="relative no-cost-txt" [class.invisible]="!noTotalCost">No data</div>
-    </div> -->
     <div class="loading-row" [class.show]="isGraphLoading">
         <div class="loading-circle"></div>
     </div>
@@ -12,7 +8,6 @@
     </div>
     <div class="loading-row" [class.show]="loadingState=='error'">
         <div class="empty-row with-refresh relative">
-            <!-- <img src="assets/images/refresh.png" alt="errorimg" width="100"> -->
             <div>Something went wrong while fetching your data!</div>
         </div>
     </div>
@@ -67,7 +62,6 @@
                 <div class="loading-circle"></div>
             </div>
             <div class="loading-row" [class.show]="isDataNotAvailable">
-                <!-- <div class="error-text">Data not available</div> -->
                 <div class="empty-row nodata with-refresh relative">
                     <img src="assets/images/no-data-icon.png" alt="noData" width="100">
                     <div><b>Oops, No Data Found</b><br>Looks like there is no data available here.</div>

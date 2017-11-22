@@ -17,7 +17,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 			description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 			gateway: 'Jane Smith',
 			alarms: 'Active',
-			rules: 'tmo.com',
+			rules: 'jazz.com',
 			title: 'API'
 		},
 		{
@@ -27,7 +27,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 			description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 			gateway: 'Jane Smith',
 			alarms: 'Active',
-			rules: 'tmo.com',
+			rules: 'jazz.com',
 			title: 'API'
 		},
 		{
@@ -37,7 +37,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 			description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
 			gateway: 'Jane Smith',
 			alarms: 'Active',
-			rules: 'tmo.com',
+			rules: 'jazz.com',
 			title: 'API'
 		}
 	]

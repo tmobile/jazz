@@ -174,7 +174,6 @@
     display: inline-block;
     height: 22px;
     width: 10px;
-    // visibility: hidden;
     vertical-align: middle;
     margin-top: -4px;
     margin-left: 4px;
@@ -258,7 +257,6 @@
 .empty-row {
     display: none;
     padding: 1rem 5px;
-    // text-transform: uppercase;
     font-weight: 300;
     font-size: 14px;
 }
@@ -268,8 +266,6 @@
     top: 35%;
     font-size: 18px;
     width:100%;
-    // left: 45%;
-    // text-transform: uppercase;
     font-weight: 300;
     &.nodata{
         font-size: 14px;
@@ -299,12 +295,6 @@
 }
 
 .table-notification {
-    // position: absolute;
-    // bottom: 0;
-    // left: 50%;
-    // -webkit-transform: translate(-50%);
-    // transform: translate(-50%);
-    // width: 100%;
     min-height: 300px;
 }
 .table-body {

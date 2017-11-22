@@ -22,11 +22,11 @@ import { AppComponent } from './app.component';
 import { ConfigService, ConfigLoader } from './app.config';
 import * as $ from 'jquery';
 
-import { BtnTmobilePrimaryComponent } from './primary-components/btn-tmobile-primary/btn-tmobile-primary.component';
-import { BtnTmobileSecondaryComponent } from './primary-components/btn-tmobile-secondary/btn-tmobile-secondary.component';
+import { BtnJazzPrimaryComponent } from './primary-components/btn-jazz-primary/btn-jazz-primary.component';
+import { BtnJazzSecondaryComponent } from './primary-components/btn-jazz-secondary/btn-jazz-secondary.component';
 import { LandingComponent } from './pages/landing/landing.component';
 import { ServicesComponent } from './pages/services/services.component';
-import { TmobileTableComponent } from './secondary-components/tmobile-table/tmobile-table.component';
+import { JazzTableComponent } from './secondary-components/jazz-table/jazz-table.component';
 import { SideTileFixedComponent } from './secondary-components/side-tile-fixed/side-tile-fixed.component';
 import { DropdownComponent } from './primary-components/dropdown/dropdown.component';
 import { MyFilterPipe } from './primary-components/custom-filter';
@@ -35,8 +35,8 @@ import { FocusDirective} from './secondary-components/create-service/focus.direc
 import { CreateServiceComponent } from './secondary-components/create-service/create-service.component';
 import { OnlyNumber } from './secondary-components/create-service/onlyNumbers';
 import { SidebarComponent } from './secondary-components/sidebar/sidebar.component';
-import { TmobileHeaderComponent } from './secondary-components/tmobile-header/tmobile-header.component';
-import { ClickOutsideDirective } from './secondary-components/tmobile-header/outside-click';
+import { JazzHeaderComponent } from './secondary-components/jazz-header/jazz-header.component';
+import { ClickOutsideDirective } from './secondary-components/jazz-header/outside-click';
 import { LoginComponent } from './pages/login/login.component';
 import { ServiceOverviewComponent } from './pages/service-overview/service-overview.component';
 import { InputComponent } from './primary-components/input/input.component';
@@ -61,14 +61,13 @@ import { SearchBoxComponent } from './primary-components/search-box/search-box.c
 
 import { DaterangePickerComponent } from './primary-components/daterange-picker/daterange-picker.component';
 import { MobileSecondaryTabComponent } from './secondary-components/mobile-secondary-tab/mobile-secondary-tab.component';
-import { TmobileMobHeaderComponent } from './secondary-components/tmobile-mob-header/tmobile-mob-header.component';
+import { JazzMobHeaderComponent } from './secondary-components/jazz-mob-header/jazz-mob-header.component';
 
 import { LineGraphComponent } from './secondary-components/line-graph/line-graph.component';
 import { ServiceMetricsComponent } from './pages/service-metrics/service-metrics.component';
 
-import { TmobileToasterComponent } from './secondary-components/tmobile-toaster/tmobile-toaster.component';
+import { JazzToasterComponent } from './secondary-components/jazz-toaster/jazz-toaster.component';
 import { JenkinsStatusComponent } from './pages/jenkins-status/jenkins-status.component';
-import { TestApiComponent } from './pages/testapi/test-api.component';
 import { FooterComponent } from './secondary-components/footer/footer.component';
 import { Error404Component } from './pages/error404/error404.component';
 import { RegisteredComponent } from './secondary-components/registered/registered.component';
@@ -94,10 +93,6 @@ const appRoutes: Routes = [
   {
     path: 'approval',
     component: JenkinsStatusComponent
-  },
-  {
-    path: 'test-api',
-    component: TestApiComponent
   },
   {
     path: 'services',
@@ -130,12 +125,12 @@ const appRoutes: Routes = [
 @NgModule({
   declarations: [
     AppComponent,
-    BtnTmobilePrimaryComponent,
-    BtnTmobileSecondaryComponent,
+    BtnJazzPrimaryComponent,
+    BtnJazzSecondaryComponent,
     LandingComponent,
-    TmobileHeaderComponent,
+    JazzHeaderComponent,
     ServicesComponent,
-    TmobileTableComponent,
+    JazzTableComponent,
     SideTileFixedComponent,
     DropdownComponent,
     TabsComponent,
@@ -169,13 +164,12 @@ const appRoutes: Routes = [
     BarGraphComponent,
     ServiceMetricsComponent,
     MobileSecondaryTabComponent,
-    TmobileMobHeaderComponent,
-    TmobileToasterComponent,
+    JazzMobHeaderComponent,
+    JazzToasterComponent,
     DaterangePickerComponent,
     JenkinsStatusComponent,
     Error404Component,
     FooterComponent,
-    TestApiComponent,
     RegisteredComponent,
     
   ],
@@ -213,5 +207,4 @@ const appRoutes: Routes = [
 
 export class AppModule { }
 
-// platformBrowserDynamic().bootstrapModule(AppModule);
 //redirectTo: is redirecting to landing page

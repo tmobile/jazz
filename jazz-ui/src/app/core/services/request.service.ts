@@ -142,11 +142,9 @@ export class RequestService {
         let headers = new Headers(headerObj);
         let options = new RequestOptions({ headers: headers });
         let router = this.router;
-        // console.log('opitons:', options);
 
         return this.http.put(url, JSON.stringify(body), options)
             .map((response: Response) => {
-                // console.log('put response:', response);
                 let responseBody;
                 responseBody = response.json();
                 if (responseBody) {

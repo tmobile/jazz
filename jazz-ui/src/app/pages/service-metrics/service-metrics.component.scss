@@ -16,9 +16,7 @@ $graph-title-height: 2.6rem;
     margin-right: -2rem;
     position: relative;
     min-height: calc(100vh - 400px);
-    // border-bottom: 2px solid #ddd;
     padding: 1.6rem;
-    // background: #fff;
 }
 
 .graph-title {
@@ -41,11 +39,7 @@ $graph-title-height: 2.6rem;
     width: 100%;
     height: 260px;
     padding-bottom: 70%;
-    // @media (min-width: 400px) {
-    //     width: 50%;
-    //     padding-bottom: 35%;
-    // }
-    
+
     /deep/ .line-graph-wrp {
         height: 100%;
         width: 100%;
@@ -70,8 +64,6 @@ $graph-title-height: 2.6rem;
 .filter-wrp {
     margin-bottom: 2rem;
 }
-
-.graph-wrp-inr {}
 
 .page-section {
     margin: 0;
