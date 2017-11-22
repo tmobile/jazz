@@ -3,10 +3,10 @@ button.btn-primary {
     border-radius: 30px;
     padding: 0px 23px;
     letter-spacing: .5px;
-    background-color: #f01f86;
-    border: 1px solid #f01f86;
+    background-color: #ed008c;
+    border: 1px solid #ed008c;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 500;
 }
 
@@ -15,11 +15,13 @@ button.btn-primary:focus,
 button.btn-primary:active {
     outline: none !important;
     background-color: #ffffff;
-    color: #f01f86;
+    color: #ed008c;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
     border: 1px solid #ffffff;
 }
-
+button.btn-primary[disabled]:hover{
+    color: #fff;
+}
 .buttonPadding {
     width: 20rem;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
@@ -36,7 +38,7 @@ button.btn-primary:active {
 
 .login {
     border-radius: 20px !important;
-    background-color: #f01f86;
+    background-color: #ed008c;
     height: 34px;
     line-height: 33px;
 }

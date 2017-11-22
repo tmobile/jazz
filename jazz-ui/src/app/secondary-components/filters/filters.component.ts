@@ -51,21 +51,26 @@ export class FiltersComponent implements OnInit {
   }
 
   ngOnInit() {
+   
   	if (this.filtersList) {
+
   		for (var i = 0; i < this.filtersList.length; ++i) {
   			let isSelected = false;
-  			let label = this.filtersList[i];
-  			if (label in this.selectedList) {
-			  	isSelected = true;
+        let label = this.filtersList[i];
+        
+  			if (this.selectedList.indexOf(label) >= 0) {
+          isSelected = true;
+             
 			  }
   			let item = {
   				id: i,
   				label: label,
   				selected: isSelected
   			}
-  			this.filters.push(item);
+        this.filters.push(item);
   		}
-  	}
+    }
+    
   }
 
 }

@@ -1,0 +1,137 @@
+@import './../../../main-styles';
+@import './../service-detail/service-detail.component.scss';
+
+.left-item{
+    margin-right:1rem;
+    @media (max-width: $screen-sm) {
+        margin-right: 0rem;
+    }
+ }
+    
+    .right-item
+    {
+    margin-left: 1rem;
+    @media (max-width: $screen-sm) {
+        margin-left: 0rem;
+    }
+}
+    
+
+.stage-wrp {
+    width:50%;
+    position: relative;
+    background: #fff;
+    // margin:1rem;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+    cursor: pointer;  
+    @media (max-width:1056px)
+    {
+        width: 48%;
+    }  
+    @media (max-width: $screen-sm) {
+        margin-right: 0rem;
+        margin-bottom: 2rem;
+        width: 100%;
+    }
+
+    
+}
+
+
+
+.service-overview-wrp
+{
+
+    display: flex;
+    flex-direction: row;
+    @media(max-width: $screen-sm){
+        flex-direction: column;
+    }
+    // border-radius: 3px;
+    // margin: 0;
+   
+    // padding: 0 1.6rem;
+    // background-color: #ffffff;
+    // box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+}
+
+.service-overview
+{
+    margin:2rem 0;
+}
+
+
+.overview-item {
+    
+    width: 33%;
+}
+
+
+.overview-value {
+   
+    color: #000000;
+}
+
+.overview-label {
+
+    margin-top: 1rem;
+    color: #000000;
+}
+
+
+.bottom-right
+{
+    width: 40%;
+}
+.gradeA
+{
+    background-color: #5cae01;
+    border-radius: 50%;
+    color:white;
+    width: 35px;
+    height: 35px;
+    font-size: 2.2rem;
+}
+
+.gradeC
+{
+    background-color: #F5A623;
+    border-radius: 50%;
+    color:white;
+    width: 35px;
+    height: 35px;
+    font-size: 2.2rem;
+}
+
+.bad-value
+{
+    color: #d0021b;
+    
+}
+
+.good-value
+{
+    color: #5dae02;
+    
+}
+
+.overview-value span{
+    font-size: 1rem;
+    margin-top: 1rem;
+    margin-left: 0.2rem;
+}
+
+.time
+{
+    color:#ed008c;
+}
+
+.desc{
+    width: 70%;
+}
+
+
+/deep/.separator-row
+{
+    margin:1rem 0 !important;
+}

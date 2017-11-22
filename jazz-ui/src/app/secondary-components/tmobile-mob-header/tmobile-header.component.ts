@@ -1,5 +1,5 @@
-// /** 
-//   * @type Component 
+// /**
+//   * @type Component
 //   * @desc Main Header Component
 //   * @author
 // */
@@ -42,7 +42,7 @@
 //         this.profileClicked = !this.profileClicked;
 //     }
 
- 
+
 
 //     goToLanding(){
 //         this.router.navigateByUrl('/landing');
@@ -50,9 +50,9 @@
 //     openSection(){
 //         var el = document.getElementById("mobileLinks");
 //         if(el.offsetHeight == 0)
-//             el.style.height = "105px"; 
+//             el.style.height = "105px";
 //         else
-//             el.style.height = "0px"; 
+//             el.style.height = "0px";
 //     }
 
 //     logout(){
@@ -64,7 +64,7 @@
 //                   // Logout successful
 //                   console.log("Logout success");
 //                   this.isLoggedIn = this.authenticationService.isLoggedIn();
-//                   this.toasterService.pop('success', 'Logout Successfull', '');
+//                   //this.toasterService.pop('success', 'Logout Successfull', '');
 //                   this.router.navigateByUrl('/landing');
 //               } else {
 //                   // Logout failed
@@ -83,7 +83,7 @@
 //                   this.toasterService.pop('error', 'Logout Failed', 'Unexpected Error.');
 //               }
 //           });
-          
+
 //     }
 
 //     constructor(
@@ -99,7 +99,7 @@
 //       this.isLoggedIn = this.authenticationService.isLoggedIn();
 
 //     }
-    
+
 
 // }
 
@@ -115,10 +115,10 @@
 //   let diff = to - start;
 //   let scrollStep = Math.PI / (duration / 10);
 //   let count = 0, currPos = start;
-  
+
 
 //   let scrollInterval = setInterval(function(){
-    
+
 //     if (el.scrollTop !== to) {
 //       let prevVal = diff * (0.5 - 0.5 * Math.cos(count * scrollStep));
 //       count = count + 1;
@@ -126,17 +126,16 @@
 //       if((direction && (val - prevVal) < 0) || (!direction && (val - prevVal) > 0))
 //       {
 //         el.scrollTop = to;
-//         clearInterval(scrollInterval); 
+//         clearInterval(scrollInterval);
 //       }
 //       else
 //       {
 //         currPos = start + diff * (0.5 - 0.5 * Math.cos(count * scrollStep));
 //         el.scrollTop = currPos;
 //       }
-  
-//     } else{ 
-//       clearInterval(scrollInterval); 
+
+//     } else{
+//       clearInterval(scrollInterval);
 //     }
 //   },10);
 // };
-

@@ -70,24 +70,32 @@ export class LineGraphComponent implements OnInit {
     this.svg = this.root.select("svg")
      .append("g")
      .attr("class", "base-group")
-     .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");;
+     .attr("transform", "translate(" + this.margin.left + "," + this.margin.top + ")");
   }
 
   private initAxis() {
     this.x = d3Scale.scaleTime().range([0, this.width]);
     this.y = d3Scale.scaleLinear().range([this.height, 0]);
     this.x.domain(d3Array.extent(this.graphData.data, (d) => d.date ));
-    var yAxisRange = d3Array.extent(this.graphData.data, (d) => d.value);
-    if (yAxisRange[1] < 1) {
-      yAxisRange[1] = 1;
+    var yAxisRange = d3Array.extent(this.graphData.data, (d) => parseFloat(d.value));
+    // if (yAxisRange[1] < 1) {
+    //   yAxisRange[1] = 0;
+    // }
+    if(!yAxisRange[0] && !yAxisRange[1]){
+      yAxisRange = [0 , 0]
     }
     this.y.domain(yAxisRange);
   }
 
   private drawAxis() {
+    // console.log("this.x ", this.x);
+    // console.log("this.y ", this.y);
 
-  	this.xAxis = d3Axis.axisBottom(this.x).ticks(4);
-  	this.yAxis = d3Axis.axisLeft(this.y).ticks(3);
+  	this.xAxis = d3Axis.axisBottom(this.x).ticks(5);
+  	this.yAxis = d3Axis.axisLeft(this.y).ticks(5);
+
+    // console.log("this.xAxis ", this.xAxis);
+    // console.log("this.yAxis ", this.yAxis);
 
     this.svg.append("g")
       .attr("class", "axis axis--x")
@@ -185,17 +193,19 @@ export class LineGraphComponent implements OnInit {
   }
 
   private drawLine() {
+    
     this.line = d3Shape.line()
       .x( (d: any) => this.x(d.date) )
-      .y( (d: any) => this.y(d.value) );
+      .y( (d: any) => this.y(parseFloat(d.value)) );
 
     if (this.graphDataOld == undefined) {
       this.graphDataOld = this.graphData;
     }
-
-    var d0 = this.line(this.graphData.data);
+    var d0;
     var d1 = this.line(this.graphDataOld.data);
-
+    // console.log("this.graphData.data ",this.graphData.data);
+    if(this.graphData.data.length > 0){
+      d0 = this.line(this.graphData.data);
     // var t = d3.transition()
     // .duration(750)
     // .ease(d3.easeLinear);
@@ -231,25 +241,28 @@ export class LineGraphComponent implements OnInit {
     //     };
     //   };
     // }
-
-
-    this.svg.append("path")
+      // console.log("d0 ",d0);
+      this.svg.append("path")
       .attr("class", "line line-plot")
       .attr("d", d0)
       // .call(transition, d0, d1);
 
 
-    this.svg.append("path")
-      .attr("class", "line line-plot-hover")
-      .attr("d", d0)
-      .attr("stroke-width","5")
-      .on("mouseover", function() { 
-        self.svg.select(".tool-tip").style("display", null); 
-      })
-      .on("mouseout", function() { 
-        self.svg.select(".tool-tip").style("display", "none");
-      })
-      .on("mousemove", mousemove);
+      this.svg.append("path")
+        .attr("class", "line line-plot-hover")
+        .attr("d", d0)
+        .attr("stroke-width","5")
+        .on("mouseover", function() { 
+          self.svg.select(".tool-tip").style("display", null); 
+        })
+        .on("mouseout", function() { 
+          self.svg.select(".tool-tip").style("display", "none");
+        })
+        .on("mousemove", mousemove);
+    } // end of if this.graphData.data
+
+
+    
 
     var bisectDate = d3Array.bisector(function(d) { return d.hour; }).left;
 
@@ -258,12 +271,15 @@ export class LineGraphComponent implements OnInit {
     // var formatDate = d3Format("");
 
     var timeFormat = {
+      '1 day' : '%I %p',
       'day' : '%I %p',
-      'week' : '%a %d',
-      'month' : '%b %d',
-      '6month' : '%B',
-      'year' : '%B',
-      'years' : '%Y'
+      '7 days' : '%a %d',
+      '4 weeks' : '%b %d',
+      '6 months' : '%b %d %y',
+      '6months' : '%B %d',
+      'year' : '%y',
+      '1 year' : '%b %y',
+      '6 years' : '%Y'
     }
     // var formatMillisecond = d3Format.timeFormat(".%L"),
     //   formatSecond = d3Format.timeFormat(":%S"),
@@ -285,9 +301,13 @@ export class LineGraphComponent implements OnInit {
     // }
 
     function formatDate(date, range) {
+      // console.log(" formatDate date", date);
+      // console.log(" formatDate range", range);
+
       if (range == undefined) {
         range = 'day';
       }
+      range = range.toLowerCase();
       // var dateFormat = d3Format.timeFormat("%H:%M:%S");
       var dateFormat = d3Format.timeFormat(timeFormat[range]);
       return dateFormat(date);
@@ -317,11 +337,17 @@ export class LineGraphComponent implements OnInit {
       var value = getGraphValue(self.x.invert(x0), self.graphData.data);
 
       var hoverX = formatDate(value.date, range);
-      var hoverY = parseFloat(value.value.toFixed(2));
+      var hoverY = parseFloat(value.value).toFixed(2);
 
       var tooltip = self.svg.select(".tool-tip");
       
       tooltip.attr("transform", "translate(" + (x0 - 40) + "," + (y0 - 80) + ")");
+
+      // console.log("range ", range);
+      // console.log("value ", value);
+      // console.log("value.date ", value.date);
+      // console.log("hoverX ", hoverX);
+
 
       tooltip.select('.hover-x').text(hoverX);
       tooltip.select('.hover-y').text(hoverY);

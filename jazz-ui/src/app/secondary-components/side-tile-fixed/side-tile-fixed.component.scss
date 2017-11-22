@@ -8,7 +8,7 @@
     //overflow: auto;
     position: fixed;
     transition: 0.4s ease;
-    top: 4.7rem;
+    top: 56px;
     right: 0;
     @media (max-width: 853px) {
         width: 100%;
@@ -42,7 +42,7 @@
     margin: auto;
     padding: 11.5px 15px;
     text-transform: uppercase;
-    font-size: 12px;
+    font-size: 14px;
     background-color: #36414d;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
 }
@@ -87,20 +87,16 @@
         max-height: 14px;
     }
 }
-
-.overlay-msg{
+.mask-wrap{
     position: absolute;
     height: 100%;
     width: 100%;
+    background-color: #343f4b;
+    opacity: 0.9;
     z-index: 1;
-    opacity: 0.8;
-    font-size: 2rem;
-    p{
-        top: 40%;
-        margin: 0 auto;
-        position: relative;
-        text-align: center;
-        color: #fff;
-         background-color: #424F5D;
-    }
+    background-image: url("/assets/images/mask-image.png");
+    background-repeat: no-repeat;
+    background-size: 20rem auto;
+    background-position: center;
+    top:0;
 } 

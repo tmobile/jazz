@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, Inject, Input, Pipe, PipeTransform } from '@angular/core';
 import { Filter } from '../../secondary-components/tmobile-table/tmobile-filter';
 import { Sort } from '../../secondary-components/tmobile-table/tmobile-table-sort';
+import { ToasterService} from 'angular2-toaster';
+import { RequestService, MessageService } from '../../core/services/index';
 
 @Component({
   selector: 'service-logs',
@@ -8,11 +10,25 @@ import { Sort } from '../../secondary-components/tmobile-table/tmobile-table-sor
   styleUrls: ['./service-logs.component.scss']
 })
 export class ServiceLogsComponent implements OnInit {
+	@Input() service: any = {};
+	payload:any;
+	private http:any;
+	root: any;
+	errBody: any;
+	parsedErrBody: any;
+	errMessage: any;
+	private toastmessage:any;
+	loadingState:string='default';
+	logsSearch:any = {"environment" : "prod"};
+	 private subscription:any;
+	 filterloglevel:string = 'INFO';
+	 environment:string = 'prod';
+
 
 	tableHeader = [
 		{
 			label: 'Time',
-			key: 'time',
+			key: 'timestamp',
 			sort: true,
 			filter: {
 				type: 'dateRange'
@@ -26,14 +42,14 @@ export class ServiceLogsComponent implements OnInit {
 			}
 		},{
 			label: 'Request ID',
-			key: 'requestId',
+			key: 'request_id',
 			sort: true,
 			filter: {
 				type: ''
 			}
 		},{
 			label: 'Log Level',
-			key: 'logLevel',
+			key: 'type',
 			sort: true,
 			filter: {
 				type: 'dropdown',
@@ -42,7 +58,8 @@ export class ServiceLogsComponent implements OnInit {
 		}
 	]
 
-	logs = []
+	logs = [];
+	backupLogs=[];
 
 	logsData = [
 		{
@@ -131,13 +148,39 @@ export class ServiceLogsComponent implements OnInit {
 		}
 	]
 
-	filtersList = ['WARN', 'ERROR', 'INFO', 'VERBOSE', 'DEBUG']
+	filtersList = ['WARN', 'ERROR', 'INFO', 'VERBOSE', 'DEBUG'];
+	selected=['INFO']
+
 
 	filterSelected: Boolean = false;
 	searchActive: Boolean = false;
 	searchbar: string = '';
 	filter:any;
 	sort:any;
+	paginationSelected: Boolean = true;
+	totalPagesTable: number = 7;
+	prevActivePage: number = 1;
+	limitValue : number = 10;
+	offsetValue:number = 0;
+
+	environmentList = ['dev', 'prod'];
+
+	onEnvSelected(env){
+		this.logsSearch.environment = env;
+		if(env === 'prod'){
+			env='prod'
+		}
+		this.environment = env;
+
+		// this.loadingState = 'loading';
+		this.callLogsFunc();
+
+	}
+
+	navigateTo(event){
+		var url = "http://search-cloud-api-es-services-smbsxcvtorusqpcygtvtlmzuzq.us-west-2.es.amazonaws.com/_plugin/kibana/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-7d,mode:quick,to:now))&_a=(columns:!(_source),filters:!(('$$hashKey':'object:705','$state':(store:appState),meta:(alias:!n,disabled:!f,index:applicationlogs,key:domain,negate:!f,value:"+this.service.domain+"),query:(match:(domain:(query:"+this.service.domain+",type:phrase)))),('$$hashKey':'object:100','$state':(store:appState),meta:(alias:!n,disabled:!f,index:applicationlogs,key:servicename,negate:!f,value:"+this.service.domain+"_"+this.service.name+"-prod),query:(match:(servicename:(query:"+this.service.domain+"_"+this.service.name+"-prod,type:phrase))))),index:applicationlogs,interval:auto,query:(query_string:(analyze_wildcard:!t,query:'*')),sort:!(timestamp,desc),uiState:(spy:(mode:(fill:!f,name:!n))))"
+		window.open(url);
+	}
 
 	onRowClicked(row, index) {
 		for (var i = 0; i < this.logs.length; i++) {
@@ -152,7 +195,7 @@ export class ServiceLogsComponent implements OnInit {
 	}
 
 	onFilter(column){
-		this.logs = this.logsData
+		//this.logs = this.logsData
 
 		for (var i = 0; i < this.tableHeader.length; i++) {
 			var col = this.tableHeader[i]
@@ -167,7 +210,6 @@ export class ServiceLogsComponent implements OnInit {
 	};
 
 	onSort(sortData){
-		console.log('sortData', sortData);
 
     var col = sortData.key;
     var reverse = false;
@@ -175,39 +217,146 @@ export class ServiceLogsComponent implements OnInit {
     	reverse = true
     }
 
-    console.log(col, reverse);
     this.logs = this.sort.sortByColumn(col , reverse , function(x:any){return x;}, this.logs);
 	};
+	callLogsFunc(){
+		this.loadingState = 'loading';
+		// console.log('',this.service);
+		this.payload= {
+			 "service" :  this.service.name ,//"logs", //
+			"domain" :   this.service.domain ,//"jazz", //
+			"environment" :  this.environment, //"dev"
+			"category" :   this.service.serviceType ,//"api",//
+			"size" : this.limitValue,
+			"offset" : this.offsetValue,
+			"type":this.filterloglevel ||"INFO"
+		}
+		// console.log("logs payload:", this.payload);
+		 if ( this.subscription ) {
+			this.subscription.unsubscribe();
+		}
+	
+		this.subscription = this.http.post('/platform/logs', this.payload).subscribe(
+      response => {
+		
+	   this.logs  =  response.data.logs || response.data.data.logs;
+		if(this.logs.length !=0){
+			var pageCount = response.data.count || response.data.data.count;
+			// console.log("total count:"+pageCount);
+			if(pageCount){
+			  this.totalPagesTable = Math.ceil(pageCount/this.limitValue);
+			}
+			else{
+			  this.totalPagesTable = 0;
+			}
+			this.backupLogs = this.logs;
+			this.filter = new Filter(this.logs);
+			this.logs = this.filter.filterFunction("type", this.filterloglevel, this.backupLogs);
+			this.sort = new Sort(this.logs);
+			this.loadingState = 'default'
+		} else{
+			this.backupLogs = this.logs;
+			this.filter = new Filter(this.logs);
+			this.loadingState = 'empty';
+		}
 
-	onFilterSelected(selectedList){
-		console.log(selectedList)
-		this.onFilter({})
-		this.logs = this.filter.filterListFunction('logLevel' , selectedList, this.logs);
+      },
+      err => {
+		  this.loadingState='error';
+		  this.errBody = err._body;
+		  this.errMessage = 'OOPS! something went wrong while fetching data';
+		  try {
+			this.parsedErrBody = JSON.parse(this.errBody);
+			if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
+			  this.errMessage = this.parsedErrBody.message;
+			}
+		  } catch(e) {
+			  console.log('JSON Parse Error', e);
+		  }
+
+        // console.log("err",err);
+
+        // this.isDataNotAvailable = true;
+        // this.isGraphLoading = false;
+        // this.isError = true;
+
+        // // Log errors if any
+        // let errorMessage;
+        // // console.log("err ",err);
+        // // console.log("err.status ",err.status);
+        // // console.log("err._body ",err._body);
+        // errorMessage=this.toastmessage.errorMessage(err,"serviceMetrics");
+        // // this.popToast('error', 'Oops!', errorMessage);
+    })
+
+
 	}
 
+	refreshData(event){
+		this.loadingState = 'default';
+		this.callLogsFunc();
+	}
 
-  // sortColumn(column,order){
-  //     var col = column.toLowerCase();     
-  //     console.log(col);   
-  //     if(order == 'true'){
-  //         console.log('up'); 
-  //         this.sort.sortByColumn(col , false , function(x:any){return x;});
-  //     } else if(order == 'false') {
-  //         console.log('down'); 
-  //         this.sort.sortByColumn(col , true , function(x:any){return x;}); 
-  //     }
-  // };
-  
+	paginatePage(currentlyActivePage){
+    if(this.prevActivePage != currentlyActivePage){
+	  this.prevActivePage = currentlyActivePage;
+	  this.logs=[];
+	  this.offsetValue = (this.limitValue * (currentlyActivePage-1));
+	  this.callLogsFunc();
+      //  ** call service
+      /*
+      * Required:- we need the total number of records from the api, which will be equal to totalPagesTable.
+      * We should be able to pass start number, size/number of records on each page to the api, where,
+      * start = (size * currentlyActivePage) + 1
+      */
+    }
+    else{
+    //   console.log("page not changed");
+    }
+
+  }
+
+	// onFilterSelected(selectedList){
+	// 	this.onFilter({})
+	// 	this.logs = this.filter.filterListFunction('logLevel' , selectedList, this.logs);
+	// }
+	onFilterSelected(filters){
+		this.loadingState = 'loading';
+		var filter ;
+		if (filters[0]) {
+			filter = filters[0];
+		}
+		this.filterloglevel=filter;
+		this.offsetValue = 0;
+		this.callLogsFunc();
+		// console.log("filter:"+filter);
+
+		 this.logs = this.filter.filterFunction("type", this.filterloglevel, this.backupLogs);
+		// console.log("this.logs.length:"+this.logs.length);
+		 if(this.logs.length === 0){
+		 	this.loadingState = 'empty';
+		 } else{
+		 	this.loadingState = 'default';
+		 }
+
+	}
+
   onServiceSearch(searchbar){
     this.logs  = this.filter.searchFunction("any" , searchbar);
   };
 
-  constructor() { }
+  constructor(@Inject(ElementRef) elementRef: ElementRef, private request: RequestService,private toasterService: ToasterService,private messageservice: MessageService) {
+    var el:HTMLElement = elementRef.nativeElement;
+    this.root = el;
+    this.toasterService = toasterService;
+    this.http = request;
+    this.toastmessage= messageservice;
+  }
 
   ngOnInit() {
-  	this.logs = this.logsData;
-		this.filter = new Filter(this.logsData);
-    this.sort = new Sort(this.logsData);
+  	//this.logs = this.logsData;
+
+	this.callLogsFunc();
   }
 
 }

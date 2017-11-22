@@ -36,6 +36,9 @@
 .text-hide {
   @include text-hide;
 }
+.visible{
+  visibility: visible;
+}
 
 
 // Hide from screenreaders and browsers

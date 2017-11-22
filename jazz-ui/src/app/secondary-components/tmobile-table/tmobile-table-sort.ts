@@ -26,7 +26,7 @@ export class Sort {
             return val2;
         }
         return 0;
-    });
+    }); 
     
   }
   

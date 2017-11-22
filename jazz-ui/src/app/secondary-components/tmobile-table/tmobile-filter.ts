@@ -18,7 +18,7 @@ export class Filter {
     }
      //for field date write separate function
      this.filteredList = inputList.filter(item => item[field].indexOf(filterString) !== -1);
-      return this.filteredList;
+      return inputList;
   }
   filterListFunction(field: any, filterStringList:Array<string>, inputList: Array<any>){
     if (inputList == undefined) {

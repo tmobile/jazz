@@ -8,7 +8,7 @@ button.btn-primary {
     border: 1px solid #ed008c;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
     border: none;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     img {
         width: 10px;
@@ -22,5 +22,5 @@ button.btn-primary {
 button.btn-primary:hover,
 button.btn-primary:focus {
     outline: none !important;
-    background-color: #ca0077;
+    background-color: #ed008c;
 }

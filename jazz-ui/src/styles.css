@@ -8,7 +8,7 @@ html.tmobile {
 
 .tmobile body {
     margin: 0;
-    font-size: 12px;
+    font-size: 14px;
     height: 100%;
     width: 100%;
     font-family: Lato !important;
@@ -558,7 +558,10 @@ html.tmobile {
 .icon-icon-web:before {
     content: "\e903";
 }
-
+/* .icon-logo-aws:before{
+    content: "\e91a";
+    color: rgb(32, 28, 29);
+} */
 .icon-logo-aws .path1:before {
     content: "\e91a";
     color: rgb(32, 28, 29);
@@ -610,101 +613,86 @@ html.tmobile {
     margin-left: -1em;
     color: rgb(60, 158, 187);
 }
-
 .icon-logo-docker .path1:before {
   content: "\e91c";
   color: rgb(54, 69, 72);
 }
-
 .icon-logo-docker .path2:before {
   content: "\e967";
   margin-left: -1.7607421875em;
   color: rgb(34, 160, 200);
 }
-
 .icon-logo-docker .path3:before {
   content: "\e968";
   margin-left: -1.7607421875em;
   color: rgb(55, 177, 217);
 }
-
 .icon-logo-docker .path4:before {
   content: "\e969";
   margin-left: -1.7607421875em;
   color: rgb(27, 129, 165);
 }
-
 .icon-logo-docker .path5:before {
   content: "\e96a";
   margin-left: -1.7607421875em;
   color: rgb(29, 145, 180);
 }
-
 .icon-logo-docker .path6:before {
   content: "\e96b";
   margin-left: -1.7607421875em;
   color: rgb(35, 163, 194);
 }
-
 .icon-logo-docker .path7:before {
   content: "\e96c";
   margin-left: -1.7607421875em;
   color: rgb(52, 187, 222);
 }
-
 .icon-logo-docker .path8:before {
   content: "\e96d";
   margin-left: -1.7607421875em;
   color: rgb(35, 163, 194);
 }
-
 .icon-logo-docker .path9:before {
   content: "\e96e";
   margin-left: -1.7607421875em;
   color: rgb(52, 187, 222);
 }
-
 .icon-logo-docker .path10:before {
   content: "\e96f";
   margin-left: -1.7607421875em;
   color: rgb(35, 163, 194);
 }
-
 .icon-logo-docker .path11:before {
   content: "\e970";
   margin-left: -1.7607421875em;
   color: rgb(52, 187, 222);
 }
-
 .icon-logo-docker .path12:before {
   content: "\e971";
   margin-left: -1.7607421875em;
   color: rgb(35, 163, 194);
 }
-
 .icon-logo-docker .path13:before {
   content: "\e972";
   margin-left: -1.7607421875em;
   color: rgb(211, 236, 236);
 }
-
 .icon-logo-docker .path14:before {
   content: "\e973";
   margin-left: -1.7607421875em;
   color: rgb(54, 69, 72);
 }
-
 .icon-logo-docker .path15:before {
   content: "\e974";
   margin-left: -1.7607421875em;
   color: rgb(189, 217, 215);
 }
-
 .icon-logo-docker .path16:before {
   content: "\e975";
   margin-left: -1.7607421875em;
   color: rgb(211, 236, 236);
 }
+
 
 .icon-logo-googleCloud .path1:before {
     content: "\e91d";
@@ -794,7 +782,7 @@ html.tmobile {
 
 .icon-icon-info:before {
     content: "\e92c";
-    color: #ed0295;
+    color: #f01f86;
 }
 
 .icon-icon-manage:before {
@@ -834,7 +822,6 @@ html.tmobile {
 
 .icon-icon-settings:before {
     content: "\e934";
-    color: #aaa;
 }
 
 .icon-logo:before {

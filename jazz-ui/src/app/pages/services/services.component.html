@@ -1,8 +1,9 @@
 <div>
     <div class="view-hdr-wrp">
         <tmobile-header class="hide-for-mobile"></tmobile-header>
-        <side-tile-fixed [inputData]="recentActivities" [actState]='mobSecState'></side-tile-fixed>
     </div>
+    <side-tile-fixed [inputData]="recentActivities" [actState]='mobSecState'></side-tile-fixed>
+    
     <div class="view-container" [class.translate-for-mob]="mobSecState == 2">
         <div class="services-content-wrp">
             <router-outlet></router-outlet>

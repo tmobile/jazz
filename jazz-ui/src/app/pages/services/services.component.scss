@@ -3,12 +3,18 @@
     width: 80%; //fallback
     width: calc(100% - 300px);
     display: inline-block;
-    padding: 0 37px;
+    padding: 0 37px 0px 37px;
     float: left;
-    min-height: 100vh;
+    // min-height: 100vh;
     @media (max-width: 853px) {
         width: 100%;
         padding: 0 18px;
+    }
+
+    /deep/ .sidebar-wrp.show{
+        .sidebar-inr{
+            overflow-y: hidden !important;
+        }
     }
 }
 
@@ -97,7 +103,8 @@
 .toastr {
     position: fixed;
     top: 10px;
-    right: 10px;
+    left: 50%;
+    margin-left: -250px;
     z-index: 100;
     color: yellow;
 }

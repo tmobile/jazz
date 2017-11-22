@@ -12,7 +12,7 @@
             <input type="number" name="second" min="0" max="60" value="time1.second" [ngModel]="time1.second" (ngModelChange)="ontime1Change($event,'second')">
         </div>
         <div class="date-wrp">
-            <ng2-datepicker [options]="options1" [(ngModel)]="date1"></ng2-datepicker>
+            <ng2-datepicker name="date1" [options]="options1" [(ngModel)]="date1"></ng2-datepicker>
         </div>
     </div>
     <div class="dt-content calendar-right-wrp">
@@ -25,7 +25,7 @@
             <input type="number" name="second" min="0" max="60" [ngModel]="time2.second" (ngModelChange)="ontime2Change($event, 'second')">
         </div>
         <div class="date-wrp">
-            <ng2-datepicker [options]="options2" [(ngModel)]="date2"></ng2-datepicker>
+            <ng2-datepicker name="date2" [options]="options2" [(ngModel)]="date2"></ng2-datepicker>
         </div>
     </div>
     <div class="dt-content btn-wrp">

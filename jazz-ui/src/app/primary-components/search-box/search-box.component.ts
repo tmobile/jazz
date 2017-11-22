@@ -7,15 +7,20 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 })
 export class SearchBoxComponent implements OnInit {
 
-  @Input() searchString: string="";
-  @Output() onChange:EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Input() searchString: any;
+  @Output() onChange:EventEmitter<any> = new EventEmitter<any>();
   searchActive: boolean;
   searchbar: string;
 
   constructor() { }
   
-  onServiceSearch(searchString){
-    this.onChange.emit(searchString);
+  onServiceSearch(searchString,searchVal){
+    var keyCodeVal;
+    if(searchString.keyCode){
+      keyCodeVal = searchString.keyCode;
+      searchString = searchVal
+    }
+    this.onChange.emit({"searchString":searchString,"keyCode":keyCodeVal});
   };
 
   ngOnInit() {

@@ -66,11 +66,13 @@
     border-bottom: none;
 }
 
-/deep/ btn-tmobile-primary button.btn {
-    float: right;
-    padding: .66rem 1.25rem;
-    font-size: 1rem;
-    font-weight: 700;
+.access-control-wrap{
+    /deep/ btn-tmobile-primary button.btn {
+        float: right;
+        padding: .66rem 1.25rem;
+        font-size: 1rem;
+        font-weight: 700;
+    }
 }
 
 .toggle-class {
@@ -169,4 +171,18 @@ input[type="text"] {
 .radio-container label {
     margin-top: 10px;
     padding: 0;
+}
+.mask-wrp{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    left:0;
+    top:0;
+    background-color: #343f4b;
+    opacity: 0.9;
+    z-index: 1;
+    background-image: url("/assets/images/mask-image.png");
+    background-repeat: no-repeat;
+    background-size: 20rem auto;
+    background-position: center;
 }

@@ -40,6 +40,7 @@ $break-small         : 840px;
 .header-tabs{
     /*margin-left: 4rem;*/
     margin-top: 1px;
+    font-size: 13px;
 }
 .header-tab{
     display: inline-block;
@@ -81,6 +82,7 @@ $break-small         : 840px;
     position: relative;
 }
 .profile img{
+    background-color: #fff;
     border-radius: 50%;
     width: 25px;
     height: 25px;
@@ -184,6 +186,7 @@ $break-small         : 840px;
 }
 .dashboardLinksMobileView{
     display: none;
+    cursor: pointer;
     @media screen and (max-width: $break-small ) {
         width:50px; 
         height:56px;
@@ -207,12 +210,13 @@ $break-small         : 840px;
         -webkit-transition: height 300ms ease-in;
 	    -moz-transition: height  300ms ease-in;
 	    -ms-transition: height  300ms ease-in;
-	    transition: height  300ms ease-in;
+        transition: height  300ms ease-in;
         li{
             padding: 0px 8px 7px;
             font-size: 12px;
             letter-spacing: 0.5px;
             font-weight: 300;
+            cursor: pointer;
         }
     }        
 }
@@ -253,4 +257,12 @@ $break-small         : 840px;
     @media screen and (max-width: $break-small ) {
 		display: none;	
 	}
+}
+.header-section.logo-wrp{
+    height: 100%;
+    padding: 8px;
+    img{
+        height: 100%;
+        cursor: pointer;
+    }
 }

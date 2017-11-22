@@ -1,23 +1,26 @@
-/** 
-  * @type Component 
+/**
+  * @type Component
   * @desc Main Header Component
   * @author
 */
 
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { AuthenticationService } from '../../core/services/index';
+import { AuthenticationService, MessageService } from '../../core/services/index';
 import { ToasterService} from 'angular2-toaster';
 
 
 @Component({
     selector: 'tmobile-header',
     templateUrl: './tmobile-header.component.html',
+    providers:[MessageService],
     styleUrls: ['./tmobile-header.component.scss']
 })
 export class TmobileHeaderComponent implements OnInit {
 
     @Input() type: string = 'default';
+    @Input() closed: boolean;
+    @Input() noLink:boolean;
     // @Output() loginClick = new EventEmitter<boolean>();
     @Output() loginClick:EventEmitter<boolean> = new EventEmitter<boolean>();
 
@@ -27,32 +30,44 @@ export class TmobileHeaderComponent implements OnInit {
     isLoginPanelOpen: boolean = false;
     notificationsAvailable: boolean = true;
     profileClicked: boolean = false;
+    private toastmessage:any;
 
     public toggleLoginPanel () {
+        if(this.closed){
+            this.isLoginPanelOpen = false;
+        }
         this.isLoginPanelOpen = !this.isLoginPanelOpen;
         this.loginClick.emit(this.isLoginPanelOpen);
     }
-    public goToAbout(hash){
+    public goToAbout(hash) {
         var top = document.getElementById(hash).offsetTop ;
         scrollTo(top,600);
         return false;
+    }
+
+    public goTosselected (link){
+
+        setTimeout(this.goToAbout(link), 10000);
     }
 
     profileClick(){
         this.profileClicked = !this.profileClicked;
     }
 
- 
+    onNavigate(){
+        window.open('https://github.com/tmobile/jazz/wiki')
+    }
+
 
     goToLanding(){
-        this.router.navigateByUrl('/landing');
+        this.router.navigateByUrl('');// Route to landing page
     }
     openSection(){
         var el = document.getElementById("mobileLinks");
         if(el.offsetHeight == 0)
-            el.style.height = "105px"; 
+            el.style.height = "75px";
         else
-            el.style.height = "0px"; 
+            el.style.height = "0px";
     }
 
     logout(){
@@ -62,43 +77,42 @@ export class TmobileHeaderComponent implements OnInit {
               this.loading = false;
               if (result === true) {
                   // Logout successful
-                  this.isLoggedIn = this.authenticationService.isLoggedIn();
-                  this.toasterService.pop('success', 'Logout Successfull', '');
-                  this.router.navigateByUrl('/landing');
+                this.isLoggedIn = this.authenticationService.isLoggedIn();
+                //Logout success toast message
+                // let successMessage  = this.toastmessage.successMessage("true", "logout");
+                //   this.toasterService.pop('success', successMessage);
+                  this.router.navigateByUrl('');// Route to landing page
               } else {
                   // Logout failed
-                  this.toasterService.pop('error', 'Logout Failed', '');
+                  let successMessage  = this.toastmessage.successMessage("false", "logout");
+                  this.toasterService.pop('error', successMessage);
               }
           }, error => {
               this.loading = false;
-              if (error !== undefined && error.status !== undefined) {
-                  if (error.status == 0) {
-                      this.toasterService.pop('error', 'Logout Failed', 'Server cannot be reached at the moment');
-                  } else if(error.status == 0){
-                      this.toasterService.pop('error', 'Logout Failed', '');
-                  }
-              } else{
-                  this.toasterService.pop('error', 'Logout Failed', 'Unexpected Error.');
-              }
+            //   let errorMessage  = this.toastmessage.errorMessage(error,"logout");
+            //   this.toasterService.pop('error', 'Oops!', errorMessage);
+
+               //for trmporary period till demo(21 aug '17)
+               this.isLoggedIn = this.authenticationService.isLoggedIn();
+               this.router.navigateByUrl('');// Route to landing page
           });
-          
+
     }
 
     constructor(
             private route: ActivatedRoute,
             private router: Router,
             private authenticationService: AuthenticationService,
-            private toasterService: ToasterService
+            private toasterService: ToasterService,
+            private messageservice: MessageService
         ) {
             this.isLoginPanelOpen = route.snapshot.data['goToLogin'] || false;
+            this.toastmessage = messageservice;
         }
 
     ngOnInit() {
       this.isLoggedIn = this.authenticationService.isLoggedIn();
-
     }
-    
-
 }
 
 
@@ -113,10 +127,10 @@ export function scrollTo(to, duration) {
   let diff = to - start;
   let scrollStep = Math.PI / (duration / 10);
   let count = 0, currPos = start;
-  
+
 
   let scrollInterval = setInterval(function(){
-    
+
     if (el.scrollTop !== to) {
       let prevVal = diff * (0.5 - 0.5 * Math.cos(count * scrollStep));
       count = count + 1;
@@ -124,17 +138,16 @@ export function scrollTo(to, duration) {
       if((direction && (val - prevVal) < 0) || (!direction && (val - prevVal) > 0))
       {
         el.scrollTop = to;
-        clearInterval(scrollInterval); 
+        clearInterval(scrollInterval);
       }
       else
       {
         currPos = start + diff * (0.5 - 0.5 * Math.cos(count * scrollStep));
         el.scrollTop = currPos;
       }
-  
-    } else{ 
-      clearInterval(scrollInterval); 
+
+    } else{
+      clearInterval(scrollInterval);
     }
   },10);
 };
-

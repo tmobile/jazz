@@ -3,9 +3,9 @@
 /*
  * Toastr
  * Version 2.0.1
- * Copyright 2012 John Papa and Hans Fjallemark.  
- * All Rights Reserved.  
- * Use, reproduction, distribution, and modification of this code is subject to the terms and 
+ * Copyright 2012 John Papa and Hans Fjallemark.
+ * All Rights Reserved.
+ * Use, reproduction, distribution, and modification of this code is subject to the terms and
  * conditions of the MIT license, available at http://www.opensource.org/licenses/mit-license.php
  *
  * Author: John Papa and Hans Fjallemark
@@ -52,19 +52,20 @@
         color: #ed0085;
         -webkit-text-shadow: 0 1px 0 #ffffff;
         text-shadow: 0 1px 0 #ffffff;
-        opacity: 0.8;
-        // -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
-        filter: alpha(opacity=80);
+        // opacity: 0.8;
+        // // -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=80);
+        // filter: alpha(opacity=80);
         z-index: 999;
+        margin-right: 2%;
     }
     .toast-close-button:hover,
     .toast-close-button:focus {
         color: #000000;
         text-decoration: none;
         cursor: pointer;
-        opacity: 0.4;
-        // -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=40);
-        filter: alpha(opacity=40);
+        // opacity: 0.4;
+        // // -ms-filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=40);
+        // filter: alpha(opacity=40);
     }
     /*Additional properties for button version
 	 iOS requires the button element instead of an anchor tag.
@@ -82,7 +83,7 @@
     }
     .toast-content {
         display: inline-block;
-        width: 90%;
+        // width: 75%;
         vertical-align: middle;
     }
     .toast-top-full-width {
@@ -103,8 +104,13 @@
         top: 12px;
     }
     .toast-top-right {
+        top: 60px;
+        left: calc(50% - 200px);
+    }
+    .landing .toast-top-right{
         top: 12px;
-        right: 12px;
+        // left: auto;
+        // right: 12px;
     }
     .toast-bottom-right {
         right: 12px;
@@ -123,9 +129,35 @@
     #toast-container {
         position: fixed;
         z-index: 999999;
-        /*overrides*/
         pointer-events: auto;
+        // left: 45%;
+        top: -100px;
+        font-size: 12px;
+        display: flex;
+        transition-property: top, bottom;
+        transition-duration: 0.5s;
+        -webkit-transition-property: top, bottom;
+        -webkit-transition-duration: 0.5s;
+        -moz-transition-property: top, bottom;
+        -moz-transition-duration: 0.5s;
     }
+        //-webkit-animation: slide 0.5s forwards;
+        
+    .toaster-anim{
+       top:10px !important;
+        
+              
+    }
+    @keyframes slide {
+        10% { top:10px;}
+        90%{top:10px;}
+        100% { top: -100px; }
+     }
+
+    .try-again:hover{
+        text-decoration: none;
+    }
+
     #toast-container.toast-center,
     #toast-container.toast-top-center,
     #toast-container.toast-bottom-center {
@@ -232,7 +264,31 @@
         background-color: #030303;
     }
     .toast-success {}
-    .toast-error {}
+
+    #toast-container .toast-error{
+        background-color: rgba(208, 2, 27, 0.75);
+        color: #fff;
+        width: 530px;
+        height: 50px;
+        margin: auto;
+    }
+    .toast-error {
+        .icon-error{
+            background-color: transparent;
+            background-image: none !important;
+            font-size: 2.5rem;
+            text-align: right;
+            vertical-align: middle;
+            line-height: 4rem;
+            &:before{
+                content: "\E920";
+                color: #ffffff;
+            }
+        }
+        .toast-close-button{
+          color: #ffffff;
+        }
+    }
     .toast-info {}
     .toast-wait {}
     .toast-warning {}
@@ -286,3 +342,10 @@
         opacity: 0;
     }
 }
+
+
+section:focus
+{
+    outline:none !important;
+}
+

@@ -1,5 +1,5 @@
 <div class="landing-hdr-wrp" >
-	<tmobile-header type="landing" (loginClick) = "onLoginClicked($event)"></tmobile-header>
+	<tmobile-header type="landing" (loginClick) = "onLoginClicked($event)" [closed]="closed"></tmobile-header>
 </div>
 <main class="landing-main-wrp" [style.overflow-y]="goToLogin ? 'hidden':'auto'">
 	<div id="landing" class="header-section">
@@ -10,28 +10,27 @@
 					<span>Manage.</span>
 					<span> Self-Service.</span>
 				</h3>
-				
 			</div>
 			<div class="section-content-text">
-				<span class = "center"> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
+				<div class = "center"> Jazz lets you seamlessly build, deploy and manage cloud native applications using serverless technology.</div>
 			</div>
-			<div class = "center top-parallax-margin">
-				<btn-tmobile-primary newclass="buttonPadding" text="GET STARTED NOW" (click)="getStartedNow()"></btn-tmobile-primary>
+			<div class = "center top-parallax-margin landing-action-btn-wrap">
+				<btn-tmobile-primary newclass="buttonPadding" text="{{buttonText}}" (click)="getStartedNow()"></btn-tmobile-primary>
 			</div>
 			<div class = "parallax-0"></div>
 			<!--<div class = "parallax-1"></div>-->
 			<div class = "parallax-2">
-				<div class = "parallax-text bg1">Donec facilisis tortor ut augue lacinia, at viverra. Donec facilisis tortor</div>
+				<!-- <div class = "parallax-text bg1">Donec facilisis tortor ut augue lacinia, at viverra. Donec facilisis tortor</div>
 				<div class = "parallax-text bg2">ut augue lacinia, at viverra. Donec facilisis tortor</div>
-				<div class = "parallax-text bg3">Donec facilisis tortor ut augue lacinia, at viverra. </div>
+				<div class = "parallax-text bg3">Donec facilisis tortor ut augue lacinia, at viverra. </div> -->
 			</div>
-			
+
 			<div class = "parallax-3"></div>
 			<!--<div class = "parallax-4"></div>-->
-			
+
 			<!--<div class = "parallax-6"></div>-->
 			<!--<div class = "parallax-7"></div>-->
-			
+
 		</section>
 	</div>
 	<section id="features"  class="section features-section features relative transform-parallax">
@@ -44,72 +43,89 @@
 		<ul class="section-content">
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Scale Icon@1x.png.png"/>
+					<img class="pre-image" src="/assets/landing/Asset 49@6x.png"/>
 				</div>
 				<div class="post-image-container">
-					<h5>RUN AT ANY SCALE</h5>
-					<span> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
+					<h5>Go Serverless in Production!</h5>
+					<span> Jazz supercharges your serverless journey while you enjoy 100% visibility into your production applications.</span>
 				</div>
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Severless Icon@1x.png.png"/>
+					<img class="pre-image" src="/assets/landing/Asset 53@6x.png"/>
 				</div>
 				<div class="post-image-container">
-					<h5>SERVERLESS MADE EASY</h5>
-					<span> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
+					<h5>Focus on Code</h5>
+					<span>No more Infrastructure worries! Jazz comes with reusable code templates & patterns so that you can quickly turn thoughts into cool things.</span>
 				</div>
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Code Icon@1x.png.png"/>
+					<img class="pre-image" src="/assets/landing/Asset 56@6x.png"/>
 				</div>
 				<div class="post-image-container">
-					<h5>FOCUS ON CODE</h5>
-					<span> Donec facilisis tortor ut augue lacinia, at viverra. Donec facilisis tortor </span>
+					<h5>Avoid Vendor Lock-In</h5>
+					<span> Jazz is seductively powerful & makes multi-cloud easy. You choose services from AWS, Azure, Google Cloud and others. Commission your Jazz experience, customize it to fit your needs!</span>
 				</div>
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Scale Icon@1x.png.png"/>
+					<img class="pre-image" src="/assets/landing/Asset 58@6x.png"/>
 				</div>
 				<div class="post-image-container">
-					<h5>RUN AT ANY SCALE</h5>
-					<span> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
+					<h5>CI/CD Solved!</h5>
+					<span>Jazz handles all the messy CI/CD work. Fall in love with Jazz and take it for a Spin today!</span>
 				</div>
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Severless Icon@1x.png.png"/>
+					<img class="pre-image" src="/assets/landing/Asset 50@6x.png"/>
 				</div>
 				<div class="post-image-container">
-					<h5>SERVERLESS MADE EASY</h5>
-					<span> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
+					<h5>Quality Code that's Secure</h5>
+					<span>Jazz helps you focus on code quality & finds vulnerabilities before they go live!</span>
 				</div>
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Code Icon@1x.png.png"/>
+					<img class="pre-image" src="/assets/landing/Asset 61@6x.png"/>
 				</div>
 				<div class="post-image-container">
-					<h5>FOCUS ON CODE</h5>
-					<span> Donec facilisis tortor ut augue lacinia, at viverra. Donec facilisis tortor ut augue lacinia, at viverra.</span>
+					<h5>Built-in Logging and Monitoring</h5>
+					<span>Troubleshoot issues and debug your serverless application quickly using live metrics and a centralized log repository.</span>
+				</div>
+			</li>
+			<li>
+				<div class="pre-image-container">
+					<img class="pre-image" src="/assets/landing/Asset 60@6x.png"/>
+				</div>
+				<div class="post-image-container">
+					<h5>Controlled Access</h5>
+					<span>You're the boss! You decide who accesses your code, approves deployments & gets access to your services.</span>
+				</div>
+			</li>
+			<li>
+				<div class="pre-image-container">
+					<img class="pre-image" src="/assets/landing/Asset 57@6x.png"/>
+				</div>
+				<div class="post-image-container">
+					<h5>Don't Go Bankrupt!</h5>
+					<span> Pay-per-use makes serverless appear insanely cheap, but it is not guaranteed. Jazz puts you in financial control so that billing mishaps are quickly avoided.</span>
 				</div>
 			</li>
 		</ul>
 
 	</section>
-	<div id="releaseCalendars" class="grey-section top-parallax-margin-half relative transform-parallax">
-		<!--<div class="transform-parallax">-->
+	<div id="releaseCalendars" class="hide grey-section top-parallax-margin-half relative transform-parallax">
+
 			<div class="pattern-parallax">
 				<div class = "parallax-6"></div>
-				<!--<div class = " parallax-7"></div>-->
+
 			</div>
 		<section  class="section features-section">
-			<!--<div class = "parallax-6"></div>
-			<div class = " parallax-7"></div>-->
+
 			<div class="section-content">
-				<h3 class="feature-title center" >Release Calendar</h3>		
+				<h3 class="feature-title center" >Release Calendar</h3>
 			</div>
 			<div class="section-content-text">
 					<span class = "center"> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
@@ -119,8 +135,7 @@
 				<btn-tmobile-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="Future Releases"></btn-tmobile-secondary>
 				<btn-tmobile-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="Past Releases"></btn-tmobile-secondary>
 				<btn-tmobile-secondary newclass="buttonPadding buttonPaddinghover nolandscape" text="Events"></btn-tmobile-secondary>
-				<!--<div class="shift-right"  (click)="shiftRight()"></div>
-				<div class="shift-left" (click)="shiftLeft()"></div>-->
+
 			</div>
 			<div class="card-container relative">
 				<div class="shift-right icon-icon-rigtArrow"  (click)="shiftRight()" [ngClass]="min ? 'minnum':'maxnum'"></div>
@@ -130,28 +145,28 @@
 							<div class ="full">
 								<h6>Hackathon</h6>
 								<span> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
-					
+
 							</div>
 						</div>
 						<div>
 							<div class ="full">
 								<h6>Hackathon</h6>
 								<span> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
-					
+
 							</div>
 						</div>
 						<div>
 							<div class ="full">
 								<h6>Hackathon</h6>
 								<span> Create, deploy, manage all your API needs.</span>
-					
+
 							</div>
 						</div>
 						<div>
 							<div class ="full">
 								<h6>Hackathon</h6>
 								<span> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
-					
+
 							</div>
 						</div>
 						<div>
@@ -160,36 +175,28 @@
 								<span> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
 								<div class = "calendar"> May 17th, 5-7 PM</div>
 							</div>
-							
+
 						</div>
 						<div>
 							<div class ="full">
 								<h6>Hackathon</h6>
 								<span> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
-					
+
 							</div>
 						</div>
 						<div>
 							<div class ="full">
 								<h6>Hackathon</h6>
 								<span> Our API Service system allows you to seamlessly create, deploy, manage all your API needs.</span>
-					
+
 							</div>
 						</div>
-						<!--<div *ngFor="let cardDetails of cardDetailsList">
-							<div class="full">
-								<h6>{{cardDetails.title}}</h6>
-								<span>{{cardDetails.description}}</span>
-								<div class="calender">{{cardDetails.date}}</div>
-							</div>
-						</div>-->
+
 					</div>
 				</div>
 				<div class="shift-left icon-icon-rigtArrow" (click)="shiftLeft()" [ngClass]="max ? 'minnum':'maxnum'"></div>
-			</div>	
+			</div>
 		</section>
-		<!--</div>-->
-		
 	</div>
 	<div id="about" class="about-section relative transform-parallax">
 		<div class="pattern-parallax">
@@ -197,49 +204,50 @@
 		</div>
 		<section class="section features-section">
 			<div class="section-content">
-				<h3 class="feature-title center">About Us</h3>		
+				<h3 class="feature-title center">About Us</h3>
 			</div>
 			<div class="section-content section-content-small">
-				<span class = "center"> 
-					Lorem ipsum dolor sit amet, enean sollicitudin, erat a elementum rutrum, neque sem pretium metus, quis mollis nisl nunc et massa. Vestibulum sed metus in lorem tristique ullamcorper id vitae erat. Nulla mollis sapien sollicitudin lacinia lacinia. Vivamus facilisis dolor et massa placerat, at vestibulum nisl egestas. Nullam rhoncus lacus non odio luctus, eu condimentum mauris ultrices.
+				<span class = "center">
+						The serverless team is bold, they think big, they build cool stuff and they make serverless fun!
 				</span>
 			</div>
 			<div class="section-content actions">
-				<span class = "center"> 
+				<span class = "center">
 					<btn-tmobile-secondary newclass="buttonPadding buttonAbout" text="E-MAIL US"></btn-tmobile-secondary>
 					<btn-tmobile-secondary text="SLACK" newclass="slackIcon buttonPadding buttonAbout"></btn-tmobile-secondary>
+					<btn-tmobile-secondary newclass="buttonPadding buttonAbout" text="MORE"></btn-tmobile-secondary>
+					
 				</span>
 			</div>
 		</section>
 	</div>
 	<section  class="section features-section top-parallax-margin-half">
-		
-		
-		<div class="section-content section-content-small footer">
-			<span class = "center"> 
-				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam sit amet porttitor mauris, fringilla feugiat ex. Cras facilisis ultricies porttitor. Curabitur nec nunc vehicula, interdum metus eget, maximus nulla. Sed tempor massa id justo consequat dapibus. 
+
+		<div class="section-content section-content-small footer hide">
+			<span class = "center">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam sit amet porttitor mauris, fringilla feugiat ex. Cras facilisis ultricies porttitor. Curabitur nec nunc vehicula, interdum metus eget, maximus nulla. Sed tempor massa id justo consequat dapibus.
 			</span>
 		</div>
-		<div class="section-content ">
-			
-				
+		<div class="section-content hidden">
+
+
 				<ul class="footer">
 					<li><div class ="home-footer"></div></li>
-					<li><a class="center">Privacy</a></li>
-					<li><a class="center">Blog</a></li>
-					<li><a class="center">Docs</a></li>
+					<li><a class="center" (click)='onNavigate($event)'>Privacy</a></li>
+					<li><a class="center hide">Blog</a></li>
+					<li><a class="center" (click)='onNavigate($event)'>Docs</a></li>
 				</ul>
-				
-			
+
+
 		</div>
 		<div class ="mobile-logo-footer"></div>
 		<div class="section-content-text bottom-parallax-padding copyright">
-			<span class=" center">Copyright 2017. All rights recieved</span>		
+			<span class=" center">Copyright 2017. All rights reserved.</span>
 		</div>
 	</section>
 
 
-	
+
 </main>
 <sidebar (loginClick) = "onLoginClicked($event)" [show]="goToLogin" (onClose)="closeSidebar($event)">
 	<login></login>

@@ -28,7 +28,12 @@ button:focus {
     // transition-property: color;
     // -webkit-transition-duration: 0.5s;
     // transition-duration: 0s;
+    &:disabled{
+        cursor: not-allowed;
+        opacity: .5;
+    }
 }
+
 
 [class^="btnT-"] {
     margin: .4em;
@@ -113,9 +118,11 @@ button:focus {
 // }
 
 .buttonPadding {
+    min-width:12.5rem;
     width: 150px;
+    max-width: 15rem;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
-    font-size: 12px !important;
+    font-size: 13px !important;
     font-weight: 400 !important;
     @media screen and (max-width: $break-small) {
         width: 24vw;
@@ -138,6 +145,8 @@ button:focus {
     background-size: 10%;
     padding-left: 35px;
     padding-right: 20px;
+    // cursor: not-allowed !important;
+    // opacity: 0.5;
 }
 
 .nolandscape {

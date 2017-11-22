@@ -1,0 +1,44 @@
+@import './../../../main-styles';
+.page-body{
+    background-color: #f3f3f3;
+    text-align: center;
+    width: 100%;
+    height: calc(100vh - 56px);
+}
+.error-txt-wrp{  
+    padding: 0 30px;
+    position: absolute;
+    width: 40%;
+    top: 25%;
+}
+.error-wrp{
+    background-image: url("../../../assets/images/error-404.png");
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-color: #f3f3f3;
+    color:#555555;
+    text-align: center;
+    margin: 0 auto;
+    height: inherit;
+   
+    .suggest-text{
+        color: #000;
+        font-size: 1.2rem;
+        padding:40px;
+        a{
+            cursor: pointer;
+        }
+    }
+}
+.error-hdr{
+    font-size: 2.5rem;
+    font-weight: bold; 
+    padding:40px 0 25px 0;
+}
+.error-txt{
+    padding-bottom:40px;
+    font-size: 1.5rem;
+    a{
+        cursor: pointer;
+    }
+}

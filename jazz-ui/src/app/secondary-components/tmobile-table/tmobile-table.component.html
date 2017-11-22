@@ -24,7 +24,7 @@
                     </div>
                     <div *ngIf="i == 2" class="domain-input-dropdown">
                         <div class="input-wrapper">
-                            <input name="domainSearch" type="text" class="textForm" placeholder="Domain name" id="domain-search" [(ngModel)]="DomainName" (ngModelChange)="onServiceChange()">
+                            <input name="domainSearch" type="text" class="textForm" placeholder="Namespace" id="domain-search" [(ngModel)]="DomainName" (ngModelChange)="onServiceChange()">
                         </div>
                     </div>
                 </td>
@@ -33,7 +33,7 @@
                 <tr (click)="onRowClicked(service)" [ngClass]="{'disable-event': service.status == 'Deleting', 'hide':state!='default'}">
                     <td *ngFor="let headers of tableHeader">
                         <span *ngIf="headers.field != 'health' && headers.field != 'status'">{{service[headers.field]}}</span>
-                        <div *ngIf="headers.field == 'health'" [ngClass]="{'pending-service': service.health <= 1, 'active-service': service.health == 2}" class="status-indicator pending-service"></div>
+                        <!-- <div *ngIf="headers.field == 'health'" [ngClass]="{'pending-service': service.health <= 1, 'active-service': service.health == 2}" class="status-indicator pending-service"></div> -->
                         <div *ngIf="headers.field == 'status'" [ngClass]="{'pending-service-text': service.health <= 1, 'active-service-text': service.health == 2}">{{service.status}}<span class="for-deleting">...</span></div>
                     </td>
                 </tr>
@@ -50,6 +50,7 @@
         </div> -->
         <div class="empty-row" [class.show]="state=='empty'">
             <div>No Data Available</div>
+            <div></div>
         </div>
     </div>
 </div>

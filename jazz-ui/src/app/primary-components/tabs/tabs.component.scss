@@ -7,7 +7,7 @@
         left: 0;
         right: 0;
         padding-left: 2.1vh;
-        z-index: 1;
+        z-index: 3;
         height: 56px;
     }
     ul {
@@ -28,12 +28,12 @@
         margin-right: 36px;
         list-style-type: none;
         display: inline-block;
-        font-size: 12px;
+        font-size: 13px;
         color: #aaaaaa;
         cursor: pointer;
         text-transform: uppercase;
         @media(max-width: 853px) {
-            font-size: 14px;
+            font-size: 15px;
             color: #fff;
             cursor: pointer;
             padding: 7px 16px;
@@ -50,6 +50,15 @@
         }
         &:hover {
             color: #ed008c;
+        }
+    }
+    li:nth-child(4), li:nth-child(3), li:nth-child(2){
+        cursor: not-allowed;
+         &.active {
+            color: #aaaaaa;
+            }
+            &:hover {
+            color: #aaaaaa;
         }
     }
 }

@@ -5,6 +5,8 @@ import * as d3Scale from "d3-scale";
 import * as d3Array from "d3-array";
 import * as d3Axis from "d3-axis";
 
+import { STATISTICS } from '../../pages/service-cost/costdata';
+
 @Component({
   selector: 'bar-graph',
   templateUrl: './bar-graph.component.html',
@@ -13,7 +15,7 @@ import * as d3Axis from "d3-axis";
 export class BarGraphComponent implements OnInit {
 
   @Input() graphData: any;
-  @Input() render: Function;
+  // @Input() render: Function;
 
   root:any;
   private width: number;
@@ -37,20 +39,21 @@ export class BarGraphComponent implements OnInit {
   ngOnInit() {
     this.onGraphRender();
   }
-  ngOnChanges(){
+  ngOnChanges(x:any){
     this.onGraphRender();
   }
 
-  public renderGraph(data){
-    this.clearGraph(this.onGraphRender);
-  }
+  // public renderGraph(data){
+  //   this.clearGraph(this.onGraphRender());
+  // }
 
-  private clearGraph(onComplete) {
-    this.root.select("svg").remove();
-    if(typeof onComplete === "function"){
-      onComplete()
-    }
-  }
+  // private clearGraph(onComplete) {
+  //   this.root.select("svg").remove();
+  //   console.log("typeof onComplete:",typeof onComplete)
+  //   if(typeof onComplete === "function"){
+  //     onComplete()
+  //   }
+  // }
 
   private onGraphRender(){
     d3.selectAll("svg > *").remove();
