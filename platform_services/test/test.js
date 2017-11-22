@@ -67,7 +67,7 @@ describe('platform_services', function() {
         "region" : "mewni",
         "type" : "mewm@n",
         "runtime" : "m0n$ter",
-        "created_by" : "g10$saRyck",
+        "created_by" : "g10$saryck",
         "status" : "mewbErTy"
       },
       "body" : {
@@ -158,7 +158,7 @@ describe('platform_services', function() {
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   * @returns {string} should return the callback response which is an error message
   */
-  it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.get fails", ()=>{
+  it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.get fails for GET", ()=>{
     event.method = "GET";
     errType = "InternalServerError";
     errMessage = "Unexpected Error occured.";
@@ -230,6 +230,88 @@ describe('platform_services', function() {
   });
 
   /*
+  * Given an event.method = get and timestamp/update values to query, timstamp info should be added to the filter
+  * @param {object} event->event.method="GET", event.path.id is undefined, query.last_update_before/after are defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should include update/timestamp info in dynamodb filter if given specific event props", ()=>{
+    event.method = "GET";
+    event.path.id = undefined;
+    var before = "someDate";
+    var after = "someTime";
+    event.query.last_updated_after = after;
+    event.query.last_updated_before = before;
+    var scanParamBefore = ":BEFORE";
+    var scanParamAfter = ":AFTER";
+    var dataType = "S";
+    var filterString = "SERVICE_TIMESTAMP" + " BETWEEN :BEFORE" + " AND :AFTER ";
+    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB", "scan", spy);
+    //trigger spy by calling index.handler()
+    var callFunction = index.handler(event, context, callback);
+    //assigning the item filter values passed to DynamoDB.scan as values to check against
+    var filterExp = spy.args[0][0].FilterExpression;
+    var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
+    var allCases = filterExp.includes(filterString) &&
+                    expAttrVals[scanParamBefore][dataType] == before &&
+                    expAttrVals[scanParamAfter][dataType] == after;
+    AWS.restore("DynamoDB");
+    assert.isTrue(allCases);
+  });
+
+  /*
+  * Given a userID that IS-NOT not listed among admin_users, dynamoDB only scans for specific user's services
+  * @param {object} event->event.method="GET", event.path.id is undefined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should do something", function(){
+    event.method = "GET";
+    event.path.id = undefined;
+    event.query.created_by = undefined;
+    //user that is not listed among admin_users
+    global.userId = "Mete0ra";
+    var dataType = "S";
+    var filterString = "SERVICE_CREATED_BY" + " = :" + "SERVICE_CREATED_BY";
+    var scanParam = ":SERVICE_CREATED_BY";
+    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB", "scan", spy);
+    //trigger spy by calling index.handler()
+    var callFunction = index.handler(event, context, callback);
+    //assigning the item filter values passed to DynamoDB.scan as values to check against
+    var filterExp = spy.args[0][0].FilterExpression;
+    var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
+    var allCases = filterExp.includes(filterString) &&
+                    expAttrVals[scanParam][dataType] == global.userId;
+    AWS.restore("DynamoDB");
+    assert.isTrue(allCases);
+  });
+
+  /*
+  * Given a userID that IS listed among admin_users, a filter is not used for only the user's services
+  * @param {object} event->event.method="GET", event.path.id is undefined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should do something", function(){
+    event.method = "GET";
+    event.path.id = undefined;
+    event.query.created_by = undefined;
+    //user that is listed among admin_users
+    global.userId = "ecl!psa";
+    var filterString = "SERVICE_CREATED_BY" + " = :" + "SERVICE_CREATED_BY";
+    var scanParam = ":SERVICE_CREATED_BY";
+    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB", "scan", spy);
+    //trigger spy by calling index.handler()
+    var callFunction = index.handler(event, context, callback);
+    //assigning the item filter values passed to DynamoDB.scan as values to check against
+    var filterExp = spy.args[0][0].FilterExpression;
+    var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
+    var allCases = !filterExp.includes(filterString) && !expAttrVals[scanParam];
+    AWS.restore("DynamoDB");
+    assert.isTrue(allCases);
+  });
+
+  /*
   * Given a failed attempt at fetching data from DynamoDB, handler() should inform of error
   * @param {object} event -> event.method is defined to be "GET", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
@@ -293,9 +375,7 @@ describe('platform_services', function() {
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
     var logResponse = logStub.args[0][0];
-    console.log(logResponse);
     var cbResponse = stub.args[0][0];
-    console.log(cbResponse);
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
