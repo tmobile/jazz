@@ -1,6 +1,7 @@
 #!groovy.
 import groovy.json.JsonOutput
 import java.text.SimpleDateFormat
+import groovy.transform.Field
 
 /**Process** of service-onboarding-build-pack
 -identify service type
@@ -29,9 +30,10 @@ def Event_Status = [
 	'COMPLETED':'COMPLETED',
 	'FAILED':'FAILED'
 ]
+@Field def region = ''
 
 node  {
-
+	region = env.jazz_region
 	def service_type =  params.service_type
 	def runtime = params.runtime
 	def service_name = params.service_name
@@ -142,19 +144,10 @@ node  {
 			sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.VALIDATE_INPUT, Event_Status.FAILED, "Invalid Service Type")
 			error "Invalid Service Type"
 		}
-
-
-		echo service_type
-		echo service_name
-		echo runtime
-		echo service_template
-		echo admin_group
-		echo "creator_username: $creator_username"
 	}
 
 	def service_id_in_db = "";
-	def region = "us-east-1"//default will be replaced below
-
+	
 	stage ('Get Service Template')
 	{
 		try{
@@ -177,7 +170,14 @@ node  {
 					region = config['region']
 
 				echo "Calling add row in db ###################################################"
-				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, domain + " - " + service_name, admin_group, service_type, env.API_KEY, "us-east-1");
+
+				def description = ' ';
+
+				if (params.description) {
+					description = params.description;
+				}
+
+				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, env.API_KEY, region);
 				updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_started", repo_url);
 			}
 		}
@@ -396,18 +396,15 @@ def sendEvent(service_type, service_name, domain, runtime, admin_group, event_na
 	echo "send event" + error
 }
 
-def updateServiceInDB(service_id_in_db, devApiID, region, statusval, repo_url) {
-	if ( (region == null) || (region != "") )
-		region = "us-east-1"
-
-  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: "+params.auth_token+"\" -X PUT -k -v -d '{ \"status\": \"" + statusval + "\", \"repository\": \"" + repo_url + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id_in_db + "/"
+def updateServiceInDB(service_id_in_db, apiId, region, statusval, repo_url) {
+  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${params.auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\", \"repository\": \"${repo_url}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id_in_db}/"
 }
 
-def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, devApiID, region) {
+def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region) {
 
 	try {
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: "+params.auth_token+"\" -X POST -k -v -d '{ \"service\": \"" + service_name + "\", \"status\":\"creation_started\", \"domain\": \"" + domain + "\", \"type\": \"" + servicetype + "\", \"created_by\": \"" + created_by + "\", \"runtime\": \"" + runtime + "\", \"repository\": \"" + repo_url + "\", \"description\": \"" + domain + " - " + service_name + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${params.auth_token} \" -X POST -k -v -d '{ \"service\": \"${service_name}\", \"status\":\"creation_started\", \"domain\": \"${domain}\", \"type\": \"${servicetype}\", \"created_by\": \"${created_by}\", \"runtime\": \"${runtime}\", \"repository\": \"${repo_url}\", \"description\": \"${desc}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/dev/platform/services/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
