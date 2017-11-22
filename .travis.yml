@@ -6,4 +6,6 @@ env:
  - PLATFORM_SERVICE=platform_logout
  - PLATFORM_SERVICE=create-serverless-service
  - PLATFORM_SERVICE=delete-serverless-service
+ - PLATFORM_SERVICE=is-service-available
+ 
 script: cd $PLATFORM_SERVICE && npm install && npm test
