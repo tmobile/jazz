@@ -27,7 +27,7 @@ const AWS = require("aws-sdk-mock");
 
 
 describe('platform_services', function() {
-  var spy, stub, err, errMessage, errType, event, context, callback, callbackObj, logMessage, logStub;
+  var spy, stub, err, errMessage, errType, dataObj, event, context, callback, callbackObj, logMessage, logStub;
 
   /*
   * helper function for determining if dynamoDB service is used during function call
@@ -71,7 +71,8 @@ describe('platform_services', function() {
         "status" : "mewbErTy"
       },
       "body" : {
-        "foo" : "bar"
+        "description" : "g0nna_GET_a-L!tt1e_we!rd",
+        "email" : "gonnaGetALittle@Wild.com"
       }
     };
     context = awsContext();
@@ -87,6 +88,12 @@ describe('platform_services', function() {
       "errorType" : "svtfoe",
       "message" : "starco"
     };
+    //define an object to be returned by dynamo upon mocked success
+    dataObj = {
+        "Item" : event.query
+    };
+    dataObj.Item.SERVICE_ID = "b100dM00n";
+    dataObj.Item.TIMESTAMP = "Ba11";
     //creating an object with the callback function in order to wrap and test callback parameters
     callbackObj = {
       "callback" : callback
@@ -218,6 +225,30 @@ describe('platform_services', function() {
   });
 
   /*
+  * Given a GET request that returns a service for a specific id from dynamo, handler() indicates Success
+  * @param {object} event -> event.method is defined to be "GET", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} should return the callback response with data from service and message indicating success
+  */
+  it("should inform of successful service lookup for specific id for GET request", ()=>{
+    event.method = "GET";
+    logMessage = "Get Success";
+    //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
+    var awsMock = AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    //wrapping the logger to check for response messages
+    logStub = sinon.stub(logger,"verbose",spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[0][0];
+    var logCheck = logResponse.includes(logMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    assert.isTrue(logCheck);
+  });
+
+  /*
   * Given an event.method = "GET" and invalid service_id, handler() attempts to get all items that match
   * @param {object} event -> event.method is defined to be "GET", event.path.id is undefined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
@@ -264,7 +295,7 @@ describe('platform_services', function() {
   * @param {object} event->event.method="GET", event.path.id is undefined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   */
-  it("should do something", function(){
+  it("should return only the user's relevant service data if user is not an admin", function(){
     event.method = "GET";
     event.path.id = undefined;
     event.query.created_by = undefined;
@@ -291,7 +322,7 @@ describe('platform_services', function() {
   * @param {object} event->event.method="GET", event.path.id is undefined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   */
-  it("should do something", function(){
+  it("should return all relevant service data without filtering userID if user is an admin", function(){
     event.method = "GET";
     event.path.id = undefined;
     event.query.created_by = undefined;
@@ -416,5 +447,69 @@ describe('platform_services', function() {
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
+  });
+
+  /*
+  * Given a successful service lookup with Dynamo for PUT request, handler() should attempt to validate the update
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should attempt to validate service update data if service info is successfully retrieved", ()=>{
+    event.method = "PUT";
+    logMessage = "validateInputData";
+    //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    //wrapping the logger to check for response messages
+    logStub = sinon.stub(logger,"info",spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args;
+    //should indicate function is validating info in event.body for the update in log notifications
+    console.log(typeof logResponse[2][0]);
+    var logCheck = logResponse[1][0].includes(logMessage) &&
+                    logResponse[2][0].description == event.body.description &&
+                    logResponse[2][0].email == event.body.email;
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    assert.isTrue(logCheck);
+  });
+
+  /*
+  * Given successful service lookup for PUT req - but missing event.body, handler() informs of empty update-data
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined, event.body is falsy
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should attempt to validate service update data if service info is successfully retrieved", ()=>{
+    event.method = "PUT";
+    var invalidBodies = ["", null, undefined];
+    errType = "BadRequest";
+    errMessage = "Service Data cannot be empty";
+    logMessage = " input data is empty ";
+    //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    //wrapping the logger and callback function to check for response messages
+    stub = sinon.stub(callbackObj,"callback",spy);
+    logStub = sinon.stub(logger, "error", spy);
+    var allCases = true;
+    //check if expected response occurs for every invalid event.body scenario, if not, have allCases be false
+    for(i in invalidBodies){
+      event.body = invalidBodies[i];
+      //trigger the mocked logic by calling handler()
+      var callFunction = index.handler(event, context, callbackObj.callback);
+      var logResponse = logStub.args[i][0];
+      var cbResponse = stub.args[i][0];
+      if(!logResponse.includes(logMessage) || !cbResponse.includes(errType) ||
+          !cbResponse.includes(errMessage)){
+        allCases = false;
+      }
+    }
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    stub.restore();
+    assert.isTrue(allCases);
   });
 });

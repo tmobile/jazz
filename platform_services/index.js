@@ -137,14 +137,14 @@ module.exports.handler = (event, context, cb) => {
                     logger.info(update_data);
 
                     // validate if input data is empty
-                    if (update_data === undefined || update_data === null) {
+                    if (!update_data) {
                         // return inputError
                         logger.error(' input data is empty ');
-                        cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
+                        return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
                     } else if (Object.keys(update_data).length === 0 && update_data.constructor === Object) {
                         // return inputError
                         logger.error('input data is empty ');
-                        cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
+                        return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
                     }
 
                     // list of fields that can be updated
