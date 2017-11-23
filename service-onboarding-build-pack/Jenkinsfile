@@ -165,10 +165,7 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
 
 				config = LoadConfiguration()
-				region = config['region']
-				if ( (config['region'] != null) && (config['region'] != "") )
-					region = config['region']
-
+				
 				echo "Calling add row in db ###################################################"
 
 				def description = ' ';
