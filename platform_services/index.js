@@ -155,7 +155,7 @@ module.exports.handler = (event, context, cb) => {
                         if (update_data.hasOwnProperty(field)) {
                             if (fields_list.indexOf(field) === -1) {
                                 logger.error('input contains fields other than allowed fields');
-                                cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid field " + field + ". Only following fields can be updated " + fields_list.join(", "))));
+                                return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid field " + field + ". Only following fields can be updated " + fields_list.join(", "))));
                                 break;
                             }
                         }
@@ -174,7 +174,7 @@ module.exports.handler = (event, context, cb) => {
                     if (field_exists === false) {
                         // return inputError
                         logger.error('No input data. Nothing to update service');
-                        cb(JSON.stringify(errorHandler.throwInputValidationError('No input data. Nothing to update service')));
+                        return cb(JSON.stringify(errorHandler.throwInputValidationError('No input data. Nothing to update service')));
                     }
                     onComplete(null, {
                         "result": "success",
