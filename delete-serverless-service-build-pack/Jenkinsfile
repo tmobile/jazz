@@ -138,7 +138,6 @@ node {
 
 	dir(bitbucket_repo_name)
 	{
-
 		switch (flowType) {
 			case "API":
 				stage('Undeploy Service') {
@@ -146,19 +145,19 @@ node {
 					def path = getResourcePath()
 					//sh "sed -i -- 's/{opt:stage}/dev/g' serverless.yml"
 					cleanUpApiGatewayResources("dev", path, region)
-					//cleanUpApiDocs("dev", service_name, domain)
+					cleanUpApiDocs("dev", service_name, domain)
 					unDeployService('dev', region)
 
 					updateServiceNameConfig(domain, service_name, "stg")
 					//sh "sed -i -- 's/{opt:stage}/stg/g' serverless.yml"
 					cleanUpApiGatewayResources("stg", path, region)
-					//cleanUpApiDocs("stg", service_name, domain)
+					cleanUpApiDocs("stg", service_name, domain)
 					unDeployService('stg', region)
 
 					updateServiceNameConfig(domain, service_name, "prod")
 					//sh "sed -i -- 's/{opt:stage}/prod/g' serverless.yml"
 					cleanUpApiGatewayResources("prod", path, region)
-					//cleanUpApiDocs("prod", service_name, domain)
+					cleanUpApiDocs("prod", service_name, domain)
 					unDeployService('prod', region)
 
 				}
@@ -177,19 +176,19 @@ node {
 
 			case "WEBSITE":
 				stage('Undeploy Service') {
-					if (cloudfrontEnabled == "true") {
+					//if (cloudfrontEnabled == "true") {
 						cleanupCloudFrontDistribution(service_name, domain, "dev")
-					}
+					//}
 					unDeployWebsite(service_name, domain, "dev")
 
-					if (cloudfrontEnabled == "true") {
+					//if (cloudfrontEnabled == "true") {
 						cleanupCloudFrontDistribution(service_name, domain, "stg")
-					}
+					//}
 					unDeployWebsite(service_name, domain, "stg")
 
-					if (cloudfrontEnabled == "true") {
+					//if (cloudfrontEnabled == "true") {
 						cleanupCloudFrontDistribution(service_name, domain, "prod")
-					}
+					//}
 					unDeployWebsite(service_name, domain, "prod")
 				}
 				break
@@ -672,8 +671,7 @@ def cleanUpApiDocs(stage, service, domain) {
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			def apiRootFolder = getApiDocsFolder(stage)
-			def servicePath = domain+"_"+service
-			sh "aws s3 rm s3://"+apiRootFolder+"/"+servicePath+" --recursive"
+			sh "aws s3 rm s3://${apiRootFolder}/${domain}/${service}/${stage} --recursive"
 			//events.sendCompletedEvent('DELETE_API_DOC', null, null, getEnvKey(stage))
 		} catch(ex) {
 			updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
