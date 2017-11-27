@@ -6,12 +6,12 @@
         "description": "API specification for nodejs template service"
     },
     "host": "{api_host_name}",
-    "basePath": "/platform",
+    "basePath": "/{domain}",
     "schemes": [
         "https"
     ],
     "paths": {
-        "/{service_name}": {
+        "/{domain}/{service_name}": {
             "options": {
                 "description": "CORS Support",
                 "consumes": [
