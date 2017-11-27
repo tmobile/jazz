@@ -293,7 +293,9 @@ node {
 			if (service_template.trim() == "cloud-logs-streamer") {
 				echo "set permission for cloud-logs-streamer"
 				try {
-					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev --statement-id lambdaFxnPermission --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
+					def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()
+
+					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
 					 echo "set permission for cloud-logs-streamer - success"
 				 }catch(ss) {
 					//ignore if already registered permissions
