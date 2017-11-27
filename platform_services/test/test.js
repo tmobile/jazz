@@ -37,7 +37,7 @@ describe('platform_services', function() {
   */
   var dynamoCheck = function(dynamoMethod, sinonSpy){
     var serviceName;
-    if(dynamoMethod == "get"){
+    if(dynamoMethod == "get" || dynamoMethod == "update"){
       serviceName = "DynamoDB.DocumentClient";
     }
     else if(dynamoMethod == "scan"){
@@ -549,7 +549,7 @@ describe('platform_services', function() {
   * @param {object} event -> event.method = "PUT", event.path.id is defined, event.body has valueless props
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   */
-  it("should inform that update is not allowed due to additional event.body properties", ()=>{
+  it("should inform that there is no input data to update with if all event.body props are empty", ()=>{
     event.method = "PUT";
     logMessage = "No input data. Nothing to update service";
     errType = "BadRequest";
@@ -565,15 +565,87 @@ describe('platform_services', function() {
     stub = sinon.stub(callbackObj, "callback", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args;
-    var cbResponse = stub.args;
-    console.log(logResponse);
-    console.log(cbResponse);
-    //var logCheck = logResponse.includes(logMessage);
-    //var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+    var logResponse = logStub.args[0][0];
+    var cbResponse = stub.args[0][0];
+    var logCheck = logResponse.includes(logMessage);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
     stub.restore();
-    assert.isTrue(true);
+    assert.isTrue(logCheck && cbCheck);
+  });
+
+  /*
+  * Given an event.method = "PUT" and defined service_id, handler() attempts to update service in DynamoDB
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should attempt to update service in dynamo if event.method = PUT and event.path.id is defined", () => {
+    event.method = "PUT";
+    //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    var attemptBool = dynamoCheck("update",spy);
+    assert.isTrue(attemptBool);
+  });
+
+  /*
+  * Given a failed attempt at a dynamo service update, handler() should inform of error
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.update fails", () =>{
+    event.method = "PUT";
+    errType = "InternalServerError";
+    errMessage = "unexpected error occured";
+    logMessage = "error occured while updating service";
+    //mocking DocumentClient from DynamoDB, get is mocked with successful return, update returns error
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    AWS.mock("DynamoDB.DocumentClient", "update", (params, cb) => {
+      return cb(err);
+    });
+    //wrapping the logger and callback function to check for response messages
+    stub = sinon.stub(callbackObj,"callback",spy);
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[0][0];
+    var cbResponse = stub.args[0][0];
+    var logCheck = logResponse.includes(logMessage);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    stub.restore();
+    assert.isTrue(cbCheck && logCheck);
+  });
+
+  /*
+  * Given a successful attempt at a dynamo service update, handler() should indicate update success
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.update fails", () =>{
+    event.method = "PUT";
+    logMessage = "Updated service";
+    //mocking DocumentClient from DynamoDB, get is mocked with successful return, update returns error
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    AWS.mock("DynamoDB.DocumentClient", "update", (params, cb) => {
+      dataObj.updateServiceByID = "heckAp00";
+      return cb(null, dataObj);
+    });
+    //wrapping the logger to check for response messages
+    logStub = sinon.stub(logger,"info",spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[6][0];
+    var logCheck = logResponse.includes(logMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    assert.isTrue(logCheck);
   });
 });

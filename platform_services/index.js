@@ -166,7 +166,7 @@ module.exports.handler = (event, context, cb) => {
                     for (var i = fields_list.length - 1; i >= 0; i--) {
                         field = fields_list[i];
                         var value = update_data[field];
-                        if (value === undefined || value === null || value === "") {
+                        if (value) {
                             field_exists = true;
                             break;
                         }
@@ -197,7 +197,7 @@ module.exports.handler = (event, context, cb) => {
                 if (error) {
                     logger.error('error occured while updating service: ' + service_id);
                     logger.error(error);
-                    cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
                 } else {
 
                     var updatedService = data.updateServiceByID;
@@ -205,7 +205,7 @@ module.exports.handler = (event, context, cb) => {
                     logger.info('Updated service');
                     logger.info(updatedService);
 
-                    cb(null, responseObj({ 'message': 'Successfully Updated service with id: ' + service_id, 'updatedService': updatedService }, event.body));
+                    return cb(null, responseObj({ 'message': 'Successfully Updated service with id: ' + service_id, 'updatedService': updatedService }, event.body));
                 }
 
             });
