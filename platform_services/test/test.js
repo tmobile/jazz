@@ -37,7 +37,9 @@ describe('platform_services', function() {
   */
   var dynamoCheck = function(dynamoMethod, sinonSpy){
     var serviceName;
-    if(dynamoMethod == "get" || dynamoMethod == "update"){
+    var docClientMethods = ["get", "update", "delete"];
+    //assign the correct aws service depending on the method to be used
+    if(docClientMethods.includes(dynamoMethod)){
       serviceName = "DynamoDB.DocumentClient";
     }
     else if(dynamoMethod == "scan"){
@@ -650,6 +652,17 @@ describe('platform_services', function() {
   });
 
   /*
+  * Given an event.method = "DELETE" and valid service_id, handler() attempts to get item info from DynamoDB
+  * @param {object} event -> event.method is defined to be "DELETE", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should attempt to get item data from dynamoDB by id if 'DELETE' method and id are defined", function(){
+    event.method = "DELETE";
+    var attemptBool = dynamoCheck("get",spy);
+    assert.isTrue(attemptBool);
+  });
+
+  /*
   * Given a failed attempt at getting data for deletion, handler() should inform of error
   * @param {object} event -> event.method is defined to be "DELETE", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
@@ -678,5 +691,113 @@ describe('platform_services', function() {
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
+  });
+
+  /*
+  * Given a service id that doesn't point to an existing service to delete, handler() indicates service not found
+  * @param {object} event -> event.method is defined to be "DELETE", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} should return the callback response which is an error message
+  */
+  it("should indicate a NotFoundError occured if no service with specified id is found", ()=>{
+    event.method = "DELETE";
+    errType = "NotFound";
+    errMessage = "Cannot find service with id: ";
+    logMessage = "Cannot find service with id: ";
+    //define an object to be returned with empty serviceCatalog
+    var dataObj = {
+      "getServiceByID" : {}
+    };
+    //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    //wrapping the logger and callback function to check for response messages
+    stub = sinon.stub(callbackObj,"callback",spy);
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[0][0];
+    var cbResponse = stub.args[0][0];
+    var logCheck = logResponse.includes(logMessage);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    stub.restore();
+    assert.isTrue(logCheck && cbCheck);
+  });
+
+  /*
+  * Given an event.method = "DELETE" and defined service_id, handler() attempts to delete service in DynamoDB
+  * @param {object} event -> event.method is defined to be "DELETE", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should attempt to deleted service in dynamo if event.method = DELETE and event.path.id is defined", () => {
+    event.method = "DELETE";
+    //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    var attemptBool = dynamoCheck("delete",spy);
+    assert.isTrue(attemptBool);
+  });
+
+  /*
+  * Given a failed attempt at a dynamo service deletion, handler() should inform of error
+  * @param {object} event -> event.method is defined to be "DELETE", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.delete fails", () =>{
+    event.method = "DELETE";
+    errType = "InternalServerError";
+    errMessage = "unexpected error occured";
+    logMessage = "Error in DeleteItem:";
+    //mocking DocumentClient from DynamoDB, get is mocked with successful return, delete returns error
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    AWS.mock("DynamoDB.DocumentClient", "delete", (params, cb) => {
+      return cb(err);
+    });
+    //wrapping the logger and callback function to check for response messages
+    stub = sinon.stub(callbackObj,"callback",spy);
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[0][0];
+    var cbResponse = stub.args[0][0];
+    var logCheck = logResponse.includes(logMessage);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    stub.restore();
+    assert.isTrue(cbCheck && logCheck);
+  });
+
+  /*
+  * Given a successful attempt at a dynamo service deletion, handler() should indicate delete success
+  * @param {object} event -> event.method is defined to be "DELETE", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should indicate that service was updated upon successful documentClient.update()", () =>{
+    event.method = "DELETE";
+    logMessage = "DeleteItem succeeded";
+    //mocking DocumentClient from DynamoDB, get is mocked with successful return, update returns error
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    AWS.mock("DynamoDB.DocumentClient", "delete", (params, cb) => {
+      dataObj.updateServiceByID = "heckAp00";
+      return cb(null, dataObj);
+    });
+    //wrapping the logger to check for response messages
+    logStub = sinon.stub(logger,"info",spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[3][0];
+    var logCheck = logResponse.includes(logMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    assert.isTrue(logCheck);
   });
 });

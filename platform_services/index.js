@@ -244,7 +244,7 @@ module.exports.handler = (event, context, cb) => {
                 // Handle error
                 if (error) {
                     logger.error('Error in DeleteItem: ' + JSON.stringify(error, null, 2));
-                    cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
                 }
 
                 var deletedService = data.updateServiceByID;
@@ -252,11 +252,11 @@ module.exports.handler = (event, context, cb) => {
                 logger.info(deletedService);
 
                 if (deletedService === null) {
-                    cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
+                    return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
                 }
 
                 logger.info("DeleteItem succeeded");
-                cb(null, responseObj({ 'message': 'Service Successfully Deleted' }, event.path));
+                return cb(null, responseObj({ 'message': 'Service Successfully Deleted' }, event.path));
             });
         }
 
