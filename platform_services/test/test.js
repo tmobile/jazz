@@ -627,7 +627,7 @@ describe('platform_services', function() {
   * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   */
-  it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.update fails", () =>{
+  it("should indicate that service was updated upon successful documentClient.update()", () =>{
     event.method = "PUT";
     logMessage = "Updated service";
     //mocking DocumentClient from DynamoDB, get is mocked with successful return, update returns error
@@ -647,5 +647,36 @@ describe('platform_services', function() {
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
     assert.isTrue(logCheck);
+  });
+
+  /*
+  * Given a failed attempt at getting data for deletion, handler() should inform of error
+  * @param {object} event -> event.method is defined to be "DELETE", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} should return the callback response which is an error message
+  */
+  it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.get fails for DELETE", ()=>{
+    event.method = "DELETE";
+    errType = "InternalServerError";
+    errMessage = "unexpected error occured";
+    logMessage = "Error in DeleteItem";
+    //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(err, null);
+    });
+    //wrapping the logger and callback function to check for response messages
+    stub = sinon.stub(callbackObj,"callback",spy);
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[0][0];
+    var cbResponse = stub.args[0][0];
+    console.log(cbResponse);
+    var logCheck = logResponse.includes(logMessage);
+    var cbCheck = cbResponse.includes(errType); //&& cbResponse.includes(errMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    stub.restore();
+    assert.isTrue(logCheck && cbCheck);
   });
 });

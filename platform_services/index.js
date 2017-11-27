@@ -226,7 +226,7 @@ module.exports.handler = (event, context, cb) => {
                         } else {
                             if (Object.keys(data).length === 0 && data.constructor === Object) {
                                 logger.error('Cannot find service with id: ' + service_id);
-                                cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
+                                return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
                             } else {
                                 onComplete(null, {
                                     "result": "success",
