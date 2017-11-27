@@ -1,0 +1,29 @@
+@import './../../../main-styles';
+.each-mob-tab {
+    text-transform: uppercase;
+    text-align: center;
+    width: 33.333%;
+    color: #fff;
+    font-size: 1.1rem;
+    background: #2b343e;
+    cursor: pointer;
+    height: 4rem;
+    line-height: 4rem;
+    &.active {
+        background: #ed008c;
+    }
+}
+
+.mob-tabs-wrap {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 5;
+    /*z-index: 1; */
+    display: none;
+    @media (max-width: 853px) {
+        display: block;
+    }
+}

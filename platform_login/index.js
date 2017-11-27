@@ -65,7 +65,6 @@ module.exports.handler = (event, context, callback) => {
 				Username : event.body.username,
 				Pool : userPool
 			};
-
 			logger.info("Authenticate against cognito for " + event.body.username);
 
 			var cognitoUser = new AWSCognito.CognitoUser(userData);

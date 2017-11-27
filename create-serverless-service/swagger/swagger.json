@@ -280,7 +280,7 @@
                 },
                 "slack_channel": {
                     "type": "string",
-                    "description":"T-Mobile Slack channel to receive all the service notifications"
+                    "description":"Slack channel to receive all the service notifications"
                 },
 				"require_internal_access": {
                     "type": "boolean",

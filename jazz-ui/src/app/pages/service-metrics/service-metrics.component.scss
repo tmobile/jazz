@@ -1,0 +1,271 @@
+@import './../../../main-styles';
+$graph-title-height: 2.6rem;
+.section-top {
+    padding: 10px 5px;
+}
+
+:host .page-section {
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+}
+
+.graph-section-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-right: -2rem;
+    position: relative;
+    min-height: calc(100vh - 400px);
+    padding: 1.6rem;
+}
+
+.graph-title {
+    padding: 0.5rem 1rem;
+    font-size: 1.2rem;
+    height: $graph-title-height;
+}
+.graph-title-text{
+    font-size: 1.2rem;
+    text-transform: uppercase;
+    padding: 20px 0;
+}
+.graph-wrp {
+    padding-right: 0;
+    position: relative;
+    flex-grow: 1;
+    /*graph-wrp:; setting padding bottom for maintaining the aspect ration of the graph */
+    /*line-graph-wrp: adding padding here for spacing between the graph tiles*/
+    /*line-graph-inr: actual graph container with background, box-shadow etc*/
+    width: 100%;
+    height: 260px;
+    padding-bottom: 70%;
+
+    /deep/ .line-graph-wrp {
+        height: 100%;
+        width: 100%;
+        position: absolute;
+        display: block;
+        padding-right: 2rem;
+        padding-bottom: 2rem;
+    }
+    .line-graph-inr {
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+        border-radius: 3px;
+        height: 100%;
+    }
+    /deep/ line-graph {
+        height: calc(100% - #{$graph-title-height});
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
+
+.filter-wrp {
+    margin-bottom: 2rem;
+}
+
+.page-section {
+    margin: 0;
+    margin-bottom: 1.5rem;
+    border-radius: 3px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+    padding: 2rem;
+}
+
+.table-container {
+    padding-top: 2rem;
+}
+
+.column,
+/deep/ .column {
+    &:nth-child(1) {
+        width: 15rem;
+    }
+    &:nth-child(2) {
+        width: 30%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+    &:nth-child(3) {
+        width: 35%;
+        white-space: nowrap;
+    }
+    &:nth-child(4) {
+        width: 7rem;
+    }
+}
+
+.filter-wrp {
+    display: flex;
+    align-items: center;
+    @media (min-width: $screen-lg) {
+        .dropdown-1, .dropdown-2 {
+            width: 200px;
+        }
+    }
+}
+
+.filters {
+    width: 100%;
+    @media (min-width: 853px) {
+        width: auto;
+    }
+}
+
+.filter-section-right {
+    .dropdown-1,
+    .dropdown-2,
+    .dropdown-3 
+     {
+        flex-grow: 1;
+        max-width: 150px;
+    }
+    .dropdown-2,.dropdown-3 {
+        margin-left: 1rem;
+    }
+    width: 100%;
+    display: flex;
+    margin-left: auto;
+    /deep/ .dropdown {
+        min-width: 125px;
+    }
+    @media (min-width: 853px) {
+        width: auto;
+        .dropdown-1 {
+            margin-left: 2rem;
+        }
+        /deep/ .dropdown {
+            min-width: none;
+        }
+    }
+}
+
+.filter-icon {
+    margin-left: 25px;
+}
+search-box {
+    display: inline-block;
+    margin-left: auto;
+}
+.graph-wrp.asset-wrap {
+    display: block;
+    width: 100%;
+    height: inherit;
+    padding-bottom: 0;
+}
+
+.graph-wrp.metric-wrap {
+    width: 33%;
+    float: left;
+    @media (min-width: 300px) {
+        width: 100%;
+        // padding-bottom: 35%;
+    }
+    @media (min-width: 500px) {
+        width: 50%;
+        padding-bottom: 35%;
+    }
+    @media (min-width: 853px) {
+        width: 50%;
+        padding-bottom: 25rem;
+    }
+    @media (min-width: 1000px) {
+        width: 50%;
+        padding-bottom: 35%;
+    }
+    @media (min-width: $screen-lg-min) {
+        width: 33.33%;
+        padding-bottom: 24%;
+    }
+}
+.metric-graph{
+
+}
+.metric-no-graph {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+.no-data-wrapper {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    transform: translate(-50%);
+    text-align: center;
+    font-size: 1.2rem;
+    color: #555;
+}
+.no-data-title {
+    font-weight: bold;
+    padding-bottom: 20px;
+    font-size: 1.5rem;
+}
+.display-widget{
+    min-height: 300px;
+}
+.loading-row {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    background: #fff;
+    top: 0;
+    left: 0;
+}
+.loading-row .loading-circle {
+    top: calc(50% - 2.5rem);
+}
+.loading-row .error-text {
+    position: relative;
+    text-align: center;
+    top: 45%;
+    font-size: 18px;
+    text-transform: uppercase;
+    font-weight: 300;
+}
+.show{
+    display: block !important;
+}
+.error-blk {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    background: #fff;
+    top: 0;
+    left: 0;
+}
+.error-blk.show {
+    display: block;
+}
+.empty-row{
+    position: relative;
+    text-align: center;
+    padding: 1rem 15px;
+    top: 25%;
+    font-size: 18px;
+    font-weight: 300;
+}
+.with-refresh.show
+{
+    left:25% !important;
+    width: 50% !important;
+}
+.with-refresh a{
+    font-weight: 400;
+}
+.with-refresh img{
+    margin-bottom: 10px;
+}
+.nodata{
+    font-size: 14px;
+    color: #555;
+    b{
+        font-size: 20px;
+    }
+}

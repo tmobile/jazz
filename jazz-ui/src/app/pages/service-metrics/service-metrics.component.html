@@ -1,0 +1,65 @@
+<div class="row page-section section-top">
+    <!-- TODO: Remove disclaimer after techtraining -->
+    <div class="disclaimer-static-data hide"><i>This data is for representational purpose only and may not be accurate</i></div>
+    <div class="filter-wrp">
+        <filters class="filters" [selectedList]="selected" [filtersList]="filtersList" [multiple]="false" (onSelected)="onFilterSelected($event)"></filters>
+        <div class="filter-section-right">
+            <dropdown class="dropdown-1" [dropdwnContent]="periodList" [selected]="periodList[0]" (onSelected)="onPeriodSelected($event)"></dropdown>
+            <dropdown class="dropdown-2" [dropdwnContent]="statisticList" [selected]="statisticList[0]" (onSelected)="onStatisticSelected($event)"></dropdown>
+            <dropdown class="dropdown-3" [dropdwnContent]="environmentList" [selected]="environmentList[0]" (onSelected)="onEnvSelected($event)"></dropdown>
+        </div>
+    </div>
+
+    <div class="graph-section-container">
+        <div *ngIf=" isGraphLoading || isDataNotAvailable || isError" class='display-widget'>
+            <div class="loading-row" [class.show]="isGraphLoading">
+                <div class="loading-circle"></div>
+            </div>
+            <div class="loading-row" [class.show]=" !isGraphLoading && isDataNotAvailable && !isError">
+                <div class="empty-row nodata with-refresh relative">
+                    <img src="assets/images/no-data-icon.png" alt="noData" width="100">
+                    <div><b>Oops, No Data Found</b><br>Looks like there is no data available here.</div>
+                </div>
+            </div>
+            <div class="error-blk" [class.show]="isError">
+                <div class="empty-row with-refresh">
+                    <img src="assets/images/refresh.png" alt="errorimg" width="100">
+                    <div>{{errMessage}}<br><a (click)="callMetricsFunc()">REFRESH</a> to give it another try.</div>
+                </div>
+            </div>
+        </div>
+         
+        <div class="graph-wrp asset-wrap" *ngIf=" !isGraphLoading && !isDataNotAvailable ">
+            <div class="graph-wrp asset-wrap clearfix" *ngFor=" let asset of serviceMetricsList; let i=index ">
+                <div class="graph-title-text">
+                    <span>{{asset.type}} </span>
+                    <span *ngFor=" let assetProperty of asset.asset_properties " >
+                        <span *ngIf="assetProperty.key == 'Method' && assetProperty.value != '' ">
+                            <span>/ {{assetProperty.key}} : </span>
+                            <span>{{assetProperty.value}}</span>
+                        </span>
+                    </span>
+                </div>
+                <div>
+                    <div class="graph-wrp metric-wrap" *ngFor=" let eachAssetMetric of asset.metrics; ">
+                    <div class="line-graph-wrp">
+                        <div class="line-graph-inr">
+                            <div class="metric-graph" *ngIf="eachAssetMetric.data.length > 0">
+                                <div class="graph-title">{{eachAssetMetric.metric_name}}</div>
+                                <line-graph [id]="eachAssetMetric.metric_name" [graphData]="eachAssetMetric" [graphDataOld]="eachAssetMetric" (render)="triggerRenderGraph(eachAssetMetric)"></line-graph>
+                            </div>
+                            <div class="metric-no-graph" *ngIf="eachAssetMetric.data.length == 0">
+                                <div class="no-data-wrapper">
+                                    <div class="no-data-title">Sorry!</div>
+                                    <div class="no-data">No data available for {{eachAssetMetric.metric_name}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>

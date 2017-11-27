@@ -1,0 +1,112 @@
+{
+    "_args": [
+        [{
+                "raw": "ng2-slimscroll@^1.2.6",
+                "scope": null,
+                "escapedName": "ng2-slimscroll",
+                "name": "ng2-slimscroll",
+                "rawSpec": "^1.2.6",
+                "spec": ">=1.2.6 <2.0.0",
+                "type": "range"
+            },
+            "/ng2-datepicker"
+        ]
+    ],
+    "_from": "ng2-slimscroll@>=1.2.6 <2.0.0",
+    "_id": "ng2-slimscroll@1.3.2",
+    "_inCache": true,
+    "_location": "/ng2-slimscroll",
+    "_nodeVersion": "7.9.0",
+    "_npmOperationalInternal": {
+        "host": "packages-18-east.internal.npmjs.com",
+        "tmp": "tmp/ng2-slimscroll-1.3.2.tgz_1493824411531_0.5238789778668433"
+    },
+    "_npmUser": {
+        "name": "jkuri",
+        "email": "jkuri88@gmail.com"
+    },
+    "_npmVersion": "4.5.0",
+    "_phantomChildren": {},
+    "_requested": {
+        "raw": "ng2-slimscroll@^1.2.6",
+        "scope": null,
+        "escapedName": "ng2-slimscroll",
+        "name": "ng2-slimscroll",
+        "rawSpec": "^1.2.6",
+        "spec": ">=1.2.6 <2.0.0",
+        "type": "range"
+    },
+    "_requiredBy": [
+        "/ng2-datepicker"
+    ],
+    "_resolved": "https://registry.npmjs.org/ng2-slimscroll/-/ng2-slimscroll-1.3.2.tgz",
+    "_shasum": "8b052ca8748080ecce8138f1ab5826beaddf5d49",
+    "_shrinkwrap": null,
+    "_spec": "ng2-slimscroll@^1.2.6",
+    "_where": "/ng2-datepicker",
+    "author": {
+        "name": "Jan Kuri",
+        "email": "jkuri88@gmail.com"
+    },
+    "bugs": {
+        "url": "https://github.com/jkuri/ng2-slimscroll/issues"
+    },
+    "dependencies": {},
+    "description": "Angular2 Customizable Scrollbar",
+    "devDependencies": {
+        "@angular/common": "^4.0.0",
+        "@angular/compiler": "^4.0.0",
+        "@angular/compiler-cli": "^4.0.0",
+        "@angular/core": "^4.0.0",
+        "@angular/platform-browser": "^4.0.0",
+        "@angular/router": "^4.0.0",
+        "@types/node": "7.0.11",
+        "awesome-typescript-loader": "^3.1.2",
+        "codelyzer": "^3.0.0-beta.4",
+        "core-js": "^2.4.1",
+        "reflect-metadata": "0.1.10",
+        "rxjs": "5.2.0",
+        "tslint": "^5.0.0-dev.0",
+        "typescript": "2.2.1",
+        "webpack": "^2.3.2",
+        "zone.js": "^0.8.5"
+    },
+    "directories": {},
+    "dist": {
+        "shasum": "8b052ca8748080ecce8138f1ab5826beaddf5d49",
+        "tarball": "https://registry.npmjs.org/ng2-slimscroll/-/ng2-slimscroll-1.3.2.tgz"
+    },
+    "gitHead": "80b7826a15e9e9c78f50b94d82b9cd912a59ce1f",
+    "homepage": "https://github.com/jkuri/ng2-slimscroll#readme",
+    "keywords": [
+        "ng2",
+        "angular",
+        "angular2",
+        "scroll",
+        "scrollbar",
+        "slimscroll"
+    ],
+    "license": "MIT",
+    "main": "bundle/ng2-slimscroll.umd.js",
+    "maintainers": [{
+        "name": "jkuri",
+        "email": "jkuri88@gmail.com"
+    }],
+    "module": "ng2-slimscroll.js",
+    "name": "ng2-slimscroll",
+    "optionalDependencies": {},
+    "readme": "ERROR: No README data found!",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/jkuri/ng2-slimscroll.git"
+    },
+    "scripts": {
+        "build": "webpack --config webpack/webpack.config.js --progress",
+        "clean": "./scripts/clean.sh",
+        "dev": "tsc --watch",
+        "lint": "tslint ./src/*.ts",
+        "prepublish": "npm run lint && ngc && npm run build"
+    },
+    "typings": "ng2-slimscroll.d.ts",
+    "version": "1.3.2"
+}

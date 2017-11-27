@@ -1,3 +1,4 @@
+![Jazz Logo](Jazz_Logo%401x.png)
 # Jazz Serverless Platform
 **Seamlessly build, deploy & manage cloud-native applications.**
 
@@ -12,10 +13,13 @@ Jazz is [open-sourced](http://opensource.t-mobile.com) and under active developm
 
 [Watch the video preview here](https://www.youtube.com/watch?v=6Kp1yxMjn1k)
 
-## Installation
+## Install
 
 You can [try the Developer Preview](https://github.com/tmobile/jazz-installer) by using the automated installer.
 
+## Try Jazz
+You can try out Jazz by registering with your email address [here](http://try.tmo-jazz.net). You will need a registration code which can be requested by joining [slack](https://tmo-oss-getinvite.herokuapp.com/). Once in slack, go to `#jazz-serverless` channel to get a working registration code.
+    
 ## User Guide
 
 For more details, see the [Wiki](https://github.com/tmobile/jazz-core/wiki).

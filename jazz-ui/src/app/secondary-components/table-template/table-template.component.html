@@ -1,0 +1,88 @@
+<div class="table-wrp" [ngClass]="type">
+    <!-- Table Header -->
+    <div class="table-header">
+        <div *ngFor="let column of header" class="column" [class.sortable]="column.sort" (click)="onSortColumn(column)">
+            <span>{{column.label}}</span>
+            <div class="arrow-wrap" [ngClass]="{'sort-down': column._reverse == true, 'sort-up': column._reverse == false}">
+                <div class="upper-arrow" (click)="onSortColumn(column , true)"></div>
+                <div class="lower-arrow" (click)="onSortColumn(column , false)"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Filter Row -->
+    <div class="table-filters-row" [class.open]="showFilters">
+        <div *ngFor="let column of header" class="column">
+            <div [ngSwitch]="getFilterType(column)">
+                <div class="input-wrapper" *ngSwitchCase="'input'">
+                    <input class="textForm" type="string" placeholder="{{column.label}}" [(ngModel)]="column.filter.value" (keydown)="onFilterApplied($event, column)">
+                </div>
+                <div class="dropdown-wrapper" *ngSwitchCase="'dropdown'">
+                    <dropdown [dropdwnContent]="column.filter.data" [selected]="column.filter.value" (onSelected)="onFilterApplied($event, column)"></dropdown>
+                </div>
+                <div class="daterange-wrapper hide" *ngSwitchCase="'dateRange'">
+                    <daterange-picker [range]="column.filter.range" (onChange)="onFilterApplied($event, column)"></daterange-picker>
+                    <span class="icon-icon-calendar2"></span>
+                </div>
+                <div *ngSwitchDefault></div>
+            </div>
+        </div>
+    </div>
+    <!-- Table Body -->
+    <div class="table-body" *ngIf=" type=='accordian' && state =='default' ">
+        <ng-content select=".table-row-wrp"></ng-content>
+    </div>
+    <div class="table-body" *ngIf="type!='accordian' && state =='default' ">
+        <ng-content select=".table-row"></ng-content>
+    </div>
+    <!-- Table Notification -->
+    <div class="table-notification" *ngIf="state != 'default'">
+        <div class="loading-row" [class.show]="state=='loading'">
+            <div class="loading-circle"></div>
+            <div class="loading-text hide">Loading Data...</div>
+        </div>
+        <div class="empty-row nodata" [class.show]="state=='empty'">
+            <img src="assets/images/no-data-icon.png" alt="noData" width="100"/>
+            <div><b>Oops, No data available!</b><br>
+                Looks like there is no data available here.
+            </div>            
+        </div>
+        <div class="empty-row with-refresh" [class.show]="state=='error'">
+            <img src="assets/images/refresh.png" alt="errorimg" width="100">
+            <div *ngIf="err_disp" class="errMessage"> {{ message }} <br> <a (click)="onRefresh($event)">REFRESH</a> to give it another try.</div>
+            <div  *ngIf="!err_disp" class="errMessage">Something went wrong while fetching the data<br> <a (click)="onRefresh($event)">REFRESH</a> to give it another try.</div>
+        </div>
+    </div>
+    <div class="table-pagination" [class.show]="showPaginationtable && state !='loading' && state != 'empty' && state != 'error' && totalPageNum > 0">
+        <nav class="pagination-nav" aria-label="Page navigation table">
+          <ul class="pagination justify-content-center">
+            <li class="page-item" (click)="paginatePageInTable('prev')" [class.disable]="currentlyActive == 1">
+                <a class="page-link icon" aria-label="Previous">
+                    <span class="icon-icon-back"></span>
+                    <span class="sr-only">Previous</span>
+                </a>
+            </li>
+            <li class="page-item" (click)="paginatePageInTable('1')" [class.active]="currentlyActive == 1"><a class="page-link">1</a></li>
+
+            <li class="page-item extended-pages dots" [class.show]="currentlyActive > 3"><a class="page-link">...</a></li>
+            
+            <li class="page-item extended-pages" [class.show]="currentlyActive - 1 > 1 && currentlyActive - 1 < totalPageNum" (click)="paginatePageInTable(currentlyActive-1)"><a class="page-link">{{currentlyActive - 1}} </a></li>
+            
+            <li class="page-item extended-pages" [class.show]="currentlyActive > 1 && currentlyActive < totalPageNum" (click)="paginatePageInTable(currentlyActive)" [class.active]="currentlyActive > 1"><a class="page-link">{{currentlyActive}}</a></li>
+            
+            <li class="page-item extended-pages" [class.show]="currentlyActive + 1 > 1 && currentlyActive + 1 < totalPageNum" (click)="paginatePageInTable(currentlyActive+1)"><a class="page-link">{{currentlyActive + 1}}</a></li>
+            
+            <li class="page-item extended-pages dots" [class.show]="(currentlyActive + 2) < totalPageNum"><a class="page-link">...</a></li>
+
+            <li class="page-item" (click)="paginatePageInTable(totalPageNum)" [class.hide]="totalPageNum == 1" [class.active]="currentlyActive == totalPageNum"><a class="page-link">{{totalPageNum}}</a></li>
+            
+            <li class="page-item" (click)="paginatePageInTable('next')" [class.disable]="currentlyActive == totalPageNum">
+                <a class="page-link icon right" aria-label="Next">
+                    <span class="icon-icon-back"></span>
+                    <span class="sr-only">Next</span>
+                </a>
+            </li>
+          </ul>
+        </nav>
+    </div>
+    
+</div>

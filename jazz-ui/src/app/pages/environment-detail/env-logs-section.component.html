@@ -1,0 +1,26 @@
+<!-- TODO: Remove disclaimer after techtraining -->
+<div class="disclaimer-static-data"><i>This data is for representational purpose only and may not be accurate</i></div>
+<div class="row page-section section-top relative">
+    
+    <div class="filter-wrp">
+        <filters class="filters" [filtersList]="filtersList" (onSelected)="onFilterSelected($event)"></filters>
+        <search-box (onChange)="onServiceSearch($event)"></search-box>
+        <div class="filter-icon">
+            <span class="icon-icon-filter-unselected" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
+        </span>
+        </div>
+    </div>
+    <table-template class="table-container env-logs" [type]="'accordian'" [header]="tableHeader" [showFilters]="filterSelected" (onFilter)="onFilter($event)" (onSort)="onSort($event)">
+        <div class="table-row-wrp" *ngFor="let row of logs; let i = index" [class.expanded]="row.expanded">
+            <div class="table-row" (click)="onRowClicked(row, i)">
+                <div class="column">{{row.time | amDateFormat: 'YYYY-MM-DD HH:mm:ss'}}</div>
+                <div class="column">{{row.message}}</div>
+                <div class="column">{{row.requestId}}</div>
+                <div class="column">{{row.logLevel}}</div>
+            </div>
+            <div class="table-row-expanded">
+                {{row.message}}
+            </div>
+        </div>
+    </table-template>
+</div>

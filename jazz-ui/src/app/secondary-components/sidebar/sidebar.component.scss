@@ -1,0 +1,72 @@
+@import './../../../main-styles';
+.sidebar-wrp {
+    position: absolute;
+    height: calc(100% - 56px);
+    z-index: 5;
+    top: 56px;
+    right: 0;
+    width: 0%;
+    overflow: hidden;
+    animation: fade-out 1s;
+    &.show {
+        display: block;
+        opacity: 1;
+        width: 100%;
+        animation: fade-in 1s;
+        .sidebar-inr {
+            transform: translateX(0%);
+            overflow-x: hidden;
+            overflow-y: auto;
+             @media screen and (max-width: $screen-sm) {
+                width:100%;
+            }
+        }
+        .sidebar-overlay {
+            opacity: 1;
+        }
+    }
+}
+
+.sidebar-inr {
+    position: absolute;
+    height: 100%;
+    right: 0;
+    top: 0px;
+    transform: translateX(100%);
+    background-image: linear-gradient(to bottom, #232A32, #3F4D5D);
+    box-shadow: -2px 0 4px 0 rgba(0, 0, 0, 0.5);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-overlay {
+    background: rgba(51, 51, 51, 0.42);
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fade-in {
+    0% {
+        opacity: 0.95;
+        width: 100%;
+    }
+    100% {
+        opacity: 1;
+        width: 100%;
+    }
+}
+
+@keyframes fade-out {
+    0% {
+        opacity: 1;
+        width: 100%;
+    }
+    100% {
+        opacity: 0.95;
+        width: 100%;
+    }
+}

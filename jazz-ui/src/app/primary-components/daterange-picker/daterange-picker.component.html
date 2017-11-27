@@ -1,0 +1,33 @@
+<div class="input-wrapper">
+    <input class="textForm" type="string" name="range" value="{{dateRangeString}}" (click)="onCalender()">
+</div>
+<div class="dt-wrapper" [class.open]="showCalendar">
+    <div class="dt-content calendar-left-wrp">
+        <div class="calendar-title">From</div>
+        <div class="time-wrp">
+            <input type="number" name="hour" min="0" max="23" [ngModel]="time1.hour" (ngModelChange)="ontime1Change($event, 'hour')">
+            <span>:</span>
+            <input type="number" name="minute" min="0" max="60" [ngModel]="time1.minute" (ngModelChange)="ontime1Change($event, 'minute')">
+            <span>:</span>
+            <input type="number" name="second" min="0" max="60" value="time1.second" [ngModel]="time1.second" (ngModelChange)="ontime1Change($event,'second')">
+        </div>
+        <div class="date-wrp">
+            <ng2-datepicker name="date1" [options]="options1" [(ngModel)]="date1"></ng2-datepicker>
+        </div>
+    </div>
+    <div class="dt-content calendar-right-wrp">
+        <div class="calendar-title">To</div>
+        <div class="time-wrp">
+            <input type="number" name="hour" min="0" max="23" [ngModel]="time2.hour" (ngModelChange)="ontime2Change($event, 'hour')">
+            <span>:</span>
+            <input type="number" name="minute" min="0" max="60" [ngModel]="time2.minute" (ngModelChange)="ontime2Change($event, 'minute')">
+            <span>:</span>
+            <input type="number" name="second" min="0" max="60" [ngModel]="time2.second" (ngModelChange)="ontime2Change($event, 'second')">
+        </div>
+        <div class="date-wrp">
+            <ng2-datepicker name="date2" [options]="options2" [(ngModel)]="date2"></ng2-datepicker>
+        </div>
+    </div>
+    <div class="dt-content btn-wrp">
+        <btn-jazz-primary [text]="'APPLY'" (click)="onApply()"></btn-jazz-primary>
+    </div>

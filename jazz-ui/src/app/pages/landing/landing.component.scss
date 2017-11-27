@@ -1,0 +1,1058 @@
+@import './../../../main-styles';
+:host {
+    height: 100vh;
+    display: block;
+}
+
+body {
+    transform-style: preserve-3d;
+}
+
+//Parallex Mixins
+$parallax-perspective: 1 !default;
+$parallax-element: "body" !default;
+$parallax-ios: true !default;
+$break-medium: 1250px;
+$break-small: 840px;
+$break-mobile: 600px;
+@mixin parallax-init( $perspective: $parallax-perspective, $element: $parallax-element, $parallax-ios: $parallax-ios) {
+    @if $element=="body" {
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+    }
+    #{$element} {
+        overflow: auto;
+        perspective: $perspective * 1px;
+        transform-style: preserve-3d;
+        // Preserve 3D
+        &,
+        * {
+            transform-style: preserve-3d;
+        }
+    }
+}
+
+@mixin parallax( $distance: 0, $perspective: $parallax-perspective) {
+    transform: translateZ($distance);
+}
+
+//End Parallex Mixins
+@include parallax-init;
+.landing-hdr-wrp {
+    height: 4.7rem;
+    position: relative;
+    z-index: 5;
+}
+
+.landing-main-wrp {
+    position: relative;
+    overflow-x: hidden;
+    height: 90%;
+    height: calc(100% - 4.7rem);
+    font-size: 1.6rem;
+    width: 100%;
+    @media screen and (max-width: $break-medium) {
+        font-size: 1.3rem;
+    }
+    @media screen and (max-width: $break-small) {
+        font-size: 1.2 rem;
+    }
+    @media screen and (max-width: $break-mobile) {
+        font-size: 1.1rem;
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        font-size: 1.2rem;
+    }
+}
+
+.header-section {
+    background-image: url("/assets/landing/jpg/BG-Header@1x.png.jpg");
+    
+    background-repeat: no-repeat;
+    background-position: left top;
+    background-size: 100%;
+    color: #fff;
+    padding-bottom: 25rem;
+    @media screen and (max-width: $break-medium) {
+        background-size: 250%;
+        background-position: 70% 0%;
+        padding-bottom: 20rem;
+    }
+    @media screen and (max-width: $break-small) {
+        background-size: 300%;
+        background-position: 70% 0%;
+        padding-bottom: 15rem;
+    }
+}
+
+.header-section h3 {
+    margin-top: 6rem !important;
+    margin-bottom: 2rem !important;
+    font-size: 3.75rem !important;
+    @media screen and (max-width: $break-medium) {
+        font-size: 3.25rem !important;
+    }
+    @media screen and (max-width: $break-small) {
+        font-size: 2.5rem !important;
+        margin-top: 2rem !important;
+    }
+    @media screen and (max-width: $break-mobile) {
+        font-size: 2rem !important;
+        margin-top: 2rem !important;
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        font-size: 2.5rem !important;
+        margin-top: 2rem !important;
+    }
+}
+
+.head-text span {
+    padding-left: 50px;
+    opacity: 0;
+    -webkit-transition: padding-left 700ms ease-in-out, opacity 400ms ease-in-out;
+    -moz-transition: padding-left 700 ease-in-out, opacity 400ms ease-in-out;
+    -ms-transition: padding-left 700ms ease-in-out, opacity 400ms ease-in-out;
+    transition: padding-left 700ms ease-in-out, opacity 400ms ease-in-out;
+    @media screen and (max-width: $break-mobile) {
+        -webkit-transition: padding-left 0ms ease-in-out, opacity 0ms ease-in-out;
+        -moz-transition: padding-left 0ms ease-in-out, opacity 0ms ease-in-out;
+        -ms-transition: padding-left 0ms ease-in-out, opacity 0ms ease-in-out;
+        transition: padding-left 0ms ease-in-out, opacity 0ms ease-in-out;
+        padding-left: 0px;
+        opacity: 1;
+    }
+}
+
+.no-padding span {
+    padding-left: 0px;
+    opacity: 1;
+}
+
+.features-section {
+    .section-content {
+        display: flex;
+        width: 70%;
+        padding: 4.5rem 0 5.5rem;
+        margin: auto;
+        font-weight: 300;
+        letter-spacing: 0.5px;
+        @media screen and (max-width: $break-medium) {
+            width: 80%;
+        }
+        @media screen and (max-width: $break-mobile) {
+            width: 88%;
+            padding: 4.5rem 0 2.75rem;
+            font-weight: 400;
+        }
+    }
+    .section-content-text {
+        display: flex;
+        width: 70%;
+        margin: auto;
+        font-weight: 300;
+        letter-spacing: 0.5px;
+    }
+}
+
+.features {
+    height: auto;
+    .section-content:last-child {
+        padding-top: 0vh !important;
+        padding-bottom: 10.5rem !important;
+    }
+}
+
+.feature-wrp {
+    width: 33.33%;
+    border-radius: 3px;
+    padding: 3vh;
+    margin-right: 3vh;
+    text-align: center;
+    &:last-child {
+        margin-right: 0;
+    }
+}
+
+.center {
+    margin: auto;
+    text-align: center;
+}
+
+.feature-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #555555;
+    text-transform: uppercase;
+    @media screen and (max-width: $break-mobile) {
+        font-size: 2rem;
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        font-size: 2rem;
+    }
+}
+
+.section-content li {
+    width: 42%;
+    margin-left: 10%;
+    list-style: none;
+    color: #555555;
+    display: inline-block;
+    margin-top: 3rem;
+    vertical-align: top;
+    @media screen and (max-width: $break-mobile) {
+        width: 100%;
+        margin-left: 0%;
+    }
+    &:nth-child(odd) {
+        margin-left: 5%;
+        @media screen and (max-width: $break-mobile) {
+            margin-left: 0%;
+        }
+    }
+    span {
+        font-size: 1.3rem;
+        line-height: 1.3;
+        @media screen and (max-width: $break-small) {
+            font-size: 1rem;
+        }
+        @media screen and (max-width: $break-mobile) {
+            // font-size: 0.9rem;
+        }
+        @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+            font-size: 1rem !important;
+        }
+    }
+    h6 {
+        font-size: 1.4vh !important;
+        @media screen and (max-width: $break-mobile) {
+            font-size: 2.4vh !important;
+        }
+        @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+            font-size: 1.4vw !important;
+        }
+    }
+    div {
+        display: inline-block;
+    }
+}
+
+.pre-image-container {
+    width: auto;
+    height: 4.5rem;
+    margin: auto;
+    display:block !important;
+}
+
+.post-image-container {
+    width: 100%;
+    vertical-align: middle;
+    line-height: 1;
+    text-align: center;
+    margin-top: 20px;
+    h5 {
+        font-size: 1.8rem;
+        margin: 0;
+        font-weight: 600;
+        padding-bottom: 0.5rem;
+        line-height: 1.4;
+        @media screen and (max-width: $break-medium) {
+            font-size: 1.3rem;
+        }
+        @media screen and (max-width: $break-small) {
+            font-size: 1.4 rem;
+        }
+    }
+}
+
+.pre-image {
+    height: 100%;
+    margin: 0 auto;
+    width: auto;
+    display: inherit;
+}
+
+ul.section-content {
+    display: block !important;
+}
+
+.feature-img-wrp {
+    height: 4vh;
+    margin: 2vh 0;
+    img {
+        height: 100%;
+    }
+}
+
+.feature-description {
+    max-height: 2.5vh;
+    overflow: hidden;
+    color: #555555;
+}
+
+.scrollable-cards {
+    vertical-align: middle;
+    display: inline-block;
+    width: 76vw;
+    height: 32vh;
+    margin: 5rem auto;
+    z-index: 2;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    @media screen and (max-width: $break-medium) {
+        width: 73vw;
+        height: 18rem;
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        width: 52vw;
+        height: 20rem;
+    }
+}
+
+.card-container {
+    width: auto;
+    margin: auto;
+    text-align: center;
+}
+
+.relative {
+    position: relative;
+}
+
+.shift-right,
+.shift-left {
+    margin: 0 2rem;
+    font-size: 5rem;
+    cursor: pointer;
+    display: inline-block;
+    position: relative;
+    vertical-align: middle;
+    @media screen and (max-width: $break-medium) {
+        margin: 0 1.5rem;
+        font-size: 5rem;
+    }
+    @media screen and (max-width: $break-small) {
+        margin: 0 0.3rem;
+        font-size: 2.5rem;
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 840px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        margin: 0 1rem;
+        font-size: 4rem;
+    }
+}
+.shift-right{
+    transform: rotate(180deg);
+}
+
+
+.scroll-me {
+    transition-duration: 500ms;
+    transition-property: transform;
+    width: auto;
+    height: 100%;
+    @media screen and (max-width: $break-medium) {
+        width: auto;
+    }
+    @media screen and (max-width: $break-small) {
+        width: auto;
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        width: auto;
+        height: 52vh;
+    }
+}
+
+.scroll-me>div {
+    width: 18.7vw;
+    height: 32vh;
+    display: inline-flex;
+    white-space: normal;
+    vertical-align: middle;
+    div {
+        background-color: #fff;
+        border: 2px solid rgba(40, 48, 58, 1);
+        ;
+        border-radius: 10px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    @media screen and (max-width: $break-medium) {
+        width: 18vw;
+        height: 18rem;
+    }
+    @media screen and (max-width: $break-small) {
+        width: 72vw;
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        width: 52vw;
+    }
+}
+
+.card-bg {
+    background-image: url("/assets/landing/Hackathon-IMG-1@1x.png.png");
+    background-repeat: no-repeat;
+    background-position: -40px -7px;
+    background-size: 200%;
+    h6 {
+        text-align: center;
+        width: 100%;
+        color: #fff;
+        font-weight: 300;
+    }
+    span {
+        text-align: center;
+        width: 70%;
+        margin: 2vh auto;
+        display: block;
+        color: #fff;
+        font-size: 1.4vh;
+        font-weight: 300;
+        line-height: 2vh;
+        letter-spacing: 0.5px;
+        @media screen and (max-width: $break-medium) {
+            margin: 1vh auto;
+            font-size: 1.2vh;
+            line-height: 1.8vh;
+        }
+        @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+            font-size: 1.2vw;
+            line-height: 1.8vw;
+        }
+    }
+    @media screen and (max-width: $break-small) {
+        background-position: -20px -15px;
+    }
+}
+
+.card-bg-pink {
+    background-image: url("/assets/landing/jpg/Release Party Image@1x.png.jpg");
+    background-repeat: no-repeat;
+    background-position: -5px -5px;
+    background-size: 160%;
+    @media screen and (max-width: $break-small) {
+        background-position: -20px -15px;
+    }
+    h6 {
+        text-align: center;
+        left: 50%;
+        color: #fff;
+        font-weight: 300;
+        font-size: 1.7rem;
+        @media screen and (max-width: $break-small) {
+            font-size: 1.4rem;
+            line-height: 4vh;
+            font-weight: 400;
+        }
+    }
+    span {
+        text-align: center;
+        width: 70%;
+        margin: 2.3vh auto;
+        display: block;
+        color: #fff;
+        font-size: 1rem;
+        line-height: 1.5;
+        font-weight: 300;
+        letter-spacing: 0.5px;
+        @media screen and (max-width: $break-medium) {
+            margin: 1.5vh auto;
+            font-size: 1rem;
+        }
+        @media screen and (max-width: $break-small) {
+            margin: 1.5vh auto;
+            font-size: 1rem;
+        }
+        @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+            font-size: 1rem;
+        }
+    }
+}
+
+.halfs {
+    height: 50%;
+    @extend .card-bg;
+    h6 {
+        margin-top: 1.6vh;
+    }
+}
+
+.quater {
+    height: 30%;
+    @extend .card-bg;
+    span {
+        margin: 1vh auto !important;
+        @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+            display: none;
+        }
+    }
+}
+
+.three-quater {
+    height: 70%;
+    @extend .card-bg;
+    h6 {
+        margin-top: 3.5vh;
+    }
+}
+
+.full {
+    height: 100%;
+    @extend .card-bg-pink;
+    filter: grayscale(100%);
+    h6 {
+        margin-top: 4vh;
+    }
+}
+
+.halfs:hover,
+.full:hover,
+.three-quater:hover,
+.quater:hover,
+img:hover {
+    -webkit-filter: brightness(110%);
+    /* Safari */
+    filter: grayscale(0%);
+}
+
+.footer {
+    width: 40%;
+    margin: -3vh auto;
+    -webkit-transition: width 400ms ease-in-out;
+    -moz-transition: width 400ms ease-in-out;
+    -ms-transition: width 400ms ease-in-out;
+    transition: width 400ms ease-in-out;
+    @media screen and (max-width: $break-small) {
+        width: 100%;
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        width: 60%;
+    }
+}
+
+.footer li {
+    width: 33% !important;
+    float: left;
+    margin: 0px !important;
+    padding: 0px !important;
+    font-size: 1.5rem;
+    line-height: 3rem;
+    text-align: center;
+    @media screen and (max-width: $break-mobile) {
+        width: 33% !important;
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        font-size: 1.5vw;
+    }
+    a{
+      margin-top: .5rem;
+      display: inline-block;
+    }
+}
+
+
+
+@mixin dark($color) {
+    background-color: darken($color, 10%);
+}
+
+.box {
+    @include dark(#555555);
+}
+
+.landing-main-wrp {
+    position: absolute;
+    perspective: 1px;
+    top: 56px;
+}
+
+.parallax-0 {
+    width: 60vw;
+    height: 36rem;
+    top: -25vh;
+    right: -15vw;
+    background-image: url("/assets/landing/Pattern-Header-01@1x.png.png");
+    background-repeat: no-repeat;
+    background-position: right top;
+    position: absolute;
+    background-size: 100%;
+    transform-style: preserve-3d;
+    @include parallax(-0.3px);
+    @media screen and (max-width: $break-medium) {
+       width:55vw;
+       height:17rem;
+       top:-8vh;
+       right:-5vw;
+       @include parallax(-0.1px);
+    }
+    @media screen and (max-width: $break-mobile) {
+
+        width: 80vw;
+        top:-12vh;
+        right: -5vw;
+    }
+    @media screen and (max-width: $break-small) {
+        width: 80vw;
+        top:-10vh;
+
+    }
+}
+
+.parallax-1 {
+    width: 50vw;
+    height: 40rem;
+    top: -40vh;
+    left: -10vw;
+    background-image: url("/assets/landing/Pattern-2@1x.png.png");
+    background-repeat: no-repeat;
+    background-position: left top;
+    position: absolute;
+    background-size: 100%;
+    transform-style: preserve-3d;
+    @include parallax(-0.2px);
+    @media screen and (max-width: $break-medium) {
+        top: -16rem;
+    }
+    @media screen and (max-width: $break-small) {
+        top: -10rem;
+        width: 70%;
+    }
+    @media screen and (max-width: $break-mobile) {
+        top: -10rem;
+        width: 98%;
+    }
+}
+
+.parallax-2 {
+    width: 35rem;
+    height: 40rem;
+    background-image: url("/assets/landing/self-service-3@1x.png");
+    background-repeat: no-repeat;
+    background-position: left top;
+    position: absolute;
+    background-size: 100%;
+    top: 35rem;
+    left: calc(50% - 18.5rem);
+    transform-style: preserve-3d;
+    @include parallax(0.3px);
+    z-index: 3;
+    -webkit-transition: background 300ms ease-in;
+    -webkit-transition-delay: 100ms;
+    -moz-transition: background-image 300ms ease-in;
+    -moz-transition-delay: 100ms;
+    -ms-transition: background-image 300ms ease-in;
+    -ms-transition-delay: 100ms;
+    transition: background 300ms ease-in;
+    transition-delay: 100ms;
+    @media screen and (max-width: $break-medium) {
+        width: 47%;
+        left: calc(50% - 25%);
+        top: 33rem;
+    }
+    @media screen and (max-width: $break-mobile) {
+        @include parallax(0.3px);
+        width: 58%;
+        left: calc(50% - 30%);
+        top: 29rem;
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        top: 29rem;
+    }
+    @media screen and (min-width: 1440px){
+        top: 38rem;
+    }
+}
+
+.landscapepadding {
+    padding-top: 6rem;
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        padding-top: 4rem;
+    }
+}
+
+.parallax-text {
+    width: 10vw;
+    font-size: 0.9rem;
+    left: 34vw;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    top: 8vw;
+    position: absolute;
+    @media screen and (max-width: $break-medium) {
+        left: 42vw;
+    }
+    @media screen and (max-width: $break-small) {
+        display: none;
+    }
+}
+
+.bg1,
+.bg2,
+.bg3 {
+    -webkit-transition: visibility 300ms ease-in;
+    -moz-transition: visibility 300ms ease-in;
+    -ms-transition: visibility 300ms ease-in;
+    transition: visibility 300ms ease-in;
+    visibility: hidden;
+}
+
+#bg1 {
+    background-image: url("/assets/landing/self-service-1@3x.png");
+    .bg1 {
+        visibility: visible;
+    }
+}
+
+#bg2 {
+    background-image: url("/assets/landing/self-service-2@3x.png");
+    .bg2 {
+        visibility: visible;
+    }
+}
+
+#bg3 {
+    background-image: url("/assets/landing/self-service-3@3x.png");
+    .bg3 {
+        visibility: visible;
+    }
+}
+
+.parallax-3 {
+    width: 38rem;
+    height: 40rem;
+    background-image: url('/assets/landing/SSIMG-bottom@1x.png.png');
+    background-repeat: no-repeat;
+    background-position: left top;
+    position: absolute;
+    background-size: 100%;
+    top: 36rem;
+    left: calc(50% - 19rem);
+    transform-style: preserve-3d;
+    @include parallax(0.25px);
+    z-index: 2;
+    @media screen and (max-width: $break-medium) {
+        width: 50%;
+        left: calc(50% - 25%);
+        top: 34rem;
+    }
+    @media screen and (max-width: $break-mobile) {
+        width: 50%;
+        top: 30rem;
+        left: calc(50% - 25%);
+    }
+    @media only screen and (min-device-width: 320px) and (max-device-width: 680px) and (-webkit-min-device-pixel-ratio: 2) and (orientation: landscape) {
+        top: 30rem;
+    }
+    @media screen and (min-width: 1440px){
+        top: 39rem;
+    }
+}
+
+.parallax-4 {
+    width: 52vw;
+    height: 28rem;
+    background-image: url("/assets/landing/Pattern-3@1x.png.png");
+    background-repeat: no-repeat;
+    background-position: left top;
+    position: absolute;
+    background-size: 100%;
+    top: calc(100% - 5rem);
+    right: -5vw;
+    transform-style: preserve-3d;
+    @include parallax(0.1px);
+    z-index: 1;
+    @media screen and (max-width: $break-medium) {
+        width: 52vh;
+        right: 4vh;
+
+    }
+    @media screen and (max-width: $break-small) {
+        bottom: -8rem;
+    }
+    @media screen and (max-width: $break-mobile) {
+        width: 80vw;
+        top:calc(100% - 3rem);
+        right:0;
+    }
+}
+
+.parallax-6 {
+
+    width: 50vw;
+    height: 40rem;
+    background-image: url("/assets/landing/Pattern-4@2x.png.png");
+    background-repeat: no-repeat;
+    background-position: left top;
+    position: absolute;
+    background-size: 90%;
+    top: 35vh;
+    left: -5vw;
+    transform-style: preserve-3d;
+    @include parallax(-0.1px);
+    z-index: 0;
+    @media screen and (max-width: $break-medium) {
+        top: 35vh;
+        background-size: 100%;
+        width:50vw;
+    }
+    @media screen and (max-width: $break-small) {
+        width: 65vw;
+        top:50vh;
+    }
+    @media screen and (max-width: $break-mobile) {
+        width:90vw;
+        top: 50vh;
+        @include parallax(-0.1px);
+    }
+}
+
+.parallax-7 {
+    width: 65vw;
+    height: 40rem;
+    background-image: url("/assets/landing/Pattern-5@1x.png.png");
+    background-repeat: no-repeat;
+    background-position: right top;
+    position: absolute;
+    background-size: 75%;
+    top: 0vh;
+    right: -6vw;
+    z-index: 0;
+    @include parallax(-0.1px);
+    @media screen and (max-width: $break-medium) {
+        background-size: 75%;
+        width: 72vw;
+    }
+    @media screen and (max-width: $break-small) {
+        width: 90vw;
+        @include parallax(0px);
+    }
+    @media screen and (max-width: $break-mobile) {
+        background-size: 100%;
+        @include parallax(-0.01px);
+    }
+}
+
+.top-parallax-margin {
+    margin-top: 5rem;
+}
+
+.top-parallax-margin-half {
+    padding-top: 30px;
+    background-color: #f5f4f4;
+}
+
+.bottom-parallax-padding {
+    padding-bottom: 3vh;
+}
+
+.grey-section {
+    height: auto;
+    background-color:transparent;
+    color: #fff;
+    padding-bottom: 30px;
+    margin-bottom: -2px;
+    .pattern-parallax{
+        position: absolute;
+        background: #28303a;
+        transform: translateZ(-0.1px);
+        top: 0rem;
+        right: -6rem;
+        bottom: -3rem;
+        left: -6rem;
+        transform: translateZ(0px);
+    }
+    .features-section {
+         transform: translateZ(0.1px);
+        .section-content,
+        .section-content-text {
+            @include parallax(-0.1px);
+        }
+    }
+    .feature-title {
+        color: #fff;
+        z-index: 5;
+        position: relative;
+        cursor: pointer;
+    }
+}
+
+.about-section {
+    color: #fff;
+    .pattern-parallax{
+        position: absolute;
+        top: -3rem;
+        bottom: 0;
+        left: -6rem;
+        right: -6rem;
+        background-image: url("/assets/landing/BG-AboutUs@1x.png.png");
+        background-repeat: no-repeat;
+        background-position: left top;
+        background-size: 100%;
+        transform: translateZ(0px);
+        @media screen and (max-width: $break-medium) {
+            background-size: 150%;
+        }
+        @media screen and (max-width: $break-small) {
+            background-size: 400% !important;
+        }
+    }
+    .features-section{
+        transform: translateZ(0.1px);
+    }
+    .feature-title {
+        color: #fff;
+        @include parallax(-0.13px);
+    }
+    .section-content-small {
+        @include parallax(-0.2px);
+        padding: 2rem 0rem;
+        span a{
+            color: #fff;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+    }
+    .actions {
+        @include parallax(0.1px);
+        @media screen and (max-width: $break-medium) {
+            width: 60% !important;
+        }
+    }
+    padding-bottom: 20px;
+}
+
+.section-content-small {
+    width: 60% !important;
+    @media screen and (max-width: $break-mobile) {
+        width: 80% !important;
+    }
+}
+
+.top-parallax-margin-half .section-content-small {
+    font-size: 1rem;
+    @media screen and (max-width: $break-small) {
+        font-size: 0.9rem;
+    }
+}
+
+.calendar {
+    background-color: transparent !important;
+    border: none !important;
+    background-image: url('/assets/landing/Calendar@1x.png.png');
+    background-repeat: no-repeat;
+    background-position: 1vh top;
+    background-size: 3vh;
+    width: 70% !important;
+    text-align: right;
+    padding-right: 6vh;
+    vertical-align: middle;
+    font-size: 1.4vh;
+    font-weight: 300;
+    line-height: 3vh;
+    margin: auto;
+    height: 3vh;
+    letter-spacing: 0.5px;
+    @media screen and (max-width: $break-medium) {
+        padding-right: 1vh;
+        background-size: 2vh;
+        font-size: 1vh;
+        line-height: 2vh;
+    }
+    @media screen and (max-width: $break-small) {
+        padding-right: 0;
+        text-align: center;
+        padding-left: 2vh;
+        background-size: 3vh;
+        background-position: 20% top;
+        font-size: 1.5vh;
+        line-height: 3vh;
+    }
+    @media screen and (max-width: $break-mobile) {
+        background-position: 1% top;
+    }
+}
+
+.copyright {
+    font-size: 0.9rem;
+    letter-spacing: 0.2px;
+}
+
+a:hover {
+    text-decoration: none;
+}
+
+.section-content-small.footer {
+    width: 60% !important;
+    font-weight: 300 !important;
+    padding: 1.25rem !important;
+}
+
+.multi-item-carousel {
+    .carousel-inner {
+        > .item {
+            transition: 500ms ease-in-out left;
+        }
+        .active {
+            &.left {
+                left: -33%;
+            }
+            &.right {
+                left: 33%;
+            }
+        }
+        .next {
+            left: 33%;
+        }
+        .prev {
+            left: -33%;
+        }
+        @media all and (transform-3d),
+        (-webkit-transform-3d) {
+            > .item {
+                // use your favourite prefixer here
+                transition: 500ms ease-in-out left;
+                transition: 500ms ease-in-out all;
+                backface-visibility: visible;
+                transform: none!important;
+            }
+        }
+    }
+    .carouse-control {
+        &.left,
+        &.right {
+            background-image: none;
+        }
+    }
+}
+
+.minnum {
+    cursor: auto;
+    opacity: 0.3;
+}
+
+.maxnum {
+    cursor: pointer;
+    opacity: 1;
+}
+
+.transform-parallax{
+    -moz-transform-style:preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    transform-style: preserve-3d;
+}
+/deep/ .sidebar-wrp{
+    top:56px !important;
+}
+.section-content.actions{
+    padding-top: 0 !important;
+}
+.landing-action-btn-wrap {
+  .btn-primary{
+    letter-spacing: .4rem;
+  }
+}

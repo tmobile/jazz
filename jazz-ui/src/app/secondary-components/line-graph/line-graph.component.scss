@@ -1,0 +1,57 @@
+:host {
+    display: block;
+    height: 100%;
+    width: 100%;
+}
+
+/deep/ {
+    .line-graph-svg {
+        font-size: 1.2rem;
+        .tick {
+            font-size: 1.1em;
+            font-weight: 500;
+            fill: #333;
+        }
+    }
+    .line {
+        fill: none;
+        stroke: #ed0085;
+        stroke-width: 3px;
+        stroke-linecap: round;
+    }
+    .line-plot-hover {
+        stroke-width: 30px;
+        stroke: transparent;
+    }
+    .axis.axis--y {
+        path {
+            stroke: none;
+        }
+        .tick line {
+            stroke: #aaa;
+        }
+        .tick:nth-child(2) {
+            opacity: 0;
+        }
+    }
+    .hover-y {
+        font-size: 1.1em;
+        fill: #ed0085;
+        font-weight: bold;
+    }
+    .hover-x {
+        fill: #000;
+        font-size: 0.9em;
+        font-weight: bold;
+    }
+}
+
+svg {
+    opacity: 0.6;
+    font-size: 1.2rem;
+    overflow: visible;
+}
+
+h1 {
+    opacity: 0.4;
+}

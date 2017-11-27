@@ -1,0 +1,107 @@
+@import './../../../main-styles';
+.section-top {
+    padding: 10px 5px;
+}
+
+.page-section {
+    margin: 0;
+    margin-bottom: 1.5rem;
+    border-radius: 3px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+    padding: 2rem;
+}
+
+.filter-wrp {
+    display: flex;
+    align-items: center;
+    dropdown {
+        display: block;
+        margin-left: auto;
+        float: right;
+        height: 32px;
+        .dropdown-btn{
+            height: 32px;
+        }
+    }
+    
+}
+
+.table-container {
+    padding-top: 2rem;
+}
+.log-table-container{
+    .column,
+    /deep/ .column {
+        &:nth-child(1) {
+            width: 15rem;
+        }
+        &:nth-child(2) {
+            width: 30%;
+            @media(max-width: $screen-sm){
+                display: none;
+            }
+            @media(max-width: $screen-md    ){
+                display: none;
+            }
+        }
+        &:nth-child(3) {
+            width: 50%;
+            white-space: nowrap;
+            @media(max-width: $screen-sm){
+                display: none;
+            }
+        }
+        &:nth-child(4) {
+            width: 12rem;
+        }
+    }
+}
+.log-table-container  /deep/ .table-body{
+    .column, /deep/ .column {
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+}
+
+search-box {
+    display: inline-block;
+    margin-left: auto;
+}
+.search-filter-wrap{
+    margin-left: auto;
+    @media(max-width:$screen-md){
+        padding-top: 1rem;
+    }
+}
+.mask-wrp{
+    position: absolute;
+    height: calc(100% - 20%);
+    width: 100%;
+    background-color: #343f4b;
+    z-index: 1;
+    top: 20%;
+    opacity: 0.9;
+    text-align: center;
+    img{
+        width: 20rem;
+        margin: 5rem auto 2rem;
+    }
+    div{
+        margin:0 auto;
+        color:#fff;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+    a{
+        text-decoration: underline;
+        cursor: pointer;
+    }
+}
+.refresh{
+    color:#ed008c;
+    padding-left:20px;
+    cursor : pointer;
+}
+

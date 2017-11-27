@@ -1,0 +1,117 @@
+<!-- TODO: Remove disclaimer after techtraining -->
+<div class="disclaimer-static-data"><i>This data is for representational purpose only and may not be accurate</i></div>
+<div class="service-details row">
+        
+    <ul class="section-left col-md-7 col-sm-12">  
+        <li>
+            <div class="det-label">Description</div>
+            <div class="det-value desc" >{{services.description || 'Give me the details for your services'}}</div>
+        </li>
+    </ul>
+    
+    <ul class="section-right col-md-5 col-sm-12">
+        <li>
+            <div class="det-label">Endpoint</div>
+            <div [class.link]='endPoint!="NA"' class="det-value">{{endPoint}}</div>
+        </li>
+    </ul>
+</div>
+          
+<div class="separator-row"></div>
+
+
+            
+<div class="service-overview-wrp">
+    <div class="stage-wrp left-item" >
+        <div class="stage-title">Code Quality</div>
+        <div class="stage-overview">
+                <ul class="service-overview">
+                        <li class="overview-item">
+                            <div class="overview-value">
+                                <div class='gradeA' title='Grade A'>A</div>
+                            </div>
+                            <div class="overview-label">Reliability</div>
+                        </li>
+                        <li class="overview-item" >
+                            <div class="overview-value">
+                                    <div class='gradeC' title='Grade C'>C</div>
+                            </div>
+                            <div class="overview-label">Security</div>
+                        </li>
+                        <li class="overview-item">
+                            <div class="overview-value">
+                                    <div class='gradeC' title='Grade C'>C</div>
+                            </div>
+                            <div class="overview-label">Maintainibility</div>
+                        </li>
+                    </ul>
+                    <ul class="service-overview">
+                        <li class="overview-item">
+                            <div class="overview-value">
+                                NA
+                            </div>
+                            <div class="overview-label ">Coverage</div>
+                        </li>
+                        <li class="overview-item">
+                            <div class="overview-value">
+                                NA
+                            </div>
+                            <div class="overview-label">
+                                Duplications
+                            </div>
+                        </li>
+                        <li class="overview-item">
+                            <div class="overview-value javascript">NA
+                            </div>
+                            <div class="overview-label">
+                                <span>JavaScript</span>
+                            </div>
+                        </li>
+                    </ul>
+            
+        </div>
+    </div>
+    <div class="stage-wrp right-item" >
+            <div class="stage-title">Deployments</div>
+            <div class="stage-overview"> 
+                    <ul class="service-overview">
+                            <li class="overview-item">
+                                <div class="overview-value">
+                                    NA
+                                </div>
+                                <div class="overview-label"># of Deployments<br>(Last 24 hours)</div>
+                            </li>
+                            <li class="overview-item" >
+                                <div class="overview-value">NA
+                                </div>
+                                <div class="overview-label">Last Successful Deployment</div>
+                            </li>
+                            <li class="overview-item">
+                                <div class="overview-value">NA
+                                </div>
+                                <div class="overview-label">Last Failed Deployment</div>
+                            </li>
+                        </ul>
+                        <ul class="service-overview">
+                            <li class="overview-item">
+                                <div class="overview-value"></div>
+                                <div class="overview-label"></div>
+                            </li>
+                            <li class="overview-item bottom-right">
+                                <div class="overview-value">NA                                    
+                                </div>
+                                <div class="overview-label">
+                                    Last Deployment Status
+                                </div>
+                            </li>
+                            <li class="overview-item">
+                                <div class="overview-value"></div>
+                                <div class="overview-label">
+                                    
+                                </div>
+                            </li>
+                        </ul>
+            </div>
+        </div>
+</div>
+        

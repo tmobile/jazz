@@ -1,0 +1,86 @@
+<div class="page-hdr-wrp" >
+	<jazz-header type="landing" (loginClick) = "onLoginClicked($event)" noLink = 'noLink' [closed]="closed"></jazz-header>
+</div>
+<div class="page-body">
+	<div class="content-wrp">
+    
+    <section class="loading-screen content-section" [class.show]="status == 'loading'">
+      <div class="loading-circle"></div>
+    </section>
+		<section class="success-screen content-section" *ngIf="status == 'success'">
+			<div class="status-row">
+				<img src="../assets/images/icons/icon-good@3x.png">
+	      <p class="success-text">SUCCESS!</p>
+			</div>
+      <div class="details-row">
+        <p>{{message}}</p>
+      </div>
+      <div class="action-row">
+        <a href=""></a>
+      </div>
+    </section>
+    <section class="error-screen content-section" *ngIf="status == 'expired'">
+      <div class="status-row">
+        <img src="../assets/images/icons/icon-bad@3x.png">
+        <p class="error-text">Oops!</p>
+      </div>
+      <div class="details-row">
+         <p>{{message}}</p>
+      </div>
+      <div class="action-row">
+        <a href=""></a>
+      </div>
+    </section>
+    <section class="error-screen content-section" *ngIf="status == 'error'">
+	    <div class="status-row">
+	    	<img src="../assets/images/icons/icon-bad@3x.png">
+	      <p class="error-text">Oops!</p>
+	    </div>
+      <div class="details-row">
+        <p>Error while performing user action. Please email us at <a href="mailto:mail@tmail.com">email@mail.com</a></p>
+      </div>
+      <div class="action-row">
+        <a target="_blank" href=""></a>
+      </div>
+    </section>
+    <section class="error-screen content-section" *ngIf="status == 'rejected'">
+	    <div class="status-row">
+	    	<img src="../assets/images/icons/icon-bad@3x.png">
+	      <p class="error-text">Oops!</p>
+	    </div>
+      <div class="details-row">
+        <p>{{message}}</p>
+      </div>
+      <div class="action-row">
+        <a target="_blank" href=""></a>
+      </div>
+    </section>
+    <section class="error-screen content-section" *ngIf="status == 'error2'">
+	    <div class="status-row">
+	    	<img src="../assets/images/icons/icon-bad@3x.png">
+	      <p class="error-text">Oops!</p>
+	    </div>
+      <div class="details-row">
+         <p>{{message}}</p>
+      </div>
+      <div class="action-row">
+        <a target="_blank" href=""></a>
+      </div>
+    </section>
+    <section class="error-screen content-section" *ngIf="status == 'aborted'">
+	    <div class="status-row">
+	    	<img src="../assets/images/icons/icon-bad@3x.png">
+	      <p class="error-text">Oops!</p>
+	    </div>
+      <div class="details-row">
+         <p>{{message}}</p>
+      </div>
+      <div class="action-row">
+        <a target="_blank" href=""></a>
+      </div>
+    </section>
+	</div>
+</div>
+<sidebar (loginClick) = "onLoginClicked($event)" [show]="goToLogin" (onClose)="closeSidebar($event)">
+  <login></login>
+</sidebar>

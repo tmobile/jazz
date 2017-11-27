@@ -1,0 +1,79 @@
+@import './../../../main-styles';
+.section-top {
+    padding: 10px 5px;
+}
+
+.page-section {
+    margin: 0;
+    margin-bottom: 1.5rem;
+    border-radius: 3px;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+    padding: 2rem;
+}
+
+.filter-wrp {
+    display: flex;
+    align-items: center;
+}
+
+.table-container {
+    padding-top: 2rem;
+}
+.env-logs{
+    .column,
+    /deep/ .column {
+    &:nth-child(1) {
+        width: 18rem;
+    }
+    &:nth-child(2) {
+        width: 30%;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        @media(max-width: $screen-sm){
+            display: none;
+        }
+        @media(max-width: $screen-md){
+            display: none;
+        }
+    }
+    &:nth-child(3) {
+        width: 35%;
+        white-space: nowrap;
+        @media(max-width: $screen-sm){
+            display: none;
+        }
+        @media(max-width: $screen-md){
+            display: none;
+        }
+    }
+    &:nth-child(4) {
+        width: 8rem;
+    }
+    }
+}
+
+.filter-icon {
+    margin-left: 25px;
+}
+
+search-box {
+    display: inline-block;
+    margin-left: auto;
+}
+
+.mask-wrap{
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    left:0;
+    top:0;
+    background-color: #343f4b;
+    opacity: 0.9;
+    z-index: 1;
+    background-image: url("/assets/images/mask-image.png");
+    background-repeat: no-repeat;
+    background-size: 20rem auto;
+    background-position: center;
+} 

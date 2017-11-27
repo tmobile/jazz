@@ -1,0 +1,10 @@
+<div class="form-label">{{label}}
+    <popover-content #myPopover placement="right" [closeOnClickOutside]="true">
+      {{popoverSubTitle}}<br>{{popoverContent}}
+    </popover-content>
+    <span *ngIf="label == 'Username'" class="icon-icon-info icon-info-wrap" popoverPlacement="right" [popover]="myPopover" [popoverOnHover]="true"></span>
+</div>
+<input type="{{type}}" name="{{name}}" [ngModel]="value" (ngModelChange)="onChange($event)" [class.error]="error" />
+<div [hidden]="!error" class="error-msg">
+    <div><span [class.hidden]="error != undefined && error.trim() == ''" class="icon-icon-alert"></span>{{error}}</div>
+</div>

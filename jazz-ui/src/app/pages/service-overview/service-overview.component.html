@@ -1,0 +1,212 @@
+<div class='current-status-wrap hide'>
+    <div class="current-meter-bar">
+        <span id='current-status-val' [ngClass]="service.status === 'creation completed' ? 'completed-bar':'under-progress-bar'"></span>
+        <div class='status-result' [ngClass]="service.status === 'creation started' || 'Stage1' || 'Stage2' || 'Stage3' || 'creation completed' ? 'completed-bar':'under-progress-bar'">
+            <div class='status-icon icon-icon-confirmcheck' *ngIf="service.status === 'creation started' || 'creation completed'"></div>
+            <div class='status-lable'>Creation</div>
+        </div>
+        <div class='status-result' [ngClass]="service.status === 'Stage1' || 'Stage2' || 'Stage3' || 'creation completed' ? 'completed-bar':'under-progress-bar'">
+            <div class='status-icon icon-icon-confirmcheck' *ngIf="service.status === 'Stage1' || 'Stage2' || 'Stage3' || 'creation completed'"></div>
+            <div class='status-lable'>Stage1</div>
+        </div>
+        <div class='status-result'  [ngClass]="service.status === 'Stage2' || 'Stage3' || 'creation completed' ? 'completed-bar':'under-progress-bar'">
+            <div class='status-icon icon-icon-confirmcheck' *ngIf="service.status === 'Stage2' || 'Stage3' || 'creation completedStage2'"></div>
+            <div class='status-lable'>Stage2</div>
+        </div>
+        <div class='status-result'  [ngClass]="service.status === 'Stage3' || 'creation completed' ? 'completed-bar':'under-progress-bar'">
+            <div class='status-icon icon-icon-confirmcheck' *ngIf="service.status === 'Stage3' || 'creation completedStage2'"></div>
+            <div class='status-lable'>Stage3</div>
+        </div>
+        <div class='status-result'  [ngClass]="service.status === 'creation completed' ? 'completed-bar':''">
+            <div class='status-icon icon-icon-confirmcheck' *ngIf="service.status === 'creation completed'"></div>
+            <div class='status-lable'>Completed</div>
+        </div>
+    </div>
+    <div class="current-meter-status"><b>Current Status:</b> {{service.status}}</div>
+</div>
+
+<div class='service-details row bottom-10' *ngIf='service.endpoints != undefined && (service.serviceType=="website" || service.serviceType=="api")'>
+    <ul class=" col-md-12 col-sm-12">
+        <li class='det-wrp' *ngIf='service.endpoints.dev != undefined'>
+            <div class=' det-label align-slf'>Dev Endpoint</div>
+            <div class='det-value endpoint-url align-slf'>
+                <div class="popupcopy" (mouseover)="myFunction()" (click)='copyClipboard("copyapilinkdev")'>
+                    <span>{{service.endpoints.dev}}<img src="../../../assets/images/icons/icon-link.png"/></span>
+                    <div class="tooltip-content" >
+                        <span id="copyPopup">{{this.copylinkmsg}}</span>
+                    </div> 
+                    <textarea id="copyapilinkdev">{{service.endpoints.dev}}</textarea>
+                </div>
+                
+            </div>
+            <div class='det-value align-slf'>
+                    <btn-jazz-secondary class='testApiBtn' text='Test Dev Api' (click)='testApi("api","dev")' *ngIf='service.serviceType=="api"'></btn-jazz-secondary>
+                    <btn-jazz-secondary class='testApiBtn' text='Go to Website' (click)='testApi("website","dev")'  *ngIf='service.serviceType=="website"'></btn-jazz-secondary>
+            </div>
+
+        </li>
+        <li class='det-wrp det-wrp-bottom' *ngIf='service.endpoints.prod != undefined'>
+            <div class=' det-label align-slf'>Prod Endpoint</div>
+            <div class='det-value endpoint-url align-slf'>
+                <div class="popupcopy" (mouseover)="myFunction()" (click)='copyClipboard("copyapilinkprod")'>
+                    <span>{{service.endpoints.prod}}<img src="../../../assets/images/icons/icon-link.png"/></span>
+                    <div class="tooltip-content" >
+                        <span id="copyPopup">{{this.copylinkmsg}}</span>
+                    </div> 
+                    <textarea id="copyapilinkprod">{{service.endpoints.prod}}</textarea>
+                </div>
+            </div>
+            <div class='det-value align-slf'>
+                    <btn-jazz-secondary class='testApiBtn' text='Test Prod Api' (click)='testApi("api","prod")' *ngIf='service.serviceType=="api"'></btn-jazz-secondary>
+                    <btn-jazz-secondary class='testApiBtn' text='Go to Website' (click)='testApi("website","prod")'  *ngIf='service.serviceType=="website"'></btn-jazz-secondary>
+            </div>
+        </li>
+    </ul>
+     <div class='api-btn-wrp'>
+            
+    </div>
+</div>
+
+<div class="service-details row">
+    <div class='edit-service-overview-btn'></div><br>
+    <div class='show-service-overview' [class.hide]="disp_show">
+	<ul class="section-left col-md-7 col-sm-12">
+        <li>
+            <div class="det-label">Status</div>
+            <div class="det-value">{{service.status}}</div>
+         </li>
+        <li>
+            <div class="det-label">Description</div>
+            <div class="det-value" [ngClass]="{PlaceHolder:description_empty}">{{service.description || 'Give me the details for your service'}}</div>
+        </li>
+        <li>
+            <div class="det-label">Namespace</div>
+            <div class="det-value">{{service.domain || 'Link a domain'}}</div>
+        </li>
+        <li>
+            <div class="det-label">Service Type</div>
+            <div class="det-value service-type">{{service.serviceType || 'Pick your service type'}}</div>
+
+        </li>
+    </ul>
+    <ul class="section-right col-md-5 col-sm-12">
+        <li>
+            <div class="det-label">Email</div>
+            <div class="det-value link" [ngClass]="{PlaceHolder:email_empty}" >{{service.email || 'Stay connected with an email'}}</div>
+        </li>
+        <li>
+            <div class="det-label">Repository</div>
+            <div class="det-value repository-link" [ngClass]="islink ? 'link':''" (click)="openLink(repositorylink)">{{bitbucketRepo}}</div>
+        </li>
+        <li>
+            <div class="det-label">Runtime</div>
+            <div class="det-value" [ngClass]="{PlaceHolder:runtime_empty}" >{{service.runtime}}</div>
+        </li>
+        <li>
+            <div class="det-label">Tags</div>
+            <div class="det-value" [ngClass]="{PlaceHolder:tags_empty}" >{{service.tags || 'Services are cooler with tags'}}</div>
+        </li>
+    </ul></div>
+    <div class='edit-service-overview' [class.hide]="disp_edit">
+            <ul class="section-left col-md-7 col-sm-12">
+
+                <li>
+                    <div class="det-label">Status</div>
+                    <div class="det-value" [ngClass]="service.status">{{service.status}}</div>
+                </li>
+                <li>
+                        <div class="det-label">Description</div>
+                        <textarea [(ngModel)]="service.description" class="det-value-input-txtarea" placeholder="Give me the details for your service"></textarea>
+                    </li>
+                    <li>
+                        <div class="det-label">Approver(s)</div>
+                        <div class="det-value">{{service.approvers || 'Got an approver? Add them here'}}</div>
+                    </li>
+
+                    <li>
+                        <div class="det-label">Namespace</div>
+                        <div class="det-value">{{service.domain || 'Link a domain'}}</div>
+                    </li>
+                    <li>
+                        <div class="det-label">Service Type</div>
+                        <div class="det-value service-type">{{service.serviceType || 'Pick your service type'}}</div>
+
+                    </li>
+                </ul>
+                <ul class="section-right col-md-5 col-sm-12">
+                    <li>
+                        <div class="det-label">Email</div>
+                        <input [(ngModel)]="email_temp" type='text' class="det-value-input" placeholder="Stay connected with an email" (blur)="check_email_valid()">
+
+                    </li>
+                    <p class='email-err-msg' [class.hide]="hide_email_error">Please enter a valid email Id</p>
+                    <li>
+                        <div class="det-label">Slack Channel</div>
+                        <input [(ngModel)]="slackChannel_temp" type='text' (blur)="checkSlackNameAvailability()" class="det-value-input" placeholder="Feeling collaborative? Add it to slack">
+                        <img *ngIf='show_loader' class="input-loader" src="../assets/images/icons/loading.png">
+                    </li>
+                    <p class='email-err-msg' [class.hide]='hide_slack_error'>Slack channel is not available. Please provide a valid slack channel.</p>
+                    <li>
+                        <div class="det-label">Repository</div>
+                        <div class="det-value link repository-link" (click)="openLink(service.repository)">{{bitbucketRepo}}</div>
+                    </li>
+                    <li>
+                        <div class="det-label">Runtime</div>
+                        <div class="det-value">{{service.runtime}}</div>
+
+                    </li>
+                    <li>
+                        <div class="det-label">Tags</div>
+                        <input [(ngModel)]="service.tags" type='text' class="det-value-input" placeholder="Services are cooler with tags">
+                    </li>
+                </ul>
+    </div>
+    <div class="loading-row" [class.show]="isLoadingService">
+        <div class="loading-circle"></div>
+    </div>
+</div>
+<div class="separator-row"></div>
+<div class="disclaimer-static-data"><i>This data is for representational purpose only and may not be accurate</i></div>
+<div class="service-overview-wrp relative">
+    <div class="stage-wrp" *ngFor="let overview of environments" [ngClass]="overview.stage" [class.active]="activeEnv == overview.stage" (click)="stageClicked(overview.stage)">
+        <div class="stage-title">{{overview.stage}}</div>
+        <div class="stage-overview">
+            <ul class="service-overview">
+                <li class="overview-item health">
+                    <div class="overview-value">NA</div>
+                    <div class="overview-label">Service Health</div>
+                </li>
+                <li class="overview-item last-status" *ngIf="overview.serviceHealth == 'good'">
+                    <div class="overview-value">NA</div>
+                    <div class="overview-label">Last Successful Deployment</div>
+                </li>
+                <li class="overview-item last-status" *ngIf="overview.serviceHealth == 'bad'">
+                    <div class="overview-value">NA</div>
+                    <div class="overview-label">Last Successful Deployment</div>
+                </li>
+                <li class="overview-item deployments-count">
+                    <div class="overview-value">NA</div>
+                    <div class="overview-label">
+                        <div># of Deployments </div>
+                        <div>({{overview.deploymentsCount.duration}})</div>
+                    </div>
+                </li>
+                <li class="overview-item cost" >
+                    <div class="overview-value">NA
+                    </div>
+                    <div class="overview-label">
+                        <div>Cost </div>
+                        <div>({{overview.cost.duration}})</div>
+                    </div>
+                </li>
+                <li class="overview-item code-quality" >
+                    <div class="overview-value">NA
+                    </div>
+                    <div class="overview-label">
+                        <span>Code Quality</span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
