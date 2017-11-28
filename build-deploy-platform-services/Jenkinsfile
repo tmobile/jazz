@@ -235,6 +235,34 @@ node {
 					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/stg-config.json"
 					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/prod-config.json"
                 }
+
+				if (service_template.trim() == "platform_usermanagement") {
+					echo "Updating parameter specific to platform_usermanagement"
+
+					sh "sed -i -- 's/{user_pool_id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{user_pool_id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{user_pool_id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
+
+					sh "sed -i -- 's/{user_client_id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{user_client_id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{user_client_id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
+
+                    sh "sed -i -- 's/{region}/" + region + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{region}/" + region + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{region}/" + region + "/g' ./config/prod-config.json"
+
+					sh "sed -i -- 's,{bb_service_host}," + "http://" + var_bitbucket_base + ",g' ./config/dev-config.json"
+					sh "sed -i -- 's,{bb_service_host}," + "http://" + var_bitbucket_base + ",g' ./config/stg-config.json"
+					sh "sed -i -- 's,{bb_service_host}," + "http://" + var_bitbucket_base + ",g' ./config/prod-config.json"
+                
+					sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + ",g' ./config/dev-config.json"
+					sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + ",g' ./config/stg-config.json"
+					sh "sed -i -- 's/{bb_username}," + env.BITBUCKET_USERNAME  + ",g' ./config/prod-config.json"
+
+					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + ",g' ./config/dev-config.json"
+					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + ",g' ./config/stg-config.json"
+					sh "sed -i -- 's/{bb_password}," + env.BITBUCKET_PASSWORD  + ",g' ./config/prod-config.json"
+				}
 			}
 		}
 		catch(error){
