@@ -1,0 +1,6 @@
+service : usermanagement
+providerRuntime : nodejs4.3
+providerMemorySize : 256
+providerTimeout : 160
+region: {inst_region}
+domain : platform
