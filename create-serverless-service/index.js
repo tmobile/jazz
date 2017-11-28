@@ -135,7 +135,7 @@ module.exports.handler = (event, context, cb) => {
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
         request({
-            url: config.JOB_BUILD_URL,       
+            url: config.JOB_BUILD_URL,
             method: 'POST',
             headers: {
                 "Authorization": base_auth_token
