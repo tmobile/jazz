@@ -16,16 +16,16 @@
 
 /**
   CRUD APIs for Service Catalog
-  @author: 
+  @author:
   @version: 1.0
 **/
 
 const errorHandlerModule = require("./components/error-handler.js");
-const responseObj = require("./components/response.js"); 
-const configObj = require("./components/config.js"); 
-const logger = require("./components/logger.js"); 
-const utils = require("./components/utils.js")(); 
-const crud = require("./components/crud")(); 
+const responseObj = require("./components/response.js");
+const configObj = require("./components/config.js");
+const logger = require("./components/logger.js");
+const utils = require("./components/utils.js")();
+const crud = require("./components/crud")();
 
 const async = require('async');
 
@@ -41,19 +41,19 @@ module.exports.handler = (event, context, cb) => {
         global.services_table = config.services_table;
 
         // event.method cannot be empty, throw error
-        if (event === undefined || event.method === undefined) {
-            cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
+        if (!event.method) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
         }
 
         // get service_id from the path
         var service_id;
-        if (event !== undefined && event.path !== undefined && event.path.id !== undefined && event.path.id !== "") {
+        if (event && event.path && event.path.id) {
             service_id = event.path.id;
         }
 
         // throw bad request error if id not specified for PUT/DELETE
         if ((event.method === 'PUT' || event.method === 'DELETE') && service_id === undefined) {
-            cb(JSON.stringify(errorHandler.throwInputValidationError("service id is required")));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("service id is required")));
         }
 
         // 1: GET service by id (/services/{service_id})
@@ -68,17 +68,17 @@ module.exports.handler = (event, context, cb) => {
             }, function(error, data) {
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
-                    cb(JSON.stringify(errorHandler.throwInternalServerError('Unexpected Error occured.')));
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError('Unexpected Error occured.')));
                 }
                 var service_obj = data.getServiceByID;
 
                 // throw error if no service exists with given service_id
                 if (Object.keys(service_obj).length === 0 && service_obj.constructor === Object) {
                     logger.error('Cannot find service with id: ' + service_id);
-                    cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
+                    return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
                 }
                 logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
-                cb(null, responseObj(data.getServiceByID, event.path));
+                return cb(null, responseObj(data.getServiceByID, event.path));
             });
         }
 
@@ -97,10 +97,10 @@ module.exports.handler = (event, context, cb) => {
                 // Handle error
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
-                    cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured')));
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured')));
                 }
 
-                cb(null, responseObj(result.fetchServices, event.query));
+                return cb(null, responseObj(result.fetchServices, event.query));
             });
         }
 
@@ -121,7 +121,7 @@ module.exports.handler = (event, context, cb) => {
                         } else {
                             if (Object.keys(data).length === 0 && data.constructor === Object) {
                                 logger.error('Cannot find service with id: ' + service_id);
-                                cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
+                                return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
                             } else {
                                 onComplete(null, {
                                     "result": "success",
@@ -266,7 +266,7 @@ module.exports.handler = (event, context, cb) => {
         if (event.method === 'POST' && service_id === undefined) {
             logger.info('Create new service');
             var service_data = event.body;
-            
+
             async.series({
                 // Validate service_data for adding new service
                 validateServiceData: function(onComplete) {
@@ -278,11 +278,11 @@ module.exports.handler = (event, context, cb) => {
                             "message": "Service Data cannot be empty"
                         });
                     }
-                    
+
                     // validate required fields
                     var required_fields = config.service_required_fields;
                     var field;
-                    
+
                     for (var i = required_fields.length - 1; i >= 0; i--) {
                         field = required_fields[i];
                         var value = service_data[field];
@@ -294,9 +294,9 @@ module.exports.handler = (event, context, cb) => {
                             });
                         }
                     }
-                    
+
                     var allowed_fields = required_fields.concat(config.service_optional_fields);
-                    
+
                     // check if input contains fields other than allowed fields
                     for (field in service_data) {
                         if (service_data.hasOwnProperty(field)) {

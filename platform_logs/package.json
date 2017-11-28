@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "request": "*",
-    "deasync": "*"
+    "deasync": "*",
+    "lodash": "*"
   },
   "devDependencies": {
     "mocha": "^v3.0.0",

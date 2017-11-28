@@ -4,6 +4,8 @@ import { AuthenticationService } from './authentication.service';
 import { Router } from '@angular/router';
 import { ToasterService} from 'angular2-toaster';
 
+
+
 @Injectable()
 export class RouteGuard implements CanActivate {
 
@@ -12,20 +14,16 @@ export class RouteGuard implements CanActivate {
     private router: Router,
   	private toasterService: ToasterService) {
     
-    	this.toasterService = toasterService;
+    	// this.toasterService = toasterService;
 
   }
 
   canActivate() {
-  	let allow = this.authService.isLoggedIn();
+		let allow = this.authService.isLoggedIn();
   	if (allow === false) {
-  		let currentUrl = this.router.url;
-
-  		// if (currentUrl !== '/landing') {
+			let currentUrl = this.router.url;
   			alert("Please Login to continue");
-  		// }
-      this.router.navigate(['/landing']);
-      // this.toasterService.pop('error', 'Unauthorised', 'Please login to continue');
+      this.router.navigate(['']);
   	}
     return allow;
   }

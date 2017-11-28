@@ -6,7 +6,8 @@ import { Observable } from 'rxjs/Rx';
 // Configuration model - should adhere to the config.json file
 // link to config.json is provided in the environments/environment.*.ts files
 export interface Configuration {
-  baseurl: string
+  baseurl: string,
+  api_doc_name: string
 }
 
 
@@ -31,7 +32,6 @@ export class ConfigService {
   }
 
   getConfiguration():Configuration {
-
     return this.config;
   }
 }

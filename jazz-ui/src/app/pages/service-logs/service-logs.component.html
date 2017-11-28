@@ -1,7 +1,16 @@
+ <!-- TODO: Remove disclaimer after techtraining -->
+ <div class="disclaimer-static-data hide">
+    <i>This data is for representational purpose only and may not be accurate</i>
+</div>
 <div class="row page-section section-top">
     <div class="filter-wrp">
-        <filters class="filters" [filtersList]="filtersList" (onSelected)="onFilterSelected($event)"></filters>
-        <div class="search-filter-wrap">
+
+        <filters class="filters" [filtersList]="filtersList" [multiple]="false" [selectedList]="selected" (onSelected)="onFilterSelected($event)"></filters>
+        <dropdown [dropdwnContent]="environmentList" [selected]="logsSearch.environment" (onSelected)="onEnvSelected($event)"></dropdown>
+         <div (click)="callLogsFunc()" class = "refresh">
+                Refresh
+        </div>
+        <div class="search-filter-wrap hide">
             <search-box (onChange)="onServiceSearch($event)"></search-box>
             <div class="filter-icon">
                 <span class="icon-icon-filter-unselected" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
@@ -9,17 +18,20 @@
             </div>
         </div>
     </div>
-    <table-template class="table-container log-table-container" [type]="'accordian'" [header]="tableHeader" [showFilters]="filterSelected" (onFilter)="onFilter($event)" (onSort)="onSort($event)">
-        <div class="table-row-wrp" *ngFor="let row of logs; let i = index" [class.expanded]="row.expanded">
-            <div class="table-row" (click)="onRowClicked(row, i)">
-                <div class="column">{{row.time | amDateFormat: 'YYYY-MM-DD HH:mm:ss'}}</div>
-                <div class="column">{{row.message}}</div>
-                <div class="column">{{row.requestId}}</div>
-                <div class="column">{{row.logLevel}}</div>
+    <div class="relative">
+        <table-template class="table-container log-table-container relative" [message]="errMessage" [state]="loadingState" (refreshData)="refreshData($event)" [type]="'accordian'" [header]="tableHeader" [showFilters]="filterSelected" (onFilter)="onFilter($event)" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected"  (paginatePage)="paginatePage($event)" [totalPageNum]="totalPagesTable">
+            <div class="table-row-wrp" *ngFor="let row of logs; let i = index" [class.expanded]="row.expanded">
+                <div class="table-row" (click)="onRowClicked(row, i)">
+                    <div class="column visible">{{row.timestamp | amDateFormat: 'YYYY-MM-DD HH:mm:ss'}}</div>
+                    <div class="column">{{row.message}}</div>
+                    <div class="column">{{row.request_id}}</div>
+                    <div class="column">{{row.type}}</div>
+                </div>
+                <div class="table-row-expanded">
+                    {{row.message}}
+                </div>
             </div>
-            <div class="table-row-expanded">
-                {{row.message}}
-            </div>
-        </div>
-    </table-template>
+
+        </table-template>
+    </div>
 </div>

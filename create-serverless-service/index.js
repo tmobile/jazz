@@ -86,7 +86,8 @@ module.exports.handler = (event, context, cb) => {
             username: user_id,
             admin_group: userlist,
             domain: event.body.domain,
-            auth_token: event.headers.Authorization
+            auth_token: event.headers.Authorization,
+            description: event.body.description
         };
 
         // create-serverless-service API to take slack-channel as one more parameter(optional)
@@ -134,7 +135,7 @@ module.exports.handler = (event, context, cb) => {
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
         request({
-            url: config.JOB_BUILD_URL,       
+            url: config.JOB_BUILD_URL,
             method: 'POST',
             headers: {
                 "Authorization": base_auth_token

@@ -23,6 +23,7 @@
 }
 
 .filter-wrp {
+    padding-bottom:3rem;
     display: flex;
     text-align: right;
     flex-wrap: wrap;
@@ -92,10 +93,14 @@ search-box {
     margin-left: auto;
 }
 
-.graph-wrp {}
+.graph-wrp {
+    width:100%;
+    margin: auto;
+    position: relative;
+}
 
 .cost-graph-temp {
-    width: 100%;
+    width: 75%;
     margin-top: 1.5rem;
 }
 
@@ -106,5 +111,90 @@ search-box {
     margin-left:auto;
     @media(max-width:$screen-md){
         padding-top: 1rem;
+    }
+}
+.loading-circle {
+    position: relative;
+    // height: 3rem;
+    &:before,
+    &:after {
+        content: "";
+        position: absolute;
+        left: calc(50% - 1.5rem);
+        height: 3rem;
+        width: 3rem;
+        border-radius: 50%;
+        border: 3px solid rgba(237, 0, 133, 0.1);
+    }
+    &:after {
+        content: "";
+        position: absolute;
+        border-left-color: #ed0085;
+        animation-name: rotate;
+        animation-duration: 1s;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+    }
+}
+
+.loading-row {
+    display: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    background: #fff;
+    top: 0;
+    left: 0;
+    .loading-circle {
+        top: calc(50% - 1.5rem);
+    }
+    .error-text{
+        position: relative;
+        text-align: center;
+        top:45%;
+        font-size: 18px;
+        text-transform: uppercase;
+        font-weight: 300;
+    }
+}
+.total-amnt{
+    position: absolute;
+    top:0;
+    width:100%;
+    height:100%;
+    font-size: 1.2rem;
+    color: #333;
+}
+.no-cost-txt{
+    top:40%;
+    text-align: center;
+    // visibility: visible;
+}
+.empty-row {
+    position: absolute;
+    text-align: center;
+    top: 25%;
+    font-size: 18px;
+    left: 45%;
+    // text-transform: uppercase;
+    font-weight: 300;
+}
+.with-refresh
+{
+    left:25% !important;
+    width: 50% !important;
+}
+.with-refresh a{
+    font-weight: bold;
+}
+.with-refresh img{
+    margin-bottom: 10px;
+}
+.nodata{
+    font-size: 14px;
+    color: #555;
+    b{
+        font-size: 20px;
     }
 }

@@ -5,7 +5,7 @@
 
 .header1 {
     display: inline-block;
-    font-size: 24px;
+    font-size: 26px;
     font-weight: bold;
     color: #000000;
 }
@@ -18,7 +18,10 @@
     display: inline-block;
 }
 
-// /deep/ .service-title-wrap button.btn-default{
+.service-type {
+    text-transform: uppercase;
+}
+
 /deep/ .page-title-wrap button.btn-default {
     background-color: transparent;
     float: right;
@@ -42,14 +45,17 @@
     border: 1px solid;
 }
 
-// .service-title-wrap {
+.delete-service-popup-content {
+    position: relative;
+}
+
 .page-title-wrap {
     overflow: hidden;
-    padding: 24px 0 0 0;
+    padding: 26px 0 0 0;
     .header1 {
         float: left;
     }
-    btn-tmobile-secondary {
+    btn-jazz-secondary {
         float: right;
     }
 }
@@ -88,7 +94,6 @@
 
 .service-status-row {
     margin-bottom: 1.5rem;
-    /*font-weight: 700;*/
 }
 
 .service-content {
@@ -118,28 +123,22 @@
     padding-right: 3rem;
 }
 
-.section-right {}
-
 .det-label {
     width: 10rem;
     flex-shrink: 0;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: bold;
     color: #000000;
 }
 
-.det-value {}
-
 .det-value.link {
     color: #1495bb;
     cursor: pointer;
-    word-break: break-all;
 }
 
 .separator-row {
     height: 2px;
     margin: 2rem 0;
-    // border: solid 1px #dddddd;
 }
 
 .service-overview-wrp {
@@ -197,8 +196,6 @@
     justify-content: center;
     align-items: center;
 }
-
-.last-status .overview-value div:first-child {}
 
 .last-status .overview-value div:last-child {
     width: 3rem;
@@ -269,7 +266,7 @@
             font-weight: bold;
             margin-right: 1.5rem;
         }
-        btn-tmobile-primary {
+        btn-jazz-primary {
             float: right;
             /deep/ .delete-btn {
                 height: 3.5rem;
@@ -277,7 +274,7 @@
             }
         }
         /deep/ button.btn-primary:hover {
-            border-color: #f01f86 !important;
+            border-color: #ed008c !important;
         }
     }
     .step-2 {
@@ -312,47 +309,56 @@
     }
 }
 
-// FOR OSS RELEASE - disable tabs
-/deep/ .service-detail-page .tabs-wrap {
-    ul {
-        display: inline-block;
+.delete-service-btn {
+    &.disabled {
         cursor: not-allowed;
-        margin: auto;
-    }
-    li {
-        &:nth-child(1) {
-            cursor: pointer;
-        }
-        &:nth-child(2),
-        &:nth-child(3),
-        &:nth-child(4),
-        &:nth-child(5) {
-            color: #ccc;
-            cursor: not-allowed;
+        opacity: 0.5;
+        /deep/ button {
             pointer-events: none;
         }
     }
 }
 
-// FOR OSS RELEASE - disable environment page link
-.service-overview-wrp {
+.loading-circle {
     position: relative;
-     .stage-wrp.active {
-        pointer-events: none;
+    &:before,
+    &:after {
+        content: "";
+        position: absolute;
+        left: calc(50% - 1.5rem);
+        height: 3rem;
+        width: 3rem;
+        border-radius: 50%;
+        border: 3px solid rgba(237, 0, 133, 0.1);
     }
-}  
-/deep/ .overlay-msg{
+    &:after {
+        content: "";
+        position: absolute;
+        border-left-color: #ed0085;
+        animation-name: rotate;
+        animation-duration: 1s;
+        animation-iteration-count: infinite;
+        animation-timing-function: linear;
+    }
+}
+
+.loading-row {
+    display: none;
     position: absolute;
-    height: 100%;
     width: 100%;
-    z-index: 1;
-    opacity: 0.8;
-    background-color: #424F5D;
-    color: #fff;
-    font-size: 2rem;
-    p{
-        top: 40%;
-        position: relative;
-        text-align: center;
+    height: 100%;
+    z-index: 2;
+    background: #fff;
+    top: 0;
+    left: 0;
+    .loading-circle {
+        top: calc(50% - 2.5rem);
     }
-}  
+}
+
+.loading-text {
+    text-align: center;
+    padding-top: 1.5rem;
+    color: #ed0085;
+    text-transform: uppercase;
+}

@@ -12,10 +12,6 @@ import { Component, OnInit, Output, EventEmitter} from '@angular/core';
   styleUrls: ['./services.component.scss']
 })
 export class ServicesComponent implements OnInit {
-
-
- /*  @Output() createServiceSlider:EventEmitter<boolean> = new EventEmitter<boolean>();*/
-
   constructor() { }
   selectedTab = 0;
   mobSecState:number = 1;
@@ -118,9 +114,5 @@ export class ServicesComponent implements OnInit {
 
   ngOnInit() {
   }
-
-  
-
-
 }
 

@@ -1,0 +1,24 @@
+<div class="page-hdr-wrp" >
+  <jazz-header type="landing" (loginClick) = "onLoginClicked($event)" noLink = 'noLink' [closed]="closed"></jazz-header>
+</div>
+<div class="page-body">
+	<div class="content-wrp">
+    <section class="success-screen content-section" >
+      <div class="status-row">
+        <img src="../assets/images/icons/icon-good@3x.png">
+        <p class="success-text">SUCCESS!</p>
+      </div>
+      <div class="details-row">
+        <p>You have registered succesfully.</p>
+      </div>
+      <div class="action-row">
+        Click <a href="">here</a> to login.
+      </div>
+    </section>
+  </div>
+</div>
+
+
+<sidebar (loginClick) = "onLoginClicked($event)" [show]="goToLogin" (onClose)="closeSidebar($event)">
+  <login></login>
+</sidebar>
