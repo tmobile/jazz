@@ -6,7 +6,7 @@ node {
 			
 		echo "Build to deploy all Platform Services"
 		
-		def platform_srvc_build_job = "/job/build-deploy-platform-service/buildWithParameters?token=bld-plat-srvs-71717&admin_group=admin_group&region=" + params.region;
+		def platform_srvc_build_job = "job/build-deploy-platform-service/buildWithParameters?token=bld-plat-srvs-71717&admin_group=admin_group&region=" + params.region;
 
 		def var_job_url = JenkinsLocationConfiguration.get().getUrl() + platform_srvc_build_job;
 		
@@ -19,7 +19,7 @@ node {
 								"platform_logs", "platform_events", "platform-services-handler"] 
 
 		platform_services.each {
-			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params       
+			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"${var_job_url}&service_name=${it}\""       
 
 			sleep(timeout_seconds)
 		}
