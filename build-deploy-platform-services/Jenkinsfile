@@ -255,13 +255,13 @@ node {
 					sh "sed -i -- 's,{bb_service_host}," + "http://" + var_bitbucket_base + ",g' ./config/stg-config.json"
 					sh "sed -i -- 's,{bb_service_host}," + "http://" + var_bitbucket_base + ",g' ./config/prod-config.json"
                 
-					sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + ",g' ./config/dev-config.json"
-					sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + ",g' ./config/stg-config.json"
-					sh "sed -i -- 's/{bb_username}," + env.BITBUCKET_USERNAME  + ",g' ./config/prod-config.json"
+					sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + "/g' ./config/prod-config.json"
 
-					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + ",g' ./config/dev-config.json"
-					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + ",g' ./config/stg-config.json"
-					sh "sed -i -- 's/{bb_password}," + env.BITBUCKET_PASSWORD  + ",g' ./config/prod-config.json"
+					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/prod-config.json"
 				}
 			}
 		}
