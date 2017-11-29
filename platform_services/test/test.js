@@ -983,6 +983,7 @@ describe('platform_services', function() {
       return cb(null, dataObj);
     });
     var attemptBool = dynamoCheck("put",spy);
+    AWS.restore("DynamoDB");
     assert.isTrue(attemptBool);
   });
 
@@ -1017,6 +1018,7 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    AWS.restore("DynamoDB");
     logStub.restore();
     stub.restore();
     assert.isTrue(cbCheck && logCheck);
