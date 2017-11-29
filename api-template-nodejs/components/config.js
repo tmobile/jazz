@@ -23,17 +23,21 @@
 **/
 
 var getStageConfig = (event) => {
-  var stage = event.stage;
-  var configObj = {};
-  // Loads the config files based on the env.
-  // Please edit the JSON files.
-  if (stage === 'dev') {
-    configObj = require('../config/dev-config.json');
-  } else if (stage === 'stg') {
-    configObj = require('../config/stg-config.json');
-  } else if (stage === 'prod') {
-    configObj = require('../config/prod-config.json');
-  }
+  var stage;
+  
+  if (event && event.awslogs && event.awslogs.data) {
+      // cw events default to dev
+      stage = 'dev';
+  }else {
+      stage = event.stage
+  } 
+  
+  var configObj;
+  
+  if (stage) {
+      configObj = require(`../config/${stage}-config.json`);
+  } 
+
   return configObj;
 };
 
