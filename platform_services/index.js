@@ -271,7 +271,7 @@ module.exports.handler = (event, context, cb) => {
                 // Validate service_data for adding new service
                 validateServiceData: function(onComplete) {
                     // validate if input data is empty
-                    if (service_data === undefined || service_data === null || service_data === {}) {
+                    if (!service_data || Object.keys(service_data) == 0) {
                         // return inputError
                         onComplete({
                             "result": "inputError",
@@ -286,7 +286,7 @@ module.exports.handler = (event, context, cb) => {
                     for (var i = required_fields.length - 1; i >= 0; i--) {
                         field = required_fields[i];
                         var value = service_data[field];
-                        if (value === undefined || value === null || value === "") {
+                        if (!value) {
                             // return inputError
                             onComplete({
                                 "result": "inputError",
@@ -322,7 +322,7 @@ module.exports.handler = (event, context, cb) => {
                         } else {
                             if (data.length > 0) {
                                 logger.error('Service name in the specified domain already exists.');
-                                cb(JSON.stringify(errorHandler.throwInputValidationError('Service name in the specified domain already exists.')));
+                                return cb(JSON.stringify(errorHandler.throwInputValidationError('Service name in the specified domain already exists.')));
                             } else {
                                 onComplete(null, {
                                     "result": "success",

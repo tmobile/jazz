@@ -37,7 +37,7 @@ describe('platform_services', function() {
   */
   var dynamoCheck = function(dynamoMethod, sinonSpy){
     var serviceName;
-    var docClientMethods = ["get", "update", "delete"];
+    var docClientMethods = ["get", "update", "delete", "put"];
     //assign the correct aws service depending on the method to be used
     if(docClientMethods.includes(dynamoMethod)){
       serviceName = "DynamoDB.DocumentClient";
@@ -92,8 +92,9 @@ describe('platform_services', function() {
     };
     //define an object to be returned by dynamo upon mocked success
     dataObj = {
-        "Item" : event.query
+        "Item" : {}
     };
+    Object.assign(dataObj.Item, event.query);
     dataObj.Item.SERVICE_ID = "b100dM00n";
     dataObj.Item.TIMESTAMP = "Ba11";
     //creating an object with the callback function in order to wrap and test callback parameters
@@ -350,7 +351,7 @@ describe('platform_services', function() {
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   * @returns {string} should return the callback response which is an error message
   */
-  it("should indicate an InternalServerError occured if DynamoDB.scan fails", ()=>{
+  it("should indicate an InternalServerError occured if DynamoDB.scan fails during GET", ()=>{
     event.method = "GET";
     event.path.id = undefined;
     errType = "InternalServerError";
@@ -684,7 +685,6 @@ describe('platform_services', function() {
     var callFunction = index.handler(event, context, callbackObj.callback);
     var logResponse = logStub.args[0][0];
     var cbResponse = stub.args[0][0];
-    console.log(cbResponse);
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType); //&& cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
@@ -799,5 +799,226 @@ describe('platform_services', function() {
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
     assert.isTrue(logCheck);
+  });
+
+  /*
+  * Given an event.method = POST and no event.body or event.path.id, handler() informs of missing input data
+  * @params{object} event -> event.method is POST, event.body is undefined, null or empty
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} callback response containing error message with details
+  */
+  it("should indicate that input data is missing when given a POST with no event.body", ()=>{
+    event.method = "POST";
+    event.path.id = undefined;
+    errType = "inputError";
+    errMessage = "Service Data cannot be empty";
+    var invalidArray = [{}, null, undefined];
+    var bool = true;
+    //handler() should issue the above error messages for any invalid value for the body
+    for(i in invalidArray){
+      //wrap the logger responses
+      stub = sinon.stub(logger, "error", spy);
+      event.body = invalidArray[i];
+      //trigger stub/spy by calling handler
+      var callfunction = index.handler(event, context, callback);
+      var cbMessage = JSON.stringify(spy.args[i*4+1][0]);
+      stub.restore();
+      if(!cbMessage.includes(errType) || !cbMessage.includes(errMessage)){
+        bool = false;
+      };
+    };
+    assert.isTrue(bool);
+  });
+
+  /*
+  * Given an event.method = POST and an event.body missing required fields, handler() informs of missing field data
+  * @params{object} event -> event.method is POST, event.body has missing required fields
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} callback response containing error message with details
+  */
+  it("should indicate that input data is missing given a POST with an event.body missing required fields", ()=>{
+    event.method = "POST";
+    event.path.id = undefined;
+    errType = "inputError";
+    errMessage = "status cannot be empty";
+    var invalidArray = ["", null, undefined];
+    var bool = true;
+    //handler() should issue the above error messages for any invalid value for the body fields
+    for(i in invalidArray){
+      //wrap the logger responses
+      stub = sinon.stub(logger, "error", spy);
+      event.body.status = invalidArray[i];
+      //trigger stub/spy by calling handler
+      var callfunction = index.handler(event, context, callback);
+      var cbMessage = JSON.stringify(spy.args[i*4+1][0]);
+      stub.restore();
+      if(!cbMessage.includes(errType) || !cbMessage.includes(errMessage)){
+        bool = false;
+      };
+    };
+    assert.isTrue(bool);
+  });
+
+  /*
+  * Given an event.method = POST and an event.body with invalid fields, handler() informs of invalid fields
+  * @params{object} event -> event.method is POST, event.body has additional fields, path.id is undefined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} callback response containing error message with details
+  */
+  it("should indicate that input data is missing given a POST with an event.body missing required fields", ()=>{
+    //query has all required fields, cloning these properties will get us past first check
+    Object.assign(event.body, event.query);
+    event.body.newProperty = "Ludo!";
+    event.method = "POST";
+    event.path.id = undefined;
+    errType = "inputError";
+    errMessage = "Invalid field " + "newProperty" + ". Only following fields can be updated ";
+    //wrap the logger responses
+    stub = sinon.stub(logger, "error", spy);
+    //trigger stub/spy by calling handler
+    var callfunction = index.handler(event, context, callback);
+    var cbMessage = JSON.stringify(spy.args[1][0]);
+    var cbCheck = cbMessage.includes(errType) && cbMessage.includes(errMessage);
+    stub.restore();
+    assert.isTrue(cbCheck);
+  });
+
+  /*
+  * Given an event.method = "POST", unspecified id, and valid body, handler() attempts to search for existing service
+  * @param {object} event -> event.method = "POST", event.path.id is undefined, event.body has required fields
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should attempt dynamoDB scan for matching services given a POST with valid body data", ()=>{
+    //query has all required fields, cloning required fields to body
+    Object.assign(event.body, event.query);
+    event.method = "POST";
+    event.path.id = undefined;
+    event.path.id = undefined;
+    var attemptBool = dynamoCheck("scan",spy);
+    assert.isTrue(attemptBool);
+  });
+
+  /*
+  * Given a failed attempt at searching services with DynamoDB, handler() should inform of error
+  * @param {object} event -> event.method = "POST", event.path.id is undefined, event.body has required props
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} should return the callback response which is an error message
+  */
+  it("should indicate an InternalServerError occured if DynamoDB.scan fails during POST", ()=>{
+    //query has all required fields, cloning required fields to body
+    Object.assign(event.body, event.query);
+    event.method = "POST";
+    event.path.id = undefined;
+    errType = "InternalServerError";
+    errMessage = "unexpected error occured";
+    logMessage = "error occured while adding new service";
+    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB", "scan", (params, cb) => {
+      return cb(err);
+    });
+    //wrapping the logger and callback function to check for response messages
+    stub = sinon.stub(callbackObj,"callback",spy);
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[0][0];
+    var cbResponse = stub.args[0][0];
+    var logCheck = logResponse.includes(logMessage);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+    AWS.restore("DynamoDB");
+    logStub.restore();
+    stub.restore();
+    assert.isTrue(logCheck && cbCheck);
+  });
+
+  /*
+  * Given a non empty return obj after searching for services, handler() aborts and states service already exists
+  * @param {object} event -> event.method = "POST", event.path.id is undefined, event.body has required props
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  * @returns {string} should return the callback response which states service exists
+  */
+  it("should indicate service already exists if return obj from dynamoDB scan is non-empty", ()=>{
+    //query has all required fields, cloning required fields to body
+    Object.assign(event.body, event.query);
+    event.method = "POST";
+    event.path.id = undefined;
+    errType = "BadRequest";
+    errMessage = "Service name in the specified domain already exists.";
+    logMessage = "Service name in the specified domain already exists.";
+    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB", "scan", (params, cb) => {
+      var item = {};
+      Object.assign(item, dataObj.Item);
+      dataObj.Items = [item];
+      return cb(null, dataObj);
+    });
+    //wrapping the logger and callback function to check for response messages
+    stub = sinon.stub(callbackObj,"callback",spy);
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[0][0];
+    var cbResponse = stub.args[0][0];
+    var logCheck = logResponse.includes(logMessage);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+    AWS.restore("DynamoDB");
+    logStub.restore();
+    stub.restore();
+    assert.isTrue(cbCheck && logCheck);
+  });
+
+  /*
+  * Given a successful POST, handler() attempts to add service in dynamoDB
+  * @param {object} event -> event.method = "POST", event.path.id is undefined, event.body has required props
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should attempt to add service in dynamo for successful POST", function(){
+    //query has all required fields, cloning required fields to body
+    Object.assign(event.body, event.query);
+    event.method = "POST";
+    event.path.id = undefined;
+    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB", "scan", (params, cb) => {
+      dataObj.Items = [];
+      return cb(null, dataObj);
+    });
+    var attemptBool = dynamoCheck("put",spy);
+    assert.isTrue(attemptBool);
+  });
+
+  /*
+  * Given a failed attempt at a dynamo service addition, handler() should inform of error
+  * @param {object} event -> event.method = "POST", event.path.id is undefined, event.body has required props
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.put fails", () =>{
+    //query has all required fields, cloning required fields to body
+    Object.assign(event.body, event.query);
+    event.method = "POST";
+    event.path.id = undefined;
+    errType = "InternalServerError";
+    errMessage = "unexpected error occured ";
+    logMessage = "error occured while adding new service";
+    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB", "scan", (params, cb) => {
+      dataObj.Items = [];
+      return cb(null, dataObj);
+    });
+    AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
+      return cb(err);
+    });
+    //wrapping the logger and callback function to check for response messages
+    stub = sinon.stub(callbackObj,"callback",spy);
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[0][0];
+    var cbResponse = stub.args[0][0];
+    var logCheck = logResponse.includes(logMessage);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    logStub.restore();
+    stub.restore();
+    assert.isTrue(cbCheck && logCheck);
   });
 });
