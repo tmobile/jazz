@@ -39,13 +39,15 @@ module.exports.handler = (event, context, callback) => {
     var errorHandler = errorHandlerModule(logger);
 
 	try {
-		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
+		if (event && event.method && event.method === 'POST') {
 
-			if (event.body.username === undefined || event.body.username === "") {
+			if (!event.body.username) {
+				logger.warn("Username not provided");
 				return callback(JSON.stringify(errorHandler.throwInputValidationError("101", "Username not provided")));
 			}
 
-			if (event.body.password === undefined || event.body.password === "") {
+			if (!event.body.password) {
+				logger.warn("No password provided for user: " + event.body.username); 
 				return callback(JSON.stringify(errorHandler.throwInputValidationError("102", "No password provided for user: " + event.body.username + ".")));
 			}
 
@@ -65,6 +67,7 @@ module.exports.handler = (event, context, callback) => {
 				Username : event.body.username,
 				Pool : userPool
 			};
+			
 			logger.info("Authenticate against cognito for " + event.body.username);
 
 			var cognitoUser = new AWSCognito.CognitoUser(userData);
@@ -79,9 +82,11 @@ module.exports.handler = (event, context, callback) => {
           		}
 			});
 		}else {
+			logger.warn("Invalid request object " + JSON.stringify(event));
 			return callback(JSON.stringify(errorHandler.throwInputValidationError("100", "Bad Request")));
 		}
 	} catch (e) {
+		logger.error("Unknown error occured: " + JSON.stringify(e));
 		return callback(JSON.stringify(errorHandler.throwInternalServerError("103", "Unknown error occured: " + e.message)));
 	}
 };
