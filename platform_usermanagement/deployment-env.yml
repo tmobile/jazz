@@ -1,4 +1,4 @@
-service : usermgmt
+service : usermanagement
 securityGroupIds: {inst_security_group_id}
 subnetIds: {inst_subnet_ids}
 providerRuntime : nodejs4.3
