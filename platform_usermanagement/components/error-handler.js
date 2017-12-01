@@ -15,28 +15,28 @@ module.exports = () => {
                 message: errorMessage.toString()
             };
         },
-        throwForbiddenError: function(errorCode, errorMessage) { 
+        throwForbiddenError: function(errorCodeNum, errorMessage) { 
             return {
                 errorCode: errorCodeNum.toString(),
                 errorType: "Forbidden",
                 message: errorMessage.toString()
             };
         },
-        throwUnauthorizedError: function(errorCode, errorMessage) {
+        throwUnauthorizedError: function(errorCodeNum, errorMessage) {
             return {
                 errorCode: errorCodeNum.toString(),
                 errorType: "Unauthorized",
                 message: errorMessage.toString()
             };
         },
-        throwNotFoundError: function(errorCode, errorMessage) { 
+        throwNotFoundError: function(errorCodeNum, errorMessage) { 
             return {
                 errorCode: errorCodeNum.toString(),
                 errorType: "NotFound",
                 message: errorMessage.toString()
             };
         },
-        throwInternalServerError: function(errorCode, errorMessage) {
+        throwInternalServerError: function(errorCodeNum, errorMessage) {
             return {
                 errorCode: errorCodeNum.toString(),
                 errorType: "InternalServerError",
