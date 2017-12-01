@@ -59,56 +59,41 @@ module.exports.handler = (event, context, cb) => {
 		var service_data = event.body;
 
 		var subPath = getSubPath(event.resourcePath);
-
+		const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
+		
 		if (subPath.indexOf('reset') > -1) {
 			logger.info('User password reset Request::' + JSON.stringify(service_data));
 
-			if (!service_data.email) {
-				logger.warn("no email address provided for password reset");
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("102", "email is required field")));
-			}
-
-			const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
-			
-			forgotPassword(cognito, config, service_data)
+			validateResetParams(service_data)
+			.then(resetUserPassword(cognito, config, service_data))
 			.catch(function (err) {
 				logger.error("Failed while resetting user password: " + JSON.stringify(err));
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("106", "Failed while resetting user password for: " + service_data.email)));
+
+				if (err.errorType) {
+					// error has already been handled and processed for API gateway
+					return cb(JSON.stringify(err));
+				}else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while resetting user password for: " + service_data.email)));
+				}
 			});
 		}else {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
 
-			var missing_required_fields = _.difference(_.values(config.required_fields), _.keys(service_data));
-
-			if (missing_required_fields.length > 0) {
-				logger.error("Following field(s) are required - " + missing_required_fields.join(", "));
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("102", "Following field(s) are required - " + missing_required_fields.join(", "))));
-			}
-
-			for (var i = 0; i < config.required_fields.length; i++) {
-				if (!service_data[config.required_fields[i]]) {
-					logger.error(config.required_fields[i] + "'s value cannot be empty");
-					return cb(JSON.stringify(errorHandler.throwInputValidationError("102", config.required_fields[i] + "'s value cannot be empty")));
-				}
-			}
-
-			service_data.usercode = service_data.usercode.toUpperCase();
-			if (!_.includes(config.reg_codes, service_data.usercode)) {
-				logger.error("Invalid User Registration Code provided ");
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("103", "Invalid User Registration Code")));
-			}
-
-			const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
-
-			createUser(cognito, config, service_data)
+			validateCreaterUserParams(config, service_data)
+			.then(createUser(cognito, config, service_data))
 			.then(result => rp(createUserInBitBucket(config, service_data, result.UserSub)))
 			.then(function(result){
 				logger.info("User: " + service_data.userid + " registered successfully!");
 				return cb(null, {result: "success",errorCode: "0",message: "User registered successfully!"});
 			}).catch(function (err) {
-				logger.error(JSON.stringify(err));
-				logger.error("Failed while registering user: " + service_data.userid);
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("106", "Failed while registering user: " + service_data.userid)));
+				logger.error("Failed while registering user: " + JSON.stringify(err));
+				
+				if (err.errorType) {
+					// error has already been handled and processed for API gateway
+					return cb(JSON.stringify(err));
+				}else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while resetting user password for: " + service_data.email)));
+				}
 			});
 		}
 	} catch (e) {
@@ -118,8 +103,9 @@ module.exports.handler = (event, context, cb) => {
 };
 
 /**
- * 
- * @param {*} queryPath 
+ * Returns the subpath for this service 
+ * @param {String} queryPath
+ * @returns {String} subPaths  
  */
 function getSubPath(queryPath) {
 	if (queryPath) {
@@ -129,6 +115,59 @@ function getSubPath(queryPath) {
 			return queryPaths.join('/');
 		}
 	}
+}
+
+/**
+ * 
+ * @param {object} userInput
+ *  
+ */
+function validateResetParams(userInput) {
+	return new Promise((resolve, reject) => {
+
+		var errorHandler = errorHandlerModule();
+	
+		if (!userInput.email) {
+			logger.warn("no email address provided for password reset");
+			return reject(errorHandler.throwInputValidationError("102", "email is required field"));
+		}else{
+			resolve();
+		}
+	});
+}
+
+/**
+ * 
+ * @param {object} userInput 
+ * @returns promise
+ */
+function validateCreaterUserParams(userInput) {
+	var errorHandler = errorHandlerModule();
+
+	return new Promise((resolve, reject) => {
+		
+		var missing_required_fields = _.difference(_.values(config.required_fields), _.keys(userInput));
+		
+		if (missing_required_fields.length > 0) {
+			logger.error("Following field(s) are required - " + missing_required_fields.join(", "));
+			return reject(errorHandler.throwInputValidationError("102", "Following field(s) are required - " + missing_required_fields.join(", ")));
+		}
+
+		for (var i = 0; i < config.required_fields.length; i++) {
+			if (!userInput[config.required_fields[i]]) {
+				logger.error(config.required_fields[i] + "'s value cannot be empty");
+				return reject(errorHandler.throwInputValidationError("102", config.required_fields[i] + "'s value cannot be empty"));
+			}
+		}
+
+		userInput.usercode = userInput.usercode.toUpperCase();
+		if (!_.includes(config.reg_codes, userInput.usercode)) {
+			logger.error("Invalid User Registration Code provided ");
+			return reject(errorHandler.throwInputValidationError("103", "Invalid User Registration Code"));
+		}
+
+		resolve();
+	});
 }
 
 function createUser(cognitoClient, config, userData) {
