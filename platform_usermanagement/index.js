@@ -44,58 +44,85 @@ module.exports.handler = (event, context, cb) => {
   	}
 
 	global.config = config;
-	
+	  
 	try {
+		logger.info(JSON.stringify(event));
 
-		if (!event || !event.method) {
-			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "method cannot be empty")));
+		if (!event || !event.method || !event.resourcePath) {
+			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "invalid or missing arguments")));
 		}
 
-		if (event.method !== 'POST')  {
+		if (event.method !== 'POST' )  {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Service operation not supported")));
 		}
 
 		var service_data = event.body;
 
-		logger.info('User Reg Request::' + JSON.stringify(service_data));
+		var subPath = getSubPath(event.resourcePath);
 
-		var missing_required_fields = _.difference(_.values(config.required_fields), _.keys(service_data));
+		if (subPath.indexOf('reset') > -1) {
+			logger.info('User password reset Request::' + JSON.stringify(service_data));
 
-		if (missing_required_fields.length > 0) {
-			logger.error("Following field(s) are required - " + missing_required_fields.join(", "));
-			return cb(JSON.stringify(errorHandler.throwInputValidationError("102", "Following field(s) are required - " + missing_required_fields.join(", "))));
-		}
-
-		for (var i = 0; i < config.required_fields.length; i++) {
-			if (!service_data[config.required_fields[i]]) {
-				logger.error(config.required_fields[i] + "'s value cannot be empty");
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("102", config.required_fields[i] + "'s value cannot be empty")));
+			if (!service_data.email) {
+				logger.warn("no email address provided for password reset");
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("102", "email is required field")));
 			}
+
+		}else {
+			logger.info('User Reg Request::' + JSON.stringify(service_data));
+
+			var missing_required_fields = _.difference(_.values(config.required_fields), _.keys(service_data));
+
+			if (missing_required_fields.length > 0) {
+				logger.error("Following field(s) are required - " + missing_required_fields.join(", "));
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("102", "Following field(s) are required - " + missing_required_fields.join(", "))));
+			}
+
+			for (var i = 0; i < config.required_fields.length; i++) {
+				if (!service_data[config.required_fields[i]]) {
+					logger.error(config.required_fields[i] + "'s value cannot be empty");
+					return cb(JSON.stringify(errorHandler.throwInputValidationError("102", config.required_fields[i] + "'s value cannot be empty")));
+				}
+			}
+
+			service_data.usercode = service_data.usercode.toUpperCase();
+			if (!_.includes(config.reg_codes, service_data.usercode)) {
+				logger.error("Invalid User Registration Code provided ");
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("103", "Invalid User Registration Code")));
+			}
+
+			const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
+
+			createUser(cognito, config, service_data)
+			.then(result => rp(createUserInBitBucket(config, service_data, result.UserSub)))
+			.then(function(result){
+				logger.info("User: " + service_data.userid + " registered successfully!");
+				return cb(null, {result: "success",errorCode: "0",message: "User registered successfully!"});
+			}).catch(function (err) {
+				logger.error(JSON.stringify(err));
+				logger.error("Failed while registering user: " + service_data.userid);
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("106", "Failed while registering user: " + service_data.userid)));
+			});
 		}
-
-		service_data.usercode = service_data.usercode.toUpperCase();
-		if (!_.includes(config.reg_codes, service_data.usercode)) {
-			logger.error("Invalid User Registration Code provided ");
-			return cb(JSON.stringify(errorHandler.throwInputValidationError("103", "Invalid User Registration Code")));
-		}
-
-		const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
-
-		createUser(cognito, config, service_data)
-		.then(result => rp(createUserInBitBucket(config, service_data, result.UserSub)))
-		.then(function(result){
-			logger.info("User: " + service_data.userid + " registered successfully!");
-			return cb(null, {result: "success",errorCode: "0",message: "User registered successfully!"});
-		}).catch(function (err) {
-			logger.error(JSON.stringify(err));
-			logger.error("Failed while registering user: " + service_data.userid);
-			return cb(JSON.stringify(errorHandler.throwInputValidationError("106", "Failed while registering user: " + service_data.userid)));
-		});
 	} catch (e) {
 		logger.error('Error in user registration : ' + e.message);
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", e.message)));
 	}
 };
+
+/**
+ * 
+ * @param {*} queryPath 
+ */
+function getSubPath(queryPath) {
+	if (queryPath) {
+		var queryPaths = queryPath.split('/');
+		if (queryPaths && queryPaths.length > 2) {
+			queryPaths.splice(0, 3); // /{namespace}/{service}/
+			return queryPaths.join('/');
+		}
+	}
+}
 
 function createUser(cognitoClient, config, userData) {
 	return new Promise((resolve, reject) => {
