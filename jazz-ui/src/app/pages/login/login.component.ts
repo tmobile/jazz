@@ -222,7 +222,10 @@ export class LoginComponent implements OnInit {
         });
         }
         resetPassword(e){
-            this.http.get('/platform/usermanagement/reset?email=' + this.model.username).subscribe(
+            var payload = {
+                'email': this.model.username
+            };
+            this.http.post('/platform/usermanagement/reset', payload).subscribe(
                 response =>{
                     console.log(response);
                 }, error => {
