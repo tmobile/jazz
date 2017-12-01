@@ -1,0 +1,179 @@
+#!groovy.
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+import groovy.transform.Field
+
+//@Field def events
+
+/**
+ * The Jenkins Job deletes any diabled CloudFront Distributions
+ * @author:
+*/
+
+node {
+
+	echo "Starting delete Stack's Cloud Front Distributions that are disabled..."
+	echo "params : $params"
+
+	cleanupCloudFrontDistribution()
+
+}
+
+
+/**
+ * Delete the the cloud Front policies related to the service folder
+ * @return
+ */
+def cleanupCloudFrontDistribution() {
+	withCredentials([
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+	]) {
+		try {
+			sh "aws configure set profile.cloud-api.region us-east-1"
+			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+			sh "aws configure set preview.cloudfront true"
+
+			def _Etag
+	
+			def idArray = getDisabledDistribution()
+            if (idArray == null)
+               return;
+			
+            echo "test3333"
+
+            if (idArray.length > 0) {
+                for (indx = 0; indx < idArray.length; indx++) {
+                  def distributionConfig = getDistributionConfig(idArray[indx])
+                  //echo "111111" + distributionConfig
+                  _Etag = generateDistributionConfigForDisable(distributionConfig)
+                  deleteCloudFrontDistribution(idArray[indx], _Etag)
+                }
+            }
+
+		} catch(ex) {
+				if((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
+					echo "Could not find a CloudFront distribution Id "
+				} else {
+					error "cleanupCloudFrontDistribution Failed. "+ex.getMessage()
+				}
+		}
+	}
+
+}
+
+/**
+ * Get the List of CloudFront distributions corresponding to the stack which are disabled
+ * @return List of distributions
+ */
+def getDisabledDistribution() {
+	def distributionID
+	def outputStr
+	try {
+		outputStr = sh (
+			script: "aws cloudfront list-distributions \
+				--output json \
+				--query \"DistributionList.Items[].{Id: Id, Enabled: Enabled, OriginDomainName: Origins.Items[0].DomainName}[?!Enabled && contains(OriginDomainName, '$env.env_name_prefix-')]\"",
+			returnStdout: true
+		)
+        if(outputStr) {
+            def outputObj = new JsonSlurper().parseText(outputStr)
+            def idArray = new String[outputObj.size()]
+            for (indx=0; indx < outputObj.size(); indx++) {
+                echo "test11111====" + indx
+                echo "Distribution id::" + outputObj[indx].Id
+                echo "Distribution Enabled::" + outputObj[indx].Enabled
+                idArray[indx] = outputObj[indx].Id
+                echo "Distribution id::" + idArray[indx]
+                echo "test2222"
+            }
+            return idArray
+        }
+		
+		return null
+
+	}catch (ex) {
+		error "getDistributionId Failed. "+ex.getMessage()
+	}
+}
+
+/**
+ * Get and save the CloudFront distribution Config corresponding to the service
+ * @param distributionID
+ * @return
+ */
+def getDistributionConfig(distributionID) {
+	def distributionConfig
+    echo "getDistributionConfig(" + distributionID + ")"
+	try {
+		distributionConfig = sh (
+			script: "aws cloudfront get-distribution-config --output json --id "+distributionID,
+			returnStdout: true
+		)
+        echo "2222222getDistributionConfig(" + distributionID + ")"
+		return distributionConfig
+
+	}catch (ex) {
+		echo "getDistributionConfig Failed."+ex.getMessage()
+		echo "getDistributionConfig Failed." + ex
+        error "getDistributionConfig Failed."+ex.getMessage()
+        
+	}
+
+}
+
+
+/**
+ * Generate Disable Distribution configuration
+ * @param service
+ * @param stage
+ * @return
+ */
+def generateDistributionConfigForDisable(distributionConfig) {
+	def distributionConfigObj
+	def eTag
+	try {
+		if(distributionConfig) {
+			distributionConfigObj = new JsonSlurper().parseText(distributionConfig)
+		}
+		eTag = distributionConfigObj.ETag
+		distributionConfigObj.DistributionConfig.Enabled = false
+		def updatedCfg = JsonOutput.toJson(distributionConfigObj.DistributionConfig)
+		echo "updatedCfg... $updatedCfg"
+		try {
+			sh "echo \'$updatedCfg\' > disable-cf-distribution-config.json"
+		}catch(ex) {}
+
+		return eTag
+	} catch(ex) {
+		error "generateDistributionConfigForDisable Failed."+ex.getMessage()
+	}
+
+}
+
+
+/**
+ * Delete CloudFront Distribution configuration
+ * @param distributionID
+ * @param _Etag
+ * @return
+ */
+def deleteCloudFrontDistribution(distributionID, _Etag) {
+
+     echo "deleteCloudFrontDistribution===" + distributionID + "=====" + _Etag +"\r\n\r\n"
+     
+	def deleteOutput
+	try {
+		deleteOutput = sh(
+			script: "aws cloudfront delete-distribution \
+						--id $distributionID \
+						--if-match $_Etag",
+			returnStdout: true
+		)
+		echo "deleteOutput...$deleteOutput"
+		return deleteOutput
+
+	} catch(ex) {
+		error "deleteCloudFrontDistribution. "+e.getMessage()
+	}
+}
