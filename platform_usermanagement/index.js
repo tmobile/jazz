@@ -68,6 +68,13 @@ module.exports.handler = (event, context, cb) => {
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("102", "email is required field")));
 			}
 
+			const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
+			
+			forgotPassword(cognito, config, service_data)
+			.catch(function (err) {
+				logger.error("Failed while resetting user password: " + JSON.stringify(err));
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("106", "Failed while resetting user password for: " + service_data.email)));
+			});
 		}else {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
 
@@ -134,8 +141,25 @@ function createUser(cognitoClient, config, userData) {
 			UserAttributes: [{Name: "custom:reg-code", "Value": userData.usercode}],
 			ValidationData: []
 		};
-
+		
 		cognitoClient.signUp(cognitoParams, (err, result) => {
+			if (err)
+				reject(err);
+			else
+				resolve(result);
+		});
+	});
+}
+
+function resetUserPassword(cognitoClient, config, userData) {
+	return new Promise((resolve, reject) => {
+
+		var cognitoParams = {
+			ClientId: config.USER_CLIENT_ID,
+			Username: userData.email
+		};
+		
+		cognitoClient.forgotPassword(cognitoParams, (err, result) => {
 			if (err)
 				reject(err);
 			else
