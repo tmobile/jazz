@@ -65,7 +65,7 @@ module.exports.handler = (event, context, cb) => {
 			logger.info('User password reset Request::' + JSON.stringify(service_data));
 
 			validateResetParams(service_data)
-			.then(resetUserPassword(cognito, config, service_data))
+			.then(s => resetUserPassword(cognito, config, service_data))
 			.catch(function (err) {
 				logger.error("Failed while resetting user password: " + JSON.stringify(err));
 
@@ -78,21 +78,21 @@ module.exports.handler = (event, context, cb) => {
 			});
 		}else {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
-
+			
 			validateCreaterUserParams(config, service_data)
-			.then(createUser(cognito, config, service_data))
-			.then(result => rp(createUserInBitBucket(config, service_data, result.UserSub)))
-			.then(function(result){
+			.then(s => createUser(cognito, config, service_data))
+			.then(s => rp(createUserInBitBucket(config, service_data, result.UserSub)))
+			.then(s => function(result){
 				logger.info("User: " + service_data.userid + " registered successfully!");
-				return cb(null, {result: "success",errorCode: "0",message: "User registered successfully!"});
-			}).catch(function (err) {
+				return cb(null, {result: "success",errorCode: "0",message: "User registered successfully!"});})
+			.catch(function (err) {
 				logger.error("Failed while registering user: " + JSON.stringify(err));
 				
 				if (err.errorType) {
 					// error has already been handled and processed for API gateway
 					return cb(JSON.stringify(err));
 				}else {
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while resetting user password for: " + service_data.email)));
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Failed while registering user: " + service_data.userid)));
 				}
 			});
 		}
