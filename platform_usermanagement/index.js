@@ -65,7 +65,7 @@ module.exports.handler = (event, context, cb) => {
 			logger.info('User password reset Request::' + JSON.stringify(service_data));
 
 			validateResetParams(service_data)
-			.then(s => resetUserPassword(cognito, config, service_data))
+			.then(s => forgotPassword(cognito, config, service_data))
 			.catch(function (err) {
 				logger.error("Failed while resetting user password: " + JSON.stringify(err));
 
@@ -74,6 +74,21 @@ module.exports.handler = (event, context, cb) => {
 					return cb(JSON.stringify(err));
 				}else {
 					return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while resetting user password for: " + service_data.email)));
+				}
+			});
+		}else if (subPath.indexOf('updatepwd') > -1) {
+			logger.info('User password update Request::' + JSON.stringify(service_data));
+
+			validateUpdatePasswordParams(service_data)
+			.then(s => updatePassword(cognito, config, service_data))
+			.catch(function (err) {
+				logger.error("Failed while updating user password: " + JSON.stringify(err));
+
+				if (err.errorType) {
+					// error has already been handled and processed for API gateway
+					return cb(JSON.stringify(err));
+				}else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while updating user password for: " + service_data.email)));
 				}
 			});
 		}else {
@@ -122,7 +137,7 @@ function getSubPath(queryPath) {
 }
 
 /**
- * 
+ * Validates user password reset params
  * @param {object} userInput
  *  
  */
@@ -135,6 +150,31 @@ function validateResetParams(userInput) {
 			logger.warn("no email address provided for password reset");
 			return reject(errorHandler.throwInputValidationError("102", "email is required field"));
 		}else{
+			resolve();
+		}
+	});
+}
+
+function validateUpdatePasswordParams(userInput) {
+	return new Promise((resolve, reject) => {
+
+		var errorHandler = errorHandlerModule();
+	
+		if (!userInput.email) {
+			logger.warn("no email address provided for password update");
+			return reject(errorHandler.throwInputValidationError("102", "Email is required field"));
+		}
+		
+		if (!userInput.verificationCode) {
+			logger.warn("no verification code provided for password update");
+			return reject(errorHandler.throwInputValidationError("102", "Verification code is required"));
+		}
+		
+		if (!userInput.password) {
+			logger.warn("no password provided for password update");
+			return reject(errorHandler.throwInputValidationError("102", "Password is required"));
+		}
+		else{
 			resolve();
 		}
 	});
@@ -194,7 +234,7 @@ function createUser(cognitoClient, config, userData) {
 	});
 }
 
-function resetUserPassword(cognitoClient, config, userData) {
+function forgotPassword(cognitoClient, config, userData) {
 	return new Promise((resolve, reject) => {
 
 		var cognitoParams = {
@@ -203,6 +243,25 @@ function resetUserPassword(cognitoClient, config, userData) {
 		};
 		
 		cognitoClient.forgotPassword(cognitoParams, (err, result) => {
+			if (err)
+				reject(err);
+			else
+				resolve(result);
+		});
+	});
+}
+
+function updatePassword(cognitoClient, config, userData) {
+	return new Promise((resolve, reject) => {
+
+		var cognitoParams = {
+			ClientId: config.USER_CLIENT_ID,
+			Username: userData.email,
+			ConfirmationCode: userData.verificationCode,
+			Password: userData.password
+		};
+
+		cognitoClient.ConfirmForgotPassword(cognitoParams, (err, result) => {
 			if (err)
 				reject(err);
 			else
