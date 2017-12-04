@@ -92,6 +92,10 @@ module.exports.handler = (event, context, cb) => {
 					// error has already been handled and processed for API gateway
 					return cb(JSON.stringify(err));
 				}else {
+					if (err.code) {
+						return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+					}
+					
 					return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Failed while registering user: " + service_data.userid)));
 				}
 			});
