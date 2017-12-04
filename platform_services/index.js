@@ -38,11 +38,12 @@ module.exports.handler = (event, context, cb) => {
     global.config = config;
 
     try {
-        global.services_table = config.services_table;
-
-        // event.method cannot be empty, throw error
         if (!event.method) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
+        }
+
+        if (!event.principalId) {
+            return cb(JSON.stringify(errorHandler.throwUnauthorizedError("You aren't authorized to access this service. Please login with your credentials.")));
         }
 
         // get service_id from the path
@@ -52,12 +53,15 @@ module.exports.handler = (event, context, cb) => {
         }
 
         // throw bad request error if id not specified for PUT/DELETE
-        if ((event.method === 'PUT' || event.method === 'DELETE') && service_id === undefined) {
+        if ((event.method === 'PUT' || event.method === 'DELETE') && !service_id) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("service id is required")));
         }
 
+        global.services_table = config.services_table;
+        global.userId = event.principalId;
+                
         // 1: GET service by id (/services/{service_id})
-        if (event.method === 'GET' && service_id !== undefined) {
+        if (event.method === 'GET' && service_id) {
             logger.info('GET service by ID : ' + service_id);
 
             async.series({
@@ -85,7 +89,7 @@ module.exports.handler = (event, context, cb) => {
 
         // 2: GET all services (/services)
         // 3: GET Filtered services (/services?field1=value&field2=value2&...)
-        if (event.method === 'GET' && service_id === undefined) {
+        if (event.method === 'GET' && !service_id) {
             logger.info('GET services');
             async.series({
                 // fetch services list from dynamodb, filter if required
@@ -107,7 +111,7 @@ module.exports.handler = (event, context, cb) => {
 
         // Update Service
         // 4: PUT service by id (/services/{service_id})
-        if (event.method === 'PUT' && service_id !== undefined) {
+        if (event.method === 'PUT' && service_id) {
             logger.info('Update service service_id ' + service_id);
 
             var update_data = event.body;
@@ -214,7 +218,7 @@ module.exports.handler = (event, context, cb) => {
 
         // Delete Service
         // 5: DELETE service by id (/services/{service_id})
-        if (event.method === 'DELETE' && service_id !== undefined) {
+        if (event.method === 'DELETE' && service_id) {
             logger.info('Delete service service_id ' + service_id);
 
             async.series({
@@ -263,7 +267,7 @@ module.exports.handler = (event, context, cb) => {
 
         // Create new service
         // 6: POST a service (/services)
-        if (event.method === 'POST' && service_id === undefined) {
+        if (event.method === 'POST' && !service_id) {
             logger.info('Create new service');
             var service_data = event.body;
 
