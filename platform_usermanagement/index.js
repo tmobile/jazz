@@ -66,6 +66,9 @@ module.exports.handler = (event, context, cb) => {
 
 			validateResetParams(service_data)
 			.then(s => forgotPassword(cognito, config, service_data))
+			.then(s => function(result){
+				logger.info("Password reset was successful for user: " + service_data.email);
+				return cb(null, {result: "success",errorCode: "0",message: "Password reset was successful for user: " + service_data.email});})
 			.catch(function (err) {
 				logger.error("Failed while resetting user password: " + JSON.stringify(err));
 
@@ -81,6 +84,9 @@ module.exports.handler = (event, context, cb) => {
 
 			validateUpdatePasswordParams(service_data)
 			.then(s => updatePassword(cognito, config, service_data))
+			.then(s => function(result){
+				logger.info("Successfully updated password for user: " + service_data.email);
+				return cb(null, {result: "success",errorCode: "0",message: "Successfully updated password for user: " + service_data.email});})
 			.catch(function (err) {
 				logger.error("Failed while updating user password: " + JSON.stringify(err));
 
