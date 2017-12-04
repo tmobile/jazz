@@ -659,7 +659,7 @@
           "description": "post body parameter.",
           "required": true,
           "schema": {
-            "$ref": "#/definitions/InputObj"
+            "$ref": "#/definitions/UpdatePwd"
           }
         }],
         "consumes": [
@@ -925,6 +925,23 @@
         },
         "message": {
           "type": "string"
+        }
+      }
+    },
+    "UpdatePwd": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Email address of the user"
+        },
+        "verificationCode": {
+          "type": "string",
+          "description": "Verification code provided as part of password reset"
+        },
+        "password": {
+          "type": "string",
+          "description": "Updated password"
         }
       }
     },

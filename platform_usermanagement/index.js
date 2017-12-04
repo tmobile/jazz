@@ -267,7 +267,7 @@ function updatePassword(cognitoClient, config, userData) {
 			Password: userData.password
 		};
 
-		cognitoClient.ConfirmForgotPassword(cognitoParams, (err, result) => {
+		cognitoClient.confirmForgotPassword(cognitoParams, (err, result) => {
 			if (err)
 				reject(err);
 			else
