@@ -75,7 +75,8 @@ describe('platform_services', function() {
       "body" : {
         "description" : "g0nna_GET_a-L!tt1e_we!rd",
         "email" : "gonnaGetALittle@Wild.com"
-      }
+      },
+      "principalId": "g10$saryck"
     };
     context = awsContext();
     callback = (err, responseObj) => {
@@ -302,8 +303,11 @@ describe('platform_services', function() {
     event.method = "GET";
     event.path.id = undefined;
     event.query.created_by = undefined;
+
     //user that is not listed among admin_users
-    global.userId = "Mete0ra";
+    var userId = "Mete0ra";
+    
+    event.principalId = userId;
     var dataType = "S";
     var filterString = "SERVICE_CREATED_BY" + " = :" + "SERVICE_CREATED_BY";
     var scanParam = ":SERVICE_CREATED_BY";
@@ -315,7 +319,7 @@ describe('platform_services', function() {
     var filterExp = spy.args[0][0].FilterExpression;
     var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
     var allCases = filterExp.includes(filterString) &&
-                    expAttrVals[scanParam][dataType] == global.userId;
+                    expAttrVals[scanParam][dataType] == userId;
     AWS.restore("DynamoDB");
     assert.isTrue(allCases);
   });
@@ -329,8 +333,10 @@ describe('platform_services', function() {
     event.method = "GET";
     event.path.id = undefined;
     event.query.created_by = undefined;
+    
     //user that is listed among admin_users
-    global.userId = "ecl!psa";
+    event.principalId = "ecl!psa";
+
     var filterString = "SERVICE_CREATED_BY" + " = :" + "SERVICE_CREATED_BY";
     var scanParam = ":SERVICE_CREATED_BY";
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
