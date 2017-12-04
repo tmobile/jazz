@@ -121,6 +121,7 @@ node {
 				error "Invalid project configuration"
 			}
 		}
+}
 
 //Dend
 /*
