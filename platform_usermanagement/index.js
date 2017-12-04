@@ -80,8 +80,8 @@ module.exports.handler = (event, context, cb) => {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
 			
 			validateCreaterUserParams(config, service_data)
-			.then(s => createUser(cognito, config, service_data))
-			.then(s => rp(createUserInBitBucket(config, service_data, result.UserSub)))
+			.then(s => createUser(cognito, config, s))
+			.then(s => rp(createUserInBitBucket(config, service_data, s.UserSub)))
 			.then(s => function(result){
 				logger.info("User: " + service_data.userid + " registered successfully!");
 				return cb(null, {result: "success",errorCode: "0",message: "User registered successfully!"});})
@@ -141,7 +141,7 @@ function validateResetParams(userInput) {
  * @param {object} userInput 
  * @returns promise
  */
-function validateCreaterUserParams(userInput) {
+function validateCreaterUserParams(config, userInput) {
 	var errorHandler = errorHandlerModule();
 
 	return new Promise((resolve, reject) => {
@@ -166,7 +166,7 @@ function validateCreaterUserParams(userInput) {
 			return reject(errorHandler.throwInputValidationError("103", "Invalid User Registration Code"));
 		}
 
-		resolve();
+		resolve(userInput);
 	});
 }
 
