@@ -4,6 +4,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 echo "Utility module loaded successfully"
 
+@Field def g_url
 
 /**
  * For all utility or common functions which can be used across all build packs
@@ -16,8 +17,15 @@ echo "Utility module loaded successfully"
 /**
  * Initialize the module. Implement this method if there are any initializations to be done.
  */
-def initialize(serviceType, service, domain) {
- //@TODO: init code goes here
+//def initialize(serviceType, service, domain) {
+//}
+
+/**
+ * Set URL
+ * @return
+ */
+def setUrl(url) {
+	g_url = url
 }
 
 
@@ -48,36 +56,37 @@ def generateBucketNameForService(domain, service) {
 		bucketName = bucketName+"-"+_hash
 	}
 	if(bucketName) {
-		return bucketName.toLowerCase()		
+		return bucketName.toLowerCase()
 	} else {
 		error "Could not generate bucket name for service"
 	}
 }
- 
+
 
 
 /**
  * For getting token to access catalog APIs.
  * Usually a service account which has access to all services
  */
- def getAuthToken(user, pwd) {
+ //Dstart
+ /*def getAuthToken(user, pwd) {
 	def login_json = []
 	def authToken = null
-	
+
 	login_json = [
 			'username': user,
 			'password': pwd
 		]
-	
+
 	def payload = JsonOutput.toJson(login_json)
-	
-	
+
+
 	try {
 		def tokenOutput = sh (script: "curl  -X POST  -k -v \
 			-H \"Content-Type: application/json\" \
-			 https://cloud-api.corporate.t-mobile.com/api/platform/login \
+			 $g_url \
 			-d \'${payload}\'", returnStdout:true)
-			
+
 		if(tokenOutput) {
 			def tokenObj = parseJson(tokenOutput)
 			if(tokenObj && tokenObj.data && tokenObj.data.token) {
@@ -88,9 +97,9 @@ def generateBucketNameForService(domain, service) {
 	}
 	catch(e){
 		error "error occured while getting auth token: " + e.getMessage()
-	}	
+	}
 
- }
+ } Dend*/
 
 
  /**
