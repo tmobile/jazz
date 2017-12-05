@@ -1079,7 +1079,7 @@ def loadServiceMetadataModule(serviceType, service, domain) {
 			def prd = env.WEBSITE_PROD_S3BUCKET
 
 			echo "loading serviceMetaData, checking git repos"
-			dir('service-metadata') {
+			//dir('service-metadata') {
 				/*checkout([$class: 'GitSCM', branches: [
 					[name: './master']
 				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -1096,7 +1096,7 @@ def loadServiceMetadataModule(serviceType, service, domain) {
 				def _utilModule = load "utility-loader.groovy"
 				Util = _utilModule
 				serviceMetadata.setUtil(_utilModule)
-			}
+			//}
 		return serviceMetadata
 
 		}catch(ex) {
