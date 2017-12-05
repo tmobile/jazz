@@ -248,4 +248,4 @@ def setUtil(utilModule) {
 	Util.setUrl(util_url)
 }
 
-return this;
+return this

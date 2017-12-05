@@ -119,4 +119,4 @@ def parseJson(def json) {
 }
 
 
-return this;
+return this
