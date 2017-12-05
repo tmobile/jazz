@@ -1080,11 +1080,11 @@ def loadServiceMetadataModule(serviceType, service, domain) {
 
 			echo "loading serviceMetaData, checking git repos"
 			dir('service-metadata') {
-				checkout([$class: 'GitSCM', branches: [
-					[name: '*/master']
+				/*checkout([$class: 'GitSCM', branches: [
+					[name: './master']
 				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
 					[credentialsId: env.REPO_CREDENTIAL_ID, url: env.JAZZ_BUILD_MODULE_URL]
-				]])
+				]])*/
 				serviceMetadata = load "service-metadata-loader.groovy"
 				serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
 				serviceMetadata.setAuthToken(setCredentials())
