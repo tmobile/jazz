@@ -1071,7 +1071,7 @@ def loadServiceMetadataModule(serviceType, service, domain) {
 	//@TODO: Uncomment this line when calling Authenticated Catalog APIs
 	//withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JAZZ_ADMIN, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		try {
-			def repo_url = var_cas_clone_url + bitbucket_repo_name+".git"
+			def repo_url = env.REPO_BASE + "/scm/" + env.REPO_LOC + "/" + domain + "-" + service_name +".git"
 			def url = "$g_base_url/platform/services?domain=$domain&service=$service"
 			def dev = env.WEBSITE_DEV_S3BUCKET
 			def stg = env.WEBSITE_STG_S3BUCKET
