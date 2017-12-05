@@ -58,9 +58,9 @@ node {
 	def var_scm_source_hook = JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
 	var_db_service_id = params.db_service_id
 
-	def jenkins_dir = pwd()
-	def metadataModule = load "${jenkins_dir}@script/service-metadata-loader.groovy"
-	def utilityModule = load "${jenkins_dir}@script/utility-loader.groovy"
+	checkout scm
+	def metadataModule = load "service-metadata-loader.groovy"
+	def utilityModule = load "utility-loader.groovy"
 	//Dend
 
 	if (params.service_name) {
