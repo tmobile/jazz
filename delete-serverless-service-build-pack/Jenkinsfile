@@ -456,7 +456,7 @@ def checkServiceExists(service_name, domain, region) {
 		//Dstart debug code
 		def firstBool = resultJson == null
 		def secondBool = resultJson.data == null
-		def thirdBool = resultJson.data.available == null
+		//def thirdBool = resultJson.data.available == null
 		echo "debug"
 		echo "resultJson: $resultJson"
 		echo "firstBool : $firstBool"
