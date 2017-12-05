@@ -341,7 +341,7 @@ node  {
 					def encoded_creator = URLEncoder.encode(owner, "utf-8")
             
 					echo "providing repository write permissions to the service creator"
-					sh "curl -X PUT -G -k -v -u -u \"$UNAME:$PWD\"  --data-urlencode \"$owner\"" \"" + var_cas_rest_repo + "/"+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN\""
+					sh "curl -X PUT -G -k -v -u \"$UNAME:$PWD\"  -d \"name=$encoded_creator\" \"${var_cas_rest_repo}/${bitbucket_name}/permissions/users?permission=REPO_ADMIN\""
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.COMPLETED, "")
 				}
