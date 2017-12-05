@@ -39,7 +39,7 @@ node  {
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
-	def creator_username = env.BITBUCKET_USERNAME 
+	
 	def service_template
 	def service_username
 	def service_password
@@ -298,7 +298,7 @@ node  {
 
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD1', usernameVariable: 'UNAME']]) {
 			def encoded_password = URLEncoder.encode(PWD1, "utf-8")
-                        sh "git clone http://$UNAME:$encoded_password@" + var_cas_clone_url + bitbucket_name +".git"
+            sh "git clone http://$UNAME:$encoded_password@" + var_cas_clone_url + bitbucket_name +".git"
 		}
 		try{
 			sh "mv -nf " + service_template + "/* " + bitbucket_name + "/"
@@ -338,8 +338,10 @@ node  {
 					echo "Adding groups to the repository with appropriate permissions"
 					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + var_cas_rest_repo + ""+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN&" + admin_group + "\" &"
 
+					def encoded_creator = URLEncoder.encode(owner, "utf-8")
+            
 					echo "providing repository write permissions to the service creator"
-					sh "curl -X PUT -G -k -v -u -u \"$UNAME:$PWD\"  --data-urlencode $creator_username \"" + var_cas_rest_repo + "/"+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN\""
+					sh "curl -X PUT -G -k -v -u -u \"$UNAME:$PWD\"  --data-urlencode \"$owner\"" \"" + var_cas_rest_repo + "/"+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN\""
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.COMPLETED, "")
 				}
