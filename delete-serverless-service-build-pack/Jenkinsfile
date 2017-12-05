@@ -121,6 +121,9 @@ node {
 				error "Invalid project configuration"
 			}
 		}
+
+		def envVars = Jenkins.instance.getGlobalNodeProperties()[0].getEnvVars()
+		echo "envVars : $envVars"
 }
 
 //Dend
@@ -1071,7 +1074,6 @@ def loadServiceMetadataModule(serviceType, service, domain) {
 	//@TODO: Uncomment this line when calling Authenticated Catalog APIs
 	//withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JAZZ_ADMIN, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		try {
-			def repo_url = env.REPO_BASE + "/scm/" + env.REPO_LOC + "/" + domain + "-" + service_name +".git"
 			def url = "$g_base_url/platform/services?domain=$domain&service=$service"
 			def dev = env.WEBSITE_DEV_S3BUCKET
 			def stg = env.WEBSITE_STG_S3BUCKET
@@ -1082,7 +1084,7 @@ def loadServiceMetadataModule(serviceType, service, domain) {
 				checkout([$class: 'GitSCM', branches: [
 					[name: '*/master']
 				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-					[credentialsId: env.REPO_CREDENTIAL_ID, url: repo_url]
+					[credentialsId: env.REPO_CREDENTIAL_ID, url: env.JAZZ_BUILD_MODULE_URL]
 				]])
 				serviceMetadata = load "service-metadata-loader.groovy"
 				serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
