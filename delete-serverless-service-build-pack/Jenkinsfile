@@ -453,7 +453,13 @@ def checkServiceExists(service_name, domain, region) {
 		echo outputStr
 		def jsonParser = new groovy.json.JsonSlurper()
 		def resultJson = jsonParser.parseText(outputStr)
+		//Dstart debug code
+		def firstBool = resultJson == null
+		def secondBool = resultJson.data == null
+		def thirdBool = resultJson.data.available == null
+		echo "debug"
 		echo "resultJson: $resultJson"
+		echo "firstBool = $firstBool , secondBool = $secondBool , thirdBool=$thirdBool"
 		if(resultJson == null || resultJson.data == null || resultJson.data.available == null) {
 			error "Is-service-available lookup failed"
 		} else if(resultJson.data.available == true) {
