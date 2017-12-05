@@ -1068,7 +1068,6 @@ def cleanupSonarProjects(service, domain) {
  *
  */
 def loadServiceMetadataModule(serviceType, service, domain) {
-	def serviceMetadata
 	//@TODO: Uncomment this line when calling Authenticated Catalog APIs
 	//withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JAZZ_ADMIN, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		try {
@@ -1077,9 +1076,10 @@ def loadServiceMetadataModule(serviceType, service, domain) {
 			def stg = env.WEBSITE_STG_S3BUCKET
 			def prd = env.WEBSITE_PROD_S3BUCKET
 
+			echo "loading serviceMetaData, checking git repos"
 			dir('service-metadata') {
 				checkout([$class: 'GitSCM', branches: [
-					[name: 'enhancement/imple']
+					[name: '*/master']
 				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
 					[credentialsId: env.REPO_CREDENTIAL_ID, url: env.JAZZ_BUILD_MODULE_URL]
 				]])
@@ -1090,6 +1090,7 @@ def loadServiceMetadataModule(serviceType, service, domain) {
 				//serviceMetadata.setCredentials(UNAME, PWD)
 
 				// Load and set dependent utility module.
+				echo "loading util module"
 				def _utilModule = load "utility-loader.groovy"
 				Util = _utilModule
 				serviceMetadata.setUtil(_utilModule)
