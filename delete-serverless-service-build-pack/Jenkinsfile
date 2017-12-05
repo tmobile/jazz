@@ -149,7 +149,8 @@ node {
 
 	stage("Validation") {
 		validateInput(service_name, domain, version)
-		checkServiceExists(service_name, domain, region)//is-service-available does not exist
+		//temporarily passing this check for testing
+		//checkServiceExists(service_name, domain, region)//is-service-available does not exist
 	}
 
 	dir(bitbucket_repo_name){
@@ -453,19 +454,12 @@ def checkServiceExists(service_name, domain, region) {
 		echo outputStr
 		def jsonParser = new groovy.json.JsonSlurper()
 		def resultJson = jsonParser.parseText(outputStr)
-		//Dstart debug code
-		def firstBool = resultJson == null
-		def secondBool = resultJson.data == null
-		//def thirdBool = resultJson.data.available == null
-		echo "resultJson: $resultJson"
-		echo "firstBool : $firstBool"
-		echo "secondBool : $secondBool"
-		//echo "thirdBool : $thirdBool"
-		/*if(resultJson == null || resultJson.data == null || resultJson.data.available == null) { */
+		if(resultJson == null || resultJson.data == null || resultJson.data == "" ||
+		 		resultJson.data.available == null) {
 			error "Is-service-available lookup failed"
-		/*} else if(resultJson.data.available == true) {
+		} else if(resultJson.data.available == true) {
 			error "No service exists with name "+service_name+" under domain "+domain
-		}*/
+		}
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
 			updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
