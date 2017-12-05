@@ -20,6 +20,7 @@ import { DropdownModule } from "ng2-dropdown";
 import { PopoverModule } from 'ng2-popover';
 import { AppComponent } from './app.component';
 import { ConfigService, ConfigLoader } from './app.config';
+import { IonRangeSliderModule } from 'ng2-ion-range-slider';
 import * as $ from 'jquery';
 
 import { BtnJazzPrimaryComponent } from './primary-components/btn-jazz-primary/btn-jazz-primary.component';
@@ -184,7 +185,8 @@ const appRoutes: Routes = [
     ToasterModule,
     NgIdleKeepaliveModule.forRoot(),
     PopoverModule,
-    ChartsModule
+    ChartsModule,
+    IonRangeSliderModule
   ],
   providers: [
     AuthenticationService,
