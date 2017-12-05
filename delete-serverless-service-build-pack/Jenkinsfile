@@ -3,9 +3,8 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
 //@Field def events
-@Field def serviceMetadata
-@Field def Util
 //Dstart
+@Field def serviceMetadata
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def domain = ''
@@ -58,6 +57,10 @@ node {
 	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_scm_source_hook = JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
 	var_db_service_id = params.db_service_id
+
+	def jenkins_dir = pwd()
+	def metadataModule = load "${jenkins_dir}@script/service-metadata-loader.groovy"
+	def utilityModule = load "${jenkins_dir}@script/utility-loader.groovy"
 	//Dend
 
 	if (params.service_name) {
@@ -191,7 +194,7 @@ node {
 	    break
 	    case "WEBSITE":
 			stage('Undeploy Service') {
-				serviceMetadata = loadServiceMetadataModule("website", service_name, domain)
+				serviceMetadata = loadServiceMetadataModule(metadataModule, utilityModule,"website", service_name, domain)
 				//if (cloudfrontEnabled == "true") {
 					cleanupCloudFrontDistribution(service_name, domain, "dev")
 				//}
@@ -1069,7 +1072,7 @@ def cleanupSonarProjects(service, domain) {
  * Load metadata module groovy file
  *
  */
-def loadServiceMetadataModule(serviceType, service, domain) {
+def loadServiceMetadataModule(dataModule, utilModule, serviceType, service, domain) {
 	//@TODO: Uncomment this line when calling Authenticated Catalog APIs
 	//withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JAZZ_ADMIN, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		try {
@@ -1084,20 +1087,20 @@ def loadServiceMetadataModule(serviceType, service, domain) {
 					[name: './master']
 				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
 					[credentialsId: env.REPO_CREDENTIAL_ID, url: env.JAZZ_BUILD_MODULE_URL]
-				]])*/
-				serviceMetadata = load "service-metadata-loader.groovy"
-				serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
-				serviceMetadata.setAuthToken(setCredentials())
+				]])
+				serviceMetadata = load "service-metadata-loader.groovy" */
+				dataModule.initialize(serviceType, service, domain, url, dev, stg, prd)
+				dataModule.setAuthToken(setCredentials())
 				//@TODO: Need a service account to be passed in to generate a TOKEN. Uncomment when calling Authenticated APIs
 				//serviceMetadata.setCredentials(UNAME, PWD)
 
 				// Load and set dependent utility module.
 				echo "loading util module"
-				def _utilModule = load "utility-loader.groovy"
-				Util = _utilModule
-				serviceMetadata.setUtil(_utilModule)
+				/*def _utilModule = load "utility-loader.groovy"
+				Util = _utilModule */
+				dataModule.setUtil(utilModule)
 			//}
-		return serviceMetadata
+		return dataModule
 
 		}catch(ex) {
 			error "loadServiceMetadataModule Failed. "+ex.getMessage()
