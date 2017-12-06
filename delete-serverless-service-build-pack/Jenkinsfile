@@ -863,7 +863,7 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 			def _Etag
 			distributionID = getDistributionId(stage, domain, service)
 
-			if (distributionID && distributionID != "")
+			if (distributionID != null && distributionID != "")
 			{
 				def distributionConfig = getDistributionConfig(distributionID)
 				_Etag = generateDistributionConfigForDisable(distributionConfig)
@@ -906,6 +906,9 @@ def getDistributionId(stage, domain, service) {
 			if (outputObj != null && outputObj[0] != null && outputObj[0] != "") {
 				distributionID = outputObj[0].Id
 			}
+			else {
+				distributionID = ""
+			}
 		}
 	}catch (ex) {
 		error "getDistributionId Failed: "+ ex.getMessage()
@@ -920,6 +923,7 @@ def getDistributionId(stage, domain, service) {
  */
 def getDistributionConfig(distributionID) {
 	def distributionConfig
+	echo "getting distribution config"
 	try {
 		distributionConfig = sh (
 			script: "aws cloudfront get-distribution-config \
