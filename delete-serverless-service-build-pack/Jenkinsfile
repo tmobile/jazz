@@ -1097,7 +1097,7 @@ def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 				echo "loading util module"
 				def _utilModule = load "utility-loader.groovy"
 				Util = _utilModule
-				serviceMetadata.setUtil(utilModule)
+				serviceMetadata.setUtil(Util)
 			}
 		return dataModule
 
