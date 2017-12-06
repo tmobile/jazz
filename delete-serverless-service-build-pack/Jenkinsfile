@@ -703,7 +703,7 @@ def getResourcePath() {
  */
 def unDeployWebsite(service, domain, stage) {
 	echo "unDeployWebsite::" + service + "::" + domain + "::" + stage
-
+	echo "serviceMetadata bucketname = $serviceMetadata.g_dev_s3_bucket"
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIALS_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
