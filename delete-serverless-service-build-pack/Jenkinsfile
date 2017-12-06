@@ -192,20 +192,21 @@ node {
 			}
 	    break
 	    case "WEBSITE":
+			//temporarily ignoring cleanupcloud front distr
 			stage('Undeploy Service') {
 				serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL,"website", service_name, domain)
 				//if (cloudfrontEnabled == "true") {
-					cleanupCloudFrontDistribution(service_name, domain, "dev")
+					//cleanupCloudFrontDistribution(service_name, domain, "dev")
 				//}
 				unDeployWebsite(service_name, domain, "dev")
 
 				//if (cloudfrontEnabled == "true") {
-					cleanupCloudFrontDistribution(service_name, domain, "stg")
+					//cleanupCloudFrontDistribution(service_name, domain, "stg")
 				//}
 				unDeployWebsite(service_name, domain, "stg")
 
 				//if (cloudfrontEnabled == "true") {
-					cleanupCloudFrontDistribution(service_name, domain, "prod")
+					//cleanupCloudFrontDistribution(service_name, domain, "prod")
 				//}
 				unDeployWebsite(service_name, domain, "prod")
 			}
