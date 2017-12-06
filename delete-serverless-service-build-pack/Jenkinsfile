@@ -903,7 +903,7 @@ def getDistributionId(stage, domain, service) {
 			echo "distribution outputStr : $outputStr"
 			def outputObj = new JsonSlurper().parseText(outputStr)
 
-			if (outputObj) {
+			if (outputObj != null && outputObj[0] != null && outputObj[0] != "") {
 				distributionID = outputObj[0].Id
 			}
 		}
