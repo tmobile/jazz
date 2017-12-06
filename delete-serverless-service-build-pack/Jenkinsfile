@@ -1098,7 +1098,7 @@ def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 				def _utilModule = load "utility-loader.groovy"
 				Util = _utilModule
 				serviceMetadata.setUtil(utilModule)
-			//}
+			}
 		return dataModule
 
 		}catch(ex) {
