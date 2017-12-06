@@ -34,21 +34,26 @@ def cleanupCloudFrontDistribution() {
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
-			def _Etag
+			def eTag
 	
 			def idArray = getDisabledDistribution()
             if (idArray == null)
                return;
 			
-            echo "test3333"
-
             if (idArray.length > 0) {
                 for (indx = 0; indx < idArray.length; indx++) {
-                  def distributionConfig = getDistributionConfig(idArray[indx])
-                  //echo "111111" + distributionConfig
-                  _Etag = generateDistributionConfigForDisable(distributionConfig)
-                  deleteCloudFrontDistribution(idArray[indx], _Etag)
-                }
+                  def distID = idArray[indx]
+                  echo "Starting processing of CF-Dist=" + distID
+                  def distributionConfig = getDistributionConfig(distID)
+                  eTag = generateDistributionConfigForDisable(distributionConfig)
+                  echo "Starting processing of CF-Dist=" + distID + " with etag=" + eTag
+                  deleteCloudFrontDistribution(idArray[indx], eTag)
+                  echo "Sleeping for 10 Seconds....."
+                  for(indxWait = 1; indxWait <100001; indxWait++) {
+                       if ((indxWait % 50000) == 0)
+                            echo "waiting....." + (indxWait/10000) + " secs"
+                  }
+               }
             }
 
 		} catch(ex) {
@@ -62,6 +67,8 @@ def cleanupCloudFrontDistribution() {
 
 }
 
+
+
 /**
  * Get the List of CloudFront distributions corresponding to the stack which are disabled
  * @return List of distributions
@@ -73,19 +80,17 @@ def getDisabledDistribution() {
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[].{Id: Id, Enabled: Enabled, OriginDomainName: Origins.Items[0].DomainName}[?!Enabled && contains(OriginDomainName, '$env.env_name_prefix-')]\"",
+				--query \"DistributionList.Items[].{Id: Id, Status: Status, Enabled: Enabled, OriginDomainName: Origins.Items[0].DomainName}[?!Enabled && contains(OriginDomainName, '$env.env_name_prefix-') && (Status == 'Deployed')]\"",
 			returnStdout: true
 		)
         if(outputStr) {
             def outputObj = new JsonSlurper().parseText(outputStr)
             def idArray = new String[outputObj.size()]
             for (indx=0; indx < outputObj.size(); indx++) {
-                echo "test11111====" + indx
                 echo "Distribution id::" + outputObj[indx].Id
                 echo "Distribution Enabled::" + outputObj[indx].Enabled
                 idArray[indx] = outputObj[indx].Id
                 echo "Distribution id::" + idArray[indx]
-                echo "test2222"
             }
             return idArray
         }
@@ -110,7 +115,7 @@ def getDistributionConfig(distributionID) {
 			script: "aws cloudfront get-distribution-config --output json --id "+distributionID,
 			returnStdout: true
 		)
-        echo "2222222getDistributionConfig(" + distributionID + ")"
+        echo "DistributionId::(" + distributionID + ")"
 		return distributionConfig
 
 	}catch (ex) {
@@ -155,25 +160,24 @@ def generateDistributionConfigForDisable(distributionConfig) {
 /**
  * Delete CloudFront Distribution configuration
  * @param distributionID
- * @param _Etag
+ * @param eTag
  * @return
  */
-def deleteCloudFrontDistribution(distributionID, _Etag) {
+def deleteCloudFrontDistribution(distributionID, eTag) {
 
-     echo "deleteCloudFrontDistribution===" + distributionID + "=====" + _Etag +"\r\n\r\n"
+    echo "deleteCloudFrontDistribution==$distributionID=====$eTag\r\n\r\n"
      
 	def deleteOutput
 	try {
 		deleteOutput = sh(
-			script: "aws cloudfront delete-distribution \
-						--id $distributionID \
-						--if-match $_Etag",
+			script: "aws cloudfront delete-distribution --id $distributionID --if-match $eTag",
 			returnStdout: true
 		)
-		echo "deleteOutput...$deleteOutput"
+		echo "delete completed for SF-Dist$distributionID"
 		return deleteOutput
 
 	} catch(ex) {
 		error "deleteCloudFrontDistribution. "+e.getMessage()
 	}
+
 }
