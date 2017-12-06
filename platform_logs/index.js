@@ -75,7 +75,7 @@ module.exports.handler = (event, context, cb) => {
 				domain = event.body.domain,
 				env = event.body.environment.toLowerCase(),
 				categoryType = event.body.category.toLowerCase(),
-				logType = event.body.type.toLowerCase(),
+				logType = event.body.type.toUpperCase(),
 				page = event.body.offset ? event.body.offset : 0,
 				startTime = event.body.start_time ? event.body.start_time : utils.setStartDate(config.DEFAULT_TIME_IN_DAYS),
 				endTime = event.body.end_time ? event.body.end_time : new Date(),
@@ -92,7 +92,8 @@ module.exports.handler = (event, context, cb) => {
 			
 			querys.push(utils.setQuery("servicename", service));		
 			querys.push(utils.setQuery("environment", env));
-			
+			querys.push(utils.setQuery("log_level", logType));
+
 			//Query to filter Control messages
 			querys.push(utils.setQuery("!message", "START*"));
 			querys.push(utils.setQuery("!message", "END*"));
