@@ -154,7 +154,7 @@ node {
 	stage("Validation") {
 		validateInput(service_name, domain, version)
 		//temporarily passing this check for testing
-		//checkServiceExists(service_name, domain, region)//is-service-available does not exist
+		checkServiceExists(service_name, domain, region)//is-service-available does not exist
 	}
 
 	dir(bitbucket_repo_name){
@@ -196,17 +196,17 @@ node {
 			stage('Undeploy Service') {
 				serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL,"website", service_name, domain)
 				//if (cloudfrontEnabled == "true") {
-					//cleanupCloudFrontDistribution(service_name, domain, "dev")
+					cleanupCloudFrontDistribution(service_name, domain, "dev")
 				//}
 				unDeployWebsite(service_name, domain, "dev")
 
 				//if (cloudfrontEnabled == "true") {
-					//cleanupCloudFrontDistribution(service_name, domain, "stg")
+					cleanupCloudFrontDistribution(service_name, domain, "stg")
 				//}
 				unDeployWebsite(service_name, domain, "stg")
 
 				//if (cloudfrontEnabled == "true") {
-					//cleanupCloudFrontDistribution(service_name, domain, "prod")
+					cleanupCloudFrontDistribution(service_name, domain, "prod")
 				//}
 				unDeployWebsite(service_name, domain, "prod")
 			}
