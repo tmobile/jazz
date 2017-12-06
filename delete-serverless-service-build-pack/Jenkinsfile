@@ -1095,6 +1095,8 @@ def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 				serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
 				serviceMetadata.setAuthToken(setCredentials())
 				echo "serviceMetadata token $serviceMetadata.g_login_token"
+				def testBucket = serviceMetadata.getBucket("dev")
+				echo "serviceMetadata bucketname : $testBucket"
 				//@TODO: Need a service account to be passed in to generate a TOKEN. Uncomment when calling Authenticated APIs
 				//serviceMetadata.setCredentials(UNAME, PWD)
 
