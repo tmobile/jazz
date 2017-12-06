@@ -1099,7 +1099,7 @@ def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 				Util = _utilModule
 				serviceMetadata.setUtil(Util)
 			}
-		return serviceMetaData
+		return serviceMetadata
 
 		}catch(ex) {
 			error "loadServiceMetadataModule Failed. "+ex.getMessage()
