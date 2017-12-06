@@ -64,7 +64,7 @@ node {
 
 	if (params.service_name) {
 		service_name =  params.service_name.trim()
-		//service = service_name
+		service = service_name
 	}
 	if(params.domain){
 		domain = params.domain.trim()
@@ -123,8 +123,6 @@ node {
 				error "Invalid project configuration"
 			}
 		}
-
-		echo sh(script: 'env|sort', returnStdout: true)
 }
 
 //Dend
@@ -192,7 +190,6 @@ node {
 			}
 	    break
 	    case "WEBSITE":
-			//temporarily ignoring cleanupcloud front distr
 			stage('Undeploy Service') {
 				serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL,"website", service_name, domain)
 				//if (cloudfrontEnabled == "true") {
@@ -851,6 +848,7 @@ def updateBucketPolicy(policy_json, bucketName){
  * @return
  */
 def cleanupCloudFrontDistribution(service, domain, stage) {
+	//events.sendStartedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
@@ -862,15 +860,12 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 			def distributionID
 			def _Etag
 			distributionID = getDistributionId(stage, domain, service)
-
-			if (distributionID != null && distributionID != "")
-			{
+			if (distributionID && distributionID != ""){
 				def distributionConfig = getDistributionConfig(distributionID)
 				_Etag = generateDistributionConfigForDisable(distributionConfig)
 				_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
 				deleteCloudFrontDistribution(distributionID, _Etag)
 			}
-			//events.sendCompletedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
 		} catch(ex) {
 				if((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
 					echo "Could not find a CloudFront distribution Id for service: $service and environment $stage"
@@ -902,13 +897,17 @@ def getDistributionId(stage, domain, service) {
 		if(outputStr) {
 			echo "distribution outputStr : $outputStr"
 			def outputObj = new JsonSlurper().parseText(outputStr)
+<<<<<<< HEAD
+			distributionID = outputObj[0].Id
+		}
+		if(distributionID == null || distributionID == "") {
+			error "getDistributionId Failed. 'distributionID' is null"
+=======
 
-			if (outputObj != null && outputObj[0] != null && outputObj[0] != "") {
+			if (outputObj) {
 				distributionID = outputObj[0].Id
 			}
-			else {
-				distributionID = ""
-			}
+>>>>>>> bd8fab1de361a131f176e66b10a6b1ab4e0aceef
 		}
 	}catch (ex) {
 		error "getDistributionId Failed: "+ ex.getMessage()
@@ -923,7 +922,6 @@ def getDistributionId(stage, domain, service) {
  */
 def getDistributionConfig(distributionID) {
 	def distributionConfig
-	echo "getting distribution config"
 	try {
 		distributionConfig = sh (
 			script: "aws cloudfront get-distribution-config \
@@ -1100,13 +1098,13 @@ def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 				serviceMetadata = load "service-metadata-loader.groovy"
 				serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
 				serviceMetadata.setAuthToken(setCredentials())
+				echo "serviceMetadata token $serviceMetadata.g_login_token"
 				//@TODO: Need a service account to be passed in to generate a TOKEN. Uncomment when calling Authenticated APIs
 				//serviceMetadata.setCredentials(UNAME, PWD)
 
 				// Load and set dependent utility module.
 				echo "loading util module"
-				def _utilModule = load "utility-loader.groovy"
-				Util = _utilModule
+				Util = load "utility-loader.groovy"
 				serviceMetadata.setUtil(Util)
 			}
 		return serviceMetadata
