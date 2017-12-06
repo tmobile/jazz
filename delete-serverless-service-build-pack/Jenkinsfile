@@ -713,9 +713,13 @@ def unDeployWebsite(service, domain, stage) {
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
+			echo "start debug"
 			def bucketName = serviceMetadata.getBucket(stage)
+			echo "bucketName: $bucketName"
 			def bucketUrl = bucketName + "/"+ domain + "-" + service
+			echo "bucketUrl: $bucketUrl"
 			def _exists = checkIfWebsiteExists(bucketUrl)
+			echo "passed checkIfWebsiteExists"
 			if(_exists) {
 				sh "aws s3 rm s3://" + bucketUrl + " --recursive"
 				cleanupS3BucketPolicy(service, domain, stage, bucketName)
