@@ -191,10 +191,10 @@ node {
 	    break
 	    case "WEBSITE":
 			stage('Undeploy Service') {
-				serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL,"website", service_name, domain)
 				//if (cloudfrontEnabled == "true") {
 					cleanupCloudFrontDistribution(service_name, domain, "dev")
 				//}
+				serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL,"website", service_name, domain)
 				unDeployWebsite(service_name, domain, "dev")
 
 				//if (cloudfrontEnabled == "true") {
@@ -707,7 +707,7 @@ def unDeployWebsite(service, domain, stage) {
 	echo "region : ${region}"
 	echo "aws_access_key_id : $AWS_ACCESS_KEY_ID"
 	echo "aws_secret_access_key : $AWS_SECRET_ACCESS_KEY"
-	
+
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIALS_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
@@ -855,36 +855,43 @@ def updateBucketPolicy(policy_json, bucketName){
  * @param stage
  * @return
  */
-def cleanupCloudFrontDistribution(service, domain, stage) {
-	//events.sendStartedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
-	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-	]) {
-		try {
-			sh "aws configure set profile.cloud-api.region ${region}"
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			sh "aws configure set preview.cloudfront true"
-			def distributionID
-			def _Etag
-			distributionID = getDistributionId(stage, domain, service)
-			if (distributionID && distributionID != ""){
-				def distributionConfig = getDistributionConfig(distributionID)
-				_Etag = generateDistributionConfigForDisable(distributionConfig)
-				_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
-				deleteCloudFrontDistribution(distributionID, _Etag)
-			}
-		} catch(ex) {
-				if((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
-					echo "Could not find a CloudFront distribution Id for service: $service and environment $stage"
-				} else {
-					updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
-					send_status_email ("FAILED")
-					error "cleanupCloudFrontDistribution Failed. "+ex.getMessage()
-				}
-		}
-	}
-}
+ def cleanupCloudFrontDistribution(service, domain, stage) {
+ 	//events.sendStartedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
+ 	withCredentials([
+ 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+ 	]) {
+ 		try {
+ 			sh "aws configure set profile.cloud-api.region ${region}"
+ 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+ 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+ 			sh "aws configure set preview.cloudfront true"
+
+ 			def distributionID
+ 			def _Etag
+
+ 			distributionID = getDistributionId(stage, domain, service)
+
+ 			if (distributionID && distributionID != "")
+ 			{
+ 				def distributionConfig = getDistributionConfig(distributionID)
+ 				_Etag = generateDistributionConfigForDisable(distributionConfig)
+ 				_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
+ 				deleteCloudFrontDistribution(distributionID, _Etag)
+ 			}
+ 			//events.sendCompletedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
+ 		} catch(ex) {
+ 				if((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
+ 					echo "Could not find a CloudFront distribution Id for service: $service and environment $stage"
+ 					//events.sendCompletedEvent('DELETE_CLOUDFRONT', "CF resource not available", null, getEnvKey(stage))
+ 				} else {
+ 					updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
+ 					send_status_email ("FAILED")
+ 					error "cleanupCloudFrontDistribution Failed. "+ex.getMessage()
+ 				}
+ 		}
+ 	}
+
+ }
 
 /**
  * Get the CloudFront distribution Id corresponding to the service
