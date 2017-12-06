@@ -4,6 +4,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 //@Field def events
 //Dstart
+@Field def Util
 @Field def serviceMetadata
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -52,15 +53,13 @@ node {
 	def var_bitbucket_email = env.REPO_EMAIL
 	def var_cas_clone_url	= var_bitbucket_base + "/scm/" + env.REPO_LOC + "/"
 	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git"
+	def jazzBuildModuleURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/jazz-build-module.git"
 	def var_serviceonboarding_repo = repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/service-onboarding-build-pack.git"
 	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_scm_source_hook = JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
 	var_db_service_id = params.db_service_id
 
-	checkout scm
-	def metadataModule = load "service-metadata-loader.groovy"
-	def utilityModule = load "utility-loader.groovy"
 	//Dend
 
 	if (params.service_name) {
@@ -194,7 +193,7 @@ node {
 	    break
 	    case "WEBSITE":
 			stage('Undeploy Service') {
-				serviceMetadata = loadServiceMetadataModule(metadataModule, utilityModule,"website", service_name, domain)
+				serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL,"website", service_name, domain)
 				//if (cloudfrontEnabled == "true") {
 					cleanupCloudFrontDistribution(service_name, domain, "dev")
 				//}
@@ -1072,7 +1071,7 @@ def cleanupSonarProjects(service, domain) {
  * Load metadata module groovy file
  *
  */
-def loadServiceMetadataModule(dataModule, utilModule, serviceType, service, domain) {
+def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 	//@TODO: Uncomment this line when calling Authenticated Catalog APIs
 	//withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JAZZ_ADMIN, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		try {
@@ -1082,23 +1081,23 @@ def loadServiceMetadataModule(dataModule, utilModule, serviceType, service, doma
 			def prd = env.WEBSITE_PROD_S3BUCKET
 
 			echo "loading serviceMetaData, checking git repos"
-			//dir('service-metadata') {
-				/*checkout([$class: 'GitSCM', branches: [
+			dir('service-metadata') {
+				checkout([$class: 'GitSCM', branches: [
 					[name: './master']
 				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-					[credentialsId: env.REPO_CREDENTIAL_ID, url: env.JAZZ_BUILD_MODULE_URL]
+					[credentialsId: env.REPO_CREDENTIAL_ID, url: buildURL]
 				]])
-				serviceMetadata = load "service-metadata-loader.groovy" */
-				dataModule.initialize(serviceType, service, domain, url, dev, stg, prd)
-				dataModule.setAuthToken(setCredentials())
+				serviceMetadata = load "service-metadata-loader.groovy"
+				serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
+				serviceMetadata.setAuthToken(setCredentials())
 				//@TODO: Need a service account to be passed in to generate a TOKEN. Uncomment when calling Authenticated APIs
 				//serviceMetadata.setCredentials(UNAME, PWD)
 
 				// Load and set dependent utility module.
 				echo "loading util module"
-				/*def _utilModule = load "utility-loader.groovy"
-				Util = _utilModule */
-				dataModule.setUtil(utilModule)
+				def _utilModule = load "utility-loader.groovy"
+				Util = _utilModule
+				serviceMetadata.setUtil(utilModule)
 			//}
 		return dataModule
 
