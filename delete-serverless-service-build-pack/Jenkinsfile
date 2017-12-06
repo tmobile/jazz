@@ -895,19 +895,11 @@ def getDistributionId(stage, domain, service) {
 			returnStdout: true
 		)
 		if(outputStr) {
-			echo "distribution outputStr : $outputStr"
 			def outputObj = new JsonSlurper().parseText(outputStr)
-<<<<<<< HEAD
-			distributionID = outputObj[0].Id
-		}
-		if(distributionID == null || distributionID == "") {
-			error "getDistributionId Failed. 'distributionID' is null"
-=======
 
 			if (outputObj) {
 				distributionID = outputObj[0].Id
 			}
->>>>>>> bd8fab1de361a131f176e66b10a6b1ab4e0aceef
 		}
 	}catch (ex) {
 		error "getDistributionId Failed: "+ ex.getMessage()
