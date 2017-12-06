@@ -5,7 +5,7 @@ const index = require('../index');
 const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon');
 const logger = require("../components/logger.js");
-//const AWS = require("aws-sdk-mock");
+const request = require('request');
 
 describe('platform_logs', function() {
   var event, context, callback, spy, stub, logStub, logMessage, errorMessage, errorType;
@@ -234,6 +234,124 @@ describe('platform_logs', function() {
     errorType = "BadRequest";
     var invalidArray = ["sw1ng", "mAmb0", "", null, undefined];
     var allChecks = multipleValidation("body", "type", invalidArray, errorMessage, errorType);
+    assert.isTrue(allChecks);
+  });
+
+  /*
+  * Given valid input parameters, handler() should attempt to send an http request
+  * @param {object, object, function} default event, context, and callback as described in beforeEach
+  */
+  it("should attempt to make an http request if given valid inputs", function(){
+    //wrapping the Request() method that gets internally called by node request.js for any http method
+    stub = sinon.stub(request, "Request", spy);
+    //trigger the spy wrapping the request by calling handler() with valid params
+    var callFunction = index.handler(event, context, callback);
+    stub.restore();
+    assert.isTrue(spy.called);
+  });
+
+  /*
+  * Given a failed http request, handler() informs that there was a request error
+  * @param {object, object, function} default event, context, and callback as described in beforeEach
+  * @returns {string} returns callback() with an error obj passed so the error is relayed as a message
+  */
+  it("should catch an error from sending request", function(){
+    var err = {
+      errType : "otherTanzen",
+      message : "Qu!ck$tep, V-wa1tz - j1ve, pas0d0b1e"
+    };
+    errorType = "InternalServerError";
+    errorMessage = "Internal Error";
+    logMessage = "Error occured : ";
+    //wrapping the Request() method that gets internally called by node request.js for any request
+    //the expected parameter only includes a requestLoad obj that has a callback function property
+    stub = sinon.stub(request, "Request", (obj) => {
+      return obj.callback(err, null, null);
+    });
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger both stubs by calling handler()
+    var callFunction = index.handler(event, context, callback);
+    var allChecks = stub.returnValues[0].includes(errorType) &&
+                    stub.returnValues[0].includes(errorMessage) &&
+                    logStub.args[0][0].includes(err.errType) &&
+                    logStub.args[0][0].includes(err.message) &&
+                    logStub.args[0][0].includes(logMessage);
+    stub.restore();
+    logStub.restore();
+    assert.isTrue(allChecks);
+  });
+
+  /*
+  * Given a 200 response, handler() reveals content of returned response
+  * @param {object, object, function} default event, context, and callback as described in beforeEach
+  */
+  it("should get output back from a successful 200 response", function(){
+    var responseObject = {
+      statusCode : 200,
+      body : {
+        'responses' : [{
+          'hits' : {
+            'total' : 400,
+            'hits' : {
+              'request_id' : {'_source' : 4, '_index' : ""},
+              'timestamp' : {'_source' : 4, '_index' : ""},
+              'message' : {'_source' : 4, '_index' : ""},
+              'log_level' : {'_source' : 4, '_index' : ""}
+            }
+          }
+        }]
+      }
+    };
+    responseObject.body = JSON.stringify(responseObject.body);
+    logMessage = "Output :";
+    //wrapping the Request() method that gets internally called by node request.js for any request
+    stub = sinon.stub(request, "Request", (obj) => {
+      return obj.callback(null, responseObject, null);
+    });
+    logStub = sinon.stub(logger, "info", spy);
+    //trigger both stubs by calling handler()
+    var callFunction = index.handler(event, context, callback);
+    var bool = logStub.args[3][0].includes(logMessage);
+    stub.restore();
+    logStub.restore();
+    assert.isTrue(bool);
+  });
+
+  /*
+  * Given an unsuccessful response, handler() informs of error
+  * @param {object, object, function} default event, context, and callback as described in beforeEach
+  * @returns {string} returns callback() with an error obj passed so the error is relayed as a message
+  */
+  it("should notify of internal server error if request returns an unsuccesful response", () => {
+    errorType = "InternalServerError";
+    errorMessage = "Error while processing the request :";
+    logMessage = "Exception occured :";
+    var err = {
+      errType : "otherTanzen",
+      message : "Qu!ck$tep, V-wa1tz - j1ve, pas0d0b1e"
+    };
+    var responseObject = {
+      //anything but 200
+      statusCode : 444,
+      body : {
+        errors : [err]
+      }
+    };
+    responseObject.body = JSON.stringify(responseObject.body);
+    //wrapping the Request() method that gets internally called by node request.js for any request
+    //the expected parameter only includes a requestLoad obj that has a callback function property
+    stub = sinon.stub(request, "Request", (obj) => {
+      return obj.callback(null, responseObject, null);
+    });
+    logStub = sinon.stub(logger, "error", spy);
+    //trigger both stubs by calling handler()
+    var callFunction = index.handler(event, context, callback);
+    var allChecks = stub.returnValues[0].includes(errorType) &&
+                    stub.returnValues[0].includes(errorMessage) &&
+                    logStub.args[0][0].includes(err.message) &&
+                    logStub.args[0][0].includes(logMessage);
+    stub.restore();
+    logStub.restore();
     assert.isTrue(allChecks);
   });
 });

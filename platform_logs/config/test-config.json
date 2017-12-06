@@ -5,5 +5,5 @@
 	"VALID_ENVIRONMENTS" : ["prod", "stg", "dev", "test"],
 	"VALID_CATEGORIES" : ["api", "function"],
 	"VALID_LOGTYPES" : ["warn", "error", "info", "verbose", "debug"],
-	"ENV_PREFIX" : "{env-prefix}"
+	"ENV_PREFIX" : "bA11r00m-dAnCe"
 }

@@ -81,41 +81,41 @@ module.exports.handler = (event, context, cb) => {
 				endTime = event.body.end_time ? event.body.end_time : new Date(),
 				size = event.body.size ? event.body.size : config.DEFAULT_SIZE,
 				querys = [];
-			
+
 			//Appending service name with Domain, Env and Jazz_type
-			service = domain + "-" + service + "-" + env;			
+			service = domain + "-" + service + "-" + env;
 			if(config.ENV_PREFIX){
 				service = config.ENV_PREFIX + "-" + service
 			}
 
 			logger.info("Service name to fetch logs :" + service);
-			
-			querys.push(utils.setQuery("servicename", service));		
+
+			querys.push(utils.setQuery("servicename", service));
 			querys.push(utils.setQuery("environment", env));
-			
+
 			//Query to filter Control messages
 			querys.push(utils.setQuery("!message", "START*"));
 			querys.push(utils.setQuery("!message", "END*"));
 			querys.push(utils.setQuery("!message", "REPORT*"));
-			
+
 			logger.info("QueryObj: "+ JSON.stringify(querys));
-			
+
 			var servCategory = [];
-			
+
 			if (categoryType.toLowerCase() == 'api'){
 				servCategory = ["apilogs","applicationlogs"];
 			} else if (categoryType.toLowerCase() == 'function'){
 				servCategory = ["applicationlogs"];
-			} 
-			
+			}
+
 			var req = utils.requestLoad;
 			req.url = config.BASE_URL + "/_plugin/kibana/elasticsearch/_msearch";
 			req.body = setRequestBody(servCategory, querys, startTime, endTime, size, page);
-			
+
 			request(req, function(err, res, body) {
 				if (err) {
 					logger.error("Error occured : " + JSON.stringify(err));
-					cb(JSON.stringify(errorHandler.throwInternalServerError("Internal Error")));
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("Internal Error")));
 				} else {
 					// Success response
 					if(res.statusCode == 200){
@@ -134,24 +134,24 @@ module.exports.handler = (event, context, cb) => {
 							log.type = hits[idx]._source.log_level;
 							logs.push(log);
 						}
-						
+
 						utils.responseModel.count = count;
-						utils.responseModel.logs = logs;						
-						
+						utils.responseModel.logs = logs;
+
 						// TODO: Remove as this is hack for UI fix
 						var ret = {"data" : utils.responseModel};
 
 						logger.info ('Output :' + JSON.stringify(utils.responseModel));
-						cb(null, responseObj(ret, event.body));
-						
+						return cb(null, responseObj(ret, event.body));
+
 					} else {
 						var error_message = 'Unknown error occured';
 						var bodyToJSON = JSON.parse(res.body);
 						if(typeof bodyToJSON.errors !== 'undefined'){
 							error_message = bodyToJSON.errors[0].message;
-						} 
+						}
 						logger.error("Exception occured :" + error_message);
-						cb(JSON.stringify(errorHandler.throwInternalServerError("Error while processing the request :" + error_message)));
+						return cb(JSON.stringify(errorHandler.throwInternalServerError("Error while processing the request :" + error_message)));
 					}
 				}
 			});
