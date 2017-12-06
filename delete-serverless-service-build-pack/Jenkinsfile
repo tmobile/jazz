@@ -193,7 +193,7 @@ node {
 	    break
 	    case "WEBSITE":
 			stage('Undeploy Service') {
-				serviceMetadata = loadServiceMetadataModule("http://bitbucketuser@jazzoss2811-bitbucketelb-408836908.us-east-1.elb.amazonaws.com:7990/scm/slf/jazz-build-module.git","website", service_name, domain)
+				serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL,"website", service_name, domain)
 				//if (cloudfrontEnabled == "true") {
 					cleanupCloudFrontDistribution(service_name, domain, "dev")
 				//}
@@ -1083,7 +1083,7 @@ def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 			echo "loading serviceMetaData, checking git repos"
 			dir('service-metadata') {
 				checkout([$class: 'GitSCM', branches: [
-					[name: './master']
+					[name: '*/master']
 				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
 					[credentialsId: env.REPO_CREDENTIAL_ID, url: buildURL]
 				]])
