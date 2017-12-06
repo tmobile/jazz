@@ -862,10 +862,15 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 			def distributionID
 			def _Etag
 			distributionID = getDistributionId(stage, domain, service)
-			def distributionConfig = getDistributionConfig(distributionID)
-			_Etag = generateDistributionConfigForDisable(distributionConfig)
-			_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
-			deleteCloudFrontDistribution(distributionID, _Etag)
+
+			if (distributionID && distributionID != "")
+			{
+				def distributionConfig = getDistributionConfig(distributionID)
+				_Etag = generateDistributionConfigForDisable(distributionConfig)
+				_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
+				deleteCloudFrontDistribution(distributionID, _Etag)
+			}
+			//events.sendCompletedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
 		} catch(ex) {
 				if((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
 					echo "Could not find a CloudFront distribution Id for service: $service and environment $stage"
@@ -897,17 +902,16 @@ def getDistributionId(stage, domain, service) {
 		if(outputStr) {
 			echo "distribution outputStr : $outputStr"
 			def outputObj = new JsonSlurper().parseText(outputStr)
-			distributionID = outputObj[0].Id
+
+			if (outputObj) {
+				distributionID = outputObj[0].Id
+			}
 		}
-		if(distributionID == null || distributionID == "") {
-			error "getDistributionId Failed. 'distributionID' is null"
-		}
-		return distributionID
 	}catch (ex) {
-		updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
-		send_status_email ("FAILED")
-		error "getDistributionId Failed. "+ex.getMessage()
+		error "getDistributionId Failed: "+ ex.getMessage()
 	}
+
+	return distributionID
 }
 /**
  * Get and save the CloudFront distribution Config corresponding to the service
