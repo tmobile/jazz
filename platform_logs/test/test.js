@@ -24,8 +24,13 @@ describe('platform_logs', function() {
     }
     //check if handler returns error notification with expected error type and message
     var handlerResponse = index.handler(event, context, callback);
-    var bool = handlerResponse.includes(errMessage) && handlerResponse.includes(errType);
-    return bool;
+    if(handlerResponse){
+      var bool = handlerResponse.includes(errMessage) && handlerResponse.includes(errType);
+      return bool;
+    }
+    else{
+      return false;
+    }
   }
 
   //setup additional helper function for validating multiple values
@@ -221,6 +226,26 @@ describe('platform_logs', function() {
     var invalidArray = ["chaCHA", "rUmBa", "sAmBa"];
     var allChecks = multipleValidation("body", "category", invalidArray, errorMessage, errorType);
     assert.isTrue(allChecks);
+  });
+
+  /*
+  * Given event.body.category that is listed as valid in config, handler() should not inform of category exception
+  * @param{object} event -> event.body.category is either api or function, not website or other
+  * @params{object, function} aws context, and callback function as described in beforeEach
+  * @returns{string} error message indicating a bad request was made
+  */
+  it("should allow only api and function to be listed as the category", () => {
+    errorMessage = "Only following values are allowed for category - ";
+    errorType = "BadRequest";
+    var invalidArray = ["api", "function", "website"];
+    var acceptCount = 3;
+    //only have 2 of the values listed be acceptable
+    for(i in invalidArray){
+      if(inputValidation("body", "category", invalidArray[i], errorMessage, errorType)){
+        acceptCount--;
+      }
+    }
+    assert.isTrue(acceptCount == 2);
   });
 
   /*

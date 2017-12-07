@@ -67,7 +67,7 @@ module.exports.handler = (event, context, cb) => {
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + config.VALID_LOGTYPES.join(", "))));
 			}
 
-			if (!event.body.category || !_.includes(config.VALID_CATEGORIES, event.body.category.toLowerCase())){
+			if (!_.includes(config.VALID_CATEGORIES, event.body.category.toLowerCase())){
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for category - " + config.VALID_CATEGORIES.join(", "))));
 			}
 
