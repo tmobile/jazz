@@ -7,7 +7,8 @@ import groovy.transform.Field
 /**
  * The Service delete workflow for service types: API, function & website
 */
-
+@Field def Util
+@Field def serviceMetadata
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def domain = ''
@@ -59,6 +60,7 @@ node {
 	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
+	def jazzBuildModuleURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/jazz-build-module.git"
 
 	var_db_service_id = params.db_service_id
 
@@ -176,6 +178,7 @@ node {
 
 			case "WEBSITE":
 				stage('Undeploy Service') {
+					serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL, "website", service_name, domain)
 					//if (cloudfrontEnabled == "true") {
 						cleanupCloudFrontDistribution(service_name, domain, "dev")
 					//}
@@ -739,32 +742,38 @@ def getResourcePath() {
  * @param stage
  * @return
  */
-def unDeployWebsite(service, domain, stage) {
-    echo "unDeployWebsite::" + service + "::" + domain + "::" + stage
+ def unDeployWebsite(service, domain, stage) {
+ 	echo "unDeployWebsite::" + service + "::" + domain + "::" + stage
+ 	echo "serviceMetadata bucketname = $serviceMetadata.g_dev_s3_bucket"
+ 	echo "region : ${region}"
+ 	echo "aws_access_key_id : $AWS_ACCESS_KEY_ID"
+ 	echo "aws_secret_access_key : $AWS_SECRET_ACCESS_KEY"
 
-	//events.sendStartedEvent('UNDEPLOY_WEBSITE', null, null, getEnvKey(stage))
-	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-	]) {
-		try {
-			sh "aws configure set profile.cloud-api.region ${region}"
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			sh "aws configure set preview.cloudfront true"
+ 	withCredentials([
+ 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIALS_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+ 	]) {
+ 		try {
+ 			sh "aws configure set profile.cloud-api.region ${region}"
+ 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+ 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+ 			sh "aws configure set preview.cloudfront true"
 
-			def folderName = service // temporary fix
-			//def folderName = domain+"_"+service // @TODO: enable after bug fix CAPI 344
-			def _exists = checkIfWebsiteExists(stage, domain + "-" + folderName)
-			if(_exists) {
-				sh "aws s3 rm s3://"+getBucket(stage)+"/" + domain + "-" + folderName+" --recursive"
-				cleanupS3BucketPolicy(service, domain, stage)
-			}
-			//events.sendCompletedEvent('UNDEPLOY_WEBSITE', null, null, getEnvKey(stage))
-		} catch(ex) {
-			updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
-			send_status_email ("FAILED")
-			error ex.getMessage()
-		}
+ 			echo "start debug"
+ 			def bucketName = serviceMetadata.getBucket(stage)
+ 			echo "bucketName: $bucketName"
+ 			def bucketUrl = bucketName + "/"+ domain + "-" + service
+ 			echo "bucketUrl: $bucketUrl"
+ 			def _exists = checkIfWebsiteExists(bucketUrl)
+ 			echo "passed checkIfWebsiteExists"
+ 			if(_exists) {
+ 				sh "aws s3 rm s3://" + bucketUrl + " --recursive"
+ 				cleanupS3BucketPolicy(service, domain, stage, bucketName)
+ 			}
+ 		} catch(ex) {
+ 			updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
+ 			send_status_email ("FAILED")
+ 			error ex.getMessage()
+ 		}
 	}
 }
 
@@ -773,12 +782,27 @@ def unDeployWebsite(service, domain, stage) {
  * @param stage
  * @return  true/false
  */
-def checkIfWebsiteExists(stage, folderName) {
+/*def checkIfWebsiteExists(stage, folderName) {
 	def status = true;
 	try {
 		sh "aws s3 ls s3://"+getBucket(stage)+"/"+folderName
 	}catch(ex) {
 		echo "Bucket or Folder does not exists"
+		status = false
+	}
+	return status
+}*/
+/**
+ * Check if the website folder existing in the S3 buckets for each environments
+ * @param stage
+ * @return  true/false
+ */
+def checkIfWebsiteExists(bucketUrl) {
+	def status = true;
+	try {
+		sh "aws s3 ls s3://" + bucketUrl
+	}catch(ex) {
+		echo "Bucket does not exist"
 		status = false
 	}
 	return status
@@ -806,7 +830,7 @@ def getBucket(stage) {
  * @param stage
  * @return
  */
-def cleanupS3BucketPolicy(service, domain, stage) {
+/*def cleanupS3BucketPolicy(service, domain, stage) {
 	//events.sendStartedEvent('DELETE_S3BUCKET_POLICY', null, null, getEnvKey(stage))
 
 	echo "cleanupS3BucketPolicy called"
@@ -861,6 +885,51 @@ def cleanupS3BucketPolicy(service, domain, stage) {
 		}
 	}
 
+}*/
+def cleanupS3BucketPolicy(service, domain, stage, bucket) {
+	echo "cleanupS3BucketPolicy called"
+
+	withCredentials([
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+	]) {
+		try {
+			sh "aws configure set profile.cloud-api.region ${region}"
+			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+			sh "aws configure set preview.cloudfront true"
+			def folderName = domain + "-" + service // temporary fix
+			//def folderName = domain+"_"+service // @TODO: enable after bug fix CAPI 344
+			def bucketPolicy = sh (
+				script: "aws s3api get-bucket-policy --bucket " + bucket + " --output json",
+				returnStdout: true
+			).trim()
+			def policyObject = parseJson(parseJson(bucketPolicy).Policy)
+			def policyObjectUpdated = [:]
+			policyObjectUpdated.Version = policyObject.Version
+			policyObjectUpdated.Id = policyObject.Id
+			def statements = []
+			def resourcePattern = bucket+"/"+folderName+"/"
+			for (items in policyObject.Statement) {
+				if(items.Sid != folderName || !(items.Resource.indexOf(resourcePattern) > -1)) {
+					def copy = [:]
+					copy.putAll(items)
+					statements.add(copy)
+				}
+			}
+			policyObjectUpdated.Statement = statements
+			def policy_json = JsonOutput.toJson(policyObjectUpdated)
+			//def bucketName = bucket
+			updateBucketPolicy(policy_json, bucket)
+            resetCredentials()
+		} catch(ex) {
+            resetCredentials()
+			if(ex.getMessage().indexOf("groovy.json.internal.LazyMap") < 0) {
+				updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
+				send_status_email ("FAILED")
+				error "cleanupS3BucketPolicy Failed. "+ex.getMessage()
+			}
+		}
+	}
 }
 
 /**
@@ -1199,4 +1268,46 @@ def send_status_email (build_status) {
    } catch (e){
        echo "Failed while sending build status notification"
    }
+}
+
+/**
+ * Load metadata module groovy file
+ *
+ */
+def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
+	//@TODO: Uncomment this line when calling Authenticated Catalog APIs
+	//withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JAZZ_ADMIN, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+		try {
+			def url = "$g_base_url/platform/services?domain=$domain&service=$service"
+			def dev = env.WEBSITE_DEV_S3BUCKET
+			def stg = env.WEBSITE_STG_S3BUCKET
+			def prd = env.WEBSITE_PROD_S3BUCKET
+
+			echo "loading serviceMetaData, checking git repos"
+			dir('service-metadata') {
+				checkout([$class: 'GitSCM', branches: [
+					[name: '*/master']
+				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+					[credentialsId: env.REPO_CREDENTIAL_ID, url: buildURL]
+				]])
+				serviceMetadata = load "service-metadata-loader.groovy"
+				serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
+				serviceMetadata.setAuthToken(setCredentials())
+				echo "serviceMetadata token $serviceMetadata.g_login_token"
+				def testBucket = serviceMetadata.getBucket("dev")
+				echo "serviceMetadata bucketname : $testBucket"
+				//@TODO: Need a service account to be passed in to generate a TOKEN. Uncomment when calling Authenticated APIs
+				//serviceMetadata.setCredentials(UNAME, PWD)
+
+				// Load and set dependent utility module.
+				echo "loading util module"
+				Util = load "utility-loader.groovy"
+				serviceMetadata.setUtil(Util)
+			}
+		return serviceMetadata
+
+		}catch(ex) {
+			error "loadServiceMetadataModule Failed. "+ex.getMessage()
+		}
+	//}
 }
