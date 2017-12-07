@@ -120,7 +120,7 @@ node {
 
 	stage("Validation") {
 		validateInput(service_name, domain, version)
-		//checkServiceExists(service_name, domain, region)//is-service-available does not exist
+		checkServiceExists(service_name, domain, region)//is-service-available does not exist
 	}
 
 	dir(bitbucket_repo_name){
