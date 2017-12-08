@@ -23,16 +23,20 @@
 **/
 
 var getStageConfig = (event) => {
-  var stage = event.stage;
-  var configObj = {};
-  // Loads the config files based on the env.
-  // Please edit the JSON files.
-  if (stage === 'dev') {
-    configObj = require('../config/dev-config.json');
-  } else if (stage === 'stg') {
-    configObj = require('../config/stg-config.json');
-  } else if (stage === 'prod') {
-    configObj = require('../config/prod-config.json');
+  if(event){
+    var stage = event.stage;
+    var configObj = {};
+    // Loads the config files based on the env.
+    // Please edit the JSON files.
+    if (stage === 'dev') {
+      configObj = require('../config/dev-config.json');
+    } else if (stage === 'stg') {
+      configObj = require('../config/stg-config.json');
+    } else if (stage === 'prod') {
+      configObj = require('../config/prod-config.json');
+    } else{
+      configObj = require("../config/" + stage + "-config.json");
+    }
   }
   return configObj;
 };

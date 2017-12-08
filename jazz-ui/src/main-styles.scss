@@ -454,7 +454,7 @@ input[type=number] {
     top: 0;
     left: 0;
     right: 0;
-    z-index: 6;
+    z-index: $zindex-modal;
 }
 .disclaimer-static-data{
     font-size: 1rem;
