@@ -207,7 +207,7 @@ export class LoginComponent implements OnInit {
                             "userpassword":this.model.password,
                             "usercode":this.model.usercode
                         }
-            this.http.post('/platform/usermgmt', payload).subscribe(
+            this.http.post('/platform/usermanagement', payload).subscribe(
                 response => { 
                     //Registration changes here
                     let message=this.toastmessage.successMessage("success","register");
@@ -222,7 +222,10 @@ export class LoginComponent implements OnInit {
         });
         }
         resetPassword(e){
-            this.http.get('/platform/usermgmt/reset?email=' + this.model.username).subscribe(
+            var payload = {
+                'email': this.model.username
+            };
+            this.http.post('/platform/usermanagement/reset', payload).subscribe(
                 response =>{
                     console.log(response);
                 }, error => {

@@ -1,0 +1,9 @@
+{
+	"BASE_URL" :"https://{inst_elastic_search_hostname}/",
+	"DEFAULT_SIZE" : 1000,
+	"DEFAULT_TIME_IN_DAYS" : 7,
+	"VALID_ENVIRONMENTS" : ["prod", "stg", "dev", "test"],
+	"VALID_CATEGORIES" : ["api", "function"],
+	"VALID_LOGTYPES" : ["warn", "error", "info", "verbose", "debug"],
+	"ENV_PREFIX" : "bA11r00m-dAnCe"
+}

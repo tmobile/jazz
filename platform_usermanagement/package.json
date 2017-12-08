@@ -1,0 +1,25 @@
+{
+  "name": "usermanagementservice",
+  "version": "0.0.1",
+  "description": "Platform user management service",
+  "main": "index.js",
+  "private": true,
+  "author": {
+    "name": "Jazz"
+  },
+  "scripts": {
+    "test": "mocha",
+    "jshint": "jshint --exclude ./node_modules ."
+  },
+  "dependencies": {
+    "deasync": "*",
+    "lodash": "*",
+    "request": "*",
+    "request-promise-native": "^1.0.5"
+  },
+  "devDependencies": {
+    "mocha": "^v3.0.0",
+    "chai": "^3.5.0",
+    "lambda-local": "^1.4.2"
+  }
+}

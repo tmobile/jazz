@@ -98,8 +98,8 @@ export class DaterangePickerComponent implements OnInit {
 	}
 	onApply(){
 
-		this.date3 = new Date($(".datepicker-input")[0].value);
-		this.date4 = new Date($(".datepicker-input")[1].value);
+		this.date3 = new Date($(".datepicker-input")[0].innerHTML);
+		this.date4 = new Date($(".datepicker-input")[1].innerHTML);
 
 
 		this.setTime(this.date3, this.time1);

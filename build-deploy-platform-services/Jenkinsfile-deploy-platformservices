@@ -6,7 +6,7 @@ node {
 			
 		echo "Build to deploy all Platform Services"
 		
-		def platform_srvc_build_job = "/job/build-deploy-platform-service/buildWithParameters?token=bld-plat-srvs-71717&admin_group=admin_group&region=" + params.region;
+		def platform_srvc_build_job = "job/build-deploy-platform-service/buildWithParameters?token=bld-plat-srvs-71717&admin_group=admin_group&region=" + params.region;
 
 		def var_job_url = JenkinsLocationConfiguration.get().getUrl() + platform_srvc_build_job;
 		
@@ -14,64 +14,15 @@ node {
 		
 		echo "Job URL:: " + var_job_url;
 			
-		// @TODO: Timeout's has to be removed and refactored 
-			
-		//Service 0 platform_services
-		service_name_params = "cognito-authorizer";
-		sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params       
+		def platform_services = ["cognito-authorizer", "create-serverless-service", "delete-serverless-service", "cloud-logs-streamer", \
+								"is-service-available",  "platform_login", "platform_logout", "platform_services", "platform_usermanagement", \
+								"platform_logs", "platform_events", "platform-services-handler"] 
 
-		sleep(timeout_seconds)
-		
-		//Service 1
-		def service_name_params = "create-serverless-service";
-		sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params;
+		platform_services.each {
+			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"${var_job_url}&service_name=${it}\""       
 
-		//Service 2
-		service_name_params = "delete-serverless-service";
-		sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
-
-		sleep(timeout_seconds)
-
-		//Service 3
-		service_name_params = "cloud-logs-streamer";
-		sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
-
-		//Service 4
-		service_name_params = "is-service-available";
-		sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
-
-		sleep(timeout_seconds)
-
-		//Service 5
-		service_name_params = "platform_login";
-		sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
-
-		//Service 6
-		service_name_params = "platform_logout";
-		sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
-
-		sleep(timeout_seconds)
-
-		//Service 7 platform_services
-		service_name_params = "platform_services";
-		sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
-		
-		sleep(timeout_seconds)
-
-		//Service 8 platform_services
-		service_name_params = "platform_events";
-		sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
-		
-		sleep(timeout_seconds)
-
-		//Service 9 platform_services
-		service_name_params = "platform-services-handler";
-		sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
-
-		sleep(timeout_seconds)
-		//Service 10 platform_logs
- 		 service_name_params = "platform_logs";
- 		 sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=\"" + service_name_params
+			sleep(timeout_seconds)
+		}
 	}
   
 }
