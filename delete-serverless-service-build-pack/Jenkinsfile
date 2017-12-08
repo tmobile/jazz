@@ -33,9 +33,9 @@ node {
 	def bitbucket_repo_name
 	def tracking_id
 	def config
-  def runtime
+	def runtime
 	def serviceConfig
-  def domainConfig
+	def domainConfig
 	def cloudfrontEnabled
 	def flowType
 	def repo_protocol				= "http://"
@@ -51,7 +51,7 @@ node {
 	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
-	def jazzBuildModuleURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/jazz-build-module.git"
+	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/${env.REPO_CORE}/jazz-build-module.git"
 
 	var_db_service_id = params.db_service_id
 
@@ -87,7 +87,7 @@ node {
 		runtime = config['providerRuntime']
 		serviceConfig = config['service']
 		domainConfig = config['domain']
-    updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_started");
+		updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_started");
 		dir(bitbucket_repo_name){
 			echo "loadServerlessConfig......."
 
@@ -294,13 +294,13 @@ def setLambdaExecutionRole(role) {
 }
 
 def changeServerlessConfig(String runtime) {
-		def config = LoadConfiguration()
-		//def subnetIds = config['subnetIds']
-		//def securityGroupIds = config['securityGroupIds']
-    //    def internalAccess = config['require_internal_access']
-		//sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
-		//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
-		//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
+	def config = LoadConfiguration()
+	//def subnetIds = config['subnetIds']
+	//def securityGroupIds = config['securityGroupIds']
+	//    def internalAccess = config['require_internal_access']
+	//sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
+	//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
+	//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
 
 	echoServerlessFile()
 
@@ -463,7 +463,7 @@ def deleteserviceindb(region, db_id) {
 	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
 	try {
 		sh "curl -X DELETE -k -v -H \"Authorization: ${params.auth_token}\" \
-			'https://${env.API_ID_DEV}.execute-api.${region}.amazonaws.com/dev/platform/services/${db_id}'"
+				'https://${env.API_ID_DEV}.execute-api.${region}.amazonaws.com/dev/platform/services/${db_id}'"
 		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
@@ -717,10 +717,10 @@ def getResourcePath() {
  			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
  			sh "aws configure set preview.cloudfront true"
  			def bucketName = serviceMetadata.getBucket(stage)
- 			def bucketUrl = bucketName + "/"+ domain + "-" + service
+ 			def bucketUrl = "${bucketName}/${domain}-${service}"
  			def _exists = checkIfWebsiteExists(bucketUrl)
  			if(_exists) {
- 				sh "aws s3 rm s3://" + bucketUrl + " --recursive"
+ 				sh "aws s3 rm s3://${bucketUrl} --recursive"
  				cleanupS3BucketPolicy(service, domain, stage, bucketName)
  			}
  		} catch(ex) {
@@ -739,7 +739,7 @@ def getResourcePath() {
 def checkIfWebsiteExists(bucketUrl) {
 	def status = true;
 	try {
-		sh "aws s3 ls s3://" + bucketUrl
+		sh "aws s3 ls s3://${bucketUrl}"
 	}catch(ex) {
 		echo "Bucket does not exist"
 		status = false
@@ -768,7 +768,7 @@ def cleanupS3BucketPolicy(service, domain, stage, bucket) {
 			def folderName = domain + "-" + service // temporary fix
 			//def folderName = domain+"_"+service // @TODO: enable after bug fix CAPI 344
 			def bucketPolicy = sh (
-				script: "aws s3api get-bucket-policy --bucket " + bucket + " --output json",
+				script: "aws s3api get-bucket-policy --bucket ${bucket} --output json",
 				returnStdout: true
 			).trim()
 			def policyObject = parseJson(parseJson(bucketPolicy).Policy)
@@ -776,7 +776,7 @@ def cleanupS3BucketPolicy(service, domain, stage, bucket) {
 			policyObjectUpdated.Version = policyObject.Version
 			policyObjectUpdated.Id = policyObject.Id
 			def statements = []
-			def resourcePattern = bucket+"/"+folderName+"/"
+			def resourcePattern = "${bucket}/${folderName}/"
 			for (items in policyObject.Statement) {
 				if(items.Sid != folderName || !(items.Resource.indexOf(resourcePattern) > -1)) {
 					def copy = [:]
@@ -1012,20 +1012,20 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
 
 	echo "loadServerlessConfig::" + runtime + "::" + configPackBBURL
 
-    dir('_config') {
-        checkout([$class: 'GitSCM', branches: [
-            [name: '*/master']
-        ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-            [credentialsId: env.REPO_CREDENTIAL_ID, url: configPackBBURL]
-        ]])
-    }
-    if (runtime.indexOf("nodejs") > -1) {
-        sh "cp _config/serverless-nodejs.yml ./serverless.yml"
-    } else if (runtime.indexOf("java") > -1) {
-        sh "cp _config/serverless-java.yml ./serverless.yml"
-    } else if (runtime.indexOf("python") > -1) {
-        sh "cp _config/serverless-python.yml ./serverless.yml"
-    }
+	dir('_config') {
+	    checkout([$class: 'GitSCM', branches: [
+	        [name: '*/master']
+	    ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+	        [credentialsId: env.REPO_CREDENTIAL_ID, url: configPackBBURL]
+	    ]])
+	}
+	if (runtime.indexOf("nodejs") > -1) {
+	    sh "cp _config/serverless-nodejs.yml ./serverless.yml"
+	} else if (runtime.indexOf("java") > -1) {
+	    sh "cp _config/serverless-java.yml ./serverless.yml"
+	} else if (runtime.indexOf("python") > -1) {
+	    sh "cp _config/serverless-python.yml ./serverless.yml"
+	}
 	sh "cp serverless.yml serverless-temp.yml"
 }
 
@@ -1091,28 +1091,28 @@ def loadServiceInfo() {
 * @return
 */
 def send_status_email (build_status) {
-   echo "Sending email notification to " + owner
-   body = ""
-   bcc_email = ""
-   if (build_status == 'COMPLETED'){
-        body = "Service deletion completed for service : $service in the namespace : $domain"
-   }else if (build_status == 'FAILED') {
-	   build_url = env.BUILD_URL + 'console'
-        body = "Service deletion FAILED for service : $service in the namespace : $domain"
-        body = body + "\n\nFor more details, please click this link: $build_url"
-   } else {
-        echo "Unsupported build status, nothing to email.."
-        return
-   }
-   try{
-        mail (to: owner, bcc: bcc_email,
-         subject: "Jazz Service Deletion Notification",
-         body: body
-        );
-        echo "Sent email to " + owner + " successfully!"
-   } catch (e){
-       echo "Failed while sending build status notification"
-   }
+	echo "Sending email notification to " + owner
+	body = ""
+	bcc_email = ""
+	if (build_status == 'COMPLETED'){
+		body = "Service deletion completed for service : $service in the namespace : $domain"
+	}else if (build_status == 'FAILED') {
+		build_url = env.BUILD_URL + 'console'
+		body = "Service deletion FAILED for service : $service in the namespace : $domain"
+		body = body + "\n\nFor more details, please click this link: $build_url"
+	} else {
+		echo "Unsupported build status, nothing to email.."
+		return
+	}
+	try{
+		mail (to: owner, bcc: bcc_email,
+			subject: "Jazz Service Deletion Notification",
+			body: body
+		);
+		echo "Sent email to " + owner + " successfully!"
+	} catch (e){
+		echo "Failed while sending build status notification"
+	}
 }
 
 /**

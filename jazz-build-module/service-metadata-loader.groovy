@@ -17,40 +17,11 @@ echo "Service metadata module loaded successfully"
 @Field def util_url
 @Field def g_service_id
 @Field def g_service_created_by
-//@Field def g_service_description
 @Field def g_service_domain
-//@Field def g_service_email
 @Field def g_service_name
-//@Field def g_service_region
 @Field def g_service_repository
 @Field def g_service_runtime
-//@Field def g_service_status
-//@Field def g_service_tags
 @Field def g_service_type
-//@Field def g_timestamp
-
-/* Assets schema */
-// @Field def g_asset_created_by
-// //@Field def g_asset_domain
-// @Field def g_asset_environment
-// @Field def g_asset_id
-// @Field def g_asset_provider
-// @Field def g_asset_provider_id
-// //@Field def g_asset_service
-// @Field def g_asset_status
-// @Field def g_asset_tags
-// @Field def g_asset_timestamp
-// @Field def g_asset_type
-
-/* Environment schema */
-// @Field def g_environment_created
-// @Field def g_environment_created_by
-// @Field def g_environment_id
-// @Field def g_environment_last_updated
-// @Field def g_environment_logical_id
-// @Field def g_environment_status
-// //@Field def g_service_domain
-// //@Field def g_service_name
 
 /**
  * Initialize the module
@@ -102,11 +73,11 @@ def loadServiceMetaData() {
  */
 def getBucket(stage) {
 	if(stage == 'dev') {
-		return g_dev_s3_bucket //"dev-serverless-static-website"
+		return g_dev_s3_bucket
 	}else if (stage == 'stg') {
-		return g_stg_s3_bucket //"stg-serverless-static-website"
+		return g_stg_s3_bucket
 	} else if (stage == 'prod') {
-		return g_prd_s3_bucket //"prod-serverless-static-website"
+		return g_prd_s3_bucket
 	}
 }
 
@@ -116,17 +87,12 @@ def getBucket(stage) {
 def showState() {
 	echo "g_service_id...$g_service_id"
 	echo "g_service_created_by...$g_service_created_by"
-	//echo "g_service_description...$g_service_description"
 	echo "g_service_domain...$g_service_domain"
-	//echo "g_service_email...$g_service_email"
 	echo "g_service_name...$g_service_name"
-	//echo "g_service_region...$g_service_region"
 	echo "g_service_repository...$g_service_repository"
 	echo "g_service_runtime...$g_service_runtime"
-	//echo "g_service_status...$g_service_status"
 	echo "g_service_tags...$g_service_tags"
 	echo "g_service_type...$g_service_type"
-	//echo "g_timestamp...$g_timestamp"
 }
 
 
