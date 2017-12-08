@@ -321,7 +321,6 @@ def echoServerlessFile() {
 def updateServiceNameConfig(domain, serviceName, envval) {
 	sh "rm serverless.yml"
 	sh "cp serverless-temp.yml serverless.yml"
-
 	//events.sendStartedEvent('UPDATE_DEPLOYMENT_CONF')
 	def fullServiceName = service_name
 	def cfStackName = service_name
@@ -329,10 +328,8 @@ def updateServiceNameConfig(domain, serviceName, envval) {
 		fullServiceName = domain+ "-" + service_name
 		cfStackName = serviceName + "-" + domain //sets CF Stack name as service--domain-env
 	}
-
 	fullServiceName = env.env_name_prefix + "-" + fullServiceName
 	cfStackName = fullServiceName
-
 	try {
 		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
 		sh "sed -i -- 's/name: \${self:service}/name: " + fullServiceName+"/g' serverless.yml"
@@ -352,7 +349,6 @@ def updateServiceNameConfig(domain, serviceName, envval) {
  */
 def updateSwaggerConfig(domain, serviceName, api_key, config) {
 	//events.sendStartedEvent('UPDATE_SWAGGER')
-
 	try {
 		if (fileExists('swagger/swagger.json')) {
 			sh "sed -i -- 's/{service_name}/" + serviceName + "/g' swagger/swagger.json"
@@ -368,8 +364,6 @@ def updateSwaggerConfig(domain, serviceName, api_key, config) {
 			sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
 			sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
-
-
 		}
 		//events.sendCompletedEvent('UPDATE_SWAGGER')
 	}catch(ex) {
@@ -389,7 +383,6 @@ def LoadConfiguration() {
 	try {
 		def result = readFile('deployment-env.yml').trim()
 		def resultList = result.tokenize("\n")
-
 		def cleanedList = []
 		for (i in resultList) {
 			if(i.toLowerCase().startsWith("#")) {
@@ -471,7 +464,6 @@ def deleteserviceindb(region, db_id) {
 	try {
 		sh "curl -X DELETE -k -v -H \"Authorization: ${params.auth_token}\" \
 			'https://${env.API_ID_DEV}.execute-api.${region}.amazonaws.com/dev/platform/services/${db_id}'"
-
 		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
@@ -526,7 +518,6 @@ def cleanUpApiGatewayResources(stage, path, region) {
 			sh "aws configure set profile.cloud-api.region ${region}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
 			//def resource_id = findResourceId(stage, path)
 			def resource_id = null
 			try {
@@ -545,23 +536,19 @@ def cleanUpApiGatewayResources(stage, path, region) {
 				send_status_email ("FAILED")
 				error "findResourceId Failed"+ex.getMessage()
 			}
-
 			if(resource_id != null && resource_id != ""){
 				def status_json = sh (
 					script: "aws apigateway delete-resource --rest-api-id "+getApiId(stage)+"  --region " + region + " --resource-id "+resource_id+" --output json" ,
 					returnStdout: true
 				).trim()
-
 				def deployment_status_json = sh (
 					script: "aws apigateway create-deployment --rest-api-id "+getApiId(stage) + "  --region " + region + " --stage-name "+stage+" --description 'API deployment after resource clean up' --output json" ,
 					returnStdout: true
 				).trim()
-
 			} else {
 				echo "Resource Id does not exists in API gateway."
 				//events.sendCompletedEvent('DELETE_API_RESOURCE', "No Resource to be deleted", null, getEnvKey(stage))
 			}
-
 		} catch(ex) {
 			updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
 			send_status_email ("FAILED")
@@ -583,7 +570,6 @@ def findResourceId(stage, resourcePath) {
 			script: "aws apigateway get-resources --rest-api-id "+getApiId(stage)+" --output json" ,
 			returnStdout: true
 		).trim()
-
 		def list = parseJson(outputStr)
 		for (items in list["items"]) {
 			if(items["path"] == resourcePath) {
@@ -660,7 +646,6 @@ def cleanUpApiDocs(stage, service, domain) {
 			error "cleanUpApiDocs Failed. "+ex.getMessage()
 		}
 	}
-
 }
 
 /**
@@ -731,7 +716,6 @@ def getResourcePath() {
  			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
  			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
  			sh "aws configure set preview.cloudfront true"
-
  			def bucketName = serviceMetadata.getBucket(stage)
  			def bucketUrl = bucketName + "/"+ domain + "-" + service
  			def _exists = checkIfWebsiteExists(bucketUrl)
@@ -747,21 +731,6 @@ def getResourcePath() {
 	}
 }
 
-/**
- * Check if the website folder existing in the S3 buckets for each environments
- * @param stage
- * @return  true/false
- */
-/*def checkIfWebsiteExists(stage, folderName) {
-	def status = true;
-	try {
-		sh "aws s3 ls s3://"+getBucket(stage)+"/"+folderName
-	}catch(ex) {
-		echo "Bucket or Folder does not exists"
-		status = false
-	}
-	return status
-}*/
 /**
  * Check if the website folder existing in the S3 buckets for each environments
  * @param stage
@@ -839,7 +808,6 @@ def resetCredentials() {
     sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
     sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXX"
 }
-
 
 @NonCPS
 def updateBucketPolicy(policy_json, bucketName){
@@ -944,7 +912,6 @@ def getDistributionConfig(distributionID) {
 			returnStdout: true
 		)
 		return distributionConfig
-
 	}catch (ex) {
 		updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
 		send_status_email ("FAILED")
@@ -973,14 +940,12 @@ def generateDistributionConfigForDisable(distributionConfig) {
 		try {
 			sh "echo \'$updatedCfg\' > disable-cf-distribution-config.json"
 		}catch(ex) {}
-
 		return eTag
 	} catch(ex) {
 		updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "deletion_failed");
 		send_status_email ("FAILED")
 		error "generateDistributionConfigForDisable Failed."+ex.getMessage()
 	}
-
 }
 
 /**
@@ -1013,7 +978,6 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 		return eTag
 	}catch(ex){
 		//events.sendFailureEvent('DISABLE_CLOUDFRONT', ex.getMessage(), null, getEnvKey(stage))
-
 		error "disableCloudFrontDistribution. "+ex.getMessage()
 	}
 }
@@ -1025,7 +989,6 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
  * @return
  */
 def deleteCloudFrontDistribution(distributionID, _Etag) {
-
 	// @TODO: Send an Event with distributionID, _Etag as inputs. A separate job will pick up the details and schedule for deletion
 	// @TODO: Clean up code below after that
 	/*
@@ -1056,7 +1019,6 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
             [credentialsId: env.REPO_CREDENTIAL_ID, url: configPackBBURL]
         ]])
     }
-
     if (runtime.indexOf("nodejs") > -1) {
         sh "cp _config/serverless-nodejs.yml ./serverless.yml"
     } else if (runtime.indexOf("java") > -1) {
@@ -1065,7 +1027,6 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
 	sh "cp serverless.yml serverless-temp.yml"
-
 }
 
 def updateServiceInDB(service_id_in_db, devApiID, region, statusval) {
@@ -1081,14 +1042,10 @@ def loadEventsModule() {
 }
 
 def loadServiceInfo() {
-
 	def token = setCredentials()
-
 	def url = "$g_base_url/platform/services?domain=$domain&service=$service"
-
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
 			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.created_by] | join(\",\")'", returnStdout: true)
-
 	def values = curlOutput.split(',')
 
 	echo "Services : $values"
@@ -1104,27 +1061,20 @@ def loadServiceInfo() {
  * Must be a service account which has access to all services
  */
  def setCredentials() {
-
 	def url = g_base_url + '/platform/login'
-
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		echo "user name is $UNAME"
-
 		def login_json = []
-
 		login_json = [
 			'username': UNAME,
 			'password': PWD
 		]
-
 		def payload = JsonOutput.toJson(login_json)
-
 		try {
 			def token = sh (script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 				 $url \
 				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
-
 			token = token.replaceAll("[\n\r]", "")
 			return token
 		}
@@ -1135,18 +1085,15 @@ def loadServiceInfo() {
 	}
  }
 
-
 /**
 * Send email to the recipient with the build status and any additional text content
 * Supported build status values =  FAILED & COMPLETED
 * @return
 */
 def send_status_email (build_status) {
-
    echo "Sending email notification to " + owner
    body = ""
    bcc_email = ""
-
    if (build_status == 'COMPLETED'){
         body = "Service deletion completed for service : $service in the namespace : $domain"
    }else if (build_status == 'FAILED') {
@@ -1157,7 +1104,6 @@ def send_status_email (build_status) {
         echo "Unsupported build status, nothing to email.."
         return
    }
-
    try{
         mail (to: owner, bcc: bcc_email,
          subject: "Jazz Service Deletion Notification",
@@ -1174,15 +1120,14 @@ def send_status_email (build_status) {
  *
  */
 def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
-	//@TODO: Uncomment this line when calling Authenticated Catalog APIs
-	//withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JAZZ_ADMIN, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		try {
 			def url = "$g_base_url/platform/services?domain=$domain&service=$service"
 			def dev = env.WEBSITE_DEV_S3BUCKET
 			def stg = env.WEBSITE_STG_S3BUCKET
 			def prd = env.WEBSITE_PROD_S3BUCKET
 
-			echo "loading serviceMetaData, checking git repos"
+			echo "loading serviceMetaData, checking repos"
+
 			dir('service-metadata') {
 				checkout([$class: 'GitSCM', branches: [
 					[name: '*/master']
@@ -1192,11 +1137,6 @@ def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 				serviceMetadata = load "service-metadata-loader.groovy"
 				serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
 				serviceMetadata.setAuthToken(setCredentials())
-				echo "serviceMetadata token $serviceMetadata.g_login_token"
-				def testBucket = serviceMetadata.getBucket("dev")
-				echo "serviceMetadata bucketname : $testBucket"
-				//@TODO: Need a service account to be passed in to generate a TOKEN. Uncomment when calling Authenticated APIs
-				//serviceMetadata.setCredentials(UNAME, PWD)
 
 				// Load and set dependent utility module.
 				echo "loading util module"
@@ -1204,7 +1144,6 @@ def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 				serviceMetadata.setUtil(Util)
 			}
 		return serviceMetadata
-
 		}catch(ex) {
 			error "loadServiceMetadataModule Failed. "+ex.getMessage()
 		}

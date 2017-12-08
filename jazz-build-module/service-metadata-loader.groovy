@@ -5,13 +5,9 @@ import groovy.transform.Field
 @Field def Util
 echo "Service metadata module loaded successfully"
 
-
-
 /**
  * The service metadata loader module. This module will load all service metadata from respective catalog tables and
  * get it ready for Jenkins builds. It loads data for all service types.
- * @author: Deepu Sundaresan(DSundar3)
- * @date: Monday, October 2, 2017
 */
 
 @Field def g_dev_s3_bucket
@@ -73,14 +69,12 @@ def initialize(serviceType, service, domain, url, dev, stg, prd) {
  * Load the service metadata from Catalog
  *
  */
-
 def loadServiceMetaData() {
 	try {
 		def serviceData = sh (script: "curl GET  -k -v \
 			-H \"Content-Type: application/json\" \
 			-H \"Authorization: $g_login_token\" \
 			\"$util_url\"", returnStdout: true)
-
 		if(serviceData) {
 			def serviceDataObj = parseJson(serviceData)
 			if(serviceDataObj && serviceDataObj.data && serviceDataObj.data.services) {
@@ -91,11 +85,9 @@ def loadServiceMetaData() {
 				g_service_runtime = dataArr.runtime
 			}
 		}
-
 		if(!g_service_id) {
 			error "Could not fetch service metadata"
 		}
-
 	}
 	catch(e){
 		echo "error occured while fetching service metadata: " + e.getMessage()
@@ -117,27 +109,6 @@ def getBucket(stage) {
 		return g_prd_s3_bucket //"prod-serverless-static-website"
 	}
 }
-
-/**
- * For getting token to access authenticated catalog APIs.
- * Must be a service account which has access to all services
- */
- /*Dstart
- def setCredentials(user, pwd) {
-	def authToken = null
-	try {
-		authToken = Util.getAuthToken(user, pwd)
-		if(authToken) {
-			setAuthToken(authToken)
-		}else {
-			error "Could not generate Auth token for API access"
-		}
-	}
-	catch(e){
-		error "error occured: " + e.getMessage()
-	}
-
- } Dend*/
 
  /**
   * Core dump
