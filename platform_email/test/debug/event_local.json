@@ -1,0 +1,10 @@
+{
+    "stage" : "local",
+    "body":{
+      
+  }
+  ,
+    "method":"POST",
+    "principalId": "foo",
+    "resourcePath": "/platform/email"
+  }
