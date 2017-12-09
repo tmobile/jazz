@@ -69,7 +69,9 @@ module.exports.handler = (event, context, cb) => {
         var approvers = event.body.approvers;
         var userlist = "";
         var domain = (event.body.domain || "").toLowerCase();
-        var bitbucketName = event.body.service_name.toLowerCase();
+        var service_name = event.body.service_name.toLowerCase();
+
+        var bitbucketName = service_name;
         if (domain.length) {
             bitbucketName = domain + "-" + bitbucketName;
         }
@@ -82,7 +84,7 @@ module.exports.handler = (event, context, cb) => {
             token: config.BUILD_TOKEN,
             service_type: event.body.service_type,
             runtime: event.body.runtime,
-            service_name: event.body.service_name,
+            service_name: service_name,
             username: user_id,
             admin_group: userlist,
             domain: event.body.domain,
