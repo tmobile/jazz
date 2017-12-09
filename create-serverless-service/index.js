@@ -15,11 +15,13 @@
 // =========================================================================
 
 'use strict';
+
+const https = require('https');
+const request = require('request');
+
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const CronParser = require("./components/cron-parser.js");
-const https = require('https');
-const request = require('request');
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const util = require('util');
