@@ -25,6 +25,7 @@ const _ = require("lodash");
 const request = require('request');
 const AWS = require('aws-sdk');
 const rp = require('request-promise-native');
+const nodemailer = require('nodemailer');
 
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
@@ -43,12 +44,10 @@ module.exports.handler = (event, context, cb) => {
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Internal error, please reach out to admins")));
   	}
 
-	global.config = config;
-	  
 	try {
 		logger.info(JSON.stringify(event));
 
-		if (!event || !event.method || !event.resourcePath) {
+		if (!event || !event.method) {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "invalid or missing arguments")));
 		}
 
@@ -56,7 +55,31 @@ module.exports.handler = (event, context, cb) => {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Service operation not supported")));
 		}
 
-		var service_data = event.body;
+		if (!event.body || !event.body.from || !event.body.to || !event.body.subject) {
+			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Required params - from, to, subject missing")));
+		}
+
+		var data = event.body;
+
+		let transporter = nodemailer.createTransport({
+			SES: new aws.SES({
+				apiVersion: '2010-12-01'
+			})
+		});
+
+		transporter.sendMail({
+			from: data.from,
+			to: data.to,
+			subject: data.subject,
+			text: data.text
+		}, (err, info) => {
+			if (err) {
+				logger.error('Error in sending email ' + JSON.stringify(err));
+			}else {
+				loggger.info('Successfully sent email ' + JSON.stringify(info));
+			}
+		});
+		
 	} catch (e) {
 		logger.error('Error in sending email : ' + e.message);
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", e.message)));

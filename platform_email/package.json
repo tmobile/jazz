@@ -14,7 +14,8 @@
   "dependencies": {
     "lodash": "*",
     "request": "*",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "nodemailer": "*"
   },
   "devDependencies": {
     "mocha": "^v3.0.0",
