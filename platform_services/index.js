@@ -38,11 +38,12 @@ module.exports.handler = (event, context, cb) => {
     global.config = config;
 
     try {
-        global.services_table = config.services_table;
-
-        // event.method cannot be empty, throw error
         if (!event.method) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
+        }
+
+        if (!event.principalId) {
+            return cb(JSON.stringify(errorHandler.throwUnauthorizedError("You aren't authorized to access this service. Please login with your credentials.")));
         }
 
         // get service_id from the path
@@ -52,12 +53,15 @@ module.exports.handler = (event, context, cb) => {
         }
 
         // throw bad request error if id not specified for PUT/DELETE
-        if ((event.method === 'PUT' || event.method === 'DELETE') && service_id === undefined) {
+        if ((event.method === 'PUT' || event.method === 'DELETE') && !service_id) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("service id is required")));
         }
 
+        global.services_table = config.services_table;
+        global.userId = event.principalId;
+                
         // 1: GET service by id (/services/{service_id})
-        if (event.method === 'GET' && service_id !== undefined) {
+        if (event.method === 'GET' && service_id) {
             logger.info('GET service by ID : ' + service_id);
 
             async.series({
@@ -85,7 +89,7 @@ module.exports.handler = (event, context, cb) => {
 
         // 2: GET all services (/services)
         // 3: GET Filtered services (/services?field1=value&field2=value2&...)
-        if (event.method === 'GET' && service_id === undefined) {
+        if (event.method === 'GET' && !service_id) {
             logger.info('GET services');
             async.series({
                 // fetch services list from dynamodb, filter if required
@@ -107,7 +111,7 @@ module.exports.handler = (event, context, cb) => {
 
         // Update Service
         // 4: PUT service by id (/services/{service_id})
-        if (event.method === 'PUT' && service_id !== undefined) {
+        if (event.method === 'PUT' && service_id) {
             logger.info('Update service service_id ' + service_id);
 
             var update_data = event.body;
@@ -137,14 +141,14 @@ module.exports.handler = (event, context, cb) => {
                     logger.info(update_data);
 
                     // validate if input data is empty
-                    if (update_data === undefined || update_data === null) {
+                    if (!update_data) {
                         // return inputError
                         logger.error(' input data is empty ');
-                        cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
+                        return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
                     } else if (Object.keys(update_data).length === 0 && update_data.constructor === Object) {
                         // return inputError
                         logger.error('input data is empty ');
-                        cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
+                        return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
                     }
 
                     // list of fields that can be updated
@@ -155,7 +159,7 @@ module.exports.handler = (event, context, cb) => {
                         if (update_data.hasOwnProperty(field)) {
                             if (fields_list.indexOf(field) === -1) {
                                 logger.error('input contains fields other than allowed fields');
-                                cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid field " + field + ". Only following fields can be updated " + fields_list.join(", "))));
+                                return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid field " + field + ". Only following fields can be updated " + fields_list.join(", "))));
                                 break;
                             }
                         }
@@ -166,7 +170,7 @@ module.exports.handler = (event, context, cb) => {
                     for (var i = fields_list.length - 1; i >= 0; i--) {
                         field = fields_list[i];
                         var value = update_data[field];
-                        if (value === undefined || value === null || value === "") {
+                        if (value) {
                             field_exists = true;
                             break;
                         }
@@ -174,7 +178,7 @@ module.exports.handler = (event, context, cb) => {
                     if (field_exists === false) {
                         // return inputError
                         logger.error('No input data. Nothing to update service');
-                        cb(JSON.stringify(errorHandler.throwInputValidationError('No input data. Nothing to update service')));
+                        return cb(JSON.stringify(errorHandler.throwInputValidationError('No input data. Nothing to update service')));
                     }
                     onComplete(null, {
                         "result": "success",
@@ -197,7 +201,7 @@ module.exports.handler = (event, context, cb) => {
                 if (error) {
                     logger.error('error occured while updating service: ' + service_id);
                     logger.error(error);
-                    cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
                 } else {
 
                     var updatedService = data.updateServiceByID;
@@ -205,7 +209,7 @@ module.exports.handler = (event, context, cb) => {
                     logger.info('Updated service');
                     logger.info(updatedService);
 
-                    cb(null, responseObj({ 'message': 'Successfully Updated service with id: ' + service_id, 'updatedService': updatedService }, event.body));
+                    return cb(null, responseObj({ 'message': 'Successfully Updated service with id: ' + service_id, 'updatedService': updatedService }, event.body));
                 }
 
             });
@@ -214,7 +218,7 @@ module.exports.handler = (event, context, cb) => {
 
         // Delete Service
         // 5: DELETE service by id (/services/{service_id})
-        if (event.method === 'DELETE' && service_id !== undefined) {
+        if (event.method === 'DELETE' && service_id) {
             logger.info('Delete service service_id ' + service_id);
 
             async.series({
@@ -226,7 +230,7 @@ module.exports.handler = (event, context, cb) => {
                         } else {
                             if (Object.keys(data).length === 0 && data.constructor === Object) {
                                 logger.error('Cannot find service with id: ' + service_id);
-                                cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
+                                return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
                             } else {
                                 onComplete(null, {
                                     "result": "success",
@@ -244,7 +248,7 @@ module.exports.handler = (event, context, cb) => {
                 // Handle error
                 if (error) {
                     logger.error('Error in DeleteItem: ' + JSON.stringify(error, null, 2));
-                    cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
                 }
 
                 var deletedService = data.updateServiceByID;
@@ -252,18 +256,18 @@ module.exports.handler = (event, context, cb) => {
                 logger.info(deletedService);
 
                 if (deletedService === null) {
-                    cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
+                    return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
                 }
 
                 logger.info("DeleteItem succeeded");
-                cb(null, responseObj({ 'message': 'Service Successfully Deleted' }, event.path));
+                return cb(null, responseObj({ 'message': 'Service Successfully Deleted' }, event.path));
             });
         }
 
 
         // Create new service
         // 6: POST a service (/services)
-        if (event.method === 'POST' && service_id === undefined) {
+        if (event.method === 'POST' && !service_id) {
             logger.info('Create new service');
             var service_data = event.body;
 
@@ -271,7 +275,7 @@ module.exports.handler = (event, context, cb) => {
                 // Validate service_data for adding new service
                 validateServiceData: function(onComplete) {
                     // validate if input data is empty
-                    if (service_data === undefined || service_data === null || service_data === {}) {
+                    if (!service_data || Object.keys(service_data) == 0) {
                         // return inputError
                         onComplete({
                             "result": "inputError",
@@ -286,7 +290,7 @@ module.exports.handler = (event, context, cb) => {
                     for (var i = required_fields.length - 1; i >= 0; i--) {
                         field = required_fields[i];
                         var value = service_data[field];
-                        if (value === undefined || value === null || value === "") {
+                        if (!value) {
                             // return inputError
                             onComplete({
                                 "result": "inputError",
@@ -322,7 +326,7 @@ module.exports.handler = (event, context, cb) => {
                         } else {
                             if (data.length > 0) {
                                 logger.error('Service name in the specified domain already exists.');
-                                cb(JSON.stringify(errorHandler.throwInputValidationError('Service name in the specified domain already exists.')));
+                                return cb(JSON.stringify(errorHandler.throwInputValidationError('Service name in the specified domain already exists.')));
                             } else {
                                 onComplete(null, {
                                     "result": "success",

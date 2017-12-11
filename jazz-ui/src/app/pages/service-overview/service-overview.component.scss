@@ -421,7 +421,7 @@ section:focus
     /deep/ .btnT-radial-in{
         padding:0.25rem 1rem;
         border: 1px solid #ed008c;
-        width:110px;
+        width:10rem;
         margin:0;
         margin-left: 20px;
     }
@@ -459,8 +459,9 @@ section:focus
 }
 
 .endpoint-url{
-    width:70%;
+    width:calc(100% - 20rem);
     color:#1495bb !important;
+    word-break: break-all;
     img{
         width:25px;
         height:25px;
