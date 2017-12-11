@@ -1,0 +1,6 @@
+node {
+   echo 'Hello World'
+//  stage('triggering jobs') {
+//   build job: 'jazzui-build', parameters: [string(name: 'scm_branch', value: 'master')]
+//  }
+}
