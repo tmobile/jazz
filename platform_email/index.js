@@ -70,6 +70,8 @@ module.exports.handler = (event, context, cb) => {
 		transporter.sendMail({
 			from: data.from,
 			to: data.to,
+			cc: data.cc,
+			
 			subject: data.subject,
 			text: data.text
 		}, (err, info) => {
