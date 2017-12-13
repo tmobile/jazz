@@ -10,6 +10,7 @@ export class MessageService {
     constructor() {}
     
     successMessage(res, type){
+        console.log('res:',res, 'type:',type)
         var message="";
         if(res !== ""){
             if(res ==="true"){

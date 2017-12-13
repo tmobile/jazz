@@ -185,9 +185,12 @@ input {
     overflow-y: hidden;
     height: calc(100vh - 56px);
 }
-// .bottom-2{
-//   margin-bottom: 2rem;
-// }
+.bottom-2{
+  color:#fff;
+  p{
+      font-size: 1.1rem;
+  }
+}
 
 .login-form-errmsg
 {
