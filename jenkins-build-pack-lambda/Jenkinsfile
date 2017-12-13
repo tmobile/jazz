@@ -54,25 +54,24 @@ def Event_Status = [
 
 node ()  {
 	region = env.jazz_region
-	g_base_url = "https://" + env.API_KEY + ".execute-api.${region}.amazonaws.com/dev"
+	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/dev"
 	role = env.jazz_roleId
-   	echo "Jobs Params: " + params
-   	echo "Build triggered via branch: " + params.scm_branch
+	echo "Jobs Params: " + params
+	echo "Build triggered via branch: " + params.scm_branch
 	def _event = ""
 
-    echo "start"
+	echo "start"
 
-    def serviceName = params.service_name
-    def cfStackName = params.service_name
+	def serviceName = params.service_name
+	def cfStackName = params.service_name
 	def branch = params.scm_branch
 
-    def bitbucket_name = params.service_name
+	def bitbucket_name = params.service_name
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-	def var_bitbucket_base			= env.REPO_BASE
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/"+env.REPO_LOC+"/"
-	def var_api_key 				= env.API_KEY
-    def config
 
+	def var_bitbucket_framework_url = "http://${env.REPO_BASE}/scm/${env.REPO_LOC}/"
+	def var_api_key 				= env.API_KEY
+	def config
 
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name.trim()
@@ -85,11 +84,11 @@ node ()  {
 		current_environment = 'dev'
 	}
 
-    stage('Checkout code base') {
+	stage('Checkout code base') {
 
 		sh 'rm -rf ' + bitbucket_name
 		sh 'mkdir ' + bitbucket_name
-        sh 'pwd'
+		sh 'pwd'
 
 		dir(bitbucket_name)
 		{
@@ -102,9 +101,7 @@ node ()  {
 		{
 			return LoadConfiguration()
 		}
-
 	}
-
 
 	def runtime = config['providerRuntime']
 	def service = config['service']
@@ -121,21 +118,21 @@ node ()  {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev"
+  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:${function}:${env.env_name_prefix}-cloud-logs-streamer-dev"
 	
 	echo "logStreamer:: " + logStreamer
 	
 	def domain = config['domain']
 
 	if (domain  && domain.trim()!="") {
-			serviceName = domain.trim() + "-" + service
-			cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
+		serviceName = domain.trim() + "-${service}"
+		cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
 	}
 
-	serviceName = env.env_name_prefix + "-" + serviceName
+	serviceName = "${env.env_name_prefix}-${serviceName}"
 	cfStackName = serviceName
 
-    echo serviceName+"******************************************************* "
+	echo serviceName+"******************************************************* "
 
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
 		isEventSchdld = true
@@ -296,7 +293,6 @@ def echoServerlessFile() {
 	echo "serverless file data $serverlessyml"
 }
 
-
 def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
 	echo "addEvents to serverless.yml file"
 	def sedCommand = "s/eventsDisabled/events/g";
@@ -348,8 +344,9 @@ def LoadConfiguration() {
 		}else {
 			cleanedList.add(i)
 		}
-		}
-		def newItem = ["subnetIds", ""]
+	}
+	
+	def newItem = ["subnetIds", ""]
 	for (item in cleanedList) {
 		// Clean up to avoid issues with more ":" in the values
 		item = item.replaceAll(" ", "").replaceFirst(":", "#");
@@ -357,12 +354,13 @@ def LoadConfiguration() {
 		def eachItemList = item.tokenize("#")
 		//handle empty values
 		def value = "";
+	
 		if(eachItemList[1]) {
 			value = eachItemList[1].trim();
 		}
+	
 		if(eachItemList[0].trim() == "securityGroupIds")
 		{
-
 			if(value.indexOf('"') == -1)
 				value = "\"" + value + "\""
 			echo value
@@ -372,7 +370,6 @@ def LoadConfiguration() {
 		{
 			if(newItem[1].trim()  == "")
 				newItem[1] = "\""  + eachItemList[1].trim()
-
 			else
 				newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
 
@@ -380,16 +377,16 @@ def LoadConfiguration() {
 		else if(eachItemList[0]) {
 			prop.put(eachItemList[0].trim(), value)
 		}
-
 	}
+
 	if(newItem[1] != "")
 	{
-	 newItem[1] =  newItem[1].trim()  + "\""
+	 	newItem[1] =  newItem[1].trim()  + "\""
 		prop.put(newItem[0].trim(),  newItem[1].trim())
 		def key = newItem[0].trim()
 		def val = newItem[1].trim()
-
 	}
+
 	echo "Loaded configurations...$prop"
 	return prop
 }
@@ -488,8 +485,6 @@ def validateUserConfigurationYml() {
 	}else {
 		error "Key $prop['events'] is required"
 	}
-
-
 }
 
 
@@ -596,7 +591,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 		//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
 		//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
 
-		def configPackBBURL = "http://" + env.REPO_BASE + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git"
+		def configPackBBURL = "http://${env.REPO_BASE}/scm/${env.REPO_CORE}/serverless-config-pack.git"
 
 		dir('_config') {
 			checkout([$class: 'GitSCM', branches: [
@@ -659,15 +654,15 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(String service, String env, String region, String logStreamer) {
-	def lambda = "/aws/lambda/"+service+"-"+env
+	def lambda = "/aws/lambda/${service}-${env}"
 	def cloudLogsStreamer = logStreamer
 	try {
-		sh "aws logs create-log-group --log-group-name "+lambda+" --region "+region
+		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
 	}catch(Exception ex) {}// ignore if already existing
 
 	try {
 		filter_json = sh (
-			script: "aws logs describe-subscription-filters --output json --log-group-name \""+lambda+"\" --region "+region ,
+			script: "aws logs describe-subscription-filters --output json --log-group-name \""+lambda+"\" --region ${region}",
 			returnStdout: true
 		).trim()
 		echo "${filter_json}"
@@ -688,15 +683,15 @@ def generateServerlessYml(service, env, serviceName, cfStackName) {
 
         sh "pwd"
 
-		sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: " + serviceName + "-" + env + "/g' serverless.yml"
-		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
+		sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: ${serviceName}-${env}/g' serverless.yml"
+		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: ${cfStackName}/g' serverless.yml"
 }
 
 /**
 	Set the Lambda execution role. If user provided a custom role override the default.
 */
 def setLambdaExecutionRole(role) {
-	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#"+role+"#g' serverless.yml"
+	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#${role}#g' serverless.yml"
 }
 /**
 *   Clear Virtualenvironment
@@ -774,11 +769,12 @@ def send_status_email (email_id, build_status, service, email_content) {
    	echo "Sending build notification to " + email_id
    	body = ""
    	bcc_email = ""
-   	if (build_status == 'STARTED') {
-        body = "Build/deploy process just STARTED for service: " + service
+   	
+	if (build_status == 'STARTED') {
+		body = "Build/deploy process just STARTED for service: " + service
    	} else if (build_status == 'FAILED') {
 		build_url = env.BUILD_URL + 'console'
-        body = "Build/deploy process FAILED for service: " + service
+        body = "Build/deploy process FAILED for service: ${service}"
         body = body + "\n\nFor more details, please click this link: $build_url"
    	} else if (build_status == 'COMPLETED'){
         body = "Build/deploy process COMPLETED successfully for service: $service"
@@ -808,7 +804,7 @@ def updateServiceInDB(service_id, domain, devApiID, region, status) {
 		echo "svc id ===============" + service_id
 		echo "domain ===============" + domain
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: "+g_login_token+"\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id + "/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${g_login_token}\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://${devApiID}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id}/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
