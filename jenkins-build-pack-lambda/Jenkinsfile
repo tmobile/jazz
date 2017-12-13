@@ -774,7 +774,7 @@ def send_status_email (email_id, build_status, service, email_content) {
 		body = "Build/deploy process just STARTED for service: " + service
    	} else if (build_status == 'FAILED') {
 		build_url = env.BUILD_URL + 'console'
-        body = "Build/deploy process FAILED for service: ${service}"
+		body = "Build/deploy process FAILED for service: ${service}"
         body = body + "\n\nFor more details, please click this link: $build_url"
    	} else if (build_status == 'COMPLETED'){
         body = "Build/deploy process COMPLETED successfully for service: $service"
