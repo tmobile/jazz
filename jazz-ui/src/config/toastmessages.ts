@@ -71,7 +71,7 @@ export const toastMessage = {
     "login":{
         "fail":"Is that you? Your login failed. So please try again..",
         "error400":"Your login failed. Seems like something went wrong.",
-        "error401":"Your login failed. Seems like something went wrong.",
+        "error401":"Token expired",
         "error404":"Your login failed. Seems like something went wrong.",
         "error500":"Your login failed. Seems like something went wrong.",
         "error0":"Your login failed, seems like we can't reach our servers."
@@ -79,11 +79,9 @@ export const toastMessage = {
     "register":{
         "success":"A verification email is sent to ",
         "error400":"Your registration failed. Seems like something went wrong.",
-        "error401":"Your registration failed. Seems like something went wrong.",
+        "error401":"Token expired",
         "error404":"Your registration failed. Seems like something went wrong.",
-        "error500":"Your registration failed. Seems like something went wrong.",
-         "error0":"Your registration failed, seems like we can't reach our servers."
-    },
+        "error500":"Your registration failed. Seems like something went wrong."},
     "error404":{
         "errorTxt":"Uh-oh, looks like you took a wrong turn, let's see if we can turn around.",
         "errorHdr":"Are you lost?"
@@ -107,7 +105,19 @@ export const toastMessage = {
         "success":"updated succesfully",
         "error400":"Something went wrong while updating the service details. Please try again",
         "error500":"Something went wrong while updating the service details. Please try again",
-
-       
+    },
+    "reset":{
+        "success":"Verification Code is sent to your registered email",
+        "error400":"Something went wrong while sending your request. Please try again",
+        "error401":"Token expired",
+        "error404":"Your request failed. Seems like something went wrong.",
+        "error500":"Your request failed. Seems like something went wrong."
+    },
+    "updatepwd":{
+        "success":"Password updated successfully",
+        "error400":"Something went wrong while updating the password. Please try again",
+        "error401":"Token expired",
+        "error404":"Your request to password update failed. Seems like something went wrong.",
+        "error500":"Your request to password update failed. Seems like something went wrong."
     }
 };

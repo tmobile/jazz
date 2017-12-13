@@ -22,8 +22,8 @@
                 
                 <div class="form-row bottom-2" *ngIf="new_pwd_req">
                     <div class="form-label"> Verification Code </div>
-                    <input required class='ip-usr' [class.err-border]='err_brd' type="number" name='verificationCode' [(ngModel)]="model.verificationCode" (ngModelChange)="onChange($event)">
-                    <p>Verification code is sent to your registered email id </p>
+                    <input required class='ip-usr' [class.err-border]='err_brd' type="text" name='verificationCode' [(ngModel)]="model.verificationCode" (ngModelChange)="onChange($event)">
+                    <p>Verification code is sent to your registered email</p>
                 </div>
                 
                 <div class="form-row bottom-2" *ngIf="!forgot_password || register || new_pwd_req">
@@ -52,7 +52,7 @@
         <div class="btn-wrp">
             <btn-jazz-primary *ngIf="!register && !forgot_password && !new_pwd_req" [text]="buttonText" (click)="login($event)" newclass="loginbutton"></btn-jazz-primary>
             <btn-jazz-primary *ngIf="register && !forgot_password && !new_pwd_req" [text]="'REGISTER'" (click)="registerUser($event)" newclass="loginbutton" [disablePrimaryBtn]= '(!username.valid && (username.dirty || username.touched)) || (!password.valid && (password.dirty || password.touched)) || (!model.username) || (!model.password) || (!model.usercode)'></btn-jazz-primary>
-            <btn-jazz-primary *ngIf="!register && (forgot_password || new_pwd_req)" [text]="'SUBMIT'" (click)="resetPassword($event)" newclass="loginbutton" [disablePrimaryBtn]='(!model.username) ||(!username.valid && (username.dirty || username.touched))'></btn-jazz-primary>            
+            <btn-jazz-primary *ngIf="!register && (forgot_password || new_pwd_req)" [text]="'SUBMIT'" (click)="resetPassword($event)" newclass="loginbutton" [disablePrimaryBtn]='disableLoginBtn() || (!username.valid && (username.dirty || username.touched))'></btn-jazz-primary>            
         </div>
         <div class="forgot-password">
             <a (click)="toggleReg('newPassword')">{{regist}}</a>
