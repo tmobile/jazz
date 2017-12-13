@@ -33,7 +33,8 @@ export class LoginComponent implements OnInit {
     register:boolean = false;
     model: any = {
         username: '',
-        password: ''
+        password: '',
+        verificationCode:''
     };
     error: any = {
         username: '',
@@ -50,6 +51,7 @@ export class LoginComponent implements OnInit {
     err_password_brd:boolean=false;
     forgot_password:boolean=false;
     userEmail:string= 'User Email';
+    new_pwd_req:boolean=false;
 
     constructor(
         private router: Router,
@@ -102,7 +104,8 @@ export class LoginComponent implements OnInit {
     toggleReg(selected){
        this.onChange(selected);
        this.model.username=this.model.password="";
-
+    //    alert(selected);
+    //    alert(this.regist);
         if(selected == 'register'){
             this.register = true;
             this.regist='Back to login';
@@ -113,6 +116,7 @@ export class LoginComponent implements OnInit {
                 this.forgot_password=true;
                 this.regist='Back to login';
             } else{
+                this.new_pwd_req=false;
                 this.userEmail = 'User Email';
                 this.forgot_password=false;
                 this.regist='Forgot Password';
@@ -222,21 +226,59 @@ export class LoginComponent implements OnInit {
         });
         }
         resetPassword(e){
-            var payload = {
-                'email': this.model.username
-            };
-            this.http.post('/platform/usermanagement/reset', payload).subscribe(
-                response =>{
-                    console.log(response);
-                }, error => {
-                    console.log(error);
-                }
-            );
-            this.register = false;
-            this.userEmail = 'User Email';
-            this.forgot_password=false;
-            this.regist='Forgot Password';
-            this.onChange(e);
-            this.model.username=this.model.password="";
+            debugger;
+            console.log(e);
+            console.log(this.forgot_password);
+            if(this.forgot_password) {
+                let payload = {
+                    'email': this.model.username
+                };
+                console.log('', payload);
+                this.http.post('/platform/usermanagement/reset', payload).subscribe(
+                    response =>{
+                        console.log(response);
+                        this.new_pwd_req=true;
+                        // this.register = false;
+                        this.userEmail = 'Registered Email';
+                        this.forgot_password=false;
+                        // this.regist='Forgot Password';
+                        this.onChange(e);
+                        this.model.password=this.model.verificationCode="";
+                    }, error => {
+                        console.log(error);
+                    }
+                );
+                
+            } else if(this.new_pwd_req) {
+                let payload = {
+                    'email': this.model.username,
+                    'verificationCode': this.model.verificationCode,
+                    'password': this.model.password
+                };
+                console.log('', payload);
+                this.http.post('/platform/usermanagement/updatepwd', payload).subscribe(
+                    response =>{
+                        console.log(response);
+                            this.new_pwd_req=false;
+                            this.register = false;
+                            this.userEmail = 'User Email';
+                            this.forgot_password=false;
+                            this.regist='Forgot Password';
+                            this.onChange(e);
+                            this.userEmail=this.model.password=this.model.verificationCode="";
+                    },
+                    error=>{
+                        console.log(error)
+                    }
+                );
+                // this.new_pwd_req=false;
+                // this.register = false;
+                // this.userEmail = 'User Email';
+                // this.forgot_password=false;
+                // this.regist='Forgot Password';
+                // this.onChange(e);
+                // this.userEmail=this.model.password=this.model.verificationCode="";
+            }
+            
         }
 }

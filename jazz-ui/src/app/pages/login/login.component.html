@@ -19,9 +19,16 @@
                             </div>
                      </div>
                 </div>
-                <div class="form-row bottom-2" *ngIf="!forgot_password || register">
+                
+                <div class="form-row bottom-2" *ngIf="new_pwd_req">
+                    <div class="form-label"> Verification Code </div>
+                    <input required class='ip-usr' [class.err-border]='err_brd' type="number" name='verificationCode' [(ngModel)]="model.verificationCode" (ngModelChange)="onChange($event)">
+                    <p>Verification code is sent to your registered email id </p>
+                </div>
+                
+                <div class="form-row bottom-2" *ngIf="!forgot_password || register || new_pwd_req">
                         <div class="form-label">Password </div>
-                        <input required minlength="6" (keyup.enter)="login()" [class.err-border]='err_password_brd || (model.password && (!password.valid && (password.dirty || password.touched)) && register)' type="password" name='password' [(ngModel)]="model.password"  (ngModelChange)="onChange($event)" #password='ngModel'>
+                        <input required minlength="6" [class.err-border]='err_password_brd || (model.password && (!password.valid && (password.dirty || password.touched)) && register)' type="password" name='password' [(ngModel)]="model.password"  (ngModelChange)="onChange($event)" #password='ngModel'>
                         <ul class='login-form-errmsg' *ngIf="model.password && (!password.valid && (password.dirty || password.touched)) && register">
                             Password must be atleast 6 characters long
                         </ul>
@@ -32,7 +39,6 @@
                                 </div>
                          </div>
                 </div>
-
                 <div *ngIf="register" class="form-row">
 
                     <div class="form-label">Registration Code</div>
@@ -44,9 +50,9 @@
         </div>
 
         <div class="btn-wrp">
-            <btn-jazz-primary *ngIf="!register && !forgot_password" [text]="buttonText" (click)="login($event)" newclass="loginbutton"></btn-jazz-primary>
-            <btn-jazz-primary *ngIf="register && !forgot_password" [text]="'REGISTER'" (click)="registerUser($event)" newclass="loginbutton" [disablePrimaryBtn]= '(!username.valid && (username.dirty || username.touched)) || (!password.valid && (password.dirty || password.touched)) || (!model.username) || (!model.password) || (!model.usercode)'></btn-jazz-primary>
-            <btn-jazz-primary *ngIf="!register && forgot_password" [text]="'SUBMIT'" (click)="resetPassword($event)" newclass="loginbutton" [disablePrimaryBtn]='(!model.username) ||(!username.valid && (username.dirty || username.touched))'></btn-jazz-primary>            
+            <btn-jazz-primary *ngIf="!register && !forgot_password && !new_pwd_req" [text]="buttonText" (click)="login($event)" newclass="loginbutton"></btn-jazz-primary>
+            <btn-jazz-primary *ngIf="register && !forgot_password && !new_pwd_req" [text]="'REGISTER'" (click)="registerUser($event)" newclass="loginbutton" [disablePrimaryBtn]= '(!username.valid && (username.dirty || username.touched)) || (!password.valid && (password.dirty || password.touched)) || (!model.username) || (!model.password) || (!model.usercode)'></btn-jazz-primary>
+            <btn-jazz-primary *ngIf="!register && (forgot_password || new_pwd_req)" [text]="'SUBMIT'" (click)="resetPassword($event)" newclass="loginbutton" [disablePrimaryBtn]='(!model.username) ||(!username.valid && (username.dirty || username.touched))'></btn-jazz-primary>            
         </div>
         <div class="forgot-password">
             <a (click)="toggleReg('newPassword')">{{regist}}</a>
@@ -54,8 +60,6 @@
         <div class="separator-row" *ngIf="!forgot_password && !register"></div>
         <div class="newUser" *ngIf="!forgot_password && !register">
             <a (click)="toggleReg('register')">Register</a>
-            <!-- <div>Don’t have a Corp Account?</div>
-            <a target="_blank" href="https://pacman.t-mobile.com/sign-up">Sign Up</a> -->
         </div>
     </div>
 </div>
