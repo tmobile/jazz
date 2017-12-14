@@ -25,7 +25,6 @@
 const utils = require("../utils.js")();
 
 module.exports = (query, getAllRecords, onComplete) => {
-  console.log(getAllRecords);
     // initialize dynamodb
     var dynamodb = utils.initDynamodb();
 
