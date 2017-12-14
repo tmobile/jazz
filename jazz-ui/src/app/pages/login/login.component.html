@@ -10,8 +10,8 @@
 
                     <div class="form-label">{{userEmail}}</div>
 
-                    <input required class='ip-usr' pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,4}$" [class.err-border]='err_username_brd || (model.username &&(!username.valid && (username.dirty || username.touched)) && register)'  (keyup.enter)="login()" type="text" name='Username' [(ngModel)]="model.username" (ngModelChange)="onChange($event)" #username='ngModel'>
-                    <p class='login-form-errmsg' *ngIf="model.username && (!username.valid && (username.dirty || username.touched)) && register && !forgot_password">Please enter a valid email</p>
+                    <input required class='ip-usr' pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$" [class.err-border]='err_username_brd || (model.username &&(!username.valid && (username.dirty || username.touched)))'  (keyup.enter)="login()" type="email" name='Username' [(ngModel)]="model.username" (ngModelChange)="onChange($event)" #username='ngModel'>
+                    <p class='login-form-errmsg' *ngIf="model.username && (!username.valid && (username.dirty || username.touched))">Please enter a valid email</p>
                     <div  class='hide-er' [class.error-msg]="error_username_disp">
                             <div>
                                 <span class="icon-icon-alert"></span>
@@ -22,14 +22,20 @@
                 
                 <div class="form-row bottom-2" *ngIf="new_pwd_req">
                     <div class="form-label"> Verification Code </div>
-                    <input required class='ip-usr' [class.err-border]='err_brd' type="text" name='verificationCode' [(ngModel)]="model.verificationCode" (ngModelChange)="onChange($event)">
-                    <p>Verification code is sent to your registered email</p>
+                    <input required class='ip-usr' [class.err-border]='err_brd' type="text" name='verificationCode' [class.err-border]='err_verificationCode_brd || (model.verificationCode &&(!verificationCode.valid && (verificationCode.dirty || verificationCode.touched)))' [(ngModel)]="model.verificationCode" (ngModelChange)="onChange($event)" #verificationCode='ngModel'>
+                    <p *ngIf='!error_verificationCode_disp'>Verification code is sent to your registered email</p>
+                    <div  class='hide-er' [class.error-msg]="error_verificationCode_disp">
+                        <div>
+                            <span class="icon-icon-alert"></span>
+                            {{error.verificationCode}}
+                        </div>
+                 </div>
                 </div>
                 
                 <div class="form-row bottom-2" *ngIf="!forgot_password || register || new_pwd_req">
                         <div class="form-label">Password </div>
-                        <input required minlength="6" [class.err-border]='err_password_brd || (model.password && (!password.valid && (password.dirty || password.touched)) && register)' type="password" name='password' [(ngModel)]="model.password"  (ngModelChange)="onChange($event)" #password='ngModel'>
-                        <ul class='login-form-errmsg' *ngIf="model.password && (!password.valid && (password.dirty || password.touched)) && register">
+                        <input required minlength="6" [class.err-border]='err_password_brd || (model.password && (!password.valid && (password.dirty || password.touched))) && (register || new_pwd_req)' type="password" name='password' [(ngModel)]="model.password"  (ngModelChange)="onChange($event)" #password='ngModel'>
+                        <ul class='login-form-errmsg' *ngIf="model.password && (!password.valid && (password.dirty || password.touched)) && (register || new_pwd_req)">
                             Password must be atleast 6 characters long
                         </ul>
                         <div *ngIf="!register" class='hide-er' [class.error-msg]="error_password_disp">
@@ -52,10 +58,13 @@
         <div class="btn-wrp">
             <btn-jazz-primary *ngIf="!register && !forgot_password && !new_pwd_req" [text]="buttonText" (click)="login($event)" newclass="loginbutton"></btn-jazz-primary>
             <btn-jazz-primary *ngIf="register && !forgot_password && !new_pwd_req" [text]="'REGISTER'" (click)="registerUser($event)" newclass="loginbutton" [disablePrimaryBtn]= '(!username.valid && (username.dirty || username.touched)) || (!password.valid && (password.dirty || password.touched)) || (!model.username) || (!model.password) || (!model.usercode)'></btn-jazz-primary>
-            <btn-jazz-primary *ngIf="!register && (forgot_password || new_pwd_req)" [text]="'SUBMIT'" (click)="resetPassword($event)" newclass="loginbutton" [disablePrimaryBtn]='disableLoginBtn() || (!username.valid && (username.dirty || username.touched))'></btn-jazz-primary>            
+            <btn-jazz-primary *ngIf="!register && (forgot_password || new_pwd_req)" [text]="'SUBMIT'" (click)="resetPassword($event)" newclass="loginbutton" [disablePrimaryBtn]='disableLoginBtn() || (!username.valid && (username.dirty || username.touched)) || (model.password && (!password.valid && (password.dirty || password.touched)))'></btn-jazz-primary>            
         </div>
         <div class="forgot-password">
             <a (click)="toggleReg('newPassword')">{{regist}}</a>
+            <br>
+            <!-- <span *ngIf='forgot_password && !new_pwd_req'> | </span> -->
+            <a *ngIf='forgot_password && !new_pwd_req' (click)="new_pwd_req=true;disableLoginBtn()">Have verification code?</a>
         </div>
         <div class="separator-row" *ngIf="!forgot_password && !register"></div>
         <div class="newUser" *ngIf="!forgot_password && !register">
