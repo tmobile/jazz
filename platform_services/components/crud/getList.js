@@ -25,7 +25,7 @@
 const utils = require("../utils.js")();
 const _ = require("lodash");
 
-module.exports = (query, onComplete) => {
+module.exports = (query, method, onComplete) => {
     // initialize dynamodb
     var dynamodb = utils.initDynamodb();
 
@@ -84,7 +84,7 @@ module.exports = (query, onComplete) => {
 		});
     }
 
-    //if (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase())) {
+    if (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()) || method === 'GET') {
         var ddb_created_by = utils.getDatabaseKeyName("created_by");
 
         // filter for services created by current user
@@ -92,7 +92,7 @@ module.exports = (query, onComplete) => {
         attributeValues[(":" + ddb_created_by)] = {
             'S': global.userId
         };
-    //}
+    }
 
     if (filter !== "") {
         filter = filter.substring(0, filter.length - insertAnd.length); // remove insertAnd at the end
