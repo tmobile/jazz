@@ -52,6 +52,8 @@ export class LoginComponent implements OnInit {
     forgot_password:boolean=false;
     userEmail:string= 'User Email';
     new_pwd_req:boolean=false;
+    error_verificationCode_disp:boolean=false;
+    err_verificationCode_brd:boolean=false;
 
     constructor(
         private router: Router,
@@ -99,6 +101,8 @@ export class LoginComponent implements OnInit {
         this.err_username_brd=false;
         this.error_password_disp=false;
         this.err_password_brd=false;
+        this.error_verificationCode_disp=false;
+        this.err_verificationCode_brd=false;
       }
 
     toggleReg(selected) {
@@ -215,7 +219,9 @@ export class LoginComponent implements OnInit {
                     let message=this.toastmessage.successMessage("success","register");
                     this.toast_pop('success', '', message + this.model.username);
                     this.clearRegForm();
-                    this.toggleReg('register');
+                    // this.toggleReg('register');
+                    this.register = false;
+                    this.regist = 'Forgot Password';
                 },
                 err => {
                     let error = JSON.parse(err._body);
@@ -224,7 +230,7 @@ export class LoginComponent implements OnInit {
                 });
         }
         disableLoginBtn(){
-            if (this.forgot_password) {
+            if (this.forgot_password && !this.new_pwd_req) {
                 if((!this.model.username) || (!this.model.username.valid && (this.model.username.dirty || this.model.username.touched))) {
                     return true;
                 }
@@ -236,7 +242,12 @@ export class LoginComponent implements OnInit {
             }
         }
         resetPassword(e) {
-            if(this.forgot_password) {
+            if (this.forgot_password && !this.new_pwd_req) {
+                if(!this.model.username){
+                    this.error_username_disp = true;
+                    this.err_username_brd = true;
+                    this.error.username = 'Username cannot be empty';
+                }
                 let payload = {
                     'email': this.model.username
                 };
@@ -260,7 +271,22 @@ export class LoginComponent implements OnInit {
                         }
                         this.toast_pop('error', 'Oops!', errorMessage);
                     });
-            } else if(this.new_pwd_req) {
+            } else if (this.new_pwd_req) {
+                if(!this.model.username){
+                    this.error_username_disp = true;
+                    this.err_username_brd = true;
+                    this.error.username = 'Username cannot be empty';
+                }
+                if (!this.model.password) {
+                    this.error_password_disp= true;
+                    this.err_password_brd = true;
+                    this.error.password = 'Password cannot be empty';
+                }
+                if (!this.model.verificationCode) {
+                    this.error_verificationCode_disp= true;
+                    this.err_verificationCode_brd = true;
+                    this.error.verificationCode = 'Verification code cannot be empty';
+                }
                 let payload = {
                     'email': this.model.username,
                     'verificationCode': this.model.verificationCode,
