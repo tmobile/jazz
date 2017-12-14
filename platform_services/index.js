@@ -26,6 +26,7 @@ const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const utils = require("./components/utils.js")();
 const crud = require("./components/crud")();
+const _ = require("lodash");
 
 const async = require('async');
 
@@ -59,6 +60,16 @@ module.exports.handler = (event, context, cb) => {
 
         global.services_table = config.services_table;
         global.userId = event.principalId;
+        var getAllRecords = false;
+        //check if the user has the proper credentials to retrieve all service information based on scenario
+        var getAllCheck = function(eventMethod){
+          //for non admins or for any "get" requests initiated, all services should not be searched.
+          if((global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()))
+              || eventMethod === "GET"){
+                return false;
+          }
+          return true;
+        };
 
         // 1: GET service by id (/services/{service_id})
         if (event.method === 'GET' && service_id) {
@@ -95,7 +106,8 @@ module.exports.handler = (event, context, cb) => {
                 // fetch services list from dynamodb, filter if required
                 fetchServices: function(onComplete) {
                     var query = event.query;
-                    crud.getList(query, event.method, onComplete);
+                    getAllRecords = getAllCheck(event.method);
+                    crud.getList(query, getAllRecords, onComplete);
                 }
             }, function(error, result) {
                 // Handle error
@@ -320,7 +332,8 @@ module.exports.handler = (event, context, cb) => {
                 },
                 // Check if a service with same domain and service_name combination exists
                 validateServiceExists: function(onComplete) {
-                    crud.getList({ 'service': service_data.service, 'domain': service_data.domain }, event.method, function onServiceGet(error, data) {
+                    getAllRecords = getAllCheck(event.method);
+                    crud.getList({ 'service': service_data.service, 'domain': service_data.domain }, getAllRecords, function onServiceGet(error, data) {
                         if (error) {
                             onComplete(error, null);
                         } else {

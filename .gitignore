@@ -11,3 +11,4 @@ node_modules
 .recommenders/
 */target/
 .nyc_output/
+npm-debug.log

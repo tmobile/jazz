@@ -23,9 +23,9 @@
 **/
 
 const utils = require("../utils.js")();
-const _ = require("lodash");
 
-module.exports = (query, method, onComplete) => {
+module.exports = (query, getAllRecords, onComplete) => {
+  console.log(getAllRecords);
     // initialize dynamodb
     var dynamodb = utils.initDynamodb();
 
@@ -84,7 +84,7 @@ module.exports = (query, method, onComplete) => {
 		});
     }
 
-    if (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()) || method === 'GET') {
+    if (!getAllRecords) {
         var ddb_created_by = utils.getDatabaseKeyName("created_by");
 
         // filter for services created by current user
