@@ -135,14 +135,14 @@ node ()  {
 	}
 
 	stage ('Pre-Build Validation'){
-		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
+		//sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
 		try {
 			loadServiceInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment)
 			send_status_email(created_by, 'STARTED', params.service_name, '')
 			clearVirtualEnv()
 			validateDeploymentConfigurations(config)
 			if (isEventSchdld == true){
-              	// validateUserConfigurationYml()
+				 //validateUserConfigurationYml()
 			}
 		}catch(ex) {
 			send_status_email(created_by, 'FAILED', params.service_name, '')
@@ -703,12 +703,12 @@ def send_status_email (email_id, build_status, service, email_content) {
  	} else if (build_status == 'COMPLETED'){
 		body = "Build/deploy process COMPLETED successfully for service: $service"
  	} else {
-    echo "Unsupported build status, nothing to email.."
-    return
+		echo "Unsupported build status, nothing to email.."
+		return
  	}
 
  	if (email_content != ''){
-    body = body + "\n\n" + email_content
+		body = body + "\n\n" + email_content
 	}
 
 	try{
