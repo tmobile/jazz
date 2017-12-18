@@ -110,6 +110,11 @@
                     "in": "query",
                     "required": false,
                     "type": "string"
+                }, {
+                    "name": "allServices",
+                    "in": "query",
+                    "required": false,
+                    "type": "string"
                 }],
                 "responses": {
                     "200": {

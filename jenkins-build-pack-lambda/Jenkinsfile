@@ -114,14 +114,14 @@ node ()  {
 	def internalAccess = config['require_internal_access']
 
 	def roleARN = role.replaceAll("/", "\\\\/")
-	
+
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
   	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${env.env_name_prefix}-cloud-logs-streamer-dev"
-	
+
 	echo "logStreamer:: " + logStreamer
-	
+
 	def domain = config['domain']
 
 	if (domain  && domain.trim()!="") {
@@ -232,7 +232,7 @@ node ()  {
 	else {
 		stage ('Deployment to Dev Env'){
 			sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			
+
 			dir(bitbucket_name){
 
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
@@ -345,7 +345,7 @@ def LoadConfiguration() {
 			cleanedList.add(i)
 		}
 	}
-	
+
 	def newItem = ["subnetIds", ""]
 	for (item in cleanedList) {
 		// Clean up to avoid issues with more ":" in the values
@@ -354,11 +354,11 @@ def LoadConfiguration() {
 		def eachItemList = item.tokenize("#")
 		//handle empty values
 		def value = "";
-	
+
 		if(eachItemList[1]) {
 			value = eachItemList[1].trim();
 		}
-	
+
 		if(eachItemList[0].trim() == "securityGroupIds")
 		{
 			if(value.indexOf('"') == -1)
@@ -708,7 +708,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	setCredentials(g_base_url + '/platform/login')
 
-	def url = "$serviceUrl?domain=$domain&service=$service"
+	def url = "$serviceUrl?domain=$domain&service=$service&allServices=true"
 
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
 			-H \"Authorization: $g_login_token\" \"$url\" | $jq -r '.data[0] | [.id, .created_by] | join(\",\")'", returnStdout: true)
@@ -769,7 +769,7 @@ def send_status_email (email_id, build_status, service, email_content) {
    	echo "Sending build notification to " + email_id
    	body = ""
    	bcc_email = ""
-   	
+
 	if (build_status == 'STARTED') {
 		body = "Build/deploy process just STARTED for service: " + service
    	} else if (build_status == 'FAILED') {

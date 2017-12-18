@@ -1043,7 +1043,7 @@ def loadEventsModule() {
 
 def loadServiceInfo() {
 	def token = setCredentials()
-	def url = "$g_base_url/platform/services?domain=$domain&service=$service"
+	def url = "$g_base_url/platform/services?domain=$domain&service=$service&allServices=true"
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
 			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.created_by] | join(\",\")'", returnStdout: true)
 	def values = curlOutput.split(',')

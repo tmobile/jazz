@@ -112,9 +112,9 @@ node() {
 	def domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
-  	
+
 	def internalAccess = config['require_internal_access']
-  	
+
 	def roleARN = role.replaceAll("/", "\\\\/")
 	def var_api_host_name = "${var_api_key}.execute-api.${region}.amazonaws.com"
 
@@ -174,7 +174,7 @@ node() {
 
 		if (params.scm_branch == 'master') {
 			stage('Deployment to Production Env') {
-				
+
 				sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
 				echo "starts Deployment to Production Env"
 
@@ -213,13 +213,13 @@ node() {
 						//validateSwaggerFile( service, domain, apiHostName )
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
-						
+
 						sh "${aws_api_import} --region ${region}  --update ${var_api_key} --deploy prod swagger/swagger.json "
 
 						def endpointUrl = "https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/prod/" + domain + "/" + params.service_name
 
 						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, endpointUrl)
-						
+
 						updateApiDocUrl(current_environment)
 
 						sh "aws s3 cp swagger/ s3://${api_doc_s3_bucket}/${domain}/${params.service_name}/${current_environment} --recursive "
@@ -270,7 +270,7 @@ node() {
 					//validateSwaggerFile( service, domain, apiHostName )
 					// import swagger api spec
 					echo "Deploying to staging API Gateway environment.."
-					
+
 					sh "$aws_api_import --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json"
 
 					def endpointUrl = "https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/dev/" + domain + "/" + params.service_name
@@ -789,7 +789,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	setCredentials(g_base_url + '/platform/login')
 
-	def url = "$serviceUrl?domain=$domain&service=$service"
+	def url = "$serviceUrl?domain=$domain&service=$service&allServices=true"
 
 	if (endpointKey == 'dev') {
 		preserveEnvKey = 'prod'
