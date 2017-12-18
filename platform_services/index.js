@@ -60,6 +60,19 @@ module.exports.handler = (event, context, cb) => {
         global.services_table = config.services_table;
         global.userId = event.principalId;
         var getAllRecords;
+        if(event.query && event.query.limit && event.query.limit == 10){
+          getAllRecords = false;
+        }
+        else{
+          getAllRecords = true;
+        }
+        /*
+        if(event.query && event.query.allServices){
+          getAllRecords = true;
+        }
+        else{
+          getAllRecords = false;
+        } */
 
         // 1: GET service by id (/services/{service_id})
         if (event.method === 'GET' && service_id) {
@@ -96,12 +109,6 @@ module.exports.handler = (event, context, cb) => {
                 // fetch services list from dynamodb, filter if required
                 fetchServices: function(onComplete) {
                     var query = event.query;
-                    if(query.allServices){
-                      getAllRecords = true;
-                    }
-                    else{
-                      getAllRecords = false;
-                    }
                     crud.getList(query, getAllRecords, onComplete);
                 }
             }, function(error, result) {
@@ -327,7 +334,7 @@ module.exports.handler = (event, context, cb) => {
                 },
                 // Check if a service with same domain and service_name combination exists
                 validateServiceExists: function(onComplete) {
-                    getAllRecords = true;
+                    getAllRecords = "true";
                     crud.getList({ 'service': service_data.service, 'domain': service_data.domain }, getAllRecords, function onServiceGet(error, data) {
                         if (error) {
                             onComplete(error, null);
