@@ -441,7 +441,6 @@ def checkServiceExists(service_name, domain, region) {
 			script: "curl -H \"Authorization: ${auth_token}\" 'https://${env.API_ID_DEV}.execute-api.${region}.amazonaws.com/dev/platform/is-service-available?domain=${domain}&service=${service_name}'" ,
 			returnStdout: true
 		).trim()
-		echo outputStr
 		def jsonParser = new groovy.json.JsonSlurper()
 		def resultJson = jsonParser.parseText(outputStr)
 		if(resultJson == null || resultJson.data == null || resultJson.data.available == null) {

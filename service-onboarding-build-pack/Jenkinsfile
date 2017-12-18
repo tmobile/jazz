@@ -405,7 +405,6 @@ node  {
  def getAuthToken() {
 	 
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-		echo "user name is $UNAME"
 
 		def loginUrl = g_base_url + "/platform/login"
 		def login_json = []
@@ -424,11 +423,9 @@ node  {
 				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
 
 			token = token.replaceAll("[\n\r]", "")
-			echo "auth_token : $token"
 			return token
 		}
 		catch(e){
-			echo "error occured: " + e.getMessage()
 			error "error occured: " + e.getMessage()
 		}
 	} 	
