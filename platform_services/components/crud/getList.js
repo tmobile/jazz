@@ -84,7 +84,7 @@ module.exports = (query, getAllRecords, onComplete) => {
 		});
     }
 
-    if (/*!getAllRecords ||*/ (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()))) {
+    if (!getAllRecords || (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()))) {
         var ddb_created_by = utils.getDatabaseKeyName("created_by");
 
         // filter for services created by current user

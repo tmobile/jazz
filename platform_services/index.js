@@ -59,20 +59,20 @@ module.exports.handler = (event, context, cb) => {
 
         global.services_table = config.services_table;
         global.userId = event.principalId;
-        var getAllRecords = true;
+        var getAllRecords;
         /*if(event.query && event.query.limit && event.query.limit == 10){
           getAllRecords = false;
         }
         else{
           getAllRecords = true;
         }*/
-        /*
+
         if(event.query && event.query.allServices){
           getAllRecords = true;
         }
         else{
           getAllRecords = false;
-        } */
+        } 
 
         // 1: GET service by id (/services/{service_id})
         if (event.method === 'GET' && service_id) {
