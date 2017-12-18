@@ -76,7 +76,6 @@ module.exports.handler = (event, context, cb) => {
 		params.domain = event.body.domain;
 		params.version = version;
 		params.db_service_id = event.body.id;
-        params.auth_token = event.headers.Authorization
 
 		var tracking_id = Guid.create().value;
 		params.tracking_id = tracking_id;

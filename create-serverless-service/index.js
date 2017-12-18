@@ -90,7 +90,6 @@ module.exports.handler = (event, context, cb) => {
             username: user_id,
             admin_group: userlist,
             domain: event.body.domain,
-            auth_token: event.headers.Authorization,
             description: event.body.description
         };
 

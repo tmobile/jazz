@@ -10,6 +10,7 @@ import groovy.transform.Field
 @Field def serviceMetadata
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
+@Field def auth_token = ''
 @Field def domain = ''
 @Field def service = ''
 @Field def owner = ''
@@ -72,7 +73,8 @@ node {
 	if(domain && domain != ""){
 		bitbucket_repo_name = domain + "-" + service_name
 	}
-
+	
+	auth_token = setCredentials()
 	loadServiceInfo()
 
 	sh 'rm -rf ' + bitbucket_repo_name
@@ -433,12 +435,12 @@ def validateInput(service_name, domain, version) {
  */
 def checkServiceExists(service_name, domain, region) {
 	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
+	
 	try {
 		def outputStr = sh (
-			script: "curl -H \"Authorization: ${params.auth_token}\" 'https://${env.API_ID_DEV}.execute-api.${region}.amazonaws.com/dev/platform/is-service-available?domain=${domain}&service=${service_name}'" ,
+			script: "curl -H \"Authorization: ${auth_token}\" 'https://${env.API_ID_DEV}.execute-api.${region}.amazonaws.com/dev/platform/is-service-available?domain=${domain}&service=${service_name}'" ,
 			returnStdout: true
 		).trim()
-		echo outputStr
 		def jsonParser = new groovy.json.JsonSlurper()
 		def resultJson = jsonParser.parseText(outputStr)
 		if(resultJson == null || resultJson.data == null || resultJson.data.available == null) {
@@ -462,7 +464,7 @@ def checkServiceExists(service_name, domain, region) {
 def deleteserviceindb(region, db_id) {
 	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
 	try {
-		sh "curl -X DELETE -k -v -H \"Authorization: ${params.auth_token}\" \
+		sh "curl -X DELETE -k -v -H \"Authorization: ${auth_token}\" \
 				'https://${env.API_ID_DEV}.execute-api.${region}.amazonaws.com/dev/platform/services/${db_id}'"
 		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 	}catch (ex) {
@@ -1030,7 +1032,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
 }
 
 def updateServiceInDB(service_id_in_db, devApiID, region, statusval) {
-  sh "curl -H \"Content-Type: application/json\"  -H \"Authorization: "+params.auth_token+"\" -X PUT -k -v -d \
+  sh "curl -H \"Content-Type: application/json\"  -H \"Authorization: "+auth_token+"\" -X PUT -k -v -d \
   		'{ \"status\": \"${statusval}\"}' https://${devApiID}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id_in_db}/"
 }
 
@@ -1042,10 +1044,9 @@ def loadEventsModule() {
 }
 
 def loadServiceInfo() {
-	def token = setCredentials()
 	def url = "$g_base_url/platform/services?domain=$domain&service=$service"
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.created_by] | join(\",\")'", returnStdout: true)
+			-H \"Authorization: $auth_token\" \"$url\" | $jq -r '.data[0] | [.created_by] | join(\",\")'", returnStdout: true)
 	def values = curlOutput.split(',')
 
 	echo "Services : $values"
