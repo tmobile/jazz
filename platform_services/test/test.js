@@ -333,7 +333,7 @@ describe('platform_services', function() {
     event.method = "GET";
     event.path.id = undefined;
     event.query.created_by = undefined;
-    event.query.allServices = true;
+    event.query.isAdmin = true;
 
     //user that is listed among admin_users
     event.principalId = "ecl!psa";
