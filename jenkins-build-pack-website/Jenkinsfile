@@ -761,7 +761,7 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 
 	echo "new json $updateJson"
 
-	def serviceUpdateUrl = "$serviceUrl/$service_id"
+	def serviceUpdateUrl = "$serviceUrl/$service_id?isAdmin=true"
 
 	def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
 		        -H \"accept: application/json\" \
