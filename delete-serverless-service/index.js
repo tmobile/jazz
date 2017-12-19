@@ -47,10 +47,7 @@ module.exports.handler = (event, context, cb) => {
 	} else if(!event.body.service_name) {
 		logger.error("Service Name is missing in the input");
 		return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Name is missing in the input")));
-	} else if (!event.headers || !event.headers.Authorization) {
-		logger.error("headers Authorization is missing in the input");
-        return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization not defined in header or approriate")));
-    }else if(!event.body.domain) {
+	} else if(!event.body.domain) {
 		logger.error("Domain key is missing in the input");
 		return cb(JSON.stringify(errorHandler.throwInputValidationError("Domain key is missing in the input")));
 	}else if(!event.body.id) {
@@ -76,7 +73,6 @@ module.exports.handler = (event, context, cb) => {
 		params.domain = event.body.domain;
 		params.version = version;
 		params.db_service_id = event.body.id;
-        params.auth_token = event.headers.Authorization
 
 		var tracking_id = Guid.create().value;
 		params.tracking_id = tracking_id;
