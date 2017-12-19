@@ -324,32 +324,33 @@ describe('platform_services', function() {
     assert.isTrue(allCases);
   });
 
-  // /*
-  // * Given a userID that IS listed among admin_users, a filter is not used for only the user's services
-  // * @param {object} event->event.method="GET", event.path.id is undefined
-  // * @params {object, function} default aws context, and callback function as defined in beforeEach
-  // */
-  // it("should return all relevant service data without filtering userID if user is an admin", function(){
-  //   event.method = "GET";
-  //   event.path.id = undefined;
-  //   event.query.created_by = undefined;
-  //
-  //   //user that is listed among admin_users
-  //   event.principalId = "ecl!psa";
-  //
-  //   var filterString = "SERVICE_CREATED_BY" + " = :" + "SERVICE_CREATED_BY";
-  //   var scanParam = ":SERVICE_CREATED_BY";
-  //   //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-  //   AWS.mock("DynamoDB", "scan", spy);
-  //   //trigger spy by calling index.handler()
-  //   var callFunction = index.handler(event, context, callback);
-  //   //assigning the item filter values passed to DynamoDB.scan as values to check against
-  //   var filterExp = spy.args[0][0].FilterExpression;
-  //   var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
-  //   var allCases = !filterExp.includes(filterString) && !expAttrVals[scanParam];
-  //   AWS.restore("DynamoDB");
-  //   assert.isTrue(allCases);
-  // });
+  /*
+  * Given a userID that IS listed among admin_users, a filter is not used for only the user's services
+  * @param {object} event->event.method="GET", event.path.id is undefined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should return all relevant service data without filtering userID if user is an admin", function(){
+    event.method = "GET";
+    event.path.id = undefined;
+    event.query.created_by = undefined;
+    event.query.isAdmin = true;
+
+    //user that is listed among admin_users
+    event.principalId = "ecl!psa";
+
+    var filterString = "SERVICE_CREATED_BY" + " = :" + "SERVICE_CREATED_BY";
+    var scanParam = ":SERVICE_CREATED_BY";
+    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB", "scan", spy);
+    //trigger spy by calling index.handler()
+    var callFunction = index.handler(event, context, callback);
+    //assigning the item filter values passed to DynamoDB.scan as values to check against
+    var filterExp = spy.args[0][0].FilterExpression;
+    var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
+    var allCases = !filterExp.includes(filterString) && !expAttrVals[scanParam];
+    AWS.restore("DynamoDB");
+    assert.isTrue(allCases);
+  });
 
   /*
   * Given a failed attempt at fetching data from DynamoDB, handler() should inform of error
