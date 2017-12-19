@@ -306,7 +306,7 @@ describe('platform_services', function() {
 
     //user that is not listed among admin_users
     var userId = "Mete0ra";
-    
+
     event.principalId = userId;
     var dataType = "S";
     var filterString = "SERVICE_CREATED_BY" + " = :" + "SERVICE_CREATED_BY";
@@ -333,7 +333,8 @@ describe('platform_services', function() {
     event.method = "GET";
     event.path.id = undefined;
     event.query.created_by = undefined;
-    
+    event.query.isAdmin = true;
+
     //user that is listed among admin_users
     event.principalId = "ecl!psa";
 

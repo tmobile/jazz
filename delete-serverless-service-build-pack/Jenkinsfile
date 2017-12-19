@@ -1031,7 +1031,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
 
 def updateServiceInDB(service_id_in_db, devApiID, region, statusval) {
   sh "curl -H \"Content-Type: application/json\"  -H \"Authorization: "+params.auth_token+"\" -X PUT -k -v -d \
-  		'{ \"status\": \"${statusval}\"}' https://${devApiID}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id_in_db}/"
+  		'{ \"status\": \"${statusval}\"}' https://${devApiID}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id_in_db}?isAdmin=true"
 }
 
 
@@ -1043,7 +1043,7 @@ def loadEventsModule() {
 
 def loadServiceInfo() {
 	def token = setCredentials()
-	def url = "$g_base_url/platform/services?domain=$domain&service=$service"
+	def url = "$g_base_url/platform/services?domain=$domain&service=$service&isAdmin=true"
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
 			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.created_by] | join(\",\")'", returnStdout: true)
 	def values = curlOutput.split(',')
