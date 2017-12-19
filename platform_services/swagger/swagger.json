@@ -111,7 +111,7 @@
                     "required": false,
                     "type": "string"
                 }, {
-                    "name": "allServices",
+                    "name": "isAdmin",
                     "in": "query",
                     "required": false,
                     "type": "string"
@@ -805,6 +805,11 @@
                     "schema": {
                         "$ref": "#/definitions/UpdateServiceObj"
                     }
+                }, {
+                    "name": "isAdmin",
+                    "in": "query",
+                    "required": false,
+                    "type": "string"
                 }],
                 "consumes": [
                     "application/json",

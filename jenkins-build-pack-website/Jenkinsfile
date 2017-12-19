@@ -723,7 +723,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	setCredentials(g_base_url + '/platform/login')
 
-	def url = "$serviceUrl?domain=$domain&service=$service&allServices=true"
+	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
 
 	if (endpointKey == 'dev') {
 		preserveEnvKey = 'prod'

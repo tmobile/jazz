@@ -60,7 +60,7 @@ module.exports.handler = (event, context, cb) => {
         global.services_table = config.services_table;
         global.userId = event.principalId;
         var getAllRecords;
-        if(event.query && event.query.allServices){
+        if(event.query && event.query.isAdmin){
           getAllRecords = true;
         }
         else{

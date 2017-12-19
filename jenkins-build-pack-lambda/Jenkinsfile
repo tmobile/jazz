@@ -708,7 +708,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	setCredentials(g_base_url + '/platform/login')
 
-	def url = "$serviceUrl?domain=$domain&service=$service&allServices=true"
+	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
 
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
 			-H \"Authorization: $g_login_token\" \"$url\" | $jq -r '.data[0] | [.id, .created_by] | join(\",\")'", returnStdout: true)
@@ -804,7 +804,7 @@ def updateServiceInDB(service_id, domain, devApiID, region, status) {
 		echo "svc id ===============" + service_id
 		echo "domain ===============" + domain
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${g_login_token}\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://${devApiID}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id}/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${g_login_token}\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://${devApiID}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id}?isAdmin=true",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
