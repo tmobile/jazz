@@ -2,6 +2,8 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
+@Field def environmentDeploymentMetadata
+@Field def Util
 
 //definitions
 def Event_Name = [
@@ -65,10 +67,8 @@ node ()  {
 	def serviceName = params.service_name
 	def cfStackName = params.service_name
 	def branch = params.scm_branch
-
 	def bitbucket_name = params.service_name
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-
 	def var_bitbucket_framework_url = "http://${env.REPO_BASE}/scm/${env.REPO_LOC}/"
 	def var_api_key 				= env.API_KEY
 	def config
@@ -97,7 +97,9 @@ node ()  {
 		}
 
 		sh 'cd ' + bitbucket_name
-		config = LoadConfiguration()
+		config = dir(bitbucket_name){
+			LoadConfiguration()
+		}
 	}
 
 	def runtime = config['providerRuntime']
@@ -111,16 +113,13 @@ node ()  {
 	def internalAccess = config['require_internal_access']
 
 	def roleARN = role.replaceAll("/", "\\\\/")
-
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
-
-  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${env.env_name_prefix}-cloud-logs-streamer-dev"
+	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${env.env_name_prefix}-cloud-logs-streamer-dev"
 
 	echo "logStreamer:: " + logStreamer
 
 	domain = config['domain']
-
 	if (domain  && domain.trim()!="") {
 		serviceName = domain.trim() + "-${service}"
 		cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
@@ -134,8 +133,9 @@ node ()  {
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
 		isEventSchdld = true
 	}
-	loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
-
+	dir(bitbucket_name){
+		loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
+	}
 /*
 *TODO add in this module?
 	environmentDeploymentMetadata = loadMetadataModules("lambda", service, domain, branch, env.BUILD_URL, env.BUILD_ID)
@@ -163,7 +163,9 @@ node ()  {
 	stage ('Build') {
 		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.STARTED, "")
 		try {
+			dir(bitbucket_name){
 				buildLambda(runtime)
+			}
 		}catch(ex) {
 			send_status_email(created_by, 'FAILED', params.service_name, '')
 			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.FAILED, ex.getMessage())
@@ -177,6 +179,7 @@ node ()  {
 			sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			dir(bitbucket_name){
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+					def lambdaProdARN
 					try {
 						// initialize aws credentials
 						sh "aws configure set profile.cloud-api.region ${region}"
@@ -189,6 +192,15 @@ node ()  {
 						loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
 
+						// TODO
+						if(isScheduleEnabled) {
+							def eventsArns = getEventsArn(domain,service, "prod")
+							for (def i = 0; i < eventsArns.size(); i++) {
+								def arn = eventsArns[i]
+								//events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", arn, "cloudwatch_event", username), "prod");
+								//sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.CREATE_ASSET, Event_Status.COMPLETED, "")
+							}
+						}
 
 						// Generate serverless yml file with domain added in function name
 						echo "Generate deployment env with domain"
@@ -198,8 +210,15 @@ node ()  {
 						echo "setting lambda execution role as $role";
 						setLambdaExecutionRole(role);
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
+						addCommonExcludes()
+
+						echo "serverless deploy about to call"
 
 						sh "serverless deploy --stage prod -v --bucket " + env.jazz_bucket_prod
+
+						def stackProdName = cfStackName + "-prod"
+						lambdaProdARN = getLambdaARN(stackProdName)
+						echo "lambdaProdARN: ${lambdaProdARN}"
 
 						_event = Event_Name.UPDATE_LOGGING_CONF
 						createSubscriptionFilters(serviceName, "prod", region, logStreamer);
@@ -231,6 +250,7 @@ node ()  {
 			dir(bitbucket_name){
 
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+					def lambdaDevARN
 					try {
 						// initialize aws credentials
 						sh "aws configure set profile.cloud-api.region ${region}"
@@ -240,33 +260,38 @@ node ()  {
 						_event = Event_Name.GET_DEPLOYMENT_CONF
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.STARTED, "")
 						loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
-
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.COMPLETED, "")
+
+						if(isScheduleEnabled) {
+							def eventsArns = getEventsArn(domain,service, "dev")
+							for (def i = 0; i < eventsArns.size(); i++) {
+								def arn = eventsArns[i]
+								//events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", arn, "cloudwatch_event", username), "prod");
+							}
+						}
 
 						// Generate serverless yml file with domain added in function name
 						echo "Generate deployment env with domain"
 						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.STARTED, "")
-
 						sh "pwd"
-
 						generateServerlessYml(service, "dev", serviceName, cfStackName)
-
-
 						echo "setting lambda execution role as $role";
 						setLambdaExecutionRole(role);
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.COMPLETED, "")
+						addCommonExcludes()
 
 						sh "serverless deploy --stage dev  -v --bucket " + env.jazz_bucket_dev
+						def stackDevName = cfStackName + "-dev";
+						lambdaDevARN = getLambdaARN(stackDevName);
+						echo "lambdaDevARN: ${lambdaDevARN}"
 
 						_event = Event_Name.UPDATE_LOGGING_CONF
 						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.STARTED, "")
 						createSubscriptionFilters(serviceName, "dev", region, logStreamer);
 						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.COMPLETED, "")
-
 						// reset credentials
 						resetCredentials()
-
 						// echo status
 						def svc_response = echoServiceInfo("dev")
 						send_status_email(created_by, 'COMPLETED', params.service_name, svc_response)
@@ -774,4 +799,65 @@ def updateServiceInDB(service_id, domain, devApiID, region, status) {
 	}catch (ex) {
 		error "updateServiceInDB Failed. "+ex.getMessage()
 	}
+}
+
+/**
+ *  Function to get arns of the triggers/events configured for the Lambda.
+ *
+ */
+def getEventsArn(domain, service, env) {
+	echo "in getEventsArn - if domain, lambdaFnName: ${domain}-${service}-${env}"
+	def eventsArn = []
+	try {
+		def lambdaFnName = service+"-"+env
+		if(domain){
+			lambdaFnName = domain+"-"+lambdaFnName
+		}
+		def lambdaPolicyTxt = sh (script:"aws lambda get-policy --function-name $lambdaFnName --output json", returnStdout: true)
+		def policyLists = null
+		if(lambdaPolicyTxt) {
+			def lambdaPolicyJson = new groovy.json.JsonSlurperClassic()
+			policyLists = lambdaPolicyJson.parseText(lambdaPolicyJson.parseText(lambdaPolicyTxt).Policy)
+			if(policyLists) {
+				for (st in policyLists.Statement) {
+					if (st.Principal.Service == "events.amazonaws.com") {
+						if(st.Condition.ArnLike["AWS:SourceArn"]) {
+							eventsArn.push(st.Condition.ArnLike["AWS:SourceArn"])
+						}
+					}
+				}
+			}
+		}
+		return eventsArn
+	} catch (ex) {
+		// Skip the 'ResourceNotFoundException' when deploying first time. Workflow can't fail here.
+		echo  "Can't fetch the events policy configurations for lambda. "+ ex.getMessage()
+		return []
+	}
+}
+
+def addCommonExcludes() {
+	sh "sed -i -e '/exclusionList/r _config/serverless-common-excludes.txt' ./serverless.yml"
+	sh "sed -i -e '/exclusionList/d' ./serverless.yml"
+}
+
+def getLambdaARN (String stackName) {
+	def ARN = "";
+	try {
+			def cloudformation_resources = "";
+			cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+
+			def jsonSlurper = new JsonSlurper()
+			def parsedObject = jsonSlurper.parseText(cloudformation_resources);
+			def outputs = parsedObject.Stacks[0].Outputs;
+
+			for (output in outputs) {
+				if(output.OutputKey == "HandlerLambdaFunctionArn") {
+					ARN = output.OutputValue
+				}
+			}
+		} catch(ex) {
+			error ex.getMessage();
+		}
+	return ARN;
 }
