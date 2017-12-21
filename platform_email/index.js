@@ -20,11 +20,7 @@ Jazz Email service
 @version: 1.0
  **/
 
-const _ = require("lodash");
-
-const request = require('request');
 const AWS = require('aws-sdk');
-const rp = require('request-promise-native');
 const nodemailer = require('nodemailer');
 
 const errorHandlerModule = require("./components/error-handler.js");
