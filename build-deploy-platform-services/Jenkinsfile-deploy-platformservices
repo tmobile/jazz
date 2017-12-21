@@ -16,7 +16,7 @@ node {
 			
 		def platform_services = ["cognito-authorizer", "create-serverless-service", "delete-serverless-service", "cloud-logs-streamer", \
 								"is-service-available",  "platform_login", "platform_logout", "platform_services", "platform_usermanagement", \
-								"platform_logs", "platform_events", "platform-services-handler"] 
+								"platform_logs", "platform_events", "platform-services-handler", "platform_email"] 
 
 		platform_services.each {
 			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"${var_job_url}&service_name=${it}\""       
