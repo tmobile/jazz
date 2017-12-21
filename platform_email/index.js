@@ -66,7 +66,7 @@ module.exports.handler = (event, context, cb) => {
 		});
 	} catch (e) {
 		logger.error('Error in sending email : ' + e.message);
-		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", e.message)));
+		return cb(JSON.stringify(errorHandler.throwInternalServerError("105", e.message)));
 	}
 };
 
@@ -84,12 +84,16 @@ function validateInput(userInput) {
 			return reject(errorHandler.throwInputValidationError("101", "invalid or missing arguments"));
 		}
 
+		if (!userInput.principalId)  {
+			return reject(errorHandler.throwForbiddenError("102", "You aren't authorized to access this resource"));
+		}
+
 		if (userInput.method !== 'POST' )  {
-			return reject(errorHandler.throwInputValidationError("101", "Service operation not supported"));
+			return reject(errorHandler.throwInputValidationError("103", "Service operation not supported"));
 		}
 
 		if (!userInput.body || !userInput.body.from || !userInput.body.to || !userInput.body.subject) {
-			return reject(errorHandler.throwInputValidationError("101", "Required params - from, to, subject missing"));
+			return reject(errorHandler.throwInputValidationError("104", "Required params - from, to, subject missing"));
 		}
 
 		resolve(userInput);
