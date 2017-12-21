@@ -1,6 +1,6 @@
 #!groovy.
 import groovy.json.JsonOutput
-
+import groovy.transform.Field
 
 
 def Event_Name =[
@@ -31,6 +31,8 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
+@Field def scm_base = ''
+
 node {		
 
 	def service_template = "create-serverless-service"
@@ -44,10 +46,14 @@ node {
 	def envmnt="dev"
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
 	def var_bitbucket_base			= env.REPO_BASE
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
 	def var_api_key 				= env.API_KEY
-	
+	def scm                			= env.JAZZ_SCM
 		
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)	
+		
+	def var_bitbucket_framework_url = "http://" + scm_base + env.REPO_CORE + "/"
+	
 
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
@@ -196,6 +202,21 @@ node {
 			
 	}	
 	
+}
+
+/**
+ * Sets the SCM Base wrt the scm configured
+ * @param  scm repo_base
+ * @return
+ */
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
+	}
+	echo "Pai scm_base:$scm_base"
 }
 
 def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName) {

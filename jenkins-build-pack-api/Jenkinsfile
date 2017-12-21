@@ -49,6 +49,7 @@ def Event_Status = [
 @Field def region = ''
 @Field def jq = '/usr/local/bin/jq'
 @Field def aws_api_import = '/var/lib/aws-apigateway-importer/aws-api-import.sh'
+@Field def scm_base = ''
 
 node() {
 	region = env.jazz_region
@@ -62,18 +63,21 @@ node() {
     //checkout scm
     echo "start"
 
-    def serviceName = params.service_name
-    def cfStackName = params.service_name
-	def branch = params.scm_branch
+	def scm 				= env.JAZZ_SCM
+    def serviceName 		= params.service_name
+    def cfStackName 		= params.service_name
+	def branch 				= params.scm_branch
+    def bitbucket_name 		= params.service_name
+	def var_credentialsId 	= env.REPO_CREDENTIAL_ID
+	def var_bitbucket_base	= env.REPO_BASE
+	def var_api_key 		= env.API_KEY
 
-    def bitbucket_name = params.service_name
-	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-	def var_bitbucket_base			= env.REPO_BASE
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_LOC + "/"
-	def var_api_key 				= env.API_KEY
 
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)
 
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git"
+	def var_bitbucket_framework_url = "http://" + scm_base  + env.REPO_LOC + "/"
+	def configPackBBURL = "http://" + scm_base  + env.REPO_CORE + "/serverless-config-pack.git"
 
 	def config
 
@@ -112,9 +116,9 @@ node() {
 	def domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
-
+  	
 	def internalAccess = config['require_internal_access']
-
+  	
 	def roleARN = role.replaceAll("/", "\\\\/")
 	def var_api_host_name = "${var_api_key}.execute-api.${region}.amazonaws.com"
 
@@ -174,7 +178,7 @@ node() {
 
 		if (params.scm_branch == 'master') {
 			stage('Deployment to Production Env') {
-
+				
 				sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
 				echo "starts Deployment to Production Env"
 
@@ -213,13 +217,13 @@ node() {
 						//validateSwaggerFile( service, domain, apiHostName )
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
-
+						
 						sh "${aws_api_import} --region ${region}  --update ${var_api_key} --deploy prod swagger/swagger.json "
 
 						def endpointUrl = "https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/prod/" + domain + "/" + params.service_name
 
 						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, endpointUrl)
-
+						
 						updateApiDocUrl(current_environment)
 
 						sh "aws s3 cp swagger/ s3://${api_doc_s3_bucket}/${domain}/${params.service_name}/${current_environment} --recursive "
@@ -270,7 +274,7 @@ node() {
 					//validateSwaggerFile( service, domain, apiHostName )
 					// import swagger api spec
 					echo "Deploying to staging API Gateway environment.."
-
+					
 					sh "$aws_api_import --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json"
 
 					def endpointUrl = "https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/dev/" + domain + "/" + params.service_name
@@ -295,6 +299,16 @@ node() {
 
 		}//if branch name ends here
 	}//dir ends here
+}
+
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
+	}
+	echo "Pai scm_base:$scm_base"
 }
 
 def echoServerlessFile() {
@@ -789,7 +803,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	setCredentials(g_base_url + '/platform/login')
 
-	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
+	def url = "$serviceUrl?domain=$domain&service=$service"
 
 	if (endpointKey == 'dev') {
 		preserveEnvKey = 'prod'
@@ -929,7 +943,7 @@ def updateServiceInDB(service, domain, serviceUrl,status) {
 
 		echo "new json $updateJson"
 
-		def serviceUpdateUrl = "$serviceUrl/$service_id?isAdmin=true"
+		def serviceUpdateUrl = "$serviceUrl/$service_id"
 
 		def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
 					-H \"accept: application/json\" \

@@ -43,6 +43,7 @@ def Event_Status = [
 @Field def env_prefix = ''
 @Field def region = ''
 @Field def jq = '/usr/local/bin/jq'
+@Field def scm_base = ''
 
 node ()  {
 	region = env.jazz_region
@@ -50,15 +51,17 @@ node ()  {
 
 	echo "Build Pack website params: " + params
 
-    def service = params.service_name
-	def branch = params.scm_branch
-	def domain = params.domain
-
-    def bitbucket_name = params.service_name
-
-	def var_bitbucket_framework_url = "http://${env.REPO_BASE}/scm/${params.scm_project}/"
-
+    def service 		= params.service_name
+	def branch 			= params.scm_branch
+	def domain 			= params.domain
+    def bitbucket_name 	= params.service_name
+	def scm       		= env.JAZZ_SCM
 	def config
+
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)
+
+	def var_bitbucket_framework_url = "http://${scm_base}${params.scm_project}/"
 
 	if (params.scm_branch == 'master') {
 		current_environment = 'prod'
@@ -340,6 +343,16 @@ node ()  {
 	}
 }
 
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
+	}
+	echo "Pai scm_base:$scm_base"
+}
+
 def getS3BucketName(String envname) {
 
 	if (envname == "dev") {
@@ -469,7 +482,7 @@ def validateTemplate() {
 
 def loadDistributionConfig() {
 
-	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + env.REPO_BASE + '/scm/' + env.REPO_CORE + '/website-distribution-pack.git']]])
+	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + scm_base + env.REPO_CORE + '/website-distribution-pack.git']]])
 
 }
 
@@ -537,7 +550,7 @@ def loadIPList() {
 
   dir('_jenkins_buildpack') {
 
-		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + env.REPO_BASE + '/scm/' + env.REPO_CORE + '/jenkins-build-pack-website.git']]])
+		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + scm_base + env.REPO_CORE + '/jenkins-build-pack-website.git']]])
 
 	}
 

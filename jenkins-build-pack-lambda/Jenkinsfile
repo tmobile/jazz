@@ -51,6 +51,7 @@ def Event_Status = [
 @Field def current_environment = ''
 @Field def region = ''
 @Field def jq = '/usr/local/bin/jq'
+@Field def scm_base = ''
 
 node ()  {
 	region = env.jazz_region
@@ -68,11 +69,15 @@ node ()  {
 
 	def bitbucket_name = params.service_name
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-
-	def var_bitbucket_framework_url = "http://${env.REPO_BASE}/scm/${env.REPO_LOC}/"
 	def var_api_key 				= env.API_KEY
+	def scm                			= env.JAZZ_SCM
 	def config
 
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)	
+
+	def var_bitbucket_framework_url = "http://${scm_base}${env.REPO_LOC}/"
+	
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name.trim()
 		domain = params.domain.trim()
@@ -286,6 +291,21 @@ node ()  {
 			}//end of dir
 		}//end of stage to dev
 	}//end of else deploy to dev
+}
+
+/**
+ * Sets the SCM Base wrt the scm configured
+ * @param  scm repo_base
+ * @return
+ */
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
+	}
+	echo "Pai scm_base:$scm_base"
 }
 
 def echoServerlessFile() {
@@ -591,7 +611,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 		//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
 		//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
 
-		def configPackBBURL = "http://${env.REPO_BASE}/scm/${env.REPO_CORE}/serverless-config-pack.git"
+		def configPackBBURL = "http://${scm_base}${env.REPO_CORE}/serverless-config-pack.git"
 
 		dir('_config') {
 			checkout([$class: 'GitSCM', branches: [

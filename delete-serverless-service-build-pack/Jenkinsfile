@@ -18,6 +18,7 @@ import groovy.transform.Field
 @Field def role = ''
 @Field def api_doc_s3_bucket = ''
 @Field def jq = '/usr/local/bin/jq'
+@Field def scm_base = ''
 
 node {
 	region = env.jazz_region
@@ -41,18 +42,20 @@ node {
 	def repo_protocol				= "http://"
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
 	def var_bitbucket_base			= env.REPO_BASE
-	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
 	def var_api_key 				= env.API_KEY
 	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + env.REPO_LOC + "/repos"
 	def var_bitbucket_email 		= env.REPO_EMAIL
-	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + env.REPO_LOC + "/"
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git"
-	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/service-onboarding-build-pack.git"
-	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
-	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
-	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
-	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/${env.REPO_CORE}/jazz-build-module.git"
+	def scm                			= env.JAZZ_SCM
 
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)
+
+	def var_serviceonboarding_repo 	= repo_protocol + scm_base + env.REPO_CORE + "/service-onboarding-build-pack.git"
+	def var_cas_clone_url			= scm_base + env.REPO_LOC + "/"
+	def configPackBBURL 			= "http://" + scm_base + env.REPO_CORE + "/serverless-config-pack.git"
+	def var_bitbucket_framework_url = repo_protocol + scm_base + env.REPO_CORE + "/"
+	def jazzBuildModuleURL 			= "http://" + scm_base + env.REPO_CORE + "/jazz-build-module.git"
+	
 	var_db_service_id = params.db_service_id
 
 	if (params.service_name) {
@@ -70,7 +73,7 @@ node {
 	}
 	bitbucket_repo_name = service_name
 	if(domain && domain != ""){
-		bitbucket_repo_name = domain + "-" + service_name
+		bitbucket_repo_name = domain + "-" + service_name	
 	}
 
 	loadServiceInfo()
@@ -181,12 +184,54 @@ node {
 		}
 	}
 
-	stage('Cleanup BitBucket/Catalog') {
-		deleteProject(bitbucket_repo_name)
+	stage('Cleanup SCM gitlab/bitbucket/Catalog') {
+		if (scm == "gitlab"){
+			//Delete the project
+			try {
+				def var_private_token = env.gitlab_private_token
+
+				//Find the project ID
+				def gitlab_project_details = sh (
+					script: "curl --header \"PRIVATE-TOKEN: $var_private_token\" \"http://$var_bitbucket_base/api/v3/projects?search=$bitbucket_repo_name\"",
+					returnStdout: true
+				).trim()
+
+				def project_id = gitlab_project_details.split(',')[0].split(':')[1]
+				echo "Pai Projectid:$project_id:"
+
+				def gitlab_delete_project = sh (
+					script: "curl --header \"PRIVATE-TOKEN: $var_private_token\" -X DELETE \"http://$var_bitbucket_base/api/v3/projects/$project_id\"",
+					returnStdout: true
+				).trim()
+				echo "gitlab_delete_project:$gitlab_delete_project"
+			}
+			catch (ex)
+			{
+				error ex.getMessage()
+			}
+
+		}else {
+			deleteProject(bitbucket_repo_name)
+		}
 		updateServiceInDB(var_db_service_id, env.API_ID_DEV, region, "inactive");
 		//deleteserviceindb(region, var_db_service_id)
 		send_status_email ("COMPLETED")
 	}
+}
+
+/**
+ * Sets the SCM Base wrt the scm configured
+ * @param  scm repo_base
+ * @return
+ */
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
+	}
+	echo "Pai scm_base:$scm_base"
 }
 
 /**
@@ -486,6 +531,7 @@ def deleteProject(repoName) {
 	//events.sendStartedEvent('DELETE_PROJECT')
 	try {
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.REPO_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+		
 		echo "deleting repository from bitbucket $repoName"
 		def repourl = "http://" + env.REPO_BASE + "/rest/api/1.0/projects/CAS/repos/" + repoName;
 		echo repourl
