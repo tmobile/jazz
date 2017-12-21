@@ -39,7 +39,7 @@ node  {
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
-	
+
 	def service_template
 	def service_username
 	def service_password
@@ -147,7 +147,7 @@ node  {
 	}
 
 	def service_id_in_db = "";
-	
+
 	stage ('Get Service Template')
 	{
 		try{
@@ -165,7 +165,7 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
 
 				config = LoadConfiguration()
-				
+
 				echo "Calling add row in db ###################################################"
 
 				def description = ' ';
@@ -231,20 +231,37 @@ node  {
 				if(service_type == 'lambda'|| service_type == 'function') {
 					def rate_expression = params.rateExpression
 					def enable_eventschedule = params.enableEventSchedule
+					def event_source_ec2 =  params.event_source_ec2
+					def event_source_s3 =  params.event_source_s3
+					def event_source_dynamodb =  params.event_source_dynamodb
+					def event_source_stream =  params.event_source_stream
+					def event_action_ec2 =  params.event_action_ec2
+					def event_action_s3 =  params.event_action_s3
+					def event_action_dynamodb =  params.event_action_dynamodb
+					def event_action_stream =  params.event_action_stream
 
 					if(rate_expression && rate_expression.trim() != ""){
 						// Using echo commands to write to deployment-env.yml
 						sh "echo \$'\neventScheduleRate: cron($rate_expression)' >> ./deployment-env.yml"
 					}
-					def var_enable_eventschedule;
-					if (enable_eventschedule)
-					   if (enable_eventschedule == true)
-					      var_enable_eventschedule = "true";
-					   else if (enable_eventschedule == false)
-					      var_enable_eventschedule = "false";
-
-					if(var_enable_eventschedule && var_enable_eventschedule.trim() != ""){
-						sh "echo \$'eventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
+					if(enable_eventschedule && enable_eventschedule.trim() != ""){
+						sh "echo \$'\neventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
+					}
+					if(event_source_ec2 && event_action_ec2){
+						sh "echo \$'\nevent_source_ec2: $event_source_ec2' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_ec2: $event_action_ec2' >> ./deployment-env.yml"
+					}
+					if(event_source_s3 && event_action_s3){
+						sh "echo \$'\nevent_source_s3: $event_source_s3' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_s3: $event_action_s3' >> ./deployment-env.yml"
+					}
+					if(event_source_dynamodb && event_action_dynamodb){
+						sh "echo \$'\nevent_source_dynamodb: $event_source_dynamodb' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_dynamodb: $event_action_dynamodb' >> ./deployment-env.yml"
+					}
+					if(event_source_stream && event_action_stream){
+						sh "echo \$'\nevent_source_stream: $event_source_stream' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_stream: $event_action_stream' >> ./deployment-env.yml"
 					}
 
 					/*
@@ -339,7 +356,7 @@ node  {
 					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + var_cas_rest_repo + ""+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN&" + admin_group + "\" &"
 
 					def encoded_creator = URLEncoder.encode(owner, "utf-8")
-            
+
 					echo "providing repository write permissions to the service creator"
 					sh "curl -X PUT -G -k -v -u \"$UNAME:$PWD\"  -d \"name=$encoded_creator\" \"${var_cas_rest_repo}/${bitbucket_name}/permissions/users?permission=REPO_ADMIN\""
 
@@ -493,14 +510,14 @@ def send_status_email (email_id, build_status, service, domain) {
    echo "Sending email notification to " + email_id
    body = ""
    bcc_email = ""
-   
+
    if (build_status == 'COMPLETED'){
         body = "Service creation completed for service : $service in the namespace : $domain"
    }else if (build_status == 'FAILED') {
 		build_url = env.BUILD_URL + 'console'
-   
+
         body = "Service creation FAILED for service : $service in the namespace : $domain"
-        body = body + "\n\nFor more details, please click this link: $build_url"        
+        body = body + "\n\nFor more details, please click this link: $build_url"
    } else {
         echo "Unsupported build status, nothing to email.."
         return
