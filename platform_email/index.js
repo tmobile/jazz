@@ -103,7 +103,7 @@ function validateInput(userInput) {
  */
 function sendEmail(config, userInput) {
 	return new Promise((resolve, reject) => { 
-		let transporter = nodemailer.createTransport({
+		var transporter = nodemailer.createTransport({
 			SES: new AWS.SES({
 				apiVersion: '2010-12-01',
 				region: config.REGION
