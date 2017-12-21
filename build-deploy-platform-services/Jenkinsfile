@@ -263,6 +263,13 @@ node {
 					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/stg-config.json"
 					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/prod-config.json"
 				}
+
+				if (service_template.trim() == "platform_email") {
+					echo "Updating parameter specific to platform email"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+                }
 			}
 		}
 		catch(error){
