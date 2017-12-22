@@ -1,7 +1,7 @@
 service : email
 securityGroupIds: {inst_security_group_id}
 subnetIds: {inst_subnet_ids}
-providerRuntime : nodejs4.3
+providerRuntime : nodejs6.10
 providerMemorySize : 256
 providerTimeout : 160
 region: {inst_region}
