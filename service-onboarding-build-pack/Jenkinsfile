@@ -39,6 +39,14 @@ node  {
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
+	if (params.rateExpression){
+		echo "params include rateExpression : ${params.rateExpression}"
+		def rateExpression = params.rateExpression
+	}
+	if (params.enableEventSchedule){
+		echo "params include enableEventSchedule : ${params.enableEventSchedule}"
+		def enableEventSchedule = params.enableEventSchedule
+	}
 
 	def service_template
 	def service_username
@@ -229,8 +237,8 @@ node  {
 				}
 
 				if(service_type == 'lambda'|| service_type == 'function') {
-					def rate_expression = params.rateExpression
-					def enable_eventschedule = params.enableEventSchedule
+					def rate_expression = rateExpression//params.rateExpression
+					def enable_eventschedule = enableEventSchedule//params.enableEventSchedule
 					def event_source_ec2 =  params.event_source_ec2
 					def event_source_s3 =  params.event_source_s3
 					def event_source_dynamodb =  params.event_source_dynamodb
