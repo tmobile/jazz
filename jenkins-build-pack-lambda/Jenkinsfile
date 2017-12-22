@@ -131,7 +131,6 @@ node ()  {
 	echo serviceName+"******************************************************* "
 
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
-		echo "in 'enabled' bool check"
 		isEventSchdld = true
 	}
 	dir(bitbucket_name){
@@ -195,7 +194,6 @@ node ()  {
 
 						// TODO
 						if(isScheduleEnabled) {
-							echo "in eventsArns bool check"
 							def eventsArns = getEventsArn(domain,service, "prod")
 							for (def i = 0; i < eventsArns.size(); i++) {
 								def arn = eventsArns[i]
@@ -265,7 +263,6 @@ node ()  {
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.COMPLETED, "")
 
 						if(isScheduleEnabled) {
-							echo "in eventsArns bool check"
 							def eventsArns = getEventsArn(domain,service, "dev")
 							for (def i = 0; i < eventsArns.size(); i++) {
 								def arn = eventsArns[i]
@@ -320,7 +317,6 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
 	echo "addEvents to serverless.yml file"
 	def sedCommand = "s/eventsDisabled/events/g";
 	if(!isScheduleEnabled){
-		echo "in isSchedEnabled bool check"
 		sedCommand = sedCommand + "; /#Start:isScheduleEnabled/,/#End:isScheduleEnabled/d"
 	}
 	if(!isEc2EventEnabled){

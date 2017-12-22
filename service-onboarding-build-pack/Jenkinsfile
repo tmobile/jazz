@@ -248,12 +248,10 @@ node  {
 					def event_action_dynamodb =  params.event_action_dynamodb
 					def event_action_stream =  params.event_action_stream
 
-					echo "in lambda bool check, rate_expression: ${rate_expression}"
 					if(rate_expression && rate_expression.trim() != ""){
 						// Using echo commands to write to deployment-env.yml
 						sh "echo \$'\neventScheduleRate: cron($rate_expression)' >> ./deployment-env.yml"
 					}
-					echo "in lambda bool check enable_eventschedule: ${enable_eventschedule}"
 					if(enable_eventschedule && enable_eventschedule.trim() != ""){
 						sh "echo \$'\neventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
 					}

@@ -247,7 +247,6 @@ describe('create-serverless-service', function() {
       stub = sinon.stub(request, "Request", spy);
       //trigger the spy wrapping the request by calling handler() with valid params
       var callFunction = index.handler(event, context, callback);
-      console.log(JSON.stringify(spy.args[0][0]));
       stub.restore();
       assert.isTrue(spy.called);
     });
