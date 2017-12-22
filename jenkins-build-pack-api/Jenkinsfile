@@ -899,8 +899,10 @@ def send_status_email (email_id, build_status, service, email_content) {
     ])
    	def cc_email = ""
    	if (build_status == 'STARTED') {
+			echo "body.subject check : ${body.subject}"
         body.subject = "Jazz Build Notification: Deployment STARTED for service: " + service
    	} else if (build_status == 'FAILED') {
+			echo "body.text check: ${body.text}"
 				def build_url = env.BUILD_URL + 'console'
         body.subject = "Jazz Build Notification: Deployment FAILED for service: " + service
         body.text = body + "\n\nFor more details, please click this link: $build_url"
@@ -945,5 +947,12 @@ def updateServiceInDB(service, domain, serviceUrl,status) {
 
 		echo "service update result: $serviceUpdateOutput"
 	}
+}
 
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
 }
