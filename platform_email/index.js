@@ -114,9 +114,9 @@ function sendEmail(config, userInput) {
 			from: userInput.from,
 			to: userInput.to,
 			cc: userInput.cc,
-			
 			subject: userInput.subject,
-			text: userInput.text
+			text: userInput.text,
+			html: userInput.html
 		}, (err, info) => {
 			if (err) {
 				logger.error('Error in sending email ' + JSON.stringify(err));
