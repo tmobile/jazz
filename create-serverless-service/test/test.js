@@ -49,7 +49,7 @@ describe('create-serverless-service', function() {
     var validCronExp;
 
     beforeEach(function(){
-      validCronExp = "12 03 24 12 07 2017";
+      validCronExp = "1 * * * ? *";
     });
 
     it("should return null if given an empty or missing expression", function(){
@@ -61,6 +61,14 @@ describe('create-serverless-service', function() {
           bool = false;
         }
       };
+      assert.isTrue(bool);
+    });
+
+    it("should return 'valid' if given a valid expression", function(){
+      var bool = false;
+      if(CronParser.validateCronExpression(validCronExp).result == 'valid'){
+        bool = true;
+      }
       assert.isTrue(bool);
     });
   });
@@ -81,11 +89,11 @@ describe('create-serverless-service', function() {
           "domain"		: "test-domain",
           "runtime"		: "nodejs",
           "approvers"		: ['tw1light_$pArkle'],
-          "rateExpression": "12 03 24 12 4 7",
+          "rateExpression": "1 * * * ? *",
           "slack_channel" : "mlp_fim",
           "require_internal_access" : false,
-          "create_cloudfront_url" : false, //?
-          "enableEventSchedule" : false
+          "create_cloudfront_url" : false//, //?
+          //"enableEventSchedule" : false
         }
       };
       context = awsContext();
@@ -239,6 +247,7 @@ describe('create-serverless-service', function() {
       stub = sinon.stub(request, "Request", spy);
       //trigger the spy wrapping the request by calling handler() with valid params
       var callFunction = index.handler(event, context, callback);
+      console.log(JSON.stringify(spy.args[0][0]));
       stub.restore();
       assert.isTrue(spy.called);
     });
