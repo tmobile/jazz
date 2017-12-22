@@ -20,11 +20,7 @@ Jazz Email service
 @version: 1.0
  **/
 
-const _ = require("lodash");
-
-const request = require('request');
 const AWS = require('aws-sdk');
-const rp = require('request-promise-native');
 const nodemailer = require('nodemailer');
 
 const errorHandlerModule = require("./components/error-handler.js");
@@ -47,44 +43,89 @@ module.exports.handler = (event, context, cb) => {
 	try {
 		logger.info(JSON.stringify(event));
 
-		if (!event || !event.method) {
-			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "invalid or missing arguments")));
+		validateInput(event)
+		.then(() => sendEmail(config, event.body))
+		.then((result) => { return cb(null, responseObj({result: "success", message: result.messageId})); })
+		.catch(function (err) {
+			logger.error("Failed while sending email: " + JSON.stringify(err));
+			
+			if (err.errorType) {
+				// error has already been handled and processed for API gateway
+				return cb(JSON.stringify(err));
+			}else {
+				if (err.code) {
+					return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+				}
+
+				return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while sending email to: " + event.body.to)));
+			}
+		});
+	} catch (e) {
+		logger.error('Error in sending email : ' + e.message);
+		return cb(JSON.stringify(errorHandler.throwInternalServerError("105", e.message)));
+	}
+};
+
+/**
+ * 
+ * @param {object} userInput 
+ * @returns promise
+ */
+function validateInput(userInput) {
+	var errorHandler = errorHandlerModule();
+
+	return new Promise((resolve, reject) => {
+		
+		if (!userInput || !userInput.method) {
+			return reject(errorHandler.throwInputValidationError("101", "invalid or missing arguments"));
 		}
 
-		if (event.method !== 'POST' )  {
-			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Service operation not supported")));
+		if (!userInput.principalId)  {
+			return reject(errorHandler.throwForbiddenError("102", "You aren't authorized to access this resource"));
 		}
 
-		if (!event.body || !event.body.from || !event.body.to || !event.body.subject) {
-			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Required params - from, to, subject missing")));
+		if (userInput.method !== 'POST' )  {
+			return reject(errorHandler.throwInputValidationError("103", "Service operation not supported"));
 		}
 
-		var data = event.body;
+		if (!userInput.body || !userInput.body.from || !userInput.body.to || !userInput.body.subject) {
+			return reject(errorHandler.throwInputValidationError("104", "Required params - from, to, subject missing"));
+		}
 
-		let transporter = nodemailer.createTransport({
-			SES: new aws.SES({
-				apiVersion: '2010-12-01'
+		resolve(userInput);
+	});
+}
+
+/**
+ * 
+ * @param {*} config
+ * @param {*} userInput 
+ */
+function sendEmail(config, userInput) {
+	return new Promise((resolve, reject) => { 
+		var transporter = nodemailer.createTransport({
+			SES: new AWS.SES({
+				apiVersion: '2010-12-01',
+				region: config.REGION
 			})
 		});
 
 		transporter.sendMail({
-			from: data.from,
-			to: data.to,
-			cc: data.cc,
+			from: userInput.from,
+			to: userInput.to,
+			cc: userInput.cc,
 			
-			subject: data.subject,
-			text: data.text
+			subject: userInput.subject,
+			text: userInput.text
 		}, (err, info) => {
 			if (err) {
 				logger.error('Error in sending email ' + JSON.stringify(err));
+				reject(err);
 			}else {
-				loggger.info('Successfully sent email ' + JSON.stringify(info));
+				logger.info('Successfully sent email ' + JSON.stringify(info));
+				resolve(info);
 			}
 		});
-		
-	} catch (e) {
-		logger.error('Error in sending email : ' + e.message);
-		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", e.message)));
-	}
-};
+	});
+}
 

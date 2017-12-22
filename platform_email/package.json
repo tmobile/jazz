@@ -12,9 +12,6 @@
     "jshint": "jshint --exclude ./node_modules ."
   },
   "dependencies": {
-    "lodash": "*",
-    "request": "*",
-    "request-promise-native": "^1.0.5",
     "nodemailer": "*"
   },
   "devDependencies": {
