@@ -85,7 +85,7 @@ describe('create-serverless-service', function() {
         "principalId" : "@pp1eJack",
         "body" : {
           "service_name"	: "test-service",
-          "service_type"	: "lambda",
+          "service_type"	: "function",
           "domain"		: "test-domain",
           "runtime"		: "nodejs",
           "approvers"		: ['tw1light_$pArkle'],
