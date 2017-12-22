@@ -890,31 +890,37 @@ def setAuthToken(token) {
 */
 def send_status_email (email_id, build_status, service, email_content) {
    	echo "Sending build notification to " + email_id
-   	body = ""
-   	bcc_email = ""
+		def body = JsonOutput.toJson([
+			from: "JAZZ ADMIN <${env.JAZZ_ADMIN}>",
+	  	to: email_id,
+	  	subject: "" ,
+	  	text: "",
+			cc: ""
+    ])
+   	def cc_email = ""
    	if (build_status == 'STARTED') {
-        body = "Build/deploy process just STARTED for service: " + service
+        body.subject = "Jazz Build Notification: Deployment STARTED for service: " + service
    	} else if (build_status == 'FAILED') {
-		build_url = env.BUILD_URL + 'console'
-        body = "Build/deploy process FAILED for service: " + service
-        body = body + "\n\nFor more details, please click this link: $build_url"
+				def build_url = env.BUILD_URL + 'console'
+        body.subject = "Jazz Build Notification: Deployment FAILED for service: " + service
+        body.text = body + "\n\nFor more details, please click this link: $build_url"
    	} else if (build_status == 'COMPLETED'){
-        body = "Build/deploy process COMPLETED successfully for service: $service"
+        body.subject = "Jazz Build Notification: Deployment COMPLETED successfully for service: $service"
    	} else {
         echo "Unsupported build status, nothing to email.."
         return
    	}
-
    	if (email_content != ''){
-        body = body + "\n\n" + email_content
-	}
-
+        body.text = body.text + "\n\n" + email_content
+		}
    	try{
-        mail (to: email_id, bcc: bcc_email,
-         subject: "Jazz Build Notification: Deployment $build_status for $service ($current_environment)",
-         body: body
-        );
-        echo "Sent email to " + email_id + " successfully!"
+				def sendMail = sh (script: "curl -k -v -H \'Content-type: application/json\' -d \'$body\' ${g_base_url}/platform/email", returnStdout: true ).trim()
+				def responseJSON = parseJson(sendMail)
+				if(responseJSON.data){
+					echo "successfully sent e-mail to $email_id"
+				} else {
+					echo "exception occured while sending e-mail: $responseJSON"
+				}
    	} catch (e){
        echo "Failed while sending build status notification"
    	}
