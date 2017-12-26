@@ -39,7 +39,7 @@ node  {
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
-	
+
 	def service_template
 	def service_username
 	def service_password
@@ -147,7 +147,7 @@ node  {
 	}
 
 	def service_id_in_db = "";
-	
+
 	stage ('Get Service Template')
 	{
 		try{
@@ -165,7 +165,7 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
 
 				config = LoadConfiguration()
-				
+
 				echo "Calling add row in db ###################################################"
 
 				def description = ' ';
@@ -339,7 +339,7 @@ node  {
 					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + var_cas_rest_repo + ""+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN&" + admin_group + "\" &"
 
 					def encoded_creator = URLEncoder.encode(owner, "utf-8")
-            
+
 					echo "providing repository write permissions to the service creator"
 					sh "curl -X PUT -G -k -v -u \"$UNAME:$PWD\"  -d \"name=$encoded_creator\" \"${var_cas_rest_repo}/${bitbucket_name}/permissions/users?permission=REPO_ADMIN\""
 
@@ -489,30 +489,52 @@ def LoadConfiguration() {
 * Supported build status values =  FAILED & COMPLETED
 * @return
 */
-def send_status_email (email_id, build_status, service, domain) {
-   echo "Sending email notification to " + email_id
-   body = ""
-   bcc_email = ""
-   
-   if (build_status == 'COMPLETED'){
-        body = "Service creation completed for service : $service in the namespace : $domain"
-   }else if (build_status == 'FAILED') {
-		build_url = env.BUILD_URL + 'console'
-   
-        body = "Service creation FAILED for service : $service in the namespace : $domain"
-        body = body + "\n\nFor more details, please click this link: $build_url"        
-   } else {
+def send_status_email (email_id, build_status, service, email_content) {
+   	echo "Sending build notification to " + email_id
+		def body_subject = ""
+		def body_text = ""
+		def cc_email = ""
+   	if (build_status == 'STARTED') {
+			echo "email status started"
+			echo "body_subject check : ${body_subject}"
+        body_subject = "Jazz Build Notification: Deployment STARTED for service: " + service
+   	} else if (build_status == 'FAILED') {
+			echo "email status failed"
+			echo "body_text check: ${body_text}"
+				def build_url = env.BUILD_URL + 'console'
+        body_subject = "Jazz Build Notification: Deployment FAILED for service: " + service
+        body_text = body + "\n\nFor more details, please click this link: $build_url"
+   	} else if (build_status == 'COMPLETED'){
+        body_subject = "Jazz Build Notification: Deployment COMPLETED successfully for service: $service"
+   	} else {
         echo "Unsupported build status, nothing to email.."
         return
-   }
+   	}
+   	if (email_content != ''){
+        body_text = body_text + "\n\n" + email_content
+		}
+		def body = "{ \"from\": \"JAZZ ADMIN <${env.JAZZ_ADMIN}>\","+
+								"\"to\": \"${email_id}\","+
+								"\"subject\": \"${body_subject}\","+
+								"\"text\": \"${body_text}\","+
+								"\"cc\": \"${cc_email}\"}"
 
-   try{
-        mail (to: email_id, bcc: bcc_email,
-         subject: "Jazz Service Creation Notification for $service",
-         body: body
-        );
-        echo "Sent email to " + email_id + " successfully!"
-   } catch (e){
+		/*JsonOutput.toJson([
+			'from': "JAZZ ADMIN <${env.JAZZ_ADMIN}>",
+	  	'to': email_id,
+	  	'subject': body_subject ,
+	  	'text': body_text,
+			'cc': cc_email
+    ])*/
+   	try{
+				def sendMail = sh (script: "curl -k -v -H \"Authorization: $g_login_token\" \'Content-type: application/json\' -d \'$body\' ${g_base_url}/platform/email", returnStdout: true ).trim()
+				def responseJSON = parseJson(sendMail)
+				if(responseJSON.data){
+					echo "successfully sent e-mail to $email_id"
+				} else {
+					echo "exception occured while sending e-mail: $responseJSON"
+				}
+   	} catch (e){
        echo "Failed while sending build status notification"
-   }
+   	}
 }

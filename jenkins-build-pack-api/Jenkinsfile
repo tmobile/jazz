@@ -890,33 +890,37 @@ def setAuthToken(token) {
 */
 def send_status_email (email_id, build_status, service, email_content) {
    	echo "Sending build notification to " + email_id
-		def body = JsonOutput.toJson([
-			from: "JAZZ ADMIN <${env.JAZZ_ADMIN}>",
-	  	to: email_id,
-	  	subject: "" ,
-	  	text: "",
-			cc: ""
-    ])
-   	def cc_email = ""
+		def body_subject = ""
+		def body_text = ""
+		def cc_email = ""
    	if (build_status == 'STARTED') {
-			echo "body.subject check : ${body.subject}"
-        body.subject = "Jazz Build Notification: Deployment STARTED for service: " + service
+			echo "email status started"
+			echo "body_subject check : ${body_subject}"
+        body_subject = "Jazz Build Notification: Deployment STARTED for service: " + service
    	} else if (build_status == 'FAILED') {
-			echo "body.text check: ${body.text}"
+			echo "email status failed"
+			echo "body_text check: ${body_text}"
 				def build_url = env.BUILD_URL + 'console'
-        body.subject = "Jazz Build Notification: Deployment FAILED for service: " + service
-        body.text = body + "\n\nFor more details, please click this link: $build_url"
+        body_subject = "Jazz Build Notification: Deployment FAILED for service: " + service
+        body_text = body + "\n\nFor more details, please click this link: $build_url"
    	} else if (build_status == 'COMPLETED'){
-        body.subject = "Jazz Build Notification: Deployment COMPLETED successfully for service: $service"
+        body_subject = "Jazz Build Notification: Deployment COMPLETED successfully for service: $service"
    	} else {
         echo "Unsupported build status, nothing to email.."
         return
    	}
    	if (email_content != ''){
-        body.text = body.text + "\n\n" + email_content
+        body_text = body_text + "\n\n" + email_content
 		}
+		def body = JsonOutput.toJson([
+			'from': "JAZZ ADMIN <${env.JAZZ_ADMIN}>",
+	  	'to': email_id,
+	  	'subject': body_subject ,
+	  	'text': body_text,
+			'cc': cc_email
+    ])
    	try{
-				def sendMail = sh (script: "curl -k -v -H \'Content-type: application/json\' -d \'$body\' ${g_base_url}/platform/email", returnStdout: true ).trim()
+				def sendMail = sh (script: "curl -k -v -H \"Authorization: $g_login_token\" \'Content-type: application/json\' -d \'$body\' ${g_base_url}/platform/email", returnStdout: true ).trim()
 				def responseJSON = parseJson(sendMail)
 				if(responseJSON.data){
 					echo "successfully sent e-mail to $email_id"
