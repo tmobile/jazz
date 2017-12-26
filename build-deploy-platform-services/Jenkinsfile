@@ -43,7 +43,8 @@ node {
 	def bitbucket_name = service_template
 	def domain = "platform"
 	def region = params.region
-	def envmnt = params.deploy_env
+	def envmnt = 'prod'
+	def branch = params.scm_branch
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
 	def var_bitbucket_base			= env.REPO_BASE
 	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
@@ -58,6 +59,12 @@ node {
 		domain = params.domain.trim()
 	}
 
+	if (params.scm_branch == 'master') {
+		envmnt = 'prod'
+	}else {
+		envmnt = 'dev'
+	}
+	
 	stage ('Get Serverless Service')
 	{
 		try{
@@ -71,7 +78,7 @@ node {
 			sh 'mkdir ' + bitbucket_name
 			dir(bitbucket_name)
 			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
+				checkout([$class: 'GitSCM', branches: [[name: '*/' + branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
 			}
 		}
 		catch(error){
@@ -263,6 +270,13 @@ node {
 					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/stg-config.json"
 					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/prod-config.json"
 				}
+
+				if (service_template.trim() == "platform_email") {
+					echo "Updating parameter specific to platform email"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+                }
 			}
 		}
 		catch(error){
