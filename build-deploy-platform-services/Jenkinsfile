@@ -291,7 +291,7 @@ node {
 	}
 	
 	
-	stage('Deployment to Dev Env') {
+	stage('Deployment to ' + envmnt + ' Env') {
 		// @TODO : Send Event feature coming soon
 		sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 		
