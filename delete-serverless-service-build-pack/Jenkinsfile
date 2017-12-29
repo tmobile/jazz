@@ -197,7 +197,7 @@ node {
 				).trim()
 
 				def project_id = gitlab_project_details.split(',')[0].split(':')[1]
-				echo "Pai Projectid:$project_id:"
+				echo "Projectid:$project_id:"
 
 				def gitlab_delete_project = sh (
 					script: "curl --header \"PRIVATE-TOKEN: $var_private_token\" -X DELETE \"http://$var_bitbucket_base/api/v3/projects/$project_id\"",
@@ -231,7 +231,7 @@ def setSCMBase(scm, repo_base)
 	{
 		scm_base = scm_base + "scm/"
 	}
-	echo "Pai scm_base:$scm_base"
+	echo "SCM Base:$scm_base"
 }
 
 /**

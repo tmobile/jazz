@@ -76,10 +76,6 @@ node  {
 
 	echo "Starting new service on-boarding.."
 	echo "params : $params"
-
-	//TBD
-	echo "Pai scm : $scm"
-	echo "Pai var_scm_source_hook : $var_scm_source_hook"
 	
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
@@ -88,7 +84,6 @@ node  {
 
 	def repo_url 
 	if (scm == "gitlab"){
-		//repo_url sample  http://34.239.159.188/cas/api_pai26_pai16
 		repo_url = repo_protocol + scm_base + "/cas/" + bitbucket_name
 	}else{	
 		repo_url = repo_protocol + env.REPO_BASE + "/projects/CAS/repos/" + bitbucket_name + "/browse";
@@ -299,12 +294,10 @@ node  {
 		{
 			try{
 				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-					echo "Pai scm : $scm"
 					if(scm == "gitlab"){
 						def private_token = env.gitlab_private_token
 						def cas_namespace_id = env.gitlab_cas_name_space_id
-						echo "Pai private_token : $private_token"
-						echo "Pai cas_namespace_id : $cas_namespace_id"
+						echo "CAS namespace id : $cas_namespace_id"
 
 						def gitlab_repo_output = sh (
 							script: "curl --header \"PRIVATE-TOKEN: $private_token\" -X POST \"http://$var_bitbucket_base/api/v3/projects?name=$bitbucket_name&path=$bitbucket_name&namespace_id=$cas_namespace_id\"",
@@ -313,11 +306,10 @@ node  {
 						
 						def jsonSlurper = new JsonSlurper()
 						def object = jsonSlurper.parseText(gitlab_repo_output)
-						echo "Pai object.id : $object.id"
+						echo "CAS project id : $object.id"
 						cas_proj_id = object.id
 					}
 					else{
-						echo "Pai else "
 						sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\" " + var_cas_rest_repo + " -d \'{\"name\":\""+ bitbucket_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
 					}
 					sh "git config --global user.email \"" + var_bitbucket_email + "\""
@@ -361,25 +353,18 @@ node  {
 						
 						echo "Adding web hooks for Jenkins integration"
 						if(scm == "gitlab"){
-							echo "Pai Gitlab Adding web hooks"
-
 							//Create webhook for each repo , as webhook in gitlab is at repo/project level
 							def var_private_token = env.gitlab_private_token
 							def var_jenkins_user_passwd_url = "http://" + env.JENKINS_USERNAME + ":" + env.JENKINS_PASSWORD + "@" +var_jenkins_url.split('/')[2]
-							
-							echo "Pai var_jenkins_user_passwd_url bfore"
-							//def gitlab_job_hook = "/job/Gitlab-Trigger-Job/buildWithParameters?SERVICE_TYPE=$service_type%26SERVICE_NAME=$service_name%26DOMAIN_NAME=$domain"
+
 							def gitlab_job_hook = "/project/Gitlab-Trigger-Job"
 							def gitlab_webhook_url = var_jenkins_user_passwd_url + gitlab_job_hook
-							//def secret_token = "Jazz-Gitlab-Hook-2830"
 							
-							echo "Pai var_jenkins_user_passwd_url: $var_jenkins_user_passwd_url"
-							echo "Pai gitlab_job_hook: $gitlab_job_hook"
-							echo "Pai gitlab_webhook_url: $gitlab_webhook_url"
+							echo "Jenkins url: $var_jenkins_user_passwd_url"
+							echo "Gitlab job hook: $gitlab_job_hook"
+							echo "Gitlab webhook url: $gitlab_webhook_url"
 
-							//sh "curl --header \"PRIVATE-TOKEN: $var_private_token\" -X POST \"http://$var_bitbucket_base/api/v3/projects/$cas_proj_id/hooks?enable_ssl_verification=false&push_events=true&token=$secret_token&url=$gitlab_webhook_url\""
 							sh "curl --header \"PRIVATE-TOKEN: $var_private_token\" -X POST \"http://$var_bitbucket_base/api/v3/projects/$cas_proj_id/hooks?enable_ssl_verification=false&push_events=true&url=$gitlab_webhook_url\""
-					
 						}
 						sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
 					}
@@ -485,7 +470,7 @@ def setSCMBase(scm, repo_base)
 	{
 		scm_base = scm_base + "scm/"
 	}
-	echo "Pai scm_base:$scm_base"
+	echo "SCM Base:$scm_base"
 }
 
 def sendEvent(service_type, service_name, domain, runtime, admin_group, event_name, event_status, error){

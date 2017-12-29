@@ -305,7 +305,7 @@ def setSCMBase(scm, repo_base)
 	{
 		scm_base = scm_base + "scm/"
 	}
-	echo "Pai scm_base:$scm_base"
+	echo "SCM Base:$scm_base"
 }
 
 def echoServerlessFile() {
