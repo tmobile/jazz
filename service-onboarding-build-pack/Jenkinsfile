@@ -39,6 +39,14 @@ node  {
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
+	if (params.rateExpression){
+		echo "params include rateExpression : ${params.rateExpression}"
+		def rateExpression = params.rateExpression
+	}
+	if (params.enableEventSchedule){
+		echo "params include enableEventSchedule : ${params.enableEventSchedule}"
+		def enableEventSchedule = params.enableEventSchedule
+	}
 
 	def service_template
 	def service_username
@@ -229,22 +237,41 @@ node  {
 				}
 
 				if(service_type == 'lambda'|| service_type == 'function') {
-					def rate_expression = params.rateExpression
-					def enable_eventschedule = params.enableEventSchedule
+					def rate_expression = rateExpression//params.rateExpression
+					def enable_eventschedule = enableEventSchedule//params.enableEventSchedule
+					def event_source_ec2 =  params.event_source_ec2
+					def event_source_s3 =  params.event_source_s3
+					def event_source_dynamodb =  params.event_source_dynamodb
+					def event_source_stream =  params.event_source_stream
+					def event_action_ec2 =  params.event_action_ec2
+					def event_action_s3 =  params.event_action_s3
+					def event_action_dynamodb =  params.event_action_dynamodb
+					def event_action_stream =  params.event_action_stream
 
+					echo "in lambda bool check, rate_expression: ${rate_expression}"
 					if(rate_expression && rate_expression.trim() != ""){
 						// Using echo commands to write to deployment-env.yml
 						sh "echo \$'\neventScheduleRate: cron($rate_expression)' >> ./deployment-env.yml"
 					}
-					def var_enable_eventschedule;
-					if (enable_eventschedule)
-					   if (enable_eventschedule == true)
-					      var_enable_eventschedule = "true";
-					   else if (enable_eventschedule == false)
-					      var_enable_eventschedule = "false";
-
-					if(var_enable_eventschedule && var_enable_eventschedule.trim() != ""){
-						sh "echo \$'eventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
+					echo "in lambda bool check enable_eventschedule: ${enable_eventschedule}"
+					if(enable_eventschedule && enable_eventschedule.trim() != ""){
+						sh "echo \$'\neventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
+					}
+					if(event_source_ec2 && event_action_ec2){
+						sh "echo \$'\nevent_source_ec2: $event_source_ec2' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_ec2: $event_action_ec2' >> ./deployment-env.yml"
+					}
+					if(event_source_s3 && event_action_s3){
+						sh "echo \$'\nevent_source_s3: $event_source_s3' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_s3: $event_action_s3' >> ./deployment-env.yml"
+					}
+					if(event_source_dynamodb && event_action_dynamodb){
+						sh "echo \$'\nevent_source_dynamodb: $event_source_dynamodb' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_dynamodb: $event_action_dynamodb' >> ./deployment-env.yml"
+					}
+					if(event_source_stream && event_action_stream){
+						sh "echo \$'\nevent_source_stream: $event_source_stream' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_stream: $event_action_stream' >> ./deployment-env.yml"
 					}
 
 					/*
@@ -486,48 +513,51 @@ def LoadConfiguration() {
 
 /**
 * Send email to the recipient with the build status and any additional text content
-* Supported build status values =  FAILED & COMPLETED
+* Supported build status values = STARTED, FAILED & COMPLETED
 * @return
 */
-def send_status_email (email_id, build_status, service, email_content) {
+def send_status_email (email_id, build_status, service, domain) {
    	echo "Sending build notification to " + email_id
-		def body_subject = ""
-		def body_text = ""
-		def cc_email = ""
+		def body_subject = ''
+		def body_text = ''
+		def cc_email = ''
+		def body_html = ''
    	if (build_status == 'STARTED') {
 			echo "email status started"
-			echo "body_subject check : ${body_subject}"
-        body_subject = "Jazz Build Notification: Deployment STARTED for service: " + service
+			body_subject = 'Jazz Build Notification: Creation STARTED for service: ' + service
    	} else if (build_status == 'FAILED') {
 			echo "email status failed"
-			echo "body_text check: ${body_text}"
-				def build_url = env.BUILD_URL + 'console'
-        body_subject = "Jazz Build Notification: Deployment FAILED for service: " + service
-        body_text = body + "\n\nFor more details, please click this link: $build_url"
+			def build_url = env.BUILD_URL + 'console'
+			body_subject = 'Jazz Build Notification: Creation FAILED for service: ' + service
+			body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
    	} else if (build_status == 'COMPLETED'){
-        body_subject = "Jazz Build Notification: Deployment COMPLETED successfully for service: $service"
+        body_subject = 'Jazz Build Notification: Creation COMPLETED successfully for service: ' + service
    	} else {
         echo "Unsupported build status, nothing to email.."
         return
    	}
-   	if (email_content != ''){
-        body_text = body_text + "\n\n" + email_content
+   	if (domain != ''){
+			domain = 'For Service: ' + service + ' in Domain: ' + domain
+        body_text = body_text + '\n\n' + domain
 		}
-		def body = "{ \"from\": \"JAZZ ADMIN <${env.JAZZ_ADMIN}>\","+
-								"\"to\": \"${email_id}\","+
-								"\"subject\": \"${body_subject}\","+
-								"\"text\": \"${body_text}\","+
-								"\"cc\": \"${cc_email}\"}"
+		def fromStr = 'JAZZ ADMIN <' + env.JAZZ_ADMIN + '>'
+		body = JsonOutput.toJson([
+							from : fromStr,
+					  	to : email_id,
+					  	subject : body_subject,
+					  	text : body_text,
+							cc : cc_email,
+							html : body_html
+				    ])
 
-		/*JsonOutput.toJson([
-			'from': "JAZZ ADMIN <${env.JAZZ_ADMIN}>",
-	  	'to': email_id,
-	  	'subject': body_subject ,
-	  	'text': body_text,
-			'cc': cc_email
-    ])*/
+		echo "request body before sending email: ${body}"
+
    	try{
-				def sendMail = sh (script: "curl -k -v -H \"Authorization: $g_login_token\" \'Content-type: application/json\' -d \'$body\' ${g_base_url}/platform/email", returnStdout: true ).trim()
+				def sendMail = sh (script: "curl -X POST \
+																		${g_base_url}/platform/email \
+																		-k -v -H \"Authorization: $g_login_token\" \
+																		-H \"Content-Type: application/json\" \
+																		-d \'${body}\'", returnStdout: true).trim()
 				def responseJSON = parseJson(sendMail)
 				if(responseJSON.data){
 					echo "successfully sent e-mail to $email_id"
@@ -537,4 +567,12 @@ def send_status_email (email_id, build_status, service, email_content) {
    	} catch (e){
        echo "Failed while sending build status notification"
    	}
+}
+
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
 }

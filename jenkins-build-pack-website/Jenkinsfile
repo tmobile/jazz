@@ -816,43 +816,45 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 */
 def send_status_email (email_id, build_status, service, email_content) {
    	echo "Sending build notification to " + email_id
-		def body_subject = ""
-		def body_text = ""
-		def cc_email = ""
+		def body_subject = ''
+		def body_text = ''
+		def cc_email = ''
+		def body_html = ''
    	if (build_status == 'STARTED') {
 			echo "email status started"
-			echo "body_subject check : ${body_subject}"
-        body_subject = "Jazz Build Notification: Deployment STARTED for service: " + service
+			body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + service
    	} else if (build_status == 'FAILED') {
 			echo "email status failed"
-			echo "body_text check: ${body_text}"
-				def build_url = env.BUILD_URL + 'console'
-        body_subject = "Jazz Build Notification: Deployment FAILED for service: " + service
-        body_text = body + "\n\nFor more details, please click this link: $build_url"
+			def build_url = env.BUILD_URL + 'console'
+			body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + service
+			body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
    	} else if (build_status == 'COMPLETED'){
-        body_subject = "Jazz Build Notification: Deployment COMPLETED successfully for service: $service"
+        body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
    	} else {
         echo "Unsupported build status, nothing to email.."
         return
    	}
    	if (email_content != ''){
-        body_text = body_text + "\n\n" + email_content
+        body_text = body_text + '\n\n' + email_content
 		}
-		def body = "{ \"from\": \"JAZZ ADMIN <${env.JAZZ_ADMIN}>\","+
-								"\"to\": \"${email_id}\","+
-								"\"subject\": \"${body_subject}\","+
-								"\"text\": \"${body_text}\","+
-								"\"cc\": \"${cc_email}\"}"
+		def fromStr = 'JAZZ ADMIN <' + env.JAZZ_ADMIN + '>'
+		body = JsonOutput.toJson([
+							from : fromStr,
+					  	to : email_id,
+					  	subject : body_subject,
+					  	text : body_text,
+							cc : cc_email,
+							html : body_html
+				    ])
 
-		/*JsonOutput.toJson([
-			'from': "JAZZ ADMIN <${env.JAZZ_ADMIN}>",
-	  	'to': email_id,
-	  	'subject': body_subject ,
-	  	'text': body_text,
-			'cc': cc_email
-    ])*/
+		echo "request body before sending email: ${body}"
+
    	try{
-				def sendMail = sh (script: "curl -k -v -H \"Authorization: $g_login_token\" \'Content-type: application/json\' -d \'$body\' ${g_base_url}/platform/email", returnStdout: true ).trim()
+				def sendMail = sh (script: "curl -X POST \
+																		${g_base_url}/platform/email \
+																		-k -v -H \"Authorization: $g_login_token\" \
+																		-H \"Content-Type: application/json\" \
+																		-d \'${body}\'", returnStdout: true).trim()
 				def responseJSON = parseJson(sendMail)
 				if(responseJSON.data){
 					echo "successfully sent e-mail to $email_id"
@@ -862,4 +864,12 @@ def send_status_email (email_id, build_status, service, email_content) {
    	} catch (e){
        echo "Failed while sending build status notification"
    	}
+}
+
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
 }
