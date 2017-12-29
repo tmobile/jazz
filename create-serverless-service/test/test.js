@@ -70,7 +70,7 @@ describe('create-serverless-service', function() {
     //set up for default valid values to pass into handler()
     beforeEach(function(){
       event = {
-        "stage" : "test"
+        "stage" : "test",
         "principalId" : "@pp1eJack",
 		"headers" : {
           "Authorization" : "pr!ncessBubb1eGum"
