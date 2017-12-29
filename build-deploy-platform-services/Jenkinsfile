@@ -48,7 +48,7 @@ node {
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
 	def var_bitbucket_base			= env.REPO_BASE
 	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
-	def var_api_key 				= env.API_KEY
+	def var_api_key 				= ''
 	
 	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git" 
 	
@@ -61,8 +61,10 @@ node {
 
 	if (params.scm_branch == 'master') {
 		envmnt = 'prod'
+		var_api_key = env.API_ID_PROD
 	}else {
 		envmnt = 'dev'
+		var_api_key = env.API_ID_DEV
 	}
 	
 	stage ('Get Serverless Service')
@@ -289,7 +291,7 @@ node {
 	}
 	
 	
-	stage('Deployment to Dev Env') {
+	stage('Deployment to ' + envmnt + ' Env') {
 		// @TODO : Send Event feature coming soon
 		sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 		
