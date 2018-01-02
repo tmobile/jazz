@@ -46,7 +46,7 @@ def Event_Status = [
 
 node ()  {
 	region = env.jazz_region
-	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 
 	echo "Build Pack website params: " + params
 

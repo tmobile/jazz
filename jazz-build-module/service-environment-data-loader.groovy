@@ -10,28 +10,34 @@ echo "Service metadata module loaded successfully"
  * get it ready for Jenkins builds. It loads data for all service types.
 */
 
-@Field def g_dev_s3_bucket
-@Field def g_stg_s3_bucket
-@Field def g_prd_s3_bucket
-@Field def g_login_token
-@Field def util_url
-@Field def g_service_id
-@Field def g_service_created_by
-@Field def g_service_domain
-@Field def g_service_name
-@Field def g_service_repository
-@Field def g_service_runtime
-@Field def g_service_type
+@Field def role_arn
+@Field def region
+@Field def role_id
+@Field def jenkins_url
+@Field def api_id_dev
+@Field def api_id_stg
+@Field def api_id_prod
+@Field def current_environment
+@Field def user_pool_id
+@Field def env_name_prefix
+@Field def client_id
+@Field def repo_base
+@Field def es_hostname
+@Field def bitbucket_base
+@Field def bitbucket_username
+@Field def bitbucket_password
 
 /**
  * Initialize the module
  */
-def initialize(serviceType, service, domain, url, dev, stg, prd) {
-	setServiceType(serviceType)
-	setDomain(domain)
-	setService(service)
-	setUrl(url)
-	setDevS3(dev)
+def initialize(role_arn, region, role_id, jenkins_url, api_id_dev, api_id_stg, api_id_prod, current_environment,user_pool_id,
+				env_name_prefix, client_id, repo_base, es_hostname, bitbucket_base, bitbucket_username, bitbucket_password) {
+	
+	setRoleARN(role_arn)
+	setDomain(region)
+	setService(role_id)
+	setUrl(jenkins_url)
+	setDevS3(api_id_dev)
 	setStgS3(stg)
 	setPrdS3(prd)
 }
@@ -42,74 +48,167 @@ def initialize(serviceType, service, domain, url, dev, stg, prd) {
  */
 def loadServiceMetaData() {
 	try {
-		def serviceData = sh (script: "curl GET  -k -v \
-			-H \"Content-Type: application/json\" \
-			-H \"Authorization: $g_login_token\" \
-			\"$util_url\"", returnStdout: true)
-		if(serviceData) {
-			def serviceDataObj = parseJson(serviceData)
-			if(serviceDataObj && serviceDataObj.data && serviceDataObj.data.services) {
-				def dataArr = serviceDataObj.data.services[0]
-				g_service_id = dataArr.id
-				g_service_created_by = dataArr.created_by
-				g_service_repository = dataArr.repository
-				g_service_runtime = dataArr.runtime
-			}
+		if (fileExists('swagger/swagger.json')){
+			//Swagger SEDs
+			echo "Updating the Swagger SEDs"
+			sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
+		 }
+
+		echo "Updating the index.js for create and delete services"
+		
+		// @TODO : These conditional statements could be removed and needs to be refactored
+		if ((service_template.trim() == "delete-serverless-service") ) {
+			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
 		}
-		if(!g_service_id) {
-			error "Could not fetch service metadata"
+		
+		if ( (service_template.trim() == "platform_events") ) {
+			sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' ./components/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' ./components/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' ./components/prod-config.json"
+		}
+		
+		if ( (service_template.trim() == "platform-services-handler") ) {
+			sh "sed -i -- 's/{conf-apikey}/" + env.API_ID_DEV + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/" + env.API_ID_STG + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/" + env.API_ID_PROD + "/g' ./config/prod-config.json"
+			
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+			
+			sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/prod-config.json"
+			
+		}
+		
+		// @TODO : These conditional statements could be removed and needs to be refactored
+		if ( (service_template.trim() == "platform_login") || (service_template.trim() == "platform_logout") || (service_template.trim() == "cognito-authorizer")) {
+			echo "Updating configs for " + envmnt + " login and logout"
+			sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+		  
+			echo "Updating configs for stg"
+			sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+		  
+			echo "Updating configs for prod"
+			sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+		}
+		
+		if ( (service_template.trim() == "is-service-available"))   
+		{
+			sh "sed -i -- 's/{inst_stack_prefix}/" + env.env_name_prefix + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/" + env.env_name_prefix + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/" + env.env_name_prefix + "/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+		}
+
+		// @TODO : These conditional statements could be removed and needs to refactored
+		if ( (service_template.trim() == "create-serverless-service") ) {
+			echo "Updating configs for repo base"
+			
+			sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/prod-config.json"
+		}
+		
+		// @TODO : These conditional statements could be removed and needs to refactored
+		if ( (service_template.trim() == "delete-serverless-service") || (service_template.trim() == "create-serverless-service") ) {
+			echo "Updating configs for jenkins host"
+			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+		  
+			echo "Updating configs for stg"
+			sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+		  
+			echo "Updating configs for prod"
+			sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+		}
+		
+		// @TODO : These conditional statements could be removed and needs to refactored
+		if (service_template.trim() == "platform_services") {
+			echo "Updating parameter specific to platform-services"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+		}
+
+		if (service_template.trim() == "platform_logs") {
+			echo "Updating parameter specific to platform_logs"
+			sh "sed -i -- 's/{env-prefix}/" + env.env_name_prefix + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{env-prefix}/" + env.env_name_prefix + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{env-prefix}/" + env.env_name_prefix + "/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/prod-config.json"
+		}
+
+		if (service_template.trim() == "cloud-logs-streamer") {
+			echo "Updating parameter specific to cloud-logs-streamer"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/prod-config.json"
+		}
+
+		if (service_template.trim() == "platform_usermanagement") {
+			echo "Updating parameter specific to platform_usermanagement"
+
+			sh "sed -i -- 's/{user_pool_id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{user_pool_id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{user_pool_id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{user_client_id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{user_client_id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{user_client_id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{region}/" + region + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{region}/" + region + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{region}/" + region + "/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's,{bb_service_host}," + "http://" + var_bitbucket_base + ",g' ./config/dev-config.json"
+			sh "sed -i -- 's,{bb_service_host}," + "http://" + var_bitbucket_base + ",g' ./config/stg-config.json"
+			sh "sed -i -- 's,{bb_service_host}," + "http://" + var_bitbucket_base + ",g' ./config/prod-config.json"
+		
+			sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + "/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/prod-config.json"
+		}
+
+		if (service_template.trim() == "platform_email") {
+			echo "Updating parameter specific to platform email"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
 		}
 	}
 	catch(e){
 		echo "error occured while fetching service metadata: " + e.getMessage()
 		error "error occured while fetching service metadata: " + e.getMessage()
 	}
-}
-
-/**
- * Get bucket name for environment
- * @param stage environment
- * @return  folder name
- */
-def getBucket(stage) {
-	if(stage == 'dev') {
-		return g_dev_s3_bucket
-	}else if (stage == 'stg') {
-		return g_stg_s3_bucket
-	} else if (stage == 'prod') {
-		return g_prd_s3_bucket
-	}
-}
-
- /**
-  * Core dump
-  */
-def showState() {
-	echo "g_service_id...$g_service_id"
-	echo "g_service_created_by...$g_service_created_by"
-	echo "g_service_domain...$g_service_domain"
-	echo "g_service_name...$g_service_name"
-	echo "g_service_repository...$g_service_repository"
-	echo "g_service_runtime...$g_service_runtime"
-	echo "g_service_tags...$g_service_tags"
-	echo "g_service_type...$g_service_type"
-}
-
-
- /**
-  * Jazz shebang that runs quietly and disable all console logs
-  *
-  */
-def jazz_quiet_sh(cmd) {
-    sh('#!/bin/sh -e\n' + cmd)
-}
-
-/**
- * JSON parser
- */
-@NonCPS
-def parseJson(def json) {
-    new groovy.json.JsonSlurperClassic().parseText(json)
 }
 
 /**

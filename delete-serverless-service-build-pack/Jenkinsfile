@@ -22,7 +22,7 @@ import groovy.transform.Field
 
 node {
 	region = env.jazz_region
-	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 	role = env.jazz_roleId
 	api_doc_s3_bucket = env.jazz_s3_api_doc
 

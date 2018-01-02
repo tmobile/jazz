@@ -52,7 +52,7 @@ node  {
 	if (params.username) {
 		owner = params.username
 	}
-	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 	echo "fetching auth_token"
 	auth_token = getAuthToken()
 	
@@ -439,14 +439,14 @@ def sendEvent(service_type, service_name, domain, runtime, admin_group, event_na
 }
 
 def updateServiceInDB(service_id_in_db, apiId, region, statusval, repo_url) {
-  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\", \"repository\": \"${repo_url}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id_in_db}/"
+  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\", \"repository\": \"${repo_url}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/prod/platform/services/${service_id_in_db}/"
 }
 
 def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region) {
 
 	try {
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '{ \"service\": \"${service_name}\", \"status\":\"creation_started\", \"domain\": \"${domain}\", \"type\": \"${servicetype}\", \"created_by\": \"${created_by}\", \"runtime\": \"${runtime}\", \"repository\": \"${repo_url}\", \"description\": \"${desc}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/dev/platform/services/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '{ \"service\": \"${service_name}\", \"status\":\"creation_started\", \"domain\": \"${domain}\", \"type\": \"${servicetype}\", \"created_by\": \"${created_by}\", \"runtime\": \"${runtime}\", \"repository\": \"${repo_url}\", \"description\": \"${desc}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/prod/platform/services/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
