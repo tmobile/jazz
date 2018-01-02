@@ -161,7 +161,7 @@ node {
 				
 				// @TODO : These conditional statements could be removed and needs to be refactored
 				if ( (service_template.trim() == "platform_login") || (service_template.trim() == "platform_logout") || (service_template.trim() == "cognito-authorizer")) {
-					echo "Updating configs for dev login and logout"
+					echo "Updating configs for " + envmnt + " login and logout"
 					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
 					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
                     sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
@@ -316,7 +316,9 @@ node {
 			sh "sed -i -- 's/" + service_name + "/" + env.env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
 
 			echo "Deploying lambda service"
-			sh "serverless deploy --stage "+envmnt+" -v --bucket " + env.jazz_bucket_dev
+			def envBucketKey= "jazz_bucket_" + envmnt
+			
+			sh "serverless deploy --stage "+envmnt+" -v --bucket " + env[envBucketKey]
 			echo "Deployed lambda service"
 							
 			// Generate swagger file based on environment
@@ -324,7 +326,7 @@ node {
 				echo "Generating the swagger file for each environment"
 				def apiHostName	= var_api_key+".execute-api."+region+".amazonaws.com" //Development environment
 				
-				generateSwaggerEnv(service_name, envmnt, env.env_name_prefix+"-"+envmnt, apiHostName, domain, service_name, env.env_name_prefix)
+				generateSwaggerEnv(service_name, envmnt, env.env_name_prefix + "-" + envmnt, apiHostName, domain, service_name, env.env_name_prefix)
 				
 				// import swagger api spec
 				echo "Deploying API gateway Endpoints"
@@ -339,7 +341,7 @@ node {
 				try {
 					def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()
 
-					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
+					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-" +envmnt + " --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
 					 echo "set permission for cloud-logs-streamer - success"
 				 }catch(ss) {
 					//ignore if already registered permissions
@@ -350,7 +352,7 @@ node {
 
 			if ( (service_template.trim() == "platform-services-handler") ) {
           
-				sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + env.env_name_prefix + "-events-hub-dev --function-name arn:aws:lambda:$region:$roleId:function:" + env.env_name_prefix + "-hndlr-dev --starting-position LATEST --region " + region
+				sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + env.env_name_prefix + "-events-hub-" + envmnt + " --function-name arn:aws:lambda:$region:$roleId:function:" + env.env_name_prefix + "-hndlr-" + envmnt +" --starting-position LATEST --region " + region
 			}
 
 			
