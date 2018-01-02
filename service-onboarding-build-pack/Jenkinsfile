@@ -39,13 +39,15 @@ node  {
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
+	def rateExpression
+	def enableEventSchedule
 	if (params.rateExpression){
 		echo "params include rateExpression : ${params.rateExpression}"
-		def rateExpression = params.rateExpression
+		rateExpression = params.rateExpression
 	}
 	if (params.enableEventSchedule){
 		echo "params include enableEventSchedule : ${params.enableEventSchedule}"
-		def enableEventSchedule = params.enableEventSchedule
+		enableEventSchedule = params.enableEventSchedule
 	}
 
 	def service_template
