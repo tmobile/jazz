@@ -17,7 +17,6 @@ import groovy.transform.Field
 @Field def region = ''
 @Field def role = ''
 @Field def api_doc_s3_bucket = ''
-@Field def jq = '/usr/local/bin/jq'
 
 node {
 	region = env.jazz_region
@@ -1041,20 +1040,31 @@ def updateServiceInDB(service_id_in_db, devApiID, region, statusval) {
 def loadEventsModule() {
 }
 
+	
 def loadServiceInfo() {
 	def token = setCredentials()
 	def url = "$g_base_url/platform/services?domain=$domain&service=$service&isAdmin=true"
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.created_by] | join(\",\")'", returnStdout: true)
-	def values = curlOutput.split(',')
-
+			-H \"Authorization: $token\" \"$url\"", returnStdout: true)
+  	echo "CURL o/p: $curlOutput"
+  	
+	def jsonParser = new groovy.json.JsonSlurper()
+	def resultJson = jsonParser.parseText(curlOutput)
+  	echo "Resultjson: $resultJson"
+	def createby = ''
+  	def pcreated = resultJson.data[0].created_by
+  	echo "resultjson createby: $pcreated"
+	if(resultJson != null && resultJson.data != null && resultJson.data[0].created_by != null) {
+			createby = resultJson.data[0].created_by
+		}
+	def values = createby.split(',')
+	
 	echo "Services : $values"
 
 	if (values[0]) {
 		owner = values[0].replaceAll("[\n\r]", "")
 	}
 }
-
 
 /**
  * For getting token to access catalog APIs.
@@ -1074,8 +1084,10 @@ def loadServiceInfo() {
 			def token = sh (script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 				 $url \
-				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
-			token = token.replaceAll("[\n\r]", "")
+				-d \'${payload}\'", returnStdout:true)
+			def jsonParser = new groovy.json.JsonSlurper()
+			def resultJson = jsonParser.parseText(token)
+			token = resultJson.data.token.replaceAll("[\n\r]", "")
 			return token
 		}
 		catch(e){

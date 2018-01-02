@@ -42,7 +42,6 @@ def Event_Status = [
 @Field def current_environment = ''
 @Field def env_prefix = ''
 @Field def region = ''
-@Field def jq = '/usr/local/bin/jq'
 
 node ()  {
 	region = env.jazz_region
@@ -731,10 +730,39 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 		preserveEnvKey = 'dev'
 	}
 
-	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $g_login_token\" \"$url\" | $jq -r '.data[0] | [.id, .endpoints[\"$preserveEnvKey\"], .created_by] | join(\",\")'", returnStdout: true)
+	def curlCMDOutput = sh (script: "curl -H \"Content-Type: application/json\" \
+			-H \"Authorization: $g_login_token\" \"$url\"", returnStdout: true)
+			
+	def jsonParser = new groovy.json.JsonSlurper()
+	def resultJson = jsonParser.parseText(curlCMDOutput)
+	def curlOutputJoin = ''
+	if (resultJson != null && resultJson.data != null )
+	{
+		if( resultJson.data[0].id != null){
+			curlOutputJoin = resultJson.data[0].id 
+		}
+		else{
+			curlOutputJoin = curlOutputJoin + "," + ""
+		}
+		
+		if( resultJson.data[0].endpoints != null && resultJson.data[0].endpoints["$preserveEnvKey"] != null){
+			curlOutputJoin = curlOutputJoin + "," + resultJson.data[0].endpoints["$preserveEnvKey"]
+		}
+		else{
+			curlOutputJoin = curlOutputJoin + "," + ""
+		}
+		
+		if( resultJson.data[0].created_by != null){
+			curlOutputJoin = curlOutputJoin + "," + resultJson.data[0].created_by
+		}
+		else{
+			curlOutputJoin = curlOutputJoin + "," + ""
+		}
+	
+	}
 
-	def values = curlOutput.split(',')
+	echo "curlOutputJoin:" + "$curlOutputJoin"
+  	def values = curlOutputJoin.split(',')
 
 	if (values[0]) {
 		service_id = values[0].replaceAll("[\n\r]", "")
@@ -790,16 +818,19 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 				'password': PWD
 			]
 
-			def payload = JsonOutput.toJson(login_json)
-
+			def payload = JsonOutput.toJson(login_json)                           
 			try {
 				g_login_token = sh (script: "curl --silent -X POST -k -v \
 					-H \"Content-Type: application/json\" \
 					 $loginUrl \
-					-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
-
-				g_login_token = g_login_token.replaceAll("[\n\r]", "")
+					-d \'${payload}\'", returnStdout:true)
+            			def jsonParser = new groovy.json.JsonSlurper()
+				def resultJson = jsonParser.parseText(g_login_token)
+            			echo "Token After : $resultJson"
+				g_login_token = resultJson.data.token.replaceAll("[\n\r]", "")
+            			return g_login_token
 			}
+						    
 			catch(e){
 				echo "error occured: " + e.getMessage()
 				error "error occured: " + e.getMessage()
