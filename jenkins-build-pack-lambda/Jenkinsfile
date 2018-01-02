@@ -798,13 +798,13 @@ def send_status_email (email_id, build_status, service, email_content) {
    	}
 }
 
-def updateServiceInDB(service_id, domain, devApiID, region, status) {
+def updateServiceInDB(service_id, domain, apiID, region, status) {
 
 	try {
 		echo "svc id ===============" + service_id
 		echo "domain ===============" + domain
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${g_login_token}\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://${devApiID}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id}?isAdmin=true",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${g_login_token}\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://${apiID}.execute-api.${region}.amazonaws.com/prod/platform/services/${service_id}?isAdmin=true",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
