@@ -157,8 +157,7 @@ node {
 					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/stg-config.json"
 					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/prod-config.json"
 					
-				}
-				
+				}				
 				// @TODO : These conditional statements could be removed and needs to be refactored
 				if ( (service_template.trim() == "platform_login") || (service_template.trim() == "platform_logout") || (service_template.trim() == "cognito-authorizer")) {
 					echo "Updating configs for " + envmnt + " login and logout"
