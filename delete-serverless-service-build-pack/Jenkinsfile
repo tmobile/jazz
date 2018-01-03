@@ -99,7 +99,7 @@ node {
 				loadServerlessConfig(runtime, configPackBBURL)
 				//changeServerlessConfig(runtime)
 				//updateServiceNameConfig(domain, service_name)
-				updateSwaggerConfig(domain, params.service_name.trim(), env.API_ID_DEV, config)
+				updateSwaggerConfig(domain, params.service_name.trim(), env.API_ID_PROD, config)
 			} else if(fileExists('build.lambda')) {
 				flowType = "LAMBDA"
 				//events.setServiceType("LAMBDA")
@@ -541,11 +541,7 @@ def cleanUpApiGatewayResources(stage, path, region) {
 				def status_json = sh (
 					script: "aws apigateway delete-resource --rest-api-id "+getApiId(stage)+"  --region " + region + " --resource-id "+resource_id+" --output json" ,
 					returnStdout: true
-				).trim()
-				def deployment_status_json = sh (
-					script: "aws apigateway create-deployment --rest-api-id "+getApiId(stage) + "  --region " + region + " --stage-name "+stage+" --description 'API deployment after resource clean up' --output json" ,
-					returnStdout: true
-				).trim()
+				).trim()				
 			} else {
 				echo "Resource Id does not exists in API gateway."
 				//events.sendCompletedEvent('DELETE_API_RESOURCE', "No Resource to be deleted", null, getEnvKey(stage))
