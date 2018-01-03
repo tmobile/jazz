@@ -374,6 +374,7 @@ def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, servic
     sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
     sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
     sh "sed -i -- 's/{envPrefix}/" + env_name_prefix + "/g' swagger/swagger.json" // {domain}
+	sh "sed -i -- 's/{envmnt}/" + env + "/g' swagger/swagger.json" // {environment}
 }
 
 /**
