@@ -15,11 +15,13 @@
 // =========================================================================
 
 'use strict';
+
+const https = require('https');
+const request = require('request');
+
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const CronParser = require("./components/cron-parser.js");
-const https = require('https');
-const request = require('request');
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const util = require('util');
@@ -43,17 +45,17 @@ module.exports.handler = (event, context, cb) => {
 
     try {
         if (!event.body) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service inputs are not defined")));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("Service inputs are not defined")));
         } else if (!event.body.service_type) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service type is not defined")));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_type' is not defined")));
         } else if (!event.body.service_name || !isValidName(event.body.service_name)) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service name is not defined or has invalid characters")));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_name' is not defined or has invalid characters")));
         } else if (!event.headers || !event.headers.Authorization) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Authorization header is missing")));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'headers' is missing")));
         } else if (event.body.service_type !== "website" && (!event.body.runtime)) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Service runtime is not defined")));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'runtime' is not defined")));
         } else if (event.body.domain && !isValidName(event.body.domain)) {
-            return cb(JSON.stringify(errorHandler.throwInternalServerError("Namespace is not appropriate")));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("Namespace is not appropriate")));
         }
 
         var user_id = event.principalId;
@@ -69,7 +71,9 @@ module.exports.handler = (event, context, cb) => {
         var approvers = event.body.approvers;
         var userlist = "";
         var domain = (event.body.domain || "").toLowerCase();
-        var bitbucketName = event.body.service_name.toLowerCase();
+        var service_name = event.body.service_name.toLowerCase();
+
+        var bitbucketName = service_name;
         if (domain.length) {
             bitbucketName = domain + "-" + bitbucketName;
         }
@@ -82,7 +86,7 @@ module.exports.handler = (event, context, cb) => {
             token: config.BUILD_TOKEN,
             service_type: event.body.service_type,
             runtime: event.body.runtime,
-            service_name: event.body.service_name,
+            service_name: service_name,
             username: user_id,
             admin_group: userlist,
             domain: event.body.domain,

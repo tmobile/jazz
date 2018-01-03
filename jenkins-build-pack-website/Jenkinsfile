@@ -161,15 +161,15 @@ node ()  {
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
 						updateCloudFrontPolicy(service, s3ProdBucket)
-						
+
 						def cfDetails = getCloudFrontDetails(current_environment, service)
 
 						if (cfDetails) {
 							echo "id is ${cfDetails[0]}, domain: ${cfDetails[1]}"
 						}
-						
+
 						updateEnableCompressConfig(current_environment, service, cfDetails[0])
-						
+
 						invalidateCloudFrontCache(cfDetails[0], service)
 
 						if (cfDetails[1]) {
@@ -208,7 +208,7 @@ node ()  {
 						generateDistributionConfig(service, current_environment, config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3ProdBucket)                                                                     
+						updateCloudFrontPolicy(service, s3ProdBucket)
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
@@ -266,11 +266,11 @@ node ()  {
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
 						updateCloudFrontPolicy(service, s3DevBucket)
-						
+
 						def cfDetails = getCloudFrontDetails(current_environment, service)
-						
+
 						updateEnableCompressConfig(current_environment, service, cfDetails[0])
-						
+
 						invalidateCloudFrontCache(cfDetails[0], service)
 
 						if (cfDetails[1]) {
@@ -476,7 +476,7 @@ def loadDistributionConfig() {
 def loadBucketPolicy(String s3Bucket){
 	// fetch current policy and save to > bucket-policy.json
 	sh "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text > bucket-policy.json"
-	
+
 	def bucketPolicy = readFile('bucket-policy.json').trim()
 	def jsonSlurper = new JsonSlurper()
 	def policyLazyMap = jsonSlurper.parseText(bucketPolicy)
@@ -652,7 +652,7 @@ def getCloudFrontDetails(env, service) {
 }
 
 def updateEnableCompressConfig(env, service, distributionId) {
-	
+
 	try {
 		def cf_config = sh (script: "aws cloudfront get-distribution-config --id $distributionId --output json" ,
 							returnStdout: true
@@ -697,10 +697,10 @@ def updateEnableCompressConfig(env, service, distributionId) {
 def invalidateCloudFrontCache(distributionId, service) {
 	try {
 		if(distributionId) {
-			
+
 			def callerReference = service+"_"+env.BUILD_ID
 			def config = "{\"Paths\":{\"Quantity\":1,\"Items\":[\"/*\"]},\"CallerReference\":\"$callerReference\"}"
-			
+
 			def invalidateStatus = sh(
 						script:"aws cloudfront create-invalidation \
 								--distribution-id $distributionId \
@@ -723,7 +723,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	setCredentials(g_base_url + '/platform/login')
 
-	def url = "$serviceUrl?domain=$domain&service=$service"
+	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
 
 	if (endpointKey == 'dev') {
 		preserveEnvKey = 'prod'
@@ -761,7 +761,7 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 
 	echo "new json $updateJson"
 
-	def serviceUpdateUrl = "$serviceUrl/$service_id"
+	def serviceUpdateUrl = "$serviceUrl/$service_id?isAdmin=true"
 
 	def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
 		        -H \"accept: application/json\" \

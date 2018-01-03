@@ -33,7 +33,8 @@ export class LoginComponent implements OnInit {
     register:boolean = false;
     model: any = {
         username: '',
-        password: ''
+        password: '',
+        verificationCode:''
     };
     error: any = {
         username: '',
@@ -50,6 +51,9 @@ export class LoginComponent implements OnInit {
     err_password_brd:boolean=false;
     forgot_password:boolean=false;
     userEmail:string= 'User Email';
+    new_pwd_req:boolean=false;
+    error_verificationCode_disp:boolean=false;
+    err_verificationCode_brd:boolean=false;
 
     constructor(
         private router: Router,
@@ -97,22 +101,24 @@ export class LoginComponent implements OnInit {
         this.err_username_brd=false;
         this.error_password_disp=false;
         this.err_password_brd=false;
+        this.error_verificationCode_disp=false;
+        this.err_verificationCode_brd=false;
       }
 
-    toggleReg(selected){
+    toggleReg(selected) {
        this.onChange(selected);
-       this.model.username=this.model.password="";
-
-        if(selected == 'register'){
+       this.model.password = '';
+        if (selected == 'register'){
             this.register = true;
             this.regist='Back to login';
-        } else if(selected == 'newPassword'){
+        } else if (selected == 'newPassword'){
             this.register = false;
-            if(this.regist == 'Forgot Password'){
+            if (this.regist == 'Forgot Password'){
                 this.userEmail = 'Registered Email';
                 this.forgot_password=true;
                 this.regist='Back to login';
-            } else{
+            } else {
+                this.new_pwd_req=false;
                 this.userEmail = 'User Email';
                 this.forgot_password=false;
                 this.regist='Forgot Password';
@@ -213,30 +219,101 @@ export class LoginComponent implements OnInit {
                     let message=this.toastmessage.successMessage("success","register");
                     this.toast_pop('success', '', message + this.model.username);
                     this.clearRegForm();
-                    this.toggleReg('register');
+                    // this.toggleReg('register');
+                    this.register = false;
+                    this.regist = 'Forgot Password';
                 },
-        err => {
-            let error = JSON.parse(err._body);
-            let errorMessage=this.toastmessage.errorMessage(err,"register");
-            this.toast_pop('error', 'Oops!', error.message);
-        });
+                err => {
+                    let error = JSON.parse(err._body);
+                    let errorMessage=this.toastmessage.errorMessage(err,"register");
+                    this.toast_pop('error', 'Oops!', error.message);
+                });
         }
-        resetPassword(e){
-            var payload = {
-                'email': this.model.username
-            };
-            this.http.post('/platform/usermanagement/reset', payload).subscribe(
-                response =>{
-                    console.log(response);
-                }, error => {
-                    console.log(error);
+        disableLoginBtn(){
+            if (this.forgot_password && !this.new_pwd_req) {
+                if((!this.model.username) || (!this.model.username.valid && (this.model.username.dirty || this.model.username.touched))) {
+                    return true;
                 }
-            );
-            this.register = false;
-            this.userEmail = 'User Email';
-            this.forgot_password=false;
-            this.regist='Forgot Password';
-            this.onChange(e);
-            this.model.username=this.model.password="";
+            } else {
+                if ((!this.model.username || !this.model.verificationCode || !this.model.password) ||
+                (!this.model.username.valid && (this.model.username.dirty || (this.model.username.touched)))){
+                    return true;
+                }
+            }
+        }
+        resetPassword(e) {
+            if (this.forgot_password && !this.new_pwd_req) {
+                if(!this.model.username){
+                    this.error_username_disp = true;
+                    this.err_username_brd = true;
+                    this.error.username = 'Username cannot be empty';
+                }
+                let payload = {
+                    'email': this.model.username
+                };
+                this.http.post('/platform/usermanagement/reset', payload).subscribe(
+                    response =>{
+                        this.new_pwd_req = true;
+                        this.userEmail = 'Registered Email';
+                        this.forgot_password = false;
+                        this.onChange(e);
+                        this.model.password = this.model.verificationCode = '';
+                        let successMsg = this.toastmessage.customMessage('success', 'reset');
+                        this.toast_pop('success', 'Success!', successMsg);
+                        
+                    }, err => {
+                        let error = JSON.parse(err._body);
+                        let errorMessage=this.toastmessage.errorMessage(err, 'reset');
+                        try{
+                            errorMessage = error.message;
+                        } catch(e) {
+                            console.log(e);
+                        }
+                        this.toast_pop('error', 'Oops!', errorMessage);
+                    });
+            } else if (this.new_pwd_req) {
+                if(!this.model.username){
+                    this.error_username_disp = true;
+                    this.err_username_brd = true;
+                    this.error.username = 'Username cannot be empty';
+                }
+                if (!this.model.password) {
+                    this.error_password_disp= true;
+                    this.err_password_brd = true;
+                    this.error.password = 'Password cannot be empty';
+                }
+                if (!this.model.verificationCode) {
+                    this.error_verificationCode_disp= true;
+                    this.err_verificationCode_brd = true;
+                    this.error.verificationCode = 'Verification code cannot be empty';
+                }
+                let payload = {
+                    'email': this.model.username,
+                    'verificationCode': this.model.verificationCode,
+                    'password': this.model.password
+                };
+                this.http.post('/platform/usermanagement/updatepwd', payload).subscribe(
+                    response =>{
+                            this.new_pwd_req=false;
+                            this.register = false;
+                            this.userEmail = 'User Email';
+                            this.forgot_password=false;
+                            this.regist='Forgot Password';
+                            this.onChange(e);
+                            this.userEmail=this.model.password=this.model.verificationCode="";
+                            let successMsg = this.toastmessage.customMessage('success', 'updatepwd');
+                            this.toast_pop('success', 'Success!', successMsg);
+                    },
+                    err => {
+                        let error = JSON.parse(err._body);
+                        let errorMessage=this.toastmessage.errorMessage(err, 'updatepwd');
+                        try{
+                            errorMessage = error.message;
+                        } catch(e) {
+                            console.log(e);
+                        }
+                        this.toast_pop('error', 'Oops!', errorMessage);
+                    });
+            }
         }
 }

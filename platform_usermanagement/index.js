@@ -65,10 +65,11 @@ module.exports.handler = (event, context, cb) => {
 			logger.info('User password reset Request::' + JSON.stringify(service_data));
 
 			validateResetParams(service_data)
-			.then(s => forgotPassword(cognito, config, service_data))
-			.then(s => function(result){
-				logger.info("Password reset was successful for user: " + service_data.email);
-				return cb(null, {result: "success",errorCode: "0",message: "Password reset was successful for user: " + service_data.email});})
+			.then(() => forgotPassword(cognito, config, service_data))
+			.then(() => function(result){
+					logger.info("Password reset was successful for user: " + service_data.email);
+					return cb(null, responseObj({result: "success",errorCode: "0",message: "Password reset was successful for user: " + service_data.email}));
+				})
 			.catch(function (err) {
 				logger.error("Failed while resetting user password: " + JSON.stringify(err));
 
@@ -79,7 +80,7 @@ module.exports.handler = (event, context, cb) => {
 					if (err.code) {
 						return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
 					}
-					
+
 					return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while resetting user password for: " + service_data.email)));
 				}
 			});
@@ -87,10 +88,10 @@ module.exports.handler = (event, context, cb) => {
 			logger.info('User password update Request::' + JSON.stringify(service_data));
 
 			validateUpdatePasswordParams(service_data)
-			.then(s => updatePassword(cognito, config, service_data))
-			.then(s => function(result){
+			.then(() => updatePassword(cognito, config, service_data))
+			.then(() => function(result){
 				logger.info("Successfully updated password for user: " + service_data.email);
-				return cb(null, {result: "success",errorCode: "0",message: "Successfully updated password for user: " + service_data.email});})
+				return cb(null, responseObj({result: "success",errorCode: "0",message: "Successfully updated password for user: " + service_data.email}));})
 			.catch(function (err) {
 				logger.error("Failed while updating user password: " + JSON.stringify(err));
 
@@ -109,11 +110,11 @@ module.exports.handler = (event, context, cb) => {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
 			
 			validateCreaterUserParams(config, service_data)
-			.then(s => createUser(cognito, config, s))
-			.then(s => rp(createUserInBitBucket(config, service_data, s.UserSub)))
-			.then(s => function(result){
+			.then((s) => createUser(cognito, config, s))
+			.then((s) => rp(createUserInBitBucket(config, service_data, s.UserSub)))
+			.then(() => function(result){
 				logger.info("User: " + service_data.userid + " registered successfully!");
-				return cb(null, {result: "success",errorCode: "0",message: "User registered successfully!"});})
+				return cb(null, responseObj({result: "success",errorCode: "0",message: "User registered successfully!"}));})
 			.catch(function (err) {
 				logger.error("Failed while registering user: " + JSON.stringify(err));
 				
@@ -161,8 +162,8 @@ function validateResetParams(userInput) {
 		var errorHandler = errorHandlerModule();
 	
 		if (!userInput.email) {
-			logger.warn("no email address provided for password reset");
-			return reject(errorHandler.throwInputValidationError("102", "email is required field"));
+			logger.info("no email address provided for password reset");
+			reject(errorHandler.throwInputValidationError("102", "email is required field"));
 		}else{
 			resolve();
 		}
@@ -255,7 +256,7 @@ function forgotPassword(cognitoClient, config, userData) {
 			ClientId: config.USER_CLIENT_ID,
 			Username: userData.email
 		};
-		
+
 		cognitoClient.forgotPassword(cognitoParams, (err, result) => {
 			if (err)
 				reject(err);
