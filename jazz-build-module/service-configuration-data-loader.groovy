@@ -59,10 +59,11 @@ def initialize(role_arn, region, role_id, jenkins_url, api_id_dev, api_id_stg, a
  */
 def loadServiceConfigurationData() {
 	try {
+		
 		if (fileExists('swagger/swagger.json')){
 			//Swagger SEDs
 			echo "Updating the Swagger SEDs"
-			sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-role}/" + role_arn + "/g' ./swagger/swagger.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
 			sh "sed -i -- 's/{conf-accId}/" + role_id + "/g' ./swagger/swagger.json"
 		 }
@@ -217,8 +218,8 @@ def loadServiceConfigurationData() {
 		}
 	}
 	catch(e){
-		echo "error occured while fetching service metadata: " + e.getMessage()
-		error "error occured while fetching service metadata: " + e.getMessage()
+		echo "error occured while loading service configuration: " + e.getMessage()
+		error "error occured while loading service configuration: " + e.getMessage()
 	}
 }
 
@@ -228,8 +229,8 @@ def setRoleARN(roleArn){
 def setRegion(rgn){
 	region = rgn
 }
-def setRoleId(role_id){
-	role_id = role_id
+def setRoleId(roleId){
+	role_id = roleId
 }
 def setJenkinsUrl(jenkinsUrl){
 	jenkins_url = jenkinsUrl
@@ -250,10 +251,10 @@ def setUserPoolId(userPoolId){
 	user_pool_id = userPoolId
 }
 def setEnvNamePrefix(envNamePrefix){
-	role_arn = envNamePrefix
+	env_name_prefix = envNamePrefix
 }
 def setClientId(clientId){
-	env_name_prefix = clientId
+	client_id = clientId
 }
 def setRepoBase(repoBase){
 	repo_base = repoBase
