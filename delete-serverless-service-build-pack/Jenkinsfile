@@ -19,20 +19,34 @@ import groovy.transform.Field
 @Field def role = ''
 @Field def api_doc_s3_bucket = ''
 @Field def jq = '/usr/local/bin/jq'
+@Field def var_api_key
+@Field def var_api_id_dev
+@Field def var_aws_credential_id
+@Field def var_env_name_prefix
+@Field def var_repo_core
+@Field def var_repo_loc
+@Field def var_credentialsId
+@Field def var_bitbucket_base
+@Field def var_bitbucket_email
 
 node {
-	def tempRepoCred = env.REPO_CREDENTIAL_ID
-	def buildModuleUrl = "http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git"
-
-	region = envLoader.getJazzField("jazz_region")
-	g_base_url = "https://${envLoader.getApiIdField("API_KEY")}.execute-api.${region}.amazonaws.com/dev"
-	role = envLoader.getJazzField("jazz_roleId")
-	api_doc_s3_bucket = envLoader.getJazzS3Field("jazz_s3_api_doc")
-
 	echo "Starting delete service job.."
 	echo "params : $params"
 
-	loadEnvModule(buildModuleUrl)
+	loadEnvModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	region = envLoader.getJazzField("jazz_region")
+	g_base_url = "https://${envLoader.getApiField("API_KEY")}.execute-api.${region}.amazonaws.com/dev"
+	role = envLoader.getJazzField("jazz_roleId")
+	api_doc_s3_bucket = envLoader.getJazzS3Field("jazz_s3_api_doc")
+	var_api_key 				= envLoader.getApiField("API_KEY")
+	var_api_id_dev = envLoader.getApiField("API_ID_DEV")
+	var_aws_credential_id = envLoader.getAWSCredentialID()
+	var_env_name_prefix = envLoader.getEnvNamePrefix()
+	var_repo_core = envLoader.getRepositoryField("REPO_CORE")
+	var_repo_loc = envLoader.getRepositoryField("REPO_LOC")
+	var_credentialsId 			= envLoader.getRepositoryField("REPO_CREDENTIAL_ID")
+	var_bitbucket_base			= envLoader.getRepositoryField("REPO_BASE")
+	var_bitbucket_email 		= envLoader.getRepositoryField("REPO_EMAIL")
 
 	def service_name
 	def version
@@ -44,18 +58,9 @@ node {
 	def domainConfig
 	def cloudfrontEnabled
 	def flowType
-	def var_aws_credential_id = envLoader.getAWSCredentialID()
-	def var_env_name_prefix = envLoader.getEnvNamePrefix()
-	def var_repo_core = envLoader.getRepositoryField("REPO_CORE")
-	def var_repo_loc = envLoader.getRepositoryField("REPO_LOC")
 	def repo_protocol				= "http://"
-	def var_credentialsId 			= envLoader.getRepositoryField("REPO_CREDENTIAL_ID")
-	def var_bitbucket_base			= envLoader.getRepositoryField("REPO_BASE")
 	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/"
-	def var_api_key 				= envLoader.getApiIdField("API_KEY")
-	def var_api_id_dev = envLoader.getApiIdField("API_ID_DEV")
 	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + var_repo_loc + "/repos"
-	def var_bitbucket_email 		= envLoader.getRepositoryField("REPO_EMAIL")
 	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + var_repo_loc + "/"
 	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
 	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/service-onboarding-build-pack.git"
@@ -628,9 +633,9 @@ def getApiId(stage) {
 	if(stage == 'dev') {
 		return var_api_id_dev
 	}else if (stage == 'stg') {
-		return envLoader.getApiIdField("API_ID_STG")
+		return envLoader.getApiField("API_ID_STG")
 	} else if (stage == 'prod') {
-		return envLoader.getApiIdField("API_ID_PROD")
+		return envLoader.getApiField("API_ID_PROD")
 	}
 }
 
@@ -1136,15 +1141,15 @@ def loadEnvModule(buildModuleUrl){
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: tempRepoCred, url: buildModuleUrl]
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
 		]])
 
 		echo "loading installer variables..."
 
-		def jsonParser = new groovy.json.JsonSlurper()
-		def installerVars = jsonParser.parseText(new File("jazz-installer-vars.json").text)
+		def resultJsonString = readFile("jazz-installer-vars.json")
 		envLoader = load "env-loader.groovy"
-		envLoader.initialize(installerVars)
+		envLoader.initialize(resultJsonString)
+		echo "finished loading env module"
 	}
 }
 

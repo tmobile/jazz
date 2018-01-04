@@ -1,5 +1,5 @@
 #!groovy?
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
@@ -12,10 +12,9 @@ import groovy.transform.Field
 @Field def g_cloudfront_origin_id
 @Field def g_cognito
 @Field def g_repository
-@Field def g_api_build
 @Field def g_lambda_build
 @Field def g_website_build
-@Field def g_api_id
+@Field def g_api
 @Field def g_jazz
 @Field def g_jazz_s3
 @Field def g_website_s3
@@ -24,24 +23,22 @@ import groovy.transform.Field
 
 echo "the module, 'env-loader', loaded successfully... congratulations..."
 
-def initialize(installerVarStr){
-  if(installerVarStr != null && !installerVarStr.equals("")){
-    def jsonParser = new groovy.json.JsonSlurper()
-    def resultJson = jsonParser.parseText(installarVarStr)
+def initialize(installerVars){
+  if(installerVars != null){
+		def resultJson = parseJson(installerVars)
 
     echo "assigning env values from installer..."
 
-    setCognito(resultJson.Cognito)
-    setRepoData(resultJson.repository)
-    setApiBuild(resultJson.API_BUILD)
-    setLambdaBuild(resultJson.Lambda)
-    setWebsiteBuild(resultJson.Website)
-    setApiId(resultJson.API_ID)
-    setJazz(resultJson.Jazz)
-    setJazzS3(resultJson.jazz_s3)
-    setWebsiteS3(resultJson.Website_s3)
-    setJenkins(resultJson.Jenkins)
-    setBitbucket(resultJson.Bitbucket)
+    setCognito(resultJson.COGNITO)
+    setRepoData(resultJson.REPOSITORY)
+    setApi(resultJson.API)
+    setLambdaBuild(resultJson.LAMBDA)
+    setWebsiteBuild(resultJson.WEBSITE)
+    setJazz(resultJson.JAZZ)
+    setJazzS3(resultJson.JAZZ_S3)
+    setWebsiteS3(resultJson.WEBSITE_S3)
+    setJenkins(resultJson.JENKINS)
+    setBitbucket(resultJson.BITBUCKET)
 
     g_aws_credential_id = resultJson.AWS_CREDENTIAL_ID
     g_env_name_prefix = resultJson.env_name_prefix
@@ -49,6 +46,12 @@ def initialize(installerVarStr){
 
     echo "env values were set successfully"
   }
+}
+
+//JSON parser
+@NonCPS
+def parseJson(def json) {
+    new groovy.json.JsonSlurperClassic().parseText(json)
 }
 
 //Getters Begin
@@ -72,10 +75,6 @@ def getRepositoryField(fieldName){
   return g_repository."$fieldName"
 }
 
-def getApiBuildField(fieldName){
-  return g_api_build."$fieldName"
-}
-
 def getLambdaBuildField(fieldName){
   return g_lambda_build."$fieldName"
 }
@@ -84,8 +83,8 @@ def getWebsiteBuildField(fieldName){
   return g_website_build."$fieldName"
 }
 
-def getApiIdField(fieldName){
-  return g_api_id."$fieldName"
+def getApiField(fieldName){
+  return g_api."$fieldName"
 }
 
 def getJazzField(fieldName){
@@ -119,10 +118,6 @@ def setRepoData(repoData){
   g_repository = repoData
 }
 
-def setApiBuild(apiBuildData){
-  g_api_build = apiBuildData
-}
-
 def setLambdaBuild(lambdaBuildData){
   g_lambda_build = lambdaBuildData
 }
@@ -131,8 +126,8 @@ def setWebsiteBuild(websiteBuildData){
   g_website_build = websiteBuildData
 }
 
-def setApiId(apiIdData){
-  g_api_id = apiIdData
+def setApi(apiData){
+  g_api = apiData
 }
 
 def setJazz(jazzData){
@@ -155,3 +150,5 @@ def setBitbucket(bitbucketData){
   g_bitbucket = bitbucketData
 }
 //Setters End
+
+return this
