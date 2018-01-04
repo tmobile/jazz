@@ -1094,7 +1094,6 @@ def loadServiceInfo() {
 	 def email_id = owner
 	 def service = params.service_name
 	 def email_content = ''
- 	 echo "Sending build notification to " + email_id
  	 def body_subject = ''
  	 def body_text = ''
  	 def cc_email = ''
@@ -1125,15 +1124,12 @@ def loadServiceInfo() {
  						 cc : cc_email,
  						 html : body_html
  					 ])
-
- 	 echo "request body before sending email: ${body}"
-
  		 try{
  			 def sendMail = sh (script: "curl -X POST \
- 																	 ${g_base_url}/platform/email \
- 																	 -k -v -H \"Authorization: $g_login_token\" \
- 																	 -H \"Content-Type: application/json\" \
- 																	 -d \'${body}\'", returnStdout: true).trim()
+					 ${g_base_url}/platform/email \
+					 -k -v -H \"Authorization: $g_login_token\" \
+					 -H \"Content-Type: application/json\" \
+					 -d \'${body}\'", returnStdout: true).trim()
  			 def responseJSON = parseJson(sendMail)
  			 if(responseJSON.data){
  				 echo "successfully sent e-mail to $email_id"
