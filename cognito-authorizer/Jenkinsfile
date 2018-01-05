@@ -7,14 +7,18 @@ node {
 		
 	   echo "Build triggered via branch::${env.BRANCH_NAME}"
 	   echo "Build triggered for JOBNAME::" + env.JOB_NAME
-
-	   def projname = env.JOB_NAME
-	   names = projname.split('/')
-	   projname = names[1]	 
+		
+		def projname = ''
+		
+	    if(env.JOB_NAME){
+		   projname = env.JOB_NAME
+		   names = projname.split('/')
+		   projname = names[1]	
+		}		   
 	   
 	   echo "projname::" + projname
 	   
-	   def build_job = '/job/build-deploy-platform-service/buildWithParameters?token=bld-plat-srvs-71717'
+	   def build_job = env.PLATFORM_SERVICE_BUILD_URI
 	   def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
 	  
 	   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=" + projname + "&admin_group=admin_group&region=us-east-1&scm_branch=${env.BRANCH_NAME}\""
