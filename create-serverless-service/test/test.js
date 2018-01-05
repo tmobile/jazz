@@ -71,10 +71,10 @@ describe('create-serverless-service', function() {
     beforeEach(function(){
       event = {
         "stage" : "test",
-        "headers" : {
-          "Authorization" : "fr1end$hip_1s_mAg1c"
-        },
         "principalId" : "@pp1eJack",
+		"headers" : {
+          "Authorization" : "pr!ncessBubb1eGum"
+        },
         "body" : {
           "service_name"	: "test-service",
           "service_type"	: "lambda",
@@ -107,7 +107,7 @@ describe('create-serverless-service', function() {
     */
     it("should inform user of error if given an event with no body property", function(){
       var errMessage = "Service inputs are not defined";
-      var errType = "InternalServerError";
+      var errType = "BadRequest";
       var bothCases = checkCase("body", null, null, errMessage, errType) &&
                       checkCase("body", null, undefined, errMessage, errType);
       assert.isTrue(bothCases);
@@ -120,8 +120,8 @@ describe('create-serverless-service', function() {
     * @returns index.handler() should return an InternalServerError notification
     */
     it("should inform user of error if given an event with no body.service_type", function(){
-      var errMessage = "Service type is not defined";
-      var errType = "InternalServerError";
+      var errMessage = "'service_type' is not defined";
+      var errType = "BadRequest";
       var bothCases = checkCase("body", "service_type", null, errMessage, errType) &&
                       checkCase("body", "service_type", null, errMessage, errType);
       assert.isTrue(bothCases);
@@ -139,8 +139,8 @@ describe('create-serverless-service', function() {
       //contains a non-alphanumeric character
       var invalidName2 = "Rar!ty";
       var nameValues = [null, undefined, invalidName1, invalidName2];
-      var errMessage = "Service name is not defined or has invalid characters";
-      var errType = "InternalServerError";
+      var errMessage = "'service_name' is not defined or has invalid characters";
+      var errType = "BadRequest";
       var allCases = true;
       //if checkCase() returns false for any of the nameValues assigned above, have allCases be false
       for (i in nameValues){
@@ -152,22 +152,6 @@ describe('create-serverless-service', function() {
     });
 
     /*
-    * Given an event with missing headers/headers.Authorization, handler() should throw InternalServerError
-    * @param {object} event, contains a null or undefined headers or headers.Authorization
-    * @params {object, function} default aws context and callback function as assigned above respectively
-    * @returns index.handler() should return an InternalServerError notification
-    */
-    it("should throw an InternalServerError error if missing event.headers", function(){
-      var errMessage = "Authorization header is missing";
-      var errType = "InternalServerError";
-      var allCases = checkCase("headers", "Authorization", null, errMessage, errType) &&
-                      checkCase("headers", "Authorization", undefined, errMessage, errType) &&
-                      checkCase("headers", null, null, errMessage, errType) &&
-                      checkCase("headers", null, undefined, errMessage, errType);
-      assert.isTrue(allCases);
-    });
-
-    /*
     * Given an event indicating a lambda or api service but no runtime, handler() informs of missing Runtime
     * @param {object} event, contains a service type that isn't "website", and no body.runtime
     * @params {object, function} default aws context and callback function as assigned above respectively
@@ -175,8 +159,8 @@ describe('create-serverless-service', function() {
     */
     it("should inform of error if given no event.body.runtime for a service other than website", ()=>{
       var runtime = "";
-      var errType = "InternalServerError";
-      var errMessage = "Service runtime is not defined";
+      var errType = "BadRequest";
+      var errMessage = "'runtime' is not defined";
       var allCases = checkCase("body","runtime",runtime,errMessage,errType) &&
                       checkCase("body", "runtime", null, errMessage, errType) &&
                       checkCase("body", "runtime", undefined, errMessage, errType);
@@ -193,7 +177,7 @@ describe('create-serverless-service', function() {
       //invalid if containing a non-alphanumeric character
       var invalidName2 = "f!utterShy";
       var errMessage = "Namespace is not appropriate";
-      var errType = "InternalServerError";
+      var errType = "BadRequest";
       var invalidCase = checkCase("body", "domain", invalidName2, errMessage, errType);
       assert.isTrue(invalidCase);
     });

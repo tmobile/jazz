@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright � 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,10 +22,10 @@
 	@version: 1.0
 **/
 
-const utils = require("../utils.js")(); 
+const utils = require("../utils.js")();
 const _ = require("lodash");
 
-module.exports = (query, onComplete) => {
+module.exports = (query, getAllRecords, onComplete) => {
     // initialize dynamodb
     var dynamodb = utils.initDynamodb();
 
@@ -40,13 +40,13 @@ module.exports = (query, onComplete) => {
     };
 
     var filter_key = utils.getDatabaseKeyName(global.config.service_filter_key);
-    
+
     if (query !== undefined && query !== null) {
-        
+
         var keys_list = global.config.service_filter_params;
 
         keys_list.forEach(function (key) {
-            
+
 			var key_name = utils.getDatabaseKeyName(key);
 
 			if (key_name == "SERVICE_TIMESTAMP" && (query.last_updated_after !== undefined || query.last_updated_before !== undefined)) {
@@ -80,11 +80,11 @@ module.exports = (query, onComplete) => {
 				attributeValues[(":" + key_name)] = {
 					'S': query[key]
 				};
-			}   
+			}
 		});
     }
 
-    if (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase())) {
+    if (!getAllRecords || (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()))) {
         var ddb_created_by = utils.getDatabaseKeyName("created_by");
 
         // filter for services created by current user

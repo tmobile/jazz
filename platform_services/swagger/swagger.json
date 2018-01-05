@@ -110,6 +110,11 @@
                     "in": "query",
                     "required": false,
                     "type": "string"
+                }, {
+                    "name": "isAdmin",
+                    "in": "query",
+                    "required": false,
+                    "type": "string"
                 }],
                 "responses": {
                     "200": {
@@ -800,6 +805,11 @@
                     "schema": {
                         "$ref": "#/definitions/UpdateServiceObj"
                     }
+                }, {
+                    "name": "isAdmin",
+                    "in": "query",
+                    "required": false,
+                    "type": "string"
                 }],
                 "consumes": [
                     "application/json",
@@ -1212,7 +1222,7 @@
 		  "x-amazon-apigateway-authorizer": {
 			"authorizerCredentials": "{conf-role}",
 			"authorizerResultTtlInSeconds": 300,
-			"authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-cognito-authorizer-dev/invocations",
+			"authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-cognito-authorizer-{envmnt}/invocations",
 			"type": "token"
 		  }
 		}
@@ -1393,6 +1403,10 @@
                 "slack_channel": {
                     "type": "string",
                     "description": "Slack channel to which all the service notifications should be sent to"
+                },				
+				"metadata":{
+                    "type": "string",
+                    "description": "Service metadata imformation"
                 },
                 "tags": {
                     "type": "array",
@@ -1468,6 +1482,10 @@
                 "slack_channel": {
                     "type": "string",
                     "description": "Slack channel to which all the service notifications should be sent to"
+                },
+                "metadata":{
+                    "type": "string",
+                    "description": "Service metadata imformation"
                 },
                 "tags": {
                     "type": "array",
