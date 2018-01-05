@@ -1,6 +1,11 @@
 #!groovy.
 import groovy.json.JsonOutput
+import groovy.transform.Field
 
+@Field def envLoader
+@Field def var_api_key
+@Field def var_credentialsId
+@Field def var_bitbucket_base
 
 
 def Event_Name =[
@@ -31,7 +36,12 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
-node {		
+node {
+	loadEnvModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	var_credentialsId 			= envLoader.getRepositoryField("REPO_CREDENTIAL_ID")
+	var_bitbucket_base			= envLoader.getRepositoryField("REPO_BASE")
+	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + envLoader.getRepositoryField("REPO_CORE") + "/"
+	var_api_key 				= envLoader.getApiField("API_KEY")
 
 	def service_template = "create-serverless-service"
 	def service_type =  "api"
@@ -42,12 +52,8 @@ node {
 	def domain = "platform"
 	def region = "us-east-1"
 	def envmnt="dev"
-	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-	def var_bitbucket_base			= env.REPO_BASE
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
-	def var_api_key 				= env.API_KEY
-	
-		
+
+
 
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
@@ -76,30 +82,30 @@ node {
 		}
 
 	}
-	
+
 	def config = dir(service_template)
 	{
 	    return LoadConfiguration()
 	}
-	
+
 	def roleARN						= config['iamRoleARN'].replaceAll("/", "\\\\/")
-	
+
 	stage ('Update Service Template')
 	{
 		//sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 		  sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 		echo "Inside Update service template"
-		
+
 		try{
 
 			dir(service_template)
 			{
-			    
-			    
+
+
 				def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-				
+
                 sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
-			
+
 				region = config['region']
 				def var_api_host_name			= var_api_key+".execute-api."+region+".amazonaws.com"
 
@@ -110,10 +116,10 @@ node {
    			    // Jazz seds
 				// This is been handled in generateSwaggerEnv
 				//sh "sed -i -- 's/{api_host_name}/" + var_api_host_name + "/g' ./swagger/swagger.json"
-				
+
 				// This is been handled in generateSwaggerEnv
 				// sh "sed -i -- 's/{domain}/" + domain + "/g' ./swagger/swagger.json"
-				
+
 				// This is been handled in generateSwaggerEnv
 				// sh "sed -i -- 's/{service_name}/" + service_name + "/g' ./swagger/swagger.json"
 
@@ -125,22 +131,22 @@ node {
 
 				// This is been handled in generateSwaggerEnv
 				// sh "sed -i -- 's/{lambda_function_name}/" + service_template+ "-" + domain + "/g' ./swagger/swagger.json"
-				
-				echo "Updating Serverless configs for dev "			
-				
-						
-		
+
+				echo "Updating Serverless configs for dev "
+
+
+
 				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/dev-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/dev-config.json"
-				
+				sh "sed -i -- 's/{conf-repo-base}/" + var_bitbucket_base + "/g' ./config/dev-config.json"
+
 				echo "Updating Serverless configs for stg"
 				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/stg-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/stg-config.json"
-				
+				sh "sed -i -- 's/{conf-repo-base}/" + var_bitbucket_base + "/g' ./config/stg-config.json"
+
 				echo "Updating Serverless configs for prod"
 				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/prod-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/prod-config.json"
-				
+				sh "sed -i -- 's/{conf-repo-base}/" + var_bitbucket_base + "/g' ./config/prod-config.json"
+
 			}
 		}
 		catch(error){
@@ -149,17 +155,17 @@ node {
 			echo(error)
 		}
 	}
-	
-	
+
+
 	stage('Deployment to Dev Env') {
 		//sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 		sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
-		
+
 		// Generate serverless yml file with domain added in function name
 			echo "Generate deployment env with domain"
 
-			
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: envLoader.getAWSCredentialID(), secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			sh "aws configure set profile.cloud-api.region "+region
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
@@ -169,11 +175,11 @@ node {
 				echo "NPM Build initiated"
 				sh "npm install --save"
 				echo "NPM Build completed"
-				
+
 				echo "Deploying lambda service"
 				sh "serverless deploy --stage "+envmnt+" -v"
 				echo "Deployed lambda service"
-								
+
 				// Generate swagger file based on environment
 				if (fileExists('swagger/swagger.json')) {
 					echo "Generating the swagger file for each environment"
@@ -183,7 +189,7 @@ node {
 					generateSwaggerEnv(service_name, envmnt, service_name, apiHostName, domain, service_template)
 
 					echo " generated #################################################### "
-					
+
 					// import swagger api spec
 					echo "Deploying API gateway Endpoints"
 					sh "/var/lib/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+"  --deploy "+envmnt+" swagger/swagger.json "
@@ -193,9 +199,9 @@ node {
 				sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 			}
 		}
-			
-	}	
-	
+
+	}
+
 }
 
 def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName) {
@@ -267,7 +273,28 @@ def LoadConfiguration() {
 }
 
 def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
-	          
+
 	echo "Send Event Called: "+error
 }
 
+/*
+* Load environment variables from build module
+*/
+def loadEnvModule(buildModuleUrl){
+	echo "loading env variables, checking repos..."
+
+	dir('env-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+		]])
+
+		echo "loading installer variables..."
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		envLoader = load "env-loader.groovy"
+		envLoader.initialize(resultJsonString)
+		echo "finished loading env module"
+	}
+}

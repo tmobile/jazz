@@ -32,6 +32,17 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
+@Field def envLoader
+@Field def var_api_key
+@Field def var_api_id_dev
+@Field def var_aws_credential_id
+@Field def var_env_name_prefix
+@Field def var_repo_core
+@Field def var_repo_loc
+@Field def var_credentialsId
+@Field def var_bitbucket_base
+@Field def var_bitbucket_email
+
 @Field def g_login_token = ''
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -45,8 +56,20 @@ def Event_Status = [
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	region = env.jazz_region
-	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	loadEnvModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	var_api_key 				= envLoader.getApiField("API_KEY")
+	var_api_id_dev = envLoader.getApiField("API_ID_DEV")
+	var_aws_credential_id = envLoader.getAWSCredentialID()
+	var_env_name_prefix = envLoader.getEnvNamePrefix()
+	var_repo_core = envLoader.getRepositoryField("REPO_CORE")
+	var_repo_loc = envLoader.getRepositoryField("REPO_LOC")
+	var_credentialsId 			= envLoader.getRepositoryField("REPO_CREDENTIAL_ID")
+	var_bitbucket_base			= envLoader.getRepositoryField("REPO_BASE")
+	var_bitbucket_email 		= envLoader.getRepositoryField("REPO_EMAIL")
+	region = envLoader.getJazzField("jazz_region")
+	g_base_url = "https://${envLoader.getApiField("API_KEY")}.execute-api.${region}.amazonaws.com/dev"
+	role = envLoader.getJazzField("jazz_roleId")
+	api_doc_s3_bucket = envLoader.getJazzS3Field("jazz_s3_api_doc")
 
 	echo "Build Pack website params: " + params
 
@@ -56,7 +79,7 @@ node ()  {
 
     def bitbucket_name = params.service_name
 
-	def var_bitbucket_framework_url = "http://${env.REPO_BASE}/scm/${params.scm_project}/"
+	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${params.scm_project}/"
 
 	def config
 
@@ -66,7 +89,7 @@ node ()  {
 		current_environment = 'dev'
 	}
 
-	env_prefix = env.env_name_prefix
+	env_prefix = var_env_name_prefix
 
     stage('Checkout code base') {
 
@@ -81,7 +104,7 @@ node ()  {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
 		}
 
 		// @TODO: dir can be removed, needs to be refactored
@@ -128,14 +151,14 @@ node ()  {
 			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
 		}
 
-	  def s3StgBucket  = env.WEBSITE_STG_S3BUCKET;
-	  def s3ProdBucket = env.WEBSITE_PROD_S3BUCKET;
-	  def s3DevBucket  = env.WEBSITE_DEV_S3BUCKET;
+	  def s3StgBucket  = envLoader.getWebsiteS3Field("WEBSITE_STG_S3BUCKET");
+	  def s3ProdBucket = envLoader.getWebsiteS3Field("WEBSITE_PROD_S3BUCKET");
+	  def s3DevBucket  = envLoader.getWebsiteS3Field("WEBSITE_DEV_S3BUCKET");
 
 	  if (branch == 'master'){
 		stage ('Deployment to Production Env'){
 		  sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
 			sh "aws configure set profile.cloud-api.region ${region}"
@@ -241,7 +264,7 @@ node ()  {
 	  else {
 		stage ('Deployment to Deployment Env'){
 		  sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
 			sh "aws configure set profile.cloud-api.region "+region
@@ -343,14 +366,14 @@ node ()  {
 def getS3BucketName(String envname) {
 
 	if (envname == "dev") {
-		return env.WEBSITE_DEV_S3BUCKET;
+		return envLoader.getWebsiteS3Field("WEBSITE_DEV_S3BUCKET");
 	} else if (envname == "stg") {
-		return env.WEBSITE_STG_S3BUCKET;
+		return envLoader.getWebsiteS3Field("WEBSITE_STG_S3BUCKET");
 	} else if (envname == "prod") {
-		return env.WEBSITE_PROD_S3BUCKET;
+		return envLoader.getWebsiteS3Field("WEBSITE_PROD_S3BUCKET");
 	}
 
-	return env.WEBSITE_DEV_S3BUCKET;
+	return envLoader.getWebsiteS3Field("WEBSITE_DEV_S3BUCKET");
 }
 
 def LoadConfiguration() {
@@ -402,8 +425,8 @@ def generateDistributionConfig(service, envname, config) {
 	sh "sed -i -- 's/{env}/"+envname+"/g' distribution_config_with_tags.json"
 
 	sh "sed -i -- 's/{conf_s3bucketname}/" + getS3BucketName(envname) + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's:{conf_origin_id}:" + env.CLOUDFRONT_ORIGIN_ID + ":g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{conf_stack_prefix}/" + var_env_name_prefix + "/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's:{conf_origin_id}:" + envLoader.getCloudfrontOriginId() + ":g' distribution_config_with_tags.json"
 
 	def owner = ''
 	try{
@@ -469,7 +492,7 @@ def validateTemplate() {
 
 def loadDistributionConfig() {
 
-	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + env.REPO_BASE + '/scm/' + env.REPO_CORE + '/website-distribution-pack.git']]])
+	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: 'http://' + var_bitbucket_base + '/scm/' + var_repo_core + '/website-distribution-pack.git']]])
 
 }
 
@@ -537,7 +560,7 @@ def loadIPList() {
 
   dir('_jenkins_buildpack') {
 
-		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + env.REPO_BASE + '/scm/' + env.REPO_CORE + '/jenkins-build-pack-website.git']]])
+		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: 'http://' + var_bitbucket_base + '/scm/' + var_repo_core + '/jenkins-build-pack-website.git']]])
 
 	}
 
@@ -844,4 +867,26 @@ def send_status_email (email_id, build_status, service, email_content) {
    	} catch (e){
        echo "Failed while sending build status notification"
    	}
+}
+
+/*
+* Load environment variables from build module
+*/
+def loadEnvModule(buildModuleUrl){
+	echo "loading env variables, checking repos..."
+
+	dir('env-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+		]])
+
+		echo "loading installer variables..."
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		envLoader = load "env-loader.groovy"
+		envLoader.initialize(resultJsonString)
+		echo "finished loading env module"
+	}
 }

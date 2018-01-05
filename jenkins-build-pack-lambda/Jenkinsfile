@@ -41,6 +41,17 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
+@Field def envLoader
+@Field def var_api_key
+@Field def var_api_id_dev
+@Field def var_aws_credential_id
+@Field def var_env_name_prefix
+@Field def var_repo_core
+@Field def var_repo_loc
+@Field def var_credentialsId
+@Field def var_bitbucket_base
+@Field def var_bitbucket_email
+
 @Field def g_login_token = ''
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -53,9 +64,21 @@ def Event_Status = [
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	region = env.jazz_region
-	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/dev"
-	role = env.jazz_roleId
+	loadEnvModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	var_api_key 				= envLoader.getApiField("API_KEY")
+	var_api_id_dev = envLoader.getApiField("API_ID_DEV")
+	var_aws_credential_id = envLoader.getAWSCredentialID()
+	var_env_name_prefix = envLoader.getEnvNamePrefix()
+	var_repo_core = envLoader.getRepositoryField("REPO_CORE")
+	var_repo_loc = envLoader.getRepositoryField("REPO_LOC")
+	var_credentialsId 			= envLoader.getRepositoryField("REPO_CREDENTIAL_ID")
+	var_bitbucket_base			= envLoader.getRepositoryField("REPO_BASE")
+	var_bitbucket_email 		= envLoader.getRepositoryField("REPO_EMAIL")
+	region = envLoader.getJazzField("jazz_region")
+	g_base_url = "https://${envLoader.getApiField("API_KEY")}.execute-api.${region}.amazonaws.com/dev"
+	role = envLoader.getJazzField("jazz_roleId")
+	api_doc_s3_bucket = envLoader.getJazzS3Field("jazz_s3_api_doc")
+
 	echo "Jobs Params: " + params
 	echo "Build triggered via branch: " + params.scm_branch
 	def _event = ""
@@ -67,10 +90,7 @@ node ()  {
 	def branch = params.scm_branch
 
 	def bitbucket_name = params.service_name
-	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-
-	def var_bitbucket_framework_url = "http://${env.REPO_BASE}/scm/${env.REPO_LOC}/"
-	def var_api_key 				= env.API_KEY
+	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${var_repo_loc}/"
 	def config
 
 	if(params.domain && params.domain.trim() != ""){
@@ -118,7 +138,7 @@ node ()  {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${env.env_name_prefix}-cloud-logs-streamer-dev"
+  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${var_env_name_prefix}-cloud-logs-streamer-dev"
 
 	echo "logStreamer:: " + logStreamer
 
@@ -129,7 +149,7 @@ node ()  {
 		cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
 	}
 
-	serviceName = "${env.env_name_prefix}-${serviceName}"
+	serviceName = "${var_env_name_prefix}-${serviceName}"
 	cfStackName = serviceName
 
 	echo serviceName+"******************************************************* "
@@ -181,7 +201,7 @@ node ()  {
 		stage ('Deployment to Production Env'){
 			sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			dir(bitbucket_name){
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					try {
 						// initialize aws credentials
 						sh "aws configure set profile.cloud-api.region ${region}"
@@ -204,7 +224,7 @@ node ()  {
 						setLambdaExecutionRole(role);
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
 
-						sh "serverless deploy --stage prod -v --bucket " + env.jazz_bucket_prod
+						sh "serverless deploy --stage prod -v --bucket " + envLoader.getJazzS3Field("jazz_bucket_prod")
 
 						_event = Event_Name.UPDATE_LOGGING_CONF
 						createSubscriptionFilters(serviceName, "prod", region, logStreamer);
@@ -235,7 +255,7 @@ node ()  {
 
 			dir(bitbucket_name){
 
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					try {
 						// initialize aws credentials
 						sh "aws configure set profile.cloud-api.region ${region}"
@@ -262,7 +282,7 @@ node ()  {
 						setLambdaExecutionRole(role);
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.COMPLETED, "")
 
-						sh "serverless deploy --stage dev  -v --bucket " + env.jazz_bucket_dev
+						sh "serverless deploy --stage dev  -v --bucket " + envLoader.getJazzS3Field("jazz_bucket_dev")
 
 						_event = Event_Name.UPDATE_LOGGING_CONF
 						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.STARTED, "")
@@ -591,13 +611,13 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 		//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
 		//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
 
-		def configPackBBURL = "http://${env.REPO_BASE}/scm/${env.REPO_CORE}/serverless-config-pack.git"
+		def configPackBBURL = "http://${var_bitbucket_base}/scm/${var_repo_core}/serverless-config-pack.git"
 
 		dir('_config') {
 			checkout([$class: 'GitSCM', branches: [
 				[name: '*/master']
 			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: env.REPO_CREDENTIAL_ID, url: configPackBBURL]
+				[credentialsId: var_credentialsId, url: configPackBBURL]
 			]])
 		}
 
@@ -810,5 +830,27 @@ def updateServiceInDB(service_id, domain, devApiID, region, status) {
 		echo "outputStr===============" + outputStr
 	}catch (ex) {
 		error "updateServiceInDB Failed. "+ex.getMessage()
+	}
+}
+
+/*
+* Load environment variables from build module
+*/
+def loadEnvModule(buildModuleUrl){
+	echo "loading env variables, checking repos..."
+
+	dir('env-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+		]])
+
+		echo "loading installer variables..."
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		envLoader = load "env-loader.groovy"
+		envLoader.initialize(resultJsonString)
+		echo "finished loading env module"
 	}
 }

@@ -75,6 +75,10 @@ def getRepositoryField(fieldName){
   return g_repository."$fieldName"
 }
 
+def getCognitoField(fieldName){
+  return g_cognito."$fieldName"
+}
+
 def getLambdaBuildField(fieldName){
   return g_lambda_build."$fieldName"
 }
