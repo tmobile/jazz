@@ -63,6 +63,19 @@ node  {
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
+<<<<<<< HEAD
+=======
+	def rateExpression
+	def enableEventSchedule
+	if (params.rateExpression){
+		echo "params include rateExpression : ${params.rateExpression}"
+		rateExpression = params.rateExpression
+	}
+	if (params.enableEventSchedule){
+		echo "params include enableEventSchedule : ${params.enableEventSchedule}"
+		enableEventSchedule = params.enableEventSchedule
+	}
+>>>>>>> 430c82c61c9fe3f5caebf533fdf43379ebff8ab0
 
 	def service_template
 	def service_username
@@ -249,22 +262,39 @@ node  {
 				}
 
 				if(service_type == 'lambda'|| service_type == 'function') {
-					def rate_expression = params.rateExpression
-					def enable_eventschedule = params.enableEventSchedule
+					def rate_expression = rateExpression//params.rateExpression
+					def enable_eventschedule = enableEventSchedule//params.enableEventSchedule
+					def event_source_ec2 =  params.event_source_ec2
+					def event_source_s3 =  params.event_source_s3
+					def event_source_dynamodb =  params.event_source_dynamodb
+					def event_source_stream =  params.event_source_stream
+					def event_action_ec2 =  params.event_action_ec2
+					def event_action_s3 =  params.event_action_s3
+					def event_action_dynamodb =  params.event_action_dynamodb
+					def event_action_stream =  params.event_action_stream
 
 					if(rate_expression && rate_expression.trim() != ""){
 						// Using echo commands to write to deployment-env.yml
 						sh "echo \$'\neventScheduleRate: cron($rate_expression)' >> ./deployment-env.yml"
 					}
-					def var_enable_eventschedule;
-					if (enable_eventschedule)
-					   if (enable_eventschedule == true)
-					      var_enable_eventschedule = "true";
-					   else if (enable_eventschedule == false)
-					      var_enable_eventschedule = "false";
-
-					if(var_enable_eventschedule && var_enable_eventschedule.trim() != ""){
-						sh "echo \$'eventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
+					if(enable_eventschedule && enable_eventschedule != ""){
+						sh "echo \$'\neventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
+					}
+					if(event_source_ec2 && event_action_ec2){
+						sh "echo \$'\nevent_source_ec2: $event_source_ec2' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_ec2: $event_action_ec2' >> ./deployment-env.yml"
+					}
+					if(event_source_s3 && event_action_s3){
+						sh "echo \$'\nevent_source_s3: $event_source_s3' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_s3: $event_action_s3' >> ./deployment-env.yml"
+					}
+					if(event_source_dynamodb && event_action_dynamodb){
+						sh "echo \$'\nevent_source_dynamodb: $event_source_dynamodb' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_dynamodb: $event_action_dynamodb' >> ./deployment-env.yml"
+					}
+					if(event_source_stream && event_action_stream){
+						sh "echo \$'\nevent_source_stream: $event_source_stream' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_stream: $event_action_stream' >> ./deployment-env.yml"
 					}
 
 					/*
@@ -536,6 +566,7 @@ def send_status_email (email_id, build_status, service, domain) {
        echo "Failed while sending build status notification"
    }
 }
+<<<<<<< HEAD
 
 /*
 * Load environment variables from build module
@@ -558,3 +589,5 @@ def loadEnvModule(buildModuleUrl){
 		echo "finished loading env module"
 	}
 }
+=======
+>>>>>>> 430c82c61c9fe3f5caebf533fdf43379ebff8ab0
