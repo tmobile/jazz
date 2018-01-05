@@ -35,16 +35,16 @@ node {
 
 	echo "params : $params"
 
-	def service_template = params.service_name
 	def service_type =  "api"
 	def runtime = "nodejs"
-	def service_name = params.service_name
-	def admin_group = params.admin_group
-	def bitbucket_name = service_template
 	def domain = "platform"
-	def region = params.region
+	def region = ''
 	def envmnt = 'prod'
-	def branch = params.scm_branch
+	def branch = 'master'
+	def service_template = ''	
+	def service_name = ''
+	def admin_group = ''
+	def bitbucket_name = ''
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
 	def var_bitbucket_base			= env.REPO_BASE
 	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
@@ -53,18 +53,32 @@ node {
 	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git" 
 	
 	def es_hostname = env.jazz_es_hostname
-
+	if(params.service_name){
+		service_template = params.service_name
+		service_name = params.service_name
+		bitbucket_name = service_template
+	}
+	if(params.admin_group){
+		admin_group = params.admin_group
+	}
+		
+	if(params.region){
+		region = params.region
+	}
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
 		domain = params.domain.trim()
 	}
 
-	if (params.scm_branch == 'master') {
-		envmnt = 'prod'
-		var_api_key = env.API_ID_PROD
-	}else {
-		envmnt = 'dev'
-		var_api_key = env.API_ID_DEV
+	if (params.scm_branch){
+		branch = params.scm_branch
+		if (params.scm_branch == 'master') {
+			envmnt = 'prod'
+			var_api_key = env.API_ID_PROD
+		}else {
+			envmnt = 'dev'
+			var_api_key = env.API_ID_DEV
+		}
 	}
 	
 	stage ('Get Serverless Service')
@@ -161,7 +175,7 @@ node {
 			sh "sed -i -- 's/" + service_name + "/" + env.env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
 
 			echo "Deploying lambda service"
-			def envBucketKey= "jazz_bucket_" + envmnt
+			def envBucketKey= env.jazz_bucket_name_prefix + envmnt
 			
 			sh "serverless deploy --stage "+envmnt+" -v --bucket " + env[envBucketKey]
 			echo "Deployed lambda service"
