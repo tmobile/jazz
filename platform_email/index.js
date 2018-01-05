@@ -89,7 +89,7 @@ function validateInput(userInput) {
 		}
 
 		if (!userInput.body || !userInput.body.from || !userInput.body.to || !userInput.body.subject) {
-			return reject(errorHandler.throwInputValidationError("104", "Required params - from, to, subject missing" + JSON.stringify(userInput)));
+			return reject(errorHandler.throwInputValidationError("104", "Required params - from, to, subject missing"));
 		}
 
 		resolve(userInput);
