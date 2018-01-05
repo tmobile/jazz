@@ -172,9 +172,7 @@ node  {
 			{
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
 
-				config = LoadConfiguration()
-				
-				echo "Calling add row in db ###################################################"
+				def config = LoadConfiguration()			
 
 				def description = ' ';
 
@@ -182,7 +180,52 @@ node  {
 					description = params.description;
 				}
 
-				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, env.API_KEY, region);
+				
+				def serviceMetadataJson = [
+											"runtime":runtime,
+											"type":service_type]
+				for(item in config){					
+					serviceMetadataJson[item.key] = item.value					
+				}
+				
+				serviceMetadataJson["service"] = service_name
+				serviceMetadataJson["domain"] = domain
+				serviceMetadataJson["owner"] = owner
+				
+				
+				def slack_channelName = params.slack_channel
+				if(slack_channelName && slack_channelName.trim() != ""){
+					serviceMetadataJson["slack_channel"] = slack_channelName
+				}
+
+
+				if(service_type == 'website') {
+					def create_cloudfront_url = 'true'
+					if(create_cloudfront_url){
+						serviceMetadataJson["create_cloudfront_url"] = create_cloudfront_url
+					}
+				}
+
+				if(service_type == 'lambda'|| service_type == 'function') {
+					def rate_expression = params.rateExpression
+					def enable_eventschedule = params.enableEventSchedule
+
+					if(rate_expression && rate_expression.trim() != ""){
+						serviceMetadataJson["eventScheduleRate"] =  cron($rate_expression)
+					}
+					def var_enable_eventschedule;
+					if (enable_eventschedule)
+					   if (enable_eventschedule == true)
+					      var_enable_eventschedule = "true";
+					   else if (enable_eventschedule == false)
+					      var_enable_eventschedule = "false";
+
+					if(var_enable_eventschedule && var_enable_eventschedule.trim() != ""){
+						serviceMetadataJson["eventScheduleEnable"] = enable_eventschedule
+					}
+				
+				}
+				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, env.API_KEY, region,serviceMetadataJson);
 				updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_started", repo_url);
 			}
 		}
@@ -201,69 +244,14 @@ node  {
 
 			dir(service_template)
 			{
-				// Add service owner in deployment-env.yml
-				// adding '\n' to be sure its added in a new line.
-				sh "echo \$'\nowner: $owner' >> ./deployment-env.yml"
-
-
-				// Changing jenkins workflow to put slack_channel one more parameter in deployment-env yml (field name: slack_channel)
-				def slack_channelName = params.slack_channel
-				if(slack_channelName && slack_channelName.trim() != ""){
-					sh "echo \$'slack_channel: $slack_channelName' >> ./deployment-env.yml"
-				}
-
-				sh "sed -i -- 's/service:.*/service : " + service_name +"/g' deployment-env.yml"
-				sh "sed -i -- 's/domain:.*/domain : "+ domain +"/g' deployment-env.yml"
+				//Clearing depoyment-env.yml
+				sh "echo -n > ./deployment-env.yml"
+				// Add service_id  in deployment-env.yml
+				sh "echo \$'\nservice_id: $service_id_in_db' >> ./deployment-env.yml"
 
 				sh "sed -i -- 's/{service_name}/" + service_name + "/g' ./Jenkinsfile"
 				sh "sed -i -- 's/{domain}/" + domain + "/g' ./Jenkinsfile"
 
-
-				if (service_type == "api") {
-					// To avoid the swagger errors when loading, we replace placeholder's values here
-					// We need to set these values back in jenkins-build-pack so as to replace them with environment specific values
-					// sh "sed -i -- 's/{api_host_name}/" + var_api_host_name + "/g' ./swagger/swagger.json"
-					// sh "sed -i -- 's/{domain}/" + domain + "/g' ./swagger/swagger.json"
-					// sh "sed -i -- 's/{service_name}/" + service_name + "/g' ./swagger/swagger.json"
-					// sh "sed -i -- 's/{api_deployment_node_title}/" + service_name + "/g' ./swagger/swagger.json"
-				}
-
-				if(service_type == 'website') {
-					// add create_cloudfront_url in deployment-env yml
-					def create_cloudfront_url = 'true'
-					if(create_cloudfront_url){
-						sh "echo \$'create_cloudfront_url: $create_cloudfront_url' >> ./deployment-env.yml"
-					}
-				}
-
-				if(service_type == 'lambda'|| service_type == 'function') {
-					def rate_expression = params.rateExpression
-					def enable_eventschedule = params.enableEventSchedule
-
-					if(rate_expression && rate_expression.trim() != ""){
-						// Using echo commands to write to deployment-env.yml
-						sh "echo \$'\neventScheduleRate: cron($rate_expression)' >> ./deployment-env.yml"
-					}
-					def var_enable_eventschedule;
-					if (enable_eventschedule)
-					   if (enable_eventschedule == true)
-					      var_enable_eventschedule = "true";
-					   else if (enable_eventschedule == false)
-					      var_enable_eventschedule = "false";
-
-					if(var_enable_eventschedule && var_enable_eventschedule.trim() != ""){
-						sh "echo \$'eventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
-					}
-
-					/*
-					// Using yaml_command plugin (Tested working in terminal)
-
-					// Commenting this block as yaml_command plugin has to be installed
-					sh "yaml set eventScheduleRate \"cron($rate_expression)\" -F=./deployment-env.yml --yaml > deployment-temp-env.yml"
-					sh "yaml set eventScheduleEnable $enable_eventschedule -F=./deployment-temp-env.yml --yaml > deployment-env.yml"
-					*/
-				}
-				//sh "cat deployment-env.yml"
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.MODIFY_TEMPLATE, Event_Status.COMPLETED, "")
 			}
 		}
@@ -442,11 +430,23 @@ def updateServiceInDB(service_id_in_db, apiId, region, statusval, repo_url) {
   sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\", \"repository\": \"${repo_url}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/prod/platform/services/${service_id_in_db}/"
 }
 
-def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region) {
+def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region,serviceMetadataJson) {
 
 	try {
+		def body = JsonOutput.toJson([
+			service:service_name,
+			status:"creation_started",
+			domain:domain,
+			type:servicetype,
+			created_by:created_by,
+			runtime:runtime,
+			repository:repo_url,
+			description:desc,
+			metadata:serviceMetadataJson
+		])
+		
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '{ \"service\": \"${service_name}\", \"status\":\"creation_started\", \"domain\": \"${domain}\", \"type\": \"${servicetype}\", \"created_by\": \"${created_by}\", \"runtime\": \"${runtime}\", \"repository\": \"${repo_url}\", \"description\": \"${desc}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/prod/platform/services/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '$body'  https://${apiID}.execute-api.${region}.amazonaws.com/prod/platform/services/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr

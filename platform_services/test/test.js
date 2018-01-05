@@ -74,7 +74,9 @@ describe('platform_services', function() {
       },
       "body" : {
         "description" : "g0nna_GET_a-L!tt1e_we!rd",
-        "email" : "gonnaGetALittle@Wild.com"
+        "email" : "gonnaGetALittle@Wild.com",
+		"metadata":{"securityGroupIds": "sg-abc123","subnetIds": "subnet-12345"}
+      },
       },
       "principalId": "g10$saryck"
     };

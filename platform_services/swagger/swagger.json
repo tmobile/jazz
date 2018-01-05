@@ -1403,6 +1403,10 @@
                 "slack_channel": {
                     "type": "string",
                     "description": "Slack channel to which all the service notifications should be sent to"
+                },				
+				"metadata":{
+                    "type": "string",
+                    "description": "Service metadata imformation"
                 },
                 "tags": {
                     "type": "array",
@@ -1478,6 +1482,10 @@
                 "slack_channel": {
                     "type": "string",
                     "description": "Slack channel to which all the service notifications should be sent to"
+                },
+                "metadata":{
+                    "type": "string",
+                    "description": "Service metadata imformation"
                 },
                 "tags": {
                     "type": "array",
