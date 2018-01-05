@@ -2,6 +2,8 @@
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
+//@Field def environmentDeploymentMetadata
+//@Field def Util
 
 //definitions
 def Event_Name = [
@@ -65,13 +67,12 @@ node ()  {
 	def serviceName = params.service_name
 	def cfStackName = params.service_name
 	def branch = params.scm_branch
-
 	def bitbucket_name = params.service_name
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-
 	def var_bitbucket_framework_url = "http://${env.REPO_BASE}/scm/${env.REPO_LOC}/"
 	def var_api_key 				= env.API_KEY
 	def config
+	def domain
 
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name.trim()
@@ -96,10 +97,8 @@ node ()  {
 		}
 
 		sh 'cd ' + bitbucket_name
-		// @TODO: dir can be removed, needs to be refactored
-		config = dir(bitbucket_name)
-		{
-			return LoadConfiguration()
+		config = dir(bitbucket_name){
+			LoadConfiguration()
 		}
 	}
 
@@ -114,16 +113,13 @@ node ()  {
 	def internalAccess = config['require_internal_access']
 
 	def roleARN = role.replaceAll("/", "\\\\/")
-
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
-
-  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${env.env_name_prefix}-cloud-logs-streamer-dev"
+	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${env.env_name_prefix}-cloud-logs-streamer-dev"
 
 	echo "logStreamer:: " + logStreamer
 
-	def domain = config['domain']
-
+	domain = config['domain']
 	if (domain  && domain.trim()!="") {
 		serviceName = domain.trim() + "-${service}"
 		cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
@@ -137,29 +133,25 @@ node ()  {
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
 		isEventSchdld = true
 	}
-
-  	dir(bitbucket_name){
+	dir(bitbucket_name){
 		loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
-  	}
+	}
 
 	stage ('Pre-Build Validation'){
 		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
 		try {
 			loadServiceInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment)
-
 			send_status_email(created_by, 'STARTED', params.service_name, '')
-
-			clearVirtualEnv()
+			//clearVirtualEnv()
 			validateDeploymentConfigurations(config)
-			if (isEventSchdld == true){
+			//if (isEventSchdld == true){
               	// validateUserConfigurationYml()
-			}
+			//}
 		}catch(ex) {
 			send_status_email(created_by, 'FAILED', params.service_name, '')
 			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
 			error ex.getMessage()
 		}
-
 		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
 	}
 
@@ -182,6 +174,7 @@ node ()  {
 			sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			dir(bitbucket_name){
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+					def lambdaProdARN
 					try {
 						// initialize aws credentials
 						sh "aws configure set profile.cloud-api.region ${region}"
@@ -194,7 +187,6 @@ node ()  {
 						loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
 
-
 						// Generate serverless yml file with domain added in function name
 						echo "Generate deployment env with domain"
 						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
@@ -204,7 +196,13 @@ node ()  {
 						setLambdaExecutionRole(role);
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
 
+						echo "serverless deploy about to call"
+
 						sh "serverless deploy --stage prod -v --bucket " + env.jazz_bucket_prod
+
+						def stackProdName = cfStackName + "-prod"
+						lambdaProdARN = getLambdaARN(stackProdName)
+						echo "lambdaProdARN: ${lambdaProdARN}"
 
 						_event = Event_Name.UPDATE_LOGGING_CONF
 						createSubscriptionFilters(serviceName, "prod", region, logStreamer);
@@ -236,6 +234,7 @@ node ()  {
 			dir(bitbucket_name){
 
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+					def lambdaDevARN
 					try {
 						// initialize aws credentials
 						sh "aws configure set profile.cloud-api.region ${region}"
@@ -245,33 +244,37 @@ node ()  {
 						_event = Event_Name.GET_DEPLOYMENT_CONF
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.STARTED, "")
 						loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
-
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.COMPLETED, "")
+
+						if(isScheduleEnabled) {
+							def eventsArns = getEventsArn(domain,service, "dev")
+							for (def i = 0; i < eventsArns.size(); i++) {
+								def arn = eventsArns[i]
+								//events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", arn, "cloudwatch_event", username), "prod");
+							}
+						}
 
 						// Generate serverless yml file with domain added in function name
 						echo "Generate deployment env with domain"
 						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.STARTED, "")
-
 						sh "pwd"
-
 						generateServerlessYml(service, "dev", serviceName, cfStackName)
-
-
 						echo "setting lambda execution role as $role";
 						setLambdaExecutionRole(role);
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.COMPLETED, "")
 
 						sh "serverless deploy --stage dev  -v --bucket " + env.jazz_bucket_dev
+						def stackDevName = cfStackName + "-dev";
+						lambdaDevARN = getLambdaARN(stackDevName);
+						echo "lambdaDevARN: ${lambdaDevARN}"
 
 						_event = Event_Name.UPDATE_LOGGING_CONF
 						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.STARTED, "")
 						createSubscriptionFilters(serviceName, "dev", region, logStreamer);
 						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.COMPLETED, "")
-
 						// reset credentials
 						resetCredentials()
-
 						// echo status
 						def svc_response = echoServiceInfo("dev")
 						send_status_email(created_by, 'COMPLETED', params.service_name, svc_response)
@@ -337,7 +340,6 @@ def LoadConfiguration() {
 	def result = readFile('deployment-env.yml').trim()
 	echo "result of yaml parsing....$result"
 	def resultList = result.tokenize("\n")
-	// delete commented lines
 	def cleanedList = []
 	for (i in resultList) {
 		if(i.toLowerCase().startsWith("#")) {
@@ -345,40 +347,33 @@ def LoadConfiguration() {
 			cleanedList.add(i)
 		}
 	}
-
 	def newItem = ["subnetIds", ""]
 	for (item in cleanedList) {
 		// Clean up to avoid issues with more ":" in the values
 		item = item.replaceAll(" ", "").replaceFirst(":", "#");
-
 		def eachItemList = item.tokenize("#")
 		//handle empty values
 		def value = "";
-
 		if(eachItemList[1]) {
 			value = eachItemList[1].trim();
 		}
-
 		if(eachItemList[0].trim() == "securityGroupIds")
 		{
 			if(value.indexOf('"') == -1)
 				value = "\"" + value + "\""
 			echo value
 		}
-
 		if(eachItemList[0].trim() == "subnetIds1" || eachItemList[0].trim()  == "subnetIds2" || eachItemList[0].trim()  == "subnetIds3")
 		{
 			if(newItem[1].trim()  == "")
 				newItem[1] = "\""  + eachItemList[1].trim()
 			else
 				newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
-
 		}
 		else if(eachItemList[0]) {
 			prop.put(eachItemList[0].trim(), value)
 		}
 	}
-
 	if(newItem[1] != "")
 	{
 	 	newItem[1] =  newItem[1].trim()  + "\""
@@ -386,17 +381,16 @@ def LoadConfiguration() {
 		def key = newItem[0].trim()
 		def val = newItem[1].trim()
 	}
-
 	echo "Loaded configurations...$prop"
 	return prop
 }
 
 /** Run validation based on runtime
 */
-def runValidation(String runtime) {
+/*def runValidation(String runtime) {
 
 
-}
+} */
 
 /**	Build project based on runtime
 */
@@ -407,13 +401,11 @@ def buildLambda(String runtime) {
 	}else if(runtime.indexOf("java") > -1) {
 		sh "mvn package"
 	}else if(runtime.indexOf("python") > -1) {
-
 		// install requirements.txt in library folder, these python modules will be a part of deployment package
 		sh "rm -rf library"
 		sh "mkdir library"
 		sh "pip install -r requirements.txt -t library"
 		sh "touch library/__init__.py"
-
 		// create virtual environment and install pytest
 		sh """
 		pip install virtualenv
@@ -422,7 +414,6 @@ def buildLambda(String runtime) {
 		pip install pytest
 		"""
 	}
-
 }
 
 /** Run Test cases based on runtime
@@ -440,12 +431,11 @@ def runTestCases(String runtime) {
 		pytest test
 		"""
 	}
-
 }
 
 /** Parse Yml file and validate for invalid configurations
 */
-def validateUserConfigurationYml() {
+/*def validateUserConfigurationYml() {
 	echo "Validating serverless.yml configuration file"
 	def prop = [:]
 	def result = readFile('serverless.yml').trim()
@@ -485,7 +475,7 @@ def validateUserConfigurationYml() {
 	}else {
 		error "Key $prop['events'] is required"
 	}
-}
+} */
 
 
 /** Reset credentials
@@ -500,21 +490,17 @@ def resetCredentials() {
 	missing.
 */
 def validateDeploymentConfigurations(def prop) {
-
 	if(prop.containsKey("service")) {
 		if(prop['service'] == "") {
 			error "Wrong configuration. Value for Key 'service' is missing in the configuration"
 		}
-
 	}else {
 		error "Wrong configuration. Key 'service' is missing in the configuration"
 	}
-
 	if(prop.containsKey("providerRuntime")) {
 		def _runtime = prop['providerRuntime']
 		if(_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
-
 		} else {
 			def validRuntimes =["nodejs4.3", "python2.7", "java8"]  //@TODO. Add more runtime supports. DSundar3
 			def flag = false
@@ -523,24 +509,20 @@ def validateDeploymentConfigurations(def prop) {
 					flag = true
 				}
 			}
-
 			if(!flag) {
 				echo "$flag"
 				error "Runtime given in the configuration is not valid."
 			}
 		}
-
 	}else {
 		error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
 	}
-
 	if(prop.containsKey("providerTimeout")) {
 		if(prop['providerTimeout'] == "") {
 			error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
 		}else if(Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
 			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
 		}
-
 	}else {
 		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
 	}
@@ -551,7 +533,6 @@ def validateDeploymentConfigurations(def prop) {
 		}else if(prop['region'] != region) {
 			error "Wrong configuration. Value for Key 'region' should be ${region}"
 		}
-
 	}else {
 		error "Wrong configuration. Key 'region' is missing in the configuration"
 	}
@@ -563,7 +544,6 @@ def validateDeploymentConfigurations(def prop) {
 			if(prop['artifact'] == "") {
 				error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
 			}
-
 		}else {
 			error "Wrong configuration. Key 'artifact' is missing in the configuration"
 		}
@@ -576,7 +556,6 @@ def validateDeploymentConfigurations(def prop) {
 			error "Wrong configuration. Key 'mainClass' is missing in the configuration"
 		}
 	}
-
 }
 
 
@@ -680,11 +659,9 @@ def createSubscriptionFilters(String service, String env, String region, String 
 	Generate the serverless yml file with domain name in lambda name
 */
 def generateServerlessYml(service, env, serviceName, cfStackName) {
-
-        sh "pwd"
-
-		sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: ${serviceName}-${env}/g' serverless.yml"
-		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: ${cfStackName}/g' serverless.yml"
+	sh "pwd"
+	sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: ${serviceName}-${env}/g' serverless.yml"
+	sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: ${cfStackName}/g' serverless.yml"
 }
 
 /**
@@ -696,29 +673,23 @@ def setLambdaExecutionRole(role) {
 /**
 *   Clear Virtualenvironment
 **/
-def clearVirtualEnv() {
+//def clearVirtualEnv() {
 //		sh "rm -rf venv" // just delete the venv folder
-}
+//}
 
 def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
 
 }
 
 def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
-
 	setCredentials(g_base_url + '/platform/login')
-
 	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
-
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
 			-H \"Authorization: $g_login_token\" \"$url\" | $jq -r '.data[0] | [.id, .created_by] | join(\",\")'", returnStdout: true)
-
 	def values = curlOutput.split(',')
-
 	if (values[0]) {
 		service_id = values[0].replaceAll("[\n\r]", "")
 	}
-
 	if (values[1]) {
 		created_by = values[1].replaceAll("[\n\r]", "")
 	}
@@ -811,4 +782,60 @@ def updateServiceInDB(service_id, domain, devApiID, region, status) {
 	}catch (ex) {
 		error "updateServiceInDB Failed. "+ex.getMessage()
 	}
+}
+
+/**
+ *  Function to get arns of the triggers/events configured for the Lambda.
+ *
+ */
+def getEventsArn(domain, service, env) {
+	echo "in getEventsArn - if domain, lambdaFnName: ${domain}-${service}-${env}"
+	def eventsArn = []
+	try {
+		def lambdaFnName = service+"-"+env
+		if(domain){
+			lambdaFnName = domain+"-"+lambdaFnName
+		}
+		def lambdaPolicyTxt = sh (script:"aws lambda get-policy --function-name $lambdaFnName --output json", returnStdout: true)
+		def policyLists = null
+		if(lambdaPolicyTxt) {
+			def lambdaPolicyJson = new groovy.json.JsonSlurperClassic()
+			policyLists = lambdaPolicyJson.parseText(lambdaPolicyJson.parseText(lambdaPolicyTxt).Policy)
+			if(policyLists) {
+				for (st in policyLists.Statement) {
+					if (st.Principal.Service == "events.amazonaws.com") {
+						if(st.Condition.ArnLike["AWS:SourceArn"]) {
+							eventsArn.push(st.Condition.ArnLike["AWS:SourceArn"])
+						}
+					}
+				}
+			}
+		}
+		return eventsArn
+	} catch (ex) {
+		// Skip the 'ResourceNotFoundException' when deploying first time. Workflow can't fail here.
+		echo  "Can't fetch the events policy configurations for lambda. "+ ex.getMessage()
+		return []
+	}
+}
+
+def getLambdaARN (String stackName) {
+	def ARN = "";
+	try {
+			def cloudformation_resources = "";
+			cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+
+			def jsonSlurper = new JsonSlurper()
+			def parsedObject = jsonSlurper.parseText(cloudformation_resources);
+			def outputs = parsedObject.Stacks[0].Outputs;
+
+			for (output in outputs) {
+				if(output.OutputKey == "HandlerLambdaFunctionArn") {
+					ARN = output.OutputValue
+				}
+			}
+		} catch(ex) {
+			error ex.getMessage();
+		}
+	return ARN;
 }
