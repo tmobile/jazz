@@ -174,7 +174,7 @@ node {
 			sh "sed -i -- 's/" + service_name + "/" + env.env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
 
 			echo "Deploying lambda service"
-			def envBucketKey= "jazz_bucket_" + envmnt
+			def envBucketKey= env.jazz_bucket_name_prefix + envmnt
 			
 			sh "serverless deploy --stage "+envmnt+" -v --bucket " + env[envBucketKey]
 			echo "Deployed lambda service"
