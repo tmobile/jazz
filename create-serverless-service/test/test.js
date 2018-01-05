@@ -71,10 +71,10 @@ describe('create-serverless-service', function() {
     beforeEach(function(){
       event = {
         "stage" : "test",
-        "headers" : {
-          "Authorization" : "fr1end$hip_1s_mAg1c"
-        },
         "principalId" : "@pp1eJack",
+		"headers" : {
+          "Authorization" : "pr!ncessBubb1eGum"
+        },
         "body" : {
           "service_name"	: "test-service",
           "service_type"	: "lambda",
@@ -148,22 +148,6 @@ describe('create-serverless-service', function() {
           allCases = false;
         }
       }
-      assert.isTrue(allCases);
-    });
-
-    /*
-    * Given an event with missing headers/headers.Authorization, handler() should throw InternalServerError
-    * @param {object} event, contains a null or undefined headers or headers.Authorization
-    * @params {object, function} default aws context and callback function as assigned above respectively
-    * @returns index.handler() should return an InternalServerError notification
-    */
-    it("should throw an InternalServerError error if missing event.headers", function(){
-      var errMessage = "'headers' is missing";
-      var errType = "BadRequest";
-      var allCases = checkCase("headers", "Authorization", null, errMessage, errType) &&
-                      checkCase("headers", "Authorization", undefined, errMessage, errType) &&
-                      checkCase("headers", null, null, errMessage, errType) &&
-                      checkCase("headers", null, undefined, errMessage, errType);
       assert.isTrue(allCases);
     });
 

@@ -54,7 +54,7 @@ def Event_Status = [
 
 node ()  {
 	region = env.jazz_region
-	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 	role = env.jazz_roleId
 	echo "Jobs Params: " + params
 	echo "Build triggered via branch: " + params.scm_branch
@@ -118,7 +118,7 @@ node ()  {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${env.env_name_prefix}-cloud-logs-streamer-dev"
+  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${env.env_name_prefix}-cloud-logs-streamer-prod"
 
 	echo "logStreamer:: " + logStreamer
 
@@ -798,13 +798,13 @@ def send_status_email (email_id, build_status, service, email_content) {
    	}
 }
 
-def updateServiceInDB(service_id, domain, devApiID, region, status) {
+def updateServiceInDB(service_id, domain, apiID, region, status) {
 
 	try {
 		echo "svc id ===============" + service_id
 		echo "domain ===============" + domain
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${g_login_token}\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://${devApiID}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id}?isAdmin=true",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${g_login_token}\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://${apiID}.execute-api.${region}.amazonaws.com/prod/platform/services/${service_id}?isAdmin=true",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
