@@ -63,19 +63,14 @@ node  {
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
-<<<<<<< HEAD
-=======
 	def rateExpression
 	def enableEventSchedule
 	if (params.rateExpression){
-		echo "params include rateExpression : ${params.rateExpression}"
 		rateExpression = params.rateExpression
 	}
 	if (params.enableEventSchedule){
-		echo "params include enableEventSchedule : ${params.enableEventSchedule}"
 		enableEventSchedule = params.enableEventSchedule
 	}
->>>>>>> 430c82c61c9fe3f5caebf533fdf43379ebff8ab0
 
 	def service_template
 	def service_username
@@ -566,8 +561,6 @@ def send_status_email (email_id, build_status, service, domain) {
        echo "Failed while sending build status notification"
    }
 }
-<<<<<<< HEAD
-
 /*
 * Load environment variables from build module
 */
@@ -589,5 +582,3 @@ def loadEnvModule(buildModuleUrl){
 		echo "finished loading env module"
 	}
 }
-=======
->>>>>>> 430c82c61c9fe3f5caebf533fdf43379ebff8ab0
