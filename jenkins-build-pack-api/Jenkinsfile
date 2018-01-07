@@ -76,7 +76,7 @@ node() {
 	//Setting SCM Repo
 	setSCMBase(scm, env.REPO_BASE)
 
-	def var_bitbucket_framework_url = "http://" + scm_base  + env.REPO_LOC + "/"
+	def scm_base_url    = "http://" + scm_base  + env.REPO_LOC + "/"
 	def configPackBBURL = "http://" + scm_base  + env.REPO_CORE + "/serverless-config-pack.git"
 
 	def config
@@ -100,7 +100,7 @@ node() {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: scm_base_url + bitbucket_name + '.git']]])
 		}
 
 		sh 'cd ' + bitbucket_name
@@ -308,7 +308,6 @@ def setSCMBase(scm, repo_base)
 	{
 		scm_base = scm_base + "scm/"
 	}
-	echo "SCM Base:$scm_base"
 }
 
 def echoServerlessFile() {

@@ -52,7 +52,7 @@ node {
 	//Setting SCM Repo
 	setSCMBase(scm, env.REPO_BASE)
 	
-	def var_bitbucket_framework_url = "http://" + scm_base + env.REPO_CORE + "/"
+	def scm_base_url = "http://" + scm_base + env.REPO_CORE + "/"
 	
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
@@ -73,7 +73,7 @@ node {
 			sh 'mkdir ' + service_template
 			dir(service_template)
 			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
+				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: scm_base_url + service_template + '.git']]])
 			}
 		}
 		catch(error){
@@ -215,7 +215,6 @@ def setSCMBase(scm, repo_base)
 	{
 		scm_base = scm_base + "scm/"
 	}
-	echo "SCM Base:$scm_base"
 }
 
 def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName) {

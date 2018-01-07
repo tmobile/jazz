@@ -42,7 +42,7 @@ node {
 	def service_name			= params.service_name
 	def admin_group 			= params.admin_group
 	def region					= params.region
-	def enviornment				= params.deploy_env
+	def environment				= params.deploy_env
 	def scm_repo_name 			= service_template
 	def domain 					= "platform"
 	def service_type 	 		= "api"
@@ -57,7 +57,7 @@ node {
 	setSCMBase(scm, env.REPO_BASE)
 
 	def configPackBBURL 	= "http://" + scm_base + env.REPO_CORE + "/serverless-config-pack.git" 
-	def scm_framework_url 	= "http://" + scm_base + env.REPO_CORE + "/"
+	def scm_base_url 		= "http://" + scm_base + env.REPO_CORE + "/"
 	
 	if(params.domain && params.domain.trim() != ""){
 		scm_repo_name = params.domain.trim() + "-" + service_name
@@ -77,7 +77,7 @@ node {
 			sh 'mkdir ' + scm_repo_name
 			dir(scm_repo_name)
 			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: credential_id, url: scm_framework_url + service_template + '.git']]])
+				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: credential_id, url: scm_base_url + service_template + '.git']]])
 			}
 		}
 		catch(error){
@@ -313,7 +313,7 @@ node {
 			sh "sed -i -- 's/" + service_name + "/" + env.env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
 
 			echo "Deploying lambda service"
-			sh "serverless deploy --stage " + enviornment + " -v --bucket " + env.jazz_bucket_dev
+			sh "serverless deploy --stage " + environment + " -v --bucket " + env.jazz_bucket_dev
 			echo "Deployed lambda service"
 							
 			// Generate swagger file based on environment
@@ -321,12 +321,12 @@ node {
 				echo "Generating the swagger file for each environment"
 				def apiHostName	= api_key + ".execute-api." + region + ".amazonaws.com" //Development environment
 				
-				generateSwaggerEnv(service_name, enviornment, env.env_name_prefix+"-"+enviornment, apiHostName, domain, service_name, env.env_name_prefix)
+				generateSwaggerEnv(service_name, environment, env.env_name_prefix+"-"+environment, apiHostName, domain, service_name, env.env_name_prefix)
 				
 				// import swagger api spec
 				echo "Deploying API gateway Endpoints"
 				sh "aws apigateway put-rest-api --rest-api-id "+api_key+" --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
-				sh "aws apigateway create-deployment --rest-api-id "+api_key+" --stage-name "+enviornment+" --profile cloud-api"
+				sh "aws apigateway create-deployment --rest-api-id "+api_key+" --stage-name "+environment+" --profile cloud-api"
 
 			}
 			
@@ -375,7 +375,6 @@ def setSCMBase(scm, repo_base)
 	{
 		scm_base = scm_base + "scm/"
 	}
-	echo "SCM Base:$scm_base"
 }
 
 def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName, env_name_prefix) {

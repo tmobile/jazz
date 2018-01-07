@@ -61,7 +61,7 @@ node ()  {
 	//Setting SCM Repo
 	setSCMBase(scm, env.REPO_BASE)
 
-	def var_bitbucket_framework_url = "http://${scm_base}${params.scm_project}/"
+	def scm_base_url = "http://${scm_base}${params.scm_project}/"
 
 	if (params.scm_branch == 'master') {
 		current_environment = 'prod'
@@ -84,7 +84,7 @@ node ()  {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: scm_base_url + bitbucket_name + '.git']]])
 		}
 
 		// @TODO: dir can be removed, needs to be refactored
@@ -350,7 +350,6 @@ def setSCMBase(scm, repo_base)
 	{
 		scm_base = scm_base + "scm/"
 	}
-	echo "SCM Base:$scm_base"
 }
 
 def getS3BucketName(String envname) {
