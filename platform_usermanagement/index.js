@@ -285,6 +285,10 @@ function updatePassword(cognitoClient, config, userData) {
 	});
 }
 
+function createUserInSCM(config, userData) {
+	return createUserInBitBucket(config, userData);
+}	
+
 function createUserInBitBucket(config, userData) {
 	var encodedUserid = encodeURIComponent(userData.userid);
 	var encodedPwd = encodeURIComponent(userData.userpassword);

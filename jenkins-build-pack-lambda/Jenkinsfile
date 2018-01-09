@@ -69,7 +69,7 @@ node ()  {
 	def bitbucket_name = params.service_name
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
 
-	def var_bitbucket_framework_url = "http://${env.REPO_BASE}/scm/${env.REPO_LOC}/"
+	def scm_base_url = "http://${env.REPO_BASE}/scm/${env.REPO_LOC}/"
 	def var_api_key 				= env.API_KEY
 	def config
 
@@ -92,7 +92,7 @@ node ()  {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: scm_base_url + bitbucket_name + '.git']]])
 		}
 
 		sh 'cd ' + bitbucket_name

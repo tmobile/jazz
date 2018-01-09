@@ -49,6 +49,7 @@ def Event_Status = [
 @Field def region = ''
 @Field def jq = '/usr/local/bin/jq'
 @Field def aws_api_import = '/var/lib/aws-apigateway-importer/aws-api-import.sh'
+@Field def scm_base = ''
 
 node() {
 	region = env.jazz_region
@@ -62,18 +63,21 @@ node() {
     //checkout scm
     echo "start"
 
-    def serviceName = params.service_name
-    def cfStackName = params.service_name
-	def branch = params.scm_branch
+	def scm 				= env.JAZZ_SCM
+    def serviceName 		= params.service_name
+    def cfStackName 		= params.service_name
+	def branch 				= params.scm_branch
+    def bitbucket_name 		= params.service_name
+	def var_credentialsId 	= env.REPO_CREDENTIAL_ID
+	def var_bitbucket_base	= env.REPO_BASE
+	def var_api_key 		= env.API_KEY
 
-    def bitbucket_name = params.service_name
-	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-	def var_bitbucket_base			= env.REPO_BASE
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_LOC + "/"
-	def var_api_key 				= env.API_KEY
 
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)
 
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git"
+	def scm_base_url    = "http://" + scm_base  + env.REPO_LOC + "/"
+	def configPackBBURL = "http://" + scm_base  + env.REPO_CORE + "/serverless-config-pack.git"
 
 	def config
 
@@ -96,7 +100,7 @@ node() {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: scm_base_url + bitbucket_name + '.git']]])
 		}
 
 		sh 'cd ' + bitbucket_name
@@ -295,6 +299,15 @@ node() {
 
 		}//if branch name ends here
 	}//dir ends here
+}
+
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
+	}
 }
 
 def echoServerlessFile() {

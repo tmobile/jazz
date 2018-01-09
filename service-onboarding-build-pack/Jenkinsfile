@@ -1,5 +1,6 @@
 #!groovy.
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 import java.text.SimpleDateFormat
 import groovy.transform.Field
 
@@ -30,49 +31,59 @@ def Event_Status = [
 	'COMPLETED':'COMPLETED',
 	'FAILED':'FAILED'
 ]
-@Field def region = ''
+@Field def region  = ''
+@Field def scm_base = '' 
+@Field def cas_proj_id
 
-node  {
-	region = env.jazz_region
-	def service_type =  params.service_type
-	def runtime = params.runtime
-	def service_name = params.service_name
-	def admin_group = "admin_group"
-	def bitbucket_name = params.service_name
-	
+node  {	
 	def service_template
 	def service_username
 	def service_password
-	def domain = params.domain
-	def owner = ""
+	
+	def service_type   				= params.service_type
+	def runtime        				= params.runtime
+	def service_name   				= params.service_name
+	def admin_group    				= "admin_group"
+	def scm_repo_name 				= params.service_name
+	def domain		                = params.domain
+
+	def scm				            = env.JAZZ_SCM
+	def owner  	                    = ""
+	def repo_protocol				= "http://"
+	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
+	def repo_base			        = env.REPO_BASE
+	def var_api_key 				= env.API_KEY
+	def var_api_host_name			= var_api_key+".execute-api.us-east-2.amazonaws.com"
+	def cas_rest_repo 			    = repo_protocol + repo_base  + "/rest/api/1.0/projects/" + env.REPO_LOC + "/repos"
+	def var_bitbucket_email 		= env.REPO_EMAIL
+
+	def var_bitbucket_branch_perm	= repo_protocol + repo_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
+	def var_bitbucket_webhook_api	= repo_protocol + repo_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
+	def jenkins_url                 = JenkinsLocationConfiguration.get().getUrl()
+	def bitbucket-scmscource-hook  	= jenkins_url + "/bitbucket-scmsource-hook/notify"
+	
+
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)
+
+	def var_cas_clone_url	 		= scm_base + env.REPO_LOC + "/"
+	def var_serviceonboarding_repo 	= repo_protocol + scm_base + env.REPO_CORE + "/service-onboarding-build-pack.git"
+	def scm_base_url                	= repo_protocol + scm_base + env.REPO_CORE + "/"
+	
+	region = env.jazz_region
 	if (params.username) {
 		owner = params.username
 	}
 
-	def repo_protocol				= "http://"
-
-	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-	def var_bitbucket_base			= env.REPO_BASE
-	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
-	def var_api_key 				= env.API_KEY
-	def var_api_host_name			= var_api_key+".execute-api.us-east-2.amazonaws.com"
-	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + env.REPO_LOC + "/repos"
-	def var_bitbucket_email 		= env.REPO_EMAIL
-	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + env.REPO_LOC + "/"
-	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/service-onboarding-build-pack.git"
-	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
-	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
-	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
-
 	echo "Starting new service on-boarding.."
 	echo "params : $params"
-
+	
 	if(params.domain && params.domain.trim() != ""){
-		bitbucket_name = params.domain.trim() + "-" + service_name
+		scm_repo_name = params.domain.trim() + "-" + service_name
 		domain = params.domain.trim()
 	}
 
-	def repo_url = repo_protocol + env.REPO_BASE + "/projects/CAS/repos/" + bitbucket_name + "/browse";
+	def repo_url = setRepoUrl(repo_protocol, scm_repo_name, repo_base)
 
 	stage('Input Validation')
 	{
@@ -162,7 +173,7 @@ node  {
 			sh 'mkdir ' + service_template
 			dir(service_template)
 			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
+				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: scm_base_url + service_template + '.git']]])
 
 				config = LoadConfiguration()
 				
@@ -278,8 +289,8 @@ node  {
 		{
 			try{
 				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-					sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\" " + var_cas_rest_repo + " -d \'{\"name\":\""+ bitbucket_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
-
+					createProjectInSCM(env.gitlab_private_token, env.gitlab_cas_name_space_id, repo_base, scm_repo_name, uname, pwd, cas_rest_repo)
+{
 					sh "git config --global user.email \"" + var_bitbucket_email + "\""
 					sh "git config --global user.name $UNAME"
 				}
@@ -298,11 +309,11 @@ node  {
 
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD1', usernameVariable: 'UNAME']]) {
 			def encoded_password = URLEncoder.encode(PWD1, "utf-8")
-            sh "git clone http://$UNAME:$encoded_password@" + var_cas_clone_url + bitbucket_name +".git"
+            sh "git clone http://$UNAME:$encoded_password@" + var_cas_clone_url + scm_repo_name +".git"
 		}
 		try{
-			sh "mv -nf " + service_template + "/* " + bitbucket_name + "/"
-			sh "mv -nf " + service_template + "/.* " + bitbucket_name + "/"
+			sh "mv -nf " + service_template + "/* " + scm_repo_name + "/"
+			sh "mv -nf " + service_template + "/.* " + scm_repo_name + "/"
 		}
 		catch (error)
 		{
@@ -310,11 +321,40 @@ node  {
 		}
 
 
-		dir (bitbucket_name)
+		dir (scm_repo_name)
 		{
 			sh "ls -lart"
 
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+				if(scm == "gitlab"){
+					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.STARTED, "")
+					try{						
+						echo "Adding web hooks for Jenkins integration"
+
+						//Create webhook for each repo , as webhook in gitlab is at repo/project level
+						def var_private_token = env.gitlab_private_token
+						def var_jenkins_user_passwd_url = "http://" + env.JENKINS_USERNAME + ":" + env.JENKINS_PASSWORD + "@" +jenkins_url.split('/')[2]
+
+						def gitlab_job_hook = "/project/Gitlab-Trigger-Job"
+						def gitlab_webhook_url = var_jenkins_user_passwd_url + gitlab_job_hook
+						
+						echo "Jenkins url: $var_jenkins_user_passwd_url"
+						echo "Gitlab job hook: $gitlab_job_hook"
+						echo "Gitlab webhook url: $gitlab_webhook_url"
+
+						sh "curl --header \"PRIVATE-TOKEN: $var_private_token\" -X POST \"http://$repo_base/api/v3/projects/$cas_proj_id/hooks?enable_ssl_verification=false&push_events=true&url=$gitlab_webhook_url\""
+						sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
+					}
+					catch(error){
+						updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+
+						send_status_email (owner, "FAILED", service_name, domain)
+
+						sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.FAILED, error.getMessage())
+						echo error
+					}
+				}
+
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.PUSH_TEMPLATE_TO_SERVICE_REPO, Event_Status.STARTED, "")
 				try{
 					sh "git add --all"
@@ -336,13 +376,16 @@ node  {
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.STARTED, "")
 				try{
 					echo "Adding groups to the repository with appropriate permissions"
-					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + var_cas_rest_repo + ""+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN&" + admin_group + "\" &"
+					if(scm == "gitlab"){
+						//TODO: Gitlab"
+					}else{
+						sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + cas_rest_repo + ""+ scm_repo_name +"/permissions/users?permission=REPO_ADMIN&" + admin_group + "\" &"
 
-					def encoded_creator = URLEncoder.encode(owner, "utf-8")
-            
-					echo "providing repository write permissions to the service creator"
-					sh "curl -X PUT -G -k -v -u \"$UNAME:$PWD\"  -d \"name=$encoded_creator\" \"${var_cas_rest_repo}/${bitbucket_name}/permissions/users?permission=REPO_ADMIN\""
-
+						def encoded_creator = URLEncoder.encode(owner, "utf-8")
+				
+						echo "providing repository write permissions to the service creator"
+						sh "curl -X PUT -G -k -v -u \"$UNAME:$PWD\"  -d \"name=$encoded_creator\" \"${cas_rest_repo}/${scm_repo_name}/permissions/users?permission=REPO_ADMIN\""
+					}
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.COMPLETED, "")
 				}
 				catch(error){
@@ -355,8 +398,11 @@ node  {
 				try{
 					checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_serviceonboarding_repo]]])
 					echo "Locking commits to master branch by enforcing pull requests"
-					sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" " + var_bitbucket_branch_perm + bitbucket_name + "/restrictions   -d \"@branch_permissions_payload.json\"  "
-
+					if(scm == "gitlab"){
+						//TODO: Gitlab Locking commits"
+					}else{
+						sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" " + var_bitbucket_branch_perm + scm_repo_name + "/restrictions   -d \"@branch_permissions_payload.json\"  "
+					}
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.LOCK_MASTER_BRANCH, Event_Status.COMPLETED, "")
 				}
@@ -369,19 +415,22 @@ node  {
 					echo error
 				}
 
-				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.STARTED, "")
-				try{
-					echo "Adding web hooks for Jenkins integration"
-					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\"  " + var_bitbucket_webhook_api + bitbucket_name + "/configurations  -d \'{\"title\": \"notify-jenkins\", \"url\": \"" + var_scm_source_hook + "\" , \"enabled\": true}\'"
-					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
-				}
-				catch(error){
-					updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+				if(scm != "gitlab"){
+					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.STARTED, "")
+					try{
+						echo "Adding web hooks for Jenkins integration"
+						sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\"  " + var_bitbucket_webhook_api + scm_repo_name + "/configurations  -d \'{\"title\": \"notify-jenkins\", \"url\": \"" + bitbucket-scmscource-hook  + "\" , \"enabled\": true}\'"
+						
+						sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
+					}
+					catch(error){
+						updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
 
-					send_status_email (owner, "FAILED", service_name, domain)
+						send_status_email (owner, "FAILED", service_name, domain)
 
-					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.FAILED, error.getMessage())
-					echo error
+						sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.FAILED, error.getMessage())
+						echo error
+					}
 				}
 
 				echo "Calling update row in db ###################################################"
@@ -390,6 +439,47 @@ node  {
 		}
 	}
 }
+
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
+	}
+}
+
+def setRepoUrl(repo_protocol, scm_repo_name, repo_base)
+{
+	def repo_url = repo_protocol
+	if (scm == "gitlab"){
+		repo_url = repo_url + scm_base + "/cas/" + scm_repo_name
+	}else{	
+		repo_url = repo_url + repo_base + "/projects/CAS/repos/" + scm_repo_name + "/browse";
+	}
+	return repo_url
+}
+
+def createProjectInSCM(gitlab_private_token, gitlab_cas_name_space_id, repo_base, scm_repo_name, username, password, cas_rest_repo)
+{
+	if(scm == "gitlab"){
+		def private_token    = gitlab_private_token
+		def cas_namespace_id = gitlab_cas_name_space_id
+
+		def gitlab_repo_output = sh (
+			script: "curl --header \"PRIVATE-TOKEN: $private_token\" -X POST \"http://$repo_base/api/v3/projects?name=$scm_repo_name&path=$scm_repo_name&namespace_id=$cas_namespace_id\"",
+			returnStdout: true
+		).trim()
+		
+		def jsonSlurper = new JsonSlurper()
+		def object = jsonSlurper.parseText(gitlab_repo_output)
+		cas_proj_id = object.id
+	}
+	else{
+		sh "curl -X POST -k -v -u \"$username:$password\" -H \"Content-Type: application/json\" " + cas_rest_repo + " -d \'{\"name\":\""+ scm_repo_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
+	}
+}
+
 
 def sendEvent(service_type, service_name, domain, runtime, admin_group, event_name, event_status, error){
 	echo "send event" + error
