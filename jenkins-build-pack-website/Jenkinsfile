@@ -861,7 +861,7 @@ def send_status_email (email_id, build_status, service, email_content) {
    	if (email_content != ''){
         	body_text = body_text + '\n\n' + email_content
 	}
-	def fromStr = 'JAZZ ADMIN <' + env.JAZZ_ADMIN + '>'
+	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
 					to : email_id,
