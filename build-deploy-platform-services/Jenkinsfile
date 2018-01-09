@@ -374,7 +374,7 @@ node {
 				).trim()
 				echo "$event_source_list"
 				if (event_source_list == "[]"){
-					sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + var_env_name_prefix + "-events-hub-dev --function-name arn:aws:lambda:$region:$roleId:function:" + env.env_name_prefix + "-hndlr-dev --starting-position LATEST --region " + region
+					sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + var_env_name_prefix + "-events-hub-dev --function-name arn:aws:lambda:$region:$roleId:function:$function_name --starting-position LATEST --region " + region
 				}
 			}
 			
