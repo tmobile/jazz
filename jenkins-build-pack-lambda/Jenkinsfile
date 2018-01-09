@@ -47,6 +47,7 @@ def Event_Status = [
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def service_id = ''
+
 @Field def created_by = ''
 
 @Field def role = ''
@@ -201,9 +202,6 @@ node ()  {
 						echo "setting lambda execution role as $role";
 						setLambdaExecutionRole(role);
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
-						addCommonExcludes()
-
-						echo "serverless deploy about to call"
 
 						echo "serverless deploy about to call"
 
@@ -241,7 +239,6 @@ node ()  {
 			sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 
 			dir(bitbucket_name){
-
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					def lambdaDevARN
 					try {
@@ -272,7 +269,6 @@ node ()  {
 						echo "setting lambda execution role as $role";
 						setLambdaExecutionRole(role);
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.COMPLETED, "")
-						addCommonExcludes()
 
 						sh "serverless deploy --stage dev  -v --bucket " + env.jazz_bucket_dev
 						def stackDevName = cfStackName + "-dev";
@@ -756,40 +752,38 @@ def send_status_email (email_id, build_status, service, email_content) {
 		def cc_email = ''
 		def body_html = ''
    	if (build_status == 'STARTED') {
-			echo "email status started"
-			body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + service
+		echo "email status started"
+		body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + service
    	} else if (build_status == 'FAILED') {
-			echo "email status failed"
-			def build_url = env.BUILD_URL + 'console'
-			body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + service
-			body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
+		echo "email status failed"
+		def build_url = env.BUILD_URL + 'console'
+		body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + service
+		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
    	} else if (build_status == 'COMPLETED'){
-        body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
+        	body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
    	} else {
-        echo "Unsupported build status, nothing to email.."
-        return
+		echo "Unsupported build status, nothing to email.."
+		return
    	}
    	if (email_content != ''){
-        body_text = body_text + '\n\n' + email_content
-		}
-		def fromStr = 'JAZZ ADMIN <' + env.JAZZ_ADMIN + '>'
-		body = JsonOutput.toJson([
-							from : fromStr,
-					  	to : email_id,
-					  	subject : body_subject,
-					  	text : body_text,
-							cc : cc_email,
-							html : body_html
-				    ])
-
-		echo "request body before sending email: ${body}"
+        	body_text = body_text + '\n\n' + email_content
+	}
+	def fromStr = 'JAZZ ADMIN <' + env.JAZZ_ADMIN + '>'
+	body = JsonOutput.toJson([
+					from : fromStr,
+					to : email_id,
+					subject : body_subject,
+					text : body_text,
+					cc : cc_email,
+					html : body_html
+			    ])
 
    	try{
 				def sendMail = sh (script: "curl -X POST \
-																		${g_base_url}/platform/email \
-																		-k -v -H \"Authorization: $g_login_token\" \
-																		-H \"Content-Type: application/json\" \
-																		-d \'${body}\'", returnStdout: true).trim()
+								${g_base_url}/platform/email \
+								-k -v -H \"Authorization: $g_login_token\" \
+								-H \"Content-Type: application/json\" \
+								-d \'${body}\'", returnStdout: true).trim()
 				def responseJSON = parseJson(sendMail)
 				if(responseJSON.data){
 					echo "successfully sent e-mail to $email_id"
@@ -797,7 +791,7 @@ def send_status_email (email_id, build_status, service, email_content) {
 					echo "exception occured while sending e-mail: $responseJSON"
 				}
    	} catch (e){
-       echo "Failed while sending build status notification"
+     		  echo "Failed while sending build status notification"
    	}
 }
 
