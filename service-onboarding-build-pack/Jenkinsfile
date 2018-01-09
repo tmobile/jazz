@@ -532,35 +532,67 @@ def LoadConfiguration() {
 
 /**
 * Send email to the recipient with the build status and any additional text content
-* Supported build status values =  FAILED & COMPLETED
+* Supported build status values = STARTED, FAILED & COMPLETED
 * @return
 */
 def send_status_email (email_id, build_status, service, domain) {
-   echo "Sending email notification to " + email_id
-   body = ""
-   bcc_email = ""
+   	echo "Sending build notification to " + email_id
+	def body_subject = ''
+	def body_text = ''
+	def cc_email = ''
+	def body_html = ''
+   	if (build_status == 'STARTED') {
+		echo "email status started"
+		body_subject = 'Jazz Build Notification: Creation STARTED for service: ' + service
+   	} else if (build_status == 'FAILED') {
+		echo "email status failed"
+		def build_url = env.BUILD_URL + 'console'
+		body_subject = 'Jazz Build Notification: Creation FAILED for service: ' + service
+		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
+   	} else if (build_status == 'COMPLETED'){
+        	body_subject = 'Jazz Build Notification: Creation COMPLETED successfully for service: ' + service
+   	} else {
+        	echo "Unsupported build status, nothing to email.."
+        	return
+   	}
+   	if (domain != ''){
+		domain = 'For Service: ' + service + ' in Domain: ' + domain
+        	body_text = body_text + '\n\n' + domain
+	}
+	def fromStr = 'JAZZ ADMIN <' + env.JAZZ_ADMIN + '>'
+	body = JsonOutput.toJson([
+					from : fromStr,
+					to : email_id,
+					subject : body_subject,
+					text : body_text,
+					cc : cc_email,
+					html : body_html
+			    ])
 
-   if (build_status == 'COMPLETED'){
-        body = "Service creation completed for service : $service in the namespace : $domain"
-   }else if (build_status == 'FAILED') {
-		build_url = env.BUILD_URL + 'console'
 
-        body = "Service creation FAILED for service : $service in the namespace : $domain"
-        body = body + "\n\nFor more details, please click this link: $build_url"
-   } else {
-        echo "Unsupported build status, nothing to email.."
-        return
-   }
+   	try{
+				def sendMail = sh (script: "curl -X POST \
+								${g_base_url}/platform/email \
+								-k -v -H \"Authorization: $g_login_token\" \
+								-H \"Content-Type: application/json\" \
+								-d \'${body}\'", returnStdout: true).trim()
+				def responseJSON = parseJson(sendMail)
+				if(responseJSON.data){
+					echo "successfully sent e-mail to $email_id"
+				} else {
+					echo "exception occured while sending e-mail: $responseJSON"
+				}
+   	} catch (e){
+       		echo "Failed while sending build status notification"
+   	}
+}
 
-   try{
-        mail (to: email_id, bcc: bcc_email,
-         subject: "Jazz Service Creation Notification for $service",
-         body: body
-        );
-        echo "Sent email to " + email_id + " successfully!"
-   } catch (e){
-       echo "Failed while sending build status notification"
-   }
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
 }
 /*
 * Load environment variables from build module

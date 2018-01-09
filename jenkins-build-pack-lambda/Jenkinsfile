@@ -59,6 +59,7 @@ def Event_Status = [
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def service_id = ''
+
 @Field def created_by = ''
 
 @Field def role = ''
@@ -86,10 +87,14 @@ node ()  {
 	echo "Build triggered via branch: " + params.scm_branch
 	def _event = ""
 
-	echo "start"
+    echo "start"
 
-	def serviceName = params.service_name
-	def cfStackName = params.service_name
+    def serviceName = ""
+    def cfStackName = ""
+		if(params.service_name != null && !params.service_name.isEmpty()){
+			serviceName = params.service_name
+			cfStackName = params.service_name
+		}
 	def branch = params.scm_branch
 	def bitbucket_name = params.service_name
 	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${var_repo_loc}/"
@@ -107,11 +112,11 @@ node ()  {
 		current_environment = 'dev'
 	}
 
-	stage('Checkout code base') {
+    stage('Checkout code base') {
 
 		sh 'rm -rf ' + bitbucket_name
 		sh 'mkdir ' + bitbucket_name
-		sh 'pwd'
+        sh 'pwd'
 
 		dir(bitbucket_name)
 		{
@@ -122,7 +127,9 @@ node ()  {
 		config = dir(bitbucket_name){
 			LoadConfiguration()
 		}
+
 	}
+
 
 	def runtime = config['providerRuntime']
 	def service = config['service']
@@ -144,14 +151,14 @@ node ()  {
 
 	domain = config['domain']
 	if (domain  && domain.trim()!="") {
-		serviceName = domain.trim() + "-${service}"
-		cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
+			serviceName = domain.trim() + "-" + service
+			cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
 	}
 
 	serviceName = "${var_env_name_prefix}-${serviceName}"
 	cfStackName = serviceName
 
-	echo serviceName+"******************************************************* "
+    echo serviceName+"******************************************************* "
 
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
 		isEventSchdld = true
@@ -316,6 +323,7 @@ def echoServerlessFile() {
 	echo "serverless file data $serverlessyml"
 }
 
+
 def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
 	echo "addEvents to serverless.yml file"
 	def sedCommand = "s/eventsDisabled/events/g";
@@ -379,6 +387,7 @@ def LoadConfiguration() {
 		}
 		if(eachItemList[0].trim() == "securityGroupIds")
 		{
+
 			if(value.indexOf('"') == -1)
 				value = "\"" + value + "\""
 			echo value
@@ -387,6 +396,7 @@ def LoadConfiguration() {
 		{
 			if(newItem[1].trim()  == "")
 				newItem[1] = "\""  + eachItemList[1].trim()
+
 			else
 				newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
 		}
@@ -396,7 +406,7 @@ def LoadConfiguration() {
 	}
 	if(newItem[1] != "")
 	{
-	 	newItem[1] =  newItem[1].trim()  + "\""
+	 newItem[1] =  newItem[1].trim()  + "\""
 		prop.put(newItem[0].trim(),  newItem[1].trim())
 		def key = newItem[0].trim()
 		def val = newItem[1].trim()
@@ -653,15 +663,15 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(String service, String env, String region, String logStreamer) {
-	def lambda = "/aws/lambda/${service}-${env}"
+	def lambda = "/aws/lambda/"+service+"-"+env
 	def cloudLogsStreamer = logStreamer
 	try {
-		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
+		sh "aws logs create-log-group --log-group-name "+lambda+" --region "+region
 	}catch(Exception ex) {}// ignore if already existing
 
 	try {
 		filter_json = sh (
-			script: "aws logs describe-subscription-filters --output json --log-group-name \""+lambda+"\" --region ${region}",
+			script: "aws logs describe-subscription-filters --output json --log-group-name \""+lambda+"\" --region "+region ,
 			returnStdout: true
 		).trim()
 		echo "${filter_json}"
@@ -688,7 +698,7 @@ def generateServerlessYml(service, env, serviceName, cfStackName) {
 	Set the Lambda execution role. If user provided a custom role override the default.
 */
 def setLambdaExecutionRole(role) {
-	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#${role}#g' serverless.yml"
+	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#"+role+"#g' serverless.yml"
 }
 /**
 *   Clear Virtualenvironment
@@ -758,34 +768,51 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 */
 def send_status_email (email_id, build_status, service, email_content) {
    	echo "Sending build notification to " + email_id
-   	body = ""
-   	bcc_email = ""
-
-	if (build_status == 'STARTED') {
-		body = "Build/deploy process just STARTED for service: " + service
+		def body_subject = ''
+		def body_text = ''
+		def cc_email = ''
+		def body_html = ''
+   	if (build_status == 'STARTED') {
+		echo "email status started"
+		body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + service
    	} else if (build_status == 'FAILED') {
-		build_url = env.BUILD_URL + 'console'
-		body = "Build/deploy process FAILED for service: ${service}"
-        body = body + "\n\nFor more details, please click this link: $build_url"
+		echo "email status failed"
+		def build_url = env.BUILD_URL + 'console'
+		body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + service
+		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
    	} else if (build_status == 'COMPLETED'){
-        body = "Build/deploy process COMPLETED successfully for service: $service"
+        	body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
    	} else {
-        echo "Unsupported build status, nothing to email.."
-        return
+		echo "Unsupported build status, nothing to email.."
+		return
    	}
-
    	if (email_content != ''){
-        body = body + "\n\n" + email_content
+        	body_text = body_text + '\n\n' + email_content
 	}
+	def fromStr = 'JAZZ ADMIN <' + env.JAZZ_ADMIN + '>'
+	body = JsonOutput.toJson([
+					from : fromStr,
+					to : email_id,
+					subject : body_subject,
+					text : body_text,
+					cc : cc_email,
+					html : body_html
+			    ])
 
    	try{
-        mail (to: email_id, bcc: bcc_email,
-         subject: "Jazz Build Notification: Deployment $build_status for $service ($current_environment)",
-         body: body
-        );
-        echo "Sent email to " + email_id + " successfully!"
+				def sendMail = sh (script: "curl -X POST \
+								${g_base_url}/platform/email \
+								-k -v -H \"Authorization: $g_login_token\" \
+								-H \"Content-Type: application/json\" \
+								-d \'${body}\'", returnStdout: true).trim()
+				def responseJSON = parseJson(sendMail)
+				if(responseJSON.data){
+					echo "successfully sent e-mail to $email_id"
+				} else {
+					echo "exception occured while sending e-mail: $responseJSON"
+				}
    	} catch (e){
-       echo "Failed while sending build status notification"
+     		  echo "Failed while sending build status notification"
    	}
 }
 
@@ -795,7 +822,7 @@ def updateServiceInDB(service_id, domain, devApiID, region, status) {
 		echo "svc id ===============" + service_id
 		echo "domain ===============" + domain
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${g_login_token}\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://${devApiID}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id}?isAdmin=true",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: "+g_login_token+"\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id + "/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
@@ -880,4 +907,13 @@ def getLambdaARN (String stackName) {
 			error ex.getMessage();
 		}
 	return ARN;
+}
+
+
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
 }
