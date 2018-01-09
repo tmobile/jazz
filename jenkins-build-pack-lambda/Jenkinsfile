@@ -64,8 +64,12 @@ node ()  {
 
     echo "start"
 
-    def serviceName = params.service_name
-    def cfStackName = params.service_name
+    def serviceName = ""
+    def cfStackName = ""
+		if(params.service_name != null && !params.service_name.isEmpty()){
+			serviceName = params.service_name
+			cfStackName = params.service_name
+		}
 	def branch = params.scm_branch
 	def bitbucket_name = params.service_name
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
@@ -138,11 +142,6 @@ node ()  {
 	dir(bitbucket_name){
 		loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
 	}
-/*
-*TODO add in this module?
-	environmentDeploymentMetadata = loadMetadataModules("lambda", service, domain, branch, env.BUILD_URL, env.BUILD_ID)
-	def gitCommitOwner = environmentDeploymentMetadata.getRepoCommitterInfo()
-	def context_map = [created_by : username, deployed_by: gitCommitOwner] */
 
 	stage ('Pre-Build Validation'){
 		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
@@ -194,16 +193,6 @@ node ()  {
 						loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
 
-						// TODO
-						if(isScheduleEnabled) {
-							def eventsArns = getEventsArn(domain,service, "prod")
-							for (def i = 0; i < eventsArns.size(); i++) {
-								def arn = eventsArns[i]
-								//events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", arn, "cloudwatch_event", username), "prod");
-								//sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.CREATE_ASSET, Event_Status.COMPLETED, "")
-							}
-						}
-
 						// Generate serverless yml file with domain added in function name
 						echo "Generate deployment env with domain"
 						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
@@ -213,6 +202,8 @@ node ()  {
 						setLambdaExecutionRole(role);
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
 						addCommonExcludes()
+
+						echo "serverless deploy about to call"
 
 						echo "serverless deploy about to call"
 
@@ -858,11 +849,6 @@ def getEventsArn(domain, service, env) {
 		echo  "Can't fetch the events policy configurations for lambda. "+ ex.getMessage()
 		return []
 	}
-}
-
-def addCommonExcludes() {
-	sh "sed -i -e '/exclusionList/r _config/serverless-common-excludes.txt' ./serverless.yml"
-	sh "sed -i -e '/exclusionList/d' ./serverless.yml"
 }
 
 def getLambdaARN (String stackName) {

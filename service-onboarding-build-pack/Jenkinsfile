@@ -39,13 +39,15 @@ node  {
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
+	def rateExpression
+	def enableEventSchedule
 	if (params.rateExpression){
 		echo "params include rateExpression : ${params.rateExpression}"
-		def rateExpression = params.rateExpression
+		rateExpression = params.rateExpression
 	}
 	if (params.enableEventSchedule){
 		echo "params include enableEventSchedule : ${params.enableEventSchedule}"
-		def enableEventSchedule = params.enableEventSchedule
+		enableEventSchedule = params.enableEventSchedule
 	}
 
 	def service_template
@@ -248,13 +250,11 @@ node  {
 					def event_action_dynamodb =  params.event_action_dynamodb
 					def event_action_stream =  params.event_action_stream
 
-					echo "in lambda bool check, rate_expression: ${rate_expression}"
 					if(rate_expression && rate_expression.trim() != ""){
 						// Using echo commands to write to deployment-env.yml
 						sh "echo \$'\neventScheduleRate: cron($rate_expression)' >> ./deployment-env.yml"
 					}
-					echo "in lambda bool check enable_eventschedule: ${enable_eventschedule}"
-					if(enable_eventschedule && enable_eventschedule.trim() != ""){
+					if(enable_eventschedule && enable_eventschedule != ""){
 						sh "echo \$'\neventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
 					}
 					if(event_source_ec2 && event_action_ec2){

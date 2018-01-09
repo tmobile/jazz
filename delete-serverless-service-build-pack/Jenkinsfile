@@ -1091,8 +1091,12 @@ def loadServiceInfo() {
  * @return
  */
  def send_status_email (build_status) {
-	 def email_id = owner
-	 def service = params.service_name
+	 def email_id = ''
+	 def service = ''
+	 if(owner != null && params.service_name != null && !owner.isEmpty() && !params.service_name.isEmpty()){
+		 email_id = owner
+		 service = params.service_name
+	 }
 	 def email_content = ''
  	 echo "Sending build notification to " + email_id
  	 def body_subject = ''
