@@ -796,12 +796,23 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 		preserveEnvKey = 'dev'
 	}
 
-	def curlCMDOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $g_login_token\" \"$url\"", returnStdout: true)
-			
+	 def curlCMDOutput = sh (script: "curl -L \
+			-H \"Authorization: $g_login_token\" \"$url\" -w \"httpErrorCode:%{response_code}:\"", returnStdout: true)
+
+    def httpResponse = 0
+    if(curlCMDOutput != null && (curlCMDOutput.indexOf("httpErrorCode") > -1))
+  	{
+     httpResponse = curlCMDOutput.split('httpErrorCode:')[1].split(':')[0]
+  	 echo "httpResponse: $httpResponse"
+  	}
+  
+    if( httpResponse == "200"){
+       echo "httpResponse Success"
+    echo "curlCMDOutput: $curlCMDOutput"
 	def jsonParser = new groovy.json.JsonSlurper()
 	def resultJson = jsonParser.parseText(curlCMDOutput)
 	def curlOutputJoin = ''
+	def values = ''
 	if (resultJson != null && resultJson.data != null )
 	{
 		if( resultJson.data[0].id != null){
@@ -825,12 +836,11 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 			curlOutputJoin = curlOutputJoin + "," + ""
 		}
 		
-
+	    values = curlOutputJoin.split(',')
 	}
 
 	echo "curlOutputJoin:" + "$curlOutputJoin"
-  	def values = curlOutputJoin.split(',')
-
+  	
 	if (values[0]) {
 		service_id = values[0].replaceAll("[\n\r]", "")
 	}
@@ -843,7 +853,9 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 		created_by = values[2].replaceAll("[\n\r]", "")
 	}
 }
-
+ else{
+       echo "httpResponse Failure"
+ }}
 def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endpointVal) {
 
 	def updateJson = ''
