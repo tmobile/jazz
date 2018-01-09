@@ -100,7 +100,7 @@ module.exports.handler = (event, context, cb) => {
         }
 
         // create-serverless-service API to take require_internal_access as one more parameter
-        if((event.body.service_type === "api" || event.body.service_type === "lambda") && (event.body.require_internal_access !== null)) {
+        if((event.body.service_type === "api" || event.body.service_type === "function") && (event.body.require_internal_access !== null)) {
             propertiesObject.require_internal_access = event.body.require_internal_access;
         }
 
@@ -112,7 +112,7 @@ module.exports.handler = (event, context, cb) => {
         }
 
         // Add rate expression to the propertiesObject;
-        if (event.body.service_type === "lambda") {
+        if (event.body.service_type === "function") {
             if (event.body.rateExpression !== undefined) {
                 var cronExpValidator = CronParser.validateCronExpression(event.body.rateExpression);
 
