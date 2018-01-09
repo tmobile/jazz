@@ -367,10 +367,17 @@ node {
 			}
 
 			if ( (service_template.trim() == "platform-services-handler") ) {
-
-				sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + var_env_name_prefix + "-events-hub-dev --function-name arn:aws:lambda:$region:$roleId:function:" + var_env_name_prefix + "-hndlr-dev --starting-position LATEST --region " + region
+				def function_name =  var_env_name_prefix + "-hndlr-dev"
+				def event_source_list = sh (
+					script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
+					returnStdout: true
+				).trim()
+				echo "$event_source_list"
+				if (event_source_list == "[]"){
+					sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + var_env_name_prefix + "-events-hub-dev --function-name arn:aws:lambda:$region:$roleId:function:$function_name --starting-position LATEST --region " + region
+				}
 			}
-
+			
 
 			// @TODO : Resetting the credentials needs to be introduced. (Re-use of same profile on Async calls needs to be considered)
 			// resetCredentials();
