@@ -30,10 +30,35 @@ def Event_Status = [
 	'COMPLETED':'COMPLETED',
 	'FAILED':'FAILED'
 ]
+@Field def configModule
+@Field def configLoader
+@Field def var_api_key
+@Field def var_api_id_dev
+@Field def var_aws_credential_id
+@Field def var_env_name_prefix
+@Field def var_repo_core
+@Field def var_repo_loc
+@Field def var_credentialsId
+@Field def var_bitbucket_base
+@Field def var_bitbucket_email
 @Field def region = ''
 
 node  {
-	region = env.jazz_region
+	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	region = configLoader.JAZZ.jazz_region
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	role = configLoader.JAZZ.jazz_roleId
+	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
+	var_api_key 				= configLoader.API.API_KEY
+	var_api_id_dev = configLoader.API.API_ID_DEV
+	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
+	var_env_name_prefix = configLoader.env_name_prefix
+	var_repo_core = configLoader.REPOSITORY.REPO_CORE
+	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
+	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
+	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
+	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
+
 	def service_type =  params.service_type
 	def runtime = params.runtime
 	def service_name = params.service_name
@@ -59,17 +84,13 @@ node  {
 
 	def repo_protocol				= "http://"
 
-	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-	def var_bitbucket_base			= env.REPO_BASE
-	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
-	def var_api_key 				= env.API_KEY
+	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/"
 	def var_api_host_name			= var_api_key+".execute-api.us-east-2.amazonaws.com"
-	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + env.REPO_LOC + "/repos"
-	def var_bitbucket_email 		= env.REPO_EMAIL
-	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + env.REPO_LOC + "/"
-	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/service-onboarding-build-pack.git"
-	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
-	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
+	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + var_repo_loc + "/repos"
+	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + var_repo_loc + "/"
+	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/service-onboarding-build-pack.git"
+	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + var_repo_loc + "/repos/"
+	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + var_repo_loc + "/repos/"
 	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
 
 	echo "Starting new service on-boarding.."
@@ -80,7 +101,7 @@ node  {
 		domain = params.domain.trim()
 	}
 
-	def repo_url = repo_protocol + env.REPO_BASE + "/projects/CAS/repos/" + bitbucket_name + "/browse";
+	def repo_url = repo_protocol + var_bitbucket_base + "/projects/CAS/repos/" + bitbucket_name + "/browse";
 
 	stage('Input Validation')
 	{
@@ -182,12 +203,12 @@ node  {
 					description = params.description;
 				}
 
-				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, env.API_KEY, region);
-				updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_started", repo_url);
+				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, var_api_key, region);
+				updateServiceInDB(service_id_in_db, var_api_key, region, "creation_started", repo_url);
 			}
 		}
 		catch(error){
-			updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+			updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 			//do nothing
 		}
 
@@ -286,7 +307,7 @@ node  {
 		}
 		catch(error){
 
-			updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+			updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 
 			send_status_email (owner, "FAILED", service_name, domain)
 
@@ -312,7 +333,7 @@ node  {
 			}
 			catch (error)
 			{
-				updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+				updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 
 				send_status_email (owner, "FAILED", service_name, domain)
 
@@ -351,7 +372,7 @@ node  {
 				}
 				catch (error)
 				{
-					updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 					send_status_email (owner, "FAILED", service_name, domain)
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.PUSH_TEMPLATE_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
@@ -371,7 +392,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
 					echo error
 				}
@@ -386,7 +407,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.LOCK_MASTER_BRANCH, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 
 					send_status_email (owner, "FAILED", service_name, domain)
 
@@ -401,7 +422,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 
 					send_status_email (owner, "FAILED", service_name, domain)
 
@@ -410,7 +431,7 @@ node  {
 				}
 
 				echo "Calling update row in db ###################################################"
-				updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_completed", repo_url);
+				updateServiceInDB(service_id_in_db, var_api_key, region, "creation_completed", repo_url);
 			}
 		}
 	}
@@ -538,7 +559,7 @@ def send_status_email (email_id, build_status, service, domain) {
 		domain = 'For Service: ' + service + ' in Domain: ' + domain
         	body_text = body_text + '\n\n' + domain
 	}
-	def fromStr = 'JAZZ ADMIN <' + env.JAZZ_ADMIN + '>'
+	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
 					to : email_id,
@@ -572,4 +593,25 @@ def parseJson(jsonString) {
     def m = [:]
     m.putAll(lazyMap)
     return m
+}
+/*
+* Load environment variables from build module
+*/
+def loadConfigModule(buildModuleUrl){
+	echo "loading env variables, checking repos..."
+
+	dir('config-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+		]])
+
+		echo "loading installer variables..."
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
+		echo "finished loading env module"
+	}
 }
