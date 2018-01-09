@@ -16,7 +16,7 @@
 
 /**
 Jazz Email service
-@author: 
+@author:
 @version: 1.0
  **/
 
@@ -32,7 +32,7 @@ module.exports.handler = (event, context, cb) => {
 
   	var errorHandler = errorHandlerModule();
   	logger.init(event, context);
-  
+
   	var config = configObj(event);
 
   	if (!config || config.length) {
@@ -48,7 +48,7 @@ module.exports.handler = (event, context, cb) => {
 		.then((result) => { return cb(null, responseObj({result: "success", message: result.messageId})); })
 		.catch(function (err) {
 			logger.error("Failed while sending email: " + JSON.stringify(err));
-			
+
 			if (err.errorType) {
 				// error has already been handled and processed for API gateway
 				return cb(JSON.stringify(err));
@@ -67,15 +67,15 @@ module.exports.handler = (event, context, cb) => {
 };
 
 /**
- * 
- * @param {object} userInput 
+ *
+ * @param {object} userInput
  * @returns promise
  */
 function validateInput(userInput) {
 	var errorHandler = errorHandlerModule();
 
 	return new Promise((resolve, reject) => {
-		
+
 		if (!userInput || !userInput.method) {
 			return reject(errorHandler.throwInputValidationError("101", "invalid or missing arguments"));
 		}
@@ -97,12 +97,12 @@ function validateInput(userInput) {
 }
 
 /**
- * 
+ *
  * @param {*} config
- * @param {*} userInput 
+ * @param {*} userInput
  */
 function sendEmail(config, userInput) {
-	return new Promise((resolve, reject) => { 
+	return new Promise((resolve, reject) => {
 		var transporter = nodemailer.createTransport({
 			SES: new AWS.SES({
 				apiVersion: '2010-12-01',
@@ -128,4 +128,3 @@ function sendEmail(config, userInput) {
 		});
 	});
 }
-
