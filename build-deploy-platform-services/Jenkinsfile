@@ -367,7 +367,7 @@ node {
 			}
 
 			if ( (service_template.trim() == "platform-services-handler") ) {
-				def function_name =  env.env_name_prefix + "-hndlr-dev"
+				def function_name =  var_env_name_prefix + "-hndlr-dev"
 				def event_source_list = sh (
 					script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
 					returnStdout: true
