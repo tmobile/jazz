@@ -1045,26 +1045,37 @@ def loadServiceInfo() {
 	def token = setCredentials()
 	def url = "$g_base_url/platform/services?domain=$domain&service=$service&isAdmin=true"
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\"", returnStdout: true)
-  	echo "CURL o/p: $curlOutput"
-  	
+			-H \"Authorization: $token\" \"$url\" -w \"httpErrorCode:%{response_code}:\"", returnStdout: true)
+  	     
+    def httpResponse = 0
+    if(curlOutput != null && (curlOutput.indexOf("httpErrorCode") > -1))
+  	{
+     httpResponse = curlOutput.split('httpErrorCode:')[1].split(':')[0]
+  	 echo "httpResponse: $httpResponse"
+  	}
+  
+    if( httpResponse == "200"){
+       echo "httpResponse Success"
+    echo "curlOutput: $curlOutput"
+    	
 	def jsonParser = new groovy.json.JsonSlurper()
 	def resultJson = jsonParser.parseText(curlOutput)
   	echo "Resultjson: $resultJson"
 	def createby = ''
-  	def pcreated = resultJson.data[0].created_by
-  	echo "resultjson createby: $pcreated"
-	if(resultJson != null && resultJson.data != null && resultJson.data[0].created_by != null) {
-			createby = resultJson.data[0].created_by
+  	def values = ''
+  	if(resultJson != null && resultJson.data != null && resultJson.data[0].created_by != null) {
+			//createby = resultJson.data[0].created_by
+      		values = resultJson.data[0].created_by.split(',')
 		}
-	def values = createby.split(',')
-	
 	echo "Services : $values"
 
 	if (values[0]) {
 		owner = values[0].replaceAll("[\n\r]", "")
 	}
 }
+  else{
+       echo "httpResponse Failure"
+ }}
 
 /**
  * For getting token to access catalog APIs.
