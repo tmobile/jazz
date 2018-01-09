@@ -2,7 +2,8 @@
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
-@Field def envLoader
+@Field def configModule
+@Field def configLoader
 @Field def var_api_key
 @Field def var_api_id_dev
 @Field def var_aws_credential_id
@@ -51,20 +52,20 @@ node {
 
 	echo "params : $params"
 
-	loadEnvModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
-	var_api_key 				= envLoader.getApiField("API_KEY")
-	var_api_id_dev = envLoader.getApiField("API_ID_DEV")
-	var_aws_credential_id = envLoader.getAWSCredentialID()
-	var_env_name_prefix = envLoader.getEnvNamePrefix()
-	var_repo_core = envLoader.getRepositoryField("REPO_CORE")
-	var_repo_loc = envLoader.getRepositoryField("REPO_LOC")
-	var_credentialsId 			= envLoader.getRepositoryField("REPO_CREDENTIAL_ID")
-	var_bitbucket_base			= envLoader.getRepositoryField("REPO_BASE")
-	var_bitbucket_email 		= envLoader.getRepositoryField("REPO_EMAIL")
-	var_bitbucket_username = envLoader.getBitbucketField("BITBUCKET_USERNAME")
-	var_bitbucket_password = envLoader.getBitbucketField("BITBUCKET_PASSWORD")
-	var_user_pool_id = envLoader.getCognito("USER_POOL_ID")
-	var_client_id = envLoader.getCognito("CLIENT_ID")
+	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	var_api_key 				= configLoader.API.API_KEY
+	var_api_id_dev = configLoader.API.API_ID_DEV
+	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
+	var_env_name_prefix = configLoader.env_name_prefix
+	var_repo_core = configLoader.REPOSITORY.REPO_CORE
+	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
+	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
+	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
+	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
+	var_bitbucket_username = configLoader.BITBUCKET.BITBUCKET_USERNAME
+	var_bitbucket_password = configLoader.BITBUCKET.BITBUCKET_PASSWORD
+	var_user_pool_id = configLoader.COGNITO.USER_POOL_ID
+	var_client_id = configLoader.COGNITO.CLIENT_ID
 
 	def service_template = params.service_name
 	def service_type =  "api"
@@ -77,7 +78,7 @@ node {
 	def envmnt = params.deploy_env
 	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/"
 	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
-	def es_hostname = envLoader.getJazzField("jazz_es_hostname")
+	def es_hostname = configLoader.JAZZ.jazz_es_hostname
 
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
@@ -162,9 +163,9 @@ node {
 				}
 
 				if ( (service_template.trim() == "platform-services-handler") ) {
-					sh "sed -i -- 's/{conf-apikey}/" + envLoader.getApiField("API_ID_DEV") + "/g' ./config/dev-config.json"
-					sh "sed -i -- 's/{conf-apikey}/" + envLoader.getApiField("API_ID_STG") + "/g' ./config/stg-config.json"
-					sh "sed -i -- 's/{conf-apikey}/" + envLoader.getApiField("API_ID_PROD") + "/g' ./config/prod-config.json"
+					sh "sed -i -- 's/{conf-apikey}/" + configLoader.API.API_ID_DEV + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-apikey}/" + configLoader.API.API_ID_STG + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-apikey}/" + configLoader.API.API_ID_PROD + "/g' ./config/prod-config.json"
 
 					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
 					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
@@ -316,7 +317,7 @@ node {
 		echo "Generate deployment env with domain"
 
 
-		withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: envLoader.getAWSCredentialID(), secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+		withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 		sh "aws configure set profile.cloud-api.region "+region
 		sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 		sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
@@ -333,7 +334,7 @@ node {
 			sh "sed -i -- 's/" + service_name + "/" + var_env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
 
 			echo "Deploying lambda service"
-			sh "serverless deploy --stage "+envmnt+" -v --bucket " + envLoader.getJazzS3Field("jazz_bucket_dev")
+			sh "serverless deploy --stage "+envmnt+" -v --bucket " + configLoader.JAZZ_S3.jazz_bucket_dev
 			echo "Deployed lambda service"
 
 			// Generate swagger file based on environment
@@ -494,10 +495,10 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 /*
 * Load environment variables from build module
 */
-def loadEnvModule(buildModuleUrl){
+def loadConfigModule(buildModuleUrl){
 	echo "loading env variables, checking repos..."
 
-	dir('env-loader') {
+	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -507,8 +508,8 @@ def loadEnvModule(buildModuleUrl){
 		echo "loading installer variables..."
 
 		def resultJsonString = readFile("jazz-installer-vars.json")
-		envLoader = load "env-loader.groovy"
-		envLoader.initialize(resultJsonString)
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
 		echo "finished loading env module"
 	}
 }

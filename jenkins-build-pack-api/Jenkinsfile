@@ -33,7 +33,8 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
-@Field def envLoader
+@Field def configModule
+@Field def configLoader
 @Field def var_api_key
 @Field def var_api_id_dev
 @Field def var_aws_credential_id
@@ -62,20 +63,20 @@ def Event_Status = [
 @Field def aws_api_import = '/var/lib/aws-apigateway-importer/aws-api-import.sh'
 
 node() {
-	loadEnvModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
-	var_api_key 				= envLoader.getApiField("API_KEY")
-	var_api_id_dev = envLoader.getApiField("API_ID_DEV")
-	var_aws_credential_id = envLoader.getAWSCredentialID()
-	var_env_name_prefix = envLoader.getEnvNamePrefix()
-	var_repo_core = envLoader.getRepositoryField("REPO_CORE")
-	var_repo_loc = envLoader.getRepositoryField("REPO_LOC")
-	var_credentialsId 			= envLoader.getRepositoryField("REPO_CREDENTIAL_ID")
-	var_bitbucket_base			= envLoader.getRepositoryField("REPO_BASE")
-	var_bitbucket_email 		= envLoader.getRepositoryField("REPO_EMAIL")
-	region = envLoader.getJazzField("jazz_region")
-	g_base_url = "https://${envLoader.getApiField("API_KEY")}.execute-api.${region}.amazonaws.com/dev"
-	role = envLoader.getJazzField("jazz_roleId")
-	api_doc_s3_bucket = envLoader.getJazzS3Field("jazz_s3_api_doc")
+	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	var_api_key 				= configLoader.API.API_KEY
+	var_api_id_dev = configLoader.API.API_ID_DEV
+	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
+	var_env_name_prefix = configLoader.env_name_prefix
+	var_repo_core = configLoader.REPOSITORY.REPO_CORE
+	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
+	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
+	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
+	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
+	region = configLoader.JAZZ.jazz_region
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	role = configLoader.JAZZ.jazz_roleId
+	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${api_doc_s3_bucket}.s3-website-${region}.amazonaws.com/"
 
     echo "Build triggered via branch: " + params.scm_branch
@@ -216,14 +217,14 @@ node() {
 					setLambdaExecutionRole(role);
 
 					echo "serverless deploy......."
-					sh "serverless deploy --stage prod -v --bucket " + envLoader.getJazzS3Field("jazz_bucket_prod")
+					sh "serverless deploy --stage prod -v --bucket " + configLoader.JAZZ_S3.jazz_bucket_prod
 					createSubscriptionFilters(serviceName, current_environment, region, logStreamer);
 					def svc_status = ''
 					if (fileExists('swagger/swagger.json')) {
 						// Generate swagger file based on environment
 						echo "Generating the swagger file for each environment"
 
-						var_api_key = envLoader.getApiField("API_ID_PROD");
+						var_api_key = configLoader.API.API_ID_PROD;
 						def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
 
 						generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, var_api_key, config)
@@ -274,13 +275,13 @@ node() {
 				setLambdaExecutionRole(role);
 
 				echo "serverless deploy......."
-				sh "serverless deploy --stage dev -v --bucket " + envLoader.getJazzS3Field("jazz_bucket_dev")
+				sh "serverless deploy --stage dev -v --bucket " + configLoader.JAZZ_S3.jazz_bucket_dev
 				createSubscriptionFilters(serviceName, current_environment, region, logStreamer);
 				def svc_status = ''
 				if (fileExists('swagger/swagger.json')) {
 					// Generate swagger file based on environment
 					echo "Generating the swagger file for each environment"
-					var_api_key = envLoader.getApiField("API_ID_DEV");
+					var_api_key = configLoader.API.API_ID_DEV;
 					def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
 
 					generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, var_api_key, config)
@@ -962,10 +963,10 @@ def updateServiceInDB(service, domain, serviceUrl,status) {
 /*
 * Load environment variables from build module
 */
-def loadEnvModule(buildModuleUrl){
+def loadConfigModule(buildModuleUrl){
 	echo "loading env variables, checking repos..."
 
-	dir('env-loader') {
+	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -975,8 +976,8 @@ def loadEnvModule(buildModuleUrl){
 		echo "loading installer variables..."
 
 		def resultJsonString = readFile("jazz-installer-vars.json")
-		envLoader = load "env-loader.groovy"
-		envLoader.initialize(resultJsonString)
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
 		echo "finished loading env module"
 	}
 }

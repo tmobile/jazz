@@ -32,7 +32,8 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
-@Field def envLoader
+@Field def configModule
+@Field def configLoader
 @Field def var_api_key
 @Field def var_api_id_dev
 @Field def var_aws_credential_id
@@ -56,20 +57,20 @@ def Event_Status = [
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	loadEnvModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
-	var_api_key 				= envLoader.getApiField("API_KEY")
-	var_api_id_dev = envLoader.getApiField("API_ID_DEV")
-	var_aws_credential_id = envLoader.getAWSCredentialID()
-	var_env_name_prefix = envLoader.getEnvNamePrefix()
-	var_repo_core = envLoader.getRepositoryField("REPO_CORE")
-	var_repo_loc = envLoader.getRepositoryField("REPO_LOC")
-	var_credentialsId 			= envLoader.getRepositoryField("REPO_CREDENTIAL_ID")
-	var_bitbucket_base			= envLoader.getRepositoryField("REPO_BASE")
-	var_bitbucket_email 		= envLoader.getRepositoryField("REPO_EMAIL")
-	region = envLoader.getJazzField("jazz_region")
-	g_base_url = "https://${envLoader.getApiField("API_KEY")}.execute-api.${region}.amazonaws.com/dev"
-	role = envLoader.getJazzField("jazz_roleId")
-	api_doc_s3_bucket = envLoader.getJazzS3Field("jazz_s3_api_doc")
+	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	var_api_key 				= configLoader.API.API_KEY
+	var_api_id_dev = configLoader.API.API_ID_DEV
+	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
+	var_env_name_prefix = configLoader.env_name_prefix
+	var_repo_core = configLoader.REPOSITORY.REPO_CORE
+	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
+	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
+	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
+	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
+	region = configLoader.JAZZ.jazz_region
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	role = configLoader.JAZZ.jazz_roleId
+	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 
 	echo "Build Pack website params: " + params
 
@@ -151,9 +152,9 @@ node ()  {
 			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
 		}
 
-	  def s3StgBucket  = envLoader.getWebsiteS3Field("WEBSITE_STG_S3BUCKET");
-	  def s3ProdBucket = envLoader.getWebsiteS3Field("WEBSITE_PROD_S3BUCKET");
-	  def s3DevBucket  = envLoader.getWebsiteS3Field("WEBSITE_DEV_S3BUCKET");
+	  def s3StgBucket  = configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
+	  def s3ProdBucket = configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
+	  def s3DevBucket  = configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
 
 	  if (branch == 'master'){
 		stage ('Deployment to Production Env'){
@@ -366,14 +367,14 @@ node ()  {
 def getS3BucketName(String envname) {
 
 	if (envname == "dev") {
-		return envLoader.getWebsiteS3Field("WEBSITE_DEV_S3BUCKET");
+		return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
 	} else if (envname == "stg") {
-		return envLoader.getWebsiteS3Field("WEBSITE_STG_S3BUCKET");
+		return configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
 	} else if (envname == "prod") {
-		return envLoader.getWebsiteS3Field("WEBSITE_PROD_S3BUCKET");
+		return configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
 	}
 
-	return envLoader.getWebsiteS3Field("WEBSITE_DEV_S3BUCKET");
+	return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
 }
 
 def LoadConfiguration() {
@@ -426,7 +427,7 @@ def generateDistributionConfig(service, envname, config) {
 
 	sh "sed -i -- 's/{conf_s3bucketname}/" + getS3BucketName(envname) + "/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_stack_prefix}/" + var_env_name_prefix + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's:{conf_origin_id}:" + envLoader.getCloudfrontOriginId() + ":g' distribution_config_with_tags.json"
+	sh "sed -i -- 's:{conf_origin_id}:" + configLoader.CLOUDFRONT_ORIGIN_ID + ":g' distribution_config_with_tags.json"
 
 	def owner = ''
 	try{
@@ -872,10 +873,10 @@ def send_status_email (email_id, build_status, service, email_content) {
 /*
 * Load environment variables from build module
 */
-def loadEnvModule(buildModuleUrl){
+def loadConfigModule(buildModuleUrl){
 	echo "loading env variables, checking repos..."
 
-	dir('env-loader') {
+	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -885,8 +886,8 @@ def loadEnvModule(buildModuleUrl){
 		echo "loading installer variables..."
 
 		def resultJsonString = readFile("jazz-installer-vars.json")
-		envLoader = load "env-loader.groovy"
-		envLoader.initialize(resultJsonString)
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
 		echo "finished loading env module"
 	}
 }

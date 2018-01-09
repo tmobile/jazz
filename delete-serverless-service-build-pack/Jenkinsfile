@@ -6,7 +6,8 @@ import groovy.transform.Field
 /**
  * The Service delete workflow for service types: API, function & website
 */
-@Field def envLoader
+@Field def configModule
+@Field def configLoader
 @Field def Util
 @Field def serviceMetadata
 @Field def g_base_url = ''
@@ -33,20 +34,20 @@ node {
 	echo "Starting delete service job.."
 	echo "params : $params"
 
-	loadEnvModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
-	region = envLoader.getJazzField("jazz_region")
-	g_base_url = "https://${envLoader.getApiField("API_KEY")}.execute-api.${region}.amazonaws.com/dev"
-	role = envLoader.getJazzField("jazz_roleId")
-	api_doc_s3_bucket = envLoader.getJazzS3Field("jazz_s3_api_doc")
-	var_api_key 				= envLoader.getApiField("API_KEY")
-	var_api_id_dev = envLoader.getApiField("API_ID_DEV")
-	var_aws_credential_id = envLoader.getAWSCredentialID()
-	var_env_name_prefix = envLoader.getEnvNamePrefix()
-	var_repo_core = envLoader.getRepositoryField("REPO_CORE")
-	var_repo_loc = envLoader.getRepositoryField("REPO_LOC")
-	var_credentialsId 			= envLoader.getRepositoryField("REPO_CREDENTIAL_ID")
-	var_bitbucket_base			= envLoader.getRepositoryField("REPO_BASE")
-	var_bitbucket_email 		= envLoader.getRepositoryField("REPO_EMAIL")
+	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	region = configLoader.JAZZ.jazz_region
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	role = configLoader.JAZZ.jazz_roleId
+	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
+	var_api_key 				= configLoader.API.API_KEY
+	var_api_id_dev = configLoader.API.API_ID_DEV
+	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
+	var_env_name_prefix = configLoader.env_name_prefix
+	var_repo_core = configLoader.REPOSITORY.REPO_CORE
+	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
+	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
+	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
+	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
 
 	def service_name
 	def version
@@ -615,11 +616,11 @@ def parseJson(jsonString) {
  */
 def getServiceBucket(stage) {
 	if(stage == 'dev') {
-		return envLoader.getWebsiteS3Field("WEBSITE_DEV_S3BUCKET");
+		return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
 	}else if (stage == 'stg') {
-		return envLoader.getWebsiteS3Field("WEBSITE_STG_S3BUCKET");
+		return configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
 	} else if (stage == 'prod') {
-		return envLoader.getWebsiteS3Field("WEBSITE_PROD_S3BUCKET");
+		return configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
 	}
 }
 
@@ -633,9 +634,9 @@ def getApiId(stage) {
 	if(stage == 'dev') {
 		return var_api_id_dev
 	}else if (stage == 'stg') {
-		return envLoader.getApiField("API_ID_STG")
+		return configLoader.API.API_ID_STG
 	} else if (stage == 'prod') {
-		return envLoader.getApiField("API_ID_PROD")
+		return configLoader.API.API_ID_PROD
 	}
 }
 
@@ -1134,10 +1135,10 @@ def send_status_email (build_status) {
 /*
 * Load environment variables from build module
 */
-def loadEnvModule(buildModuleUrl){
+def loadConfigModule(buildModuleUrl){
 	echo "loading env variables, checking repos..."
 
-	dir('env-loader') {
+	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -1147,8 +1148,8 @@ def loadEnvModule(buildModuleUrl){
 		echo "loading installer variables..."
 
 		def resultJsonString = readFile("jazz-installer-vars.json")
-		envLoader = load "env-loader.groovy"
-		envLoader.initialize(resultJsonString)
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
 		echo "finished loading env module"
 	}
 }
@@ -1160,9 +1161,9 @@ def loadEnvModule(buildModuleUrl){
 def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 		try {
 			def url = "$g_base_url/platform/services?domain=$domain&service=$service"
-			def dev = envLoader.getWebsiteS3Field("WEBSITE_DEV_S3BUCKET")
-			def stg = envLoader.getWebsiteS3Field("WEBSITE_STG_S3BUCKET")
-			def prd = envLoader.getWebsiteS3Field("WEBSITE_PROD_S3BUCKET")
+			def dev = configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET
+			def stg = configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET
+			def prd = configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET
 
 			echo "loading serviceMetaData, checking repos"
 

@@ -2,7 +2,8 @@
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
-@Field def envLoader
+@Field def configModule
+@Field def configLoader
 @Field def var_api_key
 @Field def var_credentialsId
 @Field def var_bitbucket_base
@@ -37,11 +38,11 @@ def Event_Status = [
 ]
 
 node {
-	loadEnvModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
-	var_credentialsId 			= envLoader.getRepositoryField("REPO_CREDENTIAL_ID")
-	var_bitbucket_base			= envLoader.getRepositoryField("REPO_BASE")
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + envLoader.getRepositoryField("REPO_CORE") + "/"
-	var_api_key 				= envLoader.getApiField("API_KEY")
+	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
+	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
+	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + configLoader.REPOSITORY.REPO_CORE + "/"
+	var_api_key 				= configLoader.API.API_KEY
 
 	def service_template = "create-serverless-service"
 	def service_type =  "api"
@@ -165,7 +166,7 @@ node {
 			echo "Generate deployment env with domain"
 
 
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: envLoader.getAWSCredentialID(), secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			sh "aws configure set profile.cloud-api.region "+region
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
@@ -280,10 +281,10 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 /*
 * Load environment variables from build module
 */
-def loadEnvModule(buildModuleUrl){
+def loadConfigModule(buildModuleUrl){
 	echo "loading env variables, checking repos..."
 
-	dir('env-loader') {
+	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -293,8 +294,8 @@ def loadEnvModule(buildModuleUrl){
 		echo "loading installer variables..."
 
 		def resultJsonString = readFile("jazz-installer-vars.json")
-		envLoader = load "env-loader.groovy"
-		envLoader.initialize(resultJsonString)
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
 		echo "finished loading env module"
 	}
 }
