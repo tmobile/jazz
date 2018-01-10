@@ -55,7 +55,7 @@ node  {
 	def var_api_key 				= env.API_KEY
 	def var_api_host_name			= var_api_key+".execute-api.us-east-2.amazonaws.com"
 	def cas_rest_repo 			    = repo_protocol + repo_base  + "/rest/api/1.0/projects/" + env.REPO_LOC + "/repos"
-	def cas_repo_id = ""
+	def cas_repo_id 			= getCasRepoId()
 	def var_bitbucket_email 		= env.REPO_EMAIL
 
 	def var_bitbucket_branch_perm	= repo_protocol + repo_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
@@ -74,7 +74,6 @@ node  {
 	region = env.jazz_region
 	if (params.username) {
 		owner = params.username
-		cas_repo_id = getCasRepoId(owner)
 	}
 
 	echo "Starting new service on-boarding.."
@@ -498,7 +497,7 @@ def getGitlabUserId(username, private_token){
 	return userObject[0].id
 }
 
-def getCasRepoId(username){
+def getCasRepoId(){
 	def output = sh (
 		script: "curl --header \"Private-Token: ${env.gitlab_private_token}\" -X GET \"http://$repo_base/api/v3/groups?search=${env.REPO_LOC}\"",
 		returnStdout: true
