@@ -16,7 +16,7 @@
 
 /**
 Jazz User Management service
-@author: 
+@author:
 @version: 1.0
  **/
 
@@ -35,7 +35,7 @@ module.exports.handler = (event, context, cb) => {
 
   	var errorHandler = errorHandlerModule();
   	logger.init(event, context);
-  
+
   	var config = configObj(event);
 
   	if (!config || config.length) {
@@ -44,7 +44,7 @@ module.exports.handler = (event, context, cb) => {
   	}
 
 	global.config = config;
-	  
+
 	try {
 		logger.info(JSON.stringify(event));
 
@@ -60,7 +60,7 @@ module.exports.handler = (event, context, cb) => {
 
 		var subPath = getSubPath(event.resourcePath);
 		const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
-		
+
 		if (subPath.indexOf('reset') > -1) {
 			logger.info('User password reset Request::' + JSON.stringify(service_data));
 
@@ -108,16 +108,16 @@ module.exports.handler = (event, context, cb) => {
 			});
 		}else {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
-			
+
 			validateCreaterUserParams(config, service_data)
 			.then((s) => createUser(cognito, config, s))
-			.then((s) => rp(createUserInBitBucket(config, service_data, s.UserSub)))
+			.then((s) => rp(createUserInSCM(config, service_data, s.UserSub)))
 			.then(() => function(result){
 				logger.info("User: " + service_data.userid + " registered successfully!");
 				return cb(null, responseObj({result: "success",errorCode: "0",message: "User registered successfully!"}));})
 			.catch(function (err) {
 				logger.error("Failed while registering user: " + JSON.stringify(err));
-				
+
 				if (err.errorType) {
 					// error has already been handled and processed for API gateway
 					return cb(JSON.stringify(err));
@@ -125,7 +125,7 @@ module.exports.handler = (event, context, cb) => {
 					if (err.code) {
 						return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
 					}
-					
+
 					return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Failed while registering user: " + service_data.userid)));
 				}
 			});
@@ -137,9 +137,9 @@ module.exports.handler = (event, context, cb) => {
 };
 
 /**
- * Returns the subpath for this service 
+ * Returns the subpath for this service
  * @param {String} queryPath
- * @returns {String} subPaths  
+ * @returns {String} subPaths
  */
 function getSubPath(queryPath) {
 	if (queryPath) {
@@ -154,13 +154,13 @@ function getSubPath(queryPath) {
 /**
  * Validates user password reset params
  * @param {object} userInput
- *  
+ *
  */
 function validateResetParams(userInput) {
 	return new Promise((resolve, reject) => {
 
 		var errorHandler = errorHandlerModule();
-	
+
 		if (!userInput.email) {
 			logger.info("no email address provided for password reset");
 			reject(errorHandler.throwInputValidationError("102", "email is required field"));
@@ -174,17 +174,17 @@ function validateUpdatePasswordParams(userInput) {
 	return new Promise((resolve, reject) => {
 
 		var errorHandler = errorHandlerModule();
-	
+
 		if (!userInput.email) {
 			logger.warn("no email address provided for password update");
 			return reject(errorHandler.throwInputValidationError("102", "Email is required field"));
 		}
-		
+
 		if (!userInput.verificationCode) {
 			logger.warn("no verification code provided for password update");
 			return reject(errorHandler.throwInputValidationError("102", "Verification code is required"));
 		}
-		
+
 		if (!userInput.password) {
 			logger.warn("no password provided for password update");
 			return reject(errorHandler.throwInputValidationError("102", "Password is required"));
@@ -196,17 +196,17 @@ function validateUpdatePasswordParams(userInput) {
 }
 
 /**
- * 
- * @param {object} userInput 
+ *
+ * @param {object} userInput
  * @returns promise
  */
 function validateCreaterUserParams(config, userInput) {
 	var errorHandler = errorHandlerModule();
 
 	return new Promise((resolve, reject) => {
-		
+
 		var missing_required_fields = _.difference(_.values(config.required_fields), _.keys(userInput));
-		
+
 		if (missing_required_fields.length > 0) {
 			logger.error("Following field(s) are required - " + missing_required_fields.join(", "));
 			return reject(errorHandler.throwInputValidationError("102", "Following field(s) are required - " + missing_required_fields.join(", ")));
@@ -239,7 +239,7 @@ function createUser(cognitoClient, config, userData) {
 			UserAttributes: [{Name: "custom:reg-code", "Value": userData.usercode}],
 			ValidationData: []
 		};
-		
+
 		cognitoClient.signUp(cognitoParams, (err, result) => {
 			if (err)
 				reject(err);
@@ -286,8 +286,30 @@ function updatePassword(cognitoClient, config, userData) {
 }
 
 function createUserInSCM(config, userData) {
-	return createUserInBitBucket(config, userData);
-}	
+  //users are registered with username = email currently, have gitlab user accounts be
+  //a truncated version without the email service domain
+  var cutIndex = userData.userid.indexOf('@');
+  var username = userData.substring(0,cutIndex);
+  var encodedUserid = encodeURIComponent(userData.userid);
+	var encodedPwd = encodeURIComponent(userData.userpassword);
+  var encodeUsername = encodeURIComponent(username);
+	var url = config.bitbucket_service_host + config.bitbucket_usr_add_path + '?username=' + encodedUsername + '&password=' + encodedPwd + '&name=' + encodedUserid + '&email=' + encodedUserid ;
+
+	return {
+		url: url,
+		auth: {
+			user: config.bitbucket_username,
+			password: config.bitbucket_password
+		},
+		method: 'POST',
+		rejectUnauthorized: false,
+		headers: {
+			'Accept': 'application/json',
+			'Accept-Charset': 'utf-8'
+		},
+		qs: {}
+	};
+}
 
 function createUserInBitBucket(config, userData) {
 	var encodedUserid = encodeURIComponent(userData.userid);
