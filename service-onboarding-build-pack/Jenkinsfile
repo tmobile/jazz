@@ -471,7 +471,7 @@ def createProjectInSCM(gitlab_private_token, gitlab_cas_name_space_id, repo_base
 		}
 		def user_id = getGitlabUserId(git_username)
 		def gitlab_repo_output = sh (
-			script: "curl --header \"PRIVATE-TOKEN: $private_token\" -X POST \"http://$repo_base/api/v3/projects/$user_id?name=$scm_repo_name&path=$scm_repo_name&namespace_id=$cas_namespace_id&visibility=private&request_access_enabled=true\"",
+			script: "curl --header \"PRIVATE-TOKEN: $private_token\" -X POST \"http://$repo_base/api/v3/projects/user/$user_id?name=$scm_repo_name&path=$scm_repo_name&namespace_id=$cas_namespace_id&visibility=private&request_access_enabled=true\"",
 			returnStdout: true
 		).trim()
 
