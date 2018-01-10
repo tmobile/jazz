@@ -55,6 +55,7 @@ node  {
 	def var_api_key 				= env.API_KEY
 	def var_api_host_name			= var_api_key+".execute-api.us-east-2.amazonaws.com"
 	def cas_rest_repo 			    = repo_protocol + repo_base  + "/rest/api/1.0/projects/" + env.REPO_LOC + "/repos"
+	def cas_repo_id = getCasRepoId()
 	def var_bitbucket_email 		= env.REPO_EMAIL
 
 	def var_bitbucket_branch_perm	= repo_protocol + repo_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
@@ -289,7 +290,7 @@ node  {
 		{
 			try{
 				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-					createProjectInSCM(env.gitlab_private_token, env.gitlab_cas_name_space_id, repo_base, scm_repo_name, uname, pwd, cas_rest_repo, owner)
+					createProjectInSCM(env.gitlab_private_token, env.gitlab_cas_name_space_id, repo_base, scm_repo_name, uname, pwd, cas_repo_id, owner)
 {
 					sh "git config --global user.email \"" + var_bitbucket_email + "\""
 					sh "git config --global user.name $UNAME"
@@ -460,7 +461,7 @@ def setRepoUrl(repo_protocol, scm_repo_name, repo_base)
 	return repo_url
 }
 
-def createProjectInSCM(gitlab_private_token, gitlab_cas_name_space_id, repo_base, scm_repo_name, username, password, cas_rest_repo, repo_owner)
+def createProjectInSCM(gitlab_private_token, gitlab_cas_name_space_id, repo_base, scm_repo_name, username, password, cas_repo_id, repo_owner)
 {
 	if(scm == "gitlab"){
 		def private_token    = gitlab_private_token
@@ -469,29 +470,52 @@ def createProjectInSCM(gitlab_private_token, gitlab_cas_name_space_id, repo_base
 		if(owner.contains("@")){
 			git_username = owner.substring(0, owner.indexOf("@"))
 		}
-		def user_id = getGitlabUserId(git_username)
+		def user_id = getGitlabUserId(git_username, private_token)
 		def gitlab_repo_output = sh (
-			script: "curl --header \"PRIVATE-TOKEN: $private_token\" -X POST \"http://$repo_base/api/v3/projects/user/$user_id?name=$scm_repo_name&path=$scm_repo_name&namespace_id=$cas_namespace_id&visibility=private&request_access_enabled=true\"",
+			script: "curl --header \"Private-Token: $private_token\" -X POST \"http://$repo_base/api/v3/projects/user/$user_id?name=$scm_repo_name&path=$scm_repo_name&visibility=private&request_access_enabled=true\"",
 			returnStdout: true
 		).trim()
 
 		def jsonSlurper = new JsonSlurper()
 		def object = jsonSlurper.parseText(gitlab_repo_output)
 		cas_proj_id = object.id
+
+		transferProject(cas_repo_id, cas_proj_id)
 	}
 	else{
 		sh "curl -X POST -k -v -u \"$username:$password\" -H \"Content-Type: application/json\" " + cas_rest_repo + " -d \'{\"name\":\""+ scm_repo_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
 	}
 }
 
-def getGitlabUserId(username){
+def getGitlabUserId(username, private_token){
 	def output = sh (
-		script: "curl --header \"PRIVATE-TOKEN: $private_token\" -X GET \"http://$repo_base/api/v3/users/?username=$username\"",
+		script: "curl --header \"Private-Token: $private_token\" -X GET \"http://$repo_base/api/v3/users?username=$username\"",
 		returnStdout: true
 	).trim()
 	def jsonSlurper = new JsonSlurper()
 	def userObject = jsonSlurper.parseText(output)
-	return userObject.id
+	return userObject[0].id
+}
+
+def getCasRepoId(username){
+	def output = sh (
+		script: "curl --header \"Private-Token: ${env.gitlab_private_token}\" -X GET \"http://$repo_base/api/v3/groups?search=${env.REPO_LOC}\"",
+		returnStdout: true
+	).trim()
+	def jsonSlurper = new JsonSlurper()
+	def groupObject = jsonSlurper.parseText(output)
+	return groupObject[0].id
+}
+
+def transferProject(cas_id, project_id){
+	echo "transferring project to cas"
+
+	def output = sh (
+		script: "curl --header \"Private-Token: $private_token\" -X POST \"http://$repo_base/api/v3/groups/$cas_id/projects/$project_id\"",
+		returnStdout: true
+	).trim()
+
+	echo "project transferred to cas"
 }
 
 

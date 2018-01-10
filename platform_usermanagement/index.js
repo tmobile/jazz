@@ -298,10 +298,6 @@ function createUserInSCM(config, userData) {
 
 	return {
 		url: url,
-		auth: {
-			user: config.bitbucket_username,
-			password: config.bitbucket_password
-		},
 		method: 'POST',
 		rejectUnauthorized: false,
 		headers: {
