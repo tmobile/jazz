@@ -3,10 +3,11 @@
   "REGION": "{region}",
   "USER_CLIENT_ID": "{user_client_id}",
   "bitbucket_service_host" : "{bb_service_host}",
-  "bitbucket_usr_add_path" : "/rest/api/1.0/admin/users",
-  "bitbucket_usr_grp_add_path" : "/rest/api/1.0/admin/groups/add-users",
+  "bitbucket_usr_add_path" : "/api/v3/users",
+  "bitbucket_usr_grp_add_path" : "/api/v3/groups",
   "bitbucket_username" : "{bb_username}",
   "bitbucket_password" : "{bb_password}",
+  "gitlab_private_token" : "{gitlab-private-token}",
   "reg_codes": ["JAZZ"],
   "required_fields": ["userid", "userpassword", "usercode"]
 }
