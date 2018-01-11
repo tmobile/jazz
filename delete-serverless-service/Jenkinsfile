@@ -52,7 +52,7 @@ node {
 	def admin_group = "admin_group"
 	def bitbucket_name = service_template
 	def domain = "platform"
-	def region = "us-east-1"
+	def region = configLoader.JAZZ.jazz_region
 	def envmnt="dev"
 
 
