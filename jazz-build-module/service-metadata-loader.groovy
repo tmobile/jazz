@@ -67,6 +67,27 @@ def loadServiceMetaData() {
 }
 
 /**
+ * Load the service metadata from Catalog
+ *
+ */
+ 
+def loadServiceMetaDataByServiceId() {
+	try {
+		def serviceData = sh (script: "curl GET  -k \
+			-H \"Content-Type: application/json\" \
+			-H \"Authorization: $g_login_token\" \
+			\"$util_url\"", returnStdout: true)		
+
+		return parseJson(serviceData)
+			
+	}
+	catch(e){
+		error "error occured while fetching service metadata: " + e.getMessage()
+	}
+}
+
+
+/**
  * Get bucket name for environment
  * @param stage environment
  * @return  folder name

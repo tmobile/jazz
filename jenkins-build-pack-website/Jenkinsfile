@@ -68,7 +68,10 @@ node ()  {
 	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
 	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
 	region = configLoader.JAZZ.jazz_region
+
 	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
+	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/"+ var_repo_core +"/jazz-build-module.git"
+
 	role = configLoader.JAZZ.jazz_roleId
 	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 
@@ -83,6 +86,7 @@ node ()  {
 	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${params.scm_project}/"
 
 	def config
+	def configObj
 
 	if (params.scm_branch == 'master') {
 		current_environment = 'prod'
@@ -109,12 +113,27 @@ node ()  {
 		}
 
 		// @TODO: dir can be removed, needs to be refactored
-		config = dir(bitbucket_name)
+		configObj = dir(bitbucket_name)
 		{
 			return LoadConfiguration()
 		}
 	}
 
+	if(configObj.service_id){	
+		def url = "$g_base_url/platform/services/"+configObj.service_id
+		serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
+		serviceMetadata.setUrl(url)
+		def serviceData = serviceMetadata.loadServiceMetaDataByServiceId()
+		if(serviceData && serviceData.data){	
+			config = serviceData.data['metadata']
+		}else{
+			error "Error while fetching service metadata"
+		}
+	}else{
+		error "Service Id is not available."
+	}
+	
+	
 	def create_cloudfront_url
 
 	dir(bitbucket_name)
@@ -745,7 +764,7 @@ def sendEvent(service_name, branch, environment, event_name, event_status, messa
 
 def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
-	setCredentials(g_base_url + '/platform/login')
+	def token = setCredentials()
 
 	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
 
@@ -756,7 +775,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 	}
 
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $g_login_token\" \"$url\" | $jq -r '.data[0] | [.id, .endpoints[\"$preserveEnvKey\"], .created_by] | join(\",\")'", returnStdout: true)
+			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.id, .endpoints[\"$preserveEnvKey\"], .created_by] | join(\",\")'", returnStdout: true)
 
 	def values = curlOutput.split(',')
 
@@ -800,10 +819,9 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
  */
- def setCredentials(loginUrl) {
-
-	if (g_login_token == '') {
-
+ def setCredentials() {
+	def loginUrl = g_base_url + '/platform/login'
+	def token
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 			echo "user name is $UNAME"
 
@@ -817,19 +835,20 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 			def payload = JsonOutput.toJson(login_json)
 
 			try {
-				g_login_token = sh (script: "curl --silent -X POST -k -v \
+				token = sh (script: "curl --silent -X POST -k -v \
 					-H \"Content-Type: application/json\" \
 					 $loginUrl \
 					-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
 
-				g_login_token = g_login_token.replaceAll("[\n\r]", "")
+				token = token.replaceAll("[\n\r]", "")
+				return token
 			}
 			catch(e){
 				echo "error occured: " + e.getMessage()
 				error "error occured: " + e.getMessage()
 			}
 		}
- 	}
+ 	
 
 }
 
@@ -912,4 +931,33 @@ def parseJson(jsonString) {
     def m = [:]
     m.putAll(lazyMap)
     return m
+}
+
+/**
+ * Load metadata module groovy file
+ *
+ */
+def loadServiceMetadataModule(buildURL) {
+		try {						
+			echo "loading serviceMetaData, checking repos"
+
+			dir('service-metadata') {
+				checkout([$class: 'GitSCM', branches: [
+					[name: '*/master']
+				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+					[credentialsId: env.REPO_CREDENTIAL_ID, url: buildURL]
+				]])
+				serviceMetadata = load "service-metadata-loader.groovy"			
+				serviceMetadata.setAuthToken(setCredentials())
+
+				// Load and set dependent utility module.
+				echo "loading util module"
+				Util = load "utility-loader.groovy"
+				serviceMetadata.setUtil(Util)
+				return serviceMetadata 
+			}
+		
+		}catch(ex) {
+			error "loadServiceMetadataModule Failed. "+ex.getMessage()
+		}
 }

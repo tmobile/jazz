@@ -56,6 +56,7 @@ node {
 	def bitbucket_repo_name
 	def tracking_id
 	def config
+	def configObj
 	def runtime
 	def serviceConfig
 	def domainConfig
@@ -101,9 +102,24 @@ node {
 	stage("Initialization") {
 
 		checkoutSCM(bitbucket_repo_name, repo_protocol + var_cas_clone_url)
-		config = dir(bitbucket_repo_name){
+		configObj = dir(bitbucket_repo_name){
 			return LoadConfiguration()
 		}
+		
+		if(configObj.service_id){	
+			def url = "$g_base_url/platform/services/"+configObj.service_id
+			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
+			serviceMetadata.setUrl(url)
+			def serviceData = serviceMetadata.loadServiceMetaDataByServiceId()
+			if(serviceData && serviceData.data){	
+				config = serviceData.data['metadata']
+			}else{
+				error "Error while fetching service metadata"
+			}
+		}else{
+			error "Service Id is not available."
+		}
+	
 		runtime = config['providerRuntime']
 		serviceConfig = config['service']
 		domainConfig = config['domain']
@@ -147,20 +163,20 @@ node {
 		switch (flowType) {
 			case "API":
 				stage('Undeploy Service') {
-					updateServiceNameConfig(domain, service_name, "dev")
+					updateServiceNameConfig(domain, service_name, "dev",config)
 					def path = getResourcePath()
 					//sh "sed -i -- 's/{opt:stage}/dev/g' serverless.yml"
 					cleanUpApiGatewayResources("dev", path, region)
 					cleanUpApiDocs("dev", service_name, domain)
 					unDeployService('dev', region)
 
-					updateServiceNameConfig(domain, service_name, "stg")
+					updateServiceNameConfig(domain, service_name, "stg",config)
 					//sh "sed -i -- 's/{opt:stage}/stg/g' serverless.yml"
 					cleanUpApiGatewayResources("stg", path, region)
 					cleanUpApiDocs("stg", service_name, domain)
 					unDeployService('stg', region)
 
-					updateServiceNameConfig(domain, service_name, "prod")
+					updateServiceNameConfig(domain, service_name, "prod",config)
 					//sh "sed -i -- 's/{opt:stage}/prod/g' serverless.yml"
 					cleanUpApiGatewayResources("prod", path, region)
 					cleanUpApiDocs("prod", service_name, domain)
@@ -170,18 +186,20 @@ node {
 
 			case "LAMBDA":
 				stage('Undeploy Service') {
-					updateServiceNameConfig(domain, service_name, "dev")
+					updateServiceNameConfig(domain, service_name, "dev",config)
 					unDeployService('dev', region)
-					updateServiceNameConfig(domain, service_name, "stg")
+					updateServiceNameConfig(domain, service_name, "stg",config)
 					unDeployService('stg', region)
-					updateServiceNameConfig(domain, service_name, "prod")
+					updateServiceNameConfig(domain, service_name, "prod",config)
 					unDeployService('prod', region)
 				}
 				break
 
 			case "WEBSITE":
 				stage('Undeploy Service') {
-					serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL, "website", service_name, domain)
+					serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
+					initialize(serviceMetadata, "website", service_name, domain)
+					
 					//if (cloudfrontEnabled == "true") {
 						cleanupCloudFrontDistribution(service_name, domain, "dev")
 					//}
@@ -338,7 +356,7 @@ def echoServerlessFile() {
  * @param  serviceName
  * @return
  */
-def updateServiceNameConfig(domain, serviceName, envval) {
+def updateServiceNameConfig(domain, serviceName, envval,config) {
 	sh "rm serverless.yml"
 	sh "cp serverless-temp.yml serverless.yml"
 	//events.sendStartedEvent('UPDATE_DEPLOYMENT_CONF')
@@ -354,11 +372,34 @@ def updateServiceNameConfig(domain, serviceName, envval) {
 		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
 		sh "sed -i -- 's/name: \${self:service}/name: " + fullServiceName+"/g' serverless.yml"
 		//events.sendCompletedEvent('UPDATE_DEPLOYMENT_CONF')
+		writeServerlessFile(config)
 	}catch(ex) {
 		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
 		send_status_email ("FAILED")
 		error "updateServiceNameConfig Failed. "+ex.getMessage()
 	}
+}
+
+
+
+def writeServerlessFile(config){
+	sh "pwd"
+	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml" 	
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/" + config['providerRuntime'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/" + config['providerMemorySize'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/" + config['providerTimeout'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleRate}/" + config['eventScheduleRate'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/" + config['eventScheduleEnable'] + "/g' serverless.yml"
+	if(config['artifact']){
+		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/" + config['artifact'] + "/g' serverless.yml"
+	}
+	if(config['mainClass']){
+		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/" + config['mainClass'] + "/g' serverless.yml"
+	}
+	
 }
 
 /**
@@ -1188,12 +1229,8 @@ def loadConfigModule(buildModuleUrl){
  * Load metadata module groovy file
  *
  */
-def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
-		try {
-			def url = "$g_base_url/platform/services?domain=$domain&service=$service"
-			def dev = configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET
-			def stg = configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET
-			def prd = configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET
+def loadServiceMetadataModule(buildURL) {
+		try {		
 
 			echo "loading serviceMetaData, checking repos"
 
@@ -1204,7 +1241,6 @@ def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 					[credentialsId: var_credentialsId, url: buildURL]
 				]])
 				serviceMetadata = load "service-metadata-loader.groovy"
-				serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
 				serviceMetadata.setAuthToken(setCredentials())
 
 				// Load and set dependent utility module.
@@ -1216,4 +1252,16 @@ def loadServiceMetadataModule(buildURL, serviceType, service, domain) {
 		}catch(ex) {
 			error "loadServiceMetadataModule Failed. "+ex.getMessage()
 		}
+}
+
+def initialize(serviceMetadata, serviceType, service, domain){
+	def url = "$g_base_url/platform/services?domain=$domain&service=$service"
+	def dev = configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET
+	def stg = configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET
+	def prd = configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET
+	
+	serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
+	serviceMetadata.setUrl(url)
+
+
 }
