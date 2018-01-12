@@ -52,7 +52,6 @@ echo "Events module loaded successfully"
 	'CREATE_SERVICE_REPO':'CREATE_SERVICE_REPO',
 	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
 	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
-	'UNDEPLOY_LAMBDA':'UNDEPLOY_LAMBDA',
 	'UNDEPLOY_WEBSITE':'UNDEPLOY_WEBSITE',
 	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
 	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
@@ -82,7 +81,18 @@ echo "Events module loaded successfully"
 	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
 	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
 	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
-    'ADD_WEBHOOK':'ADD_WEBHOOK'
+    'ADD_WEBHOOK':'ADD_WEBHOOK',
+	'UNDEPLOY_LAMBDA':'UNDEPLOY_LAMBDA',
+	'GET_SERVICE_CODE':'GET_SERVICE_CODE',
+	'GET_SERVERLESS_CONF':'GET_SERVERLESS_CONF',
+	'UPDATE_DEPLOYMENT_CONF':'UPDATE_DEPLOYMENT_CONF',
+	'UPDATE_SWAGGER':'UPDATE_SWAGGER',
+    'GET_DEPLOYMENT_CONF':'GET_DEPLOYMENT_CONF',
+    'VALIDATE_PRE_BUILD_CONF':'VALIDATE_PRE_BUILD_CONF',
+    'DELETE_PROJECT':'DELETE_PROJECT',
+    'DELETE_API_RESOURCE','DELETE_API_RESOURCE',
+    'DELETE_CLOUDFRONT':'DELETE_CLOUDFRONT',
+    'DISABLE_CLOUDFRONT':'DISABLE_CLOUDFRONT'
 ]
 
 /**
@@ -281,7 +291,7 @@ def sendEvent(request_id, event_type, event_handler, service_type, service_name,
 	try{
 		/**def shcmd = "curl -X POST  -k -s\
 			-H \"Content-Type: application/json\" \
-			https://cloud-api.corporate.t-mobile.com/api/platform/events \
+			https://---/api/platform/events \
 			-d \'${payload}\' >/dev/null"
 		jazz_quiet_sh(shcmd)*/
       
