@@ -5,16 +5,16 @@ import groovy.transform.Field
 //@Field def events
 @Field def configModule
 @Field def configLoader
-@Field def var_jenkins_credential_id
+@Field def jenkins_credential_id
 @Field def region
 
 node {
 
   loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
-	var_jenkins_credential_id = configLoader.JENKINS.JENKINS_CREDENTIAL_ID
+	jenkins_credential_id = configLoader.JENKINS.JENKINS_CREDENTIAL_ID
 	region = configLoader.JAZZ.jazz_region
 
-withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_jenkins_credential_id, passwordVariable: 'PWD',
+withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: jenkins_credential_id, passwordVariable: 'PWD',
 usernameVariable: 'UNAME']]){
 
    echo "Build triggered via branch::${env.BRANCH_NAME}"

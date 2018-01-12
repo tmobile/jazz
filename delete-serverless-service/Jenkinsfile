@@ -4,9 +4,9 @@ import groovy.transform.Field
 
 @Field def configModule
 @Field def configLoader
-@Field def var_api_key
-@Field def var_credentialsId
-@Field def var_bitbucket_base
+@Field def api_key
+@Field def credentialsId
+@Field def bitbucket_base
 
 
 def Event_Name =[
@@ -40,10 +40,10 @@ def Event_Status = [
 node {
 
 	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
-	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + configLoader.REPOSITORY.REPO_CORE + "/"
-	var_api_key 				= configLoader.API.API_KEY
+	credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
+	bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
+	def var_bitbucket_framework_url = "http://" + bitbucket_base + "/scm/" + configLoader.REPOSITORY.REPO_CORE + "/"
+	api_key 				= configLoader.API.API_KEY
 
 	def service_template = "delete-serverless-service"
 	def service_type =  "api"
@@ -76,7 +76,7 @@ node {
 			sh 'mkdir ' + service_template
 			dir(service_template)
 			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
+				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
 			}
 		}
 		catch(error){
@@ -109,7 +109,7 @@ node {
                 sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
 
 				region = config['region']
-				def var_api_host_name			= var_api_key+".execute-api."+region+".amazonaws.com"
+				def var_api_host_name			= api_key+".execute-api."+region+".amazonaws.com"
 
 				// TODO: the below couple of statements will be replaced with regular expression in very near future;
 				// roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
@@ -139,15 +139,15 @@ node {
 
 
 				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/dev-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + var_bitbucket_base + "/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{conf-repo-base}/" + bitbucket_base + "/g' ./config/dev-config.json"
 
 				echo "Updating Serverless configs for stg"
 				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/stg-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + var_bitbucket_base + "/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{conf-repo-base}/" + bitbucket_base + "/g' ./config/stg-config.json"
 
 				echo "Updating Serverless configs for prod"
 				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/prod-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + var_bitbucket_base + "/g' ./config/prod-config.json"
+				sh "sed -i -- 's/{conf-repo-base}/" + bitbucket_base + "/g' ./config/prod-config.json"
 
 			}
 		}
@@ -185,7 +185,7 @@ node {
 				// Generate swagger file based on environment
 				if (fileExists('swagger/swagger.json')) {
 					echo "Generating the swagger file for each environment"
-					def apiHostName	= var_api_key+".execute-api."+region+".amazonaws.com"//Development environment
+					def apiHostName	= api_key+".execute-api."+region+".amazonaws.com"//Development environment
 					echo apiHostName+" #################################################### "
 
 					generateSwaggerEnv(service_name, envmnt, service_name, apiHostName, domain, service_name)
@@ -194,7 +194,7 @@ node {
 
 					// import swagger api spec
 					echo "Deploying API gateway Endpoints"
-					sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+var_api_key+"  --deploy "+envmnt+" swagger/swagger.json "
+					sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+api_key+"  --deploy "+envmnt+" swagger/swagger.json "
 
 				}
 				//sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")

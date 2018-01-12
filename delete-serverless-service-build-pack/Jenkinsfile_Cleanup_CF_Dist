@@ -6,8 +6,8 @@ import groovy.transform.Field
 //@Field def events
 @Field def configModule
 @Field def configLoader
-@Field def var_aws_credential_id
-@Field def var_env_name_prefix
+@Field def aws_credential_id
+@Field def env_name_prefix
 @Field def region
 
 /**
@@ -21,8 +21,8 @@ node {
 	echo "params : $params"
 
 	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
-	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
+	aws_credential_id = configLoader.AWS_CREDENTIAL_ID
+	env_name_prefix = configLoader.env_name_prefix
 	region = configLoader.JAZZ.jazz_region
 
 	cleanupCloudFrontDistribution()
@@ -36,7 +36,7 @@ node {
  */
 def cleanupCloudFrontDistribution() {
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
 			sh "aws configure set profile.cloud-api.region $region"
@@ -90,7 +90,7 @@ def getDisabledDistribution() {
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[].{Id: Id, Status: Status, Enabled: Enabled, OriginDomainName: Origins.Items[0].DomainName}[?!Enabled && contains(OriginDomainName, '$var_env_name_prefix-') && (Status == 'Deployed')]\"",
+				--query \"DistributionList.Items[].{Id: Id, Status: Status, Enabled: Enabled, OriginDomainName: Origins.Items[0].DomainName}[?!Enabled && contains(OriginDomainName, '$env_name_prefix-') && (Status == 'Deployed')]\"",
 			returnStdout: true
 		)
         if(outputStr) {
