@@ -28,7 +28,7 @@ usernameVariable: 'UNAME']]){
    def build_job = '/job/build-deploy-platform-service/buildWithParameters?token=bld-plat-srvs-71717'
    def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
 
-   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=" + projname + "&admin_group=admin_group&region=${region}&deploy_env=dev\""
+   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=" + projname + "&admin_group=admin_group&region="+region+"&deploy_env=dev\""
 }
 
 
