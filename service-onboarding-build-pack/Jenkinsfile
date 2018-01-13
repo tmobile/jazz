@@ -290,7 +290,7 @@ node  {
 		{
 			try{
 				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-					createProjectInSCM(env.gitlab_private_token, env.gitlab_cas_name_space_id, repo_base, scm_repo_name, uname, pwd, cas_repo_id, owner)
+					createProjectInSCM(env.gitlab_private_token, repo_base, scm_repo_name, uname, pwd, cas_repo_id, owner)
 {
 					sh "git config --global user.email \"" + var_bitbucket_email + "\""
 					sh "git config --global user.name $UNAME"
@@ -461,11 +461,10 @@ def setRepoUrl(repo_protocol, scm_repo_name, repo_base)
 	return repo_url
 }
 
-def createProjectInSCM(gitlab_private_token, gitlab_cas_name_space_id, repo_base, scm_repo_name, username, password, cas_repo_id, repo_owner)
+def createProjectInSCM(gitlab_private_token, repo_base, scm_repo_name, username, password, cas_repo_id, repo_owner)
 {
 	if(scm == "gitlab"){
 		def private_token    = gitlab_private_token
-		def cas_namespace_id = gitlab_cas_name_space_id
 		def git_username
 		if(owner.contains("@")){
 			git_username = owner.substring(0, owner.indexOf("@"))
