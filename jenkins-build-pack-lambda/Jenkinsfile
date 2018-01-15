@@ -79,7 +79,7 @@ node ()  {
 	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
 	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
 	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 	role = configLoader.JAZZ.jazz_roleId
 	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 
@@ -816,13 +816,13 @@ def send_status_email (email_id, build_status, service, email_content) {
    	}
 }
 
-def updateServiceInDB(service_id, domain, devApiID, region, status) {
+def updateServiceInDB(service_id, domain, apiID, region, status) {
 
 	try {
 		echo "svc id ===============" + service_id
 		echo "domain ===============" + domain
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: "+g_login_token+"\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id + "/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: "+g_login_token+"\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://" + apiID + ".execute-api." + region + ".amazonaws.com/prod/platform/services/" + service_id + "/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
