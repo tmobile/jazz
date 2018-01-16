@@ -18,6 +18,7 @@ import groovy.transform.Field
 @Field def user_id
 @Field def repo_loc
 @Field def cas_rest_repo
+@Field def cas_proj_id
 
 echo "the scm-module has loaded successfully"
 
@@ -32,7 +33,7 @@ def initialize(scm, privateToken, repoBase, scmRepoName, username, password, rep
   setPassword(password)
   setCasRepoId(cas_repo_id)
   setRepoOwner(repo_owner)
-  //setUserId(user_id)
+  setUserId(user_id)
   setRepoLoc(repo_loc)
   setCasRestRepo(cas_rest_repo)
 }
@@ -52,7 +53,7 @@ def createProjectInSCM(){
 
 		def jsonSlurper = new JsonSlurper()
 		def object = jsonSlurper.parseText(gitlab_repo_output)
-		def cas_proj_id = object.id
+		cas_proj_id = object.id
 
 		transferProject(cas_repo_id, cas_proj_id)
 	}
@@ -62,23 +63,35 @@ def createProjectInSCM(){
 }
 
 def getGitlabUserId(username, private_token){
-	def output = sh (
-		script: "curl --header \"Private-Token: $private_token\" -X GET \"http://$repo_base/api/v3/users?username=$username\"",
-		returnStdout: true
-	).trim()
-	def jsonSlurper = new JsonSlurper()
-	def userObject = jsonSlurper.parseText(output)
-	return userObject[0].id
+  if(user_id == null || user_id.equals("")){
+    def output = sh (
+  		script: "curl --header \"Private-Token: $private_token\" -X GET \"http://$repo_base/api/v3/users?username=$username\"",
+  		returnStdout: true
+  	).trim()
+  	def jsonSlurper = new JsonSlurper()
+  	def userObject = jsonSlurper.parseText(output)
+    setUserId(userObject[0].id)
+  	return userObject[0].id
+  }
+  else{
+    return user_id
+  }
 }
 
 def getCasRepoId(private_token){
-	def output = sh (
-		script: "curl --header \"Private-Token: $private_token\" -X GET \"http://$repo_base/api/v3/groups?search=$repo_loc\"",
-		returnStdout: true
-	).trim()
-	def jsonSlurper = new JsonSlurper()
-	def groupObject = jsonSlurper.parseText(output)
-	return groupObject[0].id
+  if(cas_repo_id == null || cas_repo_id.equals("")){
+    def output = sh (
+  		script: "curl --header \"Private-Token: $private_token\" -X GET \"http://$repo_base/api/v3/groups?search=$repo_loc\"",
+  		returnStdout: true
+  	).trim()
+  	def jsonSlurper = new JsonSlurper()
+  	def groupObject = jsonSlurper.parseText(output)
+    setCasRepoId(groupObject[0].id)
+  	return groupObject[0].id
+  }
+  else{
+    return cas_repo_id
+  }
 }
 
 def transferProject(cas_id, project_id){
@@ -97,10 +110,6 @@ def transferProject(cas_id, project_id){
 def parseJson(def json) {
     new groovy.json.JsonSlurperClassic().parseText(json)
 }
-
-//Getters Begin
-
-//Getters End
 
 //Setters Begin
 def setScm(scmName){
@@ -135,9 +144,9 @@ def setRepoOwner(repoOwner){
   repo_owner = repoOwner
 }
 
-/*def setUserId(userId){
+def setUserId(userId){
   user_id = userId
-}*/
+}
 
 def setRepoLoc(repoLoc){
   repo_loc = repoLoc
