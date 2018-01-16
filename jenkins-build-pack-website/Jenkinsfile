@@ -4,34 +4,8 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 //definitions
-def Event_Name = [
-	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
-	'CALL_ONBOARDING_WORKFLOW':'CALL_ONBOARDING_WORKFLOW',
-	'RAISE_PR':'RAISE_PR',
-	'VALIDATE_PRE_BUILD_CONF':'VALIDATE_PRE_BUILD_CONF',
-	'CALL_ONBOARDING_SERVICE':'CALL_ONBOARDING_SERVICE',
-	'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO':'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO',
-	'CREATE_SERVICE':'CREATE_SERVICE',
-	'BUILD':'BUILD',
-	'CODE_QUALITY_CHECK':'CODE_QUALITY_CHECK',
-	'UNIT_TEST':'UNIT_TEST',
-	'COMMIT_CODE':'COMMIT_CODE',
-	'APPROVE_PR':'APPROVE_PR',
-	'CREATE_SERVICE_REPO':'CREATE_SERVICE_REPO',
-	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
-	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
-	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
-	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
-	'CREATE_ASSET':'CREATE_ASSET',
-	'UPDATE_ASSET':'UPDATE_ASSET'
-]
 
-def Event_Status = [
-	'STARTED':'STARTED',
-	'COMPLETED':'COMPLETED',
-	'FAILED':'FAILED'
-]
-
+@Field def events
 @Field def configModule
 @Field def configLoader
 @Field def var_api_key
@@ -57,7 +31,7 @@ def Event_Status = [
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	loadBuildModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
 	var_api_key 				= configLoader.API.API_KEY
 	var_api_id_dev = configLoader.API.API_ID_DEV
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
@@ -117,11 +91,26 @@ node ()  {
 
 	def create_cloudfront_url
 
+	if(!events) { error "Can't load events module"	} //Fail here
+    events.setUrl(g_base_url + "platform/events")
+	events.setDisableEvents(configLoader.DISABLE_EVENTS)
+	events.setRole(role)
+	events.setEventHandler("JENKINS")
+	events.setDomain(domain)
+	events.setRegion(region)
+	events.setEventType("SERVICE_DEPLOYMENT")
+	events.setRuntime(null)
+	events.setBranch(branch)
+	events.setServiceName(service)
+	events.setServiceType('website')
+	events.setEnvironment(current_environment)
+	
+	def context_map = [created_by : config['owner']]
+	
 	dir(bitbucket_name)
 	{
 		stage ('Pre-Build Validation'){
-
-			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
+			events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation starts', context_map, 'NA')
 			try {
 				service = config['service']
 				domain = config['domain']
@@ -144,12 +133,13 @@ node ()  {
 
 				validateTemplate()
 				validateDeploymentConfigurations(config)
+				events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, 'NA')
+				
 			}catch(ex) {
 				send_status_email(created_by, 'FAILED', params.service_name, '')
-				sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
+				events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', '', context_map)
 				error ex.getMessage()
 			}
-			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
 		}
 
 	  def s3StgBucket  = configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
@@ -158,7 +148,7 @@ node ()  {
 
 	  if (branch == 'master'){
 		stage ('Deployment to Production Env'){
-		  sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+			events.sendStartedEvent('DEPLOY_TO_AWS', 'deploy to aws starts', context_map, 'NA')
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
@@ -176,8 +166,8 @@ node ()  {
 				}catch(ex) {
 					error ex.getMessage()
 				}
-
-				sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.STARTED, assetInfo)
+				
+				events.sendStartedEvent('UPDATE_ASSET', 'update assets starts', context_map, 'NA')
 				try {
 					echo "website with name $service already exists, syncing new files"
 					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" "
@@ -211,19 +201,19 @@ node ()  {
 					echo svc_status
 
 					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
-					sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
-					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					events.sendCompletedEvent('UPDATE_ASSET', 'update assets completed', context_map, 'NA')
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deploy to aws completed', context_map, 'NA')
 				}catch(ex) {
 					send_status_email(created_by, 'FAILED', params.service_name, '')
-					sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
-					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
+					events.sendFailureEvent('UPDATE_ASSET', '', context_map)
+					events.sendFailureEvent('DEPLOY_TO_AWS', '', context_map)
 				}
 
 			 }
 			 catch (error)
 			 {
 				echo "uploading a new website with name $service"
-				sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.STARTED, assetInfo)
+				events.sendStartedEvent('CREATE_ASSET', 'create assets starts', context_map, 'NA')
 				try {
 					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" "
 					def url = ''
@@ -248,12 +238,13 @@ node ()  {
 					echo svc_status
 
 					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
-					sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
-					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					events.sendCompletedEvent('CREATE_ASSET', 'create assets completed', context_map, 'NA')
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deploy to aws completed', context_map, 'NA')
+
 				}catch(ex) {
 					send_status_email(created_by, 'FAILED', params.service_name, '')
-					sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
-					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, "")
+					events.sendFailureEvent('CREATE_ASSET', '', context_map)
+					events.sendFailureEvent('DEPLOY_TO_AWS', '', context_map)
 				}
 
 			 }
@@ -264,7 +255,7 @@ node ()  {
 	  }
 	  else {
 		stage ('Deployment to Deployment Env'){
-		  sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+		 events.sendStartedEvent('DEPLOY_TO_AWS', 'deploy to aws starts', context_map, 'NA')
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
@@ -283,7 +274,7 @@ node ()  {
 					error ex.getMessage()
 				}
 
-				sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.STARTED, assetInfo)
+				events.sendStartedEvent('UPDATE_ASSET', 'update assets starts', context_map, 'NA')
 				try {
 					echo "website with name $service already exists, syncing new files"
 					sh "aws s3 sync ./app s3://${s3DevBucket}/$service --exclude \".git/*\" --exclude \".gitignore\" "
@@ -310,19 +301,19 @@ node ()  {
 					def svc_status = "You can access your website using following link: ${url}"
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)					
+					events.sendCompletedEvent('UPDATE_ASSET', 'update assets completed', context_map, 'NA')
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deploy to aws completed', context_map, 'NA')					
 				}catch(ex) {
 					send_status_email(created_by, 'FAILED', params.service_name, '')
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
+					events.sendFailureEvent('UPDATE_ASSET', '', context_map)
+					events.sendFailureEvent('DEPLOY_TO_AWS', '', context_map)
 				}
 			 }
 			 catch (error)
 			 {
 				echo "uploading a new website with name $service"
-				sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.STARTED, assetInfo)
+				events.sendStartedEvent('CREATE_ASSET', 'create assets starts', context_map, 'NA')
 				try {
 					sh "aws s3 sync ./app s3://" + s3DevBucket + "/$service --exclude \".git/*\" --exclude \".gitignore\" "
 					def url = 'n/a'
@@ -346,13 +337,13 @@ node ()  {
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)					
+					events.sendCompletedEvent('CREATE_ASSET', 'create assets completed', context_map, 'NA')
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deploy to aws completed', context_map, 'NA')
 				}catch(ex) {
 					send_status_email(created_by, 'FAILED', params.service_name, '')
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, "")
+					events.sendFailureEvent('CREATE_ASSET', '', context_map)
+					events.sendFailureEvent('DEPLOY_TO_AWS', '', context_map)
 				}
 			 }
 			// reset Credentials
@@ -739,9 +730,7 @@ def invalidateCloudFrontCache(distributionId, service) {
 	}
 }
 
-def sendEvent(service_name, branch, environment, event_name, event_status, message){
-    echo "send event " + event_status + " message::" + message;
-}
+
 
 def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
@@ -891,7 +880,9 @@ def send_status_email (email_id, build_status, service, email_content) {
 /*
 * Load environment variables from build module
 */
-def loadConfigModule(buildModuleUrl){
+
+def loadBuildModule(buildModuleUrl){
+	echo "loading env variables, checking repos..."
 
 	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
@@ -903,6 +894,10 @@ def loadConfigModule(buildModuleUrl){
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
+		echo "finished loading env module"		
+		events = load "events-module.groovy"		
+		echo "Event module loaded "
+
 	}
 }
 
