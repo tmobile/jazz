@@ -7,6 +7,7 @@ import groovy.transform.Field
 * Logic for crud operations involving scm data
 */
 
+@Field def scm
 @Field def gitlab_private_token
 @Field def repo_base
 @Field def scm_repo_name
@@ -16,12 +17,14 @@ import groovy.transform.Field
 @Field def repo_owner //this refers to the user's username
 @Field def user_id
 @Field def repo_loc
+@Field def cas_rest_repo
 
 echo "the scm-module has loaded successfully"
 
-def initialize(privateToken, repoBase, scmRepoName, username, password, repoOwner){
+def initialize(scm, privateToken, repoBase, scmRepoName, username, password, repoOwner, cas_rest_repo){
   echo "setting intial values for scm-module"
 
+  setScm(scm)
   setGitlabPrivateToken(privateToken)
   setRepoBase(repoBase)
   setScmRepoName(scmRepoName)
@@ -29,17 +32,17 @@ def initialize(privateToken, repoBase, scmRepoName, username, password, repoOwne
   setPassword(password)
   setCasRepoId(cas_repo_id)
   setRepoOwner(repo_owner)
-  setUserId(user_id)
+  //setUserId(user_id)
   setRepoLoc(repo_loc)
+  setCasRestRepo(cas_rest_repo)
 }
 
-def createProjectInSCM(gitlab_private_token, repo_base, scm_repo_name, username, password, cas_repo_id, repo_owner)
-{
+def createProjectInSCM(){
 	if(scm == "gitlab"){
 		def private_token    = gitlab_private_token
 		def git_username
-		if(owner.contains("@")){
-			git_username = owner.substring(0, owner.indexOf("@"))
+		if(repo_owner.contains("@")){
+			git_username = repo_owner.substring(0, owner.indexOf("@"))
 		}
 		def user_id = getGitlabUserId(git_username, private_token)
 		def gitlab_repo_output = sh (
@@ -49,7 +52,7 @@ def createProjectInSCM(gitlab_private_token, repo_base, scm_repo_name, username,
 
 		def jsonSlurper = new JsonSlurper()
 		def object = jsonSlurper.parseText(gitlab_repo_output)
-		cas_proj_id = object.id
+		def cas_proj_id = object.id
 
 		transferProject(cas_repo_id, cas_proj_id)
 	}
@@ -100,6 +103,9 @@ def parseJson(def json) {
 //Getters End
 
 //Setters Begin
+def setScm(scmName){
+  scm = scmName
+}
 
 def setGitLabPrivateToken(privateToken){
   gitlab_private_token = privateToken
@@ -129,12 +135,16 @@ def setRepoOwner(repoOwner){
   repo_owner = repoOwner
 }
 
-def setUserId(userId){
+/*def setUserId(userId){
   user_id = userId
-}
+}*/
 
 def setRepoLoc(repoLoc){
   repo_loc = repoLoc
+}
+
+def setCasRestRepo(casRestRepo){
+  cas_rest_repo = casRestRepo
 }
 //Setters End
 
