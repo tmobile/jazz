@@ -52,7 +52,7 @@ node {
 
 	echo "params : $params"
 
-	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	loadConfigModule(params.config_module_url)
 	var_api_key 				= configLoader.API.API_KEY
 	var_api_id_dev = configLoader.API.API_ID_DEV
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
@@ -377,7 +377,7 @@ node {
 					sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + var_env_name_prefix + "-events-hub-dev --function-name arn:aws:lambda:$region:$roleId:function:$function_name --starting-position LATEST --region " + region
 				}
 			}
-			
+
 
 			// @TODO : Resetting the credentials needs to be introduced. (Re-use of same profile on Async calls needs to be considered)
 			// resetCredentials();
@@ -509,7 +509,7 @@ def loadConfigModule(buildModuleUrl){
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+			[credentialsId: params.config_module_credential_id, url: buildModuleUrl]
 		]])
 
 		echo "loading installer variables..."

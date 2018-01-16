@@ -63,7 +63,7 @@ def Event_Status = [
 @Field def aws_api_import = '/var/lib/aws-apigateway-importer/aws-api-import.sh'
 
 node() {
-	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	loadConfigModule(params.config_module_url)
 	var_api_key 				= configLoader.API.API_KEY
 	var_api_id_dev = configLoader.API.API_ID_DEV
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
@@ -995,7 +995,7 @@ def loadConfigModule(buildModuleUrl){
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+			[credentialsId: params.config_module_credential_id, url: buildModuleUrl]
 		]])
 
 		echo "loading installer variables..."
