@@ -50,8 +50,6 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_type' is not defined")));
         } else if (!event.body.service_name || !isValidName(event.body.service_name)) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_name' is not defined or has invalid characters")));
-        } else if (!event.headers || !event.headers.Authorization) {
-            return cb(JSON.stringify(errorHandler.throwInputValidationError("'headers' is missing")));
         } else if (event.body.service_type !== "website" && (!event.body.runtime)) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'runtime' is not defined")));
         } else if (event.body.domain && !isValidName(event.body.domain)) {
@@ -90,7 +88,6 @@ module.exports.handler = (event, context, cb) => {
             username: user_id,
             admin_group: userlist,
             domain: event.body.domain,
-            auth_token: event.headers.Authorization,
             description: event.body.description
         };
 
