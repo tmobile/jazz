@@ -47,7 +47,7 @@ def createProjectInSCM(){
 		}
 		def user_id = getGitlabUserId(git_username, private_token)
 		def gitlab_repo_output = sh (
-			script: "curl --header \"Private-Token: $private_token\" -X POST \"http://$repo_base/api/v3/projects/user/$user_id?name=$scm_repo_name&path=$scm_repo_name&visibility=private&request_access_enabled=true\"",
+			script: "curl --header \"Private-Token: $gitlab_private_token\" -X POST \"http://$repo_base/api/v3/projects/user/$user_id?name=$scm_repo_name&path=$scm_repo_name&visibility=private&request_access_enabled=true\"",
 			returnStdout: true
 		).trim()
 
@@ -65,7 +65,7 @@ def createProjectInSCM(){
 def getGitlabUserId(username, private_token){
   if(user_id == null || user_id.equals("")){
     def output = sh (
-  		script: "curl --header \"Private-Token: $private_token\" -X GET \"http://$repo_base/api/v3/users?username=$username\"",
+  		script: "curl --header \"Private-Token: $gitlab_private_token\" -X GET \"http://$repo_base/api/v3/users?username=$username\"",
   		returnStdout: true
   	).trim()
   	def jsonSlurper = new JsonSlurper()
@@ -78,10 +78,10 @@ def getGitlabUserId(username, private_token){
   }
 }
 
-def getCasRepoId(private_token){
+def getCasRepoId(){
   if(cas_repo_id == null || cas_repo_id.equals("")){
     def output = sh (
-  		script: "curl --header \"Private-Token: $private_token\" -X GET \"http://$repo_base/api/v3/groups?search=$repo_loc\"",
+  		script: "curl --header \"Private-Token: $gitlab_private_token\" -X GET \"http://$repo_base/api/v3/groups?search=$repo_loc\"",
   		returnStdout: true
   	).trim()
   	def jsonSlurper = new JsonSlurper()
@@ -98,7 +98,7 @@ def transferProject(cas_id, project_id){
 	echo "transferring project to cas"
 
 	def output = sh (
-		script: "curl --header \"Private-Token: $private_token\" -X POST \"http://$repo_base/api/v3/groups/$cas_id/projects/$project_id\"",
+		script: "curl --header \"Private-Token: $gitlab_private_token\" -X POST \"http://$repo_base/api/v3/groups/$cas_id/projects/$project_id\"",
 		returnStdout: true
 	).trim()
 
