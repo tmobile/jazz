@@ -1,24 +1,54 @@
 #!groovy
 import groovy.json.JsonOutput
+import groovy.transform.Field
+
+@Field def configModule
+@Field def configLoader
+@Field def jenkins_credential_id
+
 node {
 
-withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JENKINS_CREDENTIAL_ID, passwordVariable: 'PWD', 
+loadConfigModule(params.config_module_url)
+jenkins_credential_id = configLoader.JENKINS.JENKINS_CREDENTIAL_ID
+
+withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: jenkins_credential_id, passwordVariable: 'PWD', 
 usernameVariable: 'UNAME']]){
-    
+
    echo "Build triggered via branch::${env.BRANCH_NAME}"
    echo "Build triggered for JOBNAME::" + env.JOB_NAME
 
    def projname = env.JOB_NAME
    projname = projname.replaceAll('slf/', '')
    projname = projname.replaceAll('/' + env.BRANCH_NAME, '')
-   
+
    echo "projname::" + projname
-   
+
    def build_job = '/job/build-deploy-platform-service/buildWithParameters?token=bld-plat-srvs-71717'
    def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
-  
+
    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=" + projname + "&admin_group=admin_group&region=us-east-1&deploy_env=dev\""
 }
-    
-  
+
+}
+
+/*
+* Load environment variables from build module
+*/
+def loadConfigModule(buildModuleUrl){
+	echo "loading env variables, checking repos..."
+
+	dir('config-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: params.config_module_credential_id, url: buildModuleUrl]
+		]])
+
+		echo "loading installer variables..."
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
+		echo "finished loading env module"
+	}
 }

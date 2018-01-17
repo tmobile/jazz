@@ -39,7 +39,7 @@ def Event_Status = [
 
 node {
 
-	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	loadConfigModule(params.config_module_url)
 	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
 	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
 	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + configLoader.REPOSITORY.REPO_CORE + "/"
@@ -289,7 +289,7 @@ def loadConfigModule(buildModuleUrl){
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+			[credentialsId: params.config_module_credential_id, url: buildModuleUrl]
 		]])
 
 		echo "loading installer variables..."
