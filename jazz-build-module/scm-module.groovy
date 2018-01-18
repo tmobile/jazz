@@ -1,5 +1,5 @@
 #!groovy?
-import groovy.json.JsonSlurperClassic
+import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
@@ -106,10 +106,10 @@ def transferProject(cas_id, project_id){
 }
 
 //JSON parser
-@NonCPS
-def parseJson(def json) {
-    new groovy.json.JsonSlurperClassic().parseText(json)
-}
+//@NonCPS
+//def parseJson(def json) {
+//    new groovy.json.JsonSlurper().parseText(json)
+//}
 
 //Setters Begin
 def setScm(scmName){
