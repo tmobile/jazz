@@ -453,10 +453,10 @@ def validateInput(service_name, domain, version) {
  */
 def checkServiceExists(service_name, domain, region) {
 	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
-	
+
 	try {
 		def outputStr = sh (
-			script: "curl -H \"Authorization: ${auth_token}\" 'https://${var_api_id_dev}.execute-api.${region}.amazonaws.com/prod/platform/is-service-available?domain=${domain}&service=${service_name}'" ,
+			script: "curl -H \"Authorization: ${auth_token}\" 'https://${var_api_id_prod}.execute-api.${region}.amazonaws.com/prod/platform/is-service-available?domain=${domain}&service=${service_name}'" ,
 			returnStdout: true
 		).trim()
 		echo outputStr
@@ -484,7 +484,7 @@ def deleteserviceindb(region, db_id) {
 	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
 	try {
 		sh "curl -X DELETE -k -v -H \"Authorization: ${auth_token}\" \
-				'https://${var_api_id_dev}.execute-api.${region}.amazonaws.com/prod/platform/services/${db_id}'"
+				'https://${var_api_id_prod}.execute-api.${region}.amazonaws.com/prod/platform/services/${db_id}'"
 		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
