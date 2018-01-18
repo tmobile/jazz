@@ -160,22 +160,6 @@ describe('create-serverless-service', function() {
     });
 
     /*
-    * Given an event with missing headers/headers.Authorization, handler() should throw InternalServerError
-    * @param {object} event, contains a null or undefined headers or headers.Authorization
-    * @params {object, function} default aws context and callback function as assigned above respectively
-    * @returns index.handler() should return an InternalServerError notification
-    */
-    it("should throw an InternalServerError error if missing event.headers", function(){
-      var errMessage = "'headers' is missing";
-      var errType = "BadRequest";
-      var allCases = checkCase("headers", "Authorization", null, errMessage, errType) &&
-                      checkCase("headers", "Authorization", undefined, errMessage, errType) &&
-                      checkCase("headers", null, null, errMessage, errType) &&
-                      checkCase("headers", null, undefined, errMessage, errType);
-      assert.isTrue(allCases);
-    });
-
-    /*
     * Given an event indicating a lambda or api service but no runtime, handler() informs of missing Runtime
     * @param {object} event, contains a service type that isn't "website", and no body.runtime
     * @params {object, function} default aws context and callback function as assigned above respectively

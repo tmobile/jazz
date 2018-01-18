@@ -19,17 +19,21 @@ usernameVariable: 'UNAME']]){
    echo "Build triggered via branch::${env.BRANCH_NAME}"
    echo "Build triggered for JOBNAME::" + env.JOB_NAME
 
-   def projname = env.JOB_NAME
-   projname = projname.replaceAll('slf/', '')
-   projname = projname.replaceAll('/' + env.BRANCH_NAME, '')
+   def projname = ''
 
-   echo "projname::" + projname
+     if(env.JOB_NAME){
+      projname = env.JOB_NAME
+      names = projname.split('/')
+      projname = names[1]
+   }
 
-   def build_job = '/job/build-deploy-platform-service/buildWithParameters?token=bld-plat-srvs-71717'
-   def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+    echo "projname::" + projname
 
-   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=" + projname + "&admin_group=admin_group&region="+region+"&deploy_env=dev\""
-}
+    def build_job = env.PLATFORM_SERVICE_BUILD_URI
+    def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+
+    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=" + projname + "&admin_group=admin_group&region=${region}&scm_branch=${env.BRANCH_NAME}\""
+ }
 
 
 }
