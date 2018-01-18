@@ -4,6 +4,11 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 //@Field def events
+@Field def configModule
+@Field def configLoader
+@Field def aws_credential_id
+@Field def env_name_prefix
+@Field def region
 
 /**
  * The Jenkins Job deletes any diabled CloudFront Distributions
@@ -14,6 +19,11 @@ node {
 
 	echo "Starting delete Stack's Cloud Front Distributions that are disabled..."
 	echo "params : $params"
+
+	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	aws_credential_id = configLoader.AWS_CREDENTIAL_ID
+	env_name_prefix = configLoader.env_name_prefix
+	region = configLoader.JAZZ.jazz_region
 
 	cleanupCloudFrontDistribution()
 
@@ -26,20 +36,20 @@ node {
  */
 def cleanupCloudFrontDistribution() {
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region us-east-1"
+			sh "aws configure set profile.cloud-api.region $region"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
 			def eTag
-	
+
 			def idArray = getDisabledDistribution()
             if (idArray == null)
                return;
-			
+
             if (idArray.length > 0) {
                 for (indx = 0; indx < idArray.length; indx++) {
                   def distID = idArray[indx]
@@ -80,7 +90,7 @@ def getDisabledDistribution() {
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[].{Id: Id, Status: Status, Enabled: Enabled, OriginDomainName: Origins.Items[0].DomainName}[?!Enabled && contains(OriginDomainName, '$env.env_name_prefix-') && (Status == 'Deployed')]\"",
+				--query \"DistributionList.Items[].{Id: Id, Status: Status, Enabled: Enabled, OriginDomainName: Origins.Items[0].DomainName}[?!Enabled && contains(OriginDomainName, '$env_name_prefix-') && (Status == 'Deployed')]\"",
 			returnStdout: true
 		)
         if(outputStr) {
@@ -94,7 +104,7 @@ def getDisabledDistribution() {
             }
             return idArray
         }
-		
+
 		return null
 
 	}catch (ex) {
@@ -122,7 +132,7 @@ def getDistributionConfig(distributionID) {
 		echo "getDistributionConfig Failed."+ex.getMessage()
 		echo "getDistributionConfig Failed." + ex
         error "getDistributionConfig Failed."+ex.getMessage()
-        
+
 	}
 
 }
@@ -166,7 +176,7 @@ def generateDistributionConfigForDisable(distributionConfig) {
 def deleteCloudFrontDistribution(distributionID, eTag) {
 
     echo "deleteCloudFrontDistribution==$distributionID=====$eTag\r\n\r\n"
-     
+
 	def deleteOutput
 	try {
 		deleteOutput = sh(
@@ -180,4 +190,22 @@ def deleteCloudFrontDistribution(distributionID, eTag) {
 		error "deleteCloudFrontDistribution. "+e.getMessage()
 	}
 
+}
+
+/*
+* Load environment variables from build module
+*/
+def loadConfigModule(buildModuleUrl){
+
+	dir('config-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+		]])
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
+	}
 }
