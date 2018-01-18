@@ -290,7 +290,7 @@ function createUserInSCM(config, userData) {
   //a truncated version without the email service domain
   //password has to be atleast 8 chars
   var cutIndex = userData.userid.indexOf('@');
-  var username = userData.substring(0,cutIndex);
+  var username = userData.userid.substring(0,cutIndex);
   var encodedUserid = encodeURIComponent(userData.userid);
 	var encodedPwd = encodeURIComponent(userData.userpassword);
   var encodeUsername = encodeURIComponent(username);
