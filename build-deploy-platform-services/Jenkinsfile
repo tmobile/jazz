@@ -79,7 +79,7 @@ node {
 	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/"
 	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
 	def es_hostname = configLoader.JAZZ.jazz_es_hostname
-	
+
 	if(params.service_name){
 		service_template = params.service_name
 		service_name = params.service_name
@@ -88,17 +88,17 @@ node {
 	if(params.admin_group){
 		admin_group = params.admin_group
 	}
-	
+
 	if(params.region){
 		region = params.region
 	}
-	
+
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
 		domain = params.domain.trim()
 	}
-	
-	if(params.scm_branch){	
+
+	if(params.scm_branch){
 		if (params.scm_branch == 'master') {
 			envmnt = 'prod'
 			var_api_key = configLoader.API.API_ID_PROD
@@ -107,7 +107,7 @@ node {
 			var_api_key = configLoader.API.API_ID_DEV
 		}
 	}
-	
+
 	stage ('Get Serverless Service')
 	{
 		try{
@@ -165,7 +165,7 @@ node {
 				serviceConfigdata = loadServiceConfigurationDataModule(jazzBuildModuleURL,configLoader,roleARN, region, roleId, jenkinsURL, envmnt,es_hostname, var_bitbucket_base,service_template)
 				serviceConfigdata.loadServiceConfigurationData()
 
-				
+
 			}
 		}
 		catch(error){
@@ -203,9 +203,9 @@ node {
 			sh "sed -i -- 's/" + service_name + "/" + var_env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
 
 			echo "Deploying lambda service"
-			
+
 			def envBucketKey = configLoader.JAZZ_S3.jazz_bucket_name_prefix + envmnt
-			
+
 			sh "serverless deploy --stage " + envmnt + " -v --bucket "  + env[envBucketKey]
 			echo "Deployed lambda service"
 
@@ -249,7 +249,7 @@ node {
 					sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + var_env_name_prefix + "-events-hub-" + envmnt + " --function-name arn:aws:lambda:$region:$roleId:function:$function_name --starting-position LATEST --region " + region
 				}
 			}
-			
+
 
 			// @TODO : Resetting the credentials needs to be introduced. (Re-use of same profile on Async calls needs to be considered)
 			// resetCredentials();
@@ -376,7 +376,6 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 * Load environment variables from build module
 */
 def loadConfigModule(buildModuleUrl){
-	echo "loading env variables, checking repos..."
 
 	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
@@ -385,12 +384,9 @@ def loadConfigModule(buildModuleUrl){
 			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
 		]])
 
-		echo "loading installer variables..."
-
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
-		echo "finished loading env module"
 	}
 }
 
@@ -401,17 +397,17 @@ def loadConfigModule(buildModuleUrl){
  */
 def loadServiceConfigurationDataModule(buildURL,configLoader,role_arn, region, role_id, jenkins_url, envmnt, es_hostname, bitbucket_base, service_name){
 		try {
-			
+
 			def api_id_dev = configLoader.API.API_ID_DEV
 			def api_id_stg = configLoader.API.API_ID_STG
 			def api_id_prod = configLoader.API.API_ID_PROD
-			def user_pool_id = configLoader.COGNITO.USER_POOL_ID			
+			def user_pool_id = configLoader.COGNITO.USER_POOL_ID
 			def client_id = configLoader.COGNITO.CLIENT_ID
 			def env_name_prefix = configLoader.env_name_prefix
 			def repo_base = configLoader.REPOSITORY.REPO_BASE
 			def bitbucket_username = configLoader.BITBUCKET.BITBUCKET_USERNAME
 			def bitbucket_password = configLoader.BITBUCKET.BITBUCKET_PASSWORD
-			
+
 
 			echo "loading Service Config Data, checking repos"
 
@@ -424,12 +420,12 @@ def loadServiceConfigurationDataModule(buildURL,configLoader,role_arn, region, r
 				serviceConfigdata = load "service-configuration-data-loader.groovy"
 				serviceConfigdata.initialize(role_arn, region, role_id, jenkins_url, api_id_dev, api_id_stg, api_id_prod, envmnt,user_pool_id,
 												env_name_prefix, client_id, repo_base, es_hostname, bitbucket_base, bitbucket_username, bitbucket_password,service_name)
-				
-				
+
+
 			}
-			
+
 			return serviceConfigdata
-		
+
 		}catch(ex) {
 			error "loadServiceConfigurationDataModule Failed. "+ex.getMessage()
 		}

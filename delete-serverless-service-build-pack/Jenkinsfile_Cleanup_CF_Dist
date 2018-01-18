@@ -196,7 +196,6 @@ def deleteCloudFrontDistribution(distributionID, eTag) {
 * Load environment variables from build module
 */
 def loadConfigModule(buildModuleUrl){
-	echo "loading env variables, checking repos..."
 
 	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
@@ -205,11 +204,8 @@ def loadConfigModule(buildModuleUrl){
 			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
 		]])
 
-		echo "loading installer variables..."
-
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
-		echo "finished loading env module"
 	}
 }
