@@ -2,7 +2,6 @@
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
-//@Field def events
 @Field def configModule
 @Field def configLoader
 @Field def jenkins_credential_id
@@ -11,8 +10,8 @@ import groovy.transform.Field
 node {
 
   loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
-	jenkins_credential_id = configLoader.JENKINS.JENKINS_CREDENTIAL_ID
-	region = configLoader.JAZZ.jazz_region
+  jenkins_credential_id = configLoader.JENKINS.JENKINS_CREDENTIAL_ID
+  region = configLoader.JAZZ.jazz_region
 
 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: jenkins_credential_id, passwordVariable: 'PWD',
 usernameVariable: 'UNAME']]){
@@ -20,18 +19,21 @@ usernameVariable: 'UNAME']]){
    echo "Build triggered via branch::${env.BRANCH_NAME}"
    echo "Build triggered for JOBNAME::" + env.JOB_NAME
 
-   def projname = env.JOB_NAME
-   projname = projname.replaceAll('slf/', '')
-   projname = projname.replaceAll('/' + env.BRANCH_NAME, '')
+   def projname = ''
 
-   echo "projname::" + projname
+     if(env.JOB_NAME){
+      projname = env.JOB_NAME
+      names = projname.split('/')
+      projname = names[1]
+   }
 
-   def build_job = '/job/build-deploy-platform-service/buildWithParameters?token=bld-plat-srvs-71717'
-   def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+    echo "projname::" + projname
 
-   sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=" + projname + "&admin_group=admin_group&region="+region+"&deploy_env=dev\""
-}
+    def build_job = env.PLATFORM_SERVICE_BUILD_URI
+    def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
 
+    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=" + projname + "&admin_group=admin_group&region=${region}&scm_branch=${env.BRANCH_NAME}\""
+ }
 
 }
 

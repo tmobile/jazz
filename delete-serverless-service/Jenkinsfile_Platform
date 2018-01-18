@@ -1,282 +1,40 @@
-#!groovy.
+#!groovy
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
 @Field def configModule
 @Field def configLoader
-@Field def api_key
-@Field def credentialsId
-@Field def bitbucket_base
-
-
-def Event_Name =[
-	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
-	'CALL_ONBOARDING_WORKFLOW':'CALL_ONBOARDING_WORKFLOW',
-	'RAISE_PR':'RAISE_PR',
-	'VALIDATE_INPUT':'VALIDATE_INPUT',
-	'CALL_ONBOARDING_SERVICE':'CALL_ONBOARDING_SERVICE',
-	'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO':'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO',
-	'CREATE_SERVICE':'CREATE_SERVICE',
-	'BUILD':'BUILD',
-	'CODE_QUALITY_CHECK':'CODE_QUALITY_CHECK',
-	'UNIT_TEST':'UNIT_TEST',
-	'COMMIT_CODE':'COMMIT_CODE',
-	'APPROVE_PR':'APPROVE_PR',
-	'CREATE_SERVICE_REPO':'CREATE_SERVICE_REPO',
-	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
-	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
-	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
-	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
-	'CREATE_ASSET':'CREATE_ASSET',
-	'UPDATE_ASSET':'UPDATE_ASSET'
-]
-
-def Event_Status = [
-	'STARTED':'STARTED',
-	'COMPLETED':'COMPLETED',
-	'FAILED':'FAILED'
-]
+@Field def jenkins_credential_id
+@Field def region
 
 node {
 
-	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
-	credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	def var_bitbucket_framework_url = "http://" + bitbucket_base + "/scm/" + configLoader.REPOSITORY.REPO_CORE + "/"
-	api_key 				= configLoader.API.API_KEY
+  loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+  jenkins_credential_id = configLoader.JENKINS.JENKINS_CREDENTIAL_ID
+  region = configLoader.JAZZ.jazz_region
 
-	def service_template = "delete-serverless-service"
-	def service_type =  "api"
-	def runtime = "nodejs"
-	def service_name = "delete-serverless-service"
-	def admin_group = "admin_group"
-	def bitbucket_name = service_template
-	def domain = "platform"
-	def region = configLoader.JAZZ.jazz_region
-	def envmnt="dev"
+withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: jenkins_credential_id, passwordVariable: 'PWD',
+usernameVariable: 'UNAME']]){
 
+   echo "Build triggered via branch::${env.BRANCH_NAME}"
+   echo "Build triggered for JOBNAME::" + env.JOB_NAME
 
+   def projname = ''
 
-	if(params.domain && params.domain.trim() != ""){
-		bitbucket_name = params.domain.trim() + "-" + service_name
-		domain = params.domain.trim()
-	}
+     if(env.JOB_NAME){
+      projname = env.JOB_NAME
+      names = projname.split('/')
+      projname = names[1]
+   }
 
-	stage ('Get Serverless Service')
-	{
-		try{
-			sh 'rm -rf *'
-			sh 'rm -rf .*'
-		}
-		catch(error){
-			//do nothing
-		}
+    echo "projname::" + projname
 
-		try{
-			sh 'mkdir ' + service_template
-			dir(service_template)
-			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
-			}
-		}
-		catch(error){
-			//do nothing
-		}
+    def build_job = env.PLATFORM_SERVICE_BUILD_URI
+    def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
 
-	}
+    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=" + projname + "&admin_group=admin_group&region=${region}&scm_branch=${env.BRANCH_NAME}\""
+ }
 
-	def config = dir(service_template)
-	{
-	    return LoadConfiguration()
-	}
-
-	def roleARN						= config['iamRoleARN'].replaceAll("/", "\\\\/")
-
-	stage ('Update Service Template')
-	{
-		//sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
-		  sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
-		echo "Inside Update service template"
-
-		try{
-
-			dir(service_template)
-			{
-
-
-				def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-
-                sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
-
-				region = config['region']
-				def var_api_host_name			= api_key+".execute-api."+region+".amazonaws.com"
-
-				// TODO: the below couple of statements will be replaced with regular expression in very near future;
-				// roleARN = config['iamRoleARN'].replaceAll("/", "\\\\/")
-				def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
-
-   			    // Jazz seds
-				// This is been handled in generateSwaggerEnv
-				//sh "sed -i -- 's/{api_host_name}/" + var_api_host_name + "/g' ./swagger/swagger.json"
-
-				// This is been handled in generateSwaggerEnv
-				// sh "sed -i -- 's/{domain}/" + domain + "/g' ./swagger/swagger.json"
-
-				// This is been handled in generateSwaggerEnv
-				// sh "sed -i -- 's/{service_name}/" + service_name + "/g' ./swagger/swagger.json"
-
-				sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
-
-				sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
-
-				sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
-
-				// This is been handled in generateSwaggerEnv
-				// sh "sed -i -- 's/{lambda_function_name}/" + service_name+ "-" + domain + "/g' ./swagger/swagger.json"
-
-				echo "Updating Serverless configs for dev "
-
-
-
-				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/dev-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + bitbucket_base + "/g' ./config/dev-config.json"
-
-				echo "Updating Serverless configs for stg"
-				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/stg-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + bitbucket_base + "/g' ./config/stg-config.json"
-
-				echo "Updating Serverless configs for prod"
-				sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/prod-config.json"
-				sh "sed -i -- 's/{conf-repo-base}/" + bitbucket_base + "/g' ./config/prod-config.json"
-
-			}
-		}
-		catch(error){
-			//sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.MODIFY_TEMPLATE, Event_Status.FAILED, error.getMessage())
-			sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, error.getMessage())
-			echo(error)
-		}
-	}
-
-
-	stage('Deployment to Dev Env') {
-		//sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-		sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
-
-		// Generate serverless yml file with domain added in function name
-			echo "Generate deployment env with domain"
-
-
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-			sh "aws configure set profile.cloud-api.region "+region
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-            sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
-			dir(bitbucket_name)
-			{
-				echo "NPM Build initiated"
-				sh "npm install --save"
-				echo "NPM Build completed"
-
-				echo "Deploying lambda service"
-				sh "serverless deploy --stage "+envmnt+" -v"
-				echo "Deployed lambda service"
-
-				// Generate swagger file based on environment
-				if (fileExists('swagger/swagger.json')) {
-					echo "Generating the swagger file for each environment"
-					def apiHostName	= api_key+".execute-api."+region+".amazonaws.com"//Development environment
-					echo apiHostName+" #################################################### "
-
-					generateSwaggerEnv(service_name, envmnt, service_name, apiHostName, domain, service_name)
-
-					echo " generated #################################################### "
-
-					// import swagger api spec
-					echo "Deploying API gateway Endpoints"
-					sh "/tmp/aws-apigateway-importer/aws-api-import.sh --region "+region+" --update "+api_key+"  --deploy "+envmnt+" swagger/swagger.json "
-
-				}
-				//sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-				sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
-			}
-		}
-
-	}
-
-}
-
-def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName) {
-    sh "sed -i -- 's/{lambda_function_name}/" + serviceName + "-" + env + "/g' swagger/swagger.json"
-    sh "sed -i -- 's/{api_deployment_node_title}/" + deploymentNode + "/g' swagger/swagger.json" // {api_deployment_node_title}
-    sh "sed -i -- 's/{service_name}/" + service + "/g' swagger/swagger.json" // {service_name}
-    sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
-    sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
-}
-
-
-def LoadConfiguration() {
-	def prop = [:]
-	def result = readFile('deployment-env.yml').trim()
-	echo "result of yaml parsing....$result"
-	def resultList = result.tokenize("\n")
-	// delete commented lines
-	def cleanedList = []
-	for (i in resultList) {
-		if(i.toLowerCase().startsWith("#")) {
-		}else {
-			cleanedList.add(i)
-		}
-		}
-		def newItem = ["subnetIds", ""]
-	for (item in cleanedList) {
-
-		// Clean up to avoid issues with more ":" in the values
-		item = item.replaceAll(" ", "").replaceFirst(":", "#");
-
-		def eachItemList = item.tokenize("#")
-		//handle empty values
-		def value = "";
-		if(eachItemList[1]) {
-			value = eachItemList[1].trim();
-		}
-		if(eachItemList[0].trim() == "securityGroupIds")
-		{
-
-			if(value.indexOf('"') == -1)
-				value = "\"" + value + "\""
-
-			echo value
-		}
-
-		if(eachItemList[0].trim() == "subnetIds1" || eachItemList[0].trim()  == "subnetIds2" || eachItemList[0].trim()  == "subnetIds3")
-		{
-			if(newItem[1].trim()  == "")
-				newItem[1] = "\""  + eachItemList[1].trim()
-
-			else
-				newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
-
-		}
-		else if(eachItemList[0]) {
-			prop.put(eachItemList[0].trim(), value)
-		}
-
-	}
-	if(newItem[1] != "")
-	{
-	 newItem[1] =  newItem[1].trim()  + "\""
-		prop.put(newItem[0].trim(),  newItem[1].trim())
-		def key = newItem[0].trim()
-		def val = newItem[1].trim()
-	}
-	echo "Loaded configurations...$prop"
-	return prop
-}
-
-def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
-
-	echo "Send Event Called: "+error
 }
 
 /*
