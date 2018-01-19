@@ -11,10 +11,10 @@ import groovy.transform.Field
 @Field def gitlab_private_token
 @Field def repo_base
 @Field def scm_repo_name
-@Field def username //naming convention seems confusing as this refers to an admin's account
+@Field def username
 @Field def password
 @Field def cas_repo_id
-@Field def repo_owner //this refers to the user's username
+@Field def repo_owner
 @Field def user_id
 @Field def repo_loc
 @Field def cas_rest_repo
