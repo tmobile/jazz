@@ -44,7 +44,7 @@ node ()  {
 	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
 	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
 	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 	role = configLoader.JAZZ.jazz_roleId
 	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 
