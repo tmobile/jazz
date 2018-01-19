@@ -13,6 +13,11 @@ import groovy.transform.Field
 -git push template to git
 */
 
+// To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
+
 //definitions
 def Event_Name = [
 	'VALIDATE_INPUT': 'VALIDATE_INPUT',
@@ -49,7 +54,8 @@ def Event_Status = [
 
 
 node  {
-	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+	loadConfigModule(jazzBuildModuleURL)
 	region = configLoader.JAZZ.jazz_region
 	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 	role = configLoader.JAZZ.jazz_roleId
@@ -66,7 +72,7 @@ node  {
 
 	echo "fetching auth_token"
 	auth_token = getAuthToken()
-	
+
 	def service_type =  params.service_type
 	def runtime = params.runtime
 	def service_name = params.service_name
@@ -449,7 +455,7 @@ node  {
  * Must be a service account which has access to all services
  */
  def getAuthToken() {
-	 
+
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 
 		def loginUrl = g_base_url + "/platform/login"
@@ -474,7 +480,7 @@ node  {
 		catch(e){
 			error "error occured: " + e.getMessage()
 		}
-	} 	
+	}
 
  }
 
@@ -645,7 +651,7 @@ def loadConfigModule(buildModuleUrl){
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+			[credentialsId: repo_credential_id, url: buildModuleUrl]
 		]])
 
 		echo "loading installer variables..."
