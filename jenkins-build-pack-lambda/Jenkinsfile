@@ -124,7 +124,7 @@ node ()  {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${var_env_name_prefix}-cloud-logs-streamer-dev"
+  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${var_env_name_prefix}-cloud-logs-streamer-prod"
 
 	echo "logStreamer:: " + logStreamer
 
