@@ -342,8 +342,8 @@ node ()  {
 					events.sendCompletedEvent(events.getEventName("DEPLOY_TO_AWS"), 'deploy to aws completed', context_map, 'NA')
 				}catch(ex) {
 					send_status_email(created_by, 'FAILED', params.service_name, '')
-					events.sendFailureEvent((events.getEventName("CREATE_ASSET"), '', context_map)
-					events.sendFailureEvent((events.getEventName("DEPLOY_TO_AWS"), '', context_map)
+					events.sendFailureEvent(events.getEventName("CREATE_ASSET"), '', context_map)
+					events.sendFailureEvent(events.getEventName("DEPLOY_TO_AWS"), '', context_map)
 				}
 			 }
 			// reset Credentials
