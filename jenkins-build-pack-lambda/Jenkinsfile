@@ -44,7 +44,7 @@ node ()  {
 	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
 	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
 	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/dev"
 	role = configLoader.JAZZ.jazz_roleId
 	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 
@@ -124,7 +124,7 @@ node ()  {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${var_env_name_prefix}-cloud-logs-streamer-prod"
+  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${var_env_name_prefix}-cloud-logs-streamer-dev"
 
 	echo "logStreamer:: " + logStreamer
 
@@ -157,31 +157,31 @@ node ()  {
 			//if (isEventSchdld == true){
               	// validateUserConfigurationYml()
 			//}
-			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation ends', context_map, 'NA')
+			events.sendCompletedEvent(events.getEventName("VALIDATE_PRE_BUILD_CONF"), 'pre-build validation ends', context_map, 'NA')
 		}catch(ex) {
 			send_status_email(created_by, 'FAILED', params.service_name, '')
-			events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', '', context_map)
+			events.sendFailureEvent(events.getEventName("VALIDATE_PRE_BUILD_CONF"), '', context_map)
 			error ex.getMessage()
 		}
 	}
 
 	stage ('Build') {
-		events.sendStartedEvent('BUILD', 'build starts', context_map, 'NA')
+		events.sendStartedEvent(events.getEventName("BUILD"), 'build starts', context_map, 'NA')
 		try {
 			dir(bitbucket_name){
 				buildLambda(runtime)
 			}
-			events.sendCompletedEvent('BUILD', 'build completed', context_map, 'NA')
+			events.sendCompletedEvent(events.getEventName("BUILD"), 'build completed', context_map, 'NA')
 		}catch(ex) {
 			send_status_email(created_by, 'FAILED', params.service_name, '')
-			events.sendFailureEvent('BUILD', '', context_map)
+			events.sendFailureEvent(events.getEventName("BUILD"), '', context_map)
 			error ex.getMessage()
 		}
 	}
 
 	if (params.scm_branch == 'master') {
 		stage ('Deployment to Production Env'){
-			events.sendStartedEvent('DEPLOY_TO_AWS', 'deploy to aws starts', context_map, 'NA')
+			events.sendStartedEvent(events.getEventName("DEPLOY_TO_AWS"), 'deploy to aws starts', context_map, 'NA')
 			dir(bitbucket_name){
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					try {
@@ -215,11 +215,11 @@ node ()  {
 
 					}catch(ex) {
 						send_status_email(created_by, 'FAILED', params.service_name, '')
-						events.sendFailureEvent('DEPLOY_TO_AWS', '', context_map)
+						events.sendFailureEvent(events.getEventName("DEPLOY_TO_AWS"), '', context_map)
 						error ex.getMessage()
 					}
 					updateServiceInDB(service_id, domain, var_api_key, region, "active")
-					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deploy to aws completed', context_map, 'NA')
+					events.sendCompletedEvent(events.getEventName("DEPLOY_TO_AWS"), 'deploy to aws completed', context_map, 'NA')
 				}//end of withCredentials
 			}//end of dir
 		}//end of stage to production
@@ -227,7 +227,7 @@ node ()  {
 	}//end of stage using master
 	else {
 		stage ('Deployment to Dev Env'){
-			events.sendStartedEvent('DEPLOY_TO_AWS', 'deploy to aws starts', context_map, 'NA')
+			events.sendStartedEvent(events.getEventName("DEPLOY_TO_AWS"), 'deploy to aws starts', context_map, 'NA')
 
 			dir(bitbucket_name){
 
@@ -245,7 +245,7 @@ node ()  {
 							def eventsArns = getEventsArn(domain,service, "dev")
 							for (def i = 0; i < eventsArns.size(); i++) {
 								def arn = eventsArns[i]
-								//events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", arn, "cloudwatch_event", username), "prod");
+								//events.sendCompletedEvent(events.getEventName("CREATE_ASSET"), null, generateAssetMap("aws", arn, "cloudwatch_event", username), "prod");
 							}
 						}
 
@@ -269,11 +269,11 @@ node ()  {
 						send_status_email(created_by, 'COMPLETED', params.service_name, svc_response)
 					}catch(ex) {
 						send_status_email(created_by, 'FAILED', params.service_name, '')
-						events.sendFailureEvent('DEPLOY_TO_AWS', '', context_map)
+						events.sendFailureEvent(events.getEventName("DEPLOY_TO_AWS"), '', context_map)
 						error ex.getMessage()
 					}
 					updateServiceInDB(service_id, domain, var_api_key, region, "active")
-					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deploy to aws completed', context_map, 'NA')
+					events.sendCompletedEvent(events.getEventName("DEPLOY_TO_AWS"), 'deploy to aws completed', context_map, 'NA')
 				}//end of withCredentials
 			}//end of dir
 		}//end of stage to dev
@@ -776,13 +776,13 @@ def send_status_email (email_id, build_status, service, email_content) {
    	}
 }
 
-def updateServiceInDB(service_id, domain, apiID, region, status) {
+def updateServiceInDB(service_id, domain, devApiID, region, status) {
 
 	try {
 		echo "svc id ===============" + service_id
 		echo "domain ===============" + domain
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: "+g_login_token+"\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://" + apiID + ".execute-api." + region + ".amazonaws.com/prod/platform/services/" + service_id + "/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: "+g_login_token+"\" -X PUT -k -v -d '{ \"status\": \"" + status + "\"}' https://" + devApiID + ".execute-api." + region + ".amazonaws.com/dev/platform/services/" + service_id + "/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
@@ -794,9 +794,9 @@ def updateServiceInDB(service_id, domain, apiID, region, status) {
 /*
 * Load environment variables from build module
 */
-
 def loadBuildModule(buildModuleUrl){
 	echo "loading env variables, checking repos..."
+
 	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
@@ -804,12 +804,14 @@ def loadBuildModule(buildModuleUrl){
 			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
 		]])
 
+		echo "loading installer variables..."
+
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
+		echo "finished loading env module"
 
-		echo "finished loading env module"		
-		events = load "events-module.groovy"		
+		events = load "events-module.groovy"
 
 		echo "Event module loaded "
 	}
