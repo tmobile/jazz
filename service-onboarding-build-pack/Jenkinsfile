@@ -37,7 +37,8 @@ def Event = [
    'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
    'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
    'CLONE_TEMPLATE':'CLONE_TEMPLATE',
-   'ADD_WEBHOOK':'ADD_WEBHOOK'
+   'ADD_WEBHOOK':'ADD_WEBHOOK',
+   'VALIDATE_PRE_BUILD_CONF':'VALIDATE_PRE_BUILD_CONF'
 ]
 
 def Service_Type = [
@@ -463,7 +464,7 @@ def updateServiceInDB(service_id_in_db, apiId, region, statusval, repo_url) {
 }
 
 def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region) {
-
+    events.sendStartedEvent(Event.VALIDATE_PRE_BUILD_CONF)
 	try {
 		def outputStr = sh (
 			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${params.auth_token} \" -X POST -k -v -d '{ \"service\": \"${service_name}\", \"status\":\"creation_started\", \"domain\": \"${domain}\", \"type\": \"${servicetype}\", \"created_by\": \"${created_by}\", \"runtime\": \"${runtime}\", \"repository\": \"${repo_url}\", \"description\": \"${desc}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/dev/platform/services/",
@@ -475,13 +476,14 @@ def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc,
 		if(resultJson == null || resultJson.data == null || resultJson.data.service_id == null) {
 			error "platform/services/ Insert failed"
 		}
+        events.sendCompletedEvent(Event.VALIDATE_PRE_BUILD_CONF, "Service exists for deletion")
 		return resultJson.data.service_id;
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-			//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage())
+			events.sendFailureEvent(Event.VALIDATE_PRE_BUILD_CONF, ex.getMessage())
 			error "createServiceInDB Failed. "+ex.getMessage()
 		} else {
-			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
+			events.sendCompletedEvent(Event.VALIDATE_PRE_BUILD_CONF, "Service exists for deletion")
 		}
 	}
 
@@ -629,10 +631,10 @@ def loadConfigModule(buildModuleUrl){
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
-        
-        //Loading Event module
-        events = load "events-module.groovy"
-        
+
+		//Loading Event module
+		events = load "events-module.groovy"
+
 		echo "finished loading env and load module"
 	}
 }

@@ -340,7 +340,7 @@ def setLambdaExecutionRole(role) {
 		}
 		sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#"+lambdaRole+"#g' serverless.yml"
 	}catch(ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_0dev, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, var_api_id_dev, region, "deletion_failed");
 		send_status_email ("FAILED")
 		error "setLambdaExecutionRole Failed. "+ex.getMessage()
 	}
@@ -1228,8 +1228,8 @@ def loadConfigModule(buildModuleUrl){
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
 
-        //Loading Event module
-        events = load "events-module.groovy"
+		//Loading Event module
+		events = load "events-module.groovy"
 
 		echo "finished loading env and load module"
 	}
