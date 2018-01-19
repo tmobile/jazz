@@ -688,9 +688,7 @@ def setLambdaExecutionRole(role) {
 //		sh "rm -rf venv" // just delete the venv folder
 //}
 
-def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
 
-}
 
 def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 	setCredentials(g_base_url + '/platform/login')
