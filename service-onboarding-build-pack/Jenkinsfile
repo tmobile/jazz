@@ -27,6 +27,25 @@ import groovy.transform.Field
 @Field def var_bitbucket_email
 @Field def region = ''
 
+def Event = [
+   'VALIDATE_INPUT': 'VALIDATE_INPUT',
+   'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
+   'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO':'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO',
+   'BUILD_MASTER_BRANCH':'BUILD_MASTER_BRANCH',
+   'COMMIT_CODE':'COMMIT_CODE',
+   'CREATE_SERVICE_REPO':'CREATE_SERVICE_REPO',
+   'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
+   'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
+   'CLONE_TEMPLATE':'CLONE_TEMPLATE',
+   'ADD_WEBHOOK':'ADD_WEBHOOK'
+]
+
+def Service_Type = [
+   'API': 'API',
+   'FUNCTION':'FUNCTION',
+   'WEBSITE':'WEBSITE'
+]
+
 node  {
 	
     //Loading configurations Modules
@@ -37,7 +56,6 @@ node  {
     events.setRole(configLoader.JAZZ.jazz_roleId)
     events.setEventHandler("JENKINS")
     events.setEventType("SERVICE_DELETION")
-    //events.setRequestId(tracking_id)
     events.setServiceName(params.service_name)
     events.setBranch("NA")
     events.setDomain(params.domain)
@@ -46,11 +64,11 @@ node  {
     events.setRegion(configLoader.JAZZ.jazz_region)
     
     if(params.service_type == "api"){
-        events.setServiceType("API")
+        events.setServiceType(Service_Type.API)
     }else if(params.service_type == "lambda" || params.service_type == "function") {
-        events.setServiceType("LAMBDA")
+        events.setServiceType(Service_Type.FUNCTION)
     }else if(service_type == "website"){
-        events.setServiceType("WEBSITE")
+        events.setServiceType(Service_Type.WEBSITE)
     }else {
         error "Invalid project configuration"
     }
@@ -115,15 +133,15 @@ node  {
 
 	stage('Input Validation')
 	{
-        events.sendStartedEvent('VALIDATE_INPUT')
+        events.sendStartedEvent(Event.VALIDATE_INPUT)
 		if(service_name == "" ) {
 			send_status_email (owner, "FAILED", service_name, domain)
-            events.sendFailureEvent('VALIDATE_INPUT', "Invalid Service Name")
+            events.sendFailureEvent(Event.VALIDATE_INPUT, "Invalid Service Name")
 			error "Invalid Service Name"
 		}
 
 		if(admin_group == "" ) {
-            //events.sendFailureEvent('VALIDATE_INPUT', "Invalid Admin Group")
+            //events.sendFailureEvent(Event.VALIDATE_INPUT, "Invalid Admin Group")
 			//error "Invalid Admin Group"
 		}
 
@@ -169,16 +187,16 @@ node  {
 						break
 
 				}
-                events.sendCompletedEvent('VALIDATE_INPUT')
+                events.sendCompletedEvent(Event.VALIDATE_INPUT)
 
 			}else {
 				send_status_email (owner, "FAILED", service_name, domain)
-                events.sendFailureEvent('VALIDATE_INPUT',"Invalid runtime")
+                events.sendFailureEvent(Event.VALIDATE_INPUT,"Invalid runtime")
 				error "Invalid runtime"
 			}
 
 		}else {
-            events.sendFailureEvent('VALIDATE_INPUT',"Invalid Service Type")
+            events.sendFailureEvent(Event.VALIDATE_INPUT,"Invalid Service Type")
 			error "Invalid Service Type"
 		}
 	}
@@ -225,7 +243,7 @@ node  {
 
 	stage ('Update Service Template')
 	{
-        events.sendStartedEvent('MODIFY_TEMPLATE')
+        events.sendStartedEvent(Event.MODIFY_TEMPLATE)
         
 		try{
 
@@ -304,20 +322,19 @@ node  {
 
 					/*
 					// Using yaml_command plugin (Tested working in terminal)
-
 					// Commenting this block as yaml_command plugin has to be installed
 					sh "yaml set eventScheduleRate \"cron($rate_expression)\" -F=./deployment-env.yml --yaml > deployment-temp-env.yml"
 					sh "yaml set eventScheduleEnable $enable_eventschedule -F=./deployment-temp-env.yml --yaml > deployment-env.yml"
 					*/
 				}
-                events.sendCompletedEvent('MODIFY_TEMPLATE')
+                events.sendCompletedEvent(Event.MODIFY_TEMPLATE)
 			}
 		}
 		catch(error){
 
 			updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 			send_status_email (owner, "FAILED", service_name, domain)
-            events.sendFailureEvent('MODIFY_TEMPLATE', error.getMessage())
+            events.sendFailureEvent(Event.MODIFY_TEMPLATE, error.getMessage())
             
 			echo error
 		}
@@ -326,7 +343,7 @@ node  {
 
 	stage ('Uploading templates to code repository')
 	{
-        events.sendStartedEvent('CREATE_SERVICE_REPO')        
+        events.sendStartedEvent(Event.CREATE_SERVICE_REPO)        
 		dir(service_template)
 		{
 			try{
@@ -336,13 +353,13 @@ node  {
 					sh "git config --global user.email \"" + var_bitbucket_email + "\""
 					sh "git config --global user.name $UNAME"
 				}
-                events.sendCompletedEvent('CREATE_SERVICE_REPO')
+                events.sendCompletedEvent(Event.CREATE_SERVICE_REPO)
 			}
 			catch (error)
 			{
 				updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 				send_status_email (owner, "FAILED", service_name, domain)
-                events.sendFailureEvent('CREATE_SERVICE_REPO', error.getMessage())
+                events.sendFailureEvent(Event.CREATE_SERVICE_REPO, error.getMessage())
                 
 				echo error
 			}
@@ -367,25 +384,25 @@ node  {
 			sh "ls -lart"
 
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-                events.sendStartedEvent('PUSH_TEMPLATE_TO_SERVICE_REPO')                
+                events.sendStartedEvent(Event.PUSH_TEMPLATE_TO_SERVICE_REPO)                
 				try{
 					sh "git add --all"
 					sh "git commit -m 'Code from the standard template'"
 					sh "git remote -v"
 					sh "git push -u origin master "
 
-                    events.sendCompletedEvent('PUSH_TEMPLATE_TO_SERVICE_REPO')
+                    events.sendCompletedEvent(Event.PUSH_TEMPLATE_TO_SERVICE_REPO)
 				}
 				catch (error)
 				{
 					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 					send_status_email (owner, "FAILED", service_name, domain)
-                    events.sendFailureEvent('PUSH_TEMPLATE_TO_SERVICE_REPO', error.getMessage())
+                    events.sendFailureEvent(Event.PUSH_TEMPLATE_TO_SERVICE_REPO, error.getMessage())
                     
 					echo error
 				}
 
-                events.sendStartedEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO')                
+                events.sendStartedEvent(Event.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO)                
 				try{
 					echo "Adding groups to the repository with appropriate permissions"
 					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + var_cas_rest_repo + ""+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN&" + admin_group + "\" &"
@@ -395,41 +412,41 @@ node  {
 					echo "providing repository write permissions to the service creator"
 					sh "curl -X PUT -G -k -v -u \"$UNAME:$PWD\"  -d \"name=$encoded_creator\" \"${var_cas_rest_repo}/${bitbucket_name}/permissions/users?permission=REPO_ADMIN\""
 
-                    events.sendCompletedEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO')
+                    events.sendCompletedEvent(Event.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO)
                     
 				}
 				catch(error){
 					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
-                    events.sendFailureEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO', error.getMessage())
+                    events.sendFailureEvent(Event.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, error.getMessage())
 					echo error
 				}
 
-                events.sendStartedEvent('LOCK_MASTER_BRANCH')                
+                events.sendStartedEvent(Event.LOCK_MASTER_BRANCH)                
 				try{
 					checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_serviceonboarding_repo]]])
 					echo "Locking commits to master branch by enforcing pull requests"
 					sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" " + var_bitbucket_branch_perm + bitbucket_name + "/restrictions   -d \"@branch_permissions_payload.json\"  "
 
-                    events.sendCompletedEvent('LOCK_MASTER_BRANCH')
+                    events.sendCompletedEvent(Event.LOCK_MASTER_BRANCH)
 				}
 				catch(error){
 					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 					send_status_email (owner, "FAILED", service_name, domain)
-                    events.sendFailureEvent('LOCK_MASTER_BRANCH', error.getMessage())
+                    events.sendFailureEvent(Event.LOCK_MASTER_BRANCH, error.getMessage())
                     
 					echo error
 				}
 
-                events.sendStartedEvent('ADD_WEBHOOK')
+                events.sendStartedEvent(Event.ADD_WEBHOOK)
 				try{
 					echo "Adding web hooks for Jenkins integration"
 					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\"  " + var_bitbucket_webhook_api + bitbucket_name + "/configurations  -d \'{\"title\": \"notify-jenkins\", \"url\": \"" + var_scm_source_hook + "\" , \"enabled\": true}\'"
-                    events.sendCompletedEvent('ADD_WEBHOOK')
+                    events.sendCompletedEvent(Event.ADD_WEBHOOK)
 				}
 				catch(error){
 					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 					send_status_email (owner, "FAILED", service_name, domain)
-                    events.sendFailureEvent('ADD_WEBHOOK', error.getMessage())
+                    events.sendFailureEvent(Event.ADD_WEBHOOK, error.getMessage())
                     
 					echo error
 				}
