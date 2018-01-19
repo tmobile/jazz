@@ -33,7 +33,7 @@ import groovy.transform.Field
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	loadBuildModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
 	var_api_key 				= configLoader.API.API_KEY
 	var_api_id_dev = configLoader.API.API_ID_DEV
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
@@ -815,7 +815,7 @@ def updateServiceInDB(service_id, domain, apiID, region, status) {
 /*
 * Load environment variables from build module
 */
-def loadConfigModule(buildModuleUrl){
+def loadBuildModule(buildModuleUrl){
 	echo "loading env variables, checking repos..."
 
 	dir('config-loader') {
@@ -831,6 +831,11 @@ def loadConfigModule(buildModuleUrl){
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
 		echo "finished loading env module"
+		echo "finished loading env module"		
+ 		events = load "events-module.groovy"		
+ 
+ 		echo "Event module loaded "
+ 
 	}
 }
 
