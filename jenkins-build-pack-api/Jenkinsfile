@@ -802,13 +802,13 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
     def httpResponse = 0
     if(curlCMDOutput != null && (curlCMDOutput.indexOf("httpErrorCode") > -1))
   	{
-     httpResponse = curlCMDOutput.split('httpErrorCode:')[1].split(':')[0]
+     	 httpResponse = curlCMDOutput.split('httpErrorCode:')[1].split(':')[0]
   	 echo "httpResponse: $httpResponse"
   	}
   
     if( httpResponse == "200"){
-       echo "httpResponse Success"
-    echo "curlCMDOutput: $curlCMDOutput"
+        echo "httpResponse Success"
+    	echo "curlCMDOutput: $curlCMDOutput"
 	def jsonParser = new groovy.json.JsonSlurper()
 	def resultJson = jsonParser.parseText(curlCMDOutput)
 	def curlOutputJoin = ''
@@ -906,7 +906,9 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 					-d \'${payload}\'", returnStdout:true)
             			def jsonParser = new groovy.json.JsonSlurper()
 				def resultJson = jsonParser.parseText(g_login_token)
-            			g_login_token = resultJson.data.token.replaceAll("[\n\r]", "")
+                        if(resultJson != null && resultJson.data != null && resultJson.data.token !=null ){
+            				g_login_token = resultJson.data.token.replaceAll("[\n\r]", "")
+                        }
             			return g_login_token
 			}
 			catch(e){
