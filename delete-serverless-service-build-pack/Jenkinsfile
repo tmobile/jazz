@@ -1050,13 +1050,13 @@ def loadServiceInfo() {
     def httpResponse = 0
     if(curlOutput != null && (curlOutput.indexOf("httpErrorCode") > -1))
   	{
-     httpResponse = curlOutput.split('httpErrorCode:')[1].split(':')[0]
+         httpResponse = curlOutput.split('httpErrorCode:')[1].split(':')[0]
   	 echo "httpResponse: $httpResponse"
   	}
   
     if( httpResponse == "200"){
        echo "httpResponse Success"
-    echo "curlOutput: $curlOutput"
+       echo "curlOutput: $curlOutput"
     	
 	def jsonParser = new groovy.json.JsonSlurper()
 	def resultJson = jsonParser.parseText(curlOutput)
@@ -1064,8 +1064,7 @@ def loadServiceInfo() {
 	def createby = ''
   	def values = ''
   	if(resultJson != null && resultJson.data != null && resultJson.data[0].created_by != null) {
-			//createby = resultJson.data[0].created_by
-      		values = resultJson.data[0].created_by.split(',')
+		 values = resultJson.data[0].created_by.split(',')
 		}
 	echo "Services : $values"
 
