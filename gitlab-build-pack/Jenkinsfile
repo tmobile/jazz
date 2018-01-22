@@ -3,6 +3,7 @@
 node  {
  //echo sh(returnStdout: true, script: 'env')
  
+ def config
  def gitlab_credentialsId 	= env.REPO_CREDENTIAL_ID
  def gitlab_repo_base	    = env.REPO_BASE
  def gitlab_repo_url        = "http://" + gitlab_repo_base + "/" + env.REPO_LOC + "/"
@@ -16,54 +17,27 @@ node  {
  def service_name = ''
  def domain_name  = ''
  
- echo "gitlab_credentialsId:gitlab_credentialsId"               
- echo "gitlab_repo_url:$gitlab_repo_url"	
- echo "gitlab_repo_name:$gitlab_repo_name"
- echo "gitlab_branch:$gitlab_branch"
- 
  try{
         sh 'rm -rf $gitlab_repo_name*'
     	dir(gitlab_repo_name)
     	{
     		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: gitlab_credentialsId, url: gitlab_repo_url + gitlab_repo_name + '.git']]])
-    	   
+    	    config = LoadConfiguration()
     	   //Find the service type	
     	   if (fileExists('build.api')) {
 				service_type = "api"
+                service_name = config['service']
+                domain_name  = config['domain']
     	   } else if(fileExists('build.lambda')) {
 				service_type = "lambda"
+                service_name = config['service']
+                domain_name  = config['domain']
     	   } else if(fileExists('build.website')) {
 				service_type = "website"
+                service_name  = config['service']
+                domain_name  = config['domain']
     	   }
-
-            //Read the JenkinsFile to find the service name and domain
-             def jenkinsfile_dir = sh (
-    			script: "pwd" ,
-    			returnStdout: true
-    		).trim()
-            myFileName = jenkinsfile_dir + "/Jenkinsfile"
-            
-            //Read the Jenkins File
-            def curl_cmd = ''
-            if(fileExists(myFileName)) {
-                def result = readFile(myFileName).trim()
-    	        def resultList = result.tokenize("\n")
-            	for (i in resultList) {
-            		if(i.trim().toLowerCase().startsWith("sh \"curl")) {
-            		    curl_cmd = i.trim().substring(3)
-            	   	}
-            	}//for
-    	        
-                echo "curl:$curl_cmd"
-                def cmd_split = curl_cmd.split('&')
-                for (s in cmd_split) {
-            		if(s.trim().toLowerCase().startsWith("service_name")) {
-            		    service_name=s.split('=')[1]
-            	   	} else if(s.trim().toLowerCase().startsWith("domain")) {
-            		    domain_name=s.split('=')[1]
-            	   	}
-            	}//for
-            }//if
+        
     	}
     
     	sh 'rm -rf $gitlab_repo_name*'
@@ -94,20 +68,70 @@ node  {
         }
     }
 
-    echo "service_type:$service_type"
-    echo "build_job:$build_job"
-    echo "domain_name:$domain_name"
-    echo "service_name:$service_name"
-                
     def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
-    echo "job_url:$job_url"
- 
     if ( service_type != '' && service_name != '' && domain_name != '') { 
         echo "Call the build job"
         sh "curl -X GET -k -v -u \"$jenkins_username:$jenkins_password\"  \"" + job_url + "&service_name=$service_name&domain=$domain_name&scm_branch=$gitlab_branch\""
      }
      else
      {
-        echo "Error:ServiceType or ServiceName or DomainName is empty"
+        error "Error:ServiceType or ServiceName or DomainName is empty"
      }
+}
+
+/**
+	Reads deployment-env.yml.
+    Returns Property Map
+*/
+def LoadConfiguration() {
+    def prop = [:]
+    if (fileExists('deployment-env.yml')){
+        def result = readFile('deployment-env.yml').trim()
+
+        echo "result of yaml parsing....$result"
+        def resultList = result.tokenize("\n")
+
+        // delete commented lines
+        def cleanedList = []
+        for (i in resultList) {
+            if(i.toLowerCase().startsWith("#")) {
+            }else {
+            cleanedList.add(i)
+            }
+        }//for
+    	
+        def newItem = ["subnetIds", ""]
+        for (item in cleanedList) {
+            // Clean up to avoid issues with more ":" in the values
+            item = item.replaceAll(" ", "").replaceFirst(":", "#");
+            def eachItemList = item.tokenize("#")
+            //handle empty values
+            def value = "";
+            if(eachItemList[1]) {
+                value = eachItemList[1].trim();
+            }
+
+            //Parsing securityGroupIds
+            if(eachItemList[0].trim() == "subnetIds1" || eachItemList[0].trim()  == "subnetIds2" || eachItemList[0].trim()  == "subnetIds3")
+            {
+                if(newItem[1].trim()  == "")
+                    newItem[1] = "\""  + eachItemList[1].trim()
+                else
+                    newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
+            }
+            else if(eachItemList[0]) {
+                prop.put(eachItemList[0].trim(), value)
+            }
+        }
+        if(newItem[1] != "")
+        {
+            newItem[1] =  newItem[1].trim()  + "\""
+            prop.put(newItem[0].trim(),  newItem[1].trim())
+            def key = newItem[0].trim()
+            def val = newItem[1].trim()
+        }
+
+        echo "Loaded configurations...$prop"
+    }
+    return prop
 }

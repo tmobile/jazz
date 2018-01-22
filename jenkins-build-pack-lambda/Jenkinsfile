@@ -75,7 +75,7 @@ node ()  {
 	setSCMBase(scm, env.REPO_BASE)
 
 	def scm_base_url = "http://${scm_base}${env.REPO_LOC}/"
-	def var_api_key  = env.API_KEY
+	def api_key      = env.API_KEY
 	def config
 
 	if(params.domain && params.domain.trim() != ""){
@@ -227,7 +227,7 @@ node ()  {
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.FAILED, ex.getMessage())
 						error ex.getMessage()
 					}
-					updateServiceInDB(service_id, domain, var_api_key, region, "active")
+					updateServiceInDB(service_id, domain, api_key, region, "active")
 					sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}//end of withCredentials
 			}//end of dir
@@ -285,7 +285,7 @@ node ()  {
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.FAILED, ex.getMessage())
 						error ex.getMessage()
 					}
-					updateServiceInDB(service_id, domain, var_api_key, region, "active")
+					updateServiceInDB(service_id, domain, api_key, region, "active")
 					sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}//end of withCredentials
 			}//end of dir
