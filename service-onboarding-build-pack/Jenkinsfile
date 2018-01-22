@@ -49,6 +49,7 @@ node  {
 	def scm_repo_name 				= params.service_name
 	def domain		                = params.domain
 
+	def buildModuleUrl = "http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git"
 	def scm				            = env.JAZZ_SCM
 	def repo_protocol				= "http://"
 	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
@@ -63,9 +64,9 @@ node  {
 	def jenkins_url                 = JenkinsLocationConfiguration.get().getUrl()
 	def bitbucket-scmscource-hook  	= jenkins_url + "/bitbucket-scmsource-hook/notify"
 
-
+	loadScmModule(buildModuleUrl, scm, repo_base)
 	//Setting SCM Repo
-	setSCMBase(scm, env.REPO_BASE)
+	scm_base = scmModule.setSCMBase()
 
 	def var_cas_clone_url	 		= scm_base + env.REPO_LOC + "/"
 	def var_serviceonboarding_repo 	= repo_protocol + scm_base + env.REPO_CORE + "/service-onboarding-build-pack.git"
@@ -84,7 +85,7 @@ node  {
 		domain = params.domain.trim()
 	}
 
-	def repo_url = setRepoUrl(repo_protocol, scm_repo_name, repo_base)
+	def repo_url = scmModule.setRepoUrl(repo_protocol, scm_repo_name)
 
 	stage('Input Validation')
 	{
@@ -290,9 +291,7 @@ node  {
 		{
 			try{
 				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-					loadScmModule(buildModuleUrl, uname, pwd)
-					def cas_repo_id = scmModule.getCasRepoId()
-					scmModule.createProjectInSCM()
+					scmModule.createProjectInSCM(env.gitlab_private_token, owner, scm_repo_name, cas_rest_repo, env.REPO_LOC, uname, pwd)
 {
 					sh "git config --global user.email \"" + var_bitbucket_email + "\""
 					sh "git config --global user.name $UNAME"
@@ -443,26 +442,6 @@ node  {
 	}
 }
 
-def setSCMBase(scm, repo_base)
-{
-	scm_base = repo_base + "/"
-	if (scm == 'bitbucket')
-	{
-		scm_base = scm_base + "scm/"
-	}
-}
-
-def setRepoUrl(repo_protocol, scm_repo_name, repo_base)
-{
-	def repo_url = repo_protocol
-	if (scm == "gitlab"){
-		repo_url = repo_url + scm_base + "/cas/" + scm_repo_name
-	}else{
-		repo_url = repo_url + repo_base + "/projects/CAS/repos/" + scm_repo_name + "/browse";
-	}
-	return repo_url
-}
-
 def sendEvent(service_type, service_name, domain, runtime, admin_group, event_name, event_status, error){
 	echo "send event" + error
 }
@@ -592,7 +571,7 @@ def send_status_email (email_id, build_status, service, domain) {
 /*
 * Load some crud functionality for gitlab resources
 */
-def loadScmModule(buildModuleUrl, username, password){
+def loadScmModule(buildModuleUrl, scm, repo_base){
 	echo "loading scm-module - checking for jazz-build-module..."
 
 	dir('scm-module') {
@@ -605,7 +584,7 @@ def loadScmModule(buildModuleUrl, username, password){
 		echo "loading scm-module from jazz-build-module..."
 
 		scmModule = load "scm-module.groovy"
-		scmModule.initialize(scm, env.gitlab_private_token, repo_base, scm_repo_name, username, password, owner, cas_rest_repo)
+		scmModule.initialize(scm, repo_base)
 		echo "finished loading scm-module"
 	}
 }
