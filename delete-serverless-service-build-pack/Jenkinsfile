@@ -1097,7 +1097,9 @@ def loadServiceInfo() {
 				-d \'${payload}\'", returnStdout:true)
 			def jsonParser = new groovy.json.JsonSlurper()
 			def resultJson = jsonParser.parseText(token)
-			token = resultJson.data.token.replaceAll("[\n\r]", "")
+                        if(resultJson != null && resultJson.data != null && resultJson.data.token !=null ){            
+				token = resultJson.data.token.replaceAll("[\n\r]", "")
+              	        }
 			return token
 		}
 		catch(e){
