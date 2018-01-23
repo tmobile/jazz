@@ -32,6 +32,18 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
+@Field def configModule
+@Field def configLoader
+@Field def var_api_key
+@Field def var_api_id_dev
+@Field def var_aws_credential_id
+@Field def var_env_name_prefix
+@Field def var_repo_core
+@Field def var_repo_loc
+@Field def var_credentialsId
+@Field def var_bitbucket_base
+@Field def var_bitbucket_email
+
 @Field def g_login_token = ''
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -45,8 +57,20 @@ def Event_Status = [
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	region = env.jazz_region
-	g_base_url = "https://${env.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	var_api_key 				= configLoader.API.API_KEY
+	var_api_id_dev = configLoader.API.API_ID_DEV
+	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
+	var_env_name_prefix = configLoader.env_name_prefix
+	var_repo_core = configLoader.REPOSITORY.REPO_CORE
+	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
+	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
+	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
+	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
+	region = configLoader.JAZZ.jazz_region
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
+	role = configLoader.JAZZ.jazz_roleId
+	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 
 	echo "Build Pack website params: " + params
 
@@ -56,7 +80,7 @@ node ()  {
 
     def bitbucket_name = params.service_name
 
-	def var_bitbucket_framework_url = "http://${env.REPO_BASE}/scm/${params.scm_project}/"
+	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${params.scm_project}/"
 
 	def config
 
@@ -66,7 +90,7 @@ node ()  {
 		current_environment = 'dev'
 	}
 
-	env_prefix = env.env_name_prefix
+	env_prefix = var_env_name_prefix
 
     stage('Checkout code base') {
 
@@ -81,7 +105,7 @@ node ()  {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
 		}
 
 		// @TODO: dir can be removed, needs to be refactored
@@ -128,14 +152,14 @@ node ()  {
 			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
 		}
 
-	  def s3StgBucket  = env.WEBSITE_STG_S3BUCKET;
-	  def s3ProdBucket = env.WEBSITE_PROD_S3BUCKET;
-	  def s3DevBucket  = env.WEBSITE_DEV_S3BUCKET;
+	  def s3StgBucket  = configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
+	  def s3ProdBucket = configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
+	  def s3DevBucket  = configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
 
 	  if (branch == 'master'){
 		stage ('Deployment to Production Env'){
 		  sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
 			sh "aws configure set profile.cloud-api.region ${region}"
@@ -161,15 +185,15 @@ node ()  {
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
 						updateCloudFrontPolicy(service, s3ProdBucket)
-						
+
 						def cfDetails = getCloudFrontDetails(current_environment, service)
 
 						if (cfDetails) {
 							echo "id is ${cfDetails[0]}, domain: ${cfDetails[1]}"
 						}
-						
+
 						updateEnableCompressConfig(current_environment, service, cfDetails[0])
-						
+
 						invalidateCloudFrontCache(cfDetails[0], service)
 
 						if (cfDetails[1]) {
@@ -208,7 +232,7 @@ node ()  {
 						generateDistributionConfig(service, current_environment, config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3ProdBucket)                                                                     
+						updateCloudFrontPolicy(service, s3ProdBucket)
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
@@ -241,7 +265,7 @@ node ()  {
 	  else {
 		stage ('Deployment to Deployment Env'){
 		  sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
 			sh "aws configure set profile.cloud-api.region "+region
@@ -266,11 +290,11 @@ node ()  {
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
 						updateCloudFrontPolicy(service, s3DevBucket)
-						
+
 						def cfDetails = getCloudFrontDetails(current_environment, service)
-						
+
 						updateEnableCompressConfig(current_environment, service, cfDetails[0])
-						
+
 						invalidateCloudFrontCache(cfDetails[0], service)
 
 						if (cfDetails[1]) {
@@ -343,14 +367,14 @@ node ()  {
 def getS3BucketName(String envname) {
 
 	if (envname == "dev") {
-		return env.WEBSITE_DEV_S3BUCKET;
+		return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
 	} else if (envname == "stg") {
-		return env.WEBSITE_STG_S3BUCKET;
+		return configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
 	} else if (envname == "prod") {
-		return env.WEBSITE_PROD_S3BUCKET;
+		return configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
 	}
 
-	return env.WEBSITE_DEV_S3BUCKET;
+	return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
 }
 
 def LoadConfiguration() {
@@ -402,8 +426,8 @@ def generateDistributionConfig(service, envname, config) {
 	sh "sed -i -- 's/{env}/"+envname+"/g' distribution_config_with_tags.json"
 
 	sh "sed -i -- 's/{conf_s3bucketname}/" + getS3BucketName(envname) + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's:{conf_origin_id}:" + env.CLOUDFRONT_ORIGIN_ID + ":g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{conf_stack_prefix}/" + var_env_name_prefix + "/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's:{conf_origin_id}:" + configLoader.CLOUDFRONT_ORIGIN_ID + ":g' distribution_config_with_tags.json"
 
 	def owner = ''
 	try{
@@ -469,14 +493,14 @@ def validateTemplate() {
 
 def loadDistributionConfig() {
 
-	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + env.REPO_BASE + '/scm/' + env.REPO_CORE + '/website-distribution-pack.git']]])
+	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: 'http://' + var_bitbucket_base + '/scm/' + var_repo_core + '/website-distribution-pack.git']]])
 
 }
 
 def loadBucketPolicy(String s3Bucket){
 	// fetch current policy and save to > bucket-policy.json
 	sh "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text > bucket-policy.json"
-	
+
 	def bucketPolicy = readFile('bucket-policy.json').trim()
 	def jsonSlurper = new JsonSlurper()
 	def policyLazyMap = jsonSlurper.parseText(bucketPolicy)
@@ -537,7 +561,7 @@ def loadIPList() {
 
   dir('_jenkins_buildpack') {
 
-		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + env.REPO_BASE + '/scm/' + env.REPO_CORE + '/jenkins-build-pack-website.git']]])
+		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: 'http://' + var_bitbucket_base + '/scm/' + var_repo_core + '/jenkins-build-pack-website.git']]])
 
 	}
 
@@ -652,7 +676,7 @@ def getCloudFrontDetails(env, service) {
 }
 
 def updateEnableCompressConfig(env, service, distributionId) {
-	
+
 	try {
 		def cf_config = sh (script: "aws cloudfront get-distribution-config --id $distributionId --output json" ,
 							returnStdout: true
@@ -697,10 +721,10 @@ def updateEnableCompressConfig(env, service, distributionId) {
 def invalidateCloudFrontCache(distributionId, service) {
 	try {
 		if(distributionId) {
-			
+
 			def callerReference = service+"_"+env.BUILD_ID
 			def config = "{\"Paths\":{\"Quantity\":1,\"Items\":[\"/*\"]},\"CallerReference\":\"$callerReference\"}"
-			
+
 			def invalidateStatus = sh(
 						script:"aws cloudfront create-invalidation \
 								--distribution-id $distributionId \
@@ -723,7 +747,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	setCredentials(g_base_url + '/platform/login')
 
-	def url = "$serviceUrl?domain=$domain&service=$service"
+	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
 
 	if (endpointKey == 'dev') {
 		preserveEnvKey = 'prod'
@@ -761,7 +785,7 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 
 	echo "new json $updateJson"
 
-	def serviceUpdateUrl = "$serviceUrl/$service_id"
+	def serviceUpdateUrl = "$serviceUrl/$service_id?isAdmin=true"
 
 	def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
 		        -H \"accept: application/json\" \
@@ -816,32 +840,76 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 */
 def send_status_email (email_id, build_status, service, email_content) {
    	echo "Sending build notification to " + email_id
-   	body = ""
-   	bcc_email = ""
+	def body_subject = ''
+	def body_text = ''
+	def cc_email = ''
+	def body_html = ''
    	if (build_status == 'STARTED') {
-        body = "Build/deploy process just STARTED for service: " + service
+		echo "email status started"
+		body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + service
    	} else if (build_status == 'FAILED') {
-		build_url = env.BUILD_URL + 'console'
-        body = "Build/deploy process FAILED for service: " + service
-        body = body + "\n\nFor more details, please click this link: $build_url"
+		echo "email status failed"
+		def build_url = env.BUILD_URL + 'console'
+		body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + service
+		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
    	} else if (build_status == 'COMPLETED'){
-        body = "Build/deploy process COMPLETED successfully for service: $service"
+        	body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
    	} else {
-        echo "Unsupported build status, nothing to email.."
-        return
+        	echo "Unsupported build status, nothing to email.."
+        	return
    	}
-
    	if (email_content != ''){
-        body = body + "\n\n" + email_content
+        	body_text = body_text + '\n\n' + email_content
 	}
+	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
+	body = JsonOutput.toJson([
+					from : fromStr,
+					to : email_id,
+					subject : body_subject,
+					text : body_text,
+					cc : cc_email,
+					html : body_html
+			    ])
 
    	try{
-        mail (to: email_id, bcc: bcc_email,
-         subject: "Jazz Build Notification: Deployment $build_status for $service ($current_environment)",
-         body: body
-        );
-        echo "Sent email to " + email_id + " successfully!"
+				def sendMail = sh (script: "curl -X POST \
+								${g_base_url}/platform/email \
+								-k -v -H \"Authorization: $g_login_token\" \
+								-H \"Content-Type: application/json\" \
+								-d \'${body}\'", returnStdout: true).trim()
+				def responseJSON = parseJson(sendMail)
+				if(responseJSON.data){
+					echo "successfully sent e-mail to $email_id"
+				} else {
+					echo "exception occured while sending e-mail: $responseJSON"
+				}
    	} catch (e){
-       echo "Failed while sending build status notification"
+       		echo "Failed while sending build status notification"
    	}
+}
+
+/*
+* Load environment variables from build module
+*/
+def loadConfigModule(buildModuleUrl){
+
+	dir('config-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+		]])
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
+	}
+}
+
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
 }

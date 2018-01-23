@@ -33,6 +33,18 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
+@Field def configModule
+@Field def configLoader
+@Field def var_api_key
+@Field def var_api_id_dev
+@Field def var_aws_credential_id
+@Field def var_env_name_prefix
+@Field def var_repo_core
+@Field def var_repo_loc
+@Field def var_credentialsId
+@Field def var_bitbucket_base
+@Field def var_bitbucket_email
+
 @Field def g_login_token = ''
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -51,11 +63,20 @@ def Event_Status = [
 @Field def aws_api_import = '/var/lib/aws-apigateway-importer/aws-api-import.sh'
 
 node() {
-	region = env.jazz_region
-	api_doc_s3_bucket = env.jazz_s3_api_doc
-	g_base_url = "https://" + env.API_KEY + ".execute-api.${region}.amazonaws.com/dev"
-
-	role = env.jazz_roleId
+	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	var_api_key 				= configLoader.API.API_KEY
+	var_api_id_dev = configLoader.API.API_ID_DEV
+	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
+	var_env_name_prefix = configLoader.env_name_prefix
+	var_repo_core = configLoader.REPOSITORY.REPO_CORE
+	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
+	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
+	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
+	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
+	region = configLoader.JAZZ.jazz_region
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
+	role = configLoader.JAZZ.jazz_roleId
+	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${api_doc_s3_bucket}.s3-website-${region}.amazonaws.com/"
 
     echo "Build triggered via branch: " + params.scm_branch
@@ -67,13 +88,10 @@ node() {
 	def branch = params.scm_branch
 
     def bitbucket_name = params.service_name
-	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-	def var_bitbucket_base			= env.REPO_BASE
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + env.REPO_LOC + "/"
-	def var_api_key 				= env.API_KEY
+	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + var_repo_loc + "/"
 
 
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/serverless-config-pack.git"
+	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
 
 	def config
 
@@ -112,16 +130,16 @@ node() {
 	def domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
-  	
+
 	def internalAccess = config['require_internal_access']
-  	
+
 	def roleARN = role.replaceAll("/", "\\\\/")
 	def var_api_host_name = "${var_api_key}.execute-api.${region}.amazonaws.com"
 
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev"
+  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + var_env_name_prefix + "-cloud-logs-streamer-prod"
 
     echo "Role:: " + role
 
@@ -132,7 +150,7 @@ node() {
         domain = ""
     }
 
-	serviceName = env.env_name_prefix + "-" + serviceName
+	serviceName = var_env_name_prefix + "-" + serviceName
 	cfStackName = serviceName
 
 	sh 'cd ' + bitbucket_name
@@ -174,7 +192,7 @@ node() {
 
 		if (params.scm_branch == 'master') {
 			stage('Deployment to Production Env') {
-				
+
 				sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
 				echo "starts Deployment to Production Env"
 
@@ -183,7 +201,7 @@ node() {
 				sh "rm -rf .serverless"
 
 
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
 					sh "aws configure set profile.cloud-api.region "+region
 					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
@@ -199,27 +217,27 @@ node() {
 					setLambdaExecutionRole(role);
 
 					echo "serverless deploy......."
-					sh "serverless deploy --stage prod -v --bucket " + env.jazz_bucket_prod
+					sh "serverless deploy --stage prod -v --bucket " + configLoader.JAZZ_S3.jazz_bucket_prod
 					createSubscriptionFilters(serviceName, current_environment, region, logStreamer);
 					def svc_status = ''
 					if (fileExists('swagger/swagger.json')) {
 						// Generate swagger file based on environment
 						echo "Generating the swagger file for each environment"
 
-						var_api_key = env.API_ID_PROD;
+						var_api_key = configLoader.API.API_ID_PROD;
 						def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
 
 						generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, var_api_key, config)
 						//validateSwaggerFile( service, domain, apiHostName )
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
-						
+
 						sh "${aws_api_import} --region ${region}  --update ${var_api_key} --deploy prod swagger/swagger.json "
 
 						def endpointUrl = "https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/prod/" + domain + "/" + params.service_name
 
 						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, endpointUrl)
-						
+
 						updateApiDocUrl(current_environment)
 
 						sh "aws s3 cp swagger/ s3://${api_doc_s3_bucket}/${domain}/${params.service_name}/${current_environment} --recursive "
@@ -240,7 +258,7 @@ node() {
 				sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
 				echo "starts Deployment to Development Env"
 
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 				echo "AWS Configure ......."
 				sh "aws configure set profile.cloud-api.region ${region}"
 				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
@@ -257,20 +275,20 @@ node() {
 				setLambdaExecutionRole(role);
 
 				echo "serverless deploy......."
-				sh "serverless deploy --stage dev -v --bucket " + env.jazz_bucket_dev
+				sh "serverless deploy --stage dev -v --bucket " + configLoader.JAZZ_S3.jazz_bucket_dev
 				createSubscriptionFilters(serviceName, current_environment, region, logStreamer);
 				def svc_status = ''
 				if (fileExists('swagger/swagger.json')) {
 					// Generate swagger file based on environment
 					echo "Generating the swagger file for each environment"
-					var_api_key = env.API_ID_DEV;
+					var_api_key = configLoader.API.API_ID_DEV;
 					def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
 
 					generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, var_api_key, config)
 					//validateSwaggerFile( service, domain, apiHostName )
 					// import swagger api spec
 					echo "Deploying to staging API Gateway environment.."
-					
+
 					sh "$aws_api_import --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json"
 
 					def endpointUrl = "https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/dev/" + domain + "/" + params.service_name
@@ -616,7 +634,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
         checkout([$class: 'GitSCM', branches: [
             [name: '*/master']
         ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-            [credentialsId: env.REPO_CREDENTIAL_ID, url: configPackBBURL]
+            [credentialsId: var_credentialsId, url: configPackBBURL]
         ]])
     }
 
@@ -789,7 +807,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	setCredentials(g_base_url + '/platform/login')
 
-	def url = "$serviceUrl?domain=$domain&service=$service"
+	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
 
 	if (endpointKey == 'dev') {
 		preserveEnvKey = 'prod'
@@ -890,31 +908,49 @@ def setAuthToken(token) {
 */
 def send_status_email (email_id, build_status, service, email_content) {
    	echo "Sending build notification to " + email_id
-   	body = ""
-   	bcc_email = ""
+	def body_subject = ''
+	def body_text = ''
+	def cc_email = ''
+	def body_html = ''
    	if (build_status == 'STARTED') {
-        body = "Build/deploy process just STARTED for service: " + service
+		echo "email status started"
+		body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + service
    	} else if (build_status == 'FAILED') {
-		build_url = env.BUILD_URL + 'console'
-        body = "Build/deploy process FAILED for service: " + service
-        body = body + "\n\nFor more details, please click this link: $build_url"
+		echo "email status failed"
+		def build_url = env.BUILD_URL + 'console'
+		body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + service
+		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
    	} else if (build_status == 'COMPLETED'){
-        body = "Build/deploy process COMPLETED successfully for service: $service"
+		body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
    	} else {
-        echo "Unsupported build status, nothing to email.."
-        return
+		echo "Unsupported build status, nothing to email.."
+		return
    	}
-
    	if (email_content != ''){
-        body = body + "\n\n" + email_content
+		body_text = body_text + '\n\n' + email_content
 	}
+	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
+	body = JsonOutput.toJson([
+					from : fromStr,
+					to : email_id,
+					subject : body_subject,
+					text : body_text,
+					cc : cc_email,
+					html : body_html
+			    ])
 
    	try{
-        mail (to: email_id, bcc: bcc_email,
-         subject: "Jazz Build Notification: Deployment $build_status for $service ($current_environment)",
-         body: body
-        );
-        echo "Sent email to " + email_id + " successfully!"
+				def sendMail = sh (script: "curl -X POST \
+						${g_base_url}/platform/email \
+						-k -v -H \"Authorization: $g_login_token\" \
+						-H \"Content-Type: application/json\" \
+						-d \'${body}\'", returnStdout: true).trim()
+				def responseJSON = parseJson(sendMail)
+				if(responseJSON.data){
+					echo "successfully sent e-mail to $email_id"
+				} else {
+					echo "exception occured while sending e-mail: $responseJSON"
+				}
    	} catch (e){
        echo "Failed while sending build status notification"
    	}
@@ -929,7 +965,7 @@ def updateServiceInDB(service, domain, serviceUrl,status) {
 
 		echo "new json $updateJson"
 
-		def serviceUpdateUrl = "$serviceUrl/$service_id"
+		def serviceUpdateUrl = "$serviceUrl/$service_id?isAdmin=true"
 
 		def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
 					-H \"accept: application/json\" \
@@ -939,5 +975,30 @@ def updateServiceInDB(service, domain, serviceUrl,status) {
 
 		echo "service update result: $serviceUpdateOutput"
 	}
+}
 
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
+}
+
+/*
+* Load environment variables from build module
+*/
+def loadConfigModule(buildModuleUrl){
+
+	dir('config-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+		]])
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
+	}
 }

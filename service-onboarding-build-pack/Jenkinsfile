@@ -30,16 +30,57 @@ def Event_Status = [
 	'COMPLETED':'COMPLETED',
 	'FAILED':'FAILED'
 ]
+@Field def configModule
+@Field def configLoader
+@Field def var_api_key
+@Field def var_api_id_dev
+@Field def var_aws_credential_id
+@Field def var_env_name_prefix
+@Field def var_repo_core
+@Field def var_repo_loc
+@Field def var_credentialsId
+@Field def var_bitbucket_base
+@Field def var_bitbucket_email
 @Field def region = ''
+@Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
+@Field def auth_token = ''
+@Field def g_base_url = ''
+@Field def jq = '/usr/local/bin/jq'
+
 
 node  {
-	region = env.jazz_region
+	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	region = configLoader.JAZZ.jazz_region
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
+	role = configLoader.JAZZ.jazz_roleId
+	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
+	var_api_key 				= configLoader.API.API_KEY
+	var_api_id_dev = configLoader.API.API_ID_DEV
+	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
+	var_env_name_prefix = configLoader.env_name_prefix
+	var_repo_core = configLoader.REPOSITORY.REPO_CORE
+	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
+	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
+	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
+	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
+
+	echo "fetching auth_token"
+	auth_token = getAuthToken()
+	
 	def service_type =  params.service_type
 	def runtime = params.runtime
 	def service_name = params.service_name
 	def admin_group = "admin_group"
 	def bitbucket_name = params.service_name
-	
+	def rateExpression
+	def enableEventSchedule
+	if (params.rateExpression){
+		rateExpression = params.rateExpression
+	}
+	if (params.enableEventSchedule){
+		enableEventSchedule = params.enableEventSchedule
+	}
+
 	def service_template
 	def service_username
 	def service_password
@@ -51,17 +92,13 @@ node  {
 
 	def repo_protocol				= "http://"
 
-	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
-	def var_bitbucket_base			= env.REPO_BASE
-	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/"
-	def var_api_key 				= env.API_KEY
+	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/"
 	def var_api_host_name			= var_api_key+".execute-api.us-east-2.amazonaws.com"
-	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + env.REPO_LOC + "/repos"
-	def var_bitbucket_email 		= env.REPO_EMAIL
-	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + env.REPO_LOC + "/"
-	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + env.REPO_CORE + "/service-onboarding-build-pack.git"
-	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
-	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
+	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + var_repo_loc + "/repos"
+	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + var_repo_loc + "/"
+	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/service-onboarding-build-pack.git"
+	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + var_repo_loc + "/repos/"
+	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + var_repo_loc + "/repos/"
 	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
 
 	echo "Starting new service on-boarding.."
@@ -72,7 +109,7 @@ node  {
 		domain = params.domain.trim()
 	}
 
-	def repo_url = repo_protocol + env.REPO_BASE + "/projects/CAS/repos/" + bitbucket_name + "/browse";
+	def repo_url = repo_protocol + var_bitbucket_base + "/projects/CAS/repos/" + bitbucket_name + "/browse";
 
 	stage('Input Validation')
 	{
@@ -147,7 +184,7 @@ node  {
 	}
 
 	def service_id_in_db = "";
-	
+
 	stage ('Get Service Template')
 	{
 		try{
@@ -165,7 +202,7 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
 
 				config = LoadConfiguration()
-				
+
 				echo "Calling add row in db ###################################################"
 
 				def description = ' ';
@@ -174,12 +211,12 @@ node  {
 					description = params.description;
 				}
 
-				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, env.API_KEY, region);
-				updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_started", repo_url);
+				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, var_api_key, region);
+				updateServiceInDB(service_id_in_db, var_api_key, region, "creation_started", repo_url);
 			}
 		}
 		catch(error){
-			updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+			updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 			//do nothing
 		}
 
@@ -229,22 +266,39 @@ node  {
 				}
 
 				if(service_type == 'lambda'|| service_type == 'function') {
-					def rate_expression = params.rateExpression
-					def enable_eventschedule = params.enableEventSchedule
+					def rate_expression = rateExpression//params.rateExpression
+					def enable_eventschedule = enableEventSchedule//params.enableEventSchedule
+					def event_source_ec2 =  params.event_source_ec2
+					def event_source_s3 =  params.event_source_s3
+					def event_source_dynamodb =  params.event_source_dynamodb
+					def event_source_stream =  params.event_source_stream
+					def event_action_ec2 =  params.event_action_ec2
+					def event_action_s3 =  params.event_action_s3
+					def event_action_dynamodb =  params.event_action_dynamodb
+					def event_action_stream =  params.event_action_stream
 
 					if(rate_expression && rate_expression.trim() != ""){
 						// Using echo commands to write to deployment-env.yml
 						sh "echo \$'\neventScheduleRate: cron($rate_expression)' >> ./deployment-env.yml"
 					}
-					def var_enable_eventschedule;
-					if (enable_eventschedule)
-					   if (enable_eventschedule == true)
-					      var_enable_eventschedule = "true";
-					   else if (enable_eventschedule == false)
-					      var_enable_eventschedule = "false";
-
-					if(var_enable_eventschedule && var_enable_eventschedule.trim() != ""){
-						sh "echo \$'eventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
+					if(enable_eventschedule && enable_eventschedule != ""){
+						sh "echo \$'\neventScheduleEnable: $enable_eventschedule' >> ./deployment-env.yml"
+					}
+					if(event_source_ec2 && event_action_ec2){
+						sh "echo \$'\nevent_source_ec2: $event_source_ec2' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_ec2: $event_action_ec2' >> ./deployment-env.yml"
+					}
+					if(event_source_s3 && event_action_s3){
+						sh "echo \$'\nevent_source_s3: $event_source_s3' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_s3: $event_action_s3' >> ./deployment-env.yml"
+					}
+					if(event_source_dynamodb && event_action_dynamodb){
+						sh "echo \$'\nevent_source_dynamodb: $event_source_dynamodb' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_dynamodb: $event_action_dynamodb' >> ./deployment-env.yml"
+					}
+					if(event_source_stream && event_action_stream){
+						sh "echo \$'\nevent_source_stream: $event_source_stream' >> ./deployment-env.yml"
+						sh "echo \$'\nevent_action_stream: $event_action_stream' >> ./deployment-env.yml"
 					}
 
 					/*
@@ -261,7 +315,7 @@ node  {
 		}
 		catch(error){
 
-			updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+			updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 
 			send_status_email (owner, "FAILED", service_name, domain)
 
@@ -287,7 +341,7 @@ node  {
 			}
 			catch (error)
 			{
-				updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+				updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 
 				send_status_email (owner, "FAILED", service_name, domain)
 
@@ -326,7 +380,7 @@ node  {
 				}
 				catch (error)
 				{
-					updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 					send_status_email (owner, "FAILED", service_name, domain)
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.PUSH_TEMPLATE_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
@@ -339,14 +393,14 @@ node  {
 					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + var_cas_rest_repo + ""+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN&" + admin_group + "\" &"
 
 					def encoded_creator = URLEncoder.encode(owner, "utf-8")
-            
+
 					echo "providing repository write permissions to the service creator"
 					sh "curl -X PUT -G -k -v -u \"$UNAME:$PWD\"  -d \"name=$encoded_creator\" \"${var_cas_rest_repo}/${bitbucket_name}/permissions/users?permission=REPO_ADMIN\""
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
 					echo error
 				}
@@ -361,7 +415,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.LOCK_MASTER_BRANCH, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 
 					send_status_email (owner, "FAILED", service_name, domain)
 
@@ -376,7 +430,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
 
 					send_status_email (owner, "FAILED", service_name, domain)
 
@@ -385,25 +439,58 @@ node  {
 				}
 
 				echo "Calling update row in db ###################################################"
-				updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_completed", repo_url);
+				updateServiceInDB(service_id_in_db, var_api_key, region, "creation_completed", repo_url);
 			}
 		}
 	}
 }
+/**
+ * For getting token to access catalog APIs.
+ * Must be a service account which has access to all services
+ */
+ def getAuthToken() {
+	 
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+
+		def loginUrl = g_base_url + "/platform/login"
+		def login_json = []
+
+		login_json = [
+			'username': UNAME,
+			'password': PWD
+		]
+
+		def payload = JsonOutput.toJson(login_json)
+
+		try {
+			def token = sh (script: "curl --silent -X POST -k -v \
+				-H \"Content-Type: application/json\" \
+				 $loginUrl \
+				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
+
+			token = token.replaceAll("[\n\r]", "")
+			return token
+		}
+		catch(e){
+			error "error occured: " + e.getMessage()
+		}
+	} 	
+
+ }
 
 def sendEvent(service_type, service_name, domain, runtime, admin_group, event_name, event_status, error){
 	echo "send event" + error
 }
 
 def updateServiceInDB(service_id_in_db, apiId, region, statusval, repo_url) {
-  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${params.auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\", \"repository\": \"${repo_url}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id_in_db}/"
+  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\", \"repository\": \"${repo_url}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/prod/platform/services/${service_id_in_db}/"
 }
 
 def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region) {
 
 	try {
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${params.auth_token} \" -X POST -k -v -d '{ \"service\": \"${service_name}\", \"status\":\"creation_started\", \"domain\": \"${domain}\", \"type\": \"${servicetype}\", \"created_by\": \"${created_by}\", \"runtime\": \"${runtime}\", \"repository\": \"${repo_url}\", \"description\": \"${desc}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/dev/platform/services/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '{ \"service\": \"${service_name}\", \"status\":\"creation_started\", \"domain\": \"${domain}\", \"type\": \"${servicetype}\", \"created_by\": \"${created_by}\", \"runtime\": \"${runtime}\", \"repository\": \"${repo_url}\", \"description\": \"${desc}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/prod/platform/services/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
@@ -486,33 +573,86 @@ def LoadConfiguration() {
 
 /**
 * Send email to the recipient with the build status and any additional text content
-* Supported build status values =  FAILED & COMPLETED
+* Supported build status values = STARTED, FAILED & COMPLETED
 * @return
 */
 def send_status_email (email_id, build_status, service, domain) {
-   echo "Sending email notification to " + email_id
-   body = ""
-   bcc_email = ""
-   
-   if (build_status == 'COMPLETED'){
-        body = "Service creation completed for service : $service in the namespace : $domain"
-   }else if (build_status == 'FAILED') {
-		build_url = env.BUILD_URL + 'console'
-   
-        body = "Service creation FAILED for service : $service in the namespace : $domain"
-        body = body + "\n\nFor more details, please click this link: $build_url"        
-   } else {
-        echo "Unsupported build status, nothing to email.."
-        return
-   }
+   	echo "Sending build notification to " + email_id
+	def body_subject = ''
+	def body_text = ''
+	def cc_email = ''
+	def body_html = ''
+   	if (build_status == 'STARTED') {
+		echo "email status started"
+		body_subject = 'Jazz Build Notification: Creation STARTED for service: ' + service
+   	} else if (build_status == 'FAILED') {
+		echo "email status failed"
+		def build_url = env.BUILD_URL + 'console'
+		body_subject = 'Jazz Build Notification: Creation FAILED for service: ' + service
+		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
+   	} else if (build_status == 'COMPLETED'){
+        	body_subject = 'Jazz Build Notification: Creation COMPLETED successfully for service: ' + service
+   	} else {
+        	echo "Unsupported build status, nothing to email.."
+        	return
+   	}
+   	if (domain != ''){
+		domain = 'For Service: ' + service + ' in Domain: ' + domain
+        	body_text = body_text + '\n\n' + domain
+	}
+	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
+	body = JsonOutput.toJson([
+					from : fromStr,
+					to : email_id,
+					subject : body_subject,
+					text : body_text,
+					cc : cc_email,
+					html : body_html
+			    ])
 
-   try{
-        mail (to: email_id, bcc: bcc_email,
-         subject: "Jazz Service Creation Notification for $service",
-         body: body
-        );
-        echo "Sent email to " + email_id + " successfully!"
-   } catch (e){
-       echo "Failed while sending build status notification"
-   }
+
+   	try{
+				def sendMail = sh (script: "curl -X POST \
+								${g_base_url}/platform/email \
+								-k -v -H \"Authorization: $g_login_token\" \
+								-H \"Content-Type: application/json\" \
+								-d \'${body}\'", returnStdout: true).trim()
+				def responseJSON = parseJson(sendMail)
+				if(responseJSON.data){
+					echo "successfully sent e-mail to $email_id"
+				} else {
+					echo "exception occured while sending e-mail: $responseJSON"
+				}
+   	} catch (e){
+       		echo "Failed while sending build status notification"
+   	}
+}
+
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
+}
+/*
+* Load environment variables from build module
+*/
+def loadConfigModule(buildModuleUrl){
+	echo "loading env variables, checking repos..."
+
+	dir('config-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+		]])
+
+		echo "loading installer variables..."
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
+		echo "finished loading env module"
+	}
 }
