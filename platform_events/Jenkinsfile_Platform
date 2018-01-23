@@ -2,14 +2,18 @@
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
+// To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
 @Field def configModule
 @Field def configLoader
 @Field def jenkins_credential_id
 @Field def region
 
 node {
-
-  loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+  jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+  loadConfigModule(jazzBuildModuleURL)
   jenkins_credential_id = configLoader.JENKINS.JENKINS_CREDENTIAL_ID
   region = configLoader.JAZZ.jazz_region
 
@@ -29,10 +33,10 @@ usernameVariable: 'UNAME']]){
 
     echo "projname::" + projname
 
-    def build_job = env.PLATFORM_SERVICE_BUILD_URI
-    def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+    def build_job = configLoader.PLATFORM.PLATFORM_SERVICE_BUILD_URI
+    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
 
-    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name=" + projname + "&admin_group=admin_group&region=${region}&scm_branch=${env.BRANCH_NAME}\""
+    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=" + projname + "&admin_group=admin_group&region=${region}&scm_branch=${env.BRANCH_NAME}\""
  }
 
 }
@@ -46,7 +50,7 @@ def loadConfigModule(buildModuleUrl){
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+			[credentialsId: repo_credential_id, url: buildModuleUrl]
 		]])
 
 		def resultJsonString = readFile("jazz-installer-vars.json")

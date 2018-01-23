@@ -3,6 +3,11 @@ import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
 
+// To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
+
 //definitions
 def Event_Name = [
 	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
@@ -57,7 +62,8 @@ def Event_Status = [
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+	loadConfigModule(jazzBuildModuleURL)
 	var_api_key 				= configLoader.API.API_KEY
 	var_api_id_dev = configLoader.API.API_ID_DEV
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
@@ -897,7 +903,7 @@ def loadConfigModule(buildModuleUrl){
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+			[credentialsId: repo_credential_id, url: buildModuleUrl]
 		]])
 
 		def resultJsonString = readFile("jazz-installer-vars.json")
