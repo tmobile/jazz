@@ -88,6 +88,7 @@ node ()  {
 	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 	role = configLoader.JAZZ.jazz_roleId
 	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
+	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/"+ var_repo_core +"/jazz-build-module.git"
 
 	echo "Jobs Params: " + params
 	echo "Build triggered via branch: " + params.scm_branch
@@ -130,12 +131,27 @@ node ()  {
 		}
 
 		sh 'cd ' + bitbucket_name
-		config = dir(bitbucket_name){
+		def configObj = dir(bitbucket_name){
 			LoadConfiguration()
+		}
+		
+		if(configObj.service_id){	
+			def url = "$g_base_url/platform/services/"+configObj.service_id
+			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
+			serviceMetadata.setUrl(url)
+			def serviceData = serviceMetadata.loadServiceMetaData()
+			if(serviceData && serviceData.data){	
+				config = serviceData.data['metadata']
+			}else{
+				error "Error while fetching service metadata"
+			}
+		}else{
+			error "Service Id is not available."
 		}
 
 	}
 
+	
 
 	def runtime = config['providerRuntime']
 	def service = config['service']
@@ -226,6 +242,9 @@ node ()  {
 						echo "Generate deployment env with domain"
 						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.STARTED, "")
+						
+						writeServerlessFile(config)
+						
 						generateServerlessYml(service, "prod", serviceName, cfStackName)
 						echo "setting lambda execution role as $role";
 						setLambdaExecutionRole(role);
@@ -292,6 +311,9 @@ node ()  {
 						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.STARTED, "")
 						sh "pwd"
+						
+						writeServerlessFile(config)
+						
 						generateServerlessYml(service, "dev", serviceName, cfStackName)
 						echo "setting lambda execution role as $role";
 						setLambdaExecutionRole(role);
@@ -700,6 +722,30 @@ def generateServerlessYml(service, env, serviceName, cfStackName) {
 	sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: ${cfStackName}/g' serverless.yml"
 }
 
+
+def writeServerlessFile(config){
+	sh "pwd"
+	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml" 	
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/" + config['providerRuntime'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/" + config['providerMemorySize'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/" + config['providerTimeout'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleRate}/" + config['eventScheduleRate'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/" + config['eventScheduleEnable'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/" + config['securityGroupIds'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/" + config['subnetIds'] + "/g' serverless.yml"
+	
+	if(config['artifact']){
+		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/" + config['artifact'] + "/g' serverless.yml"
+	}
+	if(config['mainClass']){
+		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/" + config['mainClass'] + "/g' serverless.yml"
+	}
+	
+}
+
 /**
 	Set the Lambda execution role. If user provided a custom role override the default.
 */
@@ -718,10 +764,10 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 }
 
 def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
-	setCredentials(g_base_url + '/platform/login')
+	def token = setCredentials()
 	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $g_login_token\" \"$url\" | $jq -r '.data[0] | [.id, .created_by] | join(\",\")'", returnStdout: true)
+			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.id, .created_by] | join(\",\")'", returnStdout: true)
 	def values = curlOutput.split(',')
 	if (values[0]) {
 		service_id = values[0].replaceAll("[\n\r]", "")
@@ -735,10 +781,9 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
  */
- def setCredentials(loginUrl) {
-
-	if (g_login_token == '') {
-
+ def setCredentials() {
+	def loginUrl = g_base_url + '/platform/login'
+	def token
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 			echo "user name is $UNAME"
 
@@ -752,19 +797,20 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 			def payload = JsonOutput.toJson(login_json)
 
 			try {
-				g_login_token = sh (script: "curl --silent -X POST -k -v \
+				token = sh (script: "curl --silent -X POST -k -v \
 					-H \"Content-Type: application/json\" \
 					 $loginUrl \
 					-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
 
-				g_login_token = g_login_token.replaceAll("[\n\r]", "")
+				token = token.replaceAll("[\n\r]", "")
+				return token
 			}
 			catch(e){
 				echo "error occured: " + e.getMessage()
 				error "error occured: " + e.getMessage()
 			}
 		}
- 	}
+ 	
 }
 
 /**
@@ -918,4 +964,33 @@ def parseJson(jsonString) {
     def m = [:]
     m.putAll(lazyMap)
     return m
+}
+
+/**
+ * Load metadata module groovy file
+ *
+ */
+def loadServiceMetadataModule(buildURL) {
+		try {						
+			echo "loading serviceMetaData, checking repos"
+
+			dir('service-metadata') {
+				checkout([$class: 'GitSCM', branches: [
+					[name: '*/master']
+				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+					[credentialsId: env.REPO_CREDENTIAL_ID, url: buildURL]
+				]])
+				serviceMetadata = load "service-metadata-loader.groovy"			
+				serviceMetadata.setAuthToken(setCredentials())
+
+				// Load and set dependent utility module.
+				echo "loading util module"
+				Util = load "utility-loader.groovy"
+				serviceMetadata.setUtil(Util)
+				return serviceMetadata 
+			}
+		
+		}catch(ex) {
+			error "loadServiceMetadataModule Failed. "+ex.getMessage()
+		}
 }

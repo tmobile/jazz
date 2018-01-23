@@ -48,23 +48,29 @@ def loadServiceMetaData() {
 			\"$util_url\"", returnStdout: true)
 		if(serviceData) {
 			def serviceDataObj = parseJson(serviceData)
-			if(serviceDataObj && serviceDataObj.data && serviceDataObj.data.services) {
-				def dataArr = serviceDataObj.data.services[0]
-				g_service_id = dataArr.id
-				g_service_created_by = dataArr.created_by
-				g_service_repository = dataArr.repository
-				g_service_runtime = dataArr.runtime
+			if(serviceDataObj && serviceDataObj.data ){
+				if(serviceDataObj.data.services) {
+					def dataArr = serviceDataObj.data.services[0]
+					g_service_id = dataArr.id
+					g_service_created_by = dataArr.created_by
+					g_service_repository = dataArr.repository
+					g_service_runtime = dataArr.runtime
+					if(!g_service_id) {
+						error "Could not fetch service metadata"
+					}
+				}else{
+					return serviceDataObj
+				}
 			}
-		}
-		if(!g_service_id) {
-			error "Could not fetch service metadata"
-		}
+		}		
 	}
 	catch(e){
 		echo "error occured while fetching service metadata: " + e.getMessage()
 		error "error occured while fetching service metadata: " + e.getMessage()
 	}
 }
+
+
 
 /**
  * Get bucket name for environment
