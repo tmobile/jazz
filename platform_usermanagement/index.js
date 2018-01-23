@@ -225,6 +225,11 @@ function validateCreaterUserParams(config, userInput) {
 			return reject(errorHandler.throwInputValidationError("103", "Invalid User Registration Code"));
 		}
 
+    if(!config.scm_service_host){
+      logger.error("scm_service_host is not defined");
+      return reject(errorHandler.throwInputValidationError("111", "scm host not defined"));
+    }
+
 		resolve(userInput);
 	});
 }
@@ -344,9 +349,5 @@ function createUserInSCM(config, userData) {
   else if (config.scm_service_host){
     logger.error("Currently, the scm: " + config.scm_service_host + " is not supported");
     return reject(errorHandler.throwInputValidationError("110", "scm not supported"));
-  }
-  else{
-    logger.error("scm_service_host is not defined");
-    return reject(errorHandler.throwInputValidationError("111", "scm host not defined"));
   }
 }
