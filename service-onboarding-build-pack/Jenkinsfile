@@ -460,20 +460,40 @@ def setRepoUrl(scm, repo_protocol, scm_repo_name, repo_base)
 	return repo_url
 }
 
-def createProjectInSCM(scm, gitlab_private_token, gitlab_cas_name_space_id, repo_base, scm_repo_name, username, password, cas_rest_repo)
-{
-	if(scm == "gitlab"){
-		def private_token    = gitlab_private_token
-		def cas_namespace_id = gitlab_cas_name_space_id
+def createProjectInSCM(scm, gitlab_private_token, gitlab_cas_name_space_id, repo_base, scm_repo_name, username, password, cas_rest_repo){
+	try{
+		if(scm == "gitlab"){
+			def private_token    = gitlab_private_token
+			def cas_namespace_id = gitlab_cas_name_space_id
+			def git_username
+			//assuming usernames for now are a concatination of the user's email, check platform_usermanagement index.js
+			if(owner.contains("@")){
+				git_username = owner.substring(0, owner.indexOf("@"))
+			}
+			def user_id = getGitlabUserId(git_username, private_token)
+			def gitlab_repo_output = sh (
+				script: "curl --header \"Private-Token: $private_token\" -X POST \"http://$repo_base/api/v3/projects/user/$user_id?name=$scm_repo_name&path=$scm_repo_name&visibility=private&request_access_enabled=true\"",
+				returnStdout: true
+			).trim()
 
+			def jsonSlurper = new JsonSlurper()
+			def object = jsonSlurper.parseText(gitlab_repo_output)
+			if(object == null || object.equals("") || object.id == null || object.id.equals("")){
+				error "new project creation failed"
+			}
+			cas_proj_id = object.id
+			cas_repo_id = getCasRepoId()
 			transferProject(cas_repo_id, cas_proj_id)
 		}
-		else{
+		else if(scm == "bitbucket"){
 			sh "curl -X POST -k -v -u \"$username:$password\" -H \"Content-Type: application/json\" " + cas_rest_repo + " -d \'{\"name\":\""+ scm_repo_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
+		}
+		else if(scm == null || scm.isEmpty()){
+			error "scm host is not defined"
 		}
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-			//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage())
+			sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.CREATE_SERVICE_REPO, Event_Status.FAILED, "createProjectInSCM failed")
 			error "createProjectInSCM Failed. "+ex.getMessage()
 		} else {
 			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
@@ -496,7 +516,7 @@ def getGitlabUserId(username, private_token){
 		return userObject[0].id
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-			//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage())
+			sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.CREATE_SERVICE_REPO, Event_Status.FAILED, "getGitlabUserId failed")
 			error "getGitlabUserId Failed. "+ex.getMessage()
 		} else {
 			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
@@ -519,7 +539,7 @@ def getCasRepoId(){
 		return groupObject[0].id
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-			//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage())
+			sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.CREATE_SERVICE_REPO, Event_Status.FAILED, "getCasRepoId failed")
 			error "getCasRepoId Failed. "+ex.getMessage()
 		} else {
 			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
@@ -528,14 +548,12 @@ def getCasRepoId(){
 }
 
 def transferProject(cas_id, project_id){
-	echo "transferring project to cas"
 
 	def output = sh (
 		script: "curl --header \"Private-Token: $private_token\" -X POST \"http://$repo_base/api/v3/groups/$cas_id/projects/$project_id\"",
 		returnStdout: true
 	).trim()
 
-	echo "project transferred to cas"
 }
 
 
