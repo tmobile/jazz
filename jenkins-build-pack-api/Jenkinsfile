@@ -95,7 +95,6 @@ node() {
 	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/"+ var_repo_core +"/jazz-build-module.git"
 
 	def config
-	def configObj
 	
 	if (params.scm_branch == 'master') {
 		current_environment = 'prod'
@@ -122,25 +121,27 @@ node() {
 		sh 'cd ' + bitbucket_name
 
 		// @TODO: dir can be removed, needs to be refactored
-		configObj = dir(bitbucket_name)
+		def configObj = dir(bitbucket_name)
 		{
 			return LoadConfiguration()
 		}
+		
+		if(configObj.service_id){	
+			def url = "$g_base_url/platform/services/"+configObj.service_id
+			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
+			serviceMetadata.setUrl(url)
+			def serviceData = serviceMetadata.loadServiceMetaData()
+			if(serviceData && serviceData.data){	
+				config = serviceData.data['metadata']
+			}else{
+				error "Error while fetching service metadata"
+			}
+		}else{
+			error "Service Id is not available."
+		}
 
 	}
-	if(configObj.service_id){	
-		def url = "$g_base_url/platform/services/"+configObj.service_id
-		serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
-		serviceMetadata.setUrl(url)
-		def serviceData = serviceMetadata.loadServiceMetaDataByServiceId()
-		if(serviceData && serviceData.data){	
-			config = serviceData.data['metadata']
-		}else{
-			error "Error while fetching service metadata"
-		}
-	}else{
-		error "Service Id is not available."
-	}
+	
 	
 	def domain = config['domain']
     def runtime = config['providerRuntime']

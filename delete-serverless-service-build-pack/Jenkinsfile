@@ -56,7 +56,6 @@ node {
 	def bitbucket_repo_name
 	def tracking_id
 	def config
-	def configObj
 	def runtime
 	def serviceConfig
 	def domainConfig
@@ -102,7 +101,7 @@ node {
 	stage("Initialization") {
 
 		checkoutSCM(bitbucket_repo_name, repo_protocol + var_cas_clone_url)
-		configObj = dir(bitbucket_repo_name){
+		def configObj = dir(bitbucket_repo_name){
 			return LoadConfiguration()
 		}
 		
@@ -110,7 +109,7 @@ node {
 			def url = "$g_base_url/platform/services/"+configObj.service_id
 			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
 			serviceMetadata.setUrl(url)
-			def serviceData = serviceMetadata.loadServiceMetaDataByServiceId()
+			def serviceData = serviceMetadata.loadServiceMetaData()
 			if(serviceData && serviceData.data){	
 				config = serviceData.data['metadata']
 			}else{
@@ -163,20 +162,20 @@ node {
 		switch (flowType) {
 			case "API":
 				stage('Undeploy Service') {
-					updateServiceNameConfig(domain, service_name, "dev",config)
+					updateServiceNameConfig( "dev",config)
 					def path = getResourcePath()
 					//sh "sed -i -- 's/{opt:stage}/dev/g' serverless.yml"
 					cleanUpApiGatewayResources("dev", path, region)
 					cleanUpApiDocs("dev", service_name, domain)
 					unDeployService('dev', region)
 
-					updateServiceNameConfig(domain, service_name, "stg",config)
+					updateServiceNameConfig("stg",config)
 					//sh "sed -i -- 's/{opt:stage}/stg/g' serverless.yml"
 					cleanUpApiGatewayResources("stg", path, region)
 					cleanUpApiDocs("stg", service_name, domain)
 					unDeployService('stg', region)
 
-					updateServiceNameConfig(domain, service_name, "prod",config)
+					updateServiceNameConfig( "prod",config)
 					//sh "sed -i -- 's/{opt:stage}/prod/g' serverless.yml"
 					cleanUpApiGatewayResources("prod", path, region)
 					cleanUpApiDocs("prod", service_name, domain)
@@ -186,11 +185,11 @@ node {
 
 			case "LAMBDA":
 				stage('Undeploy Service') {
-					updateServiceNameConfig(domain, service_name, "dev",config)
+					updateServiceNameConfig( "dev",config)
 					unDeployService('dev', region)
-					updateServiceNameConfig(domain, service_name, "stg",config)
+					updateServiceNameConfig( "stg",config)
 					unDeployService('stg', region)
-					updateServiceNameConfig(domain, service_name, "prod",config)
+					updateServiceNameConfig( "prod",config)
 					unDeployService('prod', region)
 				}
 				break
@@ -356,15 +355,15 @@ def echoServerlessFile() {
  * @param  serviceName
  * @return
  */
-def updateServiceNameConfig(domain, serviceName, envval,config) {
+def updateServiceNameConfig(envval,config) {
 	sh "rm serverless.yml"
 	sh "cp serverless-temp.yml serverless.yml"
 	//events.sendStartedEvent('UPDATE_DEPLOYMENT_CONF')
-	def fullServiceName = service_name
-	def cfStackName = service_name
-	if(domain && domain!= ""){
-		fullServiceName = domain+ "-" + service_name
-		cfStackName = serviceName + "-" + domain //sets CF Stack name as service--domain-env
+	def fullServiceName = config[service]
+	def cfStackName = config[service]
+	if(config[domain] && config[domain]!= ""){
+		fullServiceName = config[domain]+ "-" + config[service]
+		cfStackName = serviceName + "-" + config[domain] //sets CF Stack name as service--domain-env
 	}
 	fullServiceName = var_env_name_prefix + "-" + fullServiceName
 	cfStackName = fullServiceName

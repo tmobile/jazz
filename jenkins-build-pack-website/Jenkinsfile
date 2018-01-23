@@ -86,7 +86,6 @@ node ()  {
 	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${params.scm_project}/"
 
 	def config
-	def configObj
 
 	if (params.scm_branch == 'master') {
 		current_environment = 'prod'
@@ -113,25 +112,26 @@ node ()  {
 		}
 
 		// @TODO: dir can be removed, needs to be refactored
-		configObj = dir(bitbucket_name)
+		def configObj = dir(bitbucket_name)
 		{
 			return LoadConfiguration()
 		}
-	}
-
-	if(configObj.service_id){	
-		def url = "$g_base_url/platform/services/"+configObj.service_id
-		serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
-		serviceMetadata.setUrl(url)
-		def serviceData = serviceMetadata.loadServiceMetaDataByServiceId()
-		if(serviceData && serviceData.data){	
-			config = serviceData.data['metadata']
+		
+		if(configObj.service_id){	
+			def url = "$g_base_url/platform/services/"+configObj.service_id
+			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
+			serviceMetadata.setUrl(url)
+			def serviceData = serviceMetadata.loadServiceMetaData()
+			if(serviceData && serviceData.data){	
+				config = serviceData.data['metadata']
+			}else{
+				error "Error while fetching service metadata"
+			}
 		}else{
-			error "Error while fetching service metadata"
+			error "Service Id is not available."
 		}
-	}else{
-		error "Service Id is not available."
-	}
+	
+	}	
 	
 	
 	def create_cloudfront_url
