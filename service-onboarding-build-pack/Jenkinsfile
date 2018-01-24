@@ -431,6 +431,13 @@ node  {
 						echo error
 					}
 				}
+                
+                if(scm == "gitlab"){
+                    //Making the gitlab master branch commit protected.
+                    def var_private_token = env.gitlab_private_token
+                    sh "curl --request DELETE --header \"PRIVATE-TOKEN: $var_private_token\" \"http://$repo_base/api/v3/projects/$cas_proj_id/protected_branches/master\""
+                    sh "curl --request POST --header \"PRIVATE-TOKEN: $var_private_token\" \"http://$repo_base/api/v3/projects/$cas_proj_id/protected_branches?name=master&push_access_level=0\""
+                }
 
 				echo "Calling update row in db ###################################################"
 				updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_completed", repo_url);
