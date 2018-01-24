@@ -4,9 +4,9 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" except for config_loader. env_name_prefix, jazz_bucket_web to be taken from the config_loader.
-@Field def repo_credential_id
-@Field def repo_base
-@Field def repo_core
+@Field def repo_credential_id = "jenkins1cred"
+@Field def repo_base = "jazz-daily-installer-bitbucket-1723618883.us-east-1.elb.amazonaws.com"
+@Field def repo_core = "slf"
 @Field def config_loader
 @Field def env_name_prefix
 @Field def jazz_bucket_web
@@ -14,7 +14,7 @@ import groovy.transform.Field
 /*
 * Load environment variables from build module
 */
-def loadConfigModule(build_module_url){
+def load_config_module(build_module_url){
   echo "loading environment variables, checking repos..."
 
   dir('config-loader') {
@@ -64,7 +64,7 @@ def invalidate_cloudfront(cf_id) {
 node ()  {
   stage('Loading Config-Loader') {
     build_module_url = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    loadConfigModule(build_module_url)
+    load_config_module(build_module_url)
   }
   stage('Assigning variables for this build') {
     env_name_prefix = config_loader.env_name_prefix
@@ -76,6 +76,15 @@ node ()  {
   stage('Checking out Jazz-UI repo') {
     dir('jazz-ui') {
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: credentials_id, url: jazz_ui_repourl]]])
+      
+      sh "sed -i 's/{api_doc_name}/'${config_loader.JAZZ_S3.jazz_s3_api_doc}'/g' ./src/config/config.json"
+      sh "sed -i 's/{api_doc_name}/'${config_loader.JAZZ_S3.jazz_s3_api_doc}'/g' ./src/config/config.prod.json"
+
+      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${config_loader.API.API_ID_PROD}/g' ./src/config/config.json"
+      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${config_loader.API.API_ID_PROD}/g' ./src/config/config.prod.json"
+      
+      sh "sed -i 's/{inst_region}/${config_loader.JAZZ.jazz_region}/g' ./src/config/config.json"
+      sh "sed -i 's/{inst_region}/${config_loader.JAZZ.jazz_region}/g' ./src/config/config.prod.json"
     }
   }
   stage('Building the UI - NPM build') {
