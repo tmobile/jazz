@@ -1,21 +1,42 @@
 #!groovy
 import groovy.json.JsonOutput
-node {
+import groovy.transform.Field
 
-withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: env.JENKINS_CREDENTIAL_ID, passwordVariable: 'PWD', 
-usernameVariable: 'UNAME']]){
-    
-   echo "Build triggered via branch::${env.BRANCH_NAME}"
-   echo "params : $params"
-  
-   def build_job = env.API_BUILD_URI_DEV
-    if ( env.BRANCH_NAME == 'master') {
-      build_job = env.API_BUILD_URI
-    }  
-   def var_job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
-  
-    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + var_job_url + "&service_name={service_name}&domain={domain}&scm_branch=${env.BRANCH_NAME}\""
+// To be replaced as @Field def repo_credential_id = "value" except for config_loader
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
+@Field def config_loader
+
+/*
+* Load environment variables from build module
+*/
+def load_config_module(build_module_url){
+  dir('config-loader') {
+    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: build_module_url]]])
+    def result_json_string = readFile("jazz-installer-vars.json")
+    config_module = load "config-loader.groovy"
+    config_loader = config_module.initialize(result_json_string)
+  }
 }
-    
-  
+
+/*
+* Start the Pipeline stages
+*/
+node {
+  stage('Loading Config-Loader') {
+    build_module_url = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    load_config_module(build_module_url)
+  }
+
+  stage('Triggering the Jenkins build') {
+    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.JENKINS_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+    echo "Build triggered via branch::${env.BRANCH_NAME}"
+
+    def build_job = config_loader.API.API_BUILD_URI
+    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+
+    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name={service_name}&domain={domain}&scm_branch=${env.BRANCH_NAME}\""
+    }
+  }
 }

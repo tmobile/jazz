@@ -3,6 +3,11 @@ import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
+// To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
+
 //jenkins-build-pack-api
 //definitions
 def Event_Name =[
@@ -63,7 +68,8 @@ def Event_Status = [
 @Field def aws_api_import = '/var/lib/aws-apigateway-importer/aws-api-import.sh'
 
 node() {
-	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+	loadConfigModule(jazzBuildModuleURL)
 	var_api_key 				= configLoader.API.API_KEY
 	var_api_id_dev = configLoader.API.API_ID_DEV
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
@@ -74,7 +80,7 @@ node() {
 	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
 	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
 	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 	role = configLoader.JAZZ.jazz_roleId
 	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${api_doc_s3_bucket}.s3-website-${region}.amazonaws.com/"
@@ -92,9 +98,10 @@ node() {
 
 
 	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
+	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/"+ var_repo_core +"/jazz-build-module.git"
 
 	def config
-
+	
 	if (params.scm_branch == 'master') {
 		current_environment = 'prod'
 	}else {
@@ -120,13 +127,28 @@ node() {
 		sh 'cd ' + bitbucket_name
 
 		// @TODO: dir can be removed, needs to be refactored
-		config = dir(bitbucket_name)
+		def configObj = dir(bitbucket_name)
 		{
 			return LoadConfiguration()
 		}
+		
+		if(configObj.service_id){	
+			def url = "$g_base_url/platform/services/"+configObj.service_id
+			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
+			serviceMetadata.setUrl(url)
+			def serviceData = serviceMetadata.loadServiceMetaData()
+			if(serviceData && serviceData.data){	
+				config = serviceData.data['metadata']
+			}else{
+				error "Error while fetching service metadata"
+			}
+		}else{
+			error "Service Id is not available."
+		}
 
 	}
-
+	
+	
 	def domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
@@ -139,7 +161,7 @@ node() {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + var_env_name_prefix + "-cloud-logs-streamer-dev"
+  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + var_env_name_prefix + "-cloud-logs-streamer-prod"
 
     echo "Role:: " + role
 
@@ -211,7 +233,9 @@ node() {
 
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain for PRODUCTION"
-
+					
+					writeServerlessFile(config)
+					
 					generateServerlessYml(service, current_environment, serviceName, cfStackName)
 					echo "setting lambda execution role as $role";
 					setLambdaExecutionRole(role);
@@ -270,6 +294,9 @@ node() {
 				// Generate serverless yml file with domain added in function name
 				echo "Generate deployment env with domain"
 
+				
+				writeServerlessFile(config)
+				
 				generateServerlessYml(service, current_environment, serviceName, cfStackName)
 				echo "setting lambda execution role as $role";
 				setLambdaExecutionRole(role);
@@ -534,6 +561,28 @@ def generateServerlessYml(service, env, serviceName, cfStackName) {
 	sh "sed -i -- 's/{env-stage}/" + env + "/g' serverless.yml"
 }
 
+def writeServerlessFile(config){
+	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml" 	
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/" + config['providerRuntime'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/" + config['providerMemorySize'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/" + config['providerTimeout'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleRate}/" + config['eventScheduleRate'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/" + config['eventScheduleEnable'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/" + config['securityGroupIds'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/" + config['subnetIds'] + "/g' serverless.yml"
+	
+	if(config['artifact']){
+		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/" + config['artifact'] + "/g' serverless.yml"
+	}
+	if(config['mainClass']){
+		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/" + config['mainClass'] + "/g' serverless.yml"
+	}
+	
+}
+
 /**
 	Set the Lambda execution role. If user provided a custom role override the default.
 */
@@ -647,9 +696,9 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
     }
 
 
-	sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
-	sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
-	sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
+	// sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
+	// sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
+	// sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
 
 	echoServerlessFile()
 
@@ -805,7 +854,7 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 
 def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
-	setCredentials(g_base_url + '/platform/login')
+	def token = setCredentials()
 
 	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
 
@@ -816,7 +865,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 	}
 
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $g_login_token\" \"$url\" | $jq -r '.data[0] | [.id, .endpoints[\"$preserveEnvKey\"], .created_by] | join(\",\")'", returnStdout: true)
+			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.id, .endpoints[\"$preserveEnvKey\"], .created_by] | join(\",\")'", returnStdout: true)
 
 	def values = curlOutput.split(',')
 
@@ -860,36 +909,36 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
  */
- def setCredentials(loginUrl) {
+ def setCredentials() {
+	def loginUrl = g_base_url + '/platform/login'
+	def token
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+		echo "user name is $UNAME"
 
-	if (g_login_token == '') {
+		def login_json = []
 
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-			echo "user name is $UNAME"
+		login_json = [
+			'username': UNAME,
+			'password': PWD
+		]
 
-			def login_json = []
+		def payload = JsonOutput.toJson(login_json)
 
-			login_json = [
-				'username': UNAME,
-				'password': PWD
-			]
+		try {
+			token = sh (script: "curl --silent -X POST -k -v \
+				-H \"Content-Type: application/json\" \
+				 $loginUrl \
+				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
 
-			def payload = JsonOutput.toJson(login_json)
-
-			try {
-				g_login_token = sh (script: "curl --silent -X POST -k -v \
-					-H \"Content-Type: application/json\" \
-					 $loginUrl \
-					-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
-
-				g_login_token = g_login_token.replaceAll("[\n\r]", "")
-			}
-			catch(e){
-				echo "error occured: " + e.getMessage()
-				error "error occured: " + e.getMessage()
-			}
+			token = token.replaceAll("[\n\r]", "")
+			return token
 		}
- 	}
+		catch(e){
+			echo "error occured: " + e.getMessage()
+			error "error occured: " + e.getMessage()
+		}
+	}
+ 	
 
  }
 
@@ -989,20 +1038,45 @@ def parseJson(jsonString) {
 * Load environment variables from build module
 */
 def loadConfigModule(buildModuleUrl){
-	echo "loading env variables, checking repos..."
 
 	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+			[credentialsId: repo_credential_id, url: buildModuleUrl]
 		]])
-
-		echo "loading installer variables..."
 
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
-		echo "finished loading env module"
 	}
+}
+
+/**
+ * Load metadata module groovy file
+ *
+ */
+def loadServiceMetadataModule(buildURL) {
+		try {						
+			echo "loading serviceMetaData, checking repos"
+
+			dir('service-metadata') {
+				checkout([$class: 'GitSCM', branches: [
+					[name: '*/master']
+				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+					[credentialsId: env.REPO_CREDENTIAL_ID, url: buildURL]
+				]])
+				serviceMetadata = load "service-metadata-loader.groovy"			
+				serviceMetadata.setAuthToken(setCredentials())
+
+				// Load and set dependent utility module.
+				echo "loading util module"
+				Util = load "utility-loader.groovy"
+				serviceMetadata.setUtil(Util)
+				return serviceMetadata 
+			}
+		
+		}catch(ex) {
+			error "loadServiceMetadataModule Failed. "+ex.getMessage()
+		}
 }
