@@ -4,9 +4,9 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" except for config_loader. env_name_prefix, jazz_bucket_web to be taken from the config_loader.
-@Field def repo_credential_id = "jenkins1cred"
-@Field def repo_base = "jazz-daily-installer-bitbucket-1723618883.us-east-1.elb.amazonaws.com"
-@Field def repo_core = "slf"
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
 @Field def config_loader
 @Field def env_name_prefix
 @Field def jazz_bucket_web
