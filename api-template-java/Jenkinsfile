@@ -11,7 +11,7 @@ import groovy.transform.Field
 /*
 * Load environment variables from build module
 */
-def load_config_module(build_module_url){
+def loadConfigModule(build_module_url){
   dir('config-loader') {
     checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: build_module_url]]])
     def result_json_string = readFile("jazz-installer-vars.json")
@@ -26,7 +26,7 @@ def load_config_module(build_module_url){
 node {
   stage('Loading Config-Loader') {
     build_module_url = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    load_config_module(build_module_url)
+    loadConfigModule(build_module_url)
   }
 
   stage('Triggering the Jenkins build') {
