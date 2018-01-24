@@ -95,11 +95,11 @@ node ()  {
     echo "$cf_id"
   }
   stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
-    sh '''
-    aws s3 ls ${jazz_bucket_web}
-    aws s3 cp jazz-ui/dist s3://${jazz_bucket_web} --recursive --include "*"
-    aws s3 ls ${jazz_bucket_web}
-    '''
+    sh """
+    aws s3 ls $jazz_bucket_web
+    aws s3 cp jazz-ui/dist s3://$jazz_bucket_web --recursive --include "*"
+    aws s3 ls $jazz_bucket_web
+    """
   }
   stage('Invalidating CloudFront') {
     invalidate_cloudfront(cf_id)
