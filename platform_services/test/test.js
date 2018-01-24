@@ -74,7 +74,11 @@ describe('platform_services', function() {
       },
       "body" : {
         "description" : "g0nna_GET_a-L!tt1e_we!rd",
-        "email" : "gonnaGetALittle@Wild.com"
+        "email" : "gonnaGetALittle@Wild.com",
+		"metadata":{
+			"service":"test-service2",
+			"securityGroupIds":"sg-cdb65db9"
+		}
       },
       "principalId": "g10$saryck"
     };
@@ -566,6 +570,8 @@ describe('platform_services', function() {
     errMessage = "No input data. Nothing to update service";
     event.body.description = undefined;
     event.body.email = null;
+    event.body.metadata = null;
+    
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
       return cb(null, dataObj);
