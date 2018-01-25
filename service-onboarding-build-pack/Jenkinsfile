@@ -33,7 +33,7 @@ def Event_Status = [
 ]
 @Field def region  = ''
 @Field def scm_base = ''
-@Field def cas_proj_id
+@Field def cas_proj_id = ''
 @Field def owner = ''
 @Field def scmModule
 
@@ -62,7 +62,7 @@ node  {
 	def var_bitbucket_branch_perm	= repo_protocol + repo_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_bitbucket_webhook_api	= repo_protocol + repo_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
 	def jenkins_url                 = JenkinsLocationConfiguration.get().getUrl()
-	def bitbucket-scmscource-hook  	= jenkins_url + "/bitbucket-scmsource-hook/notify"
+	def scmscource_hook  	= jenkins_url + "/bitbucket-scmsource-hook/notify"
 
 	loadScmModule(buildModuleUrl, scm, repo_base)
 	//Setting SCM Repo
@@ -208,8 +208,7 @@ node  {
 			{
 				// Add service owner in deployment-env.yml
 				// adding '\n' to be sure its added in a new line.
-				sh "echo \$'\nowner: $owner' >> ./deployment-env.yml"
-
+				sh "echo \$'owner: $owner' >> ./deployment-env.yml"
 
 				// Changing jenkins workflow to put slack_channel one more parameter in deployment-env yml (field name: slack_channel)
 				def slack_channelName = params.slack_channel
@@ -292,7 +291,6 @@ node  {
 			try{
 				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 					scmModule.createProjectInSCM(env.gitlab_private_token, owner, scm_repo_name, cas_rest_repo, env.REPO_LOC, uname, pwd)
-{
 					sh "git config --global user.email \"" + var_bitbucket_email + "\""
 					sh "git config --global user.name $UNAME"
 				}
@@ -421,7 +419,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.STARTED, "")
 					try{
 						echo "Adding web hooks for Jenkins integration"
-						sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\"  " + var_bitbucket_webhook_api + scm_repo_name + "/configurations  -d \'{\"title\": \"notify-jenkins\", \"url\": \"" + bitbucket-scmscource-hook  + "\" , \"enabled\": true}\'"
+						sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\"  " + var_bitbucket_webhook_api + scm_repo_name + "/configurations  -d \'{\"title\": \"notify-jenkins\", \"url\": \"" + scmscource_hook  + "\" , \"enabled\": true}\'"
 
 						sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
 					}

@@ -1,0 +1,137 @@
+#!groovy.
+
+node  {
+ //echo sh(returnStdout: true, script: 'env')
+ 
+ def config
+ def gitlab_credentialsId 	= env.REPO_CREDENTIAL_ID
+ def gitlab_repo_base	    = env.REPO_BASE
+ def gitlab_repo_url        = "http://" + gitlab_repo_base + "/" + env.REPO_LOC + "/"
+
+ def jenkins_username  = env.JENKINS_USERNAME
+ def jenkins_password  = env.JENKINS_PASSWORD
+
+ def gitlab_repo_name  = env.gitlabSourceRepoName
+ def gitlab_branch     = env.gitlabBranch
+ def service_type = ''
+ def service_name = ''
+ def domain_name  = ''
+ 
+ try{
+        sh 'rm -rf $gitlab_repo_name*'
+    	dir(gitlab_repo_name)
+    	{
+    		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: gitlab_credentialsId, url: gitlab_repo_url + gitlab_repo_name + '.git']]])
+    	    config = LoadConfiguration()
+    	   //Find the service type	
+    	   if (fileExists('build.api')) {
+				service_type = "api"
+                service_name = config['service']
+                domain_name  = config['domain']
+    	   } else if(fileExists('build.lambda')) {
+				service_type = "lambda"
+                service_name = config['service']
+                domain_name  = config['domain']
+    	   } else if(fileExists('build.website')) {
+				service_type = "website"
+                service_name  = config['service']
+                domain_name  = config['domain']
+    	   }
+        
+    	}
+    
+    	sh 'rm -rf $gitlab_repo_name*'
+    }
+    catch(error){
+    	//do nothing
+    	echo "Error Occured.."
+    }
+    
+    //Get the Build URL
+    if (service_type == 'api'){
+        build_job = env.API_BUILD_URI_DEV
+        if ( gitlab_branch == 'master') {
+            build_job = env.API_BUILD_URI
+        }
+    }else if(service_type == 'website') {
+        build_job = env.WEBSITE_BUILD_URI_DEV
+        if ( gitlab_branch == 'master') {
+            build_job = env.WEBSITE_BUILD_URI
+        }
+        
+        //Add scm_project as cas
+        build_job = build_job + "&scm_project=cas"
+     } else if (service_type == 'lambda' || service_type == 'function'){
+        build_job = env.LAMBDA_BUILD_URI_DEV
+        if ( gitlab_branch == 'master') {
+            build_job = env.LAMBDA_BUILD_URI 
+        }
+    }
+
+    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+    if ( service_type != '' && service_name != '' && domain_name != '') { 
+        echo "Call the build job"
+        sh "curl -X GET -k -v -u \"$jenkins_username:$jenkins_password\"  \"" + job_url + "&service_name=$service_name&domain=$domain_name&scm_branch=$gitlab_branch\""
+     }
+     else
+     {
+        error "Error:ServiceType or ServiceName or DomainName is empty"
+     }
+}
+
+/**
+	Reads deployment-env.yml.
+    Returns Property Map
+*/
+def LoadConfiguration() {
+    def prop = [:]
+    if (fileExists('deployment-env.yml')){
+        def result = readFile('deployment-env.yml').trim()
+
+        echo "result of yaml parsing....$result"
+        def resultList = result.tokenize("\n")
+
+        // delete commented lines
+        def cleanedList = []
+        for (i in resultList) {
+            if(i.toLowerCase().startsWith("#")) {
+            }else {
+            cleanedList.add(i)
+            }
+        }//for
+    	
+        def newItem = ["subnetIds", ""]
+        for (item in cleanedList) {
+            // Clean up to avoid issues with more ":" in the values
+            item = item.replaceAll(" ", "").replaceFirst(":", "#");
+            def eachItemList = item.tokenize("#")
+            //handle empty values
+            def value = "";
+            if(eachItemList[1]) {
+                value = eachItemList[1].trim();
+            }
+
+            //Parsing securityGroupIds
+            if(eachItemList[0].trim() == "subnetIds1" || eachItemList[0].trim()  == "subnetIds2" || eachItemList[0].trim()  == "subnetIds3")
+            {
+                if(newItem[1].trim()  == "")
+                    newItem[1] = "\""  + eachItemList[1].trim()
+                else
+                    newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
+            }
+            else if(eachItemList[0]) {
+                prop.put(eachItemList[0].trim(), value)
+            }
+        }
+        if(newItem[1] != "")
+        {
+            newItem[1] =  newItem[1].trim()  + "\""
+            prop.put(newItem[0].trim(),  newItem[1].trim())
+            def key = newItem[0].trim()
+            def val = newItem[1].trim()
+        }
+
+        echo "Loaded configurations...$prop"
+    }
+    return prop
+}

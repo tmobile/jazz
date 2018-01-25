@@ -225,6 +225,11 @@ function validateCreaterUserParams(config, userInput) {
 			return reject(errorHandler.throwInputValidationError("103", "Invalid User Registration Code"));
 		}
 
+    if(!config.scm_service_host){
+      logger.error("scm_service_host is not defined");
+      return reject(errorHandler.throwInputValidationError("111", "scm host not defined"));
+    }
+
 		resolve(userInput);
 	});
 }
@@ -285,28 +290,29 @@ function updatePassword(cognitoClient, config, userData) {
 	});
 }
 
-function createUserInSCM(config, userData) {
+function createUserInGitlab(config, userData) {
+  var encodedUserid = encodeURIComponent(userData.userid);
+	var encodedPwd = encodeURIComponent(userData.userpassword);
+  var url = config.scm_service_host
   //users are registered with username = email currently, have gitlab user accounts be
   //a truncated version without the email service domain
   //password has to be atleast 8 chars
   var cutIndex = userData.userid.indexOf('@');
   var username = userData.userid.substring(0,cutIndex);
-  var encodedUserid = encodeURIComponent(userData.userid);
-	var encodedPwd = encodeURIComponent(userData.userpassword);
   var encodeUsername = encodeURIComponent(username);
-	var url = config.bitbucket_service_host + config.bitbucket_usr_add_path + '?username=' + encodedUsername + '&password=' + encodedPwd + '&name=' + encodedUserid + '&email=' + encodedUserid ;
+  url = url + config.gitlab_usr_add_path + '?username=' + encodedUsername + '&password=' + encodedPwd + '&name=' + encodedUserid + '&email=' + encodedUserid ;
 
-	return {
-		url: url,
-		method: 'POST',
-		rejectUnauthorized: false,
-		headers: {
-			'Accept': 'application/json',
-			'Accept-Charset': 'utf-8',
+  return {
+    url: url,
+    method: 'POST',
+    rejectUnauthorized: false,
+    headers: {
+      'Accept': 'application/json',
+      'Accept-Charset': 'utf-8',
       'Private-Token' : config.gitlab_private_token
-		},
-		qs: {}
-	};
+    },
+    qs: {}
+  };
 }
 
 function createUserInBitBucket(config, userData) {
@@ -329,4 +335,19 @@ function createUserInBitBucket(config, userData) {
 		},
 		qs: {}
 	};
+}
+
+function createUserInSCM(config, userData) {
+  //bitbucket implementation
+  if(config.scm_service_host.includes("bitbucket")){
+  	createUserInBitBucket(config, userData);
+  }
+  //Gitlab implementation
+  else if(config.scm_service_host.includes("gitlab")){
+    createUserInGitlab(config, userData);
+  }
+  else if (config.scm_service_host){
+    logger.error("Currently, the scm: " + config.scm_service_host + " is not supported");
+    return reject(errorHandler.throwInputValidationError("110", "scm not supported"));
+  }
 }
