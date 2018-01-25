@@ -277,9 +277,9 @@ node  {
 					}
 				}
 
-				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, env.API_KEY, region,serviceMetadataJson);
+				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, configLoader.API.API_KEY, region,serviceMetadataJson);
 				
-				updateServiceInDB(service_id_in_db, env.API_KEY, region, "creation_started", repo_url);
+				updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, region, "creation_started", repo_url);
 			}
 		}
 		catch(error){
