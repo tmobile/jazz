@@ -9,5 +9,6 @@
   "bitbucket_usr_grp_add_path" : "/rest/api/1.0/admin/groups/add-users",
   "gitlab_private_token" : "{gitlab-private-token}",
   "reg_codes": ["JAZZ"],
-  "required_fields": ["userid", "userpassword", "usercode"]
+  "required_fields": ["userid", "userpassword", "usercode"],
+  "scm" : "{scm}"
 }

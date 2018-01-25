@@ -225,8 +225,8 @@ function validateCreaterUserParams(config, userInput) {
 			return reject(errorHandler.throwInputValidationError("103", "Invalid User Registration Code"));
 		}
 
-    if(!config.scm_service_host){
-      logger.error("scm_service_host is not defined");
+    if(!config.scm){
+      logger.error("scm is not defined");
       return reject(errorHandler.throwInputValidationError("111", "scm host not defined"));
     }
 
@@ -339,15 +339,15 @@ function createUserInBitBucket(config, userData) {
 
 function createUserInSCM(config, userData) {
   //bitbucket implementation
-  if(config.scm_service_host.includes("bitbucket")){
+  if(config.scm.includes("bitbucket")){
   	createUserInBitBucket(config, userData);
   }
   //Gitlab implementation
-  else if(config.scm_service_host.includes("gitlab")){
+  else if(config.scm.includes("gitlab")){
     createUserInGitlab(config, userData);
   }
-  else if (config.scm_service_host){
-    logger.error("Currently, the scm: " + config.scm_service_host + " is not supported");
+  else if (config.scm){
+    logger.error("Currently, the scm: " + config.scm + " is not supported");
     return reject(errorHandler.throwInputValidationError("110", "scm not supported"));
   }
 }

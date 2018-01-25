@@ -11,5 +11,6 @@
   "scm_password" : "{bb_password}",
   "gitlab_private_token" : "{gitlab-private-token}",
   "reg_codes": ["JAZZ"],
-  "required_fields": ["userid", "userpassword", "usercode"]
+  "required_fields": ["userid", "userpassword", "usercode"],
+  "scm" : "{scm}"
 }
