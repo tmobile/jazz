@@ -121,6 +121,28 @@ def transferProject(gitlab_private_token, cas_id, project_id){
   	).trim()
 }
 
+/**
+ * Delete the project repository from scm
+ * @param  scm_repo_name
+ * @return
+ */
+def deleteProject(gitlab_private_token, repo_loc, scm_repo_name, cas_rest_repo, username, password) {
+  if(scm == "gitlab"){
+    def encodedProjectPath = repo_loc + "%2F" + scm_repo_name
+    def gitlab_repo_output = sh (
+      script: "curl --header \"Private-Token: $gitlab_private_token\" -X POST \"http://$repo_base/api/v3/projects/$encodedProjectPath\"",
+      returnStdout: true
+    ).trim()
+  }
+  else if(scm == "bitbucket"){
+    def repourl = cas_rest_repo + scm_repo_name;
+		def outputStr = sh (
+			script: "curl -X DELETE -k -u \"$username:$password\" '" + cas_rest_repo + scm_repo_name +"'" ,
+			returnStdout: true
+		).trim()
+  }
+}
+
 
 //setters start
 def setScm(paramScm){
