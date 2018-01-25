@@ -14,7 +14,7 @@ import groovy.transform.Field
 /*
 * Load environment variables from build module
 */
-def load_config_module(build_module_url){
+def loadConfigModule(build_module_url){
   echo "loading environment variables, checking repos..."
 
   dir('config-loader') {
@@ -64,7 +64,7 @@ def invalidate_cloudfront(cf_id) {
 node ()  {
   stage('Loading Config-Loader') {
     build_module_url = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    load_config_module(build_module_url)
+    loadConfigModule(build_module_url)
   }
   stage('Assigning variables for this build') {
     env_name_prefix = config_loader.env_name_prefix
