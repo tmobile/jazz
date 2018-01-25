@@ -10,7 +10,7 @@
 
                     <div class="form-label">{{userEmail}}</div>
 
-                    <input required class='ip-usr' pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$" [class.err-border]='err_username_brd || (model.username &&(!username.valid && (username.dirty || username.touched)))'  (keyup.enter)="login()" type="email" name='Username' [(ngModel)]="model.username" (ngModelChange)="onChange($event)" #username='ngModel'>
+                    <input required class='ip-usr' pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,3}$" [class.err-border]='err_username_brd || (model.username &&(!username.valid && (username.dirty || username.touched)))'  (keyup.enter)="login()" type="email" name='Username' [(ngModel)]="model.username" (ngModelChange)="onChange($event)" #username='ngModel'>
                     <p class='login-form-errmsg' *ngIf="model.username && (!username.valid && (username.dirty || username.touched))">Please enter a valid email</p>
                     <div  class='hide-er' [class.error-msg]="error_username_disp">
                             <div>
