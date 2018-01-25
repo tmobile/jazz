@@ -4,7 +4,7 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 /*
-* Logic for working with the user's preferred scm
+* Logic for configuring projects in the user's preferred scm
 */
 
 @Field def scm
@@ -39,7 +39,7 @@ def createProjectInSCM(gitlab_private_token, repo_owner, scm_repo_name, cas_rest
   		def git_username
       def cas_proj_id
       def cas_repo_id
-
+      //assuming usernames for now are a concatination of the user's email, check platform_usermanagement index.js
   		if(repo_owner.contains("@")){
   			git_username = repo_owner.substring(0, owner.indexOf("@"))
   		}
@@ -60,15 +60,13 @@ def createProjectInSCM(gitlab_private_token, repo_owner, scm_repo_name, cas_rest
 
   		transferProject(cas_repo_id, cas_proj_id)
   	}
-  	else{
+  	else if(scm == "bitbucket"){
   		sh "curl -X POST -k -v -u \"$username:$password\" -H \"Content-Type: application/json\" " + cas_rest_repo + " -d \'{\"name\":\""+ scm_repo_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
   	}
   }catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-			//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage())
+			echo "createUserInSCM Failed"
 			error "createProjectInSCM Failed. "+ex.getMessage()
-		} else {
-			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 		}
 	}
 }
@@ -89,10 +87,8 @@ def getGitlabUserId(gitlab_username, gitlab_private_token){
   }
   catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-			//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage())
+			echo "getGitlabUserId Failed"
 			error "getGitlabUserId Failed. "+ex.getMessage()
-		} else {
-			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 		}
 	}
 }
@@ -112,10 +108,8 @@ def getCasRepoId(gitlab_private_token, repo_loc){
   	return groupObject[0].id
   }catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-			//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage())
+			echo "getCasRepoId Failed"
 			error "getCasRepoId Failed. "+ex.getMessage()
-		} else {
-			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 		}
 	}
 }

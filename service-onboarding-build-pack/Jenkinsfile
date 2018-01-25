@@ -102,6 +102,16 @@ node  {
 			//error "Invalid Admin Group"
 		}
 
+		if(scm == null || scm.isEmpty()){
+			sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.VALIDATE_INPUT, Event_Status.FAILED, "Invalid SCM")
+			error "scm is not defined"
+		}
+
+		if(!scm.equals("bitbucket") && !scm.equals("gitlab")){
+			sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.VALIDATE_INPUT, Event_Status.FAILED, "Invalid SCM")
+			error "scm host is not currently supported"
+		}
+
 		if(service_type == "api" || service_type == "lambda" || service_type == "function" || service_type == "website" ) {
 			if(runtime == "nodejs" || runtime  == "python" || runtime == "java" || runtime == "" ) {
 
