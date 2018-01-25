@@ -55,6 +55,7 @@ def Event_Status = [
 @Field def env_prefix = ''
 @Field def region = ''
 @Field def jq = '/usr/local/bin/jq'
+@Field def scm_base = ''
 
 node ()  {
 	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
@@ -74,15 +75,17 @@ node ()  {
 
 	echo "Build Pack website params: " + params
 
-    def service = params.service_name
-	def branch = params.scm_branch
-	def domain = params.domain
-
-    def bitbucket_name = params.service_name
-
-	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${params.scm_project}/"
-
+    def service 		= params.service_name
+	def branch 			= params.scm_branch
+	def domain 			= params.domain
+    def bitbucket_name 	= params.service_name
+	def scm       		= env.JAZZ_SCM
 	def config
+
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)
+
+	def scm_base_url = "http://${scm_base}${params.scm_project}/"
 
 	if (params.scm_branch == 'master') {
 		current_environment = 'prod'
@@ -105,7 +108,7 @@ node ()  {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: scm_base_url + bitbucket_name + '.git']]])
 		}
 
 		// @TODO: dir can be removed, needs to be refactored
@@ -364,6 +367,15 @@ node ()  {
 	}
 }
 
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
+	}
+}
+
 def getS3BucketName(String envname) {
 
 	if (envname == "dev") {
@@ -493,7 +505,7 @@ def validateTemplate() {
 
 def loadDistributionConfig() {
 
-	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: 'http://' + var_bitbucket_base + '/scm/' + var_repo_core + '/website-distribution-pack.git']]])
+	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + scm_base + env.REPO_CORE + '/website-distribution-pack.git']]])
 
 }
 
@@ -561,7 +573,7 @@ def loadIPList() {
 
   dir('_jenkins_buildpack') {
 
-		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: 'http://' + var_bitbucket_base + '/scm/' + var_repo_core + '/jenkins-build-pack-website.git']]])
+		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: env.REPO_CREDENTIAL_ID , url: 'http://' + scm_base + env.REPO_CORE + '/jenkins-build-pack-website.git']]])
 
 	}
 

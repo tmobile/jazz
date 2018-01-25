@@ -21,15 +21,7 @@ import groovy.transform.Field
 @Field def role = ''
 @Field def api_doc_s3_bucket = ''
 @Field def jq = '/usr/local/bin/jq'
-@Field def var_api_key
-@Field def var_api_id_dev
-@Field def var_aws_credential_id
-@Field def var_env_name_prefix
-@Field def var_repo_core
-@Field def var_repo_loc
-@Field def var_credentialsId
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
+@Field def scm_base = ''
 
 node {
 	echo "Starting delete service job.."
@@ -61,16 +53,24 @@ node {
 	def domainConfig
 	def cloudfrontEnabled
 	def flowType
+    def scm                        = env.JAZZ_SCM
 	def repo_protocol				= "http://"
-	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/"
-	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + var_repo_loc + "/repos"
-	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + var_repo_loc + "/"
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
-	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/service-onboarding-build-pack.git"
-	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + var_repo_loc + "/repos/"
-	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + var_repo_loc + "/repos/"
+	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
+	def var_bitbucket_base			= env.REPO_BASE	
+	def var_api_key 				= env.API_KEY
+	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + env.REPO_LOC + "/repos"
+	def var_bitbucket_email 		= env.REPO_EMAIL	
+	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + env.REPO_LOC + "/repos/"
+	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + env.REPO_LOC + "/repos/"
 	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
-	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/${var_repo_core}/jazz-build-module.git"
+	`
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)
+
+    def scm_base_url                = repo_protocol + scm_base + env.REPO_CORE + "/"
+    def cas_clone_url               = scm_base + env.REPO_LOC + "/"
+	def configPackBBURL             = "http://" + scm_base + env.REPO_CORE + "/serverless-config-pack.git"
+    def jazzBuildModuleURL          = "http://${scm_base}${env.REPO_CORE}/jazz-build-module.git"
 
 	var_db_service_id = params.db_service_id
 
@@ -100,7 +100,7 @@ node {
 
 	stage("Initialization") {
 
-		checkoutSCM(bitbucket_repo_name, repo_protocol + var_cas_clone_url)
+		checkoutSCM(bitbucket_repo_name, repo_protocol + cas_clone_url)
 		config = dir(bitbucket_repo_name){
 			return LoadConfiguration()
 		}
@@ -240,10 +240,10 @@ def unDeployService(stage, region) {
  * @param  bitbucket_repo_name
  * @return
  */
-def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
+def checkoutSCM(bitbucket_repo_name, cas_clone_url) {
 	dir(bitbucket_repo_name)
 	{
-		def repo_url = var_cas_clone_url + bitbucket_repo_name+".git"
+		def repo_url = cas_clone_url + bitbucket_repo_name+".git"
 		//events.sendStartedEvent('GET_SERVICE_CODE')
 		try {
 			checkout([$class: 'GitSCM', branches: [
@@ -258,6 +258,21 @@ def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
 			send_status_email ("FAILED")
 			error "checkoutSCM Failed. "+ex.getMessage()
 		}
+	}
+}
+
+/**
+ * Seting the SCM Base.
+ * @param  scm 
+  * @param  repo_base 
+ * @return
+ */
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
 	}
 }
 

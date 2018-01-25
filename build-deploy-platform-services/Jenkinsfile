@@ -2,22 +2,6 @@
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
-@Field def configModule
-@Field def configLoader
-@Field def var_api_key
-@Field def var_api_id_dev
-@Field def var_aws_credential_id
-@Field def var_env_name_prefix
-@Field def var_repo_core
-@Field def var_repo_loc
-@Field def var_credentialsId
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
-@Field def var_bitbucket_username
-@Field def var_bitbucket_password
-@Field def var_user_pool_id
-@Field def var_client_id
-
 //build-deploy-platform-services jenkinsfile
 
 def Event_Name =[
@@ -48,53 +32,35 @@ def Event_Status = [
 	'FAILED':'FAILED'
 ]
 
-node {
+@Field def scm_base = ''
+
+node {		
 
 	echo "params : $params"
-	def jazzBuildModuleURL = "http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git"
-	loadConfigModule(jazzBuildModuleURL)
-	var_api_key 				= configLoader.API.API_KEY
-	var_api_id_dev = configLoader.API.API_ID_DEV
-	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
-	var_repo_core = configLoader.REPOSITORY.REPO_CORE
-	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
-	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
-	var_bitbucket_username = configLoader.BITBUCKET.BITBUCKET_USERNAME
-	var_bitbucket_password = configLoader.BITBUCKET.BITBUCKET_PASSWORD
-	var_user_pool_id = configLoader.COGNITO.USER_POOL_ID
-	var_client_id = configLoader.COGNITO.CLIENT_ID
 
-	def service_template = ""
-	def service_type =  "api"
-	def runtime = "nodejs"
-	def service_name = ""
-	def admin_group = ""
-	def bitbucket_name = ""
-	def domain = "platform"
-	def region = ""
-	def envmnt = 'prod'
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/"
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
-	def es_hostname = configLoader.JAZZ.jazz_es_hostname
+	def service_template		= params.service_name
+	def service_name			= params.service_name
+	def admin_group 			= params.admin_group
+	def region					= params.region
+	def environment				= params.deploy_env
+	def scm_repo_name 			= service_template
+	def domain 					= "platform"
+	def service_type 	 		= "api"
+	def runtime 		 		= "nodejs"
+	def credential_id 			= env.REPO_CREDENTIAL_ID
+	def scm_repo_base			= env.REPO_BASE
+	def api_key 				= env.API_KEY
+	def scm                		= env.JAZZ_SCM
+	def es_hostname 			= env.jazz_es_hostname
 
-	if(params.service_name){
-		service_template = params.service_name
-		service_name = params.service_name
-		bitbucket_name = service_template
-	}
-	if(params.admin_group){
-		admin_group = params.admin_group
-	}
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)
 
-	if(params.region){
-		region = params.region
-	}
-
+	def configPackBBURL 	= "http://" + scm_base + env.REPO_CORE + "/serverless-config-pack.git" 
+	def scm_base_url 		= "http://" + scm_base + env.REPO_CORE + "/"
+	
 	if(params.domain && params.domain.trim() != ""){
-		bitbucket_name = params.domain.trim() + "-" + service_name
+		scm_repo_name = params.domain.trim() + "-" + service_name
 		domain = params.domain.trim()
 	}
 
@@ -111,17 +77,17 @@ node {
 	stage ('Get Serverless Service')
 	{
 		try{
-			sh 'rm -rf ' + bitbucket_name + '*'
+			sh 'rm -rf ' + scm_repo_name + '*'
 		}
 		catch(error){
 			//do nothing
 		}
 
 		try{
-			sh 'mkdir ' + bitbucket_name
-			dir(bitbucket_name)
+			sh 'mkdir ' + scm_repo_name
+			dir(scm_repo_name)
 			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
+				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: credential_id, url: scm_base_url + service_template + '.git']]])
 			}
 		}
 		catch(error){
@@ -131,14 +97,14 @@ node {
 	}
 
 	// Need to be refactored
-	def config = dir(bitbucket_name)
+	def config = dir(scm_repo_name)
 	{
 	    return LoadConfiguration()
 	}
-
-	def roleARN						= config['iamRoleARN'].replaceAll("/", "\\\\/")
-    service_name					= config['service']
-
+	
+	def roleARN		= config['iamRoleARN'].replaceAll("/", "\\\\/")
+    service_name	= config['service']
+	
 	// @TODO : the below couple of statements will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
@@ -150,21 +116,116 @@ node {
 		echo "Inside Update service template"
 
 		try{
-
-			dir(bitbucket_name)
+		
+			dir(scm_repo_name)
 			{
 				echo "loadServerlessConfig......."
 				loadServerlessConfig(runtime, configPackBBURL)
-
-				def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-
+			    
 				region = config['region']
-
-				def var_api_host_name			= var_api_key+".execute-api."+region+".amazonaws.com"
+				def jenkinsURL    = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
+				def api_host_name = api_key + ".execute-api." + region + ".amazonaws.com"
+				
+				// @TODO : Swagger sed's needs to be refactored
+  			    if (fileExists('swagger/swagger.json')){
+					//Swagger SEDs
+					echo "Updating the Swagger SEDs"
+					sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
+					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
+				 }
 
 				serviceConfigdata = loadServiceConfigurationDataModule(jazzBuildModuleURL,configLoader,roleARN, region, roleId, jenkinsURL, envmnt,es_hostname, var_bitbucket_base,service_template)
 				serviceConfigdata.loadServiceConfigurationData()
 
+				// @TODO : These conditional statements could be removed and needs to refactored
+                if ( (service_template.trim() == "create-serverless-service") ) {
+					echo "Updating configs for repo base"
+					
+					sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-repo-base}/" + env.REPO_BASE + "/g' ./config/prod-config.json"
+				}
+				
+				// @TODO : These conditional statements could be removed and needs to refactored
+				if ( (service_template.trim() == "delete-serverless-service") || (service_template.trim() == "create-serverless-service") ) {
+					echo "Updating configs for jenkins host"
+					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./config/prod-config.json"
+
+					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
+                    sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+                  
+					echo "Updating configs for stg"
+					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
+                    sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+                  
+					echo "Updating configs for prod"
+					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
+					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
+                    sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+				}
+				
+				// @TODO : These conditional statements could be removed and needs to refactored
+                if (service_template.trim() == "platform_services") {
+					echo "Updating parameter specific to platform-services"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+                }
+
+			  	if (service_template.trim() == "platform_logs") {
+					echo "Updating parameter specific to platform_logs"
+					sh "sed -i -- 's/{env-prefix}/" + env.env_name_prefix + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{env-prefix}/" + env.env_name_prefix + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{env-prefix}/" + env.env_name_prefix + "/g' ./config/prod-config.json"
+
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/prod-config.json"
+                }
+
+				if (service_template.trim() == "cloud-logs-streamer") {
+					echo "Updating parameter specific to cloud-logs-streamer"
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/prod-config.json"
+                }
+
+				if (service_template.trim() == "platform_usermanagement") {
+					echo "Updating parameter specific to platform_usermanagement"
+
+					sh "sed -i -- 's/{user_pool_id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{user_pool_id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{user_pool_id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
+
+					sh "sed -i -- 's/{user_client_id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{user_client_id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{user_client_id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
+
+                    sh "sed -i -- 's/{region}/" + region + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{region}/" + region + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{region}/" + region + "/g' ./config/prod-config.json"
+
+					sh "sed -i -- 's,{bb_service_host}," + "http://" + scm_repo_base + ",g' ./config/dev-config.json"
+					sh "sed -i -- 's,{bb_service_host}," + "http://" + scm_repo_base + ",g' ./config/stg-config.json"
+					sh "sed -i -- 's,{bb_service_host}," + "http://" + scm_repo_base + ",g' ./config/prod-config.json"                
+					
+					sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{bb_username}/" + env.BITBUCKET_USERNAME + "/g' ./config/prod-config.json"
+
+					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/dev-config.json"
+					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/stg-config.json"
+					sh "sed -i -- 's/{bb_password}/" + env.BITBUCKET_PASSWORD + "/g' ./config/prod-config.json"
+
+					sh "sed -i -- 's,{gitlab-private-token}," + "http://" + env.gitlab_private_token + ",g' ./config/dev-config.json"
+					sh "sed -i -- 's,{gitlab-private-token}," + "http://" + env.gitlab_private_token + ",g' ./config/stg-config.json"
+					sh "sed -i -- 's,{gitlab-private-token}," + "http://" + env.gitlab_private_token + ",g' ./config/prod-config.json"
+				}
 
 			}
 		}
@@ -185,15 +246,14 @@ node {
 		// Generate serverless yml file with domain added in function name
 		echo "Generate deployment env with domain"
 
-
-		withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+		withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: env.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 		sh "aws configure set profile.cloud-api.region "+region
 		sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 		sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
 		sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
-
-		dir(bitbucket_name)
+		
+		dir(scm_repo_name)
 		{
 			echo "NPM Build initiated"
 			sh "npm install --save"
@@ -203,23 +263,20 @@ node {
 			sh "sed -i -- 's/" + service_name + "/" + var_env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
 
 			echo "Deploying lambda service"
-
-			def envBucketKey = configLoader.JAZZ_S3.jazz_bucket_name_prefix + envmnt
-
-			sh "serverless deploy --stage " + envmnt + " -v --bucket "  + env[envBucketKey]
+			sh "serverless deploy --stage " + environment + " -v --bucket " + env.jazz_bucket_dev
 			echo "Deployed lambda service"
 
 			// Generate swagger file based on environment
 			if (fileExists('swagger/swagger.json')) {
 				echo "Generating the swagger file for each environment"
-				def apiHostName	= var_api_key+".execute-api."+region+".amazonaws.com" //Development environment
-
-				generateSwaggerEnv(service_name, envmnt, var_env_name_prefix+"-"+envmnt, apiHostName, domain, service_name, var_env_name_prefix)
-
+				def apiHostName	= api_key + ".execute-api." + region + ".amazonaws.com" //Development environment
+				
+				generateSwaggerEnv(service_name, environment, env.env_name_prefix+"-"+environment, apiHostName, domain, service_name, env.env_name_prefix)
+				
 				// import swagger api spec
 				echo "Deploying API gateway Endpoints"
-				sh "aws apigateway put-rest-api --rest-api-id "+var_api_key+" --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
-				sh "aws apigateway create-deployment --rest-api-id "+var_api_key+" --stage-name "+envmnt+" --profile cloud-api"
+				sh "aws apigateway put-rest-api --rest-api-id "+api_key+" --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
+				sh "aws apigateway create-deployment --rest-api-id "+api_key+" --stage-name "+environment+" --profile cloud-api"
 
 			}
 
@@ -263,6 +320,20 @@ node {
 
 }
 
+/**
+ * Sets the SCM Base wrt the scm configured
+ * @param  scm repo_base
+ * @return
+ */
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
+	}
+}
+
 def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName, env_name_prefix) {
     sh "sed -i -- 's/{lambda_function_name}/" +env_name_prefix + "-" + serviceName + "-" + env + "/g' swagger/swagger.json"
     sh "sed -i -- 's/{api_deployment_node_title}/" + deploymentNode + "/g' swagger/swagger.json" // {api_deployment_node_title}
@@ -290,8 +361,10 @@ def resetCredentials() {
 def LoadConfiguration() {
 	def prop = [:]
 	def result = readFile('deployment-env.yml').trim()
+	
 	echo "result of yaml parsing....$result"
 	def resultList = result.tokenize("\n")
+	
 	// delete commented lines
 	def cleanedList = []
 	for (i in resultList) {
@@ -299,28 +372,31 @@ def LoadConfiguration() {
 		}else {
 			cleanedList.add(i)
 		}
-		}
-		def newItem = ["subnetIds", ""]
+	}
+	
+	def newItem = ["subnetIds", ""]
 	for (item in cleanedList) {
-
 		// Clean up to avoid issues with more ":" in the values
 		item = item.replaceAll(" ", "").replaceFirst(":", "#");
 
 		def eachItemList = item.tokenize("#")
+		
 		//handle empty values
 		def value = "";
 		if(eachItemList[1]) {
 			value = eachItemList[1].trim();
 		}
+
+		//Parsing securityGroupIds
 		if(eachItemList[0].trim() == "securityGroupIds")
 		{
-
 			if(value.indexOf('"') == -1)
 				value = "\"" + value + "\""
 
 			echo value
 		}
 
+		//Parsing securityGroupIds
 		if(eachItemList[0].trim() == "subnetIds1" || eachItemList[0].trim()  == "subnetIds2" || eachItemList[0].trim()  == "subnetIds3")
 		{
 			if(newItem[1].trim()  == "")
@@ -333,7 +409,6 @@ def LoadConfiguration() {
 		else if(eachItemList[0]) {
 			prop.put(eachItemList[0].trim(), value)
 		}
-
 	}
 	if(newItem[1] != "")
 	{
@@ -342,6 +417,7 @@ def LoadConfiguration() {
 		def key = newItem[0].trim()
 		def val = newItem[1].trim()
 	}
+
 	echo "Loaded configurations...$prop"
 	return prop
 }

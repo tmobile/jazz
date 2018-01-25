@@ -66,6 +66,7 @@ def Event_Status = [
 @Field def current_environment = ''
 @Field def region = ''
 @Field def jq = '/usr/local/bin/jq'
+@Field def scm_base = ''
 
 node ()  {
 	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
@@ -89,15 +90,18 @@ node ()  {
 
     echo "start"
 
-    def serviceName = ""
-    def cfStackName = ""
-		if(params.service_name != null && !params.service_name.isEmpty()){
-			serviceName = params.service_name
-			cfStackName = params.service_name
-		}
+    def scm 		= env.JAZZ_SCM
+	def serviceName = params.service_name
+	def cfStackName = params.service_name
 	def branch = params.scm_branch
 	def bitbucket_name = params.service_name
-	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${var_repo_loc}/"
+	def var_credentialsId 			= env.REPO_CREDENTIAL_ID
+
+	//Setting SCM Repo
+	setSCMBase(scm, env.REPO_BASE)
+
+	def scm_base_url = "http://${scm_base}${env.REPO_LOC}/"
+	def api_key      = env.API_KEY
 	def config
 	def domain
 
@@ -120,7 +124,7 @@ node ()  {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: scm_base_url + bitbucket_name + '.git']]])
 		}
 
 		sh 'cd ' + bitbucket_name
@@ -247,7 +251,7 @@ node ()  {
 						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.FAILED, ex.getMessage())
 						error ex.getMessage()
 					}
-					updateServiceInDB(service_id, domain, var_api_key, region, "active")
+					updateServiceInDB(service_id, domain, api_key, region, "active")
 					sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}//end of withCredentials
 			}//end of dir
@@ -310,12 +314,21 @@ node ()  {
 						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.FAILED, ex.getMessage())
 						error ex.getMessage()
 					}
-					updateServiceInDB(service_id, domain, var_api_key, region, "active")
+					updateServiceInDB(service_id, domain, api_key, region, "active")
 					sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}//end of withCredentials
 			}//end of dir
 		}//end of stage to dev
 	}//end of else deploy to dev
+}
+
+def setSCMBase(scm, repo_base)
+{
+	scm_base = repo_base + "/"
+	if (scm == 'bitbucket')
+	{
+		scm_base = scm_base + "scm/"
+	}
 }
 
 def echoServerlessFile() {
@@ -600,7 +613,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 		//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
 		//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
 
-		def configPackBBURL = "http://${var_bitbucket_base}/scm/${var_repo_core}/serverless-config-pack.git"
+		def configPackBBURL = "http://${scm_base}${env.REPO_CORE}/serverless-config-pack.git"
 
 		dir('_config') {
 			checkout([$class: 'GitSCM', branches: [
