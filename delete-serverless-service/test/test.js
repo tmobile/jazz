@@ -110,21 +110,6 @@ describe('delete-serverless-service', function() {
       assert.isTrue(bothCases);
     });
 
-    /*
-    * Given an event with no headers or headers.Authorization, handler() informs authorization is missing
-    * @param {object} event, containing no headers or headers.Authorization
-    * @params {object, function} default aws-context object and callback function
-    * @returns {string} error notification indicating there was an InternalServerError
-    */
-    it("should inform user of missing Authorization if given an event with no headers or Authorization", ()=>{
-      var errMessage = "Authorization not defined in header or approriate";
-      var errType = "InternalServerError";
-      var allCases = checkCase("headers", "Authorization", null, errMessage, errType) &&
-                      checkCase("headers", "Authorization", undefined, errMessage, errType) &&
-                      checkCase("headers", null, null, errMessage, errType) &&
-                      checkCase("headers", null, undefined, errMessage, errType);
-      assert.isTrue(allCases);
-    });
 
     /*
     * Given an event with no body.domain, handler() informs service domain is missing

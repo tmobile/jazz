@@ -64,6 +64,16 @@ node {
 		domain = params.domain.trim()
 	}
 
+	if(params.scm_branch){
+		if (params.scm_branch == 'master') {
+			envmnt = 'prod'
+			var_api_key = configLoader.API.API_ID_PROD
+		}else {
+			envmnt = 'dev'
+			var_api_key = configLoader.API.API_ID_DEV
+		}
+	}
+
 	stage ('Get Serverless Service')
 	{
 		try{
@@ -85,7 +95,7 @@ node {
 		}
 
 	}
-	
+
 	// Need to be refactored
 	def config = dir(scm_repo_name)
 	{
@@ -97,14 +107,14 @@ node {
 	
 	// @TODO : the below couple of statements will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
-	
+
 	stage ('Update Service Template')
 	{
 	    // @TODO : Send Event feature coming soon
 		//sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 		sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 		echo "Inside Update service template"
-		
+
 		try{
 		
 			dir(scm_repo_name)
@@ -125,62 +135,8 @@ node {
 					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
 				 }
 
-				echo "Updating the index.js for create and delete services"
-				
-				// @TODO : These conditional statements could be removed and needs to be refactored
-				if ((service_template.trim() == "delete-serverless-service") ) {
-					sh "sed -i -- 's/{conf-jenkins-host}/" + jenkinsURL + "/g' ./index.js"
-				}
-				
-				if ( (service_template.trim() == "platform_events") ) {
-					sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' ./components/dev-config.json"
-					sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' ./components/stg-config.json"
-					sh "sed -i -- 's/{conf_stack_prefix}/" + env.env_name_prefix + "/g' ./components/prod-config.json"
-				}
-				
-				if ( (service_template.trim() == "platform-services-handler") ) {
-					sh "sed -i -- 's/{conf-apikey}/" + env.API_ID_DEV + "/g' ./config/dev-config.json"
-					sh "sed -i -- 's/{conf-apikey}/" + env.API_ID_STG + "/g' ./config/stg-config.json"
-					sh "sed -i -- 's/{conf-apikey}/" + env.API_ID_PROD + "/g' ./config/prod-config.json"
-					
-					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
-					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
-					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
-					
-					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/dev-config.json"
-					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/stg-config.json"
-					sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./config/prod-config.json"
-					
-				}
-				
-				// @TODO : These conditional statements could be removed and needs to be refactored
-				if ( (service_template.trim() == "platform_login") || (service_template.trim() == "platform_logout") || (service_template.trim() == "cognito-authorizer")) {
-					echo "Updating configs for dev login and logout"
-					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/dev-config.json"
-					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/dev-config.json"
-                    sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
-                  
-					echo "Updating configs for stg"
-					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/stg-config.json"
-					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/stg-config.json"
-                    sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
-                  
-					echo "Updating configs for prod"
-					sh "sed -i -- 's/{conf-user-pool-id}/" + env.USER_POOL_ID + "/g' ./config/prod-config.json"
-					sh "sed -i -- 's/{conf-client-id}/" + env.CLIENT_ID + "/g' ./config/prod-config.json"
-                    sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
-				}
-				
-				if ( (service_template.trim() == "is-service-available"))   
-				{
-					sh "sed -i -- 's/{inst_stack_prefix}/" + env.env_name_prefix + "/g' ./config/dev-config.json"
-					sh "sed -i -- 's/{inst_stack_prefix}/" + env.env_name_prefix + "/g' ./config/stg-config.json"
-					sh "sed -i -- 's/{inst_stack_prefix}/" + env.env_name_prefix + "/g' ./config/prod-config.json"
-
-					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
-					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
-					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
-				}
+				serviceConfigdata = loadServiceConfigurationDataModule(jazzBuildModuleURL,configLoader,roleARN, region, roleId, jenkinsURL, envmnt,es_hostname, var_bitbucket_base,service_template)
+				serviceConfigdata.loadServiceConfigurationData()
 
 				// @TODO : These conditional statements could be removed and needs to refactored
                 if ( (service_template.trim() == "create-serverless-service") ) {
@@ -271,12 +227,6 @@ node {
 					sh "sed -i -- 's,{gitlab-private-token}," + "http://" + env.gitlab_private_token + ",g' ./config/prod-config.json"
 				}
 
-				if (service_template.trim() == "platform_email") {
-					echo "Updating parameter specific to platform email"
-					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
-					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
-					sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
-                }
 			}
 		}
 		catch(error){
@@ -287,12 +237,12 @@ node {
 			echo(error)
 		}
 	}
-	
-	
-	stage('Deployment to Dev Env') {
+
+
+	stage('Deployment to ' + envmnt + '  Env') {
 		// @TODO : Send Event feature coming soon
 		sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
-		
+
 		// Generate serverless yml file with domain added in function name
 		echo "Generate deployment env with domain"
 
@@ -300,7 +250,7 @@ node {
 		sh "aws configure set profile.cloud-api.region "+region
 		sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 		sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-		
+
 		sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
 		
 		dir(scm_repo_name)
@@ -308,14 +258,14 @@ node {
 			echo "NPM Build initiated"
 			sh "npm install --save"
 			echo "NPM Build completed"
-			
+
 			//Change lambda service name to add stack prefix name
-			sh "sed -i -- 's/" + service_name + "/" + env.env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
+			sh "sed -i -- 's/" + service_name + "/" + var_env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
 
 			echo "Deploying lambda service"
 			sh "serverless deploy --stage " + environment + " -v --bucket " + env.jazz_bucket_dev
 			echo "Deployed lambda service"
-							
+
 			// Generate swagger file based on environment
 			if (fileExists('swagger/swagger.json')) {
 				echo "Generating the swagger file for each environment"
@@ -329,14 +279,14 @@ node {
 				sh "aws apigateway create-deployment --rest-api-id "+api_key+" --stage-name "+environment+" --profile cloud-api"
 
 			}
-			
+
 			echo "completed deployment........."
 			if (service_template.trim() == "cloud-logs-streamer") {
 				echo "set permission for cloud-logs-streamer"
 				try {
 					def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()
 
-					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + env.env_name_prefix + "-cloud-logs-streamer-dev --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
+					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + var_env_name_prefix + "-cloud-logs-streamer-" + envmnt + " --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
 					 echo "set permission for cloud-logs-streamer - success"
 				 }catch(ss) {
 					//ignore if already registered permissions
@@ -346,21 +296,28 @@ node {
 			}
 
 			if ( (service_template.trim() == "platform-services-handler") ) {
-          
-				sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + env.env_name_prefix + "-events-hub-dev --function-name arn:aws:lambda:$region:$roleId:function:" + env.env_name_prefix + "-hndlr-dev --starting-position LATEST --region " + region
+				def function_name =  var_env_name_prefix + "-hndlr-"+ envmnt
+				def event_source_list = sh (
+					script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
+					returnStdout: true
+				).trim()
+				echo "$event_source_list"
+				if (event_source_list == "[]"){
+					sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + var_env_name_prefix + "-events-hub-" + envmnt + " --function-name arn:aws:lambda:$region:$roleId:function:$function_name --starting-position LATEST --region " + region
+				}
 			}
 
-			
+
 			// @TODO : Resetting the credentials needs to be introduced. (Re-use of same profile on Async calls needs to be considered)
 			// resetCredentials();
-			
+
 			// @TODO : Send Event feature coming soon
 			sendEvent(service_type, service_name, runtime, "NA", region, domain, roleARN, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 		}
 	    }
-			
-    }	
-	
+
+    }
+
 }
 
 /**
@@ -384,6 +341,7 @@ def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, servic
     sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
     sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
     sh "sed -i -- 's/{envPrefix}/" + env_name_prefix + "/g' swagger/swagger.json" // {domain}
+	sh "sed -i -- 's/{envmnt}/" + env + "/g' swagger/swagger.json" // {environment}
 }
 
 /**
@@ -470,7 +428,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
         checkout([$class: 'GitSCM', branches: [
             [name: '*/master']
         ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-            [credentialsId: env.REPO_CREDENTIAL_ID, url: configPackBBURL]
+            [credentialsId: var_credentialsId, url: configPackBBURL]
         ]])
     }
 
@@ -486,6 +444,65 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
 
 
 def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
-	          
+
 	echo "Send Event Called: "+error
+}
+
+/*
+* Load environment variables from build module
+*/
+def loadConfigModule(buildModuleUrl){
+
+	dir('config-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
+		]])
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
+	}
+}
+
+
+/**
+ * Load service config data module groovy file
+ *
+ */
+def loadServiceConfigurationDataModule(buildURL,configLoader,role_arn, region, role_id, jenkins_url, envmnt, es_hostname, bitbucket_base, service_name){
+		try {
+
+			def api_id_dev = configLoader.API.API_ID_DEV
+			def api_id_stg = configLoader.API.API_ID_STG
+			def api_id_prod = configLoader.API.API_ID_PROD
+			def user_pool_id = configLoader.COGNITO.USER_POOL_ID
+			def client_id = configLoader.COGNITO.CLIENT_ID
+			def env_name_prefix = configLoader.env_name_prefix
+			def repo_base = configLoader.REPOSITORY.REPO_BASE
+			def bitbucket_username = configLoader.BITBUCKET.BITBUCKET_USERNAME
+			def bitbucket_password = configLoader.BITBUCKET.BITBUCKET_PASSWORD
+
+
+			echo "loading Service Config Data, checking repos"
+
+			dir('_service_configdata') {
+				checkout([$class: 'GitSCM', branches: [
+					[name: '*/master']
+				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+					[credentialsId: env.REPO_CREDENTIAL_ID, url: buildURL]
+				]])
+				serviceConfigdata = load "service-configuration-data-loader.groovy"
+				serviceConfigdata.initialize(role_arn, region, role_id, jenkins_url, api_id_dev, api_id_stg, api_id_prod, envmnt,user_pool_id,
+												env_name_prefix, client_id, repo_base, es_hostname, bitbucket_base, bitbucket_username, bitbucket_password,service_name)
+
+
+			}
+
+			return serviceConfigdata
+
+		}catch(ex) {
+			error "loadServiceConfigurationDataModule Failed. "+ex.getMessage()
+		}
 }
