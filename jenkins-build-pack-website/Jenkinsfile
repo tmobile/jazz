@@ -951,7 +951,7 @@ def loadServiceMetadataModule(buildURL) {
 				checkout([$class: 'GitSCM', branches: [
 					[name: '*/master']
 				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-					[credentialsId: env.REPO_CREDENTIAL_ID, url: buildURL]
+					[credentialsId: repo_credential_id, url: buildURL]
 				]])
 				serviceMetadata = load "service-metadata-loader.groovy"			
 				serviceMetadata.setAuthToken(setCredentials())

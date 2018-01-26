@@ -14,7 +14,7 @@ import groovy.transform.Field
 /*
 * Load environment variables from build module
 */
-def load_config_module(build_module_url){
+def loadConfigModule(build_module_url){
   echo "loading environment variables, checking repos..."
 
   dir('config-loader') {
@@ -64,7 +64,7 @@ def invalidate_cloudfront(cf_id) {
 node ()  {
   stage('Loading Config-Loader') {
     build_module_url = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    load_config_module(build_module_url)
+    loadConfigModule(build_module_url)
   }
   stage('Assigning variables for this build') {
     env_name_prefix = config_loader.env_name_prefix
@@ -76,6 +76,15 @@ node ()  {
   stage('Checking out Jazz-UI repo') {
     dir('jazz-ui') {
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: credentials_id, url: jazz_ui_repourl]]])
+      
+      sh "sed -i 's/{api_doc_name}/'${config_loader.JAZZ_S3.jazz_s3_api_doc}'/g' ./src/config/config.json"
+      sh "sed -i 's/{api_doc_name}/'${config_loader.JAZZ_S3.jazz_s3_api_doc}'/g' ./src/config/config.prod.json"
+
+      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${config_loader.API.API_ID_PROD}/g' ./src/config/config.json"
+      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${config_loader.API.API_ID_PROD}/g' ./src/config/config.prod.json"
+      
+      sh "sed -i 's/{inst_region}/${config_loader.JAZZ.jazz_region}/g' ./src/config/config.json"
+      sh "sed -i 's/{inst_region}/${config_loader.JAZZ.jazz_region}/g' ./src/config/config.prod.json"
     }
   }
   stage('Building the UI - NPM build') {
@@ -95,11 +104,11 @@ node ()  {
     echo "$cf_id"
   }
   stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
-    sh '''
-    aws s3 ls ${jazz_bucket_web}
-    aws s3 cp jazz-ui/dist s3://${jazz_bucket_web} --recursive --include "*"
-    aws s3 ls ${jazz_bucket_web}
-    '''
+    sh """
+    aws s3 ls $jazz_bucket_web
+    aws s3 cp jazz-ui/dist s3://$jazz_bucket_web --recursive --include "*"
+    aws s3 ls $jazz_bucket_web
+    """
   }
   stage('Invalidating CloudFront') {
     invalidate_cloudfront(cf_id)
