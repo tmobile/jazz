@@ -39,48 +39,24 @@ def Event_Status = [
 
 @Field def configModule
 @Field def configLoader
-@Field def var_api_key
-@Field def var_api_id_dev
-@Field def var_aws_credential_id
-@Field def var_env_name_prefix
-@Field def var_repo_core
-@Field def var_repo_loc
-@Field def var_credentialsId
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
 
 @Field def g_login_token = ''
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
+
 @Field def service_id = ''
 @Field def preserveEnvKey = ''
 @Field def preserveEnvValue = ''
 @Field def created_by = ''
 @Field def current_environment = ''
-@Field def env_prefix = ''
-@Field def region = ''
+
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-	loadConfigModule(jazzBuildModuleURL)
-	var_api_key 				= configLoader.API.API_KEY
-	var_api_id_dev = configLoader.API.API_ID_DEV
-	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
-	var_repo_core = configLoader.REPOSITORY.REPO_CORE
-	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
-	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
-	region = configLoader.JAZZ.jazz_region
+	loadConfigModule("http://${repo_base}/scm/${repo_core}/jazz-build-module.git")
 
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
-	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/"+ var_repo_core +"/jazz-build-module.git"
-
-	role = configLoader.JAZZ.jazz_roleId
-	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
-
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${configLoader.JAZZ.jazz_region}.amazonaws.com/prod"
+	
 	echo "Build Pack website params: " + params
 
     def service = params.service_name
@@ -89,7 +65,7 @@ node ()  {
 
     def bitbucket_name = params.service_name
 
-	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${params.scm_project}/"
+	def var_bitbucket_framework_url = "http://${repo_base}/scm/${params.scm_project}/"
 
 	def config
 
@@ -98,8 +74,6 @@ node ()  {
 	}else {
 		current_environment = 'dev'
 	}
-
-	env_prefix = var_env_name_prefix
 
     stage('Checkout code base') {
 
@@ -114,7 +88,7 @@ node ()  {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
 		}
 
 		// @TODO: dir can be removed, needs to be refactored
@@ -137,8 +111,7 @@ node ()  {
 			error "Service Id is not available."
 		}
 	
-	}	
-	
+	}
 	
 	def create_cloudfront_url
 
@@ -184,10 +157,10 @@ node ()  {
 	  if (branch == 'master'){
 		stage ('Deployment to Production Env'){
 		  sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
-			sh "aws configure set profile.cloud-api.region ${region}"
+			sh "aws configure set profile.cloud-api.region ${configLoader.JAZZ.jazz_region}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -258,7 +231,7 @@ node ()  {
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
 						updateCloudFrontPolicy(service, s3ProdBucket)
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.env_name_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, "http://" + url.replaceAll("[\n\r]", ""))
@@ -290,10 +263,10 @@ node ()  {
 	  else {
 		stage ('Deployment to Deployment Env'){
 		  sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
-			sh "aws configure set profile.cloud-api.region "+region
+			sh "aws configure set profile.cloud-api.region ${configLoader.JAZZ.jazz_region}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -357,7 +330,7 @@ node ()  {
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
 						updateCloudFrontPolicy(service, s3DevBucket)
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.env_name_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, "http://" + url.replaceAll("[\n\r]", ""))
@@ -451,8 +424,8 @@ def generateDistributionConfig(service, envname, config) {
 	sh "sed -i -- 's/{env}/"+envname+"/g' distribution_config_with_tags.json"
 
 	sh "sed -i -- 's/{conf_s3bucketname}/" + getS3BucketName(envname) + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's/{conf_stack_prefix}/" + var_env_name_prefix + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's:{conf_origin_id}:" + configLoader.CLOUDFRONT_ORIGIN_ID + ":g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.env_name_prefix}/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's:{conf_origin_id}:${configLoader.CLOUDFRONT_ORIGIN_ID}:g' distribution_config_with_tags.json"
 
 	def owner = ''
 	try{
@@ -518,7 +491,7 @@ def validateTemplate() {
 
 def loadDistributionConfig() {
 
-	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: 'http://' + var_bitbucket_base + '/scm/' + var_repo_core + '/website-distribution-pack.git']]])
+	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: 'http://' + repo_base + '/scm/' + repo_core + '/website-distribution-pack.git']]])
 
 }
 
@@ -586,7 +559,7 @@ def loadIPList() {
 
   dir('_jenkins_buildpack') {
 
-		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: 'http://' + var_bitbucket_base + '/scm/' + var_repo_core + '/jenkins-build-pack-website.git']]])
+		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: 'http://' + repo_base + '/scm/' + repo_core + '/jenkins-build-pack-website.git']]])
 
 	}
 
@@ -691,7 +664,7 @@ def updateCloudFrontPolicy(String service, String s3Bucket){
 def getCloudFrontDetails(env, service) {
 
 	def distributionId = sh (script: "aws  cloudfront list-distributions --output text \
-									--query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-$env-static-website-origin-$service']].{j: Id, k: DomainName}\"",
+									--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.env_name_prefix}-$env-static-website-origin-$service']].{j: Id, k: DomainName}\"",
 							returnStdout: true
 						).trim()
 
