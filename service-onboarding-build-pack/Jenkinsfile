@@ -37,40 +37,20 @@ def Event_Status = [
 ]
 @Field def configModule
 @Field def configLoader
-@Field def var_api_key
-@Field def var_api_id_dev
-@Field def var_aws_credential_id
-@Field def var_env_name_prefix
-@Field def var_repo_core
-@Field def var_repo_loc
-@Field def var_credentialsId
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
-@Field def region = ''
+
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def auth_token = ''
 @Field def g_base_url = ''
 @Field def jq = '/usr/local/bin/jq'
 
-
 node  {
 	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
-	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
+	
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${configLoader.JAZZ.jazz_region}.amazonaws.com/prod"
 	role = configLoader.JAZZ.jazz_roleId
 	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
-	var_api_key 				= configLoader.API.API_KEY
-	var_api_id_dev = configLoader.API.API_ID_DEV
-	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
-	var_repo_core = configLoader.REPOSITORY.REPO_CORE
-	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
-	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
-
-	echo "fetching auth_token"
+	
 	auth_token = getAuthToken()
 
 	def service_type =  params.service_type
@@ -96,26 +76,23 @@ node  {
 		owner = params.username
 	}
 
-	def repo_protocol				= "http://"
+	def scm_protocol				= "http://"
 
-	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/"
-	def var_api_host_name			= var_api_key+".execute-api.us-east-2.amazonaws.com"
-	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + var_repo_loc + "/repos"
-	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + var_repo_loc + "/"
-	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/service-onboarding-build-pack.git"
-	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + var_repo_loc + "/repos/"
-	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + var_repo_loc + "/repos/"
+	def scm_core_url = "${scm_protocol}${configLoader.REPOSITORY.REPO_BASE}/scm/${repo_core}/"
+	def scm_api_user_services 			= "${scm_protocol}${configLoader.REPOSITORY.REPO_BASE}/rest/api/1.0/projects/${configLoader.REPOSITORY.REPO_LOC}/repos"
+	def scm_user_services_clone_url	 		= "${configLoader.REPOSITORY.REPO_BASE}/scm/${configLoader.REPOSITORY.REPO_LOC}/"
+	
+	def var_bitbucket_webhook_api	= "${scm_protocol}${configLoader.REPOSITORY.REPO_BASE}/rest/webhook/1.0/projects/${configLoader.REPOSITORY.REPO_LOC}/repos/"
 	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
 
-	echo "Starting new service on-boarding.."
-	echo "params : $params"
+	echo "Starting new service on-boarding .. with params : $params"
 
 	if(params.domain && params.domain.trim() != ""){
 		bitbucket_name = params.domain.trim() + "-" + service_name
 		domain = params.domain.trim()
 	}
 
-	def repo_url = repo_protocol + var_bitbucket_base + "/projects/CAS/repos/" + bitbucket_name + "/browse";
+	def repo_url = "${scm_protocol}${configLoader.REPOSITORY.REPO_BASE}/projects/CAS/repos/" + bitbucket_name + "/browse";
 
 	stage('Input Validation')
 	{
@@ -205,7 +182,7 @@ node  {
 			sh 'mkdir ' + service_template
 			dir(service_template)
 			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
+				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scm_core_url + service_template + '.git']]])
 
 				config = LoadConfiguration()
 
@@ -277,13 +254,13 @@ node  {
 					}
 				}
 
-				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, configLoader.API.API_KEY, region,serviceMetadataJson);
+				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region,serviceMetadataJson);
 				
-				updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, region, "creation_started", repo_url);
+				updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_started", repo_url);
 			}
 		}
 		catch(error){
-			updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
+			updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_url);
 			//do nothing
 		}
 
@@ -311,7 +288,7 @@ node  {
 		}
 		catch(error){
 
-			updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
+			updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_url);
 
 			send_status_email (owner, "FAILED", service_name, domain)
 
@@ -327,17 +304,17 @@ node  {
 		dir(service_template)
 		{
 			try{
-				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-					sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\" " + var_cas_rest_repo + " -d \'{\"name\":\""+ bitbucket_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
+				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+					sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\" " + scm_api_user_services + " -d \'{\"name\":\""+ bitbucket_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
 
-					sh "git config --global user.email \"" + var_bitbucket_email + "\""
+					sh "git config --global user.email \"" + configLoader.REPOSITORY.REPO_EMAIL + "\""
 					sh "git config --global user.name $UNAME"
 				}
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.CREATE_SERVICE_REPO, Event_Status.COMPLETED,"")
 			}
 			catch (error)
 			{
-				updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
+				updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_url);
 
 				send_status_email (owner, "FAILED", service_name, domain)
 
@@ -346,9 +323,9 @@ node  {
 			}
 		}
 
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD1', usernameVariable: 'UNAME']]) {
+		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD1', usernameVariable: 'UNAME']]) {
 			def encoded_password = URLEncoder.encode(PWD1, "utf-8")
-            sh "git clone http://$UNAME:$encoded_password@" + var_cas_clone_url + bitbucket_name +".git"
+            sh "git clone http://$UNAME:$encoded_password@" + scm_user_services_clone_url + bitbucket_name +".git"
 		}
 		try{
 			sh "mv -nf " + service_template + "/* " + bitbucket_name + "/"
@@ -364,7 +341,7 @@ node  {
 		{
 			sh "ls -lart"
 
-            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.PUSH_TEMPLATE_TO_SERVICE_REPO, Event_Status.STARTED, "")
 				try{
 					sh "git add --all"
@@ -376,7 +353,7 @@ node  {
 				}
 				catch (error)
 				{
-					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_url);
 					send_status_email (owner, "FAILED", service_name, domain)
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.PUSH_TEMPLATE_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
@@ -386,24 +363,26 @@ node  {
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.STARTED, "")
 				try{
 					echo "Adding groups to the repository with appropriate permissions"
-					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + var_cas_rest_repo + ""+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN&" + admin_group + "\" &"
+					sh "curl -X PUT -k -v -u \"$UNAME:$PWD\" \"" + scm_api_user_services + ""+ bitbucket_name +"/permissions/users?permission=REPO_ADMIN&" + admin_group + "\" &"
 
 					def encoded_creator = URLEncoder.encode(owner, "utf-8")
 
 					echo "providing repository write permissions to the service creator"
-					sh "curl -X PUT -G -k -v -u \"$UNAME:$PWD\"  -d \"name=$encoded_creator\" \"${var_cas_rest_repo}/${bitbucket_name}/permissions/users?permission=REPO_ADMIN\""
+					sh "curl -X PUT -G -k -v -u \"$UNAME:$PWD\"  -d \"name=$encoded_creator\" \"${scm_api_user_services}/${bitbucket_name}/permissions/users?permission=REPO_ADMIN\""
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_url);
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
 					echo error
 				}
 
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.LOCK_MASTER_BRANCH, Event_Status.STARTED, "")
 				try{
-					checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_serviceonboarding_repo]]])
+					def var_serviceonboarding_repo 	= "${scm_protocol}${configLoader.REPOSITORY.REPO_BASE}/scm/${repo_core}/service-onboarding-build-pack.git"
+
+					checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: var_serviceonboarding_repo]]])
 					echo "Locking commits to master branch by enforcing pull requests"
 					sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" " + var_bitbucket_branch_perm + bitbucket_name + "/restrictions   -d \"@branch_permissions_payload.json\"  "
 
@@ -411,7 +390,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.LOCK_MASTER_BRANCH, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_url);
 
 					send_status_email (owner, "FAILED", service_name, domain)
 
@@ -426,7 +405,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, var_api_key, region, "creation_failed", repo_url);
+					updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_url);
 
 					send_status_email (owner, "FAILED", service_name, domain)
 
@@ -435,7 +414,7 @@ node  {
 				}
 
 				echo "Calling update row in db ###################################################"
-				updateServiceInDB(service_id_in_db, var_api_key, region, "creation_completed", repo_url);
+				updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_completed", repo_url);
 			}
 		}
 	}
