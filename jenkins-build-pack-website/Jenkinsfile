@@ -53,7 +53,8 @@ def Event_Status = [
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	loadConfigModule("http://${repo_base}/scm/${repo_core}/jazz-build-module.git")
+	def jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+	loadConfigModule(jazzBuildModuleURL)
 
 	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${configLoader.JAZZ.jazz_region}.amazonaws.com/prod"
 	
