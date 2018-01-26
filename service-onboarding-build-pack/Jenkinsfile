@@ -48,8 +48,6 @@ node  {
 	loadConfigModule(jazzBuildModuleURL)
 	
 	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${configLoader.JAZZ.jazz_region}.amazonaws.com/prod"
-	role = configLoader.JAZZ.jazz_roleId
-	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 	
 	auth_token = getAuthToken()
 
@@ -381,7 +379,8 @@ node  {
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.LOCK_MASTER_BRANCH, Event_Status.STARTED, "")
 				try{
 					def var_serviceonboarding_repo 	= "${scm_protocol}${configLoader.REPOSITORY.REPO_BASE}/scm/${repo_core}/service-onboarding-build-pack.git"
-
+					def var_bitbucket_branch_perm	= "${scm_protocol}${configLoader.REPOSITORY.REPO_BASE}/rest/branch-permissions/2.0/projects/${configLoader.REPOSITORY.REPO_LOC}/repos/"
+					
 					checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: var_serviceonboarding_repo]]])
 					echo "Locking commits to master branch by enforcing pull requests"
 					sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" " + var_bitbucket_branch_perm + bitbucket_name + "/restrictions   -d \"@branch_permissions_payload.json\"  "
