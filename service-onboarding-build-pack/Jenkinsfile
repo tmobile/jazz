@@ -48,8 +48,6 @@ node  {
 	loadConfigModule(jazzBuildModuleURL)
 	
 	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${configLoader.JAZZ.jazz_region}.amazonaws.com/prod"
-	role = configLoader.JAZZ.jazz_roleId
-	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 	
 	auth_token = getAuthToken()
 
