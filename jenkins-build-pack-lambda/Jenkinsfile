@@ -563,7 +563,7 @@ def validateDeploymentConfigurations(def prop) {
 	if(prop.containsKey("region")) {
 		if(prop['region'] == "") {
 			error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-		}else if(prop['region'] != region) {
+		}else if(prop['region'] != configLoader.JAZZ.jazz_region) {
 			error "Wrong configuration. Value for Key 'region' should be ${region}"
 		}
 	}else {
