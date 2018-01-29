@@ -4,9 +4,9 @@ import groovy.transform.Field
 import groovy.json.JsonSlurperClassic
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
-@Field def repo_credential_id = "jenkins1cred"
-@Field def repo_base = "jazz-daily-installer-bitbucket-1723618883.us-east-1.elb.amazonaws.com"
-@Field def repo_core = "slf"
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
 @Field def configModule
 @Field def configLoader
 @Field def var_api_key
