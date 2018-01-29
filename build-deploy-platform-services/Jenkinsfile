@@ -473,17 +473,13 @@ def loadServiceMetadata(service_id, region){
 	
 	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
 		credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-		// sh "aws configure set profile.cloud-api.region " + region
-		// sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-		// sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-		
+			
 		def table_name = var_env_name_prefix + "_services_prod"
 		def service_Object = sh (
 				script: "aws --region $region dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
 				returnStdout: true
 			).trim()
 		
-		echo "service_Object : $service_Object" 
 		
 		if(service_Object){
 			def service_data = parseJson(service_Object)
@@ -491,11 +487,8 @@ def loadServiceMetadata(service_id, region){
 			def metadata = [:]
 			
 			for(item in data){
-				echo "$item.key : $item.value.S" 
 				metadata[item.key] = item.value.S				
-			}
-			echo "metadata : $metadata" 
-			
+			}			
 			return metadata
 		}
 	}
