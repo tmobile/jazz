@@ -9,4 +9,8 @@ env:
  - PLATFORM_SERVICE=is-service-available
  - PLATFORM_SERVICE=platform_services
  - PLATFORM_SERVICE=platform_logs
+
+ before_script:
+  - npm prune
+  
 script: cd $PLATFORM_SERVICE && npm install && npm test
