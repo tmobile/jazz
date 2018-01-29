@@ -142,7 +142,6 @@ node {
 	}
 
 	def config = loadServiceMetadata(serviceObj.service_id,region)
-	echo "sini"
 	def roleARN						= config['iamRoleARN'].replaceAll("/", "\\\\/")
     service_name					= config['service']
 
