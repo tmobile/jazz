@@ -50,15 +50,6 @@ def Event_Status = [
 
 @Field def configModule
 @Field def configLoader
-@Field def var_api_key
-@Field def var_api_id_dev
-@Field def var_aws_credential_id
-@Field def var_env_name_prefix
-@Field def var_repo_core
-@Field def var_repo_loc
-@Field def var_credentialsId
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
 
 @Field def g_login_token = ''
 @Field def g_base_url = ''
@@ -67,44 +58,29 @@ def Event_Status = [
 
 @Field def created_by = ''
 
-@Field def role = ''
 @Field def current_environment = ''
-@Field def region = ''
 @Field def jq = '/usr/local/bin/jq'
 
 node ()  {
-	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+	def jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
-	var_api_key 				= configLoader.API.API_KEY
-	var_api_id_dev = configLoader.API.API_ID_DEV
-	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
-	var_repo_core = configLoader.REPOSITORY.REPO_CORE
-	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
-	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
-	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
-	role = configLoader.JAZZ.jazz_roleId
-	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
-	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/"+ var_repo_core +"/jazz-build-module.git"
 
-	echo "Jobs Params: " + params
-	echo "Build triggered via branch: " + params.scm_branch
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${configLoader.JAZZ.jazz_region}.amazonaws.com/prod"
+	
+	echo "Build triggered via branch: " + params.scm_branch + " with params " + params
 	def _event = ""
-
-    echo "start"
 
     def serviceName = ""
     def cfStackName = ""
-		if(params.service_name != null && !params.service_name.isEmpty()){
-			serviceName = params.service_name
-			cfStackName = params.service_name
-		}
+	
+	if(params.service_name != null && !params.service_name.isEmpty()){
+		serviceName = params.service_name
+		cfStackName = params.service_name
+	}
+	
 	def branch = params.scm_branch
 	def bitbucket_name = params.service_name
-	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${var_repo_loc}/"
+	def var_bitbucket_framework_url = "http://${configLoader.REPOSITORY.REPO_BASE}/scm/${configLoader.REPOSITORY.REPO_LOC}/"
 	def config
 	def domain
 
@@ -127,7 +103,7 @@ node ()  {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
 		}
 
 		sh 'cd ' + bitbucket_name
@@ -151,8 +127,6 @@ node ()  {
 
 	}
 
-	
-
 	def runtime = config['providerRuntime']
 	def service = config['service']
 	def isScheduleEnabled = isEnabled(config, "eventScheduleRate")
@@ -163,11 +137,11 @@ node ()  {
 	def isEventSchdld = false
 	def internalAccess = config['require_internal_access']
 
-	def roleARN = role.replaceAll("/", "\\\\/")
+	def roleARN = configLoader.JAZZ.jazz_roleId.replaceAll("/", "\\\\/")
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-  	def logStreamer = "arn:aws:lambda:${region}:${roleId}:function:${var_env_name_prefix}-cloud-logs-streamer-prod"
+  	def logStreamer = "arn:aws:lambda:${configLoader.JAZZ.jazz_region}:${roleId}:function:${configLoader.env_name_prefix}-cloud-logs-streamer-prod"
 
 	echo "logStreamer:: " + logStreamer
 
@@ -177,7 +151,7 @@ node ()  {
 			cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service-domain-env
 	}
 
-	serviceName = "${var_env_name_prefix}-${serviceName}"
+	serviceName = "${configLoader.env_name_prefix}-${serviceName}"
 	cfStackName = serviceName
 
     echo serviceName+"******************************************************* "
@@ -190,7 +164,7 @@ node ()  {
 	}
 
 	stage ('Pre-Build Validation'){
-		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
+		sendEvent(service, branch, runtime, "NA", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
 		try {
 			loadServiceInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment)
 			send_status_email(created_by, 'STARTED', params.service_name, '')
@@ -201,54 +175,54 @@ node ()  {
 			//}
 		}catch(ex) {
 			send_status_email(created_by, 'FAILED', params.service_name, '')
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
+			sendEvent(service, branch, runtime, "NA", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
 			error ex.getMessage()
 		}
-		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
+		sendEvent(service, branch, runtime, "NA", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
 	}
 
 	stage ('Build') {
-		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.STARTED, "")
+		sendEvent(service, branch, runtime, "NA", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.BUILD, Event_Status.STARTED, "")
 		try {
 			dir(bitbucket_name){
 				buildLambda(runtime)
 			}
 		}catch(ex) {
 			send_status_email(created_by, 'FAILED', params.service_name, '')
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.FAILED, ex.getMessage())
+			sendEvent(service, branch, runtime, "NA", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.BUILD, Event_Status.FAILED, ex.getMessage())
 			error ex.getMessage()
 		}
-		sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.COMPLETED, "")
+		sendEvent(service, branch, runtime, "NA", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.BUILD, Event_Status.COMPLETED, "")
 	}
 
 	if (params.scm_branch == 'master') {
 		stage ('Deployment to Production Env'){
-			sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+			sendEvent(service, branch, runtime, "PRODUCTION", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 			dir(bitbucket_name){
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					try {
 						// initialize aws credentials
-						sh "aws configure set profile.cloud-api.region ${region}"
+						sh "aws configure set profile.cloud-api.region ${configLoader.JAZZ.jazz_region}"
 						sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 						sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
 
 						_event = Event_Name.GET_DEPLOYMENT_CONF
-						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.STARTED, "")
+						sendEvent(service, branch, runtime, "PRODUCTION", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.STARTED, "")
 						loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
-						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
+						sendEvent(service, branch, runtime, "PRODUCTION", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.COMPLETED, "")
 
 						// Generate serverless yml file with domain added in function name
 						echo "Generate deployment env with domain"
 						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
-						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.STARTED, "")
+						sendEvent(service, branch, runtime, "PRODUCTION", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.STARTED, "")
 						
 						writeServerlessFile(config)
 						
 						generateServerlessYml(service, "prod", serviceName, cfStackName)
-						echo "setting lambda execution role as $role";
-						setLambdaExecutionRole(role);
-						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
+						echo "setting lambda execution role as ${configLoader.JAZZ.jazz_roleId}";
+						setLambdaExecutionRole(configLoader.JAZZ.jazz_roleId);
+						sendEvent(service, branch, runtime, "PRODUCTION", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.COMPLETED, "")
 
 						sh "serverless deploy --stage prod -v --bucket " + configLoader.JAZZ_S3.jazz_bucket_prod
 
@@ -257,8 +231,8 @@ node ()  {
 						echo "lambdaProdARN: ${lambdaProdARN}"
 
 						_event = Event_Name.UPDATE_LOGGING_CONF
-						createSubscriptionFilters(serviceName, "prod", region, logStreamer);
-						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.COMPLETED, "")
+						createSubscriptionFilters(serviceName, "prod", configLoader.JAZZ.jazz_region, logStreamer);
+						sendEvent(service, branch, runtime, "PRODUCTION", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.COMPLETED, "")
 
 						// reset Credentials
 						resetCredentials()
@@ -269,11 +243,11 @@ node ()  {
 
 					}catch(ex) {
 						send_status_email(created_by, 'FAILED', params.service_name, '')
-						sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, _event, Event_Status.FAILED, ex.getMessage())
+						sendEvent(service, branch, runtime, "PRODUCTION", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.FAILED, ex.getMessage())
 						error ex.getMessage()
 					}
-					updateServiceInDB(service_id, domain, var_api_key, region, "active")
-					sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					updateServiceInDB(service_id, domain, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "active")
+					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}//end of withCredentials
 			}//end of dir
 		}//end of stage to production
@@ -281,22 +255,22 @@ node ()  {
 	}//end of stage using master
 	else {
 		stage ('Deployment to Dev Env'){
-			sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+			sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 
 			dir(bitbucket_name){
 
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					def lambdaDevARN
 					try {
 						// initialize aws credentials
-						sh "aws configure set profile.cloud-api.region ${region}"
+						sh "aws configure set profile.cloud-api.region ${configLoader.JAZZ.jazz_region}"
 						sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 						sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
 						_event = Event_Name.GET_DEPLOYMENT_CONF
-						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.STARTED, "")
+						sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.STARTED, "")
 						loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
-						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.COMPLETED, "")
+						sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.COMPLETED, "")
 
 						if(isScheduleEnabled) {
 							def eventsArns = getEventsArn(domain,service, "dev")
@@ -309,15 +283,15 @@ node ()  {
 						// Generate serverless yml file with domain added in function name
 						echo "Generate deployment env with domain"
 						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
-						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.STARTED, "")
+						sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.STARTED, "")
 						sh "pwd"
 						
 						writeServerlessFile(config)
 						
 						generateServerlessYml(service, "dev", serviceName, cfStackName)
-						echo "setting lambda execution role as $role";
-						setLambdaExecutionRole(role);
-						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.COMPLETED, "")
+						echo "setting lambda execution role as ${configLoader.JAZZ.jazz_roleId}";
+						setLambdaExecutionRole(configLoader.JAZZ.jazz_roleId);
+						sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.COMPLETED, "")
 
 						sh "serverless deploy --stage dev  -v --bucket " + configLoader.JAZZ_S3.jazz_bucket_dev
 						def stackDevName = cfStackName + "-dev";
@@ -325,9 +299,9 @@ node ()  {
 						echo "lambdaDevARN: ${lambdaDevARN}"
 
 						_event = Event_Name.UPDATE_LOGGING_CONF
-						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.STARTED, "")
-						createSubscriptionFilters(serviceName, "dev", region, logStreamer);
-						sendEvent(service, branch, runtime, "STAGING", region, domain, role, _event, Event_Status.COMPLETED, "")
+						sendEvent(service, branch, runtime, "STAGING", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.STARTED, "")
+						createSubscriptionFilters(serviceName, "dev", configLoader.JAZZ.jazz_region, logStreamer);
+						sendEvent(service, branch, runtime, "STAGING", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.COMPLETED, "")
 						// reset credentials
 						resetCredentials()
 						// echo status
@@ -335,11 +309,11 @@ node ()  {
 						send_status_email(created_by, 'COMPLETED', params.service_name, svc_response)
 					}catch(ex) {
 						send_status_email(created_by, 'FAILED', params.service_name, '')
-						sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, _event, Event_Status.FAILED, ex.getMessage())
+						sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, _event, Event_Status.FAILED, ex.getMessage())
 						error ex.getMessage()
 					}
-					updateServiceInDB(service_id, domain, var_api_key, region, "active")
-					sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					updateServiceInDB(service_id, domain, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "active")
+					sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}//end of withCredentials
 			}//end of dir
 		}//end of stage to dev
@@ -424,7 +398,6 @@ def LoadConfiguration() {
 		{
 			if(newItem[1].trim()  == "")
 				newItem[1] = "\""  + eachItemList[1].trim()
-
 			else
 				newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
 		}
@@ -562,11 +535,13 @@ def validateDeploymentConfigurations(def prop) {
 		} else {
 			def validRuntimes =["nodejs4.3", "python2.7", "java8"]  //@TODO. Add more runtime supports. DSundar3
 			def flag = false
+			
 			for(int i = 0; i < validRuntimes.size(); i++) {
 				if(_runtime == validRuntimes[i]) {
 					flag = true
 				}
 			}
+
 			if(!flag) {
 				echo "$flag"
 				error "Runtime given in the configuration is not valid."
@@ -588,7 +563,7 @@ def validateDeploymentConfigurations(def prop) {
 	if(prop.containsKey("region")) {
 		if(prop['region'] == "") {
 			error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-		}else if(prop['region'] != region) {
+		}else if(prop['region'] != configLoader.JAZZ.jazz_region) {
 			error "Wrong configuration. Value for Key 'region' should be ${region}"
 		}
 	}else {
@@ -628,13 +603,13 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 		//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
 		//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
 
-		def configPackBBURL = "http://${var_bitbucket_base}/scm/${var_repo_core}/serverless-config-pack.git"
+		def configPackBBURL = "http://${configLoader.REPOSITORY.REPO_BASE}/scm/${repo_core}/serverless-config-pack.git"
 
 		dir('_config') {
 			checkout([$class: 'GitSCM', branches: [
 				[name: '*/master']
 			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: var_credentialsId, url: configPackBBURL]
+				[credentialsId: repo_credential_id, url: configPackBBURL]
 			]])
 		}
 
@@ -711,6 +686,7 @@ def createSubscriptionFilters(String service, String env, String region, String 
 			sh "aws logs delete-subscription-filter --output json --log-group-name \""+lambda+"\" --filter-name \""+filtername+"\" --region "+region
 		}
 	}catch(Exception ex) {}// ignore error if not created yet
+
 	sh "aws logs put-subscription-filter --output json --log-group-name \""+lambda+"\" --filter-name \""+lambda+"\" --filter-pattern \"\" --destination-arn \""+cloudLogsStreamer+"\" --region "+region
 }
 /**
@@ -784,33 +760,33 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
  def setCredentials() {
 	def loginUrl = g_base_url + '/platform/login'
 	def token
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-			echo "user name is $UNAME"
+	
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+		echo "user name is $UNAME"
 
-			def login_json = []
+		def login_json = []
 
-			login_json = [
-				'username': UNAME,
-				'password': PWD
-			]
+		login_json = [
+			'username': UNAME,
+			'password': PWD
+		]
 
-			def payload = JsonOutput.toJson(login_json)
+		def payload = JsonOutput.toJson(login_json)
 
-			try {
-				token = sh (script: "curl --silent -X POST -k -v \
-					-H \"Content-Type: application/json\" \
-					 $loginUrl \
-					-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
+		try {
+			token = sh (script: "curl --silent -X POST -k -v \
+				-H \"Content-Type: application/json\" \
+					$loginUrl \
+				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
 
-				token = token.replaceAll("[\n\r]", "")
-				return token
-			}
-			catch(e){
-				echo "error occured: " + e.getMessage()
-				error "error occured: " + e.getMessage()
-			}
+			token = token.replaceAll("[\n\r]", "")
+			return token
 		}
- 	
+		catch(e){
+			echo "error occured: " + e.getMessage()
+			error "error occured: " + e.getMessage()
+		}
+	}
 }
 
 /**
@@ -820,12 +796,12 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 */
 def send_status_email (email_id, build_status, service, email_content) {
    	echo "Sending build notification to " + email_id
-		def body_subject = ''
-		def body_text = ''
-		def cc_email = ''
-		def body_html = ''
+	def body_subject = ''
+	def body_text = ''
+	def cc_email = ''
+	def body_html = ''
+
    	if (build_status == 'STARTED') {
-		echo "email status started"
 		body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + service
    	} else if (build_status == 'FAILED') {
 		echo "email status failed"
@@ -833,14 +809,16 @@ def send_status_email (email_id, build_status, service, email_content) {
 		body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + service
 		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
    	} else if (build_status == 'COMPLETED'){
-        	body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
+        body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
    	} else {
 		echo "Unsupported build status, nothing to email.."
 		return
    	}
-   	if (email_content != ''){
-        	body_text = body_text + '\n\n' + email_content
+   	
+	   if (email_content != ''){
+        body_text = body_text + '\n\n' + email_content
 	}
+
 	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
@@ -852,19 +830,19 @@ def send_status_email (email_id, build_status, service, email_content) {
 			    ])
 
    	try{
-				def sendMail = sh (script: "curl -X POST \
-								${g_base_url}/platform/email \
-								-k -v -H \"Authorization: $g_login_token\" \
-								-H \"Content-Type: application/json\" \
-								-d \'${body}\'", returnStdout: true).trim()
-				def responseJSON = parseJson(sendMail)
-				if(responseJSON.data){
-					echo "successfully sent e-mail to $email_id"
-				} else {
-					echo "exception occured while sending e-mail: $responseJSON"
-				}
+		def sendMail = sh (script: "curl -X POST \
+						${g_base_url}/platform/email \
+						-k -v -H \"Authorization: $g_login_token\" \
+						-H \"Content-Type: application/json\" \
+						-d \'${body}\'", returnStdout: true).trim()
+		def responseJSON = parseJson(sendMail)
+		if(responseJSON.data){
+			echo "successfully sent e-mail to $email_id"
+		} else {
+			echo "exception occured while sending e-mail: $responseJSON"
+		}
    	} catch (e){
-     		  echo "Failed while sending build status notification"
+     	echo "Failed while sending build status notification"
    	}
 }
 
@@ -938,22 +916,24 @@ def getEventsArn(domain, service, env) {
 
 def getLambdaARN (String stackName) {
 	def ARN = "";
+	
 	try {
-			def cloudformation_resources = "";
-			cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+		def cloudformation_resources = "";
+		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
 
-			def jsonSlurper = new JsonSlurper()
-			def parsedObject = jsonSlurper.parseText(cloudformation_resources);
-			def outputs = parsedObject.Stacks[0].Outputs;
+		def jsonSlurper = new JsonSlurper()
+		def parsedObject = jsonSlurper.parseText(cloudformation_resources);
+		def outputs = parsedObject.Stacks[0].Outputs;
 
-			for (output in outputs) {
-				if(output.OutputKey == "HandlerLambdaFunctionArn") {
-					ARN = output.OutputValue
-				}
+		for (output in outputs) {
+			if(output.OutputKey == "HandlerLambdaFunctionArn") {
+				ARN = output.OutputValue
 			}
-		} catch(ex) {
-			error ex.getMessage();
 		}
+	} catch(ex) {
+		error ex.getMessage();
+	}
+
 	return ARN;
 }
 
@@ -971,26 +951,26 @@ def parseJson(jsonString) {
  *
  */
 def loadServiceMetadataModule(buildURL) {
-		try {						
-			echo "loading serviceMetaData, checking repos"
+	try {						
+		echo "loading serviceMetaData, checking repos"
 
-			dir('service-metadata') {
-				checkout([$class: 'GitSCM', branches: [
-					[name: '*/master']
-				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-					[credentialsId: repo_credential_id, url: buildURL]
-				]])
-				serviceMetadata = load "service-metadata-loader.groovy"			
-				serviceMetadata.setAuthToken(setCredentials())
+		dir('service-metadata') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildURL]
+			]])
+			serviceMetadata = load "service-metadata-loader.groovy"			
+			serviceMetadata.setAuthToken(setCredentials())
 
-				// Load and set dependent utility module.
-				echo "loading util module"
-				Util = load "utility-loader.groovy"
-				serviceMetadata.setUtil(Util)
-				return serviceMetadata 
-			}
-		
-		}catch(ex) {
-			error "loadServiceMetadataModule Failed. "+ex.getMessage()
+			// Load and set dependent utility module.
+			echo "loading util module"
+			Util = load "utility-loader.groovy"
+			serviceMetadata.setUtil(Util)
+			return serviceMetadata 
 		}
+	
+	}catch(ex) {
+		error "loadServiceMetadataModule Failed. "+ex.getMessage()
+	}
 }
