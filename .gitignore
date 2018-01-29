@@ -12,3 +12,4 @@ node_modules
 */target/
 .nyc_output/
 npm-debug.log
+*/package-lock.json
