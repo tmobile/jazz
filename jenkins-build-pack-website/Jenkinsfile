@@ -179,7 +179,8 @@ node ()  {
 				sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.STARTED, assetInfo)
 				try {
 					echo "website with name $service already exists, syncing new files"
-					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" "
+					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
 
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
@@ -224,7 +225,9 @@ node ()  {
 				echo "uploading a new website with name $service"
 				sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.STARTED, assetInfo)
 				try {
-					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" "
+					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+
 					def url = ''
 					if (create_cloudfront_url == true) {
 						loadDistributionConfig()
