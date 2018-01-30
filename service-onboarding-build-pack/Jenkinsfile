@@ -300,7 +300,7 @@ node  {
 				//Clearing depoyment-env.yml
 				sh "echo -n > ./deployment-env.yml"
 				// Add service_id  in deployment-env.yml
-				sh "echo \$'\nservice_id: $service_id_in_db' >> ./deployment-env.yml"
+				sh "echo 'service_id: $service_id_in_db' >> ./deployment-env.yml"
 				
 				sh "sed -i -- 's/{service_name}/" + service_name + "/g' ./Jenkinsfile"
 				sh "sed -i -- 's/{domain}/" + domain + "/g' ./Jenkinsfile"
