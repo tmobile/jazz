@@ -184,7 +184,7 @@ node ()  {
 
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
-						updateCloudFrontPolicy(service, s3ProdBucket, environment)
+						updateCloudFrontPolicy(service, s3ProdBucket)
 
 						def cfDetails = getCloudFrontDetails(environment, service)
 
@@ -234,7 +234,7 @@ node ()  {
 						generateDistributionConfig(service, environment, config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3ProdBucket, environment)
+						updateCloudFrontPolicy(service, s3ProdBucket)
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.env_name_prefix}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
@@ -291,7 +291,7 @@ node ()  {
 					sh "aws s3 sync ./app s3://${s3DevBucket}/$service --exclude \".git/*\" --exclude \".gitignore\" "
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
-						updateCloudFrontPolicy(service, s3DevBucket, environment)
+						updateCloudFrontPolicy(service, s3DevBucket)
 
 						def cfDetails = getCloudFrontDetails(environment, service)
 
@@ -333,7 +333,7 @@ node ()  {
 						generateDistributionConfig(service,environment,config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3DevBucket, environment)
+						updateCloudFrontPolicy(service, s3DevBucket)
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.env_name_prefix}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
@@ -622,7 +622,7 @@ def updateS3BucketPolicy(String service, String s3Bucket){
 /*
 *	add restrictions so that Cloudfront endpoint can access S3
 */
-def updateCloudFrontPolicy(String service, String s3Bucket, String environment){
+def updateCloudFrontPolicy(String service, String s3Bucket){
 	echo "updateCloudFrontPolicy"
 
 	def json_string
@@ -631,11 +631,17 @@ def updateCloudFrontPolicy(String service, String s3Bucket, String environment){
 
 	def bucketPolicy = loadBucketPolicy(s3Bucket)
 	def statements = bucketPolicy.Statement
-	def CFID = getCloudFrontDetails(environment, service)
+	def CFOAI = sh (
+		script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
+		--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.env_name_prefix}-origin_access_identity'].{j: Id}\"",
+		returnStdout: true
+		).trim()
+
+	echo "CFOAI: $CFOAI"
 
 	//	def principal = ["AWS": env.CLOUDFRONT_OAI]
 	//def principal = ["AWS": "*"]
-	def principal = {"AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${CFID[0]}"}
+	def principal = {"AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"}
 
 	for(st in statements) {
 		if(st['Sid'] == "$service") {
