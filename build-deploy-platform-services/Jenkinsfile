@@ -1,6 +1,7 @@
 #!groovy
 import groovy.json.JsonOutput
 import groovy.transform.Field
+import groovy.json.JsonSlurperClassic
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 @Field def repo_credential_id
@@ -135,11 +136,12 @@ node {
 	}
 
 	// Need to be refactored
-	def config = dir(bitbucket_name)
+	def serviceObj = dir(bitbucket_name)
 	{
 	    return LoadConfiguration()
 	}
 
+	def config = loadServiceMetadata(serviceObj.service_id,region)
 	def roleARN						= config['iamRoleARN'].replaceAll("/", "\\\\/")
     service_name					= config['service']
 
@@ -206,6 +208,8 @@ node {
 			//Change lambda service name to add stack prefix name
 			sh "sed -i -- 's/" + service_name + "/" + var_env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
 
+			writeServerlessFile(config)
+			
 			echo "Deploying lambda service"
 
 			def envBucketKey = configLoader.JAZZ_S3.jazz_bucket_name_prefix + envmnt
@@ -274,6 +278,29 @@ def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, servic
     sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
     sh "sed -i -- 's/{envPrefix}/" + env_name_prefix + "/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envmnt}/" + env + "/g' swagger/swagger.json" // {environment}
+}
+
+def writeServerlessFile(config){
+	sh "sed -i -- 's/\${file(deployment-env.yml):service}/" + config['service'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml" 	
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/" + config['providerRuntime'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/" + config['providerMemorySize'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/" + config['providerTimeout'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleRate}/" + config['eventScheduleRate'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/" + config['eventScheduleEnable'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/" + config['securityGroupIds'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/" + config['subnetIds'] + "/g' serverless.yml"
+	
+	if(config['artifact']){
+		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/" + config['artifact'] + "/g' serverless.yml"
+	}
+	if(config['mainClass']){
+		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/" + config['mainClass'] + "/g' serverless.yml"
+	}
+	
 }
 
 /**
@@ -432,4 +459,37 @@ def loadServiceConfigurationDataModule(buildURL,configLoader,role_arn, region, r
 		}catch(ex) {
 			error "loadServiceConfigurationDataModule Failed. "+ex.getMessage()
 		}
+}
+
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
+}
+
+def loadServiceMetadata(service_id, region){
+	
+	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+		credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			
+		def table_name = var_env_name_prefix + "_services_prod"
+		def service_Object = sh (
+				script: "aws --region $region dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
+				returnStdout: true
+			).trim()
+		
+		
+		if(service_Object){
+			def service_data = parseJson(service_Object)
+			def data = service_data.Item.SERVICE_METADATA.M
+			def metadata = [:]
+			
+			for(item in data){
+				metadata[item.key] = item.value.S				
+			}			
+			return metadata
+		}
+	}
 }
