@@ -656,7 +656,7 @@ def updateCloudFrontPolicy(String service, String s3Bucket){
 		new_policy.put('Effect',"Allow")
 		new_policy.put('Action',"s3:GetObject")
 		new_policy.put('Principal', principal)
-		new_policy.put('Resource',"arn:aws:s3:::$s3Bucket/$service/*")
+		new_policy.put('Resource',"arn:aws:s3:::$s3Bucket/*")
 	}
 
 	if (isPolicyExists == false) {
