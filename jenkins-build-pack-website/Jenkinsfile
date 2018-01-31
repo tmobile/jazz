@@ -56,7 +56,7 @@ node ()  {
 	def jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${configLoader.JAZZ.jazz_region}.amazonaws.com/prod"
+	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	
 	echo "Build Pack website params: " + params
 
@@ -151,9 +151,9 @@ node ()  {
 			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
 		}
 
-	  def s3StgBucket  = configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
-	  def s3ProdBucket = configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
-	  def s3DevBucket  = configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
+	  def s3StgBucket  = configLoader.JAZZ.S3.WEBSITE_STG_BUCKET;
+	  def s3ProdBucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
+	  def s3DevBucket  = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 
 	  if (branch == 'master'){
 		stage ('Deployment to Production Env'){
@@ -161,7 +161,7 @@ node ()  {
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
-			sh "aws configure set profile.cloud-api.region ${configLoader.JAZZ.jazz_region}"
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -235,7 +235,7 @@ node ()  {
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
 						updateCloudFrontPolicy(service, s3ProdBucket)
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.env_name_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, "http://" + url.replaceAll("[\n\r]", ""))
@@ -270,7 +270,7 @@ node ()  {
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
-			sh "aws configure set profile.cloud-api.region ${configLoader.JAZZ.jazz_region}"
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -334,7 +334,7 @@ node ()  {
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
 						updateCloudFrontPolicy(service, s3DevBucket)
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.env_name_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, "http://" + url.replaceAll("[\n\r]", ""))
@@ -369,14 +369,14 @@ node ()  {
 def getS3BucketName(String envname) {
 
 	if (envname == "dev") {
-		return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 	} else if (envname == "stg") {
-		return configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_STG_BUCKET;
 	} else if (envname == "prod") {
-		return configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
 	}
 
-	return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
+	return configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 }
 
 def LoadConfiguration() {
@@ -428,8 +428,8 @@ def generateDistributionConfig(service, envname, config) {
 	sh "sed -i -- 's/{env}/"+envname+"/g' distribution_config_with_tags.json"
 
 	sh "sed -i -- 's/{conf_s3bucketname}/" + getS3BucketName(envname) + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.env_name_prefix}/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's:{conf_origin_id}:${configLoader.CLOUDFRONT_ORIGIN_ID}:g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's:{conf_origin_id}:${configLoader.AWS.CLOUDFRONT_ORIGIN_ID}:g' distribution_config_with_tags.json"
 
 	def owner = ''
 	try{
@@ -668,7 +668,7 @@ def updateCloudFrontPolicy(String service, String s3Bucket){
 def getCloudFrontDetails(env, service) {
 
 	def distributionId = sh (script: "aws  cloudfront list-distributions --output text \
-									--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.env_name_prefix}-$env-static-website-origin-$service']].{j: Id, k: DomainName}\"",
+									--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-$env-static-website-origin-$service']].{j: Id, k: DomainName}\"",
 							returnStdout: true
 						).trim()
 
@@ -863,7 +863,7 @@ def send_status_email (email_id, build_status, service, email_content) {
    	if (email_content != ''){
         	body_text = body_text + '\n\n' + email_content
 	}
-	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
+	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
 					to : email_id,

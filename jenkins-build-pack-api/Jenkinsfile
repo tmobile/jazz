@@ -46,9 +46,8 @@ def Event_Status = [
 @Field def instance_prefix
 @Field def var_repo_core
 @Field def var_repo_loc
-@Field def var_credentialsId
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
+@Field def scm_credential_id
+@Field def scm_base_url
 
 @Field def g_login_token = ''
 @Field def g_base_url = ''
@@ -70,19 +69,18 @@ def Event_Status = [
 node() {
 	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
-	var_api_key 				= configLoader.API.API_KEY
-	var_api_id_dev = configLoader.API.API_ID_DEV
+	var_api_key 				= configLoader.AWS.API.PROD_ID
+	var_api_id_dev = configLoader.AWS.API.DEV_ID
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
 	instance_prefix = configLoader.INSTANCE_PREFIX
 	var_repo_core = configLoader.REPOSITORY.REPO_CORE
 	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
-	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
-	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
-	role = configLoader.JAZZ.jazz_roleId
-	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
+	scm_credential_id 			= configLoader.REPOSITORY.CREDENTIAL_ID
+	scm_base_url			= configLoader.REPOSITORY.BASE_URL
+	region = configLoader.AWS.REGION
+	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${region}.amazonaws.com/prod"
+	role = configLoader.AWS.ROLEID
+	api_doc_s3_bucket = configLoader.AWS.S3.API_DOC
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${api_doc_s3_bucket}.s3-website-${region}.amazonaws.com/"
 
     echo "Build triggered via branch: " + params.scm_branch
@@ -94,11 +92,11 @@ node() {
 	def branch = params.scm_branch
 
     def bitbucket_name = params.service_name
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + var_repo_loc + "/"
+	def var_bitbucket_framework_url = "http://" + scm_base_url + "/scm/" + var_repo_loc + "/"
 
 
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
-	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/"+ var_repo_core +"/jazz-build-module.git"
+	def configPackBBURL = "http://" + scm_base_url + "/scm/" + var_repo_core + "/serverless-config-pack.git"
+	def jazzBuildModuleURL = "http://${scm_base_url}/scm/"+ var_repo_core +"/jazz-build-module.git"
 
 	def config
 	
@@ -121,7 +119,7 @@ node() {
 
 		dir(bitbucket_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_credential_id, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
 		}
 
 		sh 'cd ' + bitbucket_name
@@ -241,14 +239,14 @@ node() {
 					setLambdaExecutionRole(role);
 
 					echo "serverless deploy......."
-					sh "serverless deploy --stage prod -v --bucket " + configLoader.JAZZ_S3.jazz_bucket_prod
+					sh "serverless deploy --stage prod -v --bucket " + configLoader.AWS.S3.PROD_BUCKET
 					createSubscriptionFilters(serviceName, current_environment, region, logStreamer);
 					def svc_status = ''
 					if (fileExists('swagger/swagger.json')) {
 						// Generate swagger file based on environment
 						echo "Generating the swagger file for each environment"
 
-						var_api_key = configLoader.API.API_ID_PROD;
+						var_api_key = configLoader.AWS.API.PROD_ID;
 						def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
 
 						generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, var_api_key, config)
@@ -302,13 +300,13 @@ node() {
 				setLambdaExecutionRole(role);
 
 				echo "serverless deploy......."
-				sh "serverless deploy --stage dev -v --bucket " + configLoader.JAZZ_S3.jazz_bucket_dev
+				sh "serverless deploy --stage dev -v --bucket " + configLoader.AWS.S3.DEV_BUCKET
 				createSubscriptionFilters(serviceName, current_environment, region, logStreamer);
 				def svc_status = ''
 				if (fileExists('swagger/swagger.json')) {
 					// Generate swagger file based on environment
 					echo "Generating the swagger file for each environment"
-					var_api_key = configLoader.API.API_ID_DEV;
+					var_api_key = configLoader.AWS.API.DEV_ID;
 					def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
 
 					generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, var_api_key, config)
@@ -683,7 +681,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
         checkout([$class: 'GitSCM', branches: [
             [name: '*/master']
         ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-            [credentialsId: var_credentialsId, url: configPackBBURL]
+            [credentialsId: scm_credential_id, url: configPackBBURL]
         ]])
     }
 
@@ -978,7 +976,7 @@ def send_status_email (email_id, build_status, service, email_content) {
    	if (email_content != ''){
 		body_text = body_text + '\n\n' + email_content
 	}
-	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
+	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
 					to : email_id,
