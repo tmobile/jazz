@@ -43,7 +43,7 @@ def Event_Status = [
 @Field def var_api_key
 @Field def var_api_id_dev
 @Field def var_aws_credential_id
-@Field def var_env_name_prefix
+@Field def instance_prefix
 @Field def var_repo_core
 @Field def var_repo_loc
 @Field def var_credentialsId
@@ -73,7 +73,7 @@ node() {
 	var_api_key 				= configLoader.API.API_KEY
 	var_api_id_dev = configLoader.API.API_ID_DEV
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
+	instance_prefix = configLoader.INSTANCE_PREFIX
 	var_repo_core = configLoader.REPOSITORY.REPO_CORE
 	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
 	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
@@ -161,7 +161,7 @@ node() {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + var_env_name_prefix + "-cloud-logs-streamer-prod"
+  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + instance_prefix + "-cloud-logs-streamer-prod"
 
     echo "Role:: " + role
 
@@ -172,7 +172,7 @@ node() {
         domain = ""
     }
 
-	serviceName = var_env_name_prefix + "-" + serviceName
+	serviceName = instance_prefix + "-" + serviceName
 	cfStackName = serviceName
 
 	sh 'cd ' + bitbucket_name

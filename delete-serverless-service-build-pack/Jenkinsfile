@@ -29,7 +29,7 @@ import groovy.transform.Field
 @Field def var_api_key
 @Field def var_api_id_dev
 @Field def var_aws_credential_id
-@Field def var_env_name_prefix
+@Field def instance_prefix
 @Field def var_repo_core
 @Field def var_repo_loc
 @Field def var_credentialsId
@@ -49,7 +49,7 @@ node {
 	var_api_id_dev = configLoader.API.API_ID_DEV
 	var_api_id_prod = configLoader.API.API_ID_PROD
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
+	instance_prefix = configLoader.INSTANCE_PREFIX
 	var_repo_core = configLoader.REPOSITORY.REPO_CORE
 	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
 	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
@@ -370,7 +370,7 @@ def updateServiceNameConfig(envval,config) {
 		fullServiceName = config[domain]+ "-" + config[service]
 		cfStackName = serviceName + "-" + config[domain] //sets CF Stack name as service--domain-env
 	}
-	fullServiceName = var_env_name_prefix + "-" + fullServiceName
+	fullServiceName = instance_prefix + "-" + fullServiceName
 	cfStackName = fullServiceName
 	try {
 		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
@@ -949,7 +949,7 @@ def getDistributionId(stage, domain, service) {
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[?Origins.Items[?Id=='$var_env_name_prefix-$stage-static-website-origin-$domain-$service']].{Distribution:DomainName, Id:Id}\"",
+				--query \"DistributionList.Items[?Origins.Items[?Id=='$instance_prefix-$stage-static-website-origin-$domain-$service']].{Distribution:DomainName, Id:Id}\"",
 			returnStdout: true
 		)
 
