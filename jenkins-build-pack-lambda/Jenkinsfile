@@ -80,7 +80,7 @@ node ()  {
 	
 	def branch = params.scm_branch
 	def bitbucket_name = params.service_name
-	def var_bitbucket_framework_url = "http://${configLoader.REPOSITORY.BASE_URL}/scm/${configLoader.REPOSITORY.REPO_LOC}/"
+	def var_bitbucket_framework_url = "http://${configLoader.REPOSITORY.BASE_URL}/scm/${configLoader.REPOSITORY.REPO_BASE_SERVICES}/"
 	def config
 	def domain
 

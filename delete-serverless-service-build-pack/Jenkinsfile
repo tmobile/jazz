@@ -49,8 +49,8 @@ node {
 	var_api_id_prod = configLoader.AWS.API.PROD_ID
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
 	instance_prefix = configLoader.INSTANCE_PREFIX
-	var_repo_core = configLoader.REPOSITORY.REPO_CORE
-	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
+	var_repo_core = configLoader.REPOSITORY.REPO_BASE_PLATFORM
+	var_repo_loc = configLoader.REPOSITORY.REPO_BASE_SERVICES
 	scm_credential_id 			= configLoader.REPOSITORY.CREDENTIAL_ID
 	scm_base_url			    = configLoader.REPOSITORY.BASE_URL
 

@@ -77,10 +77,10 @@ node  {
 	def scm_protocol				= "http://"
 
 	def scm_core_url = "${scm_protocol}${configLoader.REPOSITORY.BASE_URL}/scm/${repo_core}/"
-	def scm_api_user_services 			= "${scm_protocol}${configLoader.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${configLoader.REPOSITORY.REPO_LOC}/repos"
-	def scm_user_services_clone_url	 		= "${configLoader.REPOSITORY.BASE_URL}/scm/${configLoader.REPOSITORY.REPO_LOC}/"
+	def scm_api_user_services 			= "${scm_protocol}${configLoader.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${configLoader.REPOSITORY.REPO_BASE_SERVICES}/repos"
+	def scm_user_services_clone_url	 		= "${configLoader.REPOSITORY.BASE_URL}/scm/${configLoader.REPOSITORY.REPO_BASE_SERVICES}/"
 	
-	def var_bitbucket_webhook_api	= "${scm_protocol}${configLoader.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${configLoader.REPOSITORY.REPO_LOC}/repos/"
+	def var_bitbucket_webhook_api	= "${scm_protocol}${configLoader.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${configLoader.REPOSITORY.REPO_BASE_SERVICES}/repos/"
 	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
 
 	echo "Starting new service on-boarding .. with params : $params"
@@ -379,7 +379,7 @@ node  {
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.LOCK_MASTER_BRANCH, Event_Status.STARTED, "")
 				try{
 					def var_serviceonboarding_repo 	= "${scm_protocol}${configLoader.REPOSITORY.BASE_URL}/scm/${repo_core}/service-onboarding-build-pack.git"
-					def var_bitbucket_branch_perm	= "${scm_protocol}${configLoader.REPOSITORY.BASE_URL}/rest/branch-permissions/2.0/projects/${configLoader.REPOSITORY.REPO_LOC}/repos/"
+					def var_bitbucket_branch_perm	= "${scm_protocol}${configLoader.REPOSITORY.BASE_URL}/rest/branch-permissions/2.0/projects/${configLoader.REPOSITORY.REPO_BASE_SERVICES}/repos/"
 					
 					checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: var_serviceonboarding_repo]]])
 					echo "Locking commits to master branch by enforcing pull requests"
