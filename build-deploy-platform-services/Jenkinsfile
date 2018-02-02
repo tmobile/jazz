@@ -204,9 +204,9 @@ node {
 
 			echo "Deploying lambda service"
 
-			def envBucketKey = configLoader.JAZZ.S3_BUCKET_NAME_PREFIX + envmnt
+			def envBucketKey = envmnt.toUpperCase() +  configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX
 
-			sh "serverless deploy --stage ${envmnt} -v --bucket ${configLoader.JAZZ_S3[envBucketKey]}"
+			sh "serverless deploy --stage ${envmnt} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
 			// Generate swagger file based on environment
 			if (fileExists('swagger/swagger.json')) {
