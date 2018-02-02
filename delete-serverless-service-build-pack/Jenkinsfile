@@ -362,11 +362,11 @@ def updateServiceNameConfig(envval,config) {
 	sh "rm serverless.yml"
 	sh "cp serverless-temp.yml serverless.yml"
 	//events.sendStartedEvent('UPDATE_DEPLOYMENT_CONF')
-	def fullServiceName = config[service]
-	def cfStackName = config[service]
-	if(config[domain] && config[domain]!= ""){
-		fullServiceName = config[domain]+ "-" + config[service]
-		cfStackName = serviceName + "-" + config[domain] //sets CF Stack name as service--domain-env
+	def fullServiceName = config['service']
+	def cfStackName = config['service']
+	if(config['domain'] && config['domain']!= ""){
+		fullServiceName = config['domain']+ "-" + config['service']
+		cfStackName = config['service'] + "-" + config['domain'] //sets CF Stack name as service--domain-env
 	}
 	fullServiceName = instance_prefix + "-" + fullServiceName
 	cfStackName = fullServiceName
@@ -684,7 +684,7 @@ def getApiId(stage) {
 	if(stage == 'dev') {
 		return var_api_id_dev
 	}else if (stage == 'stg') {
-		return configLoader.API.API_ID_STG
+		return configLoader.API.STG_ID
 	} else if (stage == 'prod') {
 		return configLoader.AWS.API.PROD_ID
 	}
