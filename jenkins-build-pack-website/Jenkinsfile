@@ -641,12 +641,14 @@ def updateCloudFrontPolicy(String service, String s3Bucket){
 
 	//	def principal = ["AWS": env.CLOUDFRONT_OAI]
 	//def principal = ["AWS": "*"]
-	def principal = {"AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"}
+	def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
 
 	for(st in statements) {
 		if(st['Sid'] == "$service") {
 			isPolicyExists = true
 			new_policy = st
+			new_policy.put('Principal', principal)
+			new_policy.put('Resource',"arn:aws:s3:::$s3Bucket/*")
 		}
 	}
 	if (isPolicyExists == false) {
