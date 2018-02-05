@@ -205,9 +205,6 @@ node {
 			sh "npm install --save"
 			echo "NPM Build completed"
 
-			//Change lambda service name to add stack prefix name
-			sh "sed -i -- 's/" + service_name + "/" + var_env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
-
 			writeServerlessFile(config)
 			
 			echo "Deploying lambda service"
@@ -281,7 +278,7 @@ def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, servic
 }
 
 def writeServerlessFile(config){
-	sh "sed -i -- 's/\${file(deployment-env.yml):service}/" + config['service'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.env_name_prefix}-${config['service']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
@@ -488,7 +485,11 @@ def loadServiceMetadata(service_id, region){
 			
 			for(item in data){
 				metadata[item.key] = item.value.S				
-			}			
+			}
+			metadata['service'] = service_data.Item.SERVICE_NAME.S
+			metadata['domain'] = service_data.Item.SERVICE_DOMAIN.S
+            		metadata['owner'] = service_data.Item.SERVICE_CREATED_BY.S
+            		metadata['region'] = region
 			return metadata
 		}
 	}
