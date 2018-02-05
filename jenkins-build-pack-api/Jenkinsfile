@@ -5,34 +5,8 @@ import groovy.transform.Field
 
 //jenkins-build-pack-api
 //definitions
-def Event_Name =[
-	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
-	'CALL_ONBOARDING_WORKFLOW':'CALL_ONBOARDING_WORKFLOW',
-	'RAISE_PR':'RAISE_PR',
-	'VALIDATE_INPUT':'VALIDATE_INPUT',
-	'CALL_ONBOARDING_SERVICE':'CALL_ONBOARDING_SERVICE',
-	'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO':'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO',
-	'CREATE_SERVICE':'CREATE_SERVICE',
-	'BUILD':'BUILD',
-	'CODE_QUALITY_CHECK':'CODE_QUALITY_CHECK',
-	'UNIT_TEST':'UNIT_TEST',
-	'COMMIT_CODE':'COMMIT_CODE',
-	'APPROVE_PR':'APPROVE_PR',
-	'CREATE_SERVICE_REPO':'CREATE_SERVICE_REPO',
-	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
-	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
-	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
-	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
-	'CREATE_ASSET':'CREATE_ASSET',
-	'UPDATE_ASSET':'UPDATE_ASSET'
-]
 
-def Event_Status = [
-	'STARTED':'STARTED',
-	'COMPLETED':'COMPLETED',
-	'FAILED':'FAILED'
-]
-
+@Field def events
 @Field def configModule
 @Field def configLoader
 @Field def var_api_key
@@ -63,7 +37,8 @@ def Event_Status = [
 @Field def aws_api_import = '/var/lib/aws-apigateway-importer/aws-api-import.sh'
 
 node() {
-	loadConfigModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+	loadBuildModule("http://${env.REPO_BASE}/scm/${env.REPO_CORE}/jazz-build-module.git")
+
 	var_api_key 				= configLoader.API.API_KEY
 	var_api_id_dev = configLoader.API.API_ID_DEV
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
@@ -73,8 +48,9 @@ node() {
 	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
 	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
 	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
+
 	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 	role = configLoader.JAZZ.jazz_roleId
 	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${api_doc_s3_bucket}.s3-website-${region}.amazonaws.com/"
@@ -82,6 +58,7 @@ node() {
     echo "Build triggered via branch: " + params.scm_branch
     //checkout scm
     echo "start"
+
 
     def serviceName = params.service_name
     def cfStackName = params.service_name
@@ -127,6 +104,22 @@ node() {
 
 	}
 
+	//EVENTS
+
+	if(!events) { error "Can't load events module"	} //Fail here
+    events.setUrl(g_base_url + "platform/events")
+	events.setDisableEvents(configLoader.DISABLE_EVENTS)
+	events.setRole(role)
+	events.setEventHandler("JENKINS")
+	events.setDomain(config['domain'])
+	events.setRegion(region)
+	events.setEventType("SERVICE_DEPLOYMENT")
+	events.setRuntime(config['providerRuntime'])
+	events.setBranch(branch)
+	events.setServiceName(serviceName)
+	events.setServiceType('api')
+	events.setEnvironment(current_environment)
+
 	def domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
@@ -139,7 +132,7 @@ node() {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + var_env_name_prefix + "-cloud-logs-streamer-dev"
+  	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + var_env_name_prefix + "-cloud-logs-streamer-prod"
 
     echo "Role:: " + role
 
@@ -164,7 +157,9 @@ node() {
 		sh "cp serverless.yml serverless-prod.yml"
 		sh "cp swagger/swagger.json swagger/swagger-prod.json"
 
+		def context_map = [created_by : config['owner']]
 		stage('Pre-Build Validation') {
+			events.sendStartedEvent(events.getEventName("VALIDATE_INPUT"), 'pre-build validation starts', context_map, 'NA')
 			def currentendpointKey = ''
 			if (params.scm_branch == 'master') {
 				currentendpointKey = 'prod'
@@ -173,27 +168,23 @@ node() {
 			}
 
 			loadServiceInfo(params.service_name, domain, g_base_url + '/platform/services', currentendpointKey)
-
 			send_status_email(created_by, 'STARTED', params.service_name, '')
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_INPUT, Event_Status.STARTED, "")
-
 			validateDeploymentConfigurations(config)
 			validateSwaggerSpec();
 
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_INPUT, Event_Status.COMPLETED, "")
+			events.sendCompletedEvent(events.getEventName("VALIDATE_INPUT"), 'pre-build validation completed', context_map, 'NA')
 		}
 
 		stage('Build') {
-		   // @TODO : Send Event feature coming soon
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.STARTED, "")
+			events.sendStartedEvent(events.getEventName("BUILD"), 'Build starts', context_map, 'NA')
 			buildLambda(runtime)
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.COMPLETED, "")
+			events.sendCompletedEvent(events.getEventName("BUILD"), 'Build completed', context_map, 'NA')
 		}
 
 		if (params.scm_branch == 'master') {
 			stage('Deployment to Production Env') {
 
-				sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
+				events.sendStartedEvent(events.getEventName("DEPLOY_TO_AWS"), 'Deploy to AWS starts', context_map, 'NA')
 				echo "starts Deployment to Production Env"
 
 				sh "cp serverless-prod.yml serverless.yml"
@@ -248,14 +239,13 @@ node() {
 					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
 					updateServiceInDB(params.service_name, domain, g_base_url + '/platform/services', "active")
 					// resetCredentials()
-					sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-				}
+					events.sendCompletedEvent(events.getEventName("DEPLOY_TO_AWS"), 'Deploy to AWS completed', context_map, 'NA')				}
 			}//stage to prod ends here
 
 
 		} else {
 			stage('Deployment to Dev Env') {
-				sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
+				events.sendStartedEvent(events.getEventName("DEPLOY_TO_AWS"), 'Deploy to AWS starts', context_map, 'NA')
 				echo "starts Deployment to Development Env"
 
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
@@ -307,7 +297,7 @@ node() {
 				send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
 				updateServiceInDB(params.service_name, domain, g_base_url + '/platform/services', "active")
 				// @TODO : Send Event feature coming soon
-				sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+				events.sendCompletedEvent(events.getEventName("DEPLOY_TO_AWS"), 'Deploy to AWS starts', context_map, 'NA')
 			  }
 			} //Stage to deploy ends here
 
@@ -799,9 +789,6 @@ def clearVirtualEnv() {
     sh "rm -rf venv" // just delete the venv folder
 }
 
-def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
-	echo "Event on:" + service_name + " error:" + error
-}
 
 def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
@@ -988,21 +975,24 @@ def parseJson(jsonString) {
 /*
 * Load environment variables from build module
 */
-def loadConfigModule(buildModuleUrl){
+
+def loadBuildModule(buildModuleUrl){
 	echo "loading env variables, checking repos..."
 
 	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]
-		]])
-
-		echo "loading installer variables..."
+			[credentialsId: env.REPO_CREDENTIAL_ID, url: buildModuleUrl]		]])
 
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
-		echo "finished loading env module"
+
+		echo "finished loading env module"		
+		events = load "events-module.groovy"		
+
+		echo "Event module loaded "
+
 	}
 }

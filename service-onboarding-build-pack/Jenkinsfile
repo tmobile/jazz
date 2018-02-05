@@ -26,6 +26,11 @@ import groovy.transform.Field
 @Field def var_bitbucket_base
 @Field def var_bitbucket_email
 @Field def region = ''
+@Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
+@Field def auth_token = ''
+@Field def g_base_url = ''
+@Field def jq = '/usr/local/bin/jq'
+
 
 def Event = [
    'VALIDATE_INPUT': 'VALIDATE_INPUT',
@@ -75,7 +80,7 @@ node  {
     }
     
 	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/dev"
+	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
 	role = configLoader.JAZZ.jazz_roleId
 	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
 	var_api_key 				= configLoader.API.API_KEY
@@ -88,6 +93,9 @@ node  {
 	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
 	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
 
+	echo "fetching auth_token"
+	auth_token = getAuthToken()
+	
 	def service_type =  params.service_type
 	def runtime = params.runtime
 	def service_name = params.service_name
@@ -458,16 +466,49 @@ node  {
 		}
 	}
 }
+/**
+ * For getting token to access catalog APIs.
+ * Must be a service account which has access to all services
+ */
+ def getAuthToken() {
+	 
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+
+		def loginUrl = g_base_url + "/platform/login"
+		def login_json = []
+
+		login_json = [
+			'username': UNAME,
+			'password': PWD
+		]
+
+		def payload = JsonOutput.toJson(login_json)
+
+		try {
+			def token = sh (script: "curl --silent -X POST -k -v \
+				-H \"Content-Type: application/json\" \
+				 $loginUrl \
+				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
+
+			token = token.replaceAll("[\n\r]", "")
+			return token
+		}
+		catch(e){
+			error "error occured: " + e.getMessage()
+		}
+	} 	
+
+ }
 
 def updateServiceInDB(service_id_in_db, apiId, region, statusval, repo_url) {
-  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${params.auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\", \"repository\": \"${repo_url}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/dev/platform/services/${service_id_in_db}/"
+  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\", \"repository\": \"${repo_url}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/prod/platform/services/${service_id_in_db}/"
 }
 
 def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region) {
     events.sendStartedEvent(Event.VALIDATE_PRE_BUILD_CONF)
 	try {
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${params.auth_token} \" -X POST -k -v -d '{ \"service\": \"${service_name}\", \"status\":\"creation_started\", \"domain\": \"${domain}\", \"type\": \"${servicetype}\", \"created_by\": \"${created_by}\", \"runtime\": \"${runtime}\", \"repository\": \"${repo_url}\", \"description\": \"${desc}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/dev/platform/services/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '{ \"service\": \"${service_name}\", \"status\":\"creation_started\", \"domain\": \"${domain}\", \"type\": \"${servicetype}\", \"created_by\": \"${created_by}\", \"runtime\": \"${runtime}\", \"repository\": \"${repo_url}\", \"description\": \"${desc}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/prod/platform/services/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
