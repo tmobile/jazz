@@ -684,7 +684,7 @@ def getApiId(stage) {
 	if(stage == 'dev') {
 		return var_api_id_dev
 	}else if (stage == 'stg') {
-		return configLoader.API.STG_ID
+		return configLoader.AWS.API.STG_ID
 	} else if (stage == 'prod') {
 		return configLoader.AWS.API.PROD_ID
 	}
