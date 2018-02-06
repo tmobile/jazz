@@ -52,7 +52,7 @@ module.exports.handler = (event, context, callback) => {
 			}
 
 			var authenticationData = {
-				Username : event.body.username,
+				Username : event.body.username.toLowerCase(),
 				Password : event.body.password
 			};
 
@@ -64,7 +64,7 @@ module.exports.handler = (event, context, callback) => {
 			var authenticationDetails = new AWSCognito.AuthenticationDetails(authenticationData);
 			var userPool = new AWSCognito.CognitoUserPool(poolData);
 			var userData = {
-				Username : event.body.username,
+				Username : event.body.username.toLowerCase(),
 				Pool : userPool
 			};
 			

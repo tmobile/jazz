@@ -490,7 +490,6 @@ def loadServiceMetadata(service_id, region){
 			metadata['domain'] = service_data.Item.SERVICE_DOMAIN.S
 			metadata['owner'] = service_data.Item.SERVICE_CREATED_BY.S
 			metadata['region'] = region
-			
 			return metadata
 		}
 	}
