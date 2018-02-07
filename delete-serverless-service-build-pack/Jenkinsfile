@@ -27,12 +27,6 @@ import groovy.transform.Field
 @Field def role = ''
 @Field def jq = '/usr/local/bin/jq'
 
-@Field def var_repo_core
-@Field def var_repo_loc
-
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
-
 node {
 	echo "Starting delete service job with params : $params"
 
@@ -43,15 +37,11 @@ node {
 	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	role = configLoader.AWS.ROLEID
 	
-	var_repo_core = configLoader.REPOSITORY.REPO_BASE_PLATFORM
-	var_repo_loc = configLoader.REPOSITORY.REPO_BASE_SERVICES
-	scm_credential_id 			= configLoader.REPOSITORY.CREDENTIAL_ID
 	scm_base_url			    = configLoader.REPOSITORY.BASE_URL
-
 
 	def service_name
 	def version
-	def bitbucket_repo_name
+	def repo_name
 	def tracking_id
 	def config
 	def runtime
@@ -59,11 +49,6 @@ node {
 	def domainConfig
 	def cloudfrontEnabled
 	def flowType
-	def repo_protocol				= "http://"
-	def var_bitbucket_framework_url = repo_protocol + scm_base_url + "/scm/" + var_repo_core + "/"
-	
-	def var_cas_clone_url	 		= scm_base_url + "/scm/" + var_repo_loc + "/"
-	def configPackBBURL = "http://" + scm_base_url + "/scm/" + var_repo_core + "/serverless-config-pack.git"
 	
 	var_db_service_id = params.db_service_id
 
@@ -80,21 +65,21 @@ node {
 	if(params.tracking_id){
 		tracking_id = params.tracking_id.trim()
 	}
-	bitbucket_repo_name = service_name
+	repo_name = service_name
 	if(domain && domain != ""){
-		bitbucket_repo_name = domain + "-" + service_name
+		repo_name = domain + "-" + service_name
 	}
 
 	auth_token = setCredentials()
 	loadServiceInfo()
 
-	sh 'rm -rf ' + bitbucket_repo_name
-	sh 'mkdir ' + bitbucket_repo_name
+	sh 'rm -rf ' + repo_name
+	sh 'mkdir ' + repo_name
 
 	stage("Initialization") {
 
-		checkoutSCM(bitbucket_repo_name, repo_protocol + var_cas_clone_url)
-		def configObj = dir(bitbucket_repo_name){
+		checkoutSCM(repo_name)
+		def configObj = dir(repo_name){
 			return LoadConfiguration()
 		}
 		
@@ -116,25 +101,22 @@ node {
 		serviceConfig = config['service']
 		domainConfig = config['domain']
 		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_started");
-		dir(bitbucket_repo_name){
+		dir(repo_name){
 			echo "loadServerlessConfig......."
 
 			if (fileExists('build.api')) {
 				flowType = "API"
-				//events.setServiceType("API")
-				loadServerlessConfig(runtime, configPackBBURL)
-				//changeServerlessConfig(runtime)
-				//updateServiceNameConfig(domain, service_name)
+				
+				loadServerlessConfig(runtime)
+				
 				updateSwaggerConfig(domain, params.service_name.trim(), configLoader.API.API_KEY, config)
 			} else if(fileExists('build.lambda')) {
 				flowType = "LAMBDA"
-				//events.setServiceType("LAMBDA")
-				loadServerlessConfig(runtime, configPackBBURL)
-				//changeServerlessConfig(runtime)
-				//updateServiceNameConfig(domain, service_name)
+				
+				loadServerlessConfig(runtime)
 			} else if(fileExists('build.website')) {
 				flowType = "WEBSITE"
-				//events.setServiceType("WEBSITE")
+				
 				if(config['create_cloudfront_url']) {
 					cloudfrontEnabled = config['create_cloudfront_url'].trim()
 				}else {
@@ -151,7 +133,7 @@ node {
 		checkServiceExists(service_name, domain, configLoader.AWS.REGION)//is-service-available does not exist
 	}
 
-	dir(bitbucket_repo_name){
+	dir(repo_name){
 		switch (flowType) {
 			case "API":
 				stage('Undeploy Service') {
@@ -211,10 +193,8 @@ node {
 		}
 	}
 
-	stage('Cleanup BitBucket/Catalog') {
-		deleteProject(bitbucket_repo_name)
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "inactive");
-		send_status_email ("COMPLETED")
+	stage('Cleanup SCM') {
+		cleanup(repo_name)
 	}
 }
 
@@ -246,13 +226,13 @@ def unDeployService(stage, region) {
 
 /**
  * Checkout Code
- * @param  bitbucket_repo_name
+ * @param  repo_name
  * @return
  */
-def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
-	dir(bitbucket_repo_name)
+def checkoutSCM(repo_name) {
+	dir(repo_name)
 	{
-		def repo_url = var_cas_clone_url + bitbucket_repo_name+".git"
+		def repo_url = scmModule.getRepoCloneUrl(repo_name)
 		//events.sendStartedEvent('GET_SERVICE_CODE')
 		try {
 			checkout([$class: 'GitSCM', branches: [
@@ -260,44 +240,11 @@ def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
 			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
 				[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repo_url]
 			]])
-			//events.sendCompletedEvent('GET_SERVICE_CODE')
-
 		}catch(ex) {
 			updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 			send_status_email ("FAILED")
 			error "checkoutSCM Failed. "+ex.getMessage()
 		}
-	}
-}
-
-/**
- * Load the serverless configuration file from SCM based on the runtime.
- * @param  runtime
- * @return
- */
-def loadServerlessConfig(runtime) {
-	//events.sendStartedEvent('GET_SERVERLESS_CONF')
-	echo "loadServerlessConfig::" + runtime
-	try {
-		dir('_config') {
-			checkout([$class: 'GitSCM', branches: [
-				[name: '*/master']
-			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: env.GIT_CONFIG_URL]
-			]])
-		}
-		if (runtime.indexOf("nodejs") > -1) {
-			sh "cp _config/serverless-nodejs.yml ./serverless.yml"
-		} else if (runtime.indexOf("java") > -1) {
-			sh "cp _config/serverless-java.yml ./serverless.yml"
-		} else if (runtime.indexOf("python") > -1) {
-			sh "cp _config/serverless-python.yml ./serverless.yml"
-		}
-		//events.sendCompletedEvent('GET_SERVERLESS_CONF')
-	}catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
-		send_status_email ("FAILED")
-		error "loadServerlessConfig Failed. "+ex.getMessage()
 	}
 }
 
@@ -533,24 +480,16 @@ def deleteserviceindb(region, db_id) {
 
 
 /**
- * Delete the project repository from bitbucket
+ * Cleans up the project repository from SCM as well as update the database and send corresponding status email
  * @param  repoName
  * @return
  */
-def deleteProject(repoName) {
-	//events.sendStartedEvent('DELETE_PROJECT')
+def cleanup(repoName) {
+	
 	try {
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-		echo "deleting repository from bitbucket $repoName"
-		def repourl = "http://" + scm_base_url + "/rest/api/1.0/projects/CAS/repos/" + repoName;
-		echo repourl
-		def outputStr = sh (
-			script: "curl -X DELETE -k -u \"$UNAME:$PWD\" '" + repourl +"'" ,
-			returnStdout: true
-		).trim()
-		echo outputStr
-		}
-		//events.sendCompletedEvent('DELETE_PROJECT')
+		scmModule.deleteProject(repoName)
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "inactive");
+		send_status_email ("COMPLETED")
 	} catch (ex) {
 		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
@@ -1063,15 +1002,16 @@ def deleteCloudFrontDistribution(distributionID, _Etag) {
 	*/
 }
 
-def loadServerlessConfig(String runtime, String configPackBBURL) {
+def loadServerlessConfig(String runtime) {
 
-	echo "loadServerlessConfig::" + runtime + "::" + configPackBBURL
+	def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
+	echo "loadServerlessConfig::" + runtime + "::" + configPackURL
 
 	dir('_config') {
 	    checkout([$class: 'GitSCM', branches: [
 	        [name: '*/master']
 	    ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-	        [credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: configPackBBURL]
+	        [credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: configPackURL]
 	    ]])
 	}
 	if (runtime.indexOf("nodejs") > -1) {
@@ -1081,6 +1021,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
 	} else if (runtime.indexOf("python") > -1) {
 	    sh "cp _config/serverless-python.yml ./serverless.yml"
 	}
+	
 	sh "cp serverless.yml serverless-temp.yml"
 }
 

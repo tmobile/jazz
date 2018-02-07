@@ -142,7 +142,7 @@ def addWebhook(repo_name, webhookName, targetUrl) {
     sh "curl -X PUT -k -v -u \"${scm_config.BITBUCKET.BITBUCKET_USERNAME}:${scm_config.BITBUCKET.BITBUCKET_PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${targetUrl}\" , \"enabled\": true}\'"
 }
 
-def deleteProject(repo_loc, repo_name) {
+def deleteProject(repo_name) {
     if(scm_config.JAZZ_SCM == "gitlab"){
         def encodedProjectPath = URLEncoder.encode("${repo_loc}+${repo_name}", "utf-8")
         def gitlab_repo_delete_output = sh (
@@ -151,9 +151,8 @@ def deleteProject(repo_loc, repo_name) {
         ).trim()
     }
     else{
-        def repourl = cas_rest_repo + repo_name;
         def outputStr = sh (
-            script: "curl -X DELETE -k -u \"${scm_config.BITBUCKET.BITBUCKET_USERNAME}:${scm_config.BITBUCKET.BITBUCKET_PASSWORD}\" '" + cas_rest_repo + scm_repo_name +"'" ,
+            script: "curl -X DELETE -k -u \"${scm_config.BITBUCKET.BITBUCKET_USERNAME}:${scm_config.BITBUCKET.BITBUCKET_PASSWORD}\" '" + scm_user_services_api_endpoint + repo_name +"'" ,
             returnStdout: true
         ).trim()
     }
