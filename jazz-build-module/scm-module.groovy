@@ -132,7 +132,15 @@ def transferProject(cas_id, project_id){
 
 def setBranchPermissions(repo_name) {
     checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_config.REPOSITORY.REPO_CREDENTIAL_ID, url: serviceonboarding_repo]]])
-	sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" ${scm_branch_permission_api_endpoint}${repo_name}/restrictions   -d \"@branch_permissions_payload.json\"  "
+	sh "curl -X POST -k -v -u \"${scm_config.BITBUCKET.BITBUCKET_USERNAME}:${scm_config.BITBUCKET.BITBUCKET_PASSWORD}\"  -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" ${scm_branch_permission_api_endpoint}${repo_name}/restrictions   -d \"@branch_permissions_payload.json\"  "
+}
+
+def setRepoPermissions(repo_owner, repo_name, admin_group) {
+    sh "curl -X PUT -G -k -v -u \"${scm_config.BITBUCKET.BITBUCKET_USERNAME}:${scm_config.BITBUCKET.BITBUCKET_PASSWORD}\" -d \"name=$admin_group\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/groups?permission=REPO_ADMIN&\""
+
+    def encoded_creator = URLEncoder.encode(repo_owner, "utf-8")
+
+    sh "curl -X PUT -G -k -v -u \"${scm_config.BITBUCKET.BITBUCKET_USERNAME}:${scm_config.BITBUCKET.BITBUCKET_PASSWORD}\" -d \"name=$encoded_creator\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/users?permission=REPO_ADMIN\""
 }
 
 /**
