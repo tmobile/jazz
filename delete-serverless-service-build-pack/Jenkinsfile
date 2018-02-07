@@ -37,8 +37,6 @@ node {
 	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	role = configLoader.AWS.ROLEID
 	
-	scm_base_url			    = configLoader.REPOSITORY.BASE_URL
-
 	def service_name
 	def version
 	def repo_name
@@ -249,46 +247,6 @@ def checkoutSCM(repo_name) {
 }
 
 /**
- * Set the lambda execution role
- * @param  role
- * @return
- */
-def setLambdaExecutionRole(role) {
-	def lambdaRole = "";
-	try {
-		if (role != null && !role.equals("")) {
-			lambdaRole = role;
-		} else {
-			lambdaRole = env.DEFAULT_LAMBDA_EXE_ROLE;
-		}
-		sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#"+lambdaRole+"#g' serverless.yml"
-	}catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
-		send_status_email ("FAILED")
-		error "setLambdaExecutionRole Failed. "+ex.getMessage()
-	}
-}
-
-def changeServerlessConfig(String runtime) {
-	def config = LoadConfiguration()
-	//def subnetIds = config['subnetIds']
-	//def securityGroupIds = config['securityGroupIds']
-	//    def internalAccess = config['require_internal_access']
-	//sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
-	//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
-	//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
-
-	echoServerlessFile()
-
-}
-
-def echoServerlessFile() {
-	def serverlessyml = readFile('serverless.yml').trim()
-	echo "serverless file data $serverlessyml"
-}
-
-
-/**
  * Update the service name in serverless config file
  * @param  domain
  * @param  serviceName
@@ -318,8 +276,6 @@ def updateServiceNameConfig(envval,config) {
 	}
 }
 
-
-
 def writeServerlessFile(config){
 	sh "pwd"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
@@ -340,7 +296,6 @@ def writeServerlessFile(config){
 	if(config['mainClass']){
 		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/" + config['mainClass'] + "/g' serverless.yml"
 	}
-	
 }
 
 /**
@@ -417,12 +372,10 @@ def LoadConfiguration() {
  * @return
  */
 def validateInput(service_name, domain, version) {
-	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Input validation")
+	
 	if(service_name == null || service_name.equals("")) {
-		//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', "Invalid service")
 		error "Service Name is invalid"
 	}
-	//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Valid inputs")
 }
 
 /**
@@ -460,25 +413,6 @@ def checkServiceExists(service_name, domain, region) {
 	}
 }
 
-
-def deleteserviceindb(region, db_id) {
-	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
-	try {
-		sh "curl -X DELETE -k -v -H \"Authorization: ${auth_token}\" \
-				'https://${configLoader.API.API_ID_PROD}.execute-api.${region}.amazonaws.com/prod/platform/services/${db_id}'"
-		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
-	}catch (ex) {
-		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-			updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
-			send_status_email ("FAILED")
-			error "deleteService Failed. "+ex.getMessage()
-		} else {
-			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
-		}
-	}
-}
-
-
 /**
  * Cleans up the project repository from SCM as well as update the database and send corresponding status email
  * @param  repoName
@@ -512,7 +446,7 @@ def cleanUpApiGatewayResources(stage, path, region) {
 			sh "aws configure set profile.cloud-api.region ${region}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			//def resource_id = findResourceId(stage, path)
+			
 			def resource_id = null
 			try {
 				def outputStr = sh (
@@ -548,33 +482,6 @@ def cleanUpApiGatewayResources(stage, path, region) {
 			send_status_email ("FAILED")
 			error ex.getMessage()
 		}
-	}
-}
-
-/**
- * Find the resource Id of the service deployed in API gateway
- * @param  stage string
- * @param  resourcepath string
- * @return  resource Id
- */
-def findResourceId(stage, resourcePath) {
-	def resource_id = null
-	try {
-		def outputStr = sh (
-			script: "aws apigateway get-resources --rest-api-id "+getApiId(stage)+" --output json" ,
-			returnStdout: true
-		).trim()
-		def list = parseJson(outputStr)
-		for (items in list["items"]) {
-			if(items["path"] == resourcePath) {
-				resource_id = items["id"]
-			}
-		}
-		return resource_id
-	} catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
-		send_status_email ("FAILED")
-		error "findResourceId Failed"+ex.getMessage()
 	}
 }
 
@@ -844,18 +751,17 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 				def distributionConfig = getDistributionConfig(distributionID)
 				_Etag = generateDistributionConfigForDisable(distributionConfig)
 				_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
-				deleteCloudFrontDistribution(distributionID, _Etag)
 			}
 			//events.sendCompletedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
 		} catch(ex) {
-				if((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
-					echo "Could not find a CloudFront distribution Id for service: $service and environment $stage"
-					//events.sendCompletedEvent('DELETE_CLOUDFRONT', "CF resource not available", null, getEnvKey(stage))
-				} else {
-					updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
-					send_status_email ("FAILED")
-					error "cleanupCloudFrontDistribution Failed. "+ex.getMessage()
-				}
+			if((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
+				echo "Could not find a CloudFront distribution Id for service: $service and environment $stage"
+				//events.sendCompletedEvent('DELETE_CLOUDFRONT', "CF resource not available", null, getEnvKey(stage))
+			} else {
+				updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
+				send_status_email ("FAILED")
+				error "cleanupCloudFrontDistribution Failed. "+ex.getMessage()
+			}
 		}
 	}
 
@@ -976,32 +882,6 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 	}
 }
 
-/**
- * Delete CloudFront Distribution configuration
- * @param distributionID
- * @param _Etag
- * @return
- */
-def deleteCloudFrontDistribution(distributionID, _Etag) {
-	// @TODO: Send an Event with distributionID, _Etag as inputs. A separate job will pick up the details and schedule for deletion
-	// @TODO: Clean up code below after that
-	/*
-	def deleteOutput
-	try {
-		deleteOutput = sh(
-			script: "aws cloudfront delete-distribution \
-						--id $distributionID \
-						--if-match $_Etag",
-			returnStdout: true
-		)
-		echo "deleteOutput...$deleteOutput"
-		return deleteOutput
-	} catch(ex) {
-		error "deleteCloudFrontDistribution. "+e.getMessage()
-	}
-	*/
-}
-
 def loadServerlessConfig(String runtime) {
 
 	def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
@@ -1115,7 +995,7 @@ def loadServiceInfo() {
  	 if (email_content != ''){
  				body_text = body_text + '\n\n' + email_content
  	 }
- 	 def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.ADMIN + '>'
+ 	 def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
  	 body = JsonOutput.toJson([
  						 from : fromStr,
  						 to : email_id,
