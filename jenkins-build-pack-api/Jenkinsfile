@@ -40,6 +40,7 @@ def Event_Status = [
 
 @Field def configModule
 @Field def configLoader
+
 @Field def var_api_key
 @Field def var_api_id_dev
 @Field def var_aws_credential_id
@@ -49,6 +50,7 @@ def Event_Status = [
 @Field def scm_credential_id
 @Field def scm_base_url
 
+
 @Field def g_login_token = ''
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -57,18 +59,17 @@ def Event_Status = [
 @Field def preserveEnvKey = ''
 @Field def preserveEnvValue = ''
 @Field def created_by = ''
-@Field def api_doc_s3_bucket = ''
-@Field def role = ''
 
 @Field def current_environment = ''
 @Field def g_base_url_for_swagger = ''
-@Field def region = ''
+
 @Field def jq = '/usr/local/bin/jq'
 @Field def aws_api_import = '/var/lib/aws-apigateway-importer/aws-api-import.sh'
 
 node() {
-	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+	def jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
+
 	var_api_key 				= configLoader.AWS.API.PROD_ID
 	var_api_id_dev = configLoader.AWS.API.DEV_ID
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
@@ -84,20 +85,21 @@ node() {
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${api_doc_s3_bucket}.s3-website-${region}.amazonaws.com/"
 
     echo "Build triggered via branch: " + params.scm_branch
-    //checkout scm
-    echo "start"
-
+    
     def serviceName = params.service_name
     def cfStackName = params.service_name
 	def branch = params.scm_branch
 
     def bitbucket_name = params.service_name
+
 	def var_bitbucket_framework_url = "http://" + scm_base_url + "/scm/" + var_repo_loc + "/"
 
 
 	def configPackBBURL = "http://" + scm_base_url + "/scm/" + var_repo_core + "/serverless-config-pack.git"
 	def jazzBuildModuleURL = "http://${scm_base_url}/scm/"+ var_repo_core +"/jazz-build-module.git"
 
+
+	
 	def config
 	
 	if (params.scm_branch == 'master') {
@@ -153,15 +155,15 @@ node() {
 
 	def internalAccess = config['require_internal_access']
 
-	def roleARN = role.replaceAll("/", "\\\\/")
-	def var_api_host_name = "${var_api_key}.execute-api.${region}.amazonaws.com"
-
+	def roleARN = configLoader.JAZZ.jazz_roleId.replaceAll("/", "\\\\/")
+	
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
   	def logStreamer = "arn:aws:lambda:" + region + ":" + roleId + ":function:" + instance_prefix + "-cloud-logs-streamer-prod"
 
     echo "Role:: " + role
+
 
     if (domain  && domain.trim()!="") {
         serviceName = domain.trim() + "-" + serviceName
@@ -170,7 +172,9 @@ node() {
         domain = ""
     }
 
+
 	serviceName = instance_prefix + "-" + serviceName
+
 	cfStackName = serviceName
 
 	sh 'cd ' + bitbucket_name
@@ -195,25 +199,25 @@ node() {
 			loadServiceInfo(params.service_name, domain, g_base_url + '/platform/services', currentendpointKey)
 
 			send_status_email(created_by, 'STARTED', params.service_name, '')
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_INPUT, Event_Status.STARTED, "")
+			sendEvent(service, branch, runtime, "NA", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.VALIDATE_INPUT, Event_Status.STARTED, "")
 
 			validateDeploymentConfigurations(config)
 			validateSwaggerSpec();
 
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.VALIDATE_INPUT, Event_Status.COMPLETED, "")
+			sendEvent(service, branch, runtime, "NA", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.VALIDATE_INPUT, Event_Status.COMPLETED, "")
 		}
 
 		stage('Build') {
 		   // @TODO : Send Event feature coming soon
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.STARTED, "")
+			sendEvent(service, branch, runtime, "NA", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.BUILD, Event_Status.STARTED, "")
 			buildLambda(runtime)
-			sendEvent(service, branch, runtime, "NA", region, domain, role, Event_Name.BUILD, Event_Status.COMPLETED, "")
+			sendEvent(service, branch, runtime, "NA", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.BUILD, Event_Status.COMPLETED, "")
 		}
 
 		if (params.scm_branch == 'master') {
 			stage('Deployment to Production Env') {
 
-				sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
+				sendEvent(service, branch, runtime, "PRODUCTION", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
 				echo "starts Deployment to Production Env"
 
 				sh "cp serverless-prod.yml serverless.yml"
@@ -221,9 +225,9 @@ node() {
 				sh "rm -rf .serverless"
 
 
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
-					sh "aws configure set profile.cloud-api.region "+region
+					sh "aws configure set profile.cloud-api.region ${configLoader.JAZZ.jazz_region}"
 					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -235,34 +239,38 @@ node() {
 					writeServerlessFile(config)
 					
 					generateServerlessYml(service, current_environment, serviceName, cfStackName)
-					echo "setting lambda execution role as $role";
-					setLambdaExecutionRole(role);
+					echo "setting lambda execution role as ${configLoader.JAZZ.jazz_roleId}";
+					setLambdaExecutionRole(configLoader.JAZZ.jazz_roleId);
 
 					echo "serverless deploy......."
+
 					sh "serverless deploy --stage prod -v --bucket " + configLoader.AWS.S3.PROD_BUCKET
 					createSubscriptionFilters(serviceName, current_environment, region, logStreamer);
+
 					def svc_status = ''
 					if (fileExists('swagger/swagger.json')) {
 						// Generate swagger file based on environment
 						echo "Generating the swagger file for each environment"
 
+
 						var_api_key = configLoader.AWS.API.PROD_ID;
 						def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
 
-						generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, var_api_key, config)
+
+						generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, config)
 						//validateSwaggerFile( service, domain, apiHostName )
 						// import swagger api spec
 						echo "Deploying to staging API Gateway environment.."
 
-						sh "${aws_api_import} --region ${region}  --update ${var_api_key} --deploy prod swagger/swagger.json "
+						sh "${aws_api_import} --region ${configLoader.JAZZ.jazz_region}  --update ${configLoader.API.API_ID_PROD} --deploy prod swagger/swagger.json "
 
-						def endpointUrl = "https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/prod/" + domain + "/" + params.service_name
+						def endpointUrl = "https://${configLoader.API.API_ID_PROD}.execute-api.${configLoader.JAZZ.jazz_region}.amazonaws.com/prod/" + domain + "/" + params.service_name
 
 						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, endpointUrl)
 
 						updateApiDocUrl(current_environment)
 
-						sh "aws s3 cp swagger/ s3://${api_doc_s3_bucket}/${domain}/${params.service_name}/${current_environment} --recursive "
+						sh "aws s3 cp swagger/ s3://${configLoader.JAZZ_S3.jazz_s3_api_doc}/${domain}/${params.service_name}/${current_environment} --recursive "
 
 						svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
 					}
@@ -270,19 +278,19 @@ node() {
 					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
 					updateServiceInDB(params.service_name, domain, g_base_url + '/platform/services', "active")
 					// resetCredentials()
-					sendEvent(service, branch, runtime, "PRODUCTION", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}
 			}//stage to prod ends here
 
 
 		} else {
 			stage('Deployment to Dev Env') {
-				sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
+				sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
 				echo "starts Deployment to Development Env"
 
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 				echo "AWS Configure ......."
-				sh "aws configure set profile.cloud-api.region ${region}"
+				sh "aws configure set profile.cloud-api.region ${configLoader.JAZZ.jazz_region}"
 				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -296,12 +304,14 @@ node() {
 				writeServerlessFile(config)
 				
 				generateServerlessYml(service, current_environment, serviceName, cfStackName)
-				echo "setting lambda execution role as $role";
-				setLambdaExecutionRole(role);
+				echo "setting lambda execution role as ${configLoader.JAZZ.jazz_roleId}";
+				setLambdaExecutionRole(configLoader.JAZZ.jazz_roleId);
 
 				echo "serverless deploy......."
+
 				sh "serverless deploy --stage dev -v --bucket " + configLoader.AWS.S3.DEV_BUCKET
 				createSubscriptionFilters(serviceName, current_environment, region, logStreamer);
+
 				def svc_status = ''
 				if (fileExists('swagger/swagger.json')) {
 					// Generate swagger file based on environment
@@ -309,19 +319,20 @@ node() {
 					var_api_key = configLoader.AWS.API.DEV_ID;
 					def apiHostName = var_api_key+".execute-api."+region+".amazonaws.com" //Staging environment
 
-					generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, var_api_key, config)
+
+					generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, config)
 					//validateSwaggerFile( service, domain, apiHostName )
 					// import swagger api spec
 					echo "Deploying to staging API Gateway environment.."
 
-					sh "$aws_api_import --region "+region+" --update "+var_api_key+" --deploy dev swagger/swagger.json"
+					sh "$aws_api_import --region ${configLoader.JAZZ.jazz_region} --update ${configLoader.API.API_ID_DEV} --deploy dev swagger/swagger.json"
 
-					def endpointUrl = "https://" + var_api_key + ".execute-api." + region + ".amazonaws.com/dev/" + domain + "/" + params.service_name
+					def endpointUrl = "https://${configLoader.API.API_ID_DEV}.execute-api.${configLoader.JAZZ.jazz_region}.amazonaws.com/dev/" + domain + "/" + params.service_name
 					updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, endpointUrl)
 
           			updateApiDocUrl(current_environment)
 
-					sh "aws s3 cp swagger/ s3://${api_doc_s3_bucket}/${domain}/${params.service_name}/${current_environment} --recursive "
+					sh "aws s3 cp swagger/ s3://${configLoader.JAZZ_S3.jazz_s3_api_doc}/${domain}/${params.service_name}/${current_environment} --recursive "
 
 					svc_status  = "Your service endpoint for production environment: $endpointUrl \n\nView and test your API here: $g_base_url_for_swagger$domain/$service/dev/swagger.json"
 				}
@@ -332,7 +343,7 @@ node() {
 				send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
 				updateServiceInDB(params.service_name, domain, g_base_url + '/platform/services', "active")
 				// @TODO : Send Event feature coming soon
-				sendEvent(service, branch, runtime, "DEVELOPMENT", region, domain, role, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+				sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.JAZZ.jazz_region, domain, configLoader.JAZZ.jazz_roleId, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 			  }
 			} //Stage to deploy ends here
 
@@ -531,22 +542,20 @@ def validateUserConfigurationYml() {
 /**
 	Generate the swagger file specific to each environment
 */
-def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName, var_api_key, config) {
+def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName, config) {
     sh "sed -i -- 's/{lambda_function_name}/" + serviceName + "-" + env + "/g' swagger/swagger.json"
     sh "sed -i -- 's/{api_deployment_node_title}/" + deploymentNode + "/g' swagger/swagger.json" // {api_deployment_node_title}
     sh "sed -i -- 's/{service_name}/" + service + "/g' swagger/swagger.json" // {service_name}
     sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
     sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
 
-
-	def roleARN = role.replaceAll("/", "\\\\/")
-	def var_api_host_name = var_api_key+".execute-api."+region+".amazonaws.com"
-
+	def roleARN = configLoader.JAZZ.jazz_roleId.replaceAll("/", "\\\\/")
+	
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
 	sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
-	sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
+	sh "sed -i -- 's/{conf-region}/${configLoader.JAZZ.jazz_region}/g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
 }
 
@@ -682,6 +691,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
             [name: '*/master']
         ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
             [credentialsId: scm_credential_id, url: configPackBBURL]
+
         ]])
     }
 
@@ -804,7 +814,7 @@ def removeResourceCaching(apiID, stage, basePath){
               def methodVal = value.toUpperCase()
 
               def modifiedBasePath = pathVal.replaceAll("/", "~1")
-              sh "aws apigateway update-stage --rest-api-id $apiID --stage-name --output json $stage --patch-operations op=replace,path=/$modifiedBasePath/$methodVal/caching/enabled,value=false --region us-west-2"
+              sh "aws apigateway update-stage --rest-api-id $apiID --stage-name --output json $stage --patch-operations op=replace,path=/$modifiedBasePath/$methodVal/caching/enabled,value=false --region ${configLoader.JAZZ.jazz_region}"
 
             }
         }
