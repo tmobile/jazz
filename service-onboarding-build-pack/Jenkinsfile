@@ -49,7 +49,7 @@ node  {
 	loadConfigModule(jazzBuildModuleURL)
 	loadSCMModule(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${configLoader.JAZZ.jazz_region}.amazonaws.com/prod"
+	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	
 	auth_token = getAuthToken()
 
@@ -247,13 +247,13 @@ node  {
 
 				def repo_url = scmModule.getRepoUrl(repo_name)
 
-				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region,serviceMetadataJson);
+				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION,serviceMetadataJson);
 				
-				updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_started", repo_url);
+				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_started", repo_url);
 			}
 		}
 		catch(error){
-			updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_name);
+			updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
 			//do nothing
 		}
 	}
@@ -277,8 +277,7 @@ node  {
 			}
 		}
 		catch(error){
-
-			updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_name);
+			updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
 
 			send_status_email (owner, "FAILED", service_name, domain)
 
@@ -298,7 +297,7 @@ node  {
 			}
 			catch (error)
 			{
-				updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_name);
+				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
 
 				send_status_email (owner, "FAILED", service_name, domain)
 
@@ -312,7 +311,7 @@ node  {
 			
 			def repo_clone_url = scmModule.getRepoCloneUrl(repo_name)
 
-			sh "git config --global user.email \"" + configLoader.REPOSITORY.REPO_EMAIL + "\""
+			sh "git config --global user.email \"" + configLoader.JAZZ.ADMIN + "\""
 			sh "git config --global user.name $UNAME"
             sh "git clone http://$UNAME:$encoded_password@${repo_clone_url}"
 		}
@@ -342,7 +341,7 @@ node  {
 				}
 				catch (error)
 				{
-					updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_name);
+					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
 					send_status_email (owner, "FAILED", service_name, domain)
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.PUSH_TEMPLATE_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
@@ -356,7 +355,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_name);
+					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
 					echo error
 				}
@@ -367,7 +366,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.LOCK_MASTER_BRANCH, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_name);
+					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
 
 					send_status_email (owner, "FAILED", service_name, domain)
 
@@ -381,8 +380,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_failed", repo_name);
-
+					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
 					send_status_email (owner, "FAILED", service_name, domain)
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.FAILED, error.getMessage())
@@ -390,7 +388,7 @@ node  {
 				}
 
 				echo "Calling update row in db ###################################################"
-				updateServiceInDB(service_id_in_db, configLoader.API.API_KEY, configLoader.JAZZ.jazz_region, "creation_completed", repo_name);
+				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_completed", repo_name);
 			}
 		}
 	}
