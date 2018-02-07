@@ -24,7 +24,7 @@ node {
   jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
   loadConfigModule(jazzBuildModuleURL)
   
-  withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.JENKINS_CREDENTIAL_ID, passwordVariable: 'PWD',
+  withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD',
   usernameVariable: 'UNAME']]){
 
     echo "Build triggered via branch::${env.BRANCH_NAME}"

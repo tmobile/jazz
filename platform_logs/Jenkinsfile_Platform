@@ -14,8 +14,8 @@ import groovy.transform.Field
 node {
   jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
   loadConfigModule(jazzBuildModuleURL)
-  jenkins_credential_id = configLoader.JENKINS.JENKINS_CREDENTIAL_ID
-  region = configLoader.JAZZ.jazz_region
+  jenkins_credential_id = configLoader.JENKINS.CREDENTIAL_ID
+  region = configLoader.AWS.REGION
 
 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: jenkins_credential_id, passwordVariable: 'PWD',
 usernameVariable: 'UNAME']]){
