@@ -37,6 +37,7 @@ def Event_Status = [
 ]
 @Field def configModule
 @Field def configLoader
+@Field def scmModule
 
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def auth_token = ''
@@ -76,7 +77,6 @@ node  {
 
 	def scm_protocol				= "http://"
 
-	def scm_core_url = "${scm_protocol}${configLoader.REPOSITORY.REPO_BASE}/scm/${repo_core}/"
 	def scm_api_user_services 			= "${scm_protocol}${configLoader.REPOSITORY.REPO_BASE}/rest/api/1.0/projects/${configLoader.REPOSITORY.REPO_LOC}/repos"
 	def scm_user_services_clone_url	 		= "${configLoader.REPOSITORY.REPO_BASE}/scm/${configLoader.REPOSITORY.REPO_LOC}/"
 	
@@ -180,7 +180,7 @@ node  {
 			sh 'mkdir ' + service_template
 			dir(service_template)
 			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scm_core_url + service_template + '.git']]])
+				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
 
 				config = LoadConfiguration()
 
@@ -302,12 +302,7 @@ node  {
 		dir(service_template)
 		{
 			try{
-				withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-					sh "curl -X POST -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\" " + scm_api_user_services + " -d \'{\"name\":\""+ bitbucket_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
-
-					sh "git config --global user.email \"" + configLoader.REPOSITORY.REPO_EMAIL + "\""
-					sh "git config --global user.name $UNAME"
-				}
+				scmModule.createProject(owner, bitbucket_name)
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.CREATE_SERVICE_REPO, Event_Status.COMPLETED,"")
 			}
 			catch (error)
@@ -323,6 +318,9 @@ node  {
 
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD1', usernameVariable: 'UNAME']]) {
 			def encoded_password = URLEncoder.encode(PWD1, "utf-8")
+			
+			sh "git config --global user.email \"" + configLoader.REPOSITORY.REPO_EMAIL + "\""
+			sh "git config --global user.name $UNAME"
             sh "git clone http://$UNAME:$encoded_password@" + scm_user_services_clone_url + bitbucket_name +".git"
 		}
 		try{
@@ -641,5 +639,20 @@ def loadConfigModule(buildModuleUrl){
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
 		echo "finished loading env module"
+	}
+}
+
+/*
+* Load environment variables from build module
+*/
+def loadSCMModule(buildModuleUrl){
+	dir('config-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: repo_credential_id, url: buildModuleUrl]
+		]])
+
+		scmModule = load "scm-module.groovy"
 	}
 }
