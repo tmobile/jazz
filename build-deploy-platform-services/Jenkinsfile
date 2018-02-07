@@ -229,7 +229,7 @@ node {
 				try {
 					def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()
 
-					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + var_env_name_prefix  + "-" + config['service'] + "-" +  envmnt + " --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
+					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + instance_prefix + "-" + config['service'] + "-" +  envmnt + " --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
 
 					 echo "set permission for cloud-logs-streamer - success"
 				 }catch(ss) {
@@ -241,7 +241,7 @@ node {
 
 			if ( (service_template.trim() == "platform-services-handler") ) {
 
-				def function_name =  var_env_name_prefix  + "-" + config['service'] + "-" +  envmnt
+				def function_name =  instance_prefix + "-" + config['service'] + "-" +  envmnt
 
 				def event_source_list = sh (
 					script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
@@ -277,7 +277,7 @@ def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, servic
 }
 
 def writeServerlessFile(config){
-	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.env_name_prefix}-${config['service']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['service']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
@@ -471,7 +471,7 @@ def loadServiceMetadata(service_id, region){
 	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
 		credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			
-		def table_name = var_env_name_prefix + "_services_prod"
+		def table_name = instance_prefix+ "_services_prod"
 		def service_Object = sh (
 				script: "aws --region $region dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
 				returnStdout: true

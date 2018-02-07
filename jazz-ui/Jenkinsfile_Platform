@@ -70,7 +70,7 @@ node ()  {
     instance_prefix = config_loader.INSTANCE_PREFIX
     jazz_bucket_web = config_loader.JAZZ.S3_BUCKET_WEB
     scm_credential_id = config_loader.REPOSITORY.CREDENTIAL_ID
-    scm_base_url = config_loader.REPOSITORY.REPO_BASE
+    scm_base_url = config_loader.REPOSITORY.BASE_URL
     jazz_ui_repourl = 'http://' + scm_base_url + '/scm/slf/jazz-ui.git'
   }
   stage('Checking out Jazz-UI repo') {
