@@ -171,4 +171,8 @@ def getTemplateUrl(template_name) {
     return "${scm_core_services_endpoint}${template_name}.git";
 }
 
+def getCoreRepoCloneUrl(repo_name) {
+    return "${scm_protocol}${scm_config.REPOSITORY.REPO_BASE}/scm/${scm_config.REPOSITORY.REPO_CORE}/${repo_name}.git"
+}
+
 return this
