@@ -2,6 +2,7 @@
 import groovy.json.JsonOutput
 import groovy.transform.Field
 import groovy.json.JsonSlurper
+
 /*
 * Module that handles managing projects (create, delete) in the user's preferred scm
 */
@@ -92,11 +93,8 @@ def getGitlabUserId(gitlab_username){
         return userObject[0].id
     }
     catch (ex) {
-            if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-                echo "getGitlabUserId Failed"
-                error "getGitlabUserId Failed. "+ex.getMessage()
-            }
-        }
+        error "getGitlabUserId failed: " +ex.getMessage() 
+    }
 }
 
 def getCasRepoId(repo_loc){
@@ -116,10 +114,7 @@ def getCasRepoId(repo_loc){
         
         return groupObject[0].id
     }catch (ex) {
-        if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-            echo "getCasRepoId Failed"
-            error "getCasRepoId Failed. "+ex.getMessage()
-        }
+        error "getCasRepoId failed: "+ex.getMessage()
     }
 }
 
