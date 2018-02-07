@@ -24,7 +24,6 @@ import groovy.transform.Field
 @Field def service = ''
 @Field def owner = ''
 @Field def var_db_service_id = ''
-@Field def region = ''
 @Field def role = ''
 @Field def jq = '/usr/local/bin/jq'
 
@@ -41,8 +40,7 @@ node {
 	loadConfigModule(jazzBuildModuleURL)
 	loadSCMModule(jazzBuildModuleURL)
 
-	region = configLoader.AWS.REGION
-	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${region}.amazonaws.com/prod"
+	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	role = configLoader.AWS.ROLEID
 	
 	var_repo_core = configLoader.REPOSITORY.REPO_BASE_PLATFORM
@@ -117,7 +115,7 @@ node {
 		runtime = config['providerRuntime']
 		serviceConfig = config['service']
 		domainConfig = config['domain']
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_started");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_started");
 		dir(bitbucket_repo_name){
 			echo "loadServerlessConfig......."
 
@@ -150,7 +148,7 @@ node {
 
 	stage("Validation") {
 		validateInput(service_name, domain, version)
-		checkServiceExists(service_name, domain, region)//is-service-available does not exist
+		checkServiceExists(service_name, domain, configLoader.AWS.REGION)//is-service-available does not exist
 	}
 
 	dir(bitbucket_repo_name){
@@ -160,32 +158,32 @@ node {
 					updateServiceNameConfig( "dev",config)
 					def path = getResourcePath()
 					//sh "sed -i -- 's/{opt:stage}/dev/g' serverless.yml"
-					cleanUpApiGatewayResources("dev", path, region)
+					cleanUpApiGatewayResources("dev", path, configLoader.AWS.REGION)
 					cleanUpApiDocs("dev", service_name, domain)
-					unDeployService('dev', region)
+					unDeployService('dev', configLoader.AWS.REGION)
 
 					updateServiceNameConfig("stg",config)
 					//sh "sed -i -- 's/{opt:stage}/stg/g' serverless.yml"
-					cleanUpApiGatewayResources("stg", path, region)
+					cleanUpApiGatewayResources("stg", path, configLoader.AWS.REGION)
 					cleanUpApiDocs("stg", service_name, domain)
-					unDeployService('stg', region)
+					unDeployService('stg', configLoader.AWS.REGION)
 
 					updateServiceNameConfig( "prod",config)
 					//sh "sed -i -- 's/{opt:stage}/prod/g' serverless.yml"
-					cleanUpApiGatewayResources("prod", path, region)
+					cleanUpApiGatewayResources("prod", path, configLoader.AWS.REGION)
 					cleanUpApiDocs("prod", service_name, domain)
-					unDeployService('prod', region)
+					unDeployService('prod', configLoader.AWS.REGION)
 				}
 				break
 
 			case "LAMBDA":
 				stage('Undeploy Service') {
 					updateServiceNameConfig( "dev",config)
-					unDeployService('dev', region)
+					unDeployService('dev', configLoader.AWS.REGION)
 					updateServiceNameConfig( "stg",config)
-					unDeployService('stg', region)
+					unDeployService('stg', configLoader.AWS.REGION)
 					updateServiceNameConfig( "prod",config)
-					unDeployService('prod', region)
+					unDeployService('prod', configLoader.AWS.REGION)
 				}
 				break
 
@@ -215,8 +213,7 @@ node {
 
 	stage('Cleanup BitBucket/Catalog') {
 		deleteProject(bitbucket_repo_name)
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "inactive");
-		//deleteserviceindb(region, var_db_service_id)
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "inactive");
 		send_status_email ("COMPLETED")
 	}
 }
@@ -266,7 +263,7 @@ def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
 			//events.sendCompletedEvent('GET_SERVICE_CODE')
 
 		}catch(ex) {
-			updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+			updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 			send_status_email ("FAILED")
 			error "checkoutSCM Failed. "+ex.getMessage()
 		}
@@ -298,7 +295,7 @@ def loadServerlessConfig(runtime) {
 		}
 		//events.sendCompletedEvent('GET_SERVERLESS_CONF')
 	}catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "loadServerlessConfig Failed. "+ex.getMessage()
 	}
@@ -319,7 +316,7 @@ def setLambdaExecutionRole(role) {
 		}
 		sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#"+lambdaRole+"#g' serverless.yml"
 	}catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "setLambdaExecutionRole Failed. "+ex.getMessage()
 	}
@@ -368,7 +365,7 @@ def updateServiceNameConfig(envval,config) {
 		//events.sendCompletedEvent('UPDATE_DEPLOYMENT_CONF')
 		writeServerlessFile(config)
 	}catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "updateServiceNameConfig Failed. "+ex.getMessage()
 	}
@@ -414,8 +411,7 @@ def updateSwaggerConfig(domain, serviceName, api_key, config) {
 
 			def region = config['region']
 			def roleARN = role.replaceAll("/", "\\\\/")
-			def var_api_host_name = api_key +".execute-api."+region+".amazonaws.com"
-
+			
 			// TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
@@ -425,7 +421,7 @@ def updateSwaggerConfig(domain, serviceName, api_key, config) {
 		}
 		//events.sendCompletedEvent('UPDATE_SWAGGER')
 	}catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "updateServiceNameConfig Failed. "+ex.getMessage()
 	}
@@ -460,7 +456,7 @@ def LoadConfiguration() {
 		//events.sendCompletedEvent('GET_DEPLOYMENT_CONF')
 		return prop
 	}catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "LoadConfiguration Failed. "+ex.getMessage()
 	}
@@ -556,7 +552,7 @@ def deleteProject(repoName) {
 		}
 		//events.sendCompletedEvent('DELETE_PROJECT')
 	} catch (ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "deleteProject failed. "+ex.getMessage()
 	}
@@ -637,7 +633,7 @@ def findResourceId(stage, resourcePath) {
 		}
 		return resource_id
 	} catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "findResourceId Failed"+ex.getMessage()
 	}
@@ -693,14 +689,14 @@ def cleanUpApiDocs(stage, service, domain) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${region}"
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			def apiRootFolder = getApiDocsFolder(stage)
 			sh "aws s3 rm s3://${apiRootFolder}/${domain}/${service}/${stage} --recursive"
 			//events.sendCompletedEvent('DELETE_API_DOC', null, null, getEnvKey(stage))
 		} catch(ex) {
-			updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+			updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 			send_status_email ("FAILED")
 			error "cleanUpApiDocs Failed. "+ex.getMessage()
 		}
@@ -753,7 +749,7 @@ def getResourcePath() {
 		resourcepath = (basePath+"/"+pathInfo).replaceAll("//","/")
 		return resourcepath
 	} catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "getResourcePath Failed. "+ex.getMessage()
 	}
@@ -771,7 +767,7 @@ def getResourcePath() {
  		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
  	]) {
  		try {
- 			sh "aws configure set profile.cloud-api.region ${region}"
+ 			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
  			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
  			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
  			sh "aws configure set preview.cloudfront true"
@@ -783,7 +779,7 @@ def getResourcePath() {
  				cleanupS3BucketPolicy(service, domain, stage, bucketName)
  			}
  		} catch(ex) {
- 			updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+ 			updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
  			send_status_email ("FAILED")
  			error ex.getMessage()
  		}
@@ -820,7 +816,7 @@ def cleanupS3BucketPolicy(service, domain, stage, bucket) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${region}"
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -851,7 +847,7 @@ def cleanupS3BucketPolicy(service, domain, stage, bucket) {
 		} catch(ex) {
             resetCredentials()
 			if(ex.getMessage().indexOf("groovy.json.internal.LazyMap") < 0) {
-				updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+				updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 				send_status_email ("FAILED")
 				error "cleanupS3BucketPolicy Failed. "+ex.getMessage()
 			}
@@ -876,7 +872,7 @@ def updateBucketPolicy(policy_json, bucketName){
 				--bucket "+bucketName+" \
 				--policy \'${policy_json}\'"
 	} catch(e) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 			error e.getMessage()
 	}
@@ -894,7 +890,7 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${region}"
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -917,7 +913,7 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 					echo "Could not find a CloudFront distribution Id for service: $service and environment $stage"
 					//events.sendCompletedEvent('DELETE_CLOUDFRONT', "CF resource not available", null, getEnvKey(stage))
 				} else {
-					updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+					updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 					send_status_email ("FAILED")
 					error "cleanupCloudFrontDistribution Failed. "+ex.getMessage()
 				}
@@ -972,7 +968,7 @@ def getDistributionConfig(distributionID) {
 		)
 		return distributionConfig
 	}catch (ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "getDistributionConfig Failed."+ex.getMessage()
 	}
@@ -1001,7 +997,7 @@ def generateDistributionConfigForDisable(distributionConfig) {
 		}catch(ex) {}
 		return eTag
 	} catch(ex) {
-		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.API.API_ID_PROD, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "generateDistributionConfigForDisable Failed."+ex.getMessage()
 	}
