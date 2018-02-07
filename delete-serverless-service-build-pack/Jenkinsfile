@@ -29,32 +29,30 @@ import groovy.transform.Field
 @Field def var_api_key
 @Field def var_api_id_dev
 @Field def var_aws_credential_id
-@Field def var_env_name_prefix
+@Field def instance_prefix
 @Field def var_repo_core
 @Field def var_repo_loc
-@Field def var_credentialsId
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
+@Field def scm_credential_id
+@Field def scm_base_url
 
 node {
 	echo "Starting delete service job.."
 	echo "params : $params"
 	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
-	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
-	role = configLoader.JAZZ.jazz_roleId
-	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
-	var_api_key 				= configLoader.API.API_KEY
-	var_api_id_dev = configLoader.API.API_ID_DEV
-	var_api_id_prod = configLoader.API.API_ID_PROD
+	region = configLoader.AWS.REGION
+	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${region}.amazonaws.com/prod"
+	role = configLoader.AWS.ROLEID
+	api_doc_s3_bucket = configLoader.AWS.S3.API_DOC
+	var_api_key 				= configLoader.AWS.API.PROD_ID
+	var_api_id_dev = configLoader.AWS.API.DEV_ID
+	var_api_id_prod = configLoader.AWS.API.PROD_ID
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
-	var_repo_core = configLoader.REPOSITORY.REPO_CORE
-	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
-	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
+	instance_prefix = configLoader.INSTANCE_PREFIX
+	var_repo_core = configLoader.REPOSITORY.REPO_BASE_PLATFORM
+	var_repo_loc = configLoader.REPOSITORY.REPO_BASE_SERVICES
+	scm_credential_id 			= configLoader.REPOSITORY.CREDENTIAL_ID
+	scm_base_url			    = configLoader.REPOSITORY.BASE_URL
 
 	def service_name
 	def version
@@ -67,15 +65,15 @@ node {
 	def cloudfrontEnabled
 	def flowType
 	def repo_protocol				= "http://"
-	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/"
-	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + var_repo_loc + "/repos"
-	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + var_repo_loc + "/"
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
-	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/service-onboarding-build-pack.git"
-	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + var_repo_loc + "/repos/"
-	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + var_repo_loc + "/repos/"
+	def var_bitbucket_framework_url = repo_protocol + scm_base_url + "/scm/" + var_repo_core + "/"
+	def var_cas_rest_repo 			= repo_protocol + scm_base_url  + "/rest/api/1.0/projects/" + var_repo_loc + "/repos"
+	def var_cas_clone_url	 		= scm_base_url + "/scm/" + var_repo_loc + "/"
+	def configPackBBURL = "http://" + scm_base_url + "/scm/" + var_repo_core + "/serverless-config-pack.git"
+	def var_serviceonboarding_repo 	= repo_protocol + scm_base_url + "/scm/" + var_repo_core + "/service-onboarding-build-pack.git"
+	def var_bitbucket_branch_perm	= repo_protocol + scm_base_url + "/rest/branch-permissions/2.0/projects/" + var_repo_loc + "/repos/"
+	def var_bitbucket_webhook_api	= repo_protocol + scm_base_url + "/rest/webhook/1.0/projects/" + var_repo_loc + "/repos/"
 	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
-	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/${var_repo_core}/jazz-build-module.git"
+	def jazzBuildModuleURL = "http://${scm_base_url}/scm/${var_repo_core}/jazz-build-module.git"
 
 	var_db_service_id = params.db_service_id
 
@@ -271,7 +269,7 @@ def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
 			checkout([$class: 'GitSCM', branches: [
 				[name: '*/master']
 			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: var_credentialsId, url: repo_url]
+				[credentialsId: scm_credential_id, url: repo_url]
 			]])
 			//events.sendCompletedEvent('GET_SERVICE_CODE')
 
@@ -296,7 +294,7 @@ def loadServerlessConfig(runtime) {
 			checkout([$class: 'GitSCM', branches: [
 				[name: '*/master']
 			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: var_credentialsId, url: env.GIT_CONFIG_URL]
+				[credentialsId: scm_credential_id, url: env.GIT_CONFIG_URL]
 			]])
 		}
 		if (runtime.indexOf("nodejs") > -1) {
@@ -364,13 +362,13 @@ def updateServiceNameConfig(envval,config) {
 	sh "rm serverless.yml"
 	sh "cp serverless-temp.yml serverless.yml"
 	//events.sendStartedEvent('UPDATE_DEPLOYMENT_CONF')
-	def fullServiceName = config[service]
-	def cfStackName = config[service]
-	if(config[domain] && config[domain]!= ""){
-		fullServiceName = config[domain]+ "-" + config[service]
-		cfStackName = serviceName + "-" + config[domain] //sets CF Stack name as service--domain-env
+	def fullServiceName = config['service']
+	def cfStackName = config['service']
+	if(config['domain'] && config['domain']!= ""){
+		fullServiceName = config['domain']+ "-" + config['service']
+		cfStackName = config['service'] + "-" + config['domain'] //sets CF Stack name as service--domain-env
 	}
-	fullServiceName = var_env_name_prefix + "-" + fullServiceName
+	fullServiceName = instance_prefix + "-" + fullServiceName
 	cfStackName = fullServiceName
 	try {
 		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
@@ -554,9 +552,9 @@ def deleteserviceindb(region, db_id) {
 def deleteProject(repoName) {
 	//events.sendStartedEvent('DELETE_PROJECT')
 	try {
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: scm_credential_id, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		echo "deleting repository from bitbucket $repoName"
-		def repourl = "http://" + var_bitbucket_base + "/rest/api/1.0/projects/CAS/repos/" + repoName;
+		def repourl = "http://" + scm_base_url + "/rest/api/1.0/projects/CAS/repos/" + repoName;
 		echo repourl
 		def outputStr = sh (
 			script: "curl -X DELETE -k -u \"$UNAME:$PWD\" '" + repourl +"'" ,
@@ -668,11 +666,11 @@ def parseJson(jsonString) {
  */
 def getServiceBucket(stage) {
 	if(stage == 'dev') {
-		return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 	}else if (stage == 'stg') {
-		return configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_STG_BUCKET;
 	} else if (stage == 'prod') {
-		return configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
 	}
 }
 
@@ -686,9 +684,9 @@ def getApiId(stage) {
 	if(stage == 'dev') {
 		return var_api_id_dev
 	}else if (stage == 'stg') {
-		return configLoader.API.API_ID_STG
+		return configLoader.AWS.API.STG_ID
 	} else if (stage == 'prod') {
-		return configLoader.API.API_ID_PROD
+		return configLoader.AWS.API.PROD_ID
 	}
 }
 
@@ -949,7 +947,7 @@ def getDistributionId(stage, domain, service) {
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[?Origins.Items[?Id=='$var_env_name_prefix-$stage-static-website-origin-$domain-$service']].{Distribution:DomainName, Id:Id}\"",
+				--query \"DistributionList.Items[?Origins.Items[?Id=='$instance_prefix-$stage-static-website-origin-$domain-$service']].{Distribution:DomainName, Id:Id}\"",
 			returnStdout: true
 		)
 
@@ -1085,7 +1083,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
 	    checkout([$class: 'GitSCM', branches: [
 	        [name: '*/master']
 	    ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-	        [credentialsId: var_credentialsId, url: configPackBBURL]
+	        [credentialsId: scm_credential_id, url: configPackBBURL]
 	    ]])
 	}
 	if (runtime.indexOf("nodejs") > -1) {
@@ -1188,7 +1186,7 @@ def loadServiceInfo() {
  	 if (email_content != ''){
  				body_text = body_text + '\n\n' + email_content
  	 }
- 	 def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
+ 	 def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.ADMIN + '>'
  	 body = JsonOutput.toJson([
  						 from : fromStr,
  						 to : email_id,
@@ -1245,7 +1243,7 @@ def loadServiceMetadataModule(buildURL) {
 				checkout([$class: 'GitSCM', branches: [
 					[name: '*/master']
 				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-					[credentialsId: var_credentialsId, url: buildURL]
+					[credentialsId: scm_credential_id, url: buildURL]
 				]])
 				serviceMetadata = load "service-metadata-loader.groovy"
 				serviceMetadata.setAuthToken(setCredentials())
@@ -1263,9 +1261,9 @@ def loadServiceMetadataModule(buildURL) {
 
 def initialize(serviceMetadata, serviceType, service, domain){
 	def url = "$g_base_url/platform/services?domain=$domain&service=$service"
-	def dev = configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET
-	def stg = configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET
-	def prd = configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET
+	def dev = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET
+	def stg = configLoader.JAZZ.S3.WEBSITE_STG_BUCKET
+	def prd = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET
 	
 	serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
 	serviceMetadata.setUrl(url)
