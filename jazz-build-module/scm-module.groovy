@@ -161,8 +161,12 @@ def getRepoUrl(repo_name) {
     return "${scm_protocol}${scm_config.REPOSITORY.REPO_BASE}/projects/${scm_config.REPOSITORY.REPO_LOC}/repos/${repo_name}/browse";
 }
 
+def getRepoCloneUrl(repo_name) {
+     return "${scm_user_services_clone_url}${repo_name}.git"
+}
+
 def getTemplateUrl(template_name) {
-    return "${scm_core_services_endpoint}${template_name}.git"
+    return "${scm_core_services_endpoint}${template_name}.git";
 }
 
 return this
