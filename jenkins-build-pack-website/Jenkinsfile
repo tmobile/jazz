@@ -236,7 +236,7 @@ node ()  {
 
 						updateCloudFrontPolicy(service, s3ProdBucket)
 
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
@@ -336,7 +336,7 @@ node ()  {
 
 						updateCloudFrontPolicy(service, s3DevBucket)
             
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 
 						if (url) {
@@ -454,8 +454,6 @@ def generateDistributionConfig(service, envname, config) {
 	def distribution_config_with_tags = readFile('distribution_config_with_tags.json').trim()
 	echo(distribution_config_with_tags)
 }
-
-
 
 /**
 	Validate basic configurations in the deployment yaml file and error if any keys are
@@ -634,15 +632,11 @@ def updateCloudFrontPolicy(String service, String s3Bucket){
 	def statements = bucketPolicy.Statement
 	def CFOAI = sh (
 		script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
-		--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.env_name_prefix}-origin_access_identity'].{j: Id}\"",
+		--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\"",
 		returnStdout: true
 		).trim()
 
-	echo "CFOAI: $CFOAI"
-
-	//	def principal = ["AWS": env.CLOUDFRONT_OAI]
-	//def principal = ["AWS": "*"]
-	def principal = {"AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"}
+	def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
 
 	for(st in statements) {
 		if(st['Sid'] == "$service") {
@@ -813,34 +807,32 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
  def setCredentials() {
 	def loginUrl = g_base_url + '/platform/login'
 	def token
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-			echo "user name is $UNAME"
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+		echo "user name is $UNAME"
 
-			def login_json = []
+		def login_json = []
 
-			login_json = [
-				'username': UNAME,
-				'password': PWD
-			]
+		login_json = [
+			'username': UNAME,
+			'password': PWD
+		]
 
-			def payload = JsonOutput.toJson(login_json)
+		def payload = JsonOutput.toJson(login_json)
 
-			try {
-				token = sh (script: "curl --silent -X POST -k -v \
-					-H \"Content-Type: application/json\" \
-					 $loginUrl \
-					-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
+		try {
+			token = sh (script: "curl --silent -X POST -k -v \
+				-H \"Content-Type: application/json\" \
+					$loginUrl \
+				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
 
-				token = token.replaceAll("[\n\r]", "")
-				return token
-			}
-			catch(e){
-				echo "error occured: " + e.getMessage()
-				error "error occured: " + e.getMessage()
-			}
+			token = token.replaceAll("[\n\r]", "")
+			return token
 		}
- 	
-
+		catch(e){
+			echo "error occured: " + e.getMessage()
+			error "error occured: " + e.getMessage()
+		}
+	}
 }
 
 /**
@@ -871,7 +863,7 @@ def send_status_email (email_id, build_status, service, email_content) {
    	if (email_content != ''){
         	body_text = body_text + '\n\n' + email_content
 	}
-	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.ADMIN + '>'
+	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
 					to : email_id,
@@ -882,19 +874,19 @@ def send_status_email (email_id, build_status, service, email_content) {
 			    ])
 
    	try{
-				def sendMail = sh (script: "curl -X POST \
-								${g_base_url}/platform/email \
-								-k -v -H \"Authorization: $g_login_token\" \
-								-H \"Content-Type: application/json\" \
-								-d \'${body}\'", returnStdout: true).trim()
-				def responseJSON = parseJson(sendMail)
-				if(responseJSON.data){
-					echo "successfully sent e-mail to $email_id"
-				} else {
-					echo "exception occured while sending e-mail: $responseJSON"
-				}
+		def sendMail = sh (script: "curl -X POST \
+						${g_base_url}/platform/email \
+						-k -v -H \"Authorization: $g_login_token\" \
+						-H \"Content-Type: application/json\" \
+						-d \'${body}\'", returnStdout: true).trim()
+		def responseJSON = parseJson(sendMail)
+		if(responseJSON.data){
+			echo "successfully sent e-mail to $email_id"
+		} else {
+			echo "exception occured while sending e-mail: $responseJSON"
+		}
    	} catch (e){
-       		echo "Failed while sending build status notification"
+       	echo "Failed while sending build status notification"
    	}
 }
 
@@ -929,28 +921,27 @@ def parseJson(jsonString) {
  *
  */
 def loadServiceMetadataModule(buildURL) {
-		try {						
-			echo "loading serviceMetaData, checking repos"
+	try {						
+		echo "loading serviceMetaData, checking repos"
 
-			dir('service-metadata') {
-				checkout([$class: 'GitSCM', branches: [
-					[name: '*/master']
-				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-					[credentialsId: repo_credential_id, url: buildURL]
-				]])
-				serviceMetadata = load "service-metadata-loader.groovy"			
-				serviceMetadata.setAuthToken(setCredentials())
+		dir('service-metadata') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildURL]
+			]])
+			serviceMetadata = load "service-metadata-loader.groovy"			
+			serviceMetadata.setAuthToken(setCredentials())
 
-				// Load and set dependent utility module.
-				echo "loading util module"
-				Util = load "utility-loader.groovy"
-				serviceMetadata.setUtil(Util)
-				return serviceMetadata 
-			}
-		
-		}catch(ex) {
-			error "loadServiceMetadataModule Failed. "+ex.getMessage()
+			// Load and set dependent utility module.
+			echo "loading util module"
+			Util = load "utility-loader.groovy"
+			serviceMetadata.setUtil(Util)
+			return serviceMetadata 
 		}
+	}catch(ex) {
+		error "loadServiceMetadataModule Failed. "+ex.getMessage()
+	}
 }
 
 /*
@@ -971,5 +962,6 @@ def loadSCMModule(buildModuleUrl){
 		}
 	}catch(ex) {
 		error "loadSCMModule failed " + ex.toString()
+	
 	}
 }
