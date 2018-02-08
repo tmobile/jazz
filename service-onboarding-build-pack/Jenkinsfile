@@ -485,7 +485,7 @@ def LoadConfiguration() {
 		}else {
 			cleanedList.add(i)
 		}
-		}
+	}
 		def newItem = ["subnetIds", ""]
 	for (item in cleanedList) {
 
@@ -497,25 +497,7 @@ def LoadConfiguration() {
 		def value = "";
 		if(eachItemList[1]) {
 			value = eachItemList[1].trim();
-		}
-		if(eachItemList[0].trim() == "securityGroupIds")
-		{
-
-			if(value.indexOf('"') == -1)
-				value = "\"" + value + "\""
-
-			echo value
-		}
-
-		if(eachItemList[0].trim() == "subnetIds1" || eachItemList[0].trim()  == "subnetIds2" || eachItemList[0].trim()  == "subnetIds3")
-		{
-			if(newItem[1].trim()  == "")
-				newItem[1] = "\""  + eachItemList[1].trim()
-
-			else
-				newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
-
-		}
+		}		
 		else if(eachItemList[0]) {
 			prop.put(eachItemList[0].trim(), value)
 		}
