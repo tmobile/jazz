@@ -1,4 +1,3 @@
-artifact: api-java-template-1.0.jar
 mainClass: com.slf.services.Handler
 providerRuntime : java8
 providerMemorySize : 256
