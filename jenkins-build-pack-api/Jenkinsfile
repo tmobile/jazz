@@ -40,6 +40,7 @@ def Event_Status = [
 
 @Field def configModule
 @Field def configLoader
+@Field def scmModule
 
 @Field def var_api_key
 @Field def var_api_id_dev
@@ -48,8 +49,6 @@ def Event_Status = [
 @Field def var_repo_core
 @Field def var_repo_loc
 @Field def scm_credential_id
-@Field def scm_base_url
-
 
 @Field def g_login_token = ''
 @Field def g_base_url = ''
@@ -69,6 +68,7 @@ def Event_Status = [
 node() {
 	def jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
+	loadSCMModule(jazzBuildModuleURL)
 
 	var_api_key 				= configLoader.AWS.API.PROD_ID
 	var_api_id_dev = configLoader.AWS.API.DEV_ID
@@ -77,7 +77,6 @@ node() {
 	var_repo_core = configLoader.REPOSITORY.REPO_BASE_PLATFORM
 	var_repo_loc = configLoader.REPOSITORY.REPO_BASE_SERVICES
 	scm_credential_id 			= configLoader.REPOSITORY.CREDENTIAL_ID
-	scm_base_url			= configLoader.REPOSITORY.BASE_URL
 	region = configLoader.AWS.REGION
 	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${region}.amazonaws.com/prod"
 	role = configLoader.AWS.ROLEID
@@ -90,15 +89,8 @@ node() {
     def cfStackName = params.service_name
 	def branch = params.scm_branch
 
-    def bitbucket_name = params.service_name
+	def repo_name = params.service_name
 
-	def var_bitbucket_framework_url = "http://" + scm_base_url + "/scm/" + var_repo_loc + "/"
-
-
-	def configPackBBURL = "http://" + scm_base_url + "/scm/" + var_repo_core + "/serverless-config-pack.git"
-
-
-	
 	def config
 	
 	if (params.scm_branch == 'master') {
@@ -110,23 +102,23 @@ node() {
     stage('Checkout code base') {
 
 		if (domain  && domain.trim()!="") {
-			bitbucket_name = params.domain + "-" + params.service_name
+			repo_name = params.domain + "-" + params.service_name
 		 }else{
 			domain = ""
 		}
 
-		sh 'rm -rf ' + bitbucket_name
-		sh 'mkdir ' + bitbucket_name
+		sh 'rm -rf ' + repo_name
+		sh 'mkdir ' + repo_name
 
-		dir(bitbucket_name)
+		dir(repo_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_credential_id, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_credential_id, url: scmModule.getRepoCloneUrl(repo_name)]]])
 		}
 
-		sh 'cd ' + bitbucket_name
+		sh 'cd ' + repo_name
 
 		// @TODO: dir can be removed, needs to be refactored
-		def configObj = dir(bitbucket_name)
+		def configObj = dir(repo_name)
 		{
 			return LoadConfiguration()
 		}
@@ -175,13 +167,11 @@ node() {
 
 	cfStackName = serviceName
 
-	sh 'cd ' + bitbucket_name
+	sh 'cd ' + repo_name
 
-	dir(bitbucket_name)
+	dir(repo_name)
 	{
-
-		echo "loadServerlessConfig......."
-		loadServerlessConfig(runtime, configPackBBURL)
+		loadServerlessConfig(runtime)
 
 		sh "cp serverless.yml serverless-prod.yml"
 		sh "cp swagger/swagger.json swagger/swagger-prod.json"
@@ -292,13 +282,11 @@ node() {
 				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-				echo "loadServerlessConfig......."
-                loadServerlessConfig(runtime, configPackBBURL)
+				loadServerlessConfig(runtime)
 
 				// Generate serverless yml file with domain added in function name
 				echo "Generate deployment env with domain"
 
-				
 				writeServerlessFile(config)
 				
 				generateServerlessYml(service, current_environment, serviceName, cfStackName)
@@ -678,17 +666,19 @@ def validateDeploymentConfigurations(def prop) {
 
 }
 
-def loadServerlessConfig(String runtime, String configPackBBURL) {
+def loadServerlessConfig(String runtime) {
 
 	def config = LoadConfiguration()
 	def subnetIds = config['subnetIds']
 	def securityGroupIds = config['securityGroupIds']
 	def internalAccess = config['require_internal_access']
     dir('_config') {
-        checkout([$class: 'GitSCM', branches: [
+		def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
+
+		checkout([$class: 'GitSCM', branches: [
             [name: '*/master']
         ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-            [credentialsId: scm_credential_id, url: configPackBBURL]
+            [credentialsId: scm_credential_id, url: configPackURL]
 
         ]])
     }
@@ -700,29 +690,18 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
     } else if (runtime.indexOf("python") > -1) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
-
-
-	// sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
-	// sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
-	// sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
-
+	
 	echoServerlessFile()
-
 }
 
 /**
 	Pre-build validation of swagger api specifications
 **/
 def validateSwaggerSpec() {
-    echo "================================ validating swagger spec ================================"
-        // generating swagger with dummy values for validation
-    //generateSwaggerEnv("test-service-for-validation", "test", "test-cloud-api", apiHostName, "domain", "test-service-for-validation")
-    //sh "swagger-tools validate swagger/swagger.json"
-    echo "================================ validating swagger spec ================================"
+    
 }
 
 def validateSwaggerFile( service, domain, apiHostName ){
-    echo "================================ validating swagger before deployement ================================"
     if (fileExists('swagger/swagger.json')) {
         def swaggerFile = readFile('swagger/swagger.json').trim()
         echo "after reading swagger file/....."
@@ -736,7 +715,6 @@ def validateSwaggerFile( service, domain, apiHostName ){
 
     }
     sh "sed -i -- 's/host\": \"[^\"]*\"/host\": \"" + apiHostName +   "\"/g' swagger/swagger.json"
-    echo "================================ validating swagger before deployment ================================"
 }
 
 /**
@@ -944,9 +922,7 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 			error "error occured: " + e.getMessage()
 		}
 	}
- 	
-
- }
+}
 
  /**
  * Set Service
@@ -984,7 +960,7 @@ def send_status_email (email_id, build_status, service, email_content) {
    	if (email_content != ''){
 		body_text = body_text + '\n\n' + email_content
 	}
-	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.ADMIN + '>'
+	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
 					to : email_id,
@@ -995,17 +971,17 @@ def send_status_email (email_id, build_status, service, email_content) {
 			    ])
 
    	try{
-				def sendMail = sh (script: "curl -X POST \
-						${g_base_url}/platform/email \
-						-k -v -H \"Authorization: $g_login_token\" \
-						-H \"Content-Type: application/json\" \
-						-d \'${body}\'", returnStdout: true).trim()
-				def responseJSON = parseJson(sendMail)
-				if(responseJSON.data){
-					echo "successfully sent e-mail to $email_id"
-				} else {
-					echo "exception occured while sending e-mail: $responseJSON"
-				}
+		def sendMail = sh (script: "curl -X POST \
+				${g_base_url}/platform/email \
+				-k -v -H \"Authorization: $g_login_token\" \
+				-H \"Content-Type: application/json\" \
+				-d \'${body}\'", returnStdout: true).trim()
+		def responseJSON = parseJson(sendMail)
+		if(responseJSON.data){
+			echo "successfully sent e-mail to $email_id"
+		} else {
+			echo "exception occured while sending e-mail: $responseJSON"
+		}
    	} catch (e){
        echo "Failed while sending build status notification"
    	}
@@ -1063,26 +1039,47 @@ def loadConfigModule(buildModuleUrl){
  *
  */
 def loadServiceMetadataModule(buildURL) {
-		try {						
-			echo "loading serviceMetaData, checking repos"
+	try {						
+		echo "loading serviceMetaData, checking repos"
 
-			dir('service-metadata') {
-				checkout([$class: 'GitSCM', branches: [
-					[name: '*/master']
-				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-					[credentialsId: repo_credential_id, url: buildURL]
-				]])
-				serviceMetadata = load "service-metadata-loader.groovy"			
-				serviceMetadata.setAuthToken(setCredentials())
+		dir('service-metadata') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildURL]
+			]])
+			serviceMetadata = load "service-metadata-loader.groovy"			
+			serviceMetadata.setAuthToken(setCredentials())
 
-				// Load and set dependent utility module.
-				echo "loading util module"
-				Util = load "utility-loader.groovy"
-				serviceMetadata.setUtil(Util)
-				return serviceMetadata 
-			}
-		
-		}catch(ex) {
-			error "loadServiceMetadataModule Failed. "+ex.getMessage()
+			// Load and set dependent utility module.
+			echo "loading util module"
+			Util = load "utility-loader.groovy"
+			serviceMetadata.setUtil(Util)
+			return serviceMetadata 
 		}
+	
+	}catch(ex) {
+		error "loadServiceMetadataModule Failed. "+ex.getMessage()
+	}
+}
+
+/*
+load scm module
+*/
+def loadSCMModule(buildModuleUrl){
+
+	try {	
+		dir('scm-loader') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildModuleUrl]
+			]])
+
+			scmModule = load "scm-module.groovy"
+			scmModule.initialize(configLoader)
+		}
+	}catch(ex) {
+		error "loadSCMModule failed " + ex.toString()
+	}
 }
