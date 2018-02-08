@@ -309,11 +309,12 @@ node  {
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD1', usernameVariable: 'UNAME']]) {
 			def encoded_password = URLEncoder.encode(PWD1, "utf-8")
 			
-			def repo_clone_url = scmModule.getRepoCloneUrl(repo_name)
-
+			def repo_clone_base_url = scmModule.getRepoCloneBaseUrl(repo_name)
+			def repo_protocol = scmModule.getRepoProtocol()
+          
 			sh "git config --global user.email \"" + configLoader.JAZZ.ADMIN + "\""
 			sh "git config --global user.name $UNAME"
-            sh "git clone http://$UNAME:$encoded_password@${repo_clone_url}"
+         	sh "git clone ${repo_protocol}:$UNAME:$encoded_password@${repo_clone_base_url}"
 		}
 		try{
 			sh "mv -nf " + service_template + "/* " + repo_name + "/"
