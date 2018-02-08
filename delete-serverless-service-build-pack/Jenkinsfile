@@ -555,7 +555,7 @@ def cleanUpApiDocs(stage, service, domain) {
  * @return  folder name
  */
 def getApiDocsFolder(stage) {
-	return configLoader.JAZZ_S3.jazz_s3_api_doc
+	return configLoader.AWS.S3.API_DOC
 }
 
 /**
