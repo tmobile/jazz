@@ -516,7 +516,7 @@ def getServiceBucket(stage) {
  */
 def getApiId(stage) {
 	if(stage == 'dev') {
-		return configLoader.API.API_ID_DEV
+		return configLoader.AWS.API.DEV_ID
 	}else if (stage == 'stg') {
 		return configLoader.AWS.API.STG_ID
 	} else if (stage == 'prod') {
