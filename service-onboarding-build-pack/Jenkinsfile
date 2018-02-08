@@ -198,7 +198,9 @@ node  {
 				serviceMetadataJson["subnetIds"] = configLoader.AWS.SUBNET_IDS
 				serviceMetadataJson["region"] = configLoader.AWS.REGION 
 				serviceMetadataJson["iamRoleARN"] = configLoader.AWS.ROLEID
-				
+				if(runtime == 'java'){
+					serviceMetadataJson["artifact"] = domain + "-" + service_name + ".jar"
+				}
 				
 				def slack_channelName = params.slack_channel
 				if(slack_channelName && slack_channelName.trim() != ""){
