@@ -528,59 +528,65 @@ def updateS3BucketPolicy( service,  s3Bucket, isCloudfront, existingPolicyObj){
 	echo "updateS3BucketPolicy"
 	try{
 		def policy_filedata
-		def url
 		def new_policy
-		def isPolicyExists = false
+		def isListBucketPolicy = false
+		def stmtS3 = '{"Sid":"","Effect":"Allow","Principal":{"AWS":"*"},"Action":"s3:GetObject","Resource":"arn:aws:s3:::","Condition":{"IpAddress":{"aws:SourceIp":[]}}}'
+		def stmtCf = '{"Sid":"","Effect":"Allow","Principal":{"AWS":""},"Action":"s3:GetObject","Resource":"arn:aws:s3:::"}'
+		def stmtCfList = '{"Sid":"ListBucket","Effect":"Allow","Principal":"*","Action":"s3:ListBucket","Resource":"arn:aws:s3:::"}'
+		def cleanupIndex = -1
 
 		def bucketPolicy = existingPolicyObj
+		def statements = bucketPolicy.Statement			
+		def CFOAI = sh (
+			script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
+			--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\"",
+			returnStdout: true
+			).trim()
 
-		if (bucketPolicy) {
-			def statements = bucketPolicy.Statement			
-			def CFOAI = sh (
-				script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
-				--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\"",
-				returnStdout: true
-				).trim()
-			echo "CFOAI: $CFOAI"
-
-			//add restrictions so that Cloudfront endpoint can access S3
-			if(isCloudfront){
-				def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
-			} else{
-				def principal = "*"
+		for(st in statements) {
+			cleanupIndex++
+			if(st['Sid'] == "$service") {
+				echo "cleanupIndex...$cleanupIndex"
+				bucketPolicy.Statement[cleanupIndex] = null
+			} else if(st['Sid'] == "ListBucket") {
+				isListBucketPolicy = true
 			}
-
-			for(st in statements) {
-				if(st['Sid'] == "$service") {
-					isPolicyExists = true
-					new_policy = st
-				}
-			}
-			echo "isCloudfront: $isCloudfront"
-			echo "isPolicyExists: $isPolicyExists"
-			echo "service: $service"
-			if (isPolicyExists == false) {
-				// create new policy statement
-				new_policy = [:]
-				new_policy.put('Sid', "$service")
-				new_policy.put('Effect', "Allow")
-				new_policy.put('Action', "s3:GetObject")
-				new_policy.put('Principal', principal)
-				new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
-			}
-
-			if (isPolicyExists == false) {
-				// add new policy statement to
-				statements << new_policy
-			}
-
-			// return updated policy statements
-			echo "updated PolicyStatement : $statements"
-
-			policy_filedata = JsonOutput.prettyPrint(JsonOutput.toJson(bucketPolicy))
-
-			sh "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${policy_filedata}\'"
 		}
+		bucketPolicy.Statement.removeAll([null])
+
+		//add new list policy statement 
+		if(isListBucketPolicy == false && isCloudfront){
+			def listPolicyObject = jsonParse(stmtCfList)
+			listPolicyObject.put('Principal', principal)
+			listPolicyObject.put('Resource', "arn:aws:s3:::$s3Bucket")
+			bucketPolicy.Statement << listPolicyObject
+		}
+
+		//add restrictions so that Cloudfront endpoint can access S3
+		if(isCloudfront){
+			echo "isCloudfront: $isCloudfront"
+			def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
+			new_policy =  jsonParse(stmtCf)
+			new_policy.put('Sid', "$service")
+			new_policy.put('Principal', principal)
+			new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
+			bucketPolicy.Statement << new_policy
+		} else{
+			echo "isCloudfront: $isCloudfront"
+			def principal = "*"
+			new_policy =  jsonParse(stmtS3)
+			new_policy.put('Sid', "$service")
+			new_policy.put('Principal', principal)
+			new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
+			bucketPolicy.Statement << new_policy
+		}
+
+		echo "updated PolicyStatement : $statements"
+
+		policy_filedata = JsonOutput.prettyPrint(JsonOutput.toJson(bucketPolicy))
+
+		def putPolicyResponse = sh(returnStdout: true, script: "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${policy_filedata}\'")
+
 	} catch(ex){
 		echo "Bucket policy update failed. "+ex.getMessage()
 		error "Bucket policy update failed. "+ex.getMessage()
