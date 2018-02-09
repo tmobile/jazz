@@ -13,6 +13,8 @@ import groovy.transform.Field
 */
 @Field def configModule
 @Field def configLoader
+@Field def scmModule
+
 @Field def Util
 @Field def serviceMetadata
 @Field def g_base_url = ''
@@ -22,43 +24,22 @@ import groovy.transform.Field
 @Field def service = ''
 @Field def owner = ''
 @Field def var_db_service_id = ''
-@Field def region = ''
 @Field def role = ''
-@Field def api_doc_s3_bucket = ''
 @Field def jq = '/usr/local/bin/jq'
-@Field def var_api_key
-@Field def var_api_id_dev
-@Field def var_aws_credential_id
-@Field def var_env_name_prefix
-@Field def var_repo_core
-@Field def var_repo_loc
-@Field def var_credentialsId
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
 
 node {
-	echo "Starting delete service job.."
-	echo "params : $params"
+	echo "Starting delete service job with params : $params"
+
 	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
-	region = configLoader.JAZZ.jazz_region
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
-	role = configLoader.JAZZ.jazz_roleId
-	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
-	var_api_key 				= configLoader.API.API_KEY
-	var_api_id_dev = configLoader.API.API_ID_DEV
-	var_api_id_prod = configLoader.API.API_ID_PROD
-	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
-	var_repo_core = configLoader.REPOSITORY.REPO_CORE
-	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
-	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
+	loadSCMModule(jazzBuildModuleURL)
 
+	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+	role = configLoader.AWS.ROLEID
+	
 	def service_name
 	def version
-	def bitbucket_repo_name
+	def repo_name
 	def tracking_id
 	def config
 	def runtime
@@ -66,17 +47,7 @@ node {
 	def domainConfig
 	def cloudfrontEnabled
 	def flowType
-	def repo_protocol				= "http://"
-	def var_bitbucket_framework_url = repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/"
-	def var_cas_rest_repo 			= repo_protocol + var_bitbucket_base  + "/rest/api/1.0/projects/" + var_repo_loc + "/repos"
-	def var_cas_clone_url	 		= var_bitbucket_base + "/scm/" + var_repo_loc + "/"
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
-	def var_serviceonboarding_repo 	= repo_protocol + var_bitbucket_base + "/scm/" + var_repo_core + "/service-onboarding-build-pack.git"
-	def var_bitbucket_branch_perm	= repo_protocol + var_bitbucket_base + "/rest/branch-permissions/2.0/projects/" + var_repo_loc + "/repos/"
-	def var_bitbucket_webhook_api	= repo_protocol + var_bitbucket_base + "/rest/webhook/1.0/projects/" + var_repo_loc + "/repos/"
-	def var_scm_source_hook 		= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
-	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/${var_repo_core}/jazz-build-module.git"
-
+	
 	var_db_service_id = params.db_service_id
 
 	if (params.service_name) {
@@ -92,21 +63,21 @@ node {
 	if(params.tracking_id){
 		tracking_id = params.tracking_id.trim()
 	}
-	bitbucket_repo_name = service_name
+	repo_name = service_name
 	if(domain && domain != ""){
-		bitbucket_repo_name = domain + "-" + service_name
+		repo_name = domain + "-" + service_name
 	}
 
 	auth_token = setCredentials()
 	loadServiceInfo()
 
-	sh 'rm -rf ' + bitbucket_repo_name
-	sh 'mkdir ' + bitbucket_repo_name
+	sh 'rm -rf ' + repo_name
+	sh 'mkdir ' + repo_name
 
 	stage("Initialization") {
 
-		checkoutSCM(bitbucket_repo_name, repo_protocol + var_cas_clone_url)
-		def configObj = dir(bitbucket_repo_name){
+		checkoutSCM(repo_name)
+		def configObj = dir(repo_name){
 			return LoadConfiguration()
 		}
 		
@@ -127,26 +98,23 @@ node {
 		runtime = config['providerRuntime']
 		serviceConfig = config['service']
 		domainConfig = config['domain']
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_started");
-		dir(bitbucket_repo_name){
+		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_started");
+		dir(repo_name){
 			echo "loadServerlessConfig......."
 
 			if (fileExists('build.api')) {
 				flowType = "API"
-				//events.setServiceType("API")
-				loadServerlessConfig(runtime, configPackBBURL)
-				//changeServerlessConfig(runtime)
-				//updateServiceNameConfig(domain, service_name)
-				updateSwaggerConfig(domain, params.service_name.trim(), var_api_key, config)
+				
+				loadServerlessConfig(runtime)
+				
+				updateSwaggerConfig(domain, params.service_name.trim(), configLoader.API.API_KEY, config)
 			} else if(fileExists('build.lambda')) {
 				flowType = "LAMBDA"
-				//events.setServiceType("LAMBDA")
-				loadServerlessConfig(runtime, configPackBBURL)
-				//changeServerlessConfig(runtime)
-				//updateServiceNameConfig(domain, service_name)
+				
+				loadServerlessConfig(runtime)
 			} else if(fileExists('build.website')) {
 				flowType = "WEBSITE"
-				//events.setServiceType("WEBSITE")
+				
 				if(config['create_cloudfront_url']) {
 					cloudfrontEnabled = config['create_cloudfront_url'].trim()
 				}else {
@@ -160,42 +128,42 @@ node {
 
 	stage("Validation") {
 		validateInput(service_name, domain, version)
-		checkServiceExists(service_name, domain, region)//is-service-available does not exist
+		checkServiceExists(service_name, domain, configLoader.AWS.REGION)//is-service-available does not exist
 	}
 
-	dir(bitbucket_repo_name){
+	dir(repo_name){
 		switch (flowType) {
 			case "API":
 				stage('Undeploy Service') {
 					updateServiceNameConfig( "dev",config)
 					def path = getResourcePath()
 					//sh "sed -i -- 's/{opt:stage}/dev/g' serverless.yml"
-					cleanUpApiGatewayResources("dev", path, region)
+					cleanUpApiGatewayResources("dev", path, configLoader.AWS.REGION)
 					cleanUpApiDocs("dev", service_name, domain)
-					unDeployService('dev', region)
+					unDeployService('dev', configLoader.AWS.REGION)
 
 					updateServiceNameConfig("stg",config)
 					//sh "sed -i -- 's/{opt:stage}/stg/g' serverless.yml"
-					cleanUpApiGatewayResources("stg", path, region)
+					cleanUpApiGatewayResources("stg", path, configLoader.AWS.REGION)
 					cleanUpApiDocs("stg", service_name, domain)
-					unDeployService('stg', region)
+					unDeployService('stg', configLoader.AWS.REGION)
 
 					updateServiceNameConfig( "prod",config)
 					//sh "sed -i -- 's/{opt:stage}/prod/g' serverless.yml"
-					cleanUpApiGatewayResources("prod", path, region)
+					cleanUpApiGatewayResources("prod", path, configLoader.AWS.REGION)
 					cleanUpApiDocs("prod", service_name, domain)
-					unDeployService('prod', region)
+					unDeployService('prod', configLoader.AWS.REGION)
 				}
 				break
 
 			case "LAMBDA":
 				stage('Undeploy Service') {
 					updateServiceNameConfig( "dev",config)
-					unDeployService('dev', region)
+					unDeployService('dev', configLoader.AWS.REGION)
 					updateServiceNameConfig( "stg",config)
-					unDeployService('stg', region)
+					unDeployService('stg', configLoader.AWS.REGION)
 					updateServiceNameConfig( "prod",config)
-					unDeployService('prod', region)
+					unDeployService('prod', configLoader.AWS.REGION)
 				}
 				break
 
@@ -223,11 +191,8 @@ node {
 		}
 	}
 
-	stage('Cleanup BitBucket/Catalog') {
-		deleteProject(bitbucket_repo_name)
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "inactive");
-		//deleteserviceindb(region, var_db_service_id)
-		send_status_email ("COMPLETED")
+	stage('Cleanup SCM') {
+		cleanup(repo_name)
 	}
 }
 
@@ -239,7 +204,7 @@ node {
 def unDeployService(stage, region) {
 	//events.sendStartedEvent('UNDEPLOY_LAMBDA', null, null, getEnvKey(stage))
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
 			sh "aws configure set profile.cloud-api.region ${region}"
@@ -249,7 +214,7 @@ def unDeployService(stage, region) {
 			echo "Service undeployed"
 			//events.sendCompletedEvent('UNDEPLOY_LAMBDA', null, null, getEnvKey(stage))
 		}catch(ex) {
-			updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+			updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, region, "deletion_failed");
 			//events.sendFailureEvent('UNDEPLOY_LAMBDA', ex.getMessage(), null, getEnvKey(stage))
 			send_status_email ("FAILED")
 			error ex.getMessage()
@@ -259,100 +224,27 @@ def unDeployService(stage, region) {
 
 /**
  * Checkout Code
- * @param  bitbucket_repo_name
+ * @param  repo_name
  * @return
  */
-def checkoutSCM(bitbucket_repo_name, var_cas_clone_url) {
-	dir(bitbucket_repo_name)
+def checkoutSCM(repo_name) {
+	dir(repo_name)
 	{
-		def repo_url = var_cas_clone_url + bitbucket_repo_name+".git"
+		def repo_url = scmModule.getRepoCloneUrl(repo_name)
 		//events.sendStartedEvent('GET_SERVICE_CODE')
 		try {
 			checkout([$class: 'GitSCM', branches: [
 				[name: '*/master']
 			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: var_credentialsId, url: repo_url]
+				[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repo_url]
 			]])
-			//events.sendCompletedEvent('GET_SERVICE_CODE')
-
 		}catch(ex) {
-			updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+			updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 			send_status_email ("FAILED")
 			error "checkoutSCM Failed. "+ex.getMessage()
 		}
 	}
 }
-
-/**
- * Load the serverless configuration file from SCM based on the runtime.
- * @param  runtime
- * @return
- */
-def loadServerlessConfig(runtime) {
-	//events.sendStartedEvent('GET_SERVERLESS_CONF')
-	echo "loadServerlessConfig::" + runtime
-	try {
-		dir('_config') {
-			checkout([$class: 'GitSCM', branches: [
-				[name: '*/master']
-			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: var_credentialsId, url: env.GIT_CONFIG_URL]
-			]])
-		}
-		if (runtime.indexOf("nodejs") > -1) {
-			sh "cp _config/serverless-nodejs.yml ./serverless.yml"
-		} else if (runtime.indexOf("java") > -1) {
-			sh "cp _config/serverless-java.yml ./serverless.yml"
-		} else if (runtime.indexOf("python") > -1) {
-			sh "cp _config/serverless-python.yml ./serverless.yml"
-		}
-		//events.sendCompletedEvent('GET_SERVERLESS_CONF')
-	}catch(ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
-		send_status_email ("FAILED")
-		error "loadServerlessConfig Failed. "+ex.getMessage()
-	}
-}
-
-/**
- * Set the lambda execution role
- * @param  role
- * @return
- */
-def setLambdaExecutionRole(role) {
-	def lambdaRole = "";
-	try {
-		if (role != null && !role.equals("")) {
-			lambdaRole = role;
-		} else {
-			lambdaRole = env.DEFAULT_LAMBDA_EXE_ROLE;
-		}
-		sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#"+lambdaRole+"#g' serverless.yml"
-	}catch(ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
-		send_status_email ("FAILED")
-		error "setLambdaExecutionRole Failed. "+ex.getMessage()
-	}
-}
-
-def changeServerlessConfig(String runtime) {
-	def config = LoadConfiguration()
-	//def subnetIds = config['subnetIds']
-	//def securityGroupIds = config['securityGroupIds']
-	//    def internalAccess = config['require_internal_access']
-	//sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
-	//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
-	//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
-
-	echoServerlessFile()
-
-}
-
-def echoServerlessFile() {
-	def serverlessyml = readFile('serverless.yml').trim()
-	echo "serverless file data $serverlessyml"
-}
-
 
 /**
  * Update the service name in serverless config file
@@ -364,13 +256,13 @@ def updateServiceNameConfig(envval,config) {
 	sh "rm serverless.yml"
 	sh "cp serverless-temp.yml serverless.yml"
 	//events.sendStartedEvent('UPDATE_DEPLOYMENT_CONF')
-	def fullServiceName = config[service]
-	def cfStackName = config[service]
-	if(config[domain] && config[domain]!= ""){
-		fullServiceName = config[domain]+ "-" + config[service]
-		cfStackName = serviceName + "-" + config[domain] //sets CF Stack name as service--domain-env
+	def fullServiceName = config['service']
+	def cfStackName = config['service']
+	if(config['domain'] && config['domain']!= ""){
+		fullServiceName = config['domain']+ "-" + config['service']
+		cfStackName = config['service'] + "-" + config['domain'] //sets CF Stack name as service--domain-env
 	}
-	fullServiceName = var_env_name_prefix + "-" + fullServiceName
+	fullServiceName = configLoader.INSTANCE_PREFIX + "-" + fullServiceName
 	cfStackName = fullServiceName
 	try {
 		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
@@ -378,13 +270,11 @@ def updateServiceNameConfig(envval,config) {
 		//events.sendCompletedEvent('UPDATE_DEPLOYMENT_CONF')
 		writeServerlessFile(config)
 	}catch(ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "updateServiceNameConfig Failed. "+ex.getMessage()
 	}
 }
-
-
 
 def writeServerlessFile(config){
 	sh "pwd"
@@ -406,7 +296,6 @@ def writeServerlessFile(config){
 	if(config['mainClass']){
 		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/" + config['mainClass'] + "/g' serverless.yml"
 	}
-	
 }
 
 /**
@@ -424,8 +313,7 @@ def updateSwaggerConfig(domain, serviceName, api_key, config) {
 
 			def region = config['region']
 			def roleARN = role.replaceAll("/", "\\\\/")
-			def var_api_host_name = api_key +".execute-api."+region+".amazonaws.com"
-
+			
 			// TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
@@ -435,7 +323,7 @@ def updateSwaggerConfig(domain, serviceName, api_key, config) {
 		}
 		//events.sendCompletedEvent('UPDATE_SWAGGER')
 	}catch(ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "updateServiceNameConfig Failed. "+ex.getMessage()
 	}
@@ -470,7 +358,7 @@ def LoadConfiguration() {
 		//events.sendCompletedEvent('GET_DEPLOYMENT_CONF')
 		return prop
 	}catch(ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "LoadConfiguration Failed. "+ex.getMessage()
 	}
@@ -484,12 +372,10 @@ def LoadConfiguration() {
  * @return
  */
 def validateInput(service_name, domain, version) {
-	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Input validation")
+	
 	if(service_name == null || service_name.equals("")) {
-		//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', "Invalid service")
 		error "Service Name is invalid"
 	}
-	//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Valid inputs")
 }
 
 /**
@@ -504,7 +390,7 @@ def checkServiceExists(service_name, domain, region) {
 
 	try {
 		def outputStr = sh (
-			script: "curl -H \"Authorization: ${auth_token}\" 'https://${var_api_id_prod}.execute-api.${region}.amazonaws.com/prod/platform/is-service-available?domain=${domain}&service=${service_name}'" ,
+			script: "curl -H \"Authorization: ${auth_token}\" 'https://${configLoader.AWS.API.PROD_ID}.execute-api.${region}.amazonaws.com/prod/platform/is-service-available?domain=${domain}&service=${service_name}'" ,
 			returnStdout: true
 		).trim()
 		echo outputStr
@@ -518,7 +404,7 @@ def checkServiceExists(service_name, domain, region) {
 		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-			updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+			updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, region, "deletion_failed");
 			send_status_email ("FAILED")
 			error "checkServiceExists Failed. "+ex.getMessage()
 		} else {
@@ -527,46 +413,19 @@ def checkServiceExists(service_name, domain, region) {
 	}
 }
 
-
-def deleteserviceindb(region, db_id) {
-	//events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', "Check if service exists")
-	try {
-		sh "curl -X DELETE -k -v -H \"Authorization: ${auth_token}\" \
-				'https://${var_api_id_prod}.execute-api.${region}.amazonaws.com/prod/platform/services/${db_id}'"
-		//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
-	}catch (ex) {
-		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-			updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
-			send_status_email ("FAILED")
-			error "deleteService Failed. "+ex.getMessage()
-		} else {
-			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
-		}
-	}
-}
-
-
 /**
- * Delete the project repository from bitbucket
+ * Cleans up the project repository from SCM as well as update the database and send corresponding status email
  * @param  repoName
  * @return
  */
-def deleteProject(repoName) {
-	//events.sendStartedEvent('DELETE_PROJECT')
+def cleanup(repoName) {
+	
 	try {
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: var_credentialsId, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-		echo "deleting repository from bitbucket $repoName"
-		def repourl = "http://" + var_bitbucket_base + "/rest/api/1.0/projects/CAS/repos/" + repoName;
-		echo repourl
-		def outputStr = sh (
-			script: "curl -X DELETE -k -u \"$UNAME:$PWD\" '" + repourl +"'" ,
-			returnStdout: true
-		).trim()
-		echo outputStr
-		}
-		//events.sendCompletedEvent('DELETE_PROJECT')
+		scmModule.deleteProject(repoName)
+		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "inactive");
+		send_status_email ("COMPLETED")
 	} catch (ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "deleteProject failed. "+ex.getMessage()
 	}
@@ -581,13 +440,13 @@ def deleteProject(repoName) {
 def cleanUpApiGatewayResources(stage, path, region) {
 	//events.sendStartedEvent('DELETE_API_RESOURCE', null, null, getEnvKey(stage))
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
 			sh "aws configure set profile.cloud-api.region ${region}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			//def resource_id = findResourceId(stage, path)
+			
 			def resource_id = null
 			try {
 				def outputStr = sh (
@@ -619,37 +478,10 @@ def cleanUpApiGatewayResources(stage, path, region) {
 				//events.sendCompletedEvent('DELETE_API_RESOURCE', "No Resource to be deleted", null, getEnvKey(stage))
 			}
 		} catch(ex) {
-			updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+			updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, region, "deletion_failed");
 			send_status_email ("FAILED")
 			error ex.getMessage()
 		}
-	}
-}
-
-/**
- * Find the resource Id of the service deployed in API gateway
- * @param  stage string
- * @param  resourcepath string
- * @return  resource Id
- */
-def findResourceId(stage, resourcePath) {
-	def resource_id = null
-	try {
-		def outputStr = sh (
-			script: "aws apigateway get-resources --rest-api-id "+getApiId(stage)+" --output json" ,
-			returnStdout: true
-		).trim()
-		def list = parseJson(outputStr)
-		for (items in list["items"]) {
-			if(items["path"] == resourcePath) {
-				resource_id = items["id"]
-			}
-		}
-		return resource_id
-	} catch(ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
-		send_status_email ("FAILED")
-		error "findResourceId Failed"+ex.getMessage()
 	}
 }
 
@@ -668,11 +500,11 @@ def parseJson(jsonString) {
  */
 def getServiceBucket(stage) {
 	if(stage == 'dev') {
-		return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 	}else if (stage == 'stg') {
-		return configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_STG_BUCKET;
 	} else if (stage == 'prod') {
-		return configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
 	}
 }
 
@@ -684,11 +516,11 @@ def getServiceBucket(stage) {
  */
 def getApiId(stage) {
 	if(stage == 'dev') {
-		return var_api_id_dev
+		return configLoader.AWS.API.DEV_ID
 	}else if (stage == 'stg') {
-		return configLoader.API.API_ID_STG
+		return configLoader.AWS.API.STG_ID
 	} else if (stage == 'prod') {
-		return configLoader.API.API_ID_PROD
+		return configLoader.AWS.API.PROD_ID
 	}
 }
 
@@ -700,17 +532,17 @@ def getApiId(stage) {
 def cleanUpApiDocs(stage, service, domain) {
 	//events.sendStartedEvent('DELETE_API_DOC', null, null, getEnvKey(stage))
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${region}"
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			def apiRootFolder = getApiDocsFolder(stage)
 			sh "aws s3 rm s3://${apiRootFolder}/${domain}/${service}/${stage} --recursive"
 			//events.sendCompletedEvent('DELETE_API_DOC', null, null, getEnvKey(stage))
 		} catch(ex) {
-			updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+			updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 			send_status_email ("FAILED")
 			error "cleanUpApiDocs Failed. "+ex.getMessage()
 		}
@@ -723,7 +555,7 @@ def cleanUpApiDocs(stage, service, domain) {
  * @return  folder name
  */
 def getApiDocsFolder(stage) {
-	return api_doc_s3_bucket
+	return configLoader.AWS.S3.API_DOC
 }
 
 /**
@@ -763,7 +595,7 @@ def getResourcePath() {
 		resourcepath = (basePath+"/"+pathInfo).replaceAll("//","/")
 		return resourcepath
 	} catch(ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "getResourcePath Failed. "+ex.getMessage()
 	}
@@ -778,10 +610,10 @@ def getResourcePath() {
  	echo "unDeployWebsite::" + service + "::" + domain + "::" + stage
 
  	withCredentials([
- 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+ 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
  	]) {
  		try {
- 			sh "aws configure set profile.cloud-api.region ${region}"
+ 			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
  			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
  			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
  			sh "aws configure set preview.cloudfront true"
@@ -793,7 +625,7 @@ def getResourcePath() {
  				cleanupS3BucketPolicy(service, domain, stage, bucketName)
  			}
  		} catch(ex) {
- 			updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+ 			updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
  			send_status_email ("FAILED")
  			error ex.getMessage()
  		}
@@ -827,10 +659,10 @@ def cleanupS3BucketPolicy(service, domain, stage, bucket) {
 	echo "cleanupS3BucketPolicy called"
 
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${region}"
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -861,7 +693,7 @@ def cleanupS3BucketPolicy(service, domain, stage, bucket) {
 		} catch(ex) {
             resetCredentials()
 			if(ex.getMessage().indexOf("groovy.json.internal.LazyMap") < 0) {
-				updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+				updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 				send_status_email ("FAILED")
 				error "cleanupS3BucketPolicy Failed. "+ex.getMessage()
 			}
@@ -886,7 +718,7 @@ def updateBucketPolicy(policy_json, bucketName){
 				--bucket "+bucketName+" \
 				--policy \'${policy_json}\'"
 	} catch(e) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 			error e.getMessage()
 	}
@@ -901,10 +733,10 @@ def updateBucketPolicy(policy_json, bucketName){
 def cleanupCloudFrontDistribution(service, domain, stage) {
 	//events.sendStartedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${region}"
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -919,18 +751,17 @@ def cleanupCloudFrontDistribution(service, domain, stage) {
 				def distributionConfig = getDistributionConfig(distributionID)
 				_Etag = generateDistributionConfigForDisable(distributionConfig)
 				_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
-				deleteCloudFrontDistribution(distributionID, _Etag)
 			}
 			//events.sendCompletedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
 		} catch(ex) {
-				if((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
-					echo "Could not find a CloudFront distribution Id for service: $service and environment $stage"
-					//events.sendCompletedEvent('DELETE_CLOUDFRONT', "CF resource not available", null, getEnvKey(stage))
-				} else {
-					updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
-					send_status_email ("FAILED")
-					error "cleanupCloudFrontDistribution Failed. "+ex.getMessage()
-				}
+			if((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
+				echo "Could not find a CloudFront distribution Id for service: $service and environment $stage"
+				//events.sendCompletedEvent('DELETE_CLOUDFRONT', "CF resource not available", null, getEnvKey(stage))
+			} else {
+				updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
+				send_status_email ("FAILED")
+				error "cleanupCloudFrontDistribution Failed. "+ex.getMessage()
+			}
 		}
 	}
 
@@ -949,7 +780,7 @@ def getDistributionId(stage, domain, service) {
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[?Origins.Items[?Id=='$var_env_name_prefix-$stage-static-website-origin-$domain-$service']].{Distribution:DomainName, Id:Id}\"",
+				--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-$stage-static-website-origin-$domain-$service']].{Distribution:DomainName, Id:Id}\"",
 			returnStdout: true
 		)
 
@@ -982,7 +813,7 @@ def getDistributionConfig(distributionID) {
 		)
 		return distributionConfig
 	}catch (ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "getDistributionConfig Failed."+ex.getMessage()
 	}
@@ -1011,7 +842,7 @@ def generateDistributionConfigForDisable(distributionConfig) {
 		}catch(ex) {}
 		return eTag
 	} catch(ex) {
-		updateServiceInDB(var_db_service_id, var_api_id_prod, region, "deletion_failed");
+		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
 		send_status_email ("FAILED")
 		error "generateDistributionConfigForDisable Failed."+ex.getMessage()
 	}
@@ -1051,41 +882,16 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 	}
 }
 
-/**
- * Delete CloudFront Distribution configuration
- * @param distributionID
- * @param _Etag
- * @return
- */
-def deleteCloudFrontDistribution(distributionID, _Etag) {
-	// @TODO: Send an Event with distributionID, _Etag as inputs. A separate job will pick up the details and schedule for deletion
-	// @TODO: Clean up code below after that
-	/*
-	def deleteOutput
-	try {
-		deleteOutput = sh(
-			script: "aws cloudfront delete-distribution \
-						--id $distributionID \
-						--if-match $_Etag",
-			returnStdout: true
-		)
-		echo "deleteOutput...$deleteOutput"
-		return deleteOutput
-	} catch(ex) {
-		error "deleteCloudFrontDistribution. "+e.getMessage()
-	}
-	*/
-}
+def loadServerlessConfig(String runtime) {
 
-def loadServerlessConfig(String runtime, String configPackBBURL) {
-
-	echo "loadServerlessConfig::" + runtime + "::" + configPackBBURL
+	def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
+	echo "loadServerlessConfig::" + runtime + "::" + configPackURL
 
 	dir('_config') {
 	    checkout([$class: 'GitSCM', branches: [
 	        [name: '*/master']
 	    ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-	        [credentialsId: var_credentialsId, url: configPackBBURL]
+	        [credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: configPackURL]
 	    ]])
 	}
 	if (runtime.indexOf("nodejs") > -1) {
@@ -1095,6 +901,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
 	} else if (runtime.indexOf("python") > -1) {
 	    sh "cp _config/serverless-python.yml ./serverless.yml"
 	}
+	
 	sh "cp serverless.yml serverless-temp.yml"
 }
 
@@ -1188,7 +995,7 @@ def loadServiceInfo() {
  	 if (email_content != ''){
  				body_text = body_text + '\n\n' + email_content
  	 }
- 	 def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
+ 	 def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
  	 body = JsonOutput.toJson([
  						 from : fromStr,
  						 to : email_id,
@@ -1245,7 +1052,7 @@ def loadServiceMetadataModule(buildURL) {
 				checkout([$class: 'GitSCM', branches: [
 					[name: '*/master']
 				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-					[credentialsId: var_credentialsId, url: buildURL]
+					[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: buildURL]
 				]])
 				serviceMetadata = load "service-metadata-loader.groovy"
 				serviceMetadata.setAuthToken(setCredentials())
@@ -1263,12 +1070,31 @@ def loadServiceMetadataModule(buildURL) {
 
 def initialize(serviceMetadata, serviceType, service, domain){
 	def url = "$g_base_url/platform/services?domain=$domain&service=$service"
-	def dev = configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET
-	def stg = configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET
-	def prd = configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET
+	def dev = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET
+	def stg = configLoader.JAZZ.S3.WEBSITE_STG_BUCKET
+	def prd = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET
 	
 	serviceMetadata.initialize(serviceType, service, domain, url, dev, stg, prd)
 	serviceMetadata.setUrl(url)
+}
 
+/*
+load scm module
+*/
+def loadSCMModule(buildModuleUrl){
 
+	try {	
+		dir('scm-loader') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildModuleUrl]
+			]])
+
+			scmModule = load "scm-module.groovy"
+			scmModule.initialize(configLoader)
+		}
+	}catch(ex) {
+		error "loadSCMModule failed " + ex.toString()
+	}
 }

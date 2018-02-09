@@ -19,7 +19,7 @@ echo "Service configuration module loaded successfully"
 @Field def api_id_prod
 @Field def current_environment
 @Field def user_pool_id
-@Field def env_name_prefix
+@Field def instance_prefix
 @Field def client_id
 @Field def repo_base
 @Field def es_hostname
@@ -32,7 +32,7 @@ echo "Service configuration module loaded successfully"
  * Initialize the module
  */
 def initialize(role_arn, region, role_id, jenkins_url, api_id_dev, api_id_stg, api_id_prod, current_environment,user_pool_id,
-				env_name_prefix, client_id, repo_base, es_hostname, bitbucket_base, bitbucket_username, bitbucket_password,service_name) {
+				instance_prefix, client_id, repo_base, es_hostname, bitbucket_base, bitbucket_username, bitbucket_password,service_name) {
 	
 	setRoleARN(role_arn)
 	setRegion(region)
@@ -43,7 +43,7 @@ def initialize(role_arn, region, role_id, jenkins_url, api_id_dev, api_id_stg, a
 	setApiIdProd(api_id_prod)
 	setCurrentEnvironment(current_environment)
 	setUserPoolId(user_pool_id)
-	setEnvNamePrefix(env_name_prefix)
+	setEnvNamePrefix(instance_prefix)
 	setClientId(client_id)
 	setRepoBase(repo_base)
 	setEsHostName(es_hostname)
@@ -76,9 +76,9 @@ def loadServiceConfigurationData() {
 		}
 		
 		if ( (service_name.trim() == "platform_events") ) {
-			sh "sed -i -- 's/{conf_stack_prefix}/" + env_name_prefix + "/g' ./components/dev-config.json"
-			sh "sed -i -- 's/{conf_stack_prefix}/" + env_name_prefix + "/g' ./components/stg-config.json"
-			sh "sed -i -- 's/{conf_stack_prefix}/" + env_name_prefix + "/g' ./components/prod-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/" + instance_prefix + "/g' ./components/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/" + instance_prefix + "/g' ./components/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/" + instance_prefix + "/g' ./components/prod-config.json"
 		}
 		
 		if ( (service_name.trim() == "platform-services-handler") ) {
@@ -116,9 +116,9 @@ def loadServiceConfigurationData() {
 		
 		if ( (service_name.trim() == "is-service-available"))   
 		{
-			sh "sed -i -- 's/{inst_stack_prefix}/" + env_name_prefix + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{inst_stack_prefix}/" + env_name_prefix + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{inst_stack_prefix}/" + env_name_prefix + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/" + instance_prefix + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/" + instance_prefix + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/" + instance_prefix + "/g' ./config/prod-config.json"
 
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
@@ -166,9 +166,9 @@ def loadServiceConfigurationData() {
 
 		if (service_name.trim() == "platform_logs") {
 			echo "Updating parameter specific to platform_logs"
-			sh "sed -i -- 's/{env-prefix}/" + env_name_prefix + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{env-prefix}/" + env_name_prefix + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{env-prefix}/" + env_name_prefix + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{env-prefix}/" + instance_prefix + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{env-prefix}/" + instance_prefix + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{env-prefix}/" + instance_prefix + "/g' ./config/prod-config.json"
 
 			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/stg-config.json"
@@ -251,7 +251,7 @@ def setUserPoolId(userPoolId){
 	user_pool_id = userPoolId
 }
 def setEnvNamePrefix(envNamePrefix){
-	env_name_prefix = envNamePrefix
+	instance_prefix = envNamePrefix
 }
 def setClientId(clientId){
 	client_id = clientId

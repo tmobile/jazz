@@ -1,6 +1,7 @@
 #!groovy
 import groovy.json.JsonOutput
 import groovy.transform.Field
+import groovy.json.JsonSlurperClassic
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 @Field def repo_credential_id
@@ -9,14 +10,12 @@ import groovy.transform.Field
 @Field def configModule
 @Field def configLoader
 @Field def var_api_key
-@Field def var_api_id_dev
 @Field def var_aws_credential_id
-@Field def var_env_name_prefix
+@Field def instance_prefix
 @Field def var_repo_core
 @Field def var_repo_loc
-@Field def var_credentialsId
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
+@Field def scm_credential_id
+@Field def scm_base_url
 @Field def var_bitbucket_username
 @Field def var_bitbucket_password
 @Field def var_user_pool_id
@@ -57,19 +56,17 @@ node {
 	echo "params : $params"
 	def jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
-	var_api_key 				= configLoader.API.API_KEY
-	var_api_id_dev = configLoader.API.API_ID_DEV
+	var_api_key 				= configLoader.AWS.API.PROD_ID
 	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
-	var_repo_core = configLoader.REPOSITORY.REPO_CORE
-	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
-	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
-	var_bitbucket_username = configLoader.BITBUCKET.BITBUCKET_USERNAME
-	var_bitbucket_password = configLoader.BITBUCKET.BITBUCKET_PASSWORD
-	var_user_pool_id = configLoader.COGNITO.USER_POOL_ID
-	var_client_id = configLoader.COGNITO.CLIENT_ID
+	instance_prefix = configLoader.INSTANCE_PREFIX
+	var_repo_core = configLoader.REPOSITORY.REPO_BASE_PLATFORM
+	var_repo_loc = configLoader.REPOSITORY.REPO_BASE_SERVICES
+	scm_credential_id 			= configLoader.REPOSITORY.CREDENTIAL_ID
+	scm_base_url			    = configLoader.REPOSITORY.BASE_URL
+	var_bitbucket_username = configLoader.SCM.USERNAME
+	var_bitbucket_password = configLoader.SCM.PASSWORD
+	var_user_pool_id = configLoader.AWS.COGNITO.USER_POOL_ID
+	var_client_id = configLoader.AWS.COGNITO.CLIENT_ID
 
 	def service_template = ""
 	def service_type =  "api"
@@ -80,9 +77,9 @@ node {
 	def domain = "platform"
 	def region = ""
 	def envmnt = 'prod'
-	def var_bitbucket_framework_url = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/"
-	def configPackBBURL = "http://" + var_bitbucket_base + "/scm/" + var_repo_core + "/serverless-config-pack.git"
-	def es_hostname = configLoader.JAZZ.jazz_es_hostname
+	def var_bitbucket_framework_url = "http://" + scm_base_url + "/scm/" + var_repo_core + "/"
+	def configPackBBURL = "http://" + scm_base_url + "/scm/" + var_repo_core + "/serverless-config-pack.git"
+	def es_hostname = configLoader.AWS.ES_HOSTNAME
 
 	if(params.service_name){
 		service_template = params.service_name
@@ -105,10 +102,10 @@ node {
 	if(params.scm_branch){
 		if (params.scm_branch == 'master') {
 			envmnt = 'prod'
-			var_api_key = configLoader.API.API_ID_PROD
+			var_api_key = configLoader.AWS.API.PROD_ID
 		}else {
 			envmnt = 'dev'
-			var_api_key = configLoader.API.API_ID_DEV
+			var_api_key = configLoader.AWS.API.DEV_ID
 		}
 	}
 
@@ -125,7 +122,7 @@ node {
 			sh 'mkdir ' + bitbucket_name
 			dir(bitbucket_name)
 			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId, url: var_bitbucket_framework_url + service_template + '.git']]])
+				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_credential_id, url: var_bitbucket_framework_url + service_template + '.git']]])
 			}
 		}
 		catch(error){
@@ -135,11 +132,12 @@ node {
 	}
 
 	// Need to be refactored
-	def config = dir(bitbucket_name)
+	def serviceObj = dir(bitbucket_name)
 	{
 	    return LoadConfiguration()
 	}
 
+	def config = loadServiceMetadata(serviceObj.service_id,region)
 	def roleARN						= config['iamRoleARN'].replaceAll("/", "\\\\/")
     service_name					= config['service']
 
@@ -166,7 +164,7 @@ node {
 
 				def var_api_host_name			= var_api_key+".execute-api."+region+".amazonaws.com"
 
-				serviceConfigdata = loadServiceConfigurationDataModule(jazzBuildModuleURL,configLoader,roleARN, region, roleId, jenkinsURL, envmnt,es_hostname, var_bitbucket_base,service_template)
+				serviceConfigdata = loadServiceConfigurationDataModule(jazzBuildModuleURL,configLoader,roleARN, region, roleId, jenkinsURL, envmnt,es_hostname, scm_base_url,service_template)
 				serviceConfigdata.loadServiceConfigurationData()
 
 
@@ -203,21 +201,20 @@ node {
 			sh "npm install --save"
 			echo "NPM Build completed"
 
-			//Change lambda service name to add stack prefix name
-			sh "sed -i -- 's/" + service_name + "/" + var_env_name_prefix + "-" + service_name + "/g' ./deployment-env.yml"
+			writeServerlessFile(config)			
 
 			echo "Deploying lambda service"
 
-			def envBucketKey = configLoader.JAZZ_S3.jazz_bucket_name_prefix + envmnt
+			def envBucketKey = envmnt.toUpperCase() +  configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX
 
-			sh "serverless deploy --stage ${envmnt} -v --bucket ${configLoader.JAZZ_S3[envBucketKey]}"
+			sh "serverless deploy --stage ${envmnt} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
 			// Generate swagger file based on environment
 			if (fileExists('swagger/swagger.json')) {
 				echo "Generating the swagger file for each environment"
 				def apiHostName	= var_api_key+".execute-api."+region+".amazonaws.com" //Development environment
 
-				generateSwaggerEnv(service_name, envmnt, var_env_name_prefix+"-"+envmnt, apiHostName, domain, service_name, var_env_name_prefix)
+				generateSwaggerEnv(service_name, envmnt, instance_prefix+"-"+envmnt, apiHostName, domain, service_name, instance_prefix)
 
 				// import swagger api spec
 				echo "Deploying API gateway Endpoints"
@@ -232,7 +229,8 @@ node {
 				try {
 					def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()
 
-					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + var_env_name_prefix + "-cloud-logs-streamer-" + envmnt + " --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
+					 sh "aws lambda add-permission --function-name arn:aws:lambda:" + region + ":" + roleId + ":function:" + instance_prefix + "-" + config['service'] + "-" +  envmnt + " --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs." + region + ".amazonaws.com --region " + region
+
 					 echo "set permission for cloud-logs-streamer - success"
 				 }catch(ss) {
 					//ignore if already registered permissions
@@ -242,14 +240,16 @@ node {
 			}
 
 			if ( (service_template.trim() == "platform-services-handler") ) {
-				def function_name =  var_env_name_prefix + "-hndlr-"+ envmnt
+
+				def function_name =  instance_prefix + "-" + config['service'] + "-" +  envmnt
+
 				def event_source_list = sh (
 					script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
 					returnStdout: true
 				).trim()
 				echo "$event_source_list"
 				if (event_source_list == "[]"){
-					sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + var_env_name_prefix + "-events-hub-" + envmnt + " --function-name arn:aws:lambda:$region:$roleId:function:$function_name --starting-position LATEST --region " + region
+					sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/" + instance_prefix + "-events-hub-" + envmnt + " --function-name arn:aws:lambda:$region:$roleId:function:$function_name --starting-position LATEST --region " + region
 				}
 			}
 
@@ -274,6 +274,29 @@ def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, servic
     sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
     sh "sed -i -- 's/{envPrefix}/" + env_name_prefix + "/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envmnt}/" + env + "/g' swagger/swagger.json" // {environment}
+}
+
+def writeServerlessFile(config){
+	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['service']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml" 	
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/" + config['providerRuntime'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/" + config['providerMemorySize'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/" + config['providerTimeout'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleRate}/" + config['eventScheduleRate'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/" + config['eventScheduleEnable'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/" + config['securityGroupIds'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/" + config['subnetIds'] + "/g' serverless.yml"
+	
+	if(config['artifact']){
+		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/" + config['artifact'] + "/g' serverless.yml"
+	}
+	if(config['mainClass']){
+		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/" + config['mainClass'] + "/g' serverless.yml"
+	}
+	
 }
 
 /**
@@ -355,7 +378,7 @@ def loadServerlessConfig(String runtime, String configPackBBURL) {
         checkout([$class: 'GitSCM', branches: [
             [name: '*/master']
         ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-            [credentialsId: var_credentialsId, url: configPackBBURL]
+            [credentialsId: scm_credential_id, url: configPackBBURL]
         ]])
     }
 
@@ -401,15 +424,15 @@ def loadConfigModule(buildModuleUrl){
 def loadServiceConfigurationDataModule(buildURL,configLoader,role_arn, region, role_id, jenkins_url, envmnt, es_hostname, bitbucket_base, service_name){
 		try {
 
-			def api_id_dev = configLoader.API.API_ID_DEV
+			def api_id_dev = configLoader.AWS.API.DEV_ID
 			def api_id_stg = configLoader.API.API_ID_STG
-			def api_id_prod = configLoader.API.API_ID_PROD
-			def user_pool_id = configLoader.COGNITO.USER_POOL_ID
-			def client_id = configLoader.COGNITO.CLIENT_ID
-			def env_name_prefix = configLoader.env_name_prefix
-			def repo_base = configLoader.REPOSITORY.REPO_BASE
-			def bitbucket_username = configLoader.BITBUCKET.BITBUCKET_USERNAME
-			def bitbucket_password = configLoader.BITBUCKET.BITBUCKET_PASSWORD
+			def api_id_prod = configLoader.AWS.API.PROD_ID
+			def user_pool_id = configLoader.AWS.COGNITO.USER_POOL_ID
+			def client_id = configLoader.AWS.COGNITO.CLIENT_ID
+			def env_name_prefix = configLoader.INSTANCE_PREFIX
+			def repo_base = configLoader.REPOSITORY.BASE_URL
+			def bitbucket_username = configLoader.SCM.USERNAME
+			def bitbucket_password = configLoader.SCM.PASSWORD
 
 
 			echo "loading Service Config Data, checking repos"
@@ -432,4 +455,43 @@ def loadServiceConfigurationDataModule(buildURL,configLoader,role_arn, region, r
 		}catch(ex) {
 			error "loadServiceConfigurationDataModule Failed. "+ex.getMessage()
 		}
+
 }
+
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
+}
+
+def loadServiceMetadata(service_id, region){
+	
+	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+		credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			
+		def table_name = instance_prefix+ "_services_prod"
+		def service_Object = sh (
+				script: "aws --region $region dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
+				returnStdout: true
+			).trim()
+		
+		
+		if(service_Object){
+			def service_data = parseJson(service_Object)
+			def data = service_data.Item.SERVICE_METADATA.M
+			def metadata = [:]
+			
+			for(item in data){
+				metadata[item.key] = item.value.S				
+			}
+			metadata['service'] = service_data.Item.SERVICE_NAME.S
+			metadata['domain'] = service_data.Item.SERVICE_DOMAIN.S
+			metadata['owner'] = service_data.Item.SERVICE_CREATED_BY.S
+			metadata['region'] = region
+			return metadata
+		}
+	}
+}
+
