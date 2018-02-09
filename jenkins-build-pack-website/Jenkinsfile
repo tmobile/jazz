@@ -184,7 +184,7 @@ node ()  {
 
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
-						updateCloudFrontPolicy(service, s3ProdBucket)
+						loadBucketPolicy(service, s3ProdBucket, true)
 
 						def cfDetails = getCloudFrontDetails(environment, service)
 
@@ -201,10 +201,9 @@ node ()  {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, url)
 						}
 					} else{
-						def siteUrl = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, siteUrl)
-
-						url = updateS3BucketPolicy(service, s3ProdBucket)
+						loadBucketPolicy(service, s3Bucket, false)
+						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
+						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, url)
 					}
 
 					def svc_status = 'You can access your website using following link: ' + url
@@ -234,18 +233,16 @@ node ()  {
 						generateDistributionConfig(service, environment, config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3ProdBucket)
-
+						loadBucketPolicy(service, s3ProdBucket, true)
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
 						}
 					}else{
-						def siteUrl = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, siteUrl)
-
-						url = updateS3BucketPolicy(service, s3ProdBucket)
+						loadBucketPolicy(service, s3Bucket, false)
+						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
+						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
@@ -292,7 +289,7 @@ node ()  {
 					sh "aws s3 sync ./app s3://${s3DevBucket}/$service --exclude \".git/*\" --exclude \".gitignore\" "
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
-						updateCloudFrontPolicy(service, s3DevBucket)
+						loadBucketPolicy(service, s3DevBucket, true)
 
 						def cfDetails = getCloudFrontDetails(environment, service)
 
@@ -305,10 +302,9 @@ node ()  {
 							updateServiceWithEndpointInfo(params.service_name, domain, "${g_base_url}/platform/services", environment, url)
 						}
 					} else{
-						def siteUrl = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, "${g_base_url}/platform/services", environment, siteUrl)
-
-						url = updateS3BucketPolicy(service, s3DevBucket)
+						loadBucketPolicy(service, s3Bucket, false)
+						url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
+						updateServiceWithEndpointInfo(params.service_name, domain, "${g_base_url}/platform/services", environment, url)
 					}
 					def svc_status = "You can access your website using following link: ${url}"
 					echo svc_status
@@ -334,19 +330,16 @@ node ()  {
 						generateDistributionConfig(service,environment,config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3DevBucket)
-            
+						loadBucketPolicy(service, s3DevBucket, true)
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
-
 
 						if (url) {
 							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
 						}
 					}else{
-						def siteUrl = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, siteUrl)
-
-						url = updateS3BucketPolicy(service, s3DevBucket)
+						loadBucketPolicy(service, s3Bucket,false)
+						url = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
+						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
@@ -455,6 +448,8 @@ def generateDistributionConfig(service, envname, config) {
 	echo(distribution_config_with_tags)
 }
 
+
+
 /**
 	Validate basic configurations in the deployment yaml file and error if any keys are
 	missing.
@@ -500,64 +495,23 @@ def loadDistributionConfig() {
 
 }
 
-def loadBucketPolicy(String s3Bucket){
-	// fetch current policy and save to > bucket-policy.json
-	sh "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text > bucket-policy.json"
-
-	def bucketPolicy = readFile('bucket-policy.json').trim()
-	def jsonSlurper = new JsonSlurper()
-	def policyLazyMap = jsonSlurper.parseText(bucketPolicy)
-
-	def jsonMap = [:]
-
-    jsonMap.putAll(policyLazyMap)
-    def policyObject = [:]
-
-    def statementsList = []
-
-    // convert bucketPolicy from groovy.json.internal.LazyMap to normal map
-    try {
-	    policyObject["Id"] = jsonMap["Id"]
-	    policyObject["Version"] = jsonMap["Version"]
-	    for(st in jsonMap["Statement"]) {
-	    	statement = [:]
-	    	for ( e in st ) {
-	    		if (e.key == "Principal") {
-	    			if (e.value == '*') {
-	    				statement.put("Principal", "*")
-	    			} else {
-	    				principal = [:]
-		    			for ( p in e.value ) {
-		    				principal.put(p.key, p.value)
-		    			}
-		    			statement.put("Principal", principal)
-	    			}
-	    		} else if (e.key == "Condition") {
-	    			condition = [:]
-
-	    			for ( f in e.value ) {
-	    				f_value = [:]
-	    				for ( src in f.value ) {
-	    					src_list = []
-	    					f_value.put(src.key, src.value)
-	    				}
-	    				condition.put(f.key, f_value)
-	    			}
-	    			statement.put("Condition", condition)
-	    		} else{
-	    			statement.put(e.key, e.value)
-	    		}
-	    	}
-	    	statementsList << statement
-	    }
-	    policyObject["Statement"] = statementsList
-    }
-    catch(Exception e) {
-    	echo "error occured while parsing bucketPolicy " + e.toString()
-    }
-
-    echo "policyObject : $policyObject"
-	return policyObject
+def loadBucketPolicy(String service, String s3Bucket, Boolean create_cloudfront_url){
+	def policySpec = '{"Version":"2012-10-17","Id":"Policy For ","Statement":[]}'
+	def policyObj 
+	
+	try {
+		def policyJson = sh(returnStdout: true, script: "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text")
+		echo "policyJson: $policyJson"
+		policyObj = jsonParse(policyJson) 
+		echo "loadBucketPolicy readFile: $policyObj"
+	} catch(ex) {
+		echo "Bucket policy doesn't exists yet."
+		policyObj =  jsonParse(policySpec)
+		policyObj.Id += "$s3Bucket"
+	}
+	if(policyObj) {
+		updateS3BucketPolicy(service, s3Bucket, create_cloudfront_url, policyObj)
+	}
 }
 
 def loadIPList() {
@@ -567,106 +521,70 @@ def loadIPList() {
 		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getCoreRepoCloneUrl("jenkins-build-pack-website")]]])
 	}
 }
-
 /*
 *	add restrictions so that Cloudfront endpoint can access S3
 */
-def updateS3BucketPolicy(String service, String s3Bucket){
+def updateS3BucketPolicy( service,  s3Bucket, isCloudfront, existingPolicyObj){
 	echo "updateS3BucketPolicy"
+	try{
+		def policy_filedata
+		def url
+		def new_policy
+		def isPolicyExists = false
 
-	def policy_filedata
-	def url
-	def new_policy
-	def isPolicyExists = false
+		def bucketPolicy = existingPolicyObj
 
-	def bucketPolicy = loadBucketPolicy(s3Bucket)
+		if (bucketPolicy) {
+			def statements = bucketPolicy.Statement			
+			def CFOAI = sh (
+				script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
+				--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\"",
+				returnStdout: true
+				).trim()
+			echo "CFOAI: $CFOAI"
 
-	if (bucketPolicy) {
-		def statements = bucketPolicy.Statement
-		//def principal = ["AWS": "*"]
-		def principal = "*"
-
-		for(st in statements) {
-			if(st['Sid'] == "$service") {
-				isPolicyExists = true
-				new_policy = st
+			//add restrictions so that Cloudfront endpoint can access S3
+			if(isCloudfront){
+				def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
+			} else{
+				def principal = "*"
 			}
+
+			for(st in statements) {
+				if(st['Sid'] == "$service") {
+					isPolicyExists = true
+					new_policy = st
+				}
+			}
+			echo "isCloudfront: $isCloudfront"
+			echo "isPolicyExists: $isPolicyExists"
+			echo "service: $service"
+			if (isPolicyExists == false) {
+				// create new policy statement
+				new_policy = [:]
+				new_policy.put('Sid', "$service")
+				new_policy.put('Effect', "Allow")
+				new_policy.put('Action', "s3:GetObject")
+				new_policy.put('Principal', principal)
+				new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
+			}
+
+			if (isPolicyExists == false) {
+				// add new policy statement to
+				statements << new_policy
+			}
+
+			// return updated policy statements
+			echo "updated PolicyStatement : $statements"
+
+			policy_filedata = JsonOutput.prettyPrint(JsonOutput.toJson(bucketPolicy))
+
+			sh "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${policy_filedata}\'"
 		}
-		if (isPolicyExists == false) {
-			// create new policy statement
-			new_policy = [:]
-			new_policy.put('Sid', "$service")
-			new_policy.put('Effect', "Allow")
-			new_policy.put('Action', "s3:GetObject")
-			new_policy.put('Principal', principal)
-			new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
-		}
-
-		if (isPolicyExists == false) {
-			// add new policy statement to
-			statements << new_policy
-		}
-
-		// return updated policy statements
-		echo "updated PolicyStatement : $statements"
-
-		policy_filedata = JsonOutput.prettyPrint(JsonOutput.toJson(bucketPolicy))
-
-		sh "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${policy_filedata}\'"
+	} catch(ex){
+		echo "Bucket policy update failed. "+ex.getMessage()
+		error "Bucket policy update failed. "+ex.getMessage()
 	}
-
-	return "https://s3.amazonaws.com/$s3Bucket/$service/index.html"
-}
-
-/*
-*	add restrictions so that Cloudfront endpoint can access S3
-*/
-def updateCloudFrontPolicy(String service, String s3Bucket){
-	echo "updateCloudFrontPolicy"
-
-	def json_string
-	def isPolicyExists = false
-	def new_policy
-
-	def bucketPolicy = loadBucketPolicy(s3Bucket)
-	def statements = bucketPolicy.Statement
-	def CFOAI = sh (
-		script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
-		--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\"",
-		returnStdout: true
-		).trim()
-
-	def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
-
-	for(st in statements) {
-		if(st['Sid'] == "$service") {
-			isPolicyExists = true
-			new_policy = st
-			new_policy.put('Principal', principal)
-			new_policy.put('Resource',"arn:aws:s3:::$s3Bucket/*")
-		}
-	}
-	if (isPolicyExists == false) {
-		// create new policy statement
-		new_policy = [:]
-		new_policy.put('Sid',"$service")
-		new_policy.put('Effect',"Allow")
-		new_policy.put('Action',"s3:GetObject")
-		new_policy.put('Principal', principal)
-		new_policy.put('Resource',"arn:aws:s3:::$s3Bucket/*")
-	}
-
-	if (isPolicyExists == false) {
-		// add new policy statement to
-		statements << new_policy
-	}
-
-
-	def jsonMap = [:]
-
-	json_string = JsonOutput.prettyPrint(JsonOutput.toJson(bucketPolicy))
-
-	sh "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${json_string}\'"
 }
 
 def getCloudFrontDetails(env, service) {
@@ -965,4 +883,13 @@ def loadSCMModule(buildModuleUrl){
 	}catch(ex) {
 		error "loadSCMModule failed: " + ex.toString()
 	}
+}
+
+/**
+ * Non-lazy JSON parser
+ */
+@NonCPS
+def jsonParse(jsonString) {
+    def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    return nonLazyMap
 }
