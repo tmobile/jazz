@@ -1,4 +1,5 @@
 mainClass: com.slf.services.Handler
+artifact: api-java-template-1.0.jar
 providerRuntime : java8
 providerMemorySize : 256
 providerTimeout : 160

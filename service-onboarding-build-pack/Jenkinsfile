@@ -194,14 +194,12 @@ node  {
 				
 				serviceMetadataJson["service"] = service_name
 				serviceMetadataJson["domain"] = domain
+				serviceMetadataJson["owner"] = owner
 				serviceMetadataJson["securityGroupIds"] = configLoader.AWS.SECURITY_GROUP_IDS
 				serviceMetadataJson["subnetIds"] = configLoader.AWS.SUBNET_IDS
 				serviceMetadataJson["region"] = configLoader.AWS.REGION 
 				serviceMetadataJson["iamRoleARN"] = configLoader.AWS.ROLEID
-				if(runtime == 'java'){
-					serviceMetadataJson["artifact"] = domain + "-" + service_name + ".jar"
-				}
-				
+								
 				def slack_channelName = params.slack_channel
 				if(slack_channelName && slack_channelName.trim() != ""){
 					serviceMetadataJson["slack_channel"] = slack_channelName
@@ -480,38 +478,36 @@ def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc,
 }
 
 def LoadConfiguration() {
-	def prop = [:]
 	def result = readFile('deployment-env.yml').trim()
 	echo "result of yaml parsing....$result"
+	def prop = [: ]
 	def resultList = result.tokenize("\n")
-	// delete commented lines
-	def cleanedList = []
-	for (i in resultList) {
-		if(i.toLowerCase().startsWith("#")) {
-		}else {
-			cleanedList.add(i)
-		}
-	}		
-	for (item in cleanedList) {
 
-		// Clean up to avoid issues with more ":" in the values
+    // delete commented lines
+    def cleanedList = []
+    for (i in resultList) {
+        if (i.toLowerCase().startsWith("#")) {} else {
+            cleanedList.add(i)
+        }
+    }
+    // echo "result of yaml parsing after clean up....$cleanedList"
+    for (item in cleanedList) {
+        // Clean up to avoid issues with more ":" in the values
 		item = item.replaceAll(" ", "").replaceFirst(":", "#");
-
 		def eachItemList = item.tokenize("#")
-		//handle empty values
-		def value = "";
-		if(eachItemList[1]) {
-			value = eachItemList[1].trim();
-		}		
-		else if(eachItemList[0]) {
-			prop.put(eachItemList[0].trim(), value)
-		}
+        //handle empty values
+        def value = null;
+        if (eachItemList[1]) {
+            value = eachItemList[1].trim();
+        }
 
-	}
-	
-	echo "Loaded configurations...$prop"
+        if (eachItemList[0]) {
+            prop.put(eachItemList[0].trim(), value)
+        }
 
-	return prop
+    }
+	echo "Loaded configurations....$prop"
+	return prop	
 }
 
 /**

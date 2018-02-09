@@ -148,7 +148,7 @@ node() {
 
 	dir(repo_name)
 	{
-		loadServerlessConfig(runtime)
+		loadServerlessConfig(runtime,config)
 
 		sh "cp serverless.yml serverless-prod.yml"
 		sh "cp swagger/swagger.json swagger/swagger-prod.json"
@@ -257,7 +257,7 @@ node() {
 				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-				loadServerlessConfig(runtime)
+				loadServerlessConfig(runtime, config)
 
 				// Generate serverless yml file with domain added in function name
 				echo "Generate deployment env with domain"
@@ -630,9 +630,8 @@ def validateDeploymentConfigurations(def prop) {
 
 }
 
-def loadServerlessConfig(String runtime) {
+def loadServerlessConfig(String runtime, config) {
 
-	def config = LoadConfiguration()
 	def subnetIds = config['subnetIds']
 	def securityGroupIds = config['securityGroupIds']
 	def internalAccess = config['require_internal_access']
