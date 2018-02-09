@@ -50,6 +50,7 @@ def Event_Status = [
 
 @Field def configModule
 @Field def configLoader
+@Field def scmModule
 
 @Field def g_login_token = ''
 @Field def g_base_url = ''
@@ -64,6 +65,7 @@ def Event_Status = [
 node ()  {
 	def jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
+	loadSCMModule(jazzBuildModuleURL)
 
 	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	
@@ -79,13 +81,13 @@ node ()  {
 	}
 	
 	def branch = params.scm_branch
-	def bitbucket_name = params.service_name
-	def var_bitbucket_framework_url = "http://${configLoader.REPOSITORY.BASE_URL}/scm/${configLoader.REPOSITORY.REPO_BASE_SERVICES}/"
+	def repo_name = params.service_name
+	
 	def config
 	def domain
 
 	if(params.domain && params.domain.trim() != ""){
-		bitbucket_name = params.domain.trim() + "-" + service_name.trim()
+		repo_name = params.domain.trim() + "-" + service_name.trim()
 		domain = params.domain.trim()
 	}
 
@@ -97,17 +99,17 @@ node ()  {
 
     stage('Checkout code base') {
 
-		sh 'rm -rf ' + bitbucket_name
-		sh 'mkdir ' + bitbucket_name
+		sh 'rm -rf ' + repo_name
+		sh 'mkdir ' + repo_name
         sh 'pwd'
 
-		dir(bitbucket_name)
+		dir(repo_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getRepoCloneUrl(repo_name)]]])
 		}
 
-		sh 'cd ' + bitbucket_name
-		def configObj = dir(bitbucket_name){
+		sh 'cd ' + repo_name
+		def configObj = dir(repo_name){
 			LoadConfiguration()
 		}
 		
@@ -159,7 +161,7 @@ node ()  {
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
 		isEventSchdld = true
 	}
-	dir(bitbucket_name){
+	dir(repo_name){
 		loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
 	}
 
@@ -184,7 +186,7 @@ node ()  {
 	stage ('Build') {
 		sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.STARTED, "")
 		try {
-			dir(bitbucket_name){
+			dir(repo_name){
 				buildLambda(runtime)
 			}
 		}catch(ex) {
@@ -198,7 +200,7 @@ node ()  {
 	if (params.scm_branch == 'master') {
 		stage ('Deployment to Production Env'){
 			sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			dir(bitbucket_name){
+			dir(repo_name){
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					try {
 						// initialize aws credentials
@@ -257,7 +259,7 @@ node ()  {
 		stage ('Deployment to Dev Env'){
 			sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
 
-			dir(bitbucket_name){
+			dir(repo_name){
 
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					def lambdaDevARN
@@ -596,20 +598,14 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 
     echo " load serverless...."
 		def config = LoadConfiguration()
-		//def subnetIds = config['subnetIds']
-		//def securityGroupIds = config['securityGroupIds']
-		//def internalAccess = config['require_internal_access']
-		//sh "sed -i -- 's/securityGroupIds/securityGroupIdsOld/g' deployment-env.yml"
-		//sh "sed -i -- 's/subnetIds/subnetIdsOld/g' deployment-env.yml"
-		//sh "echo '\nsubnetIds : $subnetIds\nsecurityGroupIds : $securityGroupIds\n' >> deployment-env.yml"
 
-		def configPackBBURL = "http://${configLoader.REPOSITORY.BASE_URL}/scm/${repo_core}/serverless-config-pack.git"
+		def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
 
 		dir('_config') {
 			checkout([$class: 'GitSCM', branches: [
 				[name: '*/master']
 			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: configPackBBURL]
+				[credentialsId: repo_credential_id, url: configPackURL]
 			]])
 		}
 
@@ -622,18 +618,12 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 	}else if(runtime.indexOf("python") > -1) {
 		sh "cp _config/serverless-python.yml ./serverless.yml"
 	}
-	// serverless.yml file that is loaded contains all events enabled.
-	// remove events if the not selected and also enable events
+	
 	if (isEventSchdld == true) {
 		addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
 	}
 
-	/*Based on the require_internal_access flag in deployment-env.yml enabling  vpn*/
-	//if ((internalAccess != null && internalAccess.equals('true')) || internalAccess == null) {
-	//	addVpnDetails()
-	// }
 	echoServerlessFile()
-	/**sh "cp _config/$serverlessFileName ./serverless.yml"*/
 }
 
 def echoServiceInfo(String env) {
@@ -819,7 +809,7 @@ def send_status_email (email_id, build_status, service, email_content) {
         body_text = body_text + '\n\n' + email_content
 	}
 
-	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.ADMIN + '>'
+	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
 					to : email_id,
@@ -972,5 +962,26 @@ def loadServiceMetadataModule(buildURL) {
 	
 	}catch(ex) {
 		error "loadServiceMetadataModule Failed. "+ex.getMessage()
+	}
+}
+
+/*
+load scm module
+*/
+def loadSCMModule(buildModuleUrl){
+
+	try {	
+		dir('scm-loader') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildModuleUrl]
+			]])
+
+			scmModule = load "scm-module.groovy"
+			scmModule.initialize(configLoader)
+		}
+	}catch(ex) {
+		error "loadSCMModule failed " + ex.toString()
 	}
 }

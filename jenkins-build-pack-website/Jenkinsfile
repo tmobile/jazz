@@ -39,6 +39,7 @@ def Event_Status = [
 
 @Field def configModule
 @Field def configLoader
+@Field def scmModule
 
 @Field def g_login_token = ''
 @Field def g_base_url = ''
@@ -55,6 +56,7 @@ def Event_Status = [
 node ()  {
 	def jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
 	loadConfigModule(jazzBuildModuleURL)
+	loadSCMModule(jazzBuildModuleURL)
 
 	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	
@@ -64,9 +66,7 @@ node ()  {
 	def branch = params.scm_branch
 	def domain = params.domain
 
-    def bitbucket_name = params.service_name
-
-	def var_bitbucket_framework_url = "http://${repo_base}/scm/${params.scm_project}/"
+	def repo_name = params.service_name
 
 	def config
 
@@ -79,21 +79,21 @@ node ()  {
     stage('Checkout code base') {
 
 		if (domain && domain.trim()!="") {
-			bitbucket_name = params.domain + "-" + service
+			repo_name = params.domain + "-" + service
 		 }else{
 			domain = ""
 		}
 
-		sh 'rm -rf ' + bitbucket_name
-		sh 'mkdir ' + bitbucket_name
+		sh 'rm -rf ' + repo_name
+		sh 'mkdir ' + repo_name
 
-		dir(bitbucket_name)
+		dir(repo_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getRepoCloneUrl(repo_name)]]])
 		}
 
 		// @TODO: dir can be removed, needs to be refactored
-		def configObj = dir(bitbucket_name)
+		def configObj = dir(repo_name)
 		{
 			return LoadConfiguration()
 		}
@@ -116,7 +116,7 @@ node ()  {
 	
 	def create_cloudfront_url
 
-	dir(bitbucket_name)
+	dir(repo_name)
 	{
 		stage ('Pre-Build Validation'){
 
@@ -496,7 +496,7 @@ def validateTemplate() {
 
 def loadDistributionConfig() {
 
-	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: 'http://' + repo_base + '/scm/' + repo_core + '/website-distribution-pack.git']]])
+	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url:  scmModule.getCoreRepoCloneUrl("website-distribution-pack")]]])
 
 }
 
@@ -564,10 +564,8 @@ def loadIPList() {
 
   dir('_jenkins_buildpack') {
 
-		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: 'http://' + repo_base + '/scm/' + repo_core + '/jenkins-build-pack-website.git']]])
-
+		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getCoreRepoCloneUrl("jenkins-build-pack-website")]]])
 	}
-
 }
 
 /*
@@ -888,7 +886,7 @@ def send_status_email (email_id, build_status, service, email_content) {
 			echo "exception occured while sending e-mail: $responseJSON"
 		}
    	} catch (e){
-       	echo "Failed while sending build status notification"
+       	echo "Failed while sending build status notification  " + e.toString()
    	}
 }
 
@@ -941,8 +939,28 @@ def loadServiceMetadataModule(buildURL) {
 			serviceMetadata.setUtil(Util)
 			return serviceMetadata 
 		}
-	
 	}catch(ex) {
-		error "loadServiceMetadataModule Failed. "+ex.getMessage()
+		error "loadServiceMetadataModule failed: "+ex.getMessage()
+	}
+}
+
+/*
+load scm module
+*/
+def loadSCMModule(buildModuleUrl){
+
+	try {	
+		dir('scm-loader') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildModuleUrl]
+			]])
+
+			scmModule = load "scm-module.groovy"
+			scmModule.initialize(configLoader)
+		}
+	}catch(ex) {
+		error "loadSCMModule failed: " + ex.toString()
 	}
 }

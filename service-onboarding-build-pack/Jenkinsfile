@@ -249,11 +249,11 @@ node  {
 
 				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION,serviceMetadataJson);
 				
-				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_started", repo_url);
+				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_started");
 			}
 		}
 		catch(error){
-			updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
+			updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
 			//do nothing
 		}
 	}
@@ -277,7 +277,7 @@ node  {
 			}
 		}
 		catch(error){
-			updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
+			updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
 
 			send_status_email (owner, "FAILED", service_name, domain)
 
@@ -309,11 +309,12 @@ node  {
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD1', usernameVariable: 'UNAME']]) {
 			def encoded_password = URLEncoder.encode(PWD1, "utf-8")
 			
-			def repo_clone_url = scmModule.getRepoCloneUrl(repo_name)
-
+			def repo_clone_base_url = scmModule.getRepoCloneBaseUrl(repo_name)
+			def repo_protocol = scmModule.getRepoProtocol()
+          
 			sh "git config --global user.email \"" + configLoader.JAZZ.ADMIN + "\""
 			sh "git config --global user.name $UNAME"
-            sh "git clone http://$UNAME:$encoded_password@${repo_clone_url}"
+         	sh "git clone ${repo_protocol}$UNAME:$encoded_password@${repo_clone_base_url}"
 		}
 		try{
 			sh "mv -nf " + service_template + "/* " + repo_name + "/"
@@ -341,7 +342,7 @@ node  {
 				}
 				catch (error)
 				{
-					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
+					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
 					send_status_email (owner, "FAILED", service_name, domain)
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.PUSH_TEMPLATE_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
@@ -355,7 +356,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
+					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
 					echo error
 				}
@@ -366,7 +367,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.LOCK_MASTER_BRANCH, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
+					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
 
 					send_status_email (owner, "FAILED", service_name, domain)
 
@@ -380,7 +381,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
+					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
 					send_status_email (owner, "FAILED", service_name, domain)
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.FAILED, error.getMessage())
@@ -388,7 +389,7 @@ node  {
 				}
 
 				echo "Calling update row in db ###################################################"
-				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_completed", repo_name);
+				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_completed");
 			}
 		}
 	}
@@ -431,8 +432,8 @@ def sendEvent(service_type, service_name, domain, runtime, admin_group, event_na
 	echo "send event" + error
 }
 
-def updateServiceInDB(service_id_in_db, apiId, region, statusval, repo_url) {
-  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\", \"repository\": \"${repo_url}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/prod/platform/services/${service_id_in_db}/"
+def updateServiceInDB(service_id_in_db, apiId, region, statusval) {
+  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/prod/platform/services/${service_id_in_db}/"
 }
 
 def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region,serviceMetadataJson) {
