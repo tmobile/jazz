@@ -596,9 +596,6 @@ def validateDeploymentConfigurations(def prop) {
 
 def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isStreamEnabled, def isDynamoDbEnabled){
 
-    echo " load serverless...."
-		def config = LoadConfiguration()
-
 		def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
 
 		dir('_config') {
