@@ -195,8 +195,11 @@ node  {
 				serviceMetadataJson["service"] = service_name
 				serviceMetadataJson["domain"] = domain
 				serviceMetadataJson["owner"] = owner
-				
-				
+				serviceMetadataJson["securityGroupIds"] = configLoader.AWS.SECURITY_GROUP_IDS
+				serviceMetadataJson["subnetIds"] = configLoader.AWS.SUBNET_IDS
+				serviceMetadataJson["region"] = configLoader.AWS.REGION 
+				serviceMetadataJson["iamRoleARN"] = configLoader.AWS.ROLEID
+								
 				def slack_channelName = params.slack_channel
 				if(slack_channelName && slack_channelName.trim() != ""){
 					serviceMetadataJson["slack_channel"] = slack_channelName
@@ -475,63 +478,36 @@ def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc,
 }
 
 def LoadConfiguration() {
-	def prop = [:]
 	def result = readFile('deployment-env.yml').trim()
 	echo "result of yaml parsing....$result"
+	def prop = [: ]
 	def resultList = result.tokenize("\n")
-	// delete commented lines
-	def cleanedList = []
-	for (i in resultList) {
-		if(i.toLowerCase().startsWith("#")) {
-		}else {
-			cleanedList.add(i)
-		}
-		}
-		def newItem = ["subnetIds", ""]
-	for (item in cleanedList) {
 
-		// Clean up to avoid issues with more ":" in the values
+    // delete commented lines
+    def cleanedList = []
+    for (i in resultList) {
+        if (i.toLowerCase().startsWith("#")) {} else {
+            cleanedList.add(i)
+        }
+    }
+    // echo "result of yaml parsing after clean up....$cleanedList"
+    for (item in cleanedList) {
+        // Clean up to avoid issues with more ":" in the values
 		item = item.replaceAll(" ", "").replaceFirst(":", "#");
-
 		def eachItemList = item.tokenize("#")
-		//handle empty values
-		def value = "";
-		if(eachItemList[1]) {
-			value = eachItemList[1].trim();
-		}
-		if(eachItemList[0].trim() == "securityGroupIds")
-		{
+        //handle empty values
+        def value = null;
+        if (eachItemList[1]) {
+            value = eachItemList[1].trim();
+        }
 
-			if(value.indexOf('"') == -1)
-				value = "\"" + value + "\""
+        if (eachItemList[0]) {
+            prop.put(eachItemList[0].trim(), value)
+        }
 
-			echo value
-		}
-
-		if(eachItemList[0].trim() == "subnetIds1" || eachItemList[0].trim()  == "subnetIds2" || eachItemList[0].trim()  == "subnetIds3")
-		{
-			if(newItem[1].trim()  == "")
-				newItem[1] = "\""  + eachItemList[1].trim()
-
-			else
-				newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
-
-		}
-		else if(eachItemList[0]) {
-			prop.put(eachItemList[0].trim(), value)
-		}
-
-	}
-	if(newItem[1] != "")
-	{
-	 newItem[1] =  newItem[1].trim()  + "\""
-		prop.put(newItem[0].trim(),  newItem[1].trim())
-		def key = newItem[0].trim()
-		def val = newItem[1].trim()
-	}
-	echo "Loaded configurations...$prop"
-
-	return prop
+    }
+	echo "Loaded configurations....$prop"
+	return prop	
 }
 
 /**
@@ -566,7 +542,7 @@ def send_status_email (email_id, build_status, service, domain) {
         	body_text = body_text + '\n\n' + domain
 	}
 	
-	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
+	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
 					to : email_id,

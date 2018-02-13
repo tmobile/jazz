@@ -4,7 +4,7 @@ import groovy.transform.Field
 import groovy.json.JsonSlurper
 
 /*
-* Module that handles managing projects (create, delete) in the user's preferred scm
+* Module that handles managing repos (create, delete) in the user's preferred scm
 */
 
 def scm_core_services_endpoint
@@ -23,18 +23,26 @@ def initialize(configData){
 }
 
 def setRepoEndpoints(){
-    scm_user_services_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
-    scm_core_services_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/" 
-    scm_user_services_clone_url = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/"
-    scm_webhook_api = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
-    scm_branch_permission_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/branch-permissions/2.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
-    serviceonboarding_repo	= "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/service-onboarding-build-pack.git"
+    if(scm_config.SCM.TYPE == "gitlab"){
+        scm_user_services_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
+        scm_core_services_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/" 
+        scm_user_services_clone_url = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/"
+        scm_webhook_api = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
+        scm_branch_permission_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/branch-permissions/2.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
+        serviceonboarding_repo	= "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/service-onboarding-build-pack.git"
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        scm_user_services_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
+        scm_core_services_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/" 
+        scm_user_services_clone_url = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/"
+        scm_webhook_api = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
+        scm_branch_permission_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/branch-permissions/2.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
+        serviceonboarding_repo	= "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/service-onboarding-build-pack.git"
+    }
 }
 
 def createProject(repo_owner, repo_name){
     try { 
-        echo "ready to create project"
-        if(scm_config.SCM.TYPE == "gitlab") {
+        if(scm_config.SCM.TYPE == "gitlab"){
             def git_username
             def cas_proj_id
             def cas_repo_id
@@ -63,8 +71,7 @@ def createProject(repo_owner, repo_name){
             cas_repo_id = getCasRepoId(gitlab_private_token, repo_loc)
 
             transferProject(cas_repo_id, cas_proj_id)
-        }
-        else{
+        }else if(scm_config.SCM.TYPE == "bitbucket"){
             sh "curl -X POST -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" " + scm_user_services_api_endpoint + " -d \'{\"name\":\""+ repo_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
         }
     }catch (ex) {
@@ -126,31 +133,42 @@ def transferProject(cas_id, project_id){
 }
 
 def setBranchPermissions(repo_name) {
-    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_config.REPOSITORY.CREDENTIAL_ID, url: serviceonboarding_repo]]])
-	sh "curl -X POST -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\"  -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" ${scm_branch_permission_api_endpoint}${repo_name}/restrictions   -d \"@branch_permissions_payload.json\"  "
+    if(scm_config.SCM.TYPE == "gitlab"){
+
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_config.REPOSITORY.CREDENTIAL_ID, url: serviceonboarding_repo]]])
+	    sh "curl -X POST -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\"  -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" ${scm_branch_permission_api_endpoint}${repo_name}/restrictions   -d \"@branch_permissions_payload.json\"  "
+    }
 }
 
 def setRepoPermissions(repo_owner, repo_name, admin_group) {
-    sh "curl -X PUT -G -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -d \"name=$admin_group\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/groups?permission=REPO_ADMIN&\""
+    if(scm_config.SCM.TYPE == "gitlab"){
 
-    def encoded_creator = URLEncoder.encode(repo_owner, "utf-8")
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        sh "curl -X PUT -G -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -d \"name=$admin_group\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/groups?permission=REPO_ADMIN&\""
 
-    sh "curl -X PUT -G -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -d \"name=$encoded_creator\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/users?permission=REPO_ADMIN\""
+        def encoded_creator = URLEncoder.encode(repo_owner, "utf-8")
+
+        sh "curl -X PUT -G -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -d \"name=$encoded_creator\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/users?permission=REPO_ADMIN\""
+    }
 }
 
 def addWebhook(repo_name, webhookName, targetUrl) {
-    sh "curl -X PUT -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${targetUrl}\" , \"enabled\": true}\'"
+    if(scm_config.SCM.TYPE == "gitlab"){
+        sh "curl -X PUT -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${targetUrl}\" , \"enabled\": true}\'"
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        sh "curl -X PUT -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${targetUrl}\" , \"enabled\": true}\'"
+    }
 }
 
 def deleteProject(repo_name) {
-    if(scm_config.JAZZ_SCM == "gitlab"){
+    if(scm_config.SCM.TYPE == "gitlab"){
         def encodedProjectPath = URLEncoder.encode("${repo_loc}+${repo_name}", "utf-8")
         def gitlab_repo_delete_output = sh (
-            script: "curl --header \"Private-Token: ${scm_config.GITLAB.gitlab_private_token}\" -X POST \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$encodedProjectPath\"",
+            script: "curl --header \"Private-Token: ${scm_config.PRIVATE_TOKEN}\" -X POST \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$encodedProjectPath\"",
             returnStdout: true
         ).trim()
-    }
-    else{
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
         def outputStr = sh (
             script: "curl -X DELETE -k -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" '" + scm_user_services_api_endpoint + repo_name +"'" ,
             returnStdout: true
@@ -159,15 +177,27 @@ def deleteProject(repo_name) {
 }
 
 def getRepoUrl(repo_name) {
-    return "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/${repo_name}/browse";
+    if(scm_config.SCM.TYPE == "gitlab"){
+        return "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/${repo_name}";
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        return "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/${repo_name}/browse";
+    } 
 }
 
 def getRepoCloneUrl(repo_name) {
-     return "${scm_user_services_clone_url}${repo_name}.git"
+    if(scm_config.SCM.TYPE == "gitlab"){
+        return "${scm_user_services_clone_url}${repo_name}.git"
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        return "${scm_user_services_clone_url}${repo_name}.git"
+    }
 }
 
 def getRepoCloneBaseUrl(repo_name) {
-     return "${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/${repo_name}.git"
+    if(scm_config.SCM.TYPE == "gitlab"){
+        return "${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/${repo_name}.git"
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        return "${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/${repo_name}.git"
+    }
 }
 
 def getRepoProtocol() {
@@ -175,11 +205,19 @@ def getRepoProtocol() {
 }
 
 def getTemplateUrl(template_name) {
-    return "${scm_core_services_endpoint}${template_name}.git";
+    if(scm_config.SCM.TYPE == "gitlab"){
+        return "${scm_core_services_endpoint}${template_name}.git";
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        return "${scm_core_services_endpoint}${template_name}.git";
+    }
 }
 
 def getCoreRepoCloneUrl(repo_name) {
-    return "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/${repo_name}.git"
+    if(scm_config.SCM.TYPE == "gitlab"){
+        return "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/${repo_name}.git"
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        return "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/${repo_name}.git"
+    }
 }
 
 return this
