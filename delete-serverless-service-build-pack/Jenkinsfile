@@ -25,7 +25,6 @@ import groovy.transform.Field
 @Field def owner = ''
 @Field def var_db_service_id = ''
 @Field def role = ''
-@Field def jq = '/usr/local/bin/jq'
 
 node {
 	echo "Starting delete service job with params : $params"
@@ -920,14 +919,14 @@ def loadEventsModule() {
 def loadServiceInfo() {
 	def token = setCredentials()
 	def url = "$g_base_url/platform/services?domain=$domain&service=$service&isAdmin=true"
+
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.created_by] | join(\",\")'", returnStdout: true)
-	def values = curlOutput.split(',')
+			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
+	
+	def curlOutputJSON = parseJson(curlOutput)
 
-	echo "Services : $values"
-
-	if (values[0]) {
-		owner = values[0].replaceAll("[\n\r]", "")
+	if (curlOutputJSON.data[0].created_by) {
+		created_by = curlOutputJSON.data[0].created_by
 	}
 }
 
@@ -945,14 +944,18 @@ def loadServiceInfo() {
 			'username': UNAME,
 			'password': PWD
 		]
+		def tokenJson_token = null
 		def payload = JsonOutput.toJson(login_json)
 		try {
 			def token = sh (script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 				 $url \
-				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
-			token = token.replaceAll("[\n\r]", "")
-			return token
+				-d \'${payload}\'", returnStdout:true).trim()
+
+			def tokenJson = parseJson(token)
+			tokenJson_token = tokenJson.data.token
+			
+			return tokenJson_token
 		}
 		catch(e){
 			echo "error occured: " + e.getMessage()
