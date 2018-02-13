@@ -542,7 +542,7 @@ def send_status_email (email_id, build_status, service, domain) {
         	body_text = body_text + '\n\n' + domain
 	}
 	
-	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
+	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
 					to : email_id,
