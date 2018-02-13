@@ -529,7 +529,6 @@ def updateS3BucketPolicy( service,  s3Bucket, isCloudfront, existingPolicyObj){
 	try{
 		def policy_filedata
 		def new_policy
-		def isListBucketPolicy = false
 		def stmtS3 = '{"Sid":"","Effect":"Allow","Principal":{"AWS":"*"},"Action":"s3:GetObject","Resource":"arn:aws:s3:::","Condition":{"IpAddress":{"aws:SourceIp":[]}}}'
 		def stmtCf = '{"Sid":"","Effect":"Allow","Principal":{"AWS":""},"Action":"s3:GetObject","Resource":"arn:aws:s3:::"}'
 		def stmtCfList = '{"Sid":"ListBucket","Effect":"Allow","Principal":"*","Action":"s3:ListBucket","Resource":"arn:aws:s3:::"}'
@@ -549,18 +548,10 @@ def updateS3BucketPolicy( service,  s3Bucket, isCloudfront, existingPolicyObj){
 				echo "cleanupIndex...$cleanupIndex"
 				bucketPolicy.Statement[cleanupIndex] = null
 			} else if(st['Sid'] == "ListBucket") {
-				isListBucketPolicy = true
+				bucketPolicy.Statement[cleanupIndex] = null
 			}
 		}
 		bucketPolicy.Statement.removeAll([null])
-
-		//add new list policy statement 
-		if(isListBucketPolicy == false && isCloudfront){
-			def listPolicyObject = jsonParse(stmtCfList)
-			listPolicyObject.put('Principal', principal)
-			listPolicyObject.put('Resource', "arn:aws:s3:::$s3Bucket")
-			bucketPolicy.Statement << listPolicyObject
-		}
 
 		//add restrictions so that Cloudfront endpoint can access S3
 		if(isCloudfront){
@@ -571,6 +562,12 @@ def updateS3BucketPolicy( service,  s3Bucket, isCloudfront, existingPolicyObj){
 			new_policy.put('Principal', principal)
 			new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
 			bucketPolicy.Statement << new_policy
+
+			//add new list policy statement 
+			def listPolicyObject = jsonParse(stmtCfList)
+			listPolicyObject.put('Principal', principal)
+			listPolicyObject.put('Resource', "arn:aws:s3:::$s3Bucket")
+			bucketPolicy.Statement << listPolicyObject
 		} else{
 			echo "isCloudfront: $isCloudfront"
 			def principal = "*"
