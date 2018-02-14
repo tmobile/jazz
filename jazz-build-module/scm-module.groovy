@@ -68,9 +68,9 @@ def createProject(repo_owner, repo_name){
              
             cas_proj_id = object.id
 
-            cas_repo_id = getCasRepoId(gitlab_private_token, repo_loc)
+            user_services_group_id = getUserServicesGroupId()
 
-            transferProject(cas_repo_id, cas_proj_id)
+            transferProject(user_services_group_id, cas_proj_id)
         }else if(scm_config.SCM.TYPE == "bitbucket"){
             sh "curl -X POST -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" " + scm_user_services_api_endpoint + " -d \'{\"name\":\""+ repo_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
         }
@@ -104,10 +104,10 @@ def getGitlabUserId(gitlab_username){
     }
 }
 
-def getCasRepoId(repo_loc){
+def getUserServicesGroupId(){
     try{
         def output = sh (
-            script: "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X GET \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/groups?search=$repo_loc\"",
+            script: "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X GET \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/groups?search=${scm_config.REPOSITORY.REPO_BASE_SERVICES}\"",
             returnStdout: true
         ).trim()
 
@@ -116,12 +116,33 @@ def getCasRepoId(repo_loc){
         
         if(groupObject == null || groupObject.equals("") || groupObject[0] == null || groupObject[0].equals("") 
             || groupObject[0].id == null || groupObject[0].id.equals("")){
-            error "get cas group data failed"
+            error "Unable to find the user services group id "
         }
         
         return groupObject[0].id
     }catch (ex) {
-        error "getCasRepoId failed: "+ex.getMessage()
+        error "getUserServicesGroupId failed: "+ex.getMessage()
+    }
+}
+
+def getGitLabsProjectId(repo_name) {
+    try{
+        def output = sh (
+            script: "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X GET \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects?search=${repo_name}\"",
+            returnStdout: true
+        ).trim()
+
+        def jsonSlurper = new JsonSlurper()
+        def projectObject = jsonSlurper.parseText(output)
+        
+        if(projectObject == null || projectObject.equals("") || projectObject[0] == null || projectObject[0].equals("") 
+            || projectObject[0].id == null || projectObject[0].id.equals("")){
+            error "getGitLabsProjectId failed to find project with name $repo_name" 
+        }
+        
+        return projectObject[0].id
+    }catch (ex) {
+        error "getGitLabsProjectId failed: "+ex.getMessage()
     }
 }
 
@@ -134,16 +155,19 @@ def transferProject(cas_id, project_id){
 
 def setBranchPermissions(repo_name) {
     if(scm_config.SCM.TYPE == "gitlab"){
+        def proj_id = getGitLabsProjectId(repo_name)
 
+        sh "curl --request DELETE --header \"PRIVATE-TOKEN: ${scm_config.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/protected_branches/master\""
+        sh "curl --request POST --header \"PRIVATE-TOKEN: ${scm_config.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/protected_branches?name=master&push_access_level=0\""
     }else if(scm_config.SCM.TYPE == "bitbucket"){
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_config.REPOSITORY.CREDENTIAL_ID, url: serviceonboarding_repo]]])
-	    sh "curl -X POST -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\"  -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" ${scm_branch_permission_api_endpoint}${repo_name}/restrictions   -d \"@branch_permissions_payload.json\"  "
+	    sh "curl -X POST -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\"  -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" ${scm_branch_permission_api_endpoint}${repo_name}/restrictions -d \"@branch_permissions_payload.json\"  "
     }
 }
 
 def setRepoPermissions(repo_owner, repo_name, admin_group) {
     if(scm_config.SCM.TYPE == "gitlab"){
-
+        
     }else if(scm_config.SCM.TYPE == "bitbucket"){
         sh "curl -X PUT -G -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -d \"name=$admin_group\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/groups?permission=REPO_ADMIN&\""
 
