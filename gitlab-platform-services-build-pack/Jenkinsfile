@@ -1,0 +1,65 @@
+#!groovy
+import groovy.json.JsonOutput
+import groovy.transform.Field
+
+// To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
+@Field def scm_type
+
+@Field def configModule
+@Field def configLoader
+@Field def jenkins_credential_id
+@Field def region
+
+node {
+  loadConfigModule(getBuildModuleUrl())
+
+  jenkins_credential_id = configLoader.JENKINS.CREDENTIAL_ID
+  region = configLoader.AWS.REGION
+
+withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: jenkins_credential_id, passwordVariable: 'PWD',
+usernameVariable: 'UNAME']]){
+
+   def gitlab_repo_name  = env.gitlabSourceRepoName
+   def gitlab_branch     = env.gitlabBranch
+
+   echo "Build triggered via branch::$gitlab_branch"
+   echo "Build triggered for JOBNAME::$gitlab_repo_name" 
+
+   
+    def build_job = configLoader.PLATFORM.PLATFORM_SERVICE_BUILD_URI
+    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+
+    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=" + gitlab_repo_name + "&admin_group=admin_group&region=${region}&scm_branch=${gitlab_branch}\""
+ }
+
+}
+
+/*
+* Load environment variables from build module
+*/
+def loadConfigModule(buildModuleUrl){
+
+	dir('config-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: repo_credential_id, url: buildModuleUrl]
+		]])
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
+	}
+}
+
+def getBuildModuleUrl() {
+    if (scm_type && scm_type != "bitbucket") {
+      // right now only bitbucket has this additional tag scm in its git clone path
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+    }else {
+      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    } 
+} 
