@@ -7,6 +7,7 @@ import groovy.transform.Field
 @Field def repo_credential_id
 @Field def repo_base
 @Field def repo_core
+@Field def scm_type
 
 /**
  * The Service delete workflow for service types: API, function & website
@@ -30,7 +31,7 @@ import groovy.transform.Field
 node {
 	echo "Starting delete service job with params : $params"
 
-	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+	jazzBuildModuleURL = getBuildModuleUrl()
 	loadConfigModule(jazzBuildModuleURL)
 	loadSCMModule(jazzBuildModuleURL)
 
@@ -1098,3 +1099,12 @@ def loadSCMModule(buildModuleUrl){
 		error "loadSCMModule failed " + ex.toString()
 	}
 }
+
+def getBuildModuleUrl() {
+    if (scm_type && scm_type != "bitbucket") {
+      // right now only bitbucket has this additional tag scm in its git clone path
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+    }else {
+      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    } 
+} 
