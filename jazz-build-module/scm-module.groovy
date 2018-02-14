@@ -179,7 +179,9 @@ def setRepoPermissions(repo_owner, repo_name, admin_group) {
 
 def addWebhook(repo_name, webhookName, targetUrl) {
     if(scm_config.SCM.TYPE == "gitlab"){
-        sh "curl -X PUT -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${targetUrl}\" , \"enabled\": true}\'"
+        def proj_id = getGitLabsProjectId(repo_name)
+        // gitlabs has no support to name a webhook
+        sh "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X POST \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/hooks?enable_ssl_verification=false&push_events=true&url=$targetUrl\""
     }else if(scm_config.SCM.TYPE == "bitbucket"){
         sh "curl -X PUT -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${targetUrl}\" , \"enabled\": true}\'"
     }
