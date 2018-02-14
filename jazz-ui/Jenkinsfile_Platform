@@ -7,9 +7,10 @@ import groovy.transform.Field
 @Field def repo_credential_id
 @Field def repo_base
 @Field def repo_core
+@Field def scm_type
+
 @Field def config_loader
-@Field def instance_prefix
-@Field def jazz_bucket_web
+@Field def scmModule
 
 /*
 * Load environment variables from build module
@@ -30,9 +31,9 @@ def loadConfigModule(build_module_url){
 /*
 * Get CloudFront DistID
 */
-def get_cloudfront_ID(instance_prefix) {
+def get_cloudfront_ID() {
   try {
-    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='$instance_prefix-originid']].{Id: Id}\" --output json" , returnStdout: true).trim()
+    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-originid']].{Id: Id}\" --output json" , returnStdout: true).trim()
     echo "cf_list_dists is: $cf_list_dists"
     def config_parser = new groovy.json.JsonSlurper()
     def cf_dists = config_parser.parseText(cf_list_dists)
@@ -63,19 +64,14 @@ def invalidate_cloudfront(cf_id) {
 */
 node ()  {
   stage('Loading Config-Loader') {
-    build_module_url = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    loadConfigModule(build_module_url)
+    def jazzBuildModuleURL = getBuildModuleUrl()
+	  loadConfigModule(jazzBuildModuleURL)
+	  loadSCMModule(jazzBuildModuleURL)
   }
-  stage('Assigning variables for this build') {
-    instance_prefix = config_loader.INSTANCE_PREFIX
-    jazz_bucket_web = config_loader.JAZZ.S3_BUCKET_WEB
-    scm_credential_id = config_loader.REPOSITORY.CREDENTIAL_ID
-    scm_base_url = config_loader.REPOSITORY.BASE_URL
-    jazz_ui_repourl = 'http://' + scm_base_url + '/scm/slf/jazz-ui.git'
-  }
+
   stage('Checking out Jazz-UI repo') {
     dir('jazz-ui') {
-        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_credential_id, url: jazz_ui_repourl]]])
+        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz-ui")]]])
       
       sh "sed -i 's/{api_doc_name}/'${config_loader.AWS.S3.API_DOC}'/g' ./src/config/config.json"
       sh "sed -i 's/{api_doc_name}/'${config_loader.AWS.S3.API_DOC}'/g' ./src/config/config.prod.json"
@@ -100,17 +96,47 @@ node ()  {
     '''
   }
   stage('Getting CloudFront DistID') {
-    cf_id = get_cloudfront_ID(instance_prefix)
+    cf_id = get_cloudfront_ID()
     echo "$cf_id"
   }
   stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
     sh """
-    aws s3 ls $jazz_bucket_web
-    aws s3 cp jazz-ui/dist s3://$jazz_bucket_web --recursive --include "*"
-    aws s3 ls $jazz_bucket_web
+    aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB}
+    aws s3 cp jazz-ui/dist s3://${config_loader.JAZZ.S3_BUCKET_WEB} --recursive --include "*"
+    aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB}
     """
   }
   stage('Invalidating CloudFront') {
     invalidate_cloudfront(cf_id)
   }
 }
+
+/*
+load scm module
+*/
+def loadSCMModule(buildModuleUrl){
+
+	try {	
+		dir('scm-loader') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildModuleUrl]
+			]])
+
+			scmModule = load "scm-module.groovy"
+			scmModule.initialize(configLoader)
+		}
+	}catch(ex) {
+		error "loadSCMModule failed: " + ex.toString()
+	}
+}
+
+def getBuildModuleUrl() {
+    if (scm_type && scm_type != "bitbucket") {
+      // right now only bitbucket has this additional tag scm in its git clone path
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+    }else {
+      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    } 
+} 

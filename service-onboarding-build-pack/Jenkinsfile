@@ -17,6 +17,7 @@ import groovy.transform.Field
 @Field def repo_credential_id
 @Field def repo_base
 @Field def repo_core
+@Field def scm_type
 
 //definitions
 def Event_Name = [
@@ -45,7 +46,7 @@ def Event_Status = [
 @Field def jq = '/usr/local/bin/jq'
 
 node  {
-	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+	jazzBuildModuleURL = getBuildModuleUrl()
 	loadConfigModule(jazzBuildModuleURL)
 	loadSCMModule(jazzBuildModuleURL)
 
@@ -620,3 +621,12 @@ def loadSCMModule(buildModuleUrl){
 		error "loadSCMModule failed " + ex.toString()
 	}
 }
+
+def getBuildModuleUrl() {
+    if (scm_type && scm_type != "bitbucket") {
+      // right now only bitbucket has this additional tag scm in its git clone path
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+    }else {
+      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    } 
+} 
