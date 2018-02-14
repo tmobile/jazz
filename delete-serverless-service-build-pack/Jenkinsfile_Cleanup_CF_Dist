@@ -7,6 +7,7 @@ import groovy.transform.Field
 @Field def repo_credential_id
 @Field def repo_base
 @Field def repo_core
+@Field def scm_type
 
 //@Field def events
 @Field def configModule
@@ -25,16 +26,14 @@ node {
 	echo "Starting delete Stack's Cloud Front Distributions that are disabled..."
 	echo "params : $params"
 
-	jazzBuildModuleURL = "http://" + repo_base + "/scm/" + repo_core + "/jazz-build-module.git"
-	loadConfigModule(jazzBuildModuleURL)
+	loadConfigModule(getBuildModuleUrl())
+	
 	aws_credential_id = configLoader.AWS_CREDENTIAL_ID
 	instance_prefix = configLoader.INSTANCE_PREFIX
 	region = configLoader.AWS.REGION
 
 	cleanupCloudFrontDistribution()
-
 }
-
 
 /**
  * Delete the the cloud Front policies related to the service folder
@@ -215,3 +214,12 @@ def loadConfigModule(buildModuleUrl){
 		configLoader = configModule.initialize(resultJsonString)
 	}
 }
+
+def getBuildModuleUrl() {
+    if (scm_type && scm_type != "bitbucket") {
+      // right now only bitbucket has this additional tag scm in its git clone path
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+    }else {
+      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    } 
+} 
