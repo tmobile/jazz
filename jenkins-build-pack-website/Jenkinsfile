@@ -52,8 +52,6 @@ def Event_Status = [
 @Field def created_by = ''
 @Field def environment = ''
 
-@Field def jq = '/usr/local/bin/jq'
-
 node ()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadConfigModule(jazzBuildModuleURL)
@@ -503,11 +501,11 @@ def loadBucketPolicy(String service, String s3Bucket, Boolean create_cloudfront_
 	try {
 		def policyJson = sh(returnStdout: true, script: "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text")
 		echo "policyJson: $policyJson"
-		policyObj = jsonParse(policyJson) 
+		policyObj = parseJson(policyJson) 
 		echo "loadBucketPolicy readFile: $policyObj"
 	} catch(ex) {
 		echo "Bucket policy doesn't exists yet."
-		policyObj =  jsonParse(policySpec)
+		policyObj =  parseJson(policySpec)
 		policyObj.Id += "$s3Bucket"
 	}
 	if(policyObj) {
@@ -536,7 +534,8 @@ def updateS3BucketPolicy( service,  s3Bucket, isCloudfront, existingPolicyObj){
 		def cleanupIndex = -1
 
 		def bucketPolicy = existingPolicyObj
-		def statements = bucketPolicy.Statement			
+		def statements = bucketPolicy.Statement	
+
 		def CFOAI = sh (
 			script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
 			--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\"",
@@ -558,21 +557,21 @@ def updateS3BucketPolicy( service,  s3Bucket, isCloudfront, existingPolicyObj){
 		if(isCloudfront){
 			echo "isCloudfront: $isCloudfront"
 			def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
-			new_policy =  jsonParse(stmtCf)
+			new_policy =  parseJson(stmtCf)
 			new_policy.put('Sid', "$service")
 			new_policy.put('Principal', principal)
 			new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
 			bucketPolicy.Statement << new_policy
 
 			//add new list policy statement 
-			def listPolicyObject = jsonParse(stmtCfList)
+			def listPolicyObject = parseJson(stmtCfList)
 			listPolicyObject.put('Principal', principal)
 			listPolicyObject.put('Resource', "arn:aws:s3:::$s3Bucket")
 			bucketPolicy.Statement << listPolicyObject
 		} else{
 			echo "isCloudfront: $isCloudfront"
 			def principal = "*"
-			new_policy =  jsonParse(stmtS3)
+			new_policy =  parseJson(stmtS3)
 			new_policy.put('Sid', "$service")
 			new_policy.put('Principal', principal)
 			new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
@@ -684,20 +683,21 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 	}
 
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.id, .endpoints[\"$preserveEnvKey\"], .created_by] | join(\",\")'", returnStdout: true)
+			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
+	echo "curlOutput: $curlOutput"
 
-	def values = curlOutput.split(',')
-
-	if (values[0]) {
-		service_id = values[0].replaceAll("[\n\r]", "")
+	def curlOutputJSON = parseJson(curlOutput)
+	
+	if (curlOutputJSON.data[0].id) {
+		service_id = curlOutputJSON.data[0].id
 	}
 
-	if (values[1]) {
-		preserveEnvValue = values[1].replaceAll("[\n\r]", "")
+	if (curlOutputJSON.data[0].endpoints) {
+		preserveEnvValue = curlOutputJSON.data[0].endpoints["$preserveEnvKey"]
 	}
 
-	if (values[2]) {
-		created_by = values[2].replaceAll("[\n\r]", "")
+	if (curlOutputJSON.data[0].created_by) {
+		created_by = curlOutputJSON.data[0].created_by
 	}
 }
 
@@ -740,17 +740,19 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 			'username': UNAME,
 			'password': PWD
 		]
-
+		def tokenJson_token = null
 		def payload = JsonOutput.toJson(login_json)
 
 		try {
 			token = sh (script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 					$loginUrl \
-				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
+				-d \'${payload}\'", returnStdout:true).trim()
 
-			token = token.replaceAll("[\n\r]", "")
-			return token
+			def tokenJson = parseJson(token)
+			tokenJson_token = tokenJson.data.token
+
+			return tokenJson_token
 		}
 		catch(e){
 			echo "error occured: " + e.getMessage()
@@ -832,6 +834,9 @@ def loadConfigModule(buildModuleUrl){
 	}
 }
 
+/**
+ * Non-lazy JSON parser
+ */
 @NonCPS
 def parseJson(jsonString) {
     def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
@@ -888,16 +893,6 @@ def loadSCMModule(buildModuleUrl){
 		error "loadSCMModule failed: " + ex.toString()
 	}
 }
-
-/**
- * Non-lazy JSON parser
- */
-@NonCPS
-def jsonParse(jsonString) {
-    def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-    return nonLazyMap
-}
-
 
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {

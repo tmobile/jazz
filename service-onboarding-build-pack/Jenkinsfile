@@ -43,7 +43,6 @@ def Event_Status = [
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def auth_token = ''
 @Field def g_base_url = ''
-@Field def jq = '/usr/local/bin/jq'
 
 node  {
 	jazzBuildModuleURL = getBuildModuleUrl()
@@ -413,17 +412,19 @@ node  {
 			'username': UNAME,
 			'password': PWD
 		]
-
+		def tokenJson_token = null
 		def payload = JsonOutput.toJson(login_json)
 
 		try {
 			def token = sh (script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
-				 $loginUrl \
-				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
+					$loginUrl \
+				-d \'${payload}\'", returnStdout:true).trim()
 
-			token = token.replaceAll("[\n\r]", "")
-			return token
+			def tokenJson = parseJson(token)
+			tokenJson_token = tokenJson.data.token
+
+			return tokenJson_token
 		}
 		catch(e){
 			error "error occured: " + e.getMessage()

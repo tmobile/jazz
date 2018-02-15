@@ -61,7 +61,6 @@ def Event_Status = [
 @Field def created_by = ''
 
 @Field def current_environment = ''
-@Field def jq = '/usr/local/bin/jq'
 
 node ()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
@@ -730,14 +729,18 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 	def token = setCredentials()
 	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
+
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.id, .created_by] | join(\",\")'", returnStdout: true)
-	def values = curlOutput.split(',')
-	if (values[0]) {
-		service_id = values[0].replaceAll("[\n\r]", "")
+			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
+
+	def curlOutputJSON = parseJson(curlOutput)
+
+	if (curlOutputJSON.data[0].id) {
+		service_id = curlOutputJSON.data[0].id
 	}
-	if (values[1]) {
-		created_by = values[1].replaceAll("[\n\r]", "")
+
+	if (curlOutputJSON.data[0].created_by) {
+		created_by = curlOutputJSON.data[0].created_by
 	}
 }
 
@@ -758,17 +761,19 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 			'username': UNAME,
 			'password': PWD
 		]
-
+		def tokenJson_token = null
 		def payload = JsonOutput.toJson(login_json)
 
 		try {
 			token = sh (script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 					$loginUrl \
-				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
+				-d \'${payload}\'", returnStdout:true).trim()
 
-			token = token.replaceAll("[\n\r]", "")
-			return token
+			def tokenJson = parseJson(token)
+			tokenJson_token = tokenJson.data.token
+			
+			return tokenJson_token
 		}
 		catch(e){
 			echo "error occured: " + e.getMessage()
