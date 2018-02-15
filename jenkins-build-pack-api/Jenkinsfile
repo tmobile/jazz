@@ -55,7 +55,6 @@ def Event_Status = [
 @Field def current_environment = ''
 @Field def g_base_url_for_swagger = ''
 
-@Field def jq = '/usr/local/bin/jq'
 @Field def aws_api_import = '/var/lib/aws-apigateway-importer/aws-api-import.sh'
 
 node() {
@@ -806,27 +805,21 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
 
-	if (endpointKey == 'dev') {
-		preserveEnvKey = 'prod'
-	}else if (endpointKey == 'prod') {
-		preserveEnvKey = 'dev'
-	}
-
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.id, .endpoints[\"$preserveEnvKey\"], .created_by] | join(\",\")'", returnStdout: true)
+			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
+	echo "curlOutput: $curlOutput"
+	def curlOutputJSON = parseJson(curlOutput)
 
-	def values = curlOutput.split(',')
-
-	if (values[0]) {
-		service_id = values[0].replaceAll("[\n\r]", "")
+	if (curlOutputJSON.data[0].id) {
+		service_id = curlOutputJSON.data[0].id
 	}
 
-	if (values[1]) {
-		preserveEnvValue = values[1].replaceAll("[\n\r]", "")
+	if (curlOutputJSON.data[0].endpoints) {
+		preserveEnvValue = curlOutputJSON.data[0].endpoints["$endpointKey"]
 	}
 
-	if (values[2]) {
-		created_by = values[2].replaceAll("[\n\r]", "")
+	if (curlOutputJSON.data[0].created_by) {
+		created_by = curlOutputJSON.data[0].created_by
 	}
 }
 
@@ -869,17 +862,19 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 			'username': UNAME,
 			'password': PWD
 		]
-
+		def tokenJson_token = null
 		def payload = JsonOutput.toJson(login_json)
 
 		try {
 			token = sh (script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
-				 $loginUrl \
-				-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
+					$loginUrl \
+				-d \'${payload}\'", returnStdout:true).trim()
 
-			token = token.replaceAll("[\n\r]", "")
-			return token
+			def tokenJson = parseJson(token)
+			tokenJson_token = tokenJson.data.token
+			
+			return tokenJson_token
 		}
 		catch(e){
 			echo "error occured: " + e.getMessage()
