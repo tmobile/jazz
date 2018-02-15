@@ -744,13 +744,11 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 		def payload = JsonOutput.toJson(login_json)
 
 		try {
-			
 			token = sh (script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 					$loginUrl \
 				-d \'${payload}\'", returnStdout:true).trim()
 
-			
 			def tokenJson = parseJson(token)
 			tokenJson_token = tokenJson.data.token
 

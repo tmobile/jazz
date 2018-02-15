@@ -805,12 +805,6 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
 
-	// if (endpointKey == 'dev') {
-	// 	preserveEnvKey = 'prod'
-	// }else if (endpointKey == 'prod') {
-	// 	preserveEnvKey = 'dev'
-	// }
-
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
 			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
 	echo "curlOutput: $curlOutput"
