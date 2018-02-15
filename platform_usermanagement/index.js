@@ -31,6 +31,8 @@ const responseObj = require("./components/response.js");
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 
+const scmFactory = require("./scm/scmFactory.js");
+
 module.exports.handler = (event, context, cb) => {
 
   	var errorHandler = errorHandlerModule();
@@ -111,7 +113,7 @@ module.exports.handler = (event, context, cb) => {
 			
 			validateCreaterUserParams(config, service_data)
 			.then((s) => createUser(cognito, config, s))
-			.then((s) => rp(createUserInBitBucket(config, service_data, s.UserSub)))
+			.then((s) => rp(getRequestToCreateSCMUser(config, service_data)))
 			.then(() => function(result){
 				logger.info("User: " + service_data.userid + " registered successfully!");
 				return cb(null, responseObj({result: "success",errorCode: "0",message: "User registered successfully!"}));})
@@ -285,24 +287,7 @@ function updatePassword(cognitoClient, config, userData) {
 	});
 }
 
-function createUserInBitBucket(config, userData) {
-	var encodedUserid = encodeURIComponent(userData.userid);
-	var encodedPwd = encodeURIComponent(userData.userpassword);
-	var url = config.bitbucket_service_host + config.bitbucket_usr_add_path + '?name=' + encodedUserid + '&password=' + encodedPwd + '&displayName=' + encodedUserid + '&emailAddress=' + encodedUserid + '&addToDefualtGroup=false&notify=false';
-
-	return {
-		url: url,
-		auth: {
-			user: config.bitbucket_username,
-			password: config.bitbucket_password
-		},
-		method: 'POST',
-		rejectUnauthorized: false,
-		headers: {
-			'Accept': 'application/json',
-			'Accept-Charset': 'utf-8',
-			'X-Atlassian-Token': 'no-check'
-		},
-		qs: {}
-	};
+function getRequestToCreateSCMUser(config, userData) {
+	var scm = new scmFactory(config);
+	return scm.addUser(userData.userid, userData.userpassword);
 }
