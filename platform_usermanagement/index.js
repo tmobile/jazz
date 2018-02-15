@@ -118,7 +118,7 @@ module.exports.handler = (event, context, cb) => {
 				logger.info("User: " + service_data.userid + " registered successfully!");
 				return cb(null, responseObj({result: "success",errorCode: "0",message: "User registered successfully!"}));})
 			.catch(function (err) {
-				logger.error("Failed while registering user: " + JSON.stringify(err));
+				logger.error("Failed while registering user: " + JSON.stringify(err, Object.getOwnPropertyNames(err)));
 				
 				if (err.errorType) {
 					// error has already been handled and processed for API gateway
@@ -233,7 +233,7 @@ function validateCreaterUserParams(config, userInput) {
 
 function createUser(cognitoClient, config, userData) {
 	return new Promise((resolve, reject) => {
-
+		return resolve(userData);
 		var cognitoParams = {
 			ClientId: config.USER_CLIENT_ID,
 			Username: userData.userid.toLowerCase(),
