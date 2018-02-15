@@ -233,7 +233,7 @@ function validateCreaterUserParams(config, userInput) {
 
 function createUser(cognitoClient, config, userData) {
 	return new Promise((resolve, reject) => {
-		return resolve(userData);
+		
 		var cognitoParams = {
 			ClientId: config.USER_CLIENT_ID,
 			Username: userData.userid.toLowerCase(),
