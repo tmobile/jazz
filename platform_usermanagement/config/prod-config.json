@@ -15,8 +15,8 @@
     },
     "gitlab": {
       "HOSTNAME": "{gitlab_service_host}",
-      "API_USER_ADD" : "/api/v3/users",
-      "API_GROUP_ADD" : "/api/v3/groups",
+      "API_USER_ADD" : "/api/v4/users",
+      "API_GROUP_ADD" : "/api/v4/groups",
       "PRIVATE_TOKEN": "{gitlab_private_token}"
     }
   }

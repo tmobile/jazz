@@ -59,7 +59,7 @@ module.exports.handler = (event, context, cb) => {
 		}
 
 		var service_data = event.body;
-
+		
 		var subPath = getSubPath(event.resourcePath);
 		const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
 		
@@ -289,5 +289,5 @@ function updatePassword(cognitoClient, config, userData) {
 
 function getRequestToCreateSCMUser(config, userData) {
 	var scm = new scmFactory(config);
-	return scm.addUser(userData.userid, userData.userpassword);
+	return scm.addUserRequest(userData.userid, userData.userpassword);
 }

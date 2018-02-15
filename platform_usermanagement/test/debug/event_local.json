@@ -1,6 +1,6 @@
 {
     "stage" : "local",
-    "body":{"userid":"foo+Test123@gmail.com","userpassword":"1234567#","usercode":"TEST"},
+    "body":{"userid":"foo+Test123@gmail.com","userpassword":"12345678","usercode":"TEST"},
     "method":"POST",
     "principalId": "foo",
     "resourcePath": "/test/foo"

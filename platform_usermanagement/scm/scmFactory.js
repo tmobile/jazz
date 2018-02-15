@@ -29,16 +29,15 @@
  * @param {*} password - password that needs to be set in gitlab
  */
 var createUserInGitlabRequest = function(config, userId, password) {
-    var encodedUserid = encodeURIComponent(userId);
+    var encodedUserId = encodeURIComponent(userId);
     var encodedPwd = encodeURIComponent(password);
     
-    //users are registered with username = email currently, have gitlab user accounts be
-    //a truncated version without the email service domain
-    //password has to be atleast 8 chars
-    var username = userId.substring(0,userId.indexOf('@'));
+    //gitlabs username is restricted to alphanumeric and . _ - characters, 
+    // so using email all email characters (except -, _) replaced with -
+    var username = userId.replace(/'|!|#|%|&|\+|\?|\^|`|{|}|~|\@/g, '-');
     var encodedUsername = encodeURIComponent(username);
 
-    var url = config.HOSTNAME + config.API_USER_ADD + '?username=' + encodedUsername + '&password=' + encodedPwd + '&name=' + encodedUserid + '&email=' + encodedUserid ;
+    var url = config.HOSTNAME + config.API_USER_ADD + '?&username=' + encodedUsername + '&password=' + encodedPwd + '&name=' + encodedUserId + '&email=' + encodedUserid + '&skip_confirmation=true';
 
     return {
         url: url,
