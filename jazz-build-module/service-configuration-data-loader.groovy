@@ -10,20 +10,17 @@ echo "Service configuration module loaded successfully"
  * get it ready for Jenkins builds. It loads data for all service types.
 */
 
+@Field def service_config
 @Field def role_arn
 @Field def region
 @Field def role_id
 @Field def jenkins_url
-@Field def api_id_dev
-@Field def api_id_stg
-@Field def api_id_prod
 @Field def current_environment
 @Field def user_pool_id
 @Field def instance_prefix
 @Field def client_id
 @Field def repo_base
 @Field def es_hostname
-@Field def bitbucket_base
 @Field def bitbucket_username
 @Field def bitbucket_password
 @Field def service_name
@@ -31,25 +28,25 @@ echo "Service configuration module loaded successfully"
 /**
  * Initialize the module
  */
-def initialize(role_arn, region, role_id, jenkins_url, api_id_dev, api_id_stg, api_id_prod, current_environment,user_pool_id,
-				instance_prefix, client_id, repo_base, es_hostname, bitbucket_base, bitbucket_username, bitbucket_password,service_name) {
+def initialize(config, role_arn, region, role_id, jenkins_url, current_environment, service_name) {
 	
+	service_config = config
 	setRoleARN(role_arn)
 	setRegion(region)
 	setRoleId(role_id)
 	setJenkinsUrl(jenkins_url)
-	setApiIdDev(api_id_dev)
-	setApiIdStg(api_id_stg)
-	setApiIdProd(api_id_prod)
+	setApiIdDev(config.AWS.API.DEV_ID)
+	setApiIdStg(config.AWS.API.STG_ID)
+	setApiIdProd(config.AWS.API.PROD_ID)
 	setCurrentEnvironment(current_environment)
-	setUserPoolId(user_pool_id)
-	setEnvNamePrefix(instance_prefix)
-	setClientId(client_id)
-	setRepoBase(repo_base)
-	setEsHostName(es_hostname)
-	setBitbucketBase(bitbucket_base)
-	setBitbucketUserName(bitbucket_username)
-	setBitbucketPassword(bitbucket_password)	
+	setUserPoolId(config.AWS.COGNITO.USER_POOL_ID)
+	setEnvNamePrefix(config.INSTANCE_PREFIX)
+	setClientId(config.AWS.COGNITO.CLIENT_ID)
+	setRepoBase(config.REPOSITORY.BASE_URL)
+	setEsHostName(config.AWS.ES_HOSTNAME)
+	setBitbucketBase(configLoader.REPOSITORY.BASE_URL)
+	setBitbucketUserName(config.SCM.USERNAME)
+	setBitbucketPassword(config.SCM.PASSWORD)	
 	setServiceName(service_name)
 }
 
@@ -82,9 +79,9 @@ def loadServiceConfigurationData() {
 		}
 		
 		if ( (service_name.trim() == "platform-services-handler") ) {
-			sh "sed -i -- 's/{conf-apikey}/" + api_id_dev + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-apikey}/" + api_id_stg + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-apikey}/" + api_id_prod + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.DEV_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.STG_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.PROD_ID}/g' ./config/prod-config.json"
 			
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
@@ -197,17 +194,33 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{region}/" + region + "/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{region}/" + region + "/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's,{bb_service_host}," + "http://" + bitbucket_base + ",g' ./config/dev-config.json"
-			sh "sed -i -- 's,{bb_service_host}," + "http://" + bitbucket_base + ",g' ./config/stg-config.json"
-			sh "sed -i -- 's,{bb_service_host}," + "http://" + bitbucket_base + ",g' ./config/prod-config.json"
-		
-			sh "sed -i -- 's/{bb_username}/" + bitbucket_username + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{bb_username}/" + bitbucket_username + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{bb_username}/" + bitbucket_username + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{scm_type}/{service_config.SCM.TYPE}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{scm_type}/{service_config.SCM.TYPE}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{scm_type}/{service_config.SCM.TYPE}/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{bb_password}/" + bitbucket_password + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{bb_password}/" + bitbucket_password + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{bb_password}/" + bitbucket_password + "/g' ./config/prod-config.json"
+			if (service_config.SCM.TYPE == "bitbucket") {
+				sh "sed -i -- 's,{bb_service_host},http://{service_config.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
+				sh "sed -i -- 's,{bb_service_host},http://{service_config.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
+				sh "sed -i -- 's,{bb_service_host},http://{service_config.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
+			
+				sh "sed -i -- 's/{bb_username}/{service_config.SCM.USERNAME}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{bb_username}/{service_config.SCM.USERNAME}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{bb_username}/{service_config.SCM.USERNAME}/g' ./config/prod-config.json"
+
+				sh "sed -i -- 's/{bb_password}/{service_config.SCM.PASSWORD}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{bb_password}/{service_config.SCM.PASSWORD}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{bb_password}/{service_config.SCM.PASSWORD}/g' ./config/prod-config.json"
+			}
+
+			if (service_config.SCM.TYPE == "gitlab") {
+				sh "sed -i -- 's,{gitlab_service_host},http://{service_config.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
+				sh "sed -i -- 's,{gitlab_service_host},http://{service_config.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
+				sh "sed -i -- 's,{gitlab_service_host},http://{service_config.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
+			
+				sh "sed -i -- 's/{gitlab_private_token}/{service_config.SCM.PRIVATE_TOKEN}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{gitlab_private_token}/{service_config.SCM.PRIVATE_TOKEN}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{gitlab_private_token}/{service_config.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
+			}	
 		}
 
 		if (service_name.trim() == "platform_email") {
@@ -235,15 +248,6 @@ def setRoleId(roleId){
 def setJenkinsUrl(jenkinsUrl){
 	jenkins_url = jenkinsUrl
 }
-def setApiIdDev(apiIdDev){
-	api_id_dev = apiIdDev
-}
-def setApiIdStg(apiIdStg){
-	api_id_stg = apiIdStg
-}
-def setApiIdProd(apiIdProd){
-	api_id_prod = apiIdProd
-}
 def setCurrentEnvironment(currentEnvironment){
 	current_environment = currentEnvironment
 }
@@ -261,9 +265,6 @@ def setRepoBase(repoBase){
 }
 def setEsHostName(esHostname){
 	es_hostname = esHostname
-}
-def setBitbucketBase(bitbucketBase){
-	bitbucket_base = bitbucketBase
 }
 def setBitbucketUserName(bitbucketUsername){
 	bitbucket_username = bitbucketUsername
