@@ -59,7 +59,8 @@ node {
 	def bitbucket_name = ""
 	def domain = "platform"
 	def region = ""
-	def envmnt = 'prod'
+	def envmnt = 'prod'	
+    
 	
 	if(params.service_name){
 		service_template = params.service_name
@@ -88,7 +89,7 @@ node {
 			api_key = configLoader.AWS.API.DEV_ID
 		}
 	}
-
+	
 	stage ('Get Serverless Service')
 	{
 		try{
@@ -102,7 +103,7 @@ node {
 			sh 'mkdir ' + bitbucket_name
 			dir(bitbucket_name)
 			{
-				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getRepoCloneUrl(bitbucket_name)]]])
+				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getCoreRepoCloneUrl(bitbucket_name)]]])
 			}
 		}
 		catch(error){
