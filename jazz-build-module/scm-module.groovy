@@ -1,7 +1,6 @@
 #!groovy?
 import groovy.json.JsonOutput
 import groovy.transform.Field
-import groovy.json.JsonSlurper
 
 /*
 * Module that handles managing repos (create, delete) in the user's preferred scm
@@ -45,36 +44,29 @@ def createProject(repo_owner, repo_name){
             // so using email all email characters (except -, _) replaced with -
             def gitlab_username = repo_owner.replaceAll("[^a-zA-Z0-9_-]","-")
 
-            def cas_proj_id
-            def cas_repo_id
-            
             def user_id = getGitlabUserId(gitlab_username)
-            
+            def user_services_group_id = getUserServicesGroupId()
+
             def gitlab_repo_output = sh (
                 script: "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X POST \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/user/$user_id?name=$repo_name&path=$repo_name&visibility=private&request_access_enabled=true\"",
                 returnStdout: true
             ).trim()
 
-            def jsonSlurper = new JsonSlurper()
-            def object = jsonSlurper.parseText(gitlab_repo_output)
+            def jsonSlurper = new groovy.json.JsonSlurperClassic()
+            def repo_details = jsonSlurper.parseText(gitlab_repo_output)
             
-            if(object == null || object.equals("") || object.id == null || object.id.equals("")){
+            if(repo_details == null || repo_details.equals("") || repo_details.id == null || repo_details.id.equals("")){
                 error "project creation in gitlabs failed"
             }
-             
-            cas_proj_id = object.id
-
-            user_services_group_id = getUserServicesGroupId()
-
-            transferProject(user_services_group_id, cas_proj_id)
+            repo_id = repo_details.id
+            
+            transferProject(user_services_group_id, repo_id)
         }else if(scm_config.SCM.TYPE == "bitbucket"){
             sh "curl -X POST -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" " + scm_user_services_api_endpoint + " -d \'{\"name\":\""+ repo_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
         }
     }catch (ex) {
-        if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-            echo "createProject Failed"
-            error "createProjectInSCM Failed. "+ex.getMessage()
-        }
+        echo "createProject failed: " +ex.toString()
+        error "createProject failed: "+ex.getMessage()
     }
 }
 
@@ -85,7 +77,7 @@ def getGitlabUserId(gitlab_username){
             returnStdout: true
         ).trim()
   
-        def jsonSlurper = new groovy.json.JsonSlurper()
+        def jsonSlurper = new groovy.json.JsonSlurperClassic()
         def userObject = jsonSlurper.parseText(output)
   
         if(userObject == null || userObject.equals("") || userObject[0] == null || userObject[0].equals("") 
@@ -107,7 +99,7 @@ def getUserServicesGroupId(){
             returnStdout: true
         ).trim()
 
-        def jsonSlurper = new JsonSlurper()
+        def jsonSlurper = new groovy.json.JsonSlurperClassic()
         def groupObject = jsonSlurper.parseText(output)
         
         if(groupObject == null || groupObject.equals("") || groupObject[0] == null || groupObject[0].equals("") 
@@ -128,7 +120,7 @@ def getGitLabsProjectId(repo_name) {
             returnStdout: true
         ).trim()
 
-        def jsonSlurper = new JsonSlurper()
+        def jsonSlurper = new groovy.json.JsonSlurperClassic()
         def projectObject = jsonSlurper.parseText(output)
         
         if(projectObject == null || projectObject.equals("") || projectObject[0] == null || projectObject[0].equals("") 
@@ -143,10 +135,11 @@ def getGitLabsProjectId(repo_name) {
 }
 
 def transferProject(cas_id, project_id){
-  	def output = sh (
-  		script: "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X POST \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/groups/$cas_id/projects/$project_id\"",
-  		returnStdout: true
-  	).trim()
+    try{
+        sh "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X POST \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/groups/$cas_id/projects/$project_id\""
+    }catch (ex) {
+        echo "transferProject failed: "+ex.getMessage()
+    }
 }
 
 def setBranchPermissions(repo_name) {
