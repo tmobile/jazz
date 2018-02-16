@@ -2,11 +2,22 @@
   "USER_POOL_ID":"{user_pool_id}",
   "REGION": "{region}",
   "USER_CLIENT_ID": "{user_client_id}",
-  "bitbucket_service_host" : "{bb_service_host}",
-  "bitbucket_usr_add_path" : "/rest/api/1.0/admin/users",
-  "bitbucket_usr_grp_add_path" : "/rest/api/1.0/admin/groups/add-users",
-  "bitbucket_username" : "{bb_username}",
-  "bitbucket_password" : "{bb_password}",
   "reg_codes": ["JAZZ"],
-  "required_fields": ["userid", "userpassword", "usercode"]
+  "required_fields": ["userid", "userpassword", "usercode"],
+  "SCM_TYPE": "gitlab",
+  "SCM_CONFIG" : {
+    "bitbucket" : {
+      "HOSTNAME": "mybitbuckethost",
+      "USERNAME": "bb_username",
+      "PASSWORD": "bb_password",
+      "API_USER_ADD" : "/rest/api/1.0/admin/users",
+      "API_GROUP_ADD" : "/rest/api/1.0/admin/groups/add-users"
+    },
+    "gitlab": {
+      "HOSTNAME": "mygitlabhost",
+      "API_USER_ADD" : "/api/v4/users",
+      "API_GROUP_ADD" : "/api/v4/groups",
+      "PRIVATE_TOKEN": "gitlabprivatetoken"
+    }
+  }
 }

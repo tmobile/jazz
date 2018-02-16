@@ -1,7 +1,6 @@
 #!groovy?
 import groovy.json.JsonOutput
 import groovy.transform.Field
-import groovy.json.JsonSlurper
 
 /*
 * Module that handles managing repos (create, delete) in the user's preferred scm
@@ -10,7 +9,7 @@ import groovy.json.JsonSlurper
 def scm_core_services_endpoint
 def scm_user_services_api_endpoint
 def scm_user_services_clone_url
-def scm_webhook_api
+
 def scm_branch_permission_api_endpoint
 
 def serviceonboarding_repo
@@ -27,14 +26,12 @@ def setRepoEndpoints(){
         scm_user_services_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
         scm_core_services_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/" 
         scm_user_services_clone_url = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/"
-        scm_webhook_api = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
         scm_branch_permission_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/branch-permissions/2.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
         serviceonboarding_repo	= "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/service-onboarding-build-pack.git"
     }else if(scm_config.SCM.TYPE == "bitbucket"){
         scm_user_services_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
         scm_core_services_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/" 
         scm_user_services_clone_url = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/"
-        scm_webhook_api = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
         scm_branch_permission_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/branch-permissions/2.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
         serviceonboarding_repo	= "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/service-onboarding-build-pack.git"
     }
@@ -43,53 +40,44 @@ def setRepoEndpoints(){
 def createProject(repo_owner, repo_name){
     try { 
         if(scm_config.SCM.TYPE == "gitlab"){
-            def git_username
-            def cas_proj_id
-            def cas_repo_id
-            
-            //assuming usernames for now are a concatenation of the user's email, check platform_usermanagement index.js
-            if(repo_owner.contains("@")){
-                git_username = repo_owner.substring(0, owner.indexOf("@"))
-            }
+            //gitlabs username is restricted to alphanumeric and . _ - characters, 
+            // so using email all email characters (except -, _) replaced with -
+            def gitlab_username = repo_owner.replaceAll("[^a-zA-Z0-9_-]","-")
 
-            def user_id = getGitlabUserId(git_username, ${scm_config.SCM.PRIVATE_TOKEN})
-            
+            def user_id = getGitlabUserId(gitlab_username)
+            def user_services_group_id = getUserServicesGroupId()
+
             def gitlab_repo_output = sh (
                 script: "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X POST \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/user/$user_id?name=$repo_name&path=$repo_name&visibility=private&request_access_enabled=true\"",
                 returnStdout: true
             ).trim()
 
-            def jsonSlurper = new JsonSlurper()
-            def object = jsonSlurper.parseText(gitlab_repo_output)
+            def jsonSlurper = new groovy.json.JsonSlurperClassic()
+            def repo_details = jsonSlurper.parseText(gitlab_repo_output)
             
-            if(object == null || object.equals("") || object.id == null || object.id.equals("")){
+            if(repo_details == null || repo_details.equals("") || repo_details.id == null || repo_details.id.equals("")){
                 error "project creation in gitlabs failed"
             }
-             
-            cas_proj_id = object.id
-
-            user_services_group_id = getUserServicesGroupId()
-
-            transferProject(user_services_group_id, cas_proj_id)
+            repo_id = repo_details.id
+            
+            transferProject(user_services_group_id, repo_id)
         }else if(scm_config.SCM.TYPE == "bitbucket"){
             sh "curl -X POST -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" " + scm_user_services_api_endpoint + " -d \'{\"name\":\""+ repo_name +"\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
         }
     }catch (ex) {
-        if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
-            echo "createUserInSCM Failed"
-            error "createProjectInSCM Failed. "+ex.getMessage()
-        }
+        echo "createProject failed: " +ex.toString()
+        error "createProject failed: "+ex.getMessage()
     }
 }
 
 def getGitlabUserId(gitlab_username){
     try{
         def output = sh (
-            script: "curl --header \"Private-Token: ${scm_config..SCM.PRIVATE_TOKEN}\" -X GET \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/users?username=$gitlab_username\"",
+            script: "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X GET \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/users?username=$gitlab_username\"",
             returnStdout: true
         ).trim()
   
-        def jsonSlurper = new groovy.json.JsonSlurper()
+        def jsonSlurper = new groovy.json.JsonSlurperClassic()
         def userObject = jsonSlurper.parseText(output)
   
         if(userObject == null || userObject.equals("") || userObject[0] == null || userObject[0].equals("") 
@@ -111,7 +99,7 @@ def getUserServicesGroupId(){
             returnStdout: true
         ).trim()
 
-        def jsonSlurper = new JsonSlurper()
+        def jsonSlurper = new groovy.json.JsonSlurperClassic()
         def groupObject = jsonSlurper.parseText(output)
         
         if(groupObject == null || groupObject.equals("") || groupObject[0] == null || groupObject[0].equals("") 
@@ -132,7 +120,7 @@ def getGitLabsProjectId(repo_name) {
             returnStdout: true
         ).trim()
 
-        def jsonSlurper = new JsonSlurper()
+        def jsonSlurper = new groovy.json.JsonSlurperClassic()
         def projectObject = jsonSlurper.parseText(output)
         
         if(projectObject == null || projectObject.equals("") || projectObject[0] == null || projectObject[0].equals("") 
@@ -147,18 +135,19 @@ def getGitLabsProjectId(repo_name) {
 }
 
 def transferProject(cas_id, project_id){
-  	def output = sh (
-  		script: "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X POST \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/groups/$cas_id/projects/$project_id\"",
-  		returnStdout: true
-  	).trim()
+    try{
+        sh "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X POST \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/groups/$cas_id/projects/$project_id\""
+    }catch (ex) {
+        echo "transferProject failed: "+ex.getMessage()
+    }
 }
 
 def setBranchPermissions(repo_name) {
     if(scm_config.SCM.TYPE == "gitlab"){
         def proj_id = getGitLabsProjectId(repo_name)
 
-        sh "curl --request DELETE --header \"PRIVATE-TOKEN: ${scm_config.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/protected_branches/master\""
-        sh "curl --request POST --header \"PRIVATE-TOKEN: ${scm_config.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/protected_branches?name=master&push_access_level=0\""
+        sh "curl --request DELETE --header \"PRIVATE-TOKEN: ${scm_config.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/protected_branches/master\""
+        sh "curl --request POST --header \"PRIVATE-TOKEN: ${scm_config.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/protected_branches?name=master&push_access_level=0\""
     }else if(scm_config.SCM.TYPE == "bitbucket"){
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_config.REPOSITORY.CREDENTIAL_ID, url: serviceonboarding_repo]]])
 	    sh "curl -X POST -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\"  -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" ${scm_branch_permission_api_endpoint}${repo_name}/restrictions -d \"@branch_permissions_payload.json\"  "
@@ -179,8 +168,11 @@ def setRepoPermissions(repo_owner, repo_name, admin_group) {
 
 def addWebhook(repo_name, webhookName, targetUrl) {
     if(scm_config.SCM.TYPE == "gitlab"){
-        sh "curl -X PUT -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${targetUrl}\" , \"enabled\": true}\'"
+        def proj_id = getGitLabsProjectId(repo_name)
+        // gitlabs has no support to name a webhook
+        sh "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X POST \"http://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/hooks?enable_ssl_verification=false&push_events=true&url=$targetUrl\""
     }else if(scm_config.SCM.TYPE == "bitbucket"){
+        def scm_webhook_api = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/" 
         sh "curl -X PUT -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${targetUrl}\" , \"enabled\": true}\'"
     }
 }

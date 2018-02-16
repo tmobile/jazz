@@ -300,7 +300,7 @@ node  {
 			}
 			catch (error)
 			{
-				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed", repo_name);
+				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
 
 				send_status_email (owner, "FAILED", service_name, domain)
 
