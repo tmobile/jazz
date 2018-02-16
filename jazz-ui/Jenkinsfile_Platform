@@ -125,7 +125,7 @@ def loadSCMModule(buildModuleUrl){
 			]])
 
 			scmModule = load "scm-module.groovy"
-			scmModule.initialize(configLoader)
+			scmModule.initialize(config_loader)
 		}
 	}catch(ex) {
 		error "loadSCMModule failed: " + ex.toString()

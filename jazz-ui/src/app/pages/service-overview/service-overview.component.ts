@@ -382,7 +382,7 @@ export class ServiceOverviewComponent implements OnInit {
     this.check_empty_fields();
         this.islink = this.ValidURL(this.service.repository);
         if(this.islink){
-            this.bitbucketRepo = "Bitbucket Link";
+            this.bitbucketRepo = "Git Repo";
             this.repositorylink = this.service.repository;
         } else if(this.service.repository === "[Archived]"){
             this.bitbucketRepo = "Archived";
