@@ -153,8 +153,8 @@ def setBranchPermissions(repo_name) {
     if(scm_config.SCM.TYPE == "gitlab"){
         def proj_id = getGitLabsProjectId(repo_name)
 
-        sh "curl --request DELETE --header \"PRIVATE-TOKEN: ${scm_config.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/protected_branches/master\""
-        sh "curl --request POST --header \"PRIVATE-TOKEN: ${scm_config.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}://${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/protected_branches?name=master&push_access_level=0\""
+        sh "curl --request DELETE --header \"PRIVATE-TOKEN: ${scm_config.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/protected_branches/master\""
+        sh "curl --request POST --header \"PRIVATE-TOKEN: ${scm_config.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/api/v3/projects/$proj_id/protected_branches?name=master&push_access_level=0\""
     }else if(scm_config.SCM.TYPE == "bitbucket"){
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: scm_config.REPOSITORY.CREDENTIAL_ID, url: serviceonboarding_repo]]])
 	    sh "curl -X POST -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\"  -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" ${scm_branch_permission_api_endpoint}${repo_name}/restrictions -d \"@branch_permissions_payload.json\"  "
