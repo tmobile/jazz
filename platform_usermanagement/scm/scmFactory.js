@@ -34,7 +34,7 @@ var createUserInGitlabRequest = function(config, userId, password) {
     
     //gitlabs username is restricted to alphanumeric and . _ - characters, 
     // so using email all email characters (except -, _) replaced with -
-    var username = userId.replace(/'|!|#|%|&|\+|\?|\^|`|{|}|~|\@/g, '-');
+    var username = userId.replace(/[^a-zA-Z0-9_-]/g, '-');
     var encodedUsername = encodeURIComponent(username);
 
     var url = config.HOSTNAME + config.API_USER_ADD + '?&username=' + encodedUsername + '&password=' + encodedPwd + '&name=' + encodedUserId + '&email=' + encodedUserId + '&skip_confirmation=true';
