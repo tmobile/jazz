@@ -38,10 +38,13 @@ module.exports.handler = (event, context, cb) => {
 	const dynamodb = new AWS.DynamoDB();
 	const kinesis = new AWS.Kinesis();
 
+
 	try {
+		if (!event.method) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
+        }
 		//GET Handler
 		if (event !== undefined && event.method !== undefined && event.method === 'GET') {
-
 			async.series({
 				get_events: function (callback) {
 					var filter = "";
