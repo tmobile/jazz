@@ -12,7 +12,6 @@ def scm_user_services_clone_url
 def scm_branch_permission_api_endpoint
 def serviceonboarding_repo
 def scm_config
-def scm_webhook_target_url
 @Field def scm_protocol	= "http://"
 
 def initialize(configData){
@@ -27,14 +26,12 @@ def setRepoEndpoints(){
         scm_user_services_clone_url = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/"
         scm_branch_permission_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/branch-permissions/2.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
         serviceonboarding_repo	= "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/service-onboarding-build-pack.git"
-		scm_webhook_target_url 	= "${scm_protocol}${scm_config.JENKINS.USERNAME}:${scm_config.JENKINS.JENKINS_PASSWORD}@${JenkinsLocationConfiguration.get().getUrl().split('/')[2]}/project/Gitlab-Trigger-Job"
 	}else if(scm_config.SCM.TYPE == "bitbucket"){
         scm_user_services_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
         scm_core_services_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/" 
         scm_user_services_clone_url = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/"
         scm_branch_permission_api_endpoint = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/branch-permissions/2.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
         serviceonboarding_repo	= "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/scm/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/service-onboarding-build-pack.git"
-		scm_webhook_target_url 	= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
 	}
 }
 
@@ -166,7 +163,7 @@ def setRepoPermissions(repo_owner, repo_name, admin_group) {
     }
 }
 
-def addWebhook(repo_name, webhookName) {
+def addWebhook(repo_name, webhookName,scm_webhook_target_url) {
     if(scm_config.SCM.TYPE == "gitlab"){
         def proj_id = getGitLabsProjectId(repo_name)
 		def scm_webhook_api = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/hooks?enable_ssl_verification=false&push_events=true&url="
