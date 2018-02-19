@@ -501,11 +501,11 @@ def loadBucketPolicy(String service, String s3Bucket, Boolean create_cloudfront_
 	try {
 		def policyJson = sh(returnStdout: true, script: "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text")
 		echo "policyJson: $policyJson"
-		policyObj = parseJson(policyJson) 
+		policyObj = jsonParse(policyJson) 
 		echo "loadBucketPolicy readFile: $policyObj"
 	} catch(ex) {
 		echo "Bucket policy doesn't exists yet."
-		policyObj =  parseJson(policySpec)
+		policyObj =  jsonParse(policySpec)
 		policyObj.Id += "$s3Bucket"
 	}
 	if(policyObj) {
@@ -557,21 +557,21 @@ def updateS3BucketPolicy( service,  s3Bucket, isCloudfront, existingPolicyObj){
 		if(isCloudfront){
 			echo "isCloudfront: $isCloudfront"
 			def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
-			new_policy =  parseJson(stmtCf)
+			new_policy =  jsonParse(stmtCf)
 			new_policy.put('Sid', "$service")
 			new_policy.put('Principal', principal)
 			new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
 			bucketPolicy.Statement << new_policy
 
 			//add new list policy statement 
-			def listPolicyObject = parseJson(stmtCfList)
+			def listPolicyObject = jsonParse(stmtCfList)
 			listPolicyObject.put('Principal', principal)
 			listPolicyObject.put('Resource', "arn:aws:s3:::$s3Bucket")
 			bucketPolicy.Statement << listPolicyObject
 		} else{
 			echo "isCloudfront: $isCloudfront"
 			def principal = "*"
-			new_policy =  parseJson(stmtS3)
+			new_policy =  jsonParse(stmtS3)
 			new_policy.put('Sid', "$service")
 			new_policy.put('Principal', principal)
 			new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
@@ -686,7 +686,7 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
 	echo "curlOutput: $curlOutput"
 
-	def curlOutputJSON = parseJson(curlOutput)
+	def curlOutputJSON = jsonParse(curlOutput)
 	
 	if (curlOutputJSON.data[0].id) {
 		service_id = curlOutputJSON.data[0].id
@@ -749,7 +749,7 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 					$loginUrl \
 				-d \'${payload}\'", returnStdout:true).trim()
 
-			def tokenJson = parseJson(token)
+			def tokenJson = jsonParse(token)
 			tokenJson_token = tokenJson.data.token
 
 			return tokenJson_token
@@ -902,3 +902,9 @@ def getBuildModuleUrl() {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     } 
 } 
+
+@NonCPS
+def jsonParse(jsonString) {
+    def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    return nonLazyMap
+}
