@@ -425,7 +425,7 @@ node  {
 					$loginUrl \
 				-d \'${payload}\'", returnStdout:true).trim()
 
-			def tokenJson = parseJson(token)
+			def tokenJson = jsonParse(token)
 			tokenJson_token = tokenJson.data.token
 
 			return tokenJson_token
@@ -635,3 +635,8 @@ def getBuildModuleUrl() {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     } 
 } 
+@NonCPS
+def jsonParse(jsonString) {
+    def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    return nonLazyMap
+}
