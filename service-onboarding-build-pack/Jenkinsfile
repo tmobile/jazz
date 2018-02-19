@@ -334,7 +334,13 @@ node  {
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 				sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.STARTED, "")
 				try{
-					scmModule.addWebhook(repo_name, "notify-jenkins")
+					def scm_webhook_target_url
+					if(configLoader.SCM.TYPE == "gitlab"){
+						scm_webhook_target_url 	= "http://${configLoader.JENKINS.USERNAME}:${configLoader.JENKINS.JENKINS_PASSWORD}@${JenkinsLocationConfiguration.get().getUrl().split('/')[2]}/project/Gitlab-Trigger-Job"
+					}else if(configLoader.SCM.TYPE == "bitbucket"){
+						scm_webhook_target_url 	= JenkinsLocationConfiguration.get().getUrl()+"/bitbucket-scmsource-hook/notify"
+					}
+					scmModule.addWebhook(repo_name, "notify-jenkins",scm_webhook_target_url)
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
 				}
 				catch(error){
