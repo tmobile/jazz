@@ -141,7 +141,7 @@ node {
 
 				region = config['region']
 
-				serviceConfigdata = loadServiceConfigurationDataModule(jazzBuildModuleURL,configLoader,roleARN, region, roleId, jenkinsURL, envmnt,configLoader.AWS.ES_HOSTNAME, configLoader.REPOSITORY.BASE_URL,service_template)
+				serviceConfigdata = loadServiceConfigurationDataModule(jazzBuildModuleURL,configLoader,roleARN, region, roleId, jenkinsURL, envmnt,service_template)
 				serviceConfigdata.loadServiceConfigurationData()
 			}
 		}
@@ -386,21 +386,8 @@ def loadConfigModule(buildModuleUrl){
  * Load service config data module groovy file
  *
  */
-def loadServiceConfigurationDataModule(buildURL,configLoader,role_arn, region, role_id, jenkins_url, envmnt, es_hostname, bitbucket_base, service_name){
+def loadServiceConfigurationDataModule(buildURL,configLoader,role_arn, region, role_id, jenkins_url, envmnt, service_name){
 	try {
-
-		def api_id_dev = configLoader.AWS.API.DEV_ID
-		def api_id_stg = configLoader.API.API_ID_STG
-		def api_id_prod = configLoader.AWS.API.PROD_ID
-		def user_pool_id = configLoader.AWS.COGNITO.USER_POOL_ID
-		def client_id = configLoader.AWS.COGNITO.CLIENT_ID
-		def env_name_prefix = configLoader.INSTANCE_PREFIX
-		def repo_base = configLoader.REPOSITORY.BASE_URL
-		def bitbucket_username = configLoader.SCM.USERNAME
-		def bitbucket_password = configLoader.SCM.PASSWORD
-
-
-		echo "loading Service Config Data, checking repos"
 
 		dir('_service_configdata') {
 			checkout([$class: 'GitSCM', branches: [
@@ -409,8 +396,7 @@ def loadServiceConfigurationDataModule(buildURL,configLoader,role_arn, region, r
 				[credentialsId: repo_credential_id, url: buildURL]
 			]])
 			serviceConfigdata = load "service-configuration-data-loader.groovy"
-			serviceConfigdata.initialize(role_arn, region, role_id, jenkins_url, api_id_dev, api_id_stg, api_id_prod, envmnt,user_pool_id,
-											env_name_prefix, client_id, repo_base, es_hostname, bitbucket_base, bitbucket_username, bitbucket_password,service_name)
+			serviceConfigdata.initialize(configLoader, role_arn, region, role_id, jenkins_url, envmnt, service_name)
 		}
 
 		return serviceConfigdata
