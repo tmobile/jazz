@@ -9,7 +9,6 @@ import groovy.transform.Field
 @Field def repo_core
 @Field def scm_type
 
-
 //definitions
 def Event_Name = [
 	'GENERATE_API_DOC':'GENERATE_API_DOC',
@@ -56,7 +55,7 @@ def Event_Status = [
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def current_environment = ''
-
+@Field def stack_name
 node ()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModule(jazzBuildModuleURL)
@@ -65,13 +64,6 @@ node ()  {
 	
 	echo "Build triggered via branch: " + params.scm_branch + " with params " + params
 	def _event = ""
-
-    def serviceName = ""
-
-	if(params.service_name != null && !params.service_name.isEmpty()){
-		serviceName = params.service_name
-		cfStackName = params.service_name
-	}
 	
 	def branch = params.scm_branch
 	def repo_name = params.service_name
@@ -102,7 +94,7 @@ node ()  {
 		def repocloneUrl
 		if(domain && domain == "platform"){
 			repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
-		}else{
+		}else{			
 			auth_token = setCredentials()
 			repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
 		}
@@ -134,15 +126,18 @@ node ()  {
 	def isEc2EventEnabled = isEnabled(config, "event_source_ec2")
 	def isEventSchdld = false
 	def internalAccess = config['require_internal_access']
-
+	domain = config['domain']	
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
-	domain = config['domain']
-	serviceName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
 	
-	echo "serviceName : $serviceName"
-
+					
+	if(domain && domain == "platform"){
+		stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
+	}else{			
+		stackName = "${configLoader.INSTANCE_PREFIX}-${config['service']}-${current_environment}"
+	}
+	
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
 		isEventSchdld = true
 	}
@@ -153,34 +148,27 @@ node ()  {
 				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 				echo "Inside Update service template"
 				try{
-					echo "loadServerlessConfig......."
-					def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-
-					region = config['region']
-					
-					serviceConfigdata.initialize(configLoader, roleARN, region, roleId, jenkinsURL, current_environment, repo_name)
-					serviceConfigdata.loadServiceConfigurationData()
-					
+					updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)					
 				}
 				catch(error){
 					sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.COMPLETED, "")
 					error "Error occured while updating service template."
 				}
 			}			
-		}else{
-			stage ('Pre-Build Validation'){
-				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
-				try {
-					send_status_email(config, 'STARTED',"")
-					validateDeploymentConfigurations(config)
-				}catch(ex) {
-					send_status_email(config, 'FAILED',"")
-					sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
-					error ex.getMessage()
-				}
-				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
-			}			
-		}	
+		}
+		stage ('Pre-Build Validation'){
+			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
+			try {
+				send_status_email(config, 'STARTED',"")
+				validateDeploymentConfigurations(config)
+			}catch(ex) {
+				send_status_email(config, 'FAILED',"")
+				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
+				error ex.getMessage()
+			}
+			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
+		}			
+			
 
 		stage ('Build') {
 			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.STARTED, "")
@@ -221,7 +209,7 @@ node ()  {
 						echo "Generate deployment env with domain"
 						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
 						sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, _event, Event_Status.STARTED, "")
-						
+
 						writeServerlessFile(config,current_environment)
 						
 						echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
@@ -230,47 +218,29 @@ node ()  {
 
 						def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 						sh "serverless deploy --stage ${current_environment} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
-
-						def stackName = "${configLoader.INSTANCE_PREFIX}-${config['service']}-${current_environment}"
-						lambdaARN = getLambdaARN(stackName)
+						
+						def lambdaARN = getLambdaARN(stackName)
 						echo "lambdaARN: ${lambdaARN}"
 						// reset Credentials
 						resetCredentials()					
 						if(domain != "platform"){
-							createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION,roleId);
-							updateServiceWithEndpointInfo(config, current_environment, endpointUrl)						
-							// echo status
-							def svc_response = echoServiceInfo(current_environment)
-							send_status_email(config, 'COMPLETED',svc_response)
+							createSubscriptionFilters(stackName, current_environment, configLoader.AWS.REGION,roleId);							
 						}
 						_event = Event_Name.UPDATE_LOGGING_CONF
 						sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, _event, Event_Status.COMPLETED, "")
 					
 						if(domain && domain == "platform"){
-							if ( (config['service'].trim() == "platform-services-handler") ) {
-								def function_name =  "${configLoader.INSTANCE_PREFIX}-" + config['service'] + "-" +  current_environment
-								def event_source_list = sh (
-									script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
-									returnStdout: true
-								).trim()
-								echo "$event_source_list"
-								if (event_source_list == "[]"){
-									sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$roleId:stream/${configLoader.INSTANCE_PREFIX}-events-hub-" + current_environment + " --function-name arn:aws:lambda:$region:$roleId:function:$function_name --starting-position LATEST --region " + region
-								}
-							}
+							serviceConfigdata.setKinesisStream(config)
 						}else{
-							updateServiceInDB(config, "active")
-							def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
-							send_status_email(config, 'COMPLETED',svc_status)
+							updateServiceInDB(config, "active")							
 						}	
+						def svc_response = echoServiceInfo(current_environment)
+						send_status_email(config, 'COMPLETED',svc_response)
 					}catch(ex) {
-						if(domain != "platform"){
-							send_status_email(config, 'FAILED','')
-						}
+						send_status_email(config, 'FAILED','')						
 						sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, _event, Event_Status.FAILED, ex.getMessage())
 						error ex.getMessage()
-					}
-					
+					}					
 					sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}//end of withCredentials
 			}//end of dir
@@ -555,7 +525,7 @@ def createSubscriptionFilters(service, env, region,roleId) {
 
 def writeServerlessFile(config,current_environment){
 	sh "pwd"
-	//sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: ${configLoader.INSTANCE_PREFIX}-${config['service']}/g' serverless.yml"
+	sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: ${stackName}/g' serverless.yml"
 	sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: ${configLoader.INSTANCE_PREFIX}-${config['service']}/g' serverless.yml"
 	sh "sed -i -- 's/{env-stage}/" + current_environment + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
@@ -642,53 +612,55 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 * @return
 */
 def send_status_email (config, build_status, email_content) {
-   	echo "Sending build notification to ${config['created_by']}"
-	def body_subject = ''
-	def body_text = ''
-	def cc_email = ''
-	def body_html = ''
-   	if (build_status == 'STARTED') {
-		echo "email status started"
-		body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + config['service']
-   	} else if (build_status == 'FAILED') {
-		echo "email status failed"
-		def build_url = env.BUILD_URL + 'console'
-		body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + config['service']
-		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
-   	} else if (build_status == 'COMPLETED'){
-		body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + config['service']
-   	} else {
-		echo "Unsupported build status, nothing to email.."
-		return
-   	}
-   	if (email_content != ''){
-		body_text = body_text + '\n\n' + email_content
-	}
-	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
-	body = JsonOutput.toJson([
-					from : fromStr,
-					to : config['created_by'],
-					subject : body_subject,
-					text : body_text,
-					cc : cc_email,
-					html : body_html
-			    ])
-
-   	try{
-		def sendMail = sh (script: "curl -X POST \
-				${g_base_url}/platform/email \
-				-k -v -H \"Authorization: $auth_token\" \
-				-H \"Content-Type: application/json\" \
-				-d \'${body}\'", returnStdout: true).trim()
-		def responseJSON = parseJson(sendMail)
-		if(responseJSON.data){
-			echo "successfully sent e-mail to ${config['created_by']}"
+	if(domain != "platform"){
+		echo "Sending build notification to ${config['created_by']}"
+		def body_subject = ''
+		def body_text = ''
+		def cc_email = ''
+		def body_html = ''
+		if (build_status == 'STARTED') {
+			echo "email status started"
+			body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + config['service']
+		} else if (build_status == 'FAILED') {
+			echo "email status failed"
+			def build_url = env.BUILD_URL + 'console'
+			body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + config['service']
+			body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
+		} else if (build_status == 'COMPLETED'){
+			body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + config['service']
 		} else {
-			echo "exception occured while sending e-mail: $responseJSON"
+			echo "Unsupported build status, nothing to email.."
+			return
 		}
-   	} catch (e){
-       echo "Failed while sending build status notification"
-   	}
+		if (email_content != ''){
+			body_text = body_text + '\n\n' + email_content
+		}
+		def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
+		body = JsonOutput.toJson([
+						from : fromStr,
+						to : config['created_by'],
+						subject : body_subject,
+						text : body_text,
+						cc : cc_email,
+						html : body_html
+					])
+
+		try{
+			def sendMail = sh (script: "curl -X POST \
+					${g_base_url}/platform/email \
+					-k -v -H \"Authorization: $auth_token\" \
+					-H \"Content-Type: application/json\" \
+					-d \'${body}\'", returnStdout: true).trim()
+			def responseJSON = parseJson(sendMail)
+			if(responseJSON.data){
+				echo "successfully sent e-mail to ${config['created_by']}"
+			} else {
+				echo "exception occured while sending e-mail: $responseJSON"
+			}
+		} catch (e){
+		   echo "Failed while sending build status notification"
+		}
+	}
 }
 
 def updateServiceInDB(config,status) {
@@ -781,7 +753,12 @@ def parseJson(jsonString) {
     return m
 }
 
-
+def updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)	{
+	echo "loadServerlessConfig......."
+	def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
+	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name)
+	serviceConfigdata.loadServiceConfigurationData()
+}
 /*
 * Load environment variables from build module
 */

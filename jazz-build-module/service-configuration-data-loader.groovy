@@ -217,4 +217,31 @@ def setServiceName(serviceName){
 	service_name = serviceName
 }
 
+def setKinesisStream(config){
+	if ( (config['service'].trim() == "platform-services-handler") ) {
+		def function_name =  "${service_config.INSTANCE_PREFIX}-" + config['service'] + "-" +  current_environment
+		def event_source_list = sh (
+			script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
+			returnStdout: true
+		).trim()
+		echo "$event_source_list"
+		if (event_source_list == "[]"){
+			sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$role_id:stream/${service_config.INSTANCE_PREFIX}-events-hub-" + current_environment + " --function-name arn:aws:lambda:$region:$role_id:function:$function_name --starting-position LATEST --region " + region
+		}
+	}
+}
+def setLogStreamPermission(config){
+	if (config['service'] == "cloud-logs-streamer") {
+		echo "set permission for cloud-logs-streamer"
+		try {
+			def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()
+			sh "aws lambda add-permission --function-name arn:aws:lambda:${region}:${role_id}:function:${service_config.INSTANCE_PREFIX}-" + config['service'] + "-${current_environment} --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs.${region}.amazonaws.com --region ${region}"
+			echo "set permission for cloud-logs-streamer - success"
+		}catch(ss) {
+			//ignore if already registered permissions
+			echo(ss)
+			echo "set permission for cloud-logs-streamer - ok np"
+		}
+	}	
+}
 return this

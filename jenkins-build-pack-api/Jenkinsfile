@@ -10,6 +10,7 @@ import groovy.transform.Field
 @Field def repo_core
 @Field def scm_type
 
+
 //definitions
 def Event_Name =[
 	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
@@ -113,7 +114,7 @@ node() {
 		}
 	}
 	
-	def domain = config['domain']
+	domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
 
@@ -139,32 +140,24 @@ node() {
 				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 				echo "Inside Update service template"
 				try{
-					echo "loadServerlessConfig......."
-					def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-
-					region = config['region']
-					
-					serviceConfigdata.initialize(configLoader, roleARN, region, roleId, jenkinsURL, current_environment, repo_name)
-					serviceConfigdata.loadServiceConfigurationData()
-					
+					updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)	
 				}
 				catch(error){
 					sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.COMPLETED, "")
 					error "Error occured while updating service template."
 				}
 			}			
-	    }else{
-			stage('Pre-Build Validation') {				
-				send_status_email(config, 'STARTED',"")
-				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_INPUT, Event_Status.STARTED, "")
+	    }
+		stage('Pre-Build Validation') {				
+			send_status_email(config, 'STARTED',"")
+			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_INPUT, Event_Status.STARTED, "")
 
-				validateDeploymentConfigurations(config)
-				validateSwaggerSpec();
+			validateDeploymentConfigurations(config)
+			validateSwaggerSpec();
 
-				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_INPUT, Event_Status.COMPLETED, "")
-			}
+			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_INPUT, Event_Status.COMPLETED, "")
 		}
-
+		
 		stage('Build') {
 		   // @TODO : Send Event feature coming soon
 			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.STARTED, "")
@@ -212,7 +205,9 @@ node() {
 
 					generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, config)
 					echo "Deploying to staging API Gateway environment.."
-					sh "${aws_api_import} --region ${configLoader.AWS.REGION}  --update ${configLoader.AWS.API[api_key]} --deploy ${current_environment} swagger/swagger.json "
+					sh "aws apigateway put-rest-api --rest-api-id ${configLoader.AWS.API[api_key]} --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
+                    sh "aws apigateway create-deployment --rest-api-id ${configLoader.AWS.API[api_key]} --stage-name ${current_environment} --profile cloud-api"
+					
 					def endpointUrl = "https://${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/${current_environment}/" + domain + "/" + params.service_name
 					if(domain != "platform"){
 						createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION,roleId);
@@ -222,25 +217,14 @@ node() {
 					sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${params.service_name}/${current_environment} --recursive "
 					echo "completed deployment........."					
 					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-				}
-				if(domain && domain == "platform"){
-					if (config['service'].trim() == "cloud-logs-streamer") {
-						echo "set permission for cloud-logs-streamer"
-						try {
-							def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()
-							sh "aws lambda add-permission --function-name arn:aws:lambda:${region}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-" + config['service'] + "-${current_environment} --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs.${region}.amazonaws.com --region ${region}"
-
-							echo "set permission for cloud-logs-streamer - success"
-						}catch(error) {
-							//ignore if already registered permissions
-							error "set permission for cloud-logs-streamer - failed"
-						}
-					}					
-				}else{
-					updateServiceInDB(config, "active")
 					def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
 					send_status_email(config, 'COMPLETED',svc_status)	
 				}
+				if(domain && domain == "platform"){						
+					serviceConfigdata.setLogStreamPermission(config)					
+				}else{
+					updateServiceInDB(config, "active")					
+				}				
 				echo "completed deployment........."					
 				sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 								
@@ -604,55 +588,56 @@ def updateServiceWithEndpointInfo(config,endpointKey, endpointVal) {
 * @return
 */
 def send_status_email (config, build_status, email_content) {
-   	echo "Sending build notification to ${config['created_by']}"
-	def body_subject = ''
-	def body_text = ''
-	def cc_email = ''
-	def body_html = ''
-   	if (build_status == 'STARTED') {
-		echo "email status started"
-		body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + config['service']
-   	} else if (build_status == 'FAILED') {
-		echo "email status failed"
-		def build_url = env.BUILD_URL + 'console'
-		body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + config['service']
-		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
-   	} else if (build_status == 'COMPLETED'){
-		body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + config['service']
-   	} else {
-		echo "Unsupported build status, nothing to email.."
-		return
-   	}
-   	if (email_content != ''){
-		body_text = body_text + '\n\n' + email_content
-	}
-	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
-	body = JsonOutput.toJson([
-					from : fromStr,
-					to : config['created_by'],
-					subject : body_subject,
-					text : body_text,
-					cc : cc_email,
-					html : body_html
-			    ])
-
-   	try{
-		def sendMail = sh (script: "curl -X POST \
-				${g_base_url}/platform/email \
-				-k -v -H \"Authorization: $auth_token\" \
-				-H \"Content-Type: application/json\" \
-				-d \'${body}\'", returnStdout: true).trim()
-		def responseJSON = parseJson(sendMail)
-		if(responseJSON.data){
-			echo "successfully sent e-mail to ${config['created_by']}"
+	if(domain != "platform"){
+		echo "Sending build notification to ${config['created_by']}"
+		def body_subject = ''
+		def body_text = ''
+		def cc_email = ''
+		def body_html = ''
+		if (build_status == 'STARTED') {
+			echo "email status started"
+			body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + config['service']
+		} else if (build_status == 'FAILED') {
+			echo "email status failed"
+			def build_url = env.BUILD_URL + 'console'
+			body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + config['service']
+			body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
+		} else if (build_status == 'COMPLETED'){
+			body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + config['service']
 		} else {
-			echo "exception occured while sending e-mail: $responseJSON"
+			echo "Unsupported build status, nothing to email.."
+			return
 		}
-   	} catch (e){
-       echo "Failed while sending build status notification"
-   	}
-}
+		if (email_content != ''){
+			body_text = body_text + '\n\n' + email_content
+		}
+		def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
+		body = JsonOutput.toJson([
+						from : fromStr,
+						to : config['created_by'],
+						subject : body_subject,
+						text : body_text,
+						cc : cc_email,
+						html : body_html
+					])
 
+		try{
+			def sendMail = sh (script: "curl -X POST \
+					${g_base_url}/platform/email \
+					-k -v -H \"Authorization: $auth_token\" \
+					-H \"Content-Type: application/json\" \
+					-d \'${body}\'", returnStdout: true).trim()
+			def responseJSON = parseJson(sendMail)
+			if(responseJSON.data){
+				echo "successfully sent e-mail to ${config['created_by']}"
+			} else {
+				echo "exception occured while sending e-mail: $responseJSON"
+			}
+		} catch (e){
+		   echo "Failed while sending build status notification"
+		}
+	}
+}
 def updateServiceInDB(config,status) {
 
 	def updateJson = ''
@@ -673,7 +658,12 @@ def updateServiceInDB(config,status) {
 		echo "service update result: $serviceUpdateOutput"
 	}
 }
-
+def updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)	{
+	echo "loadServerlessConfig......."
+	def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
+	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name)
+	serviceConfigdata.loadServiceConfigurationData()
+}
 @NonCPS
 def parseJson(jsonString) {
     def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
