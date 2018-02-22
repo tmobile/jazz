@@ -27,12 +27,8 @@ describe('platform_events', function() {
 
     var dynamoCheck = function(dynamoMethod, sinonSpy){
         var serviceName;
-        var docClientMethods = ["get", "put"];
         //assign the correct aws service depending on the method to be used
-        if(docClientMethods.includes(dynamoMethod)){
-          serviceName = "DynamoDB.DocumentClient";
-        }
-        else if(dynamoMethod == "scan"){
+        if(dynamoMethod == "scan" || dynamoMethod == "getItem"){
           serviceName = "DynamoDB";
         }
         //mocking DocumentClient from DynamoDB and wrapping with predefined spy
@@ -51,8 +47,7 @@ describe('platform_events', function() {
             "stage" : "test",
             "query" : {
                 "service_name" : "jazz-service",
-                "username" : "xyz",
-                "last_eveluated_key" : "last-time"
+                "username" : "xyz"
             },
             "body": {
                 "service_context" : {},
@@ -60,9 +55,9 @@ describe('platform_events', function() {
                 "event_name" : "CREATE_SERVICE",
                 "service_name" : "jazz-service",
                 "event_status" : "COMPLETED",
-                "event_type" : "SERVICE_CREATION",
+                "event_type" : "test",
                 "username" : "xyz",
-                "event_timestamp" : ""
+                "event_timestamp" : "2018-01-23T10:28:10:136"
             }
         };
         callback = (err, responseObj) => {
@@ -78,35 +73,11 @@ describe('platform_events', function() {
             "errorType" : "svtfoe",
             "message" : "starco"
         };
-        // define an object to be returned by dynamo upon mocked success
-        dataObj = {
-            "Item" : {}
-        };
-        Object.assign(dataObj.Item);
-        dataObj.Item.username = "xyz";
-        dataObj.Item.FilterExpression = "Ba11";
+        
         //creating an object with the callback function in order to wrap and test callback parameters
         callbackObj = {
             "callback" : callback
         };
-    });
-
-    it("should indicate that method is missing when given an event with no event.method", ()=>{
-        errType = "BadRequest";
-        errMessage = "method cannot be empty";
-        var returnMessage;
-        var invalidArray = ["", null, undefined];
-        var bool = true;
-        //handler should indicate the above error information for method equaling any of the values in
-        //"invalidArray", otherwise have bool be false
-        for(i in invalidArray){
-          event.method = invalidArray[i];
-          returnMessage = index.handler(event, context, callback);
-          if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
-            bool = false;
-          }
-        };
-        assert.isTrue(bool);
     });
 
     it("should attempt to get item data from dynamoDB by query params if 'GET' method and query params are defined", ()=>{
@@ -148,7 +119,7 @@ describe('platform_events', function() {
         //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
         AWS.mock("DynamoDB", "scan", spy);
         //trigger spy by calling index.handler()
-        var callFunction = index.handler(event, context, callback);
+        var callFunction = index.handler(event, context, callbackObj.callback);
         //assigning the item filter values passed to DynamoDB.scan as values to check against
         var filterExp = spy.args[0][0].FilterExpression;
         var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
@@ -158,6 +129,70 @@ describe('platform_events', function() {
         AWS.restore("DynamoDB");
         assert.isTrue(allCases);
     });
+
+    it("should indicate Bad request if no query params", ()=>{
+        event.method = "GET";
+        logMessage = "error"
+        var invalidArray = ["",null, undefined];
+        errType = "BadRequest"
+        var errMessage = "Bad request.";
+        AWS.mock("DynamoDB", "scan", (params, cb)=>{
+            return cb(null, dataObj);
+        });
+        stub = sinon.stub(callbackObj, "callback", spy);
+        for(i in invalidArray){
+            event.query = invalidArray[i];
+            var callFunction = index.handler(event, context, callbackObj.callback);
+            var cbResponse = stub.args[0][0];
+            var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+        }
+        AWS.restore("DynamoDB");
+        stub.restore();
+        assert.isTrue(cbCheck);
+    });
+
+    it("should indicate Bad request if invalid query params are provided", ()=>{
+        event.method = "GET";
+        event.query = {
+            "invalid" : "test"
+        };
+        errType = "BadRequest"
+        var errMessage = "Bad request.";
+        AWS.mock("DynamoDB", "scan", (params, cb)=>{
+            return cb(null, dataObj);
+        });
+        stub = sinon.stub(callbackObj, "callback", spy);
+        var callFunction = index.handler(event, context, callbackObj.callback);
+        var cbResponse = stub.args[0][0];
+        var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+        AWS.restore("DynamoDB");
+        stub.restore();
+        assert.isTrue(cbCheck);
+    });
+
+    it("should indicate success if method GET and query params are defined", ()=>{
+        event.method = "GET";
+        logMessage = 'success';
+        var dataObj = {
+            "Items": [event.query]
+        }
+        //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+        AWS.mock("DynamoDB", "scan", (params, cb)=>{
+            // dataObj.LastEvaluatedKey = undefined;
+            return cb(null, dataObj);
+        });
+        logStub = sinon.stub(logger, "verbose", spy);
+        //trigger spy by calling index.handler()
+        var callFunction = index.handler(event, context, callbackObj.callback);
+        //assigning the item filter values passed to DynamoDB.scan as values to check against
+        var logResponse = logStub.args[0][0];
+        var logCheck = logResponse.includes(logMessage)
+        AWS.restore("DynamoDB");
+        logStub.restore();
+        assert.isTrue(logCheck);
+    });
+
+    //POST handler starts from here//
 
     it("should indicate that body is missing when an event with no event.body", ()=>{
         event.method = "POST";
@@ -308,74 +343,153 @@ describe('platform_events', function() {
        assert.isTrue(bool);
     });
 
-    // it("should indicate an InputValidationError occured if DynamoDB.scan fails during POST", ()=>{
-    //     event.method = "POST";
-    //     errType = "BadRequest";
-    //     errMessage = "error";
-    //     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-    //     AWS.mock("DynamoDB", "scan", (params, cb) => {
-    //       return cb(err);
-    //     });
-    //     //wrapping the logger and callback function to check for response messages
-    //     stub = sinon.stub(callbackObj,"callback",spy);
-    //     //trigger the mocked logic by calling handler()
-    //     var callFunction = index.handler(event, context, callbackObj.callback);
-    //     var cbResponse = stub.args[0][0];
-    //     var cbCheck = cbResponse.includes(errMessage) && cbResponse.includes(errType);
-    //     AWS.restore("DynamoDB");
-    //     stub.restore();
-    //     assert.isTrue(cbCheck);
-    // });
-
-    // it("should indicate an InternalServerError occured if DynamoDB.scan fails during POST", ()=>{
-    //     event.method = "POST";
-    //     event.body.service_context = {
-    //         "service_type": "api",
-    //         "repository": "",
-    //         "domain": "oss",
-    //         "runtime": "nodejs",
-    //         "admin_groups": "name=xyz&",
-    //         "is_public_endpoint": true
-    //     };
-    //     event.body.event_timestamp = "2018-01-23T10:28:10:136";
-    //     errType = "InternalServerError";
-    //     errMessage = "internal error occured";
-    //     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-    //     AWS.mock("DynamoDB", "scan", (params, cb) => {
-    //       return cb(err);
-    //     });
-    //     //wrapping the logger and callback function to check for response messages
-    //     stub = sinon.stub(callbackObj,"callback",spy);
-    //     //trigger the mocked logic by calling handler()
-    //     var callFunction = index.handler(event, context, callbackObj.callback);
-    //     var cbResponse = stub.args[0][0];
-    //     var cbCheck = cbResponse.includes(errMessage) && cbResponse.includes(errType);
-    //     AWS.restore("DynamoDB");
-    //     stub.restore();
-    //     assert.isTrue(cbCheck);
-    // });
-
-    it("should attempt to add service in dynamo for successful POST", function(){
-        //query has all required fields, cloning required fields to body
+    it("should indicate an InputValidationError occured if event.body.event_timestamp with invalid format", ()=>{
         event.method = "POST";
+        errType = "BadRequest";
+        errMessage = "error";
+        event.body.event_timestamp = "2018-01-23T10:28:10:136z";
         //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-        AWS.mock("DynamoDB", "scan", (params, cb) => {
-          dataObj.Items = [];
-          return cb(null, dataObj);
-        });
-        var attemptBool = dynamoCheck("scan", spy);
+        AWS.mock("DynamoDB", "getItem", spy);
+        //wrapping the logger and callback function to check for response messages
+        stub = sinon.stub(callbackObj,"callback",spy);
+        //trigger the mocked logic by calling handler()
+        var callFunction = index.handler(event, context, callbackObj.callback);
+        var cbResponse = stub.args[0][0];
+        var cbCheck = cbResponse.includes(errMessage) && cbResponse.includes(errType);
         AWS.restore("DynamoDB");
+        stub.restore();
+        assert.isTrue(cbCheck);
+    });
+
+    it("should indicate an InternalServerError occured if DynamoDB.getItem fails during POST", ()=>{
+        event.method = "POST";
+        errType = "InternalServerError";
+        errMessage = "An internal error occured";
+        //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+        AWS.mock("DynamoDB", "getItem", (params, cb) => {
+          return cb(err);
+        });
+        //wrapping the logger and callback function to check for response messages
+        stub = sinon.stub(callbackObj,"callback",spy);
+        //trigger the mocked logic by calling handler()
+        var callFunction = index.handler(event, context, callbackObj.callback);
+        var cbResponse = stub.args[0][0];
+        var cbCheck = cbResponse.includes(errMessage);
+        AWS.restore("DynamoDB");
+        stub.restore();
+        assert.isTrue(cbCheck);
+    });
+
+    it("should attempt to get item from DynamoDB by body prameters if POST method and body parameters are defined", function(){
+        event.method = "POST";
+        var attemptBool = dynamoCheck('getItem', spy);
         assert.isTrue(attemptBool);
-      });
-    
-    
+    });
 
-    // it('tests handler', function(done) {
+    it("should attempt to initiate kinesis putRecord if method POST and body parameters are defined",()=>{
+        event.method = "POST";
+        // mock kinesis putRecord with event.body parameters defined
+        AWS.mock('DynamoDB', 'getItem',spy);
+        AWS.mock("Kinesis","putRecord",spy);
+        var callFunction = index.handler(event, context, callback);
+        var bool = spy.called; 
+        AWS.restore('Kinesis');
+        AWS.restore('DynamoDB');
+        assert.isTrue(bool);
+    });
 
-    // 	index.handler({method:'GET'},{},function() {})
+    it("should indicate internalserver error  if document.getitems fail for method POST", ()=>{
+        event.method = "POST";
+        errType = 'InternalServerError';
+        errMessage = 'internal error occured';
+        logMessage = 'error';
+        AWS.mock('DynamoDB', 'getItem', (params, cb)=>{
+            return cb(err);
+        });
+        stub = sinon.stub(callbackObj, 'callback', spy);
+        logStub = sinon.stub(logger, 'error', spy);
+        var callFunction = index.handler(event, context, callbackObj.callback);
+        var logResponse = logStub.args[0][0];
+        var cbResponse = stub.args[0][0];
+        var logCheck = logResponse.includes(logMessage);
+        var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+        AWS.restore('DynamoDB');
+        logStub.restore();
+        assert.isTrue(cbCheck && logCheck);
+    });
 
-    //     //Test cases to be added here.
-    //     assert(true);
-    //     done();
-    // });
+    it("should indicate badrequest error  if document.getitems return with empty obj for method POST", ()=>{
+        event.method = "POST";
+        errType = 'BadRequest';
+        errMessage = 'Bad request.';
+        logMessage = 'Invalid ';
+        AWS.mock('DynamoDB', 'getItem', (params, cb)=>{
+            return cb(null, {});
+        });
+        stub = sinon.stub(callbackObj, 'callback', spy);
+        logStub = sinon.stub(logger, 'error', spy);
+        var callFunction = index.handler(event, context, callbackObj.callback);
+        var logResponse = logStub.args[0][0];
+        var cbResponse = stub.args[0][0];
+        var logCheck = logResponse.includes(logMessage);
+        var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+        AWS.restore('DynamoDB');
+        logStub.restore();
+        assert.isTrue(cbCheck && logCheck);
+    });
+
+
+    it("should indicate success if method POST and body params are defined", ()=>{
+        event.method = "POST";
+        logMessage = 'success';
+        var dataObj = {
+            "Item" : event.body
+        };
+        var kinesisObj = {
+            "event_id": "id"
+        }
+        AWS.mock('DynamoDB', 'getItem',(params, cb)=>{
+            return cb(null, dataObj);
+        });
+        AWS.mock('Kinesis', 'putRecord', (params, cb)=>{
+            return cb(null, kinesisObj);
+        });
+        logStub = sinon.stub(logger, 'verbose', spy);
+        var callFunction = index.handler(event, context, callbackObj.callback);
+        var logResponse = logStub.args[0][0];
+        var logCheck = logResponse.includes(logMessage);
+        AWS.restore('Kinesis');
+        AWS.restore('DynamoDB');
+        logStub.restore();
+        assert.isTrue(logCheck)
+    });
+
+    it("should indicate error while kinesis.putRecord fail for defined method POST and body params", ()=>{
+        event.method = "POST";
+        logMessage = 'kinesis error';
+        errMessage = "Error storing event."
+        var dataObj = {
+            "Item" : event.body
+        };
+       
+        AWS.mock('DynamoDB', 'getItem',(params, cb)=>{
+            return cb(null, dataObj);
+        });
+        AWS.mock('Kinesis', 'putRecord', (params, cb)=>{
+            return cb(err);
+        });
+        stub = sinon.stub(callbackObj, 'callback', spy);
+        logStub = sinon.stub(logger, 'error', spy);
+        var callFunction = index.handler(event, context, callbackObj.callback);
+        var logResponse = logStub.args[0][0];
+        var cbResponse = stub.args[0][0];
+        var logCheck = logResponse.includes(logMessage);
+        var cbCheck = cbResponse.includes(errMessage);
+        AWS.restore('Kinesis');
+        AWS.restore('DynamoDB');
+        stub.restore();
+        logStub.restore();
+        assert.isTrue(logCheck && cbCheck)
+    });
+
 });
