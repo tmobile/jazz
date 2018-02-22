@@ -59,9 +59,9 @@ node {
 	def bitbucket_name = ""
 	def domain = "platform"
 	def region = ""
-	def envmnt = 'prod'	
-    
-	
+	def envmnt = 'prod'
+
+
 	if(params.service_name){
 		service_template = params.service_name
 		service_name = params.service_name
@@ -89,7 +89,7 @@ node {
 			api_key = configLoader.AWS.API.DEV_ID
 		}
 	}
-	
+
 	stage ('Get Serverless Service')
 	{
 		try{
@@ -171,7 +171,7 @@ node {
 				sh "npm install --save"
 				echo "NPM Build completed"
 
-				writeServerlessFile(config)			
+				writeServerlessFile(config)
 
 				echo "Deploying lambda service"
 
@@ -190,6 +190,10 @@ node {
 					echo "Deploying API gateway Endpoints"
 					sh "aws apigateway put-rest-api --rest-api-id ${api_key} --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
 					sh "aws apigateway create-deployment --rest-api-id ${api_key} --stage-name "+envmnt+" --profile cloud-api"
+
+					//Tagging the API Stages - Soon to be replaced by build-pack-api Jenkins Job. Code is already added in place in that job.
+					//Tagging the stage created for api deployment in the above shell step
+					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_key}/stages/${envmnt} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}"
 
 				}
 
@@ -244,7 +248,7 @@ def writeServerlessFile(config){
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
-	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml" 	
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/" + config['providerRuntime'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/" + config['providerMemorySize'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/" + config['providerTimeout'] + "/g' serverless.yml"
@@ -252,14 +256,14 @@ def writeServerlessFile(config){
 	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/" + config['eventScheduleEnable'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/" + config['securityGroupIds'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/" + config['subnetIds'] + "/g' serverless.yml"
-	
+
 	if(config['artifact']){
 		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/" + config['artifact'] + "/g' serverless.yml"
 	}
 	if(config['mainClass']){
 		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/" + config['mainClass'] + "/g' serverless.yml"
 	}
-	
+
 }
 
 /**
@@ -416,24 +420,24 @@ def parseJson(jsonString) {
 }
 
 def loadServiceMetadata(service_id, region){
-	
+
 	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
 		credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-			
+
 		def table_name = "${configLoader.INSTANCE_PREFIX}_services_prod"
 		def service_Object = sh (
 				script: "aws --region $region dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
 				returnStdout: true
 			).trim()
-		
-		
+
+
 		if(service_Object){
 			def service_data = parseJson(service_Object)
 			def data = service_data.Item.SERVICE_METADATA.M
 			def metadata = [:]
-			
+
 			for(item in data){
-				metadata[item.key] = item.value.S				
+				metadata[item.key] = item.value.S
 			}
 			metadata['service'] = service_data.Item.SERVICE_NAME.S
 			metadata['domain'] = service_data.Item.SERVICE_DOMAIN.S
@@ -449,7 +453,7 @@ load scm module
 */
 def loadSCMModule(buildModuleUrl){
 
-	try {	
+	try {
 		dir('scm-loader') {
 			checkout([$class: 'GitSCM', branches: [
 				[name: '*/master']
@@ -468,8 +472,8 @@ def loadSCMModule(buildModuleUrl){
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
       // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git"
     }else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    } 
-} 
+    }
+}
