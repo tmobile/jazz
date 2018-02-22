@@ -41,7 +41,7 @@ module.exports.handler = (event, context, cb) => {
 	try {
 		//GET Handler
 		if (event !== undefined && event.method !== undefined && event.method === 'GET') {
-
+			logger.info("GET Handler")
 			async.series({
 				get_events: function (callback) {
 					var filter = "";
@@ -52,7 +52,6 @@ module.exports.handler = (event, context, cb) => {
 						"ReturnConsumedCapacity": "TOTAL",
 						"Limit": "500"
 					};
-					console.log(event.query);
 					if (event.query !== undefined && event.query !== null && Object.keys(event.query).length > 0) {
 						Object.keys(event.query).forEach(function (key) {
 							if (key === "last_evaluated_key") {
@@ -80,7 +79,6 @@ module.exports.handler = (event, context, cb) => {
 						scanparams.ExpressionAttributeValues = attributeValues;
 						dynamodb.scan(scanparams, function (err, items) {
 							if (err) {
-
 								logger.error("error in dynamodb scan");
 								logger.error(err);
 								callback(err);
@@ -103,7 +101,6 @@ module.exports.handler = (event, context, cb) => {
 					if (results.get_events !== undefined && results.get_events !== "" && results.get_events.Items !== undefined && results.get_events.Items !== "") {
 						results.get_events.Items.forEach(function (item) {
 							var event = {};
-
 							Object.keys(item).forEach(function (key) {
 								if (key === "SERVICE_CONTEXT" ){
 									event.service_context = item.SERVICE_CONTEXT.S;
@@ -133,13 +130,14 @@ module.exports.handler = (event, context, cb) => {
 							});
 							events.push(event);
 						});
-
 						if (results.get_events.LastEvaluatedKey !== undefined || results.get_events.LastEvaluatedKey !== "") {
+							logger.verbose('Get success')
 							cb(null, responseObj({
 									"events": events,
 									"last_evaluated_key": results.get_events.LastEvaluatedKey
 								}, event.query));
 						} else {
+							logger.verbose('Get success')
 							cb(null, responseObj({
 									"events": events
 								}, event.query));
@@ -154,6 +152,7 @@ module.exports.handler = (event, context, cb) => {
 
 		//POST Handler
 		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
+			logger.info("POST Handler")
 			if (event.body === undefined) {
 				return cb(JSON.stringify(errorHandler.throwInternalServerError("Service inputs not defined!")));
 			}
@@ -186,7 +185,6 @@ module.exports.handler = (event, context, cb) => {
 
 			async.auto({
 				validate_event_type: function (callback) {
-					logger.info(event.body.event_type);
 					var event_type_params = {
 						Key: {
 							"EVENT_TYPE": {
@@ -216,7 +214,6 @@ module.exports.handler = (event, context, cb) => {
 					});
 				},
 				validate_event_name: function (callback) {
-					logger.info(event.body.event_name);
 					var event_name_params = {
 						Key: {
 							"EVENT_NAME": {
@@ -246,7 +243,6 @@ module.exports.handler = (event, context, cb) => {
 					});
 				},
 				validate_event_handler: function (callback) {
-					logger.info(event.body.event_handler);
 					var event_handler_params = {
 						Key: {
 							"EVENT_HANDLER": {
@@ -276,7 +272,6 @@ module.exports.handler = (event, context, cb) => {
 					});
 				},
 				validate_event_status: function (callback) {
-					logger.info(event.body.event_status);
 					var event_status_params = {
 						Key: {
 							"EVENT_STATUS": {
@@ -323,7 +318,7 @@ module.exports.handler = (event, context, cb) => {
 					}
 				},
 				store_context: ['validate_event_type', 'validate_event_name', 'validate_event_handler', 'validate_event_status', 'validate_timestamp', function (results, callback) {
-						var timestamp = moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS');
+					var timestamp = moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS');
 						var event_params = {
 							Item: {
 								"EVENT_ID": {
@@ -389,7 +384,7 @@ module.exports.handler = (event, context, cb) => {
 						};
 						kinesis.putRecord(stream_params, function(err, data) {
 						  if (err) {
-
+							  logger.error('kinesis error');
 								callback({
 									"code": 500,
 									"message": "Error storing event. " + err.message
@@ -410,11 +405,13 @@ module.exports.handler = (event, context, cb) => {
 					if (err.code !== undefined && err.code === 500) {
 						cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + err.message)));
 					} else {
+						logger.error(err);
 						cb(JSON.stringify(errorHandler.throwInputValidationError("Bad request. message: " + err.message)));
 					}
 
 				} else {
-					logger.info(results.store_context);
+					
+					logger.verbose('POST success' + results.store_context)
 					cb(null, responseObj(results.store_context, event.body));
 				}
 
