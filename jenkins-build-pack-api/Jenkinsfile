@@ -63,11 +63,11 @@ node() {
 	loadSCMModule(jazzBuildModuleURL)
 
 	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
-	
+
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
 
     echo "Build triggered via branch: " + params.scm_branch
-    
+
     def serviceName = params.service_name
     def cfStackName = params.service_name
 	def branch = params.scm_branch
@@ -75,7 +75,7 @@ node() {
 	def repo_name = params.service_name
 
 	def config
-	
+
 	if (params.scm_branch == 'master') {
 		current_environment = 'prod'
 	}else {
@@ -105,13 +105,13 @@ node() {
 		{
 			return LoadConfiguration()
 		}
-		
-		if(configObj.service_id){	
+
+		if(configObj.service_id){
 			def url = "$g_base_url/platform/services/"+configObj.service_id
 			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
 			serviceMetadata.setUrl(url)
 			def serviceData = serviceMetadata.loadServiceMetaData()
-			if(serviceData && serviceData.data){	
+			if(serviceData && serviceData.data){
 				config = serviceData.data['metadata']
 			}else{
 				error "Error while fetching service metadata"
@@ -120,14 +120,14 @@ node() {
 			error "Service Id is not available."
 		}
 	}
-	
+
 	def domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
 
 	def internalAccess = config['require_internal_access']
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
-	
+
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
@@ -200,16 +200,17 @@ node() {
 
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain for PRODUCTION"
-					
+
 					writeServerlessFile(config)
-					
+
 					generateServerlessYml(service, current_environment, serviceName, cfStackName)
-					
+
 					setLambdaExecutionRole(configLoader.AWS.ROLEID);
 
 					echo "serverless deploy......."
 
 					sh "serverless deploy --stage prod -v --bucket " + configLoader.AWS.S3.PROD_BUCKET
+
 					createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION, logStreamer);
 
 					def svc_status = ''
@@ -226,6 +227,10 @@ node() {
 						echo "Deploying to staging API Gateway environment.."
 
 						sh "${aws_api_import} --region ${configLoader.AWS.REGION}  --update ${configLoader.AWS.API.PROD_ID} --deploy prod swagger/swagger.json "
+
+						//To be used once we remove the build-deploy-platform-services jenkinsjob
+						//Tagging the prod stage created for api deployment in the above shell step
+						//sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API.PROD_ID}/stages/prod --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}"
 
 						def endpointUrl = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod/" + domain + "/" + params.service_name
 
@@ -263,21 +268,22 @@ node() {
 				echo "Generate deployment env with domain"
 
 				writeServerlessFile(config)
-				
+
 				generateServerlessYml(service, current_environment, serviceName, cfStackName)
-				
+
 				setLambdaExecutionRole(configLoader.AWS.ROLEID);
 
 				echo "serverless deploy......."
 
 				sh "serverless deploy --stage dev -v --bucket " + configLoader.AWS.S3.DEV_BUCKET
+
 				createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION, logStreamer);
 
 				def svc_status = ''
 				if (fileExists('swagger/swagger.json')) {
 					// Generate swagger file based on environment
 					echo "Generating the swagger file for each environment"
-					
+
 					def apiHostName = "${configLoader.AWS.API.DEV_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" //Staging environment
 
 					generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, config)
@@ -286,6 +292,10 @@ node() {
 					echo "Deploying to staging API Gateway environment.."
 
 					sh "$aws_api_import --region ${configLoader.AWS.REGION} --update ${configLoader.AWS.API.DEV_ID} --deploy dev swagger/swagger.json"
+
+					//To be used once we remove the build-deploy-platform-services jenkinsjob  
+					//Tagging the dev stage created for api deployment in the above shell step
+					//sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API.DEV_ID}/stages/dev --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}"
 
 					def endpointUrl = "https://${configLoader.AWS.API.DEV_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/dev/" + domain + "/" + params.service_name
 					updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, endpointUrl)
@@ -333,7 +343,7 @@ def LoadConfiguration() {
 			cleanedList.add(i)
 		}
 	}
-	
+
 	def newItem = ["subnetIds", ""]
 	for (item in cleanedList) {
 
@@ -346,7 +356,7 @@ def LoadConfiguration() {
 		if(eachItemList[1]) {
 			value = eachItemList[1].trim();
 		}
-	
+
 		if(eachItemList[0].trim() == "securityGroupIds")
 		{
 			if(value.indexOf('"') == -1)
@@ -501,7 +511,7 @@ def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, servic
     sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
 
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
-	
+
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
@@ -523,7 +533,7 @@ def writeServerlessFile(config){
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
-	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml" 	
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/" + config['providerRuntime'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/" + config['providerMemorySize'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/" + config['providerTimeout'] + "/g' serverless.yml"
@@ -531,7 +541,7 @@ def writeServerlessFile(config){
 	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/" + config['eventScheduleEnable'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/" + config['securityGroupIds'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/" + config['subnetIds'] + "/g' serverless.yml"
-	
+
 	if(config['artifact']){
 		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/" + config['artifact'] + "/g' serverless.yml"
 	}
@@ -653,7 +663,7 @@ def loadServerlessConfig(String runtime, config) {
     } else if (runtime.indexOf("python") > -1) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
-	
+
 	echoServerlessFile()
 }
 
@@ -661,7 +671,7 @@ def loadServerlessConfig(String runtime, config) {
 	Pre-build validation of swagger api specifications
 **/
 def validateSwaggerSpec() {
-    
+
 }
 
 def validateSwaggerFile( service, domain, apiHostName ){
@@ -873,7 +883,7 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 
 			def tokenJson = jsonParse(token)
 			tokenJson_token = tokenJson.data.token
-			
+
 			return tokenJson_token
 		}
 		catch(e){
@@ -998,7 +1008,7 @@ def loadConfigModule(buildModuleUrl){
  *
  */
 def loadServiceMetadataModule(buildURL) {
-	try {						
+	try {
 		echo "loading serviceMetaData, checking repos"
 
 		dir('service-metadata') {
@@ -1007,16 +1017,16 @@ def loadServiceMetadataModule(buildURL) {
 			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
 				[credentialsId: repo_credential_id, url: buildURL]
 			]])
-			serviceMetadata = load "service-metadata-loader.groovy"			
+			serviceMetadata = load "service-metadata-loader.groovy"
 			serviceMetadata.setAuthToken(setCredentials())
 
 			// Load and set dependent utility module.
 			echo "loading util module"
 			Util = load "utility-loader.groovy"
 			serviceMetadata.setUtil(Util)
-			return serviceMetadata 
+			return serviceMetadata
 		}
-	
+
 	}catch(ex) {
 		error "loadServiceMetadataModule Failed. "+ex.getMessage()
 	}
@@ -1027,7 +1037,7 @@ load scm module
 */
 def loadSCMModule(buildModuleUrl){
 
-	try {	
+	try {
 		dir('scm-loader') {
 			checkout([$class: 'GitSCM', branches: [
 				[name: '*/master']
@@ -1046,10 +1056,10 @@ def loadSCMModule(buildModuleUrl){
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
       // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git"
     }else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    } 
+    }
 }
 
 @NonCPS
