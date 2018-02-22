@@ -62,7 +62,7 @@ node() {
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
 
     echo "Build triggered via branch: " + params.scm_branch
-    
+
     def serviceName = params.service_name
 	def branch = params.scm_branch
 	def repo_name = params.service_name
@@ -122,7 +122,7 @@ node() {
 	
 	def internalAccess = config['require_internal_access']
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
-	
+
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))  	
 
@@ -304,7 +304,7 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName,config) {
 	sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envmnt}/" + env + "/g' swagger/swagger.json" // {environment}
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
-	
+
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
@@ -319,7 +319,7 @@ def writeServerlessFile(config, current_environment){
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
-	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml" 	
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/" + config['providerRuntime'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/" + config['providerMemorySize'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/" + config['providerTimeout'] + "/g' serverless.yml"
@@ -327,7 +327,7 @@ def writeServerlessFile(config, current_environment){
 	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/" + config['eventScheduleEnable'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/" + config['securityGroupIds'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/" + config['subnetIds'] + "/g' serverless.yml"
-	
+
 	if(config['artifact']){
 		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/" + config['artifact'] + "/g' serverless.yml"
 	}
@@ -445,7 +445,7 @@ def loadServerlessConfig(runtime) {
     } else if (runtime.indexOf("python") > -1) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
-	
+
 	echoServerlessFile()
 }
 
@@ -453,7 +453,7 @@ def loadServerlessConfig(runtime) {
 	Pre-build validation of swagger api specifications
 **/
 def validateSwaggerSpec() {
-    
+
 }
 
 def validateSwaggerFile( service, domain, apiHostName ){
@@ -566,7 +566,7 @@ def updateServiceWithEndpointInfo(config,endpointKey, endpointVal) {
 
 			def tokenJson = parseJson(token)
 			tokenJson_token = tokenJson.data.token
-			
+
 			return tokenJson_token
 		}
 		catch(e){
