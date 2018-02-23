@@ -244,4 +244,46 @@ def setLogStreamPermission(config){
 		}
 	}	
 }
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
+}
+def loadServiceMetadata(service_id,configLoader){
+	
+	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+		credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			
+		def table_name = "${configLoader.INSTANCE_PREFIX}_services_prod"
+		def service_Object = sh (
+				script: "aws --region ${configLoader.AWS.REGION} dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
+				returnStdout: true
+			).trim()
+		
+		
+		if(service_Object){
+			def service_data = parseJson(service_Object)
+			def data = service_data.Item.SERVICE_METADATA.M
+			def metadata = [:]
+			
+			for(item in data){
+				metadata[item.key] = item.value.S				
+			}
+			metadata['service_id'] = service_data.Item.SERVICE_ID.S
+			metadata['service'] = service_data.Item.SERVICE_NAME.S
+			metadata['domain'] = service_data.Item.SERVICE_DOMAIN.S
+			metadata['owner'] = service_data.Item.SERVICE_CREATED_BY.S
+			metadata['created_by'] = service_data.Item.SERVICE_CREATED_BY.S
+			metadata['type'] = service_data.Item.SERVICE_TYPE.S
+			metadata['region'] = configLoader.AWS.REGION
+			if(service_data.Item.SERVICE_ENDPOINTS)			
+				metadata['endpoints'] = service_data.Item.SERVICE_ENDPOINTS.M
+			
+			
+			return metadata
+		}
+	}
+}
 return this
