@@ -230,7 +230,7 @@ node() {
 
 						//To be used once we remove the build-deploy-platform-services jenkinsjob
 						//Tagging the prod stage created for api deployment in the above shell step
-						//sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API.PROD_ID}/stages/prod --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}"
+						//sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API.PROD_ID}/stages/prod --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX} --profile cloud-api"
 
 						def endpointUrl = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod/" + domain + "/" + params.service_name
 
@@ -293,9 +293,9 @@ node() {
 
 					sh "$aws_api_import --region ${configLoader.AWS.REGION} --update ${configLoader.AWS.API.DEV_ID} --deploy dev swagger/swagger.json"
 
-					//To be used once we remove the build-deploy-platform-services jenkinsjob  
+					//To be used once we remove the build-deploy-platform-services jenkinsjob
 					//Tagging the dev stage created for api deployment in the above shell step
-					//sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API.DEV_ID}/stages/dev --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}"
+					//sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API.DEV_ID}/stages/dev --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX} --profile cloud-api"
 
 					def endpointUrl = "https://${configLoader.AWS.API.DEV_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/dev/" + domain + "/" + params.service_name
 					updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, endpointUrl)

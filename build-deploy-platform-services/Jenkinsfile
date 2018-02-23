@@ -193,7 +193,7 @@ node {
 
 					//Tagging the API Stages - Soon to be replaced by build-pack-api Jenkins Job. Code is already added in place in that job.
 					//Tagging the stage created for api deployment in the above shell step
-					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_key}/stages/${envmnt} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}"
+					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_key}/stages/${envmnt} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX} --profile cloud-api"
 
 				}
 
