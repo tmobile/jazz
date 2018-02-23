@@ -4,6 +4,7 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
+
 @Field def repo_credential_id
 @Field def repo_base
 @Field def repo_core
@@ -104,7 +105,6 @@ node ()  {
 			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: repocloneUrl]]])
 		}
 
-		sh 'cd ' + repo_name
 		def configObj = dir(repo_name){
 			LoadConfiguration()
 		}
@@ -131,12 +131,7 @@ node ()  {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 	
-					
-	if(domain && domain == "platform"){
-		stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
-	}else{			
-		stackName = "${configLoader.INSTANCE_PREFIX}-${config['service']}-${current_environment}"
-	}
+	stackName = "${configLoader.INSTANCE_PREFIX}-${config['service']}-${current_environment}"
 	
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
 		isEventSchdld = true
@@ -173,9 +168,7 @@ node ()  {
 		stage ('Build') {
 			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.STARTED, "")
 			try {
-				dir(repo_name){
-					buildLambda(runtime)
-				}
+				buildLambda(runtime)				
 			}catch(ex) {
 				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.FAILED, ex.getMessage())
 				error ex.getMessage()
@@ -191,7 +184,6 @@ node ()  {
 		}
 		stage("Deployment to ${env_key} environment") {	
 			sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			dir(repo_name){
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					try {
 						// initialize aws credentials
@@ -243,7 +235,6 @@ node ()  {
 					}					
 					sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}//end of withCredentials
-			}//end of dir
 		}//end of stage to production
 	}
 }
@@ -381,7 +372,7 @@ def validateDeploymentConfigurations(def prop) {
 		if(_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes =["nodejs4.3", "python2.7", "java8"]  //@TODO. Add more runtime supports. DSundar3
+			def validRuntimes =["nodejs4.3","nodejs6.10", "python2.7", "java8"]  //@TODO. Add more runtime supports. DSundar3
 			def flag = false
 			
 			for(int i = 0; i < validRuntimes.size(); i++) {
@@ -525,8 +516,7 @@ def createSubscriptionFilters(service, env, region,roleId) {
 
 def writeServerlessFile(config,current_environment){
 	sh "pwd"
-	sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: ${stackName}/g' serverless.yml"
-	sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: ${configLoader.INSTANCE_PREFIX}-${config['service']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['service']}/g' serverless.yml"
 	sh "sed -i -- 's/{env-stage}/" + current_environment + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
@@ -555,12 +545,7 @@ def writeServerlessFile(config,current_environment){
 def setLambdaExecutionRole(role) {
 	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#"+role+"#g' serverless.yml"
 }
-/**
-*   Clear Virtualenvironment
-**/
-//def clearVirtualEnv() {
-//		sh "rm -rf venv" // just delete the venv folder
-//}
+
 
 def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
 

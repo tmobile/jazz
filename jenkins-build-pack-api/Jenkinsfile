@@ -11,6 +11,7 @@ import groovy.transform.Field
 @Field def scm_type
 
 
+
 //definitions
 def Event_Name =[
 	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
@@ -94,12 +95,11 @@ node() {
 			auth_token = setCredentials()
 			repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
 		}
+		
 		dir(repo_name)
 		{
 			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
 		}
-
-		sh 'cd ' + repo_name
 
 		// @TODO: dir can be removed, needs to be refactored
 		def configObj = dir(repo_name)
@@ -126,14 +126,10 @@ node() {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))  	
 
-	sh 'cd ' + repo_name
 
 	dir(repo_name)
 	{
 		loadServerlessConfig(runtime)
-
-		// sh "cp serverless.yml serverless-prod.yml"
-		// sh "cp swagger/swagger.json swagger/swagger-prod.json"
 
 		if(domain && domain == "platform"){
 			stage ('Update Service Template'){
@@ -175,16 +171,12 @@ node() {
 			sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
 			echo "starts Deployment to ${env_key} Env"
 
-			// sh "cp serverless-prod.yml serverless.yml"
-			// sh "cp swagger/swagger-prod.json swagger/swagger.json"
-			sh "rm -rf .serverless"
-
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 				echo "AWS Configure ......."
 				sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
+				
 				// Generate serverless yml file with domain added in function name
 				echo "Generate deployment env with domain for ${env_key}"
 				
@@ -202,8 +194,7 @@ node() {
 
 					def api_key = env_key + "_ID"
 					def apiHostName = "${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" //Staging environment
-
-					generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, config)
+					generateSwaggerEnv(current_environment, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName,config)
 					echo "Deploying to staging API Gateway environment.."
 					sh "aws apigateway put-rest-api --rest-api-id ${configLoader.AWS.API[api_key]} --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
                     sh "aws apigateway create-deployment --rest-api-id ${configLoader.AWS.API[api_key]} --stage-name ${current_environment} --profile cloud-api"
@@ -212,9 +203,9 @@ node() {
 					if(domain != "platform"){
 						createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION,roleId);
 						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)
+						updateApiDocUrl(current_environment)
+						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${params.service_name}/${current_environment} --recursive "
 					}
-					updateApiDocUrl(current_environment)
-					sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${params.service_name}/${current_environment} --recursive "
 					echo "completed deployment........."					
 					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 					def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
@@ -301,12 +292,12 @@ def buildLambda(runtime) {
 /**
 	Generate the swagger file specific to each environment
 */
-def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName, config) {
-    sh "sed -i -- 's/{lambda_function_name}/" + serviceName + "-" + env + "/g' swagger/swagger.json"
+def generateSwaggerEnv(env, deploymentNode, apiHostName,config) {
+    sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['service']}-${env}/g' swagger/swagger.json"
     sh "sed -i -- 's/{api_deployment_node_title}/" + deploymentNode + "/g' swagger/swagger.json" // {api_deployment_node_title}
-    sh "sed -i -- 's/{service_name}/" + service + "/g' swagger/swagger.json" // {service_name}
+    sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
     sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
-    sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
+    sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envmnt}/" + env + "/g' swagger/swagger.json" // {environment}
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
@@ -379,7 +370,7 @@ def validateDeploymentConfigurations(def prop) {
             error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 
         } else {
-            def validRuntimes = ["nodejs4.3", "python2.7", "java8"] //@TODO. Add more runtime supports. DSundar3
+            def validRuntimes = ["nodejs4.3","nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports. DSundar3
             def flag = false
             for (int i = 0; i < validRuntimes.size(); i++) {
                 if (_runtime == validRuntimes[i]) {
