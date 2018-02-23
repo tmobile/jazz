@@ -73,7 +73,7 @@ node ()  {
 	def domain = params.domain
 
 	if(params.domain && params.domain.trim() != ""){
-		if(params.domain != "platform"){
+		if(params.domain != "platform" && configLoader.SCM.TYPE != "gitlab" ){
 			repo_name = params.domain.trim() + "-" + params.service_name.trim()			
 		}
 	}else{
@@ -95,7 +95,7 @@ node ()  {
 		def repocloneUrl
 		if(domain && domain == "platform"){
 			repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
-		}else{			
+		}else{					
 			auth_token = setCredentials()
 			repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
 		}

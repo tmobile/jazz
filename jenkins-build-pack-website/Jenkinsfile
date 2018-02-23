@@ -78,7 +78,9 @@ node ()  {
     stage('Checkout code base') {
 
 		if (domain && domain.trim()!="") {
-			repo_name = params.domain + "-" + service
+			if(configLoader.SCM.TYPE != "gitlab" ){
+				repo_name = params.domain + "-" + service
+			}
 		 }else{
 			domain = ""
 		}
@@ -136,14 +138,14 @@ node ()  {
 
 				echo "create_cloudfront_url====" + create_cloudfront_url
 
-				loadServiceInfo(params.service_name, domain, g_base_url + '/platform/services', environment)
+				loadServiceInfo(config['service'], domain, g_base_url + '/platform/services', environment)
 
-				send_status_email(created_by, 'STARTED', params.service_name, '')
+				send_status_email(created_by, 'STARTED', config['service'], '')
 
 				validateTemplate()
 				validateDeploymentConfigurations(config)
 			}catch(ex) {
-				send_status_email(created_by, 'FAILED', params.service_name, '')
+				send_status_email(created_by, 'FAILED', config['service'], '')
 				sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
 				error ex.getMessage()
 			}
@@ -197,22 +199,22 @@ node ()  {
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, url)
+							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
 						}
 					} else{
 						loadBucketPolicy(service, s3Bucket, false)
 						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, url)
+						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
 					}
 
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
+					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
 					sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
 					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', params.service_name, '')
+					send_status_email(created_by, 'FAILED', config['service'], '')
 					sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
 					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
 				}
@@ -236,21 +238,21 @@ node ()  {
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
+							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
 						}
 					}else{
 						loadBucketPolicy(service, s3Bucket, false)
 						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, url)
+						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
+					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
 					sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
 					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', params.service_name, '')
+					send_status_email(created_by, 'FAILED', config['service'], '')
 					sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
 					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, "")
 				}
@@ -298,21 +300,21 @@ node ()  {
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(params.service_name, domain, "${g_base_url}/platform/services", environment, url)
+							updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/platform/services", environment, url)
 						}
 					} else{
 						loadBucketPolicy(service, s3Bucket, false)
 						url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, "${g_base_url}/platform/services", environment, url)
+						updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/platform/services", environment, url)
 					}
 					def svc_status = "You can access your website using following link: ${url}"
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
+					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', params.service_name, '')
+					send_status_email(created_by, 'FAILED', config['service'], '')
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
 				}
@@ -333,21 +335,21 @@ node ()  {
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
+							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
 						}
 					}else{
 						loadBucketPolicy(service, s3Bucket,false)
 						url = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', environment, url)
+						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
+					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', params.service_name, '')
+					send_status_email(created_by, 'FAILED', config['service'], '')
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, "")
 				}
