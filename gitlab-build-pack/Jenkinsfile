@@ -12,6 +12,8 @@ import groovy.json.JsonSlurper
 @Field def repo_core
 @Field def scm_type
 
+
+
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
@@ -29,9 +31,11 @@ node  {
 
     try{
         sh 'rm -rf $gitlab_repo_name*'
+		def repocloneUrl = getRepoCloneUrl()
+		echo "repocloneUrl : $repocloneUrl"
     	dir(gitlab_repo_name){
-    		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getRepoUrl(gitlab_repo_name)]]])
-    	    config = getServiceConfiguration(jazzBuildModuleURL)    	   
+    		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: repocloneUrl]]])
+    	    config = getServiceConfiguration()    	   
     	}
     	sh 'rm -rf $gitlab_repo_name*'
     }
@@ -51,7 +55,7 @@ node  {
     def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
     if ( config['type']  != '' && config['service']  != '' && config['domain']  != '') {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: configLoader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){        
-			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"   \"${job_url}&service_name=${config['service']}&domain=${config['domain']}&scm_branch=${env.gitlabBranch}\""
+			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"   \"${job_url}&service_name=${gitlab_repo_name}&domain=${config['domain']}&scm_branch=${env.gitlabBranch}\""
 		}
 	}else  {
         error "Error: service type or service name or namespace is empty"
@@ -62,9 +66,10 @@ node  {
 	Reads deployment-env.yml.
     Returns Property Map
 */
-def getServiceConfiguration(jazzBuildModuleURL) {
+def getServiceConfiguration() {
     def prop = [:]
     if (fileExists('deployment-env.yml')){
+		echo "Reading from deployment.yml file "
         def result = readFile('deployment-env.yml').trim()
 
         def resultList = result.tokenize("\n")
@@ -94,11 +99,12 @@ def getServiceConfiguration(jazzBuildModuleURL) {
 
         if(prop.service_id){			
 			def serviceData = serviceConfigdata.loadServiceMetadata(prop.service_id,configLoader)
+			return serviceData
 		}else{
 			error "Service Id is not available."
 		}
     }
-    error "Unable to find deployment-env file"
+    
 }
 
 /*
@@ -133,5 +139,11 @@ def getBuildModuleUrl() {
     }else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     } 
+}
+
+def getRepoCloneUrl(){
+	def srcUrl = env.gitlabSourceRepoURL.tokenize(':')
+	return "http://${repo_base}/${srcUrl[1]}"
+	
 } 
 

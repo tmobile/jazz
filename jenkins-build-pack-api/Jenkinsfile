@@ -78,7 +78,7 @@ node() {
 	
     stage('Checkout code base') {
 		if (params.domain  && params.domain.trim() != "" ) {			
-			if(domain != "platform"){
+			if(domain != "platform" && configLoader.SCM.TYPE != "gitlab"){
 				repo_name = params.domain + "-" + params.service_name				
 			}
 		 }else{
@@ -199,12 +199,12 @@ node() {
 					sh "aws apigateway put-rest-api --rest-api-id ${configLoader.AWS.API[api_key]} --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
                     sh "aws apigateway create-deployment --rest-api-id ${configLoader.AWS.API[api_key]} --stage-name ${current_environment} --profile cloud-api"
 					
-					def endpointUrl = "https://${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/${current_environment}/" + domain + "/" + params.service_name
+					def endpointUrl = "https://${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/${current_environment}/" + domain + "/" + config['service']
 					if(domain != "platform"){
 						createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION,roleId);
 						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)
 						updateApiDocUrl(current_environment)
-						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${params.service_name}/${current_environment} --recursive "
+						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
 					}
 					echo "completed deployment........."					
 					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
