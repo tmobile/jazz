@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-// 
+// Copyright ? 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -15,11 +15,11 @@
 // =========================================================================
 
 /**
-	Nodejs Template Project
+  Nodejs Template Project
   @module: config.js
   @description: Defines variables/functions to retrieve environment related data
-	@author:
-	@version: 1.0
+  @author:
+  @version: 1.0
 **/
 
 var getStageConfig = (event) => {
@@ -28,11 +28,13 @@ var getStageConfig = (event) => {
     // Loads the config files based on the env.
     // Please edit the JSON files.
     if (stage === 'dev') {
-        configObj = require('./dev-config.json');
+        configObj = require('../config/dev-config.json');
     } else if (stage === 'stg') {
-        configObj = require('./stg-config.json');
-    } else {
-        configObj = require('./prod-config.json');
+        configObj = require('../config/stg-config.json');
+    } else if (stage === 'prod'){
+        configObj = require('../config/prod-config.json');
+    }else {
+        configObj = require('../config/' + stage + '-config.json')
     }
     return configObj;
 };

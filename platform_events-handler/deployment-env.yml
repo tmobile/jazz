@@ -1,0 +1,12 @@
+service : get-events-handler
+domain : jazz
+owner: Smalire
+securityGroupIds: sg-5a1e9023
+subnetIds: subnet-5b15363e, subnet-6f135218, subnet-71a63e28
+providerRuntime : nodejs4.3
+providerMemorySize : 256
+providerTimeout : 160
+region: us-west-2
+# Put your custom role here which has the IAM permissions required by your code
+iamRoleARN: arn:aws:iam::302890901340:role/jazz_platform_services
+require_internal_access: false
