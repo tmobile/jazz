@@ -18,37 +18,106 @@ module.exports.handler = (event, context, cb) => {
 	var failedEvents = [];
 	var serviceCreationEvents = scEvents();
 	var failureCodes = fcodes();
-	var authToken;
+	var failureQueue = configData.FAILURE_QUEUE;
 
-	async.series({
-		
-			getToken: function (mainCallback) {
-				try{				
-					var svcPayload = {
-					uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
-					method: 'POST',
-					json: {
-						"username": configData.SERVICE_USER,
-						"password": configData.TOKEN_CREDS
-					},
-					rejectUnauthorized: false
-				};
+	async.each(event.Records, function (record, callback) {
 
-				request(svcPayload, function (error, response, body) {
-					if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
-						authToken = body.data.token;
-						mainCallback(null, {
-							"auth_token": authToken
+		/*
+		 ************************************************
+		SAMPLE KINESIS RECORD
+		 ************************************************{
+		kinesis: {
+		kinesisSchemaVersion: '1.0',
+		partitionKey: 'VALIDATE_INPUT',
+		sequenceNumber: '49574219880753003597816065353678073460941546253285588994',
+		data: 'eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMifSwiVElNRVNUQU1QIjp7IlMiOiIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiJ9LCJTRVJWSUNFX0NPTlRFWFQiOnsiUyI6IntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSJ9LCJFVkVOVF9IQU5ETEVSIjp7IlMiOiJKRU5LSU5TIn0sIkVWRU5UX05BTUUiOnsiUyI6IlZBTElEQVRFX0lOUFVUIn0sIlNFUlZJQ0VfTkFNRSI6eyJTIjoidGVzdDgifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJDT01QTEVURUQifSwiRVZFTlRfVFlQRSI6eyJTIjoiU0VSVklDRV9DUkVBVElPTiJ9LCJVU0VSTkFNRSI6eyJTIjoic3ZjX2NwdF9qbmtfYXV0aF9wcmQifSwiRVZFTlRfVElNRVNUQU1QIjp7IlMiOiIyMDE3LTA1LTA1VDA2OjA2OjM3OjUzMyJ9LCJBQUEiOnsiTlVMTCI6dHJ1ZX0sIkJCQiI6eyJTIjoidmFsIn19LCJSZXR1cm5Db25zdW1lZENhcGFjaXR5IjoiVE9UQUwiLCJUYWJsZU5hbWUiOiJFdmVudHNfRGV2In0=',
+		approximateArrivalTimestamp: 1498499666.218
+		},
+		eventSource: 'aws:kinesis',
+		eventVersion: '1.0',
+		eventID: 'shardId-000000000000:49574219880753003597816065353678073460941546253285588994',
+		eventName: 'aws:kinesis:record',
+		invokeIdentityArn: 'arn:aws:iam::xxx:role/lambda_basic_execution',
+		awsRegion: 'us-west-2',
+		eventSourceARN: 'arn:aws:kinesis:us-west-2:xxx:stream/serverless-events-hub-dev'
+		}
+		 ************************************************
+
+		 ************************************************
+		SAMPLE DECODED DATA (FROM KINESIS RECORD)
+		 ************************************************{
+		"Item": {
+		"EVENT_ID": {
+		"S": "e825ef7b-c8b7-8a84-d3f0-d73bd7a8d566"
+		},
+		"TIMESTAMP": {
+		"S": "2017-06-26T19:54:30:013"
+		},
+		"SERVICE_CONTEXT": {
+		"S": "{\"service_type\":\"api\",\"runtime\":\"nodejs\",\"admin_group\":\"name=d&name=b&name=a&name=b&name=u&\"}"
+		},
+		"EVENT_HANDLER": {
+		"S": "JENKINS"
+		},
+		"EVENT_NAME": {
+		"S": "VALIDATE_INPUT"
+		},
+		"SERVICE_NAME": {
+		"S": "test8"
+		},
+		"EVENT_STATUS": {
+		"S": "COMPLETED"
+		},
+		"EVENT_TYPE": {
+		"S": "SERVICE_CREATION"
+		},
+		"USERNAME": {
+		"S": "svc_cpt_jnk_auth_prd"
+		},
+		"EVENT_TIMESTAMP": {
+		"S": "2017-05-05T06:06:37:533"
+		},
+		"AAA": {
+		"NULL": true
+		},
+		"BBB": {
+		"S": "val"
+		}
+		}
+		}
+		 ************************************************
+		 */
+
+		var sequenceNumber = record.kinesis.sequenceNumber;
+		var encodedPayload = record.kinesis.data;
+
+		async.auto({
+			checkInterest: function (innerCallback) {
+				//check if event-name is in the service-creation-events list
+				if (Object.keys(serviceCreationEvents).indexOf(record.kinesis.partitionKey) !== -1) {
+
+					var payload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
+					//check if event-type is Service Creation
+					if (payload.Item.EVENT_TYPE && payload.Item.EVENT_TYPE.S && payload.Item.EVENT_TYPE.S === "SERVICE_CREATION") {
+						// logger.info("found SERVICE_CREATION event with sequence number: " + sequenceNumber);
+						innerCallback(null, {
+							"interested_event": true,
+							"payload": payload
 						});
 					} else {
-						mainCallback({
-							"error": "Could not get authentication token for updating Service catalog.",
-							"details": response.body.message
+						logger.error('not interesting event');
+						//This is not an interesting event
+						innerCallback(null, {
+							"interested_event": false
 						});
 					}
-				});
-				}catch(e){
-					mainCallback(e);
+				} else {
+					logger.error('partitionKey not available');
+					//This is not an interesting event
+					innerCallback(null, {
+						"interested_event": false
+					});
+
 				}
 			},
 			processBatch: function (mainCallback) {
@@ -87,168 +156,151 @@ module.exports.handler = (event, context, cb) => {
 							innerCallback(e);
 						}
 
-					},
-
-					processRecord: ['checkInterest', function (results, innerCallback) {
-							try{						
-							
-							
-							if (results.checkInterest.interested_event) {
-								var payload = results.checkInterest.payload.Item;
-								/*
-								1. if event-name = CALL_ONBOARDING_WORKFLOW and event-status = Completed Call services with status STARTED
-								2. if event-name = ONBOARDING_COMPLETED and event-status = Completed Call services to get service id and then call put on services for updating status as COMPLETED
-								3. if event-status = Failed for any event Call services to get service id and then call put on services for updating status as FAILED
-								 */
-
-								var svcContext = JSON.parse(payload.SERVICE_CONTEXT.S);
-								logger.info(svcContext);
-								var domain;
-								var description;
-								var runtime;
-								var region;
-								var repository;
-								var email;
-								var slackChannel;
-								var tags;
-								var type;
-								var endpoint;
-								var metadata;
-								if (svcContext.domain !== undefined) {
-									domain = svcContext.domain;
-								} else {
-									domain = null;
+						if (!payload.EVENT_NAME.S || payload.EVENT_NAME.S === "" || !payload.EVENT_STATUS.S || payload.EVENT_STATUS.S === "") {
+							logger.info('Invalid EVENT_NAME.S or EVENT_STATUS');
+							failedEvents.push({
+								Id: sequenceNumber,
+								DelaySeconds: 0,
+								MessageBody: "Validation error while processing event for service " + domain + "." + payload.SERVICE_NAME.S + ".",
+								MessageAttributes: {
+									"sequence_id": {
+										DataType: "String",
+										StringValue: sequenceNumber.toString()
+									},
+									"event": {
+										DataType: "String",
+										StringValue: JSON.stringify(payload)
+									},
+									"failure_code": {
+										DataType: "String",
+										StringValue: failureCodes.PR_ERROR_1.code
+									},
+									"failure_message": {
+										DataType: "String",
+										StringValue: "validation error. Either event name or event status is not properly defined."
+									}
 								}
-								if (svcContext.description !== undefined) {
-									description = svcContext.description;
-								} 
-								if (svcContext.runtime !== undefined) {
-									runtime = svcContext.runtime;
-								} 
-								if (svcContext.region !== undefined) {
-									region = svcContext.region;
-								} 
-								if (svcContext.repository !== undefined) {
-									repository = svcContext.repository;
-								} 
-								if (svcContext.email !== undefined) {
-									email = svcContext.email;
-								} 
-								if (svcContext.slack_channel !== undefined) {
-									slackChannel = svcContext.slack_channel;
-								} 
-								if (svcContext.tags !== undefined) {
-									tags = svcContext.tags;
-								} 
-								if (svcContext.service_type !== undefined) {
-									type = svcContext.service_type;
-								}
-								if (svcContext.metadata !== undefined) {
-									metadata = svcContext.metadata;
-								}
-								if (svcContext.endpoint !== undefined) {
-									endpoint = svcContext.endpoint;
-								}								
+							});
+							logger.error("validation error. Either event name or event status is not properly defined.");
+							return innerCallback({
+								"error": "validation error. Either event name or event status is not properly defined."
+							});
+						}
+						if (payload.EVENT_NAME.S === startingEvent) {
+							logger.info('EVENT_NAME ' + startingEvent);
+							if (payload.EVENT_STATUS.S === "COMPLETED") {
 
-								if (!payload.EVENT_NAME.S || payload.EVENT_NAME.S === "" || !payload.EVENT_STATUS.S || payload.EVENT_STATUS.S === "") {
-									logger.error("validation error. Either event name or event status is not properly defined.");
-									return innerCallback({
-										"error": "validation error. Either event name or event status is not properly defined."
-									});
-								}
+                              var req =  {
+										"service": payload.SERVICE_NAME.S,
+										"domain": domain,
+										"description": description,
+										"type": type,
+										"runtime": runtime,
+										"region": region,
+										"repository": repository,
+										"created_by": payload.USERNAME.S,
+										"email": email,
+										"slack_channel": slackChannel,
+										"tags": tags,
+										"status": "STARTED"
+									};
 
-								var inputs = {};
+								// call services post with status started
+								var svcPayload = {
+									uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE,
+                                    url: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE,
+									method: 'POST',
+									json: req,
+									rejectUnauthorized: false
+								};
 
-								if (payload.EVENT_TYPE.S === "SERVICE_CREATION") {
 
-									if (payload.EVENT_NAME.S === configData.SERVICE_CREATION_EVENT_START) {
-										if (payload.EVENT_STATUS.S === "COMPLETED") {
-											//create service in catalog with status creation_started
-											inputs = {
-												"TOKEN": authToken,
-												"SERVICE_API_URL": configData.SERVICE_API_URL,
-												"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-												"SERVICE_NAME": payload.SERVICE_NAME.S,
-												"DOMAIN": domain,
-												"DESCRIPTION": description,
-												"TYPE": type,
-												"RUNTIME": runtime,
-												"REGION": region,
-												"REPOSITORY": repository,
-												"USERNAME": payload.USERNAME.S,
-												"EMAIL": email,
-												"SLACKCHANNEL": slackChannel,
-												"TAGS": tags,
-												"ENDPOINTS": endpoint,
-												"STATUS": "creation_started",
-												"METADATA":metadata
-											};
 
-											crud.create(inputs, function (err, results) {
-												if (err) {
-													logger.error(err.details);
-													return innerCallback({
-														"error": err.error
-													});
-												} else {
-													logger.info("created a new service in service catalog.");
-													return innerCallback(null, {
-														"message": "created a new service in service catalog."
-													});
+								request(svcPayload, function (error, response, body) {
+
+									if (response.statusCode === 200) {
+										if (body.data === null || body.data === "") {
+											failedEvents.push({
+												Id: sequenceNumber,
+												DelaySeconds: 0,
+												MessageBody: "Unknown error while creating a new service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
+												MessageAttributes: {
+													"sequence_id": {
+														DataType: "String",
+														StringValue: sequenceNumber.toString()
+													},
+													"event": {
+														DataType: "String",
+														StringValue: JSON.stringify(payload)
+													},
+													"failure_code": {
+														DataType: "String",
+														StringValue: failureCodes.PR_ERROR_2.code
+													},
+													"failure_message": {
+														DataType: "String",
+														StringValue: failureCodes.PR_ERROR_2.message
+													}
 												}
 											});
 
+										} else {
+											processedEvents.push({
+												"sequence_id": sequenceNumber,
+												"event": payload,
+												"failure_code": null,
+												"failure_message": null
+											});
+											logger.info("created a new service in service catalog.");
+											logger.verbose("created a new service in service catalog.");
+											return innerCallback(null, {
+												"message": "created a new service in service catalog."
+											});
 										}
 									} else {
 
-										if (payload.EVENT_NAME.S === configData.SERVICE_CREATION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
-											//update service in catalog with creation_completed
+							}
+							/*for "CALL_ONBOARDING_WORKFLOW" event all other statuses including failed can be ignored
+							because service catalog item create will only happen
+							when CALL_ONBOARDING_WORKFLOW successfully completes */
+						} else {
+							var svcGetPayload;
+							if (payload.EVENT_NAME.S === endingEvent && payload.EVENT_STATUS.S === "COMPLETED") {
+								//call services put with status completed
+								logger.info('EVENT_NAME '+  endingEvent+'with COMPLETED status ');
+								svcGetPayload = {
+									uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
+									url: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
+									method: 'GET',
+									rejectUnauthorized: false
+								};
 
-											inputs = {
-												"TOKEN": authToken,
-												"SERVICE_API_URL": configData.SERVICE_API_URL,
-												"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-												"DOMAIN": domain,
-												"SERVICE_NAME": payload.SERVICE_NAME.S
-											};
-											crud.get(inputs, function (err, results) {
-												if (err) {
-													logger.error(err.details);
-													return innerCallback({
-														"error": err.error
-													});
-												} else {
+								request(svcGetPayload, function (error, response, body) {
 
-													var service_status = "creation_completed";
-
-													logger.info("description: " + description);
-													inputs = {
-														"TOKEN": authToken,
-														"SERVICE_API_URL": configData.SERVICE_API_URL,
-														"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-														"ID": results.id,
-														"DESCRIPTION": description,
-														"REPOSITORY": repository,
-														"EMAIL": email,
-														"SLACKCHANNEL": slackChannel,
-														"TAGS": tags,
-														"ENDPOINTS": endpoint,
-														"STATUS": service_status
-													};
-
-													crud.update(inputs, function (err, results) {
-														if (err) {
-															logger.error(err.details);
-															return innerCallback({
-																"error": "unknown error updating service " + payload.SERVICE_NAME.S + " in service catalog."
-															});
-														} else {
-															logger.info("updated service "  + payload.SERVICE_NAME.S + " in service catalog.");
-															return innerCallback(null, {
-																"message": "updated service "  + payload.SERVICE_NAME.S + " in service catalog."
-															});
-														}
-													});
+									if (response.statusCode === 200) {
+										var output = JSON.parse(body);
+										if (output.data === null || output.data === "" || output.data === undefined || output.data.length === undefined || output.data.length === 0 ) {
+											failedEvents.push({
+												Id: sequenceNumber,
+												DelaySeconds: 0,
+												MessageBody: "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog",
+												MessageAttributes: {
+													"sequence_id": {
+														DataType: "String",
+														StringValue: sequenceNumber.toString()
+													},
+													"event": {
+														DataType: "String",
+														StringValue: JSON.stringify(payload)
+													},
+													"failure_code": {
+														DataType: "String",
+														StringValue: failureCodes.PR_ERROR_4.code
+													},
+													"failure_message": {
+														DataType: "String",
+														StringValue: "service " + domain + "." + payload.SERVICE_NAME.S + " not available in service catalog"
+													}
 												}
 											});
 
@@ -257,17 +309,19 @@ module.exports.handler = (event, context, cb) => {
 										if (payload.EVENT_STATUS.S === "FAILED") {
 											//update service in catalog with creation_failed
 
-											inputs = {
-												"TOKEN": authToken,
-												"SERVICE_API_URL": configData.SERVICE_API_URL,
-												"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-												"DOMAIN": domain,
-												"SERVICE_NAME": payload.SERVICE_NAME.S
-											};
-
-											crud.get(inputs, function (err, results) {
-												console.log(err);
-												console.log(results);
+													} else {
+														processedEvents.push({
+															"sequence_id": sequenceNumber,
+															"event": payload,
+															"failure_code": null,
+															"failure_message": null
+														});
+														logger.verbose("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
+														logger.info("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
+														return innerCallback(null, {
+															"message": "updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
+														});
+													}
 
 												if (err) {
 													logger.error(err.details);
@@ -308,48 +362,112 @@ module.exports.handler = (event, context, cb) => {
 										}
 
 									}
+								});
 
-								} else if (payload.EVENT_TYPE.S === "SERVICE_DELETION") {
+							}
+							if (payload.EVENT_STATUS.S === "FAILED") {
+								logger.info('FAILED EVENT_STATUS');
+								//call services put with status failed
+								svcGetPayload = {
+									uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
+									url: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
+									method: 'GET',
+									rejectUnauthorized: false
+								};
+								request(svcGetPayload, function (error, response, body) {
 
-									if (payload.EVENT_NAME.S === configData.SERVICE_DELETION_EVENT_START && payload.EVENT_STATUS.S === "STARTED") {
-										//delete service in catalog with status deletion_started
-										inputs = {
-											"TOKEN": authToken,
-											"SERVICE_API_URL": configData.SERVICE_API_URL,
-											"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-											"DOMAIN": domain,
-											"SERVICE_NAME": payload.SERVICE_NAME.S
-										};
-										crud.get(inputs, function (err, results) {
-											if (err) {
-												logger.error(err.details);
-												return innerCallback({
-													"error": err.error
-												});
-											} else {
 
-												inputs = {
-													"TOKEN": authToken,
-													"SERVICE_API_URL": configData.SERVICE_API_URL,
-													"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-													"ID": results.id,
-													"DESCRIPTION": description,
-													"REPOSITORY": repository,
-													"EMAIL": email,
-													"SLACKCHANNEL": slackChannel,
-													"TAGS": tags,
-													"ENDPOINTS": endpoint,
-													"STATUS": "deletion_started"
-												};
-
-												crud.update(inputs, function (err, results) {
-													if (err) {
-														logger.error(err.details);
+									if (response.statusCode === 200) {
+										var output = JSON.parse(body);
+										if (output.data === null || output.data === "" || output.data === undefined || output.data.length === undefined || output.data.length === 0) {
+											failedEvents.push({
+												Id: sequenceNumber,
+												DelaySeconds: 0,
+												MessageBody: "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog",
+												MessageAttributes: {
+													"sequence_id": {
+														DataType: "String",
+														StringValue: sequenceNumber.toString()
+													},
+													"event": {
+														DataType: "String",
+														StringValue: JSON.stringify(payload)
+													},
+													"failure_code": {
+														DataType: "String",
+														StringValue: failureCodes.PR_ERROR_4.code
+													},
+													"failure_message": {
+														DataType: "String",
+														StringValue: "service " + domain + "." + payload.SERVICE_NAME.S + " not available in service catalog"
+													}
+												}
+											});
+											logger.error("error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog");
+											return innerCallback({
+												"error": "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog"
+											});
+										} else {
+											//call put
+											var svcPayload = {
+												uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "/" + output.data[0].id,
+												url: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "/" + output.data[0].id,
+												method: 'PUT',
+												json: {
+													"service": payload.SERVICE_NAME.S,
+													"domain": domain,
+													"description": description,
+													"type": type,
+													"runtime": runtime,
+													"region": region,
+													"repository": repository,
+													"created_by": payload.USERNAME.S,
+													"email": email,
+													"slack_channel": slackChannel,
+													"tags": tags,
+													"status": "FAILED"
+												},
+												rejectUnauthorized: false
+											};
+											request(svcPayload, function (error, response, body) {
+												if (response.statusCode === 200) {
+													if (body.data === null || body.data === "") {
+														failedEvents.push({
+															Id: sequenceNumber,
+															DelaySeconds: 0,
+															MessageBody: "Processing error while updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
+															MessageAttributes: {
+																"sequence_id": {
+																	DataType: "String",
+																	StringValue: sequenceNumber.toString()
+																},
+																"event": {
+																	DataType: "String",
+																	StringValue: JSON.stringify(payload)
+																},
+																"failure_code": {
+																	DataType: "String",
+																	StringValue: failureCodes.PR_ERROR_2.code
+																},
+																"failure_message": {
+																	DataType: "String",
+																	StringValue: "unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
+																}
+															}
+														});
+														logger.error("unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback({
 															"error": "unknown error updating service " + payload.SERVICE_NAME.S + " in service catalog."
 														});
 													} else {
-														logger.info("updated service "  + payload.SERVICE_NAME.S + " in service catalog.");
+														processedEvents.push({
+															"sequence_id": sequenceNumber,
+															"event": payload,
+															"failure_code": null,
+															"failure_message": null
+														});
+														logger.verbose("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
+														logger.info("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback(null, {
 															"message": "updated service "  + payload.SERVICE_NAME.S + " in service catalog."
 														});
@@ -412,13 +530,15 @@ module.exports.handler = (event, context, cb) => {
 										if (payload.EVENT_STATUS.S === "FAILED") {
 											//update service in catalog with creation_failed
 
-											inputs = {
-												"TOKEN": authToken,
-												"SERVICE_API_URL": configData.SERVICE_API_URL,
-												"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-												"DOMAIN": domain,
-												"SERVICE_NAME": payload.SERVICE_NAME.S
-											};
+					} else {
+						logger.error('push un-interesting event to processed queue');
+						//push un-interesting event to processed queue
+						processedEvents.push({
+							"sequence_id": sequenceNumber,
+							"failure_code": null,
+							"failure_message": null
+						});
+					}
 
 											crud.get(inputs, function (err, results) {
 												if (err) {
@@ -459,57 +579,24 @@ module.exports.handler = (event, context, cb) => {
 
 										}
 
-									}
+	}, function (err) {
+		async.series(
+			[
+				function (callback) {
+					var sqs = new AWS.SQS({
+							apiVersion: '2012-11-05'
+						});
+					var sqsparams = {
+						Entries: failedEvents,
+						QueueUrl: failureQueue
+					};
 
-								}
-								else if (payload.EVENT_TYPE.S === "SERVICE_DEPLOYMENT") {
-
-									if (payload.EVENT_NAME.S === configData.SERVICE_DEPLOYMENT_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
-										//delete service in catalog with status deletion_started
-										inputs = {
-											"TOKEN": authToken,
-											"SERVICE_API_URL": configData.SERVICE_API_URL,
-											"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-											"DOMAIN": domain,
-											"SERVICE_NAME": payload.SERVICE_NAME.S
-										};
-										crud.get(inputs, function (err, results) {
-											if (err) {
-												logger.error(err.details);
-												return innerCallback({
-													"error": err.error
-												});
-											} else {
-
-												inputs = {
-													"TOKEN": authToken,
-													"SERVICE_API_URL": configData.SERVICE_API_URL,
-													"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-													"ID": results.id,
-													"DESCRIPTION": description,
-													"REPOSITORY": repository,
-													"EMAIL": email,
-													"SLACKCHANNEL": slackChannel,
-													"TAGS": tags,
-													"ENDPOINTS": endpoint,
-													"STATUS": "active"
-												};
-
-												crud.update(inputs, function (err, results) {
-													if (err) {
-														logger.error(err.details);
-														return innerCallback({
-															"error": "unknown error updating service " + payload.SERVICE_NAME.S + " in service catalog."
-														});
-													} else {
-														logger.info("updated service "  + payload.SERVICE_NAME.S + " in service catalog.");
-														return innerCallback(null, {
-															"message": "updated service "  + payload.SERVICE_NAME.S + " in service catalog."
-														});
-													}
-												});
-
-											}
+					if (failedEvents.length > 0) {
+						logger.error(JSON.stringify(failedEvents));
+						sqs.sendMessageBatch(sqsparams, function (err, data) {
+							if (err) {
+								logger.error("SQS error");
+								callback(err);
 
 										});
 									}
@@ -533,8 +620,16 @@ module.exports.handler = (event, context, cb) => {
 					callback(err);
 				});
 
-			}, function (err) {			
-				
+				}
+			], function (err, results) {
+			if (err) {
+				logger.info(err)
+				cb(err);
+			} else {
+				logger.verbose('events failed'+ failedEvents.length+'processed events'+processedEvents.length);
+				cb(null, {
+					"processed_events": processedEvents.length,
+					"failed_events": failedEvents.length
 				});
 
 			}catch(e){
