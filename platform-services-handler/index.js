@@ -117,25 +117,26 @@ module.exports.handler = (event, context, cb) => {
 
 		async.auto({
 			checkInterest: function (innerCallback) {
-
 				//check if event-name is in the service-creation-events list
 				if (Object.keys(serviceCreationEvents).indexOf(record.kinesis.partitionKey) !== -1) {
 
 					var payload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 					//check if event-type is Service Creation
 					if (payload.Item.EVENT_TYPE && payload.Item.EVENT_TYPE.S && payload.Item.EVENT_TYPE.S === "SERVICE_CREATION") {
-						logger.info("found SERVICE_CREATION event with sequence number: " + sequenceNumber);
+						// logger.info("found SERVICE_CREATION event with sequence number: " + sequenceNumber);
 						innerCallback(null, {
 							"interested_event": true,
 							"payload": payload
 						});
 					} else {
+						logger.error('not interesting event');
 						//This is not an interesting event
 						innerCallback(null, {
 							"interested_event": false
 						});
 					}
 				} else {
+					logger.error('partitionKey not available');
 					//This is not an interesting event
 					innerCallback(null, {
 						"interested_event": false
@@ -211,6 +212,7 @@ module.exports.handler = (event, context, cb) => {
 						}
 
 						if (!payload.EVENT_NAME.S || payload.EVENT_NAME.S === "" || !payload.EVENT_STATUS.S || payload.EVENT_STATUS.S === "") {
+							logger.info('Invalid EVENT_NAME.S or EVENT_STATUS');
 							failedEvents.push({
 								Id: sequenceNumber,
 								DelaySeconds: 0,
@@ -239,8 +241,8 @@ module.exports.handler = (event, context, cb) => {
 								"error": "validation error. Either event name or event status is not properly defined."
 							});
 						}
-
 						if (payload.EVENT_NAME.S === startingEvent) {
+							logger.info('EVENT_NAME ' + startingEvent);
 							if (payload.EVENT_STATUS.S === "COMPLETED") {
 
                               var req =  {
@@ -258,9 +260,6 @@ module.exports.handler = (event, context, cb) => {
 										"status": "STARTED"
 									};
 
-                                logger.info("svcPayload:::::" + configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE);
-                                logger.info("svcPayload::uri:::" + JSON.stringify(req));
-
 								// call services post with status started
 								var svcPayload = {
 									uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE,
@@ -273,10 +272,6 @@ module.exports.handler = (event, context, cb) => {
 
 
 								request(svcPayload, function (error, response, body) {
-
-                                    //logger.info(" >> "+JSON.stringify(svcPayload.json));
-
-                                logger.info("response.statusCode:" + response.statusCode);
 
 									if (response.statusCode === 200) {
 										if (body.data === null || body.data === "") {
@@ -316,6 +311,7 @@ module.exports.handler = (event, context, cb) => {
 												"failure_message": null
 											});
 											logger.info("created a new service in service catalog.");
+											logger.verbose("created a new service in service catalog.");
 											return innerCallback(null, {
 												"message": "created a new service in service catalog."
 											});
@@ -361,13 +357,13 @@ module.exports.handler = (event, context, cb) => {
 							var svcGetPayload;
 							if (payload.EVENT_NAME.S === endingEvent && payload.EVENT_STATUS.S === "COMPLETED") {
 								//call services put with status completed
+								logger.info('EVENT_NAME '+  endingEvent+'with COMPLETED status ');
 								svcGetPayload = {
 									uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
 									url: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
 									method: 'GET',
 									rejectUnauthorized: false
 								};
-								console.log(svcGetPayload.uri);
 
 								request(svcGetPayload, function (error, response, body) {
 
@@ -464,6 +460,7 @@ module.exports.handler = (event, context, cb) => {
 															"failure_code": null,
 															"failure_message": null
 														});
+														logger.verbose("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														logger.info("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback(null, {
 															"message": "updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
@@ -537,8 +534,8 @@ module.exports.handler = (event, context, cb) => {
 								});
 
 							}
-
 							if (payload.EVENT_STATUS.S === "FAILED") {
+								logger.info('FAILED EVENT_STATUS');
 								//call services put with status failed
 								svcGetPayload = {
 									uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "?domain=" + domain + "&service=" + payload.SERVICE_NAME.S,
@@ -546,7 +543,6 @@ module.exports.handler = (event, context, cb) => {
 									method: 'GET',
 									rejectUnauthorized: false
 								};
-								logger.info("Catalog GET Payload: " + svcGetPayload);
 								request(svcGetPayload, function (error, response, body) {
 
 
@@ -602,7 +598,6 @@ module.exports.handler = (event, context, cb) => {
 												},
 												rejectUnauthorized: false
 											};
-											logger.info("Catalog Payload: " + svcPayload);
 											request(svcPayload, function (error, response, body) {
 												if (response.statusCode === 200) {
 													if (body.data === null || body.data === "") {
@@ -641,6 +636,7 @@ module.exports.handler = (event, context, cb) => {
 															"failure_code": null,
 															"failure_message": null
 														});
+														logger.verbose("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														logger.info("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback(null, {
 															"message": "updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
@@ -714,6 +710,7 @@ module.exports.handler = (event, context, cb) => {
 						}
 
 					} else {
+						logger.error('push un-interesting event to processed queue');
 						//push un-interesting event to processed queue
 						processedEvents.push({
 							"sequence_id": sequenceNumber,
@@ -730,7 +727,6 @@ module.exports.handler = (event, context, cb) => {
 		});
 
 	}, function (err) {
-
 		async.series(
 			[
 				function (callback) {
@@ -746,6 +742,7 @@ module.exports.handler = (event, context, cb) => {
 						logger.error(JSON.stringify(failedEvents));
 						sqs.sendMessageBatch(sqsparams, function (err, data) {
 							if (err) {
+								logger.error("SQS error");
 								callback(err);
 
 							} else {
@@ -761,8 +758,10 @@ module.exports.handler = (event, context, cb) => {
 				}
 			], function (err, results) {
 			if (err) {
+				logger.info(err)
 				cb(err);
 			} else {
+				logger.verbose('events failed'+ failedEvents.length+'processed events'+processedEvents.length);
 				cb(null, {
 					"processed_events": processedEvents.length,
 					"failed_events": failedEvents.length
