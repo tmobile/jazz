@@ -53,9 +53,15 @@ def loadServiceConfigurationData() {
 		}
 		
 		if ( (service_name.trim() == "platform_events") ) {
-			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./components/dev-config.json"
-			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./components/stg-config.json"
-			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./components/prod-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+		}
+		
+		if ( (service_name.trim() == "platform_events-handler") ) {
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
 		}
 		
 		if ( (service_name.trim() == "platform-services-handler") ) {
