@@ -169,7 +169,6 @@ describe('Sample', function() {
 
     it("should indicate success if method GET and query params are defined", ()=>{
         event.method = "GET";
-        logMessage = 'success';
         var dataObj = {
             "Items": [event.query]
         }
@@ -178,15 +177,16 @@ describe('Sample', function() {
             // dataObj.LastEvaluatedKey = undefined;
             return cb(null, dataObj);
         });
-        logStub = sinon.stub(logger, "verbose", spy);
+        stub = sinon.stub(callbackObj, "callback", spy);
         //trigger spy by calling index.handler()
         var callFunction = index.handler(event, context, callbackObj.callback);
         //assigning the item filter values passed to DynamoDB.scan as values to check against
-        var logResponse = logStub.args[0][0];
-        var logCheck = logResponse.includes(logMessage)
+        var cbResponse = stub.args[0][1];
+        console.log(stub.args[0][1].input)
+        var cbCheck = cbResponse.input === event.query;
         AWS.restore("DynamoDB");
-        logStub.restore();
-        assert.isTrue(logCheck);
+        stub.restore();
+        assert.isTrue(cbCheck);
     });
 
     //POST handler starts from here//
@@ -438,7 +438,6 @@ describe('Sample', function() {
 
     it("should indicate success if method POST and body params are defined", ()=>{
         event.method = "POST";
-        logMessage = 'success';
         var dataObj = {
             "Item" : event.body
         };
@@ -451,14 +450,14 @@ describe('Sample', function() {
         AWS.mock('Kinesis', 'putRecord', (params, cb)=>{
             return cb(null, kinesisObj);
         });
-        logStub = sinon.stub(logger, 'verbose', spy);
+        stub = sinon.stub(callbackObj, "callback", spy);
         var callFunction = index.handler(event, context, callbackObj.callback);
-        var logResponse = logStub.args[0][0];
-        var logCheck = logResponse.includes(logMessage);
+        var cbResponse = stub.args[0][1];
+        var cbCheck = cbResponse.input === event.body;
         AWS.restore('Kinesis');
         AWS.restore('DynamoDB');
-        logStub.restore();
-        assert.isTrue(logCheck)
+        stub.restore();
+        assert.isTrue(cbCheck)
     });
 
     it("should indicate error while kinesis.putRecord fail for defined method POST and body params", ()=>{
