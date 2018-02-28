@@ -185,7 +185,6 @@ describe('platform_events', function() {
         var callFunction = index.handler(event, context, callbackObj.callback);
         //assigning the item filter values passed to DynamoDB.scan as values to check against
         var cbResponse = stub.args[0][1];
-        console.log(stub.args[0][1].input)
         var cbCheck = cbResponse.input === event.query;
         AWS.restore("DynamoDB");
         stub.restore();
