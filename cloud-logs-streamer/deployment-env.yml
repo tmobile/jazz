@@ -1,10 +1,1 @@
-service : cloud-logs-streamer
-securityGroupIds: {inst_security_group_id}
-subnetIds: {inst_subnet_ids}
-providerRuntime : nodejs4.3
-providerMemorySize : 256
-providerTimeout : 160
-region: {inst_region}
-iamRoleARN: {inst_role_lambda_basic_execution}
-
-domain: platform
+service_id : {service_id}
