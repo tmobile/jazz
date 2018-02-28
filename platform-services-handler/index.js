@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -123,7 +123,6 @@ module.exports.handler = (event, context, cb) => {
 					var payload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 					//check if event-type is Service Creation
 					if (payload.Item.EVENT_TYPE && payload.Item.EVENT_TYPE.S && payload.Item.EVENT_TYPE.S === "SERVICE_CREATION") {
-						// logger.info("found SERVICE_CREATION event with sequence number: " + sequenceNumber);
 						innerCallback(null, {
 							"interested_event": true,
 							"payload": payload
@@ -136,7 +135,7 @@ module.exports.handler = (event, context, cb) => {
 						});
 					}
 				} else {
-					logger.error('partitionKey not available');
+					logger.debug('partitionKey not available');
 					//This is not an interesting event
 					innerCallback(null, {
 						"interested_event": false
@@ -310,7 +309,6 @@ module.exports.handler = (event, context, cb) => {
 												"failure_code": null,
 												"failure_message": null
 											});
-											logger.info("created a new service in service catalog.");
 											logger.verbose("created a new service in service catalog.");
 											return innerCallback(null, {
 												"message": "created a new service in service catalog."
@@ -461,7 +459,6 @@ module.exports.handler = (event, context, cb) => {
 															"failure_message": null
 														});
 														logger.verbose("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
-														logger.info("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback(null, {
 															"message": "updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
 														});
@@ -637,7 +634,6 @@ module.exports.handler = (event, context, cb) => {
 															"failure_message": null
 														});
 														logger.verbose("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
-														logger.info("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback(null, {
 															"message": "updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
 														});
@@ -710,7 +706,7 @@ module.exports.handler = (event, context, cb) => {
 						}
 
 					} else {
-						logger.error('push un-interesting event to processed queue');
+						logger.debug('push un-interesting event to processed queue');
 						//push un-interesting event to processed queue
 						processedEvents.push({
 							"sequence_id": sequenceNumber,
@@ -761,7 +757,8 @@ module.exports.handler = (event, context, cb) => {
 				logger.info(err)
 				cb(err);
 			} else {
-				logger.verbose('events failed'+ failedEvents.length+'processed events'+processedEvents.length);
+				logger.verbose('return number of events failed and processed')
+				logger.info('events failed: '+ failedEvents.length+'processed events: '+processedEvents.length);
 				cb(null, {
 					"processed_events": processedEvents.length,
 					"failed_events": failedEvents.length
