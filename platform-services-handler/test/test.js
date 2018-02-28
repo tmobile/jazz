@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -93,7 +93,7 @@ describe('Platform_services-handler', function() {
     var invalidArrya = ["", null, undefined];
     logMessage = 'partitionKey not available';
     errMessage = 'push un-interesting event to processed queue';
-    logStub = sinon.stub(logger, 'error', spy);
+    logStub = sinon.stub(logger, 'debug', spy);
     var callFunction, logResponse, logCheck;
     for(i in invalidArrya){
       event.Records[0].kinesis.partitionKey = invalidArrya[i];
@@ -110,9 +110,11 @@ describe('Platform_services-handler', function() {
     logMessage = 'not interesting event';
     errMessage = 'push un-interesting event to processed queue';
     logStub = sinon.stub(logger, 'error',spy);
+    debgStub = sinon.stub(logger, 'debug', spy);
     var callFunction = index.handler(event, context, callback);
-    var logCheck = logStub.args[0][0].includes(logMessage) && logStub.args[1][0].includes(errMessage);
+    var logCheck = logStub.args[0][0].includes(logMessage) && debgStub.args[0][0].includes(errMessage);
     logStub.restore();
+    debgStub.restore();
     assert.isTrue(logCheck);
   });
 
@@ -280,9 +282,10 @@ describe('Platform_services-handler', function() {
       return obj.callback(null, responseObjectGET, bodyObj);
     });
     var callFunction = index.handler(event, context, callback);
+    var logCheck = logStub.args[0][0].includes(logMessage);
     logStub.restore();
     getReqStub.restore();
-    assert.isTrue(true)
+    assert.isTrue(logCheck)
   });
 
   it("should indicate error if response code is not 200 and kinesis data is defined for complted endingEvent", ()=>{
@@ -350,9 +353,10 @@ describe('Platform_services-handler', function() {
       return obj.callback(null, responseObjectGET, bodyObj);
     });
     var callFunction = index.handler(event, context, callback);
+    var logCheck = logStub.args[0][0].includes(logMessage);
     logStub.restore();
     getReqStub.restore();
-    assert.isTrue(true)
+    assert.isTrue(logCheck)
   });
 
 });

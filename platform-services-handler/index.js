@@ -1,3 +1,25 @@
+// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
+/*jshint loopfunc:true */
+/**
+This Handler looks for Service Creation events and updates Service Catalog
+@version: 1.0
+ **/
+
 const config = require('./components/config.js'); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
 const async = require("async");
@@ -99,7 +121,6 @@ module.exports.handler = (event, context, cb) => {
 					var payload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 					//check if event-type is Service Creation
 					if (payload.Item.EVENT_TYPE && payload.Item.EVENT_TYPE.S && payload.Item.EVENT_TYPE.S === "SERVICE_CREATION") {
-						// logger.info("found SERVICE_CREATION event with sequence number: " + sequenceNumber);
 						innerCallback(null, {
 							"interested_event": true,
 							"payload": payload
@@ -112,7 +133,7 @@ module.exports.handler = (event, context, cb) => {
 						});
 					}
 				} else {
-					logger.error('partitionKey not available');
+					logger.debug('partitionKey not available');
 					//This is not an interesting event
 					innerCallback(null, {
 						"interested_event": false
@@ -251,7 +272,6 @@ module.exports.handler = (event, context, cb) => {
 												"failure_code": null,
 												"failure_message": null
 											});
-											logger.info("created a new service in service catalog.");
 											logger.verbose("created a new service in service catalog.");
 											return innerCallback(null, {
 												"message": "created a new service in service catalog."
@@ -317,7 +337,6 @@ module.exports.handler = (event, context, cb) => {
 															"failure_message": null
 														});
 														logger.verbose("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
-														logger.info("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback(null, {
 															"message": "updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
 														});
@@ -467,7 +486,6 @@ module.exports.handler = (event, context, cb) => {
 															"failure_message": null
 														});
 														logger.verbose("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
-														logger.info("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback(null, {
 															"message": "updated service "  + payload.SERVICE_NAME.S + " in service catalog."
 														});
@@ -531,7 +549,7 @@ module.exports.handler = (event, context, cb) => {
 											//update service in catalog with creation_failed
 
 					} else {
-						logger.error('push un-interesting event to processed queue');
+						logger.debug('push un-interesting event to processed queue');
 						//push un-interesting event to processed queue
 						processedEvents.push({
 							"sequence_id": sequenceNumber,
@@ -626,7 +644,8 @@ module.exports.handler = (event, context, cb) => {
 				logger.info(err)
 				cb(err);
 			} else {
-				logger.verbose('events failed'+ failedEvents.length+'processed events'+processedEvents.length);
+				logger.verbose('return number of events failed and processed')
+				logger.info('events failed: '+ failedEvents.length+'processed events: '+processedEvents.length);
 				cb(null, {
 					"processed_events": processedEvents.length,
 					"failed_events": failedEvents.length
