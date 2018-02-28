@@ -1,1 +1,1 @@
-This is a sample NodeJs template project
+Service that receives and processes platform specific events.
