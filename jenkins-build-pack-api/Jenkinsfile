@@ -202,10 +202,10 @@ node() {
 					def endpointUrl = "https://${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/${current_environment}/" + domain + "/" + config['service']
 					if(domain != "platform"){
 						createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION,roleId);
-						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)
-						updateApiDocUrl(current_environment)
-						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
+						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)						
 					}
+					updateApiDocUrl(current_environment)
+					sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
 					echo "completed deployment........."					
 					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 					def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
@@ -481,7 +481,7 @@ def updateApiDocUrl(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(service, env, region,roleId) {
-	def lambda = "/aws/lambda/"+service+"-"+env
+	def lambda = "/aws/lambda/${service}-${env}"
 	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-cloud-logs-streamer-prod"
 	try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
@@ -489,7 +489,7 @@ def createSubscriptionFilters(service, env, region,roleId) {
 
 	try {
 		filter_json = sh (
-			script: "aws logs describe-subscription-filters --output json --log-group-name \""+lambda+"\" --region "+region ,
+			script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${region}" ,
 			returnStdout: true
 		).trim()
 		echo "${filter_json}"
@@ -498,17 +498,17 @@ def createSubscriptionFilters(service, env, region,roleId) {
         filtername = resultJson.subscriptionFilters[0].filterName
 		echo "removing existing filter... $filtername"
 		if(filtername != "" && !filtername.equals(lambda)) {
-			sh "aws logs delete-subscription-filter --output json --log-group-name \""+lambda+"\" --filter-name \""+filtername+"\" --region "+region
+			sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --region ${region}"
 		}
 	}catch(Exception ex) {}// ignore error if not created yet
 	
-	sh "aws logs put-subscription-filter --output json --log-group-name \""+lambda+"\" --filter-name \""+lambda+"\" --filter-pattern \"\" --destination-arn \""+logStreamer+"\" --region "+region
+	sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region}"
 }
 
 
 
 def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
-	echo "Event on:" + service_name + " error:" + error
+	echo "Event on:$service_name  error: $error"
 }
 
 def updateServiceWithEndpointInfo(config,endpointKey, endpointVal) {
