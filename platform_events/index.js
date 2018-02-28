@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ module.exports.handler = (event, context, cb) => {
 	try {
 		//GET Handler
 		if (event !== undefined && event.method !== undefined && event.method === 'GET') {
-			logger.info("GET Handler")
+			// logger.info("GET Handler")
 			async.series({
 				get_events: function (callback) {
 					var filter = "";
@@ -132,13 +132,13 @@ module.exports.handler = (event, context, cb) => {
 							events.push(event);
 						});
 						if (results.get_events.LastEvaluatedKey !== undefined || results.get_events.LastEvaluatedKey !== "") {
-							logger.verbose('Get success')
+							// logger.verbose('Get success')
 							cb(null, responseObj({
 									"events": events,
 									"last_evaluated_key": results.get_events.LastEvaluatedKey
 								}, event.query));
 						} else {
-							logger.verbose('Get success')
+							// logger.verbose('Get success')
 							cb(null, responseObj({
 									"events": events
 								}, event.query));
@@ -153,7 +153,7 @@ module.exports.handler = (event, context, cb) => {
 
 		//POST Handler
 		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
-			logger.info("POST Handler")
+			// logger.info("POST Handler")
 			if (event.body === undefined) {
 				return cb(JSON.stringify(errorHandler.throwInternalServerError("Service inputs not defined!")));
 			}
@@ -319,7 +319,7 @@ module.exports.handler = (event, context, cb) => {
 					}
 				},
 				store_context: ['validate_event_type', 'validate_event_name', 'validate_event_handler', 'validate_event_status', 'validate_timestamp', function (results, callback) {
-					var timestamp = moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS');
+						var timestamp = moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS');
 						var event_params = {
 							Item: {
 								"EVENT_ID": {
@@ -385,7 +385,7 @@ module.exports.handler = (event, context, cb) => {
 						};
 						kinesis.putRecord(stream_params, function(err, data) {
 						  if (err) {
-							  logger.error('kinesis error');
+							  logger.error('kinesis error'+ JSON.stringify(err));
 								callback({
 									"code": 500,
 									"message": "Error storing event. " + err.message
@@ -402,17 +402,15 @@ module.exports.handler = (event, context, cb) => {
 			}, function (err, results) {
 
 				if (err) {
-					logger.error(err);
+					logger.error(JSON.stringify(err));
 					if (err.code !== undefined && err.code === 500) {
 						cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + err.message)));
 					} else {
-						logger.error(err);
+						logger.error(JSON.stringify(err));
 						cb(JSON.stringify(errorHandler.throwInputValidationError("Bad request. message: " + err.message)));
 					}
 
-				} else {
-					
-					logger.verbose('POST success' + results.store_context)
+				} else {					
 					cb(null, responseObj(results.store_context, event.body));
 				}
 
