@@ -41,7 +41,6 @@ module.exports.handler = (event, context, cb) => {
 	try {
 		//GET Handler
 		if (event !== undefined && event.method !== undefined && event.method === 'GET') {
-			// logger.info("GET Handler")
 			async.series({
 				get_events: function (callback) {
 					var filter = "";
@@ -131,13 +130,11 @@ module.exports.handler = (event, context, cb) => {
 							events.push(event);
 						});
 						if (results.get_events.LastEvaluatedKey !== undefined || results.get_events.LastEvaluatedKey !== "") {
-							// logger.verbose('Get success')
 							cb(null, responseObj({
 									"events": events,
 									"last_evaluated_key": results.get_events.LastEvaluatedKey
 								}, event.query));
 						} else {
-							// logger.verbose('Get success')
 							cb(null, responseObj({
 									"events": events
 								}, event.query));
@@ -152,7 +149,6 @@ module.exports.handler = (event, context, cb) => {
 
 		//POST Handler
 		if (event !== undefined && event.method !== undefined && event.method === 'POST') {
-			// logger.info("POST Handler")
 			if (event.body === undefined) {
 				return cb(JSON.stringify(errorHandler.throwInternalServerError("Service inputs not defined!")));
 			}
@@ -409,7 +405,7 @@ module.exports.handler = (event, context, cb) => {
 						cb(JSON.stringify(errorHandler.throwInputValidationError("Bad request. message: " + err.message)));
 					}
 
-				} else {					
+				} else {
 					cb(null, responseObj(results.store_context, event.body));
 				}
 
