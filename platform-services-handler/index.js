@@ -212,29 +212,30 @@ module.exports.handler = (event, context, cb) => {
 
 						if (!payload.EVENT_NAME.S || payload.EVENT_NAME.S === "" || !payload.EVENT_STATUS.S || payload.EVENT_STATUS.S === "") {
 							logger.info('Invalid EVENT_NAME.S or EVENT_STATUS');
-							failedEvents.push({
-								Id: sequenceNumber,
-								DelaySeconds: 0,
-								MessageBody: "Validation error while processing event for service " + domain + "." + payload.SERVICE_NAME.S + ".",
-								MessageAttributes: {
-									"sequence_id": {
-										DataType: "String",
-										StringValue: sequenceNumber.toString()
-									},
-									"event": {
-										DataType: "String",
-										StringValue: JSON.stringify(payload)
-									},
-									"failure_code": {
-										DataType: "String",
-										StringValue: failureCodes.PR_ERROR_1.code
-									},
-									"failure_message": {
-										DataType: "String",
-										StringValue: "validation error. Either event name or event status is not properly defined."
-									}
-								}
-							});
+							// failedEvents.push({
+							// 	Id: sequenceNumber,
+							// 	DelaySeconds: 0,
+							// 	MessageBody: "Validation error while processing event for service " + domain + "." + payload.SERVICE_NAME.S + ".",
+							// 	MessageAttributes: {
+							// 		"sequence_id": {
+							// 			DataType: "String",
+							// 			StringValue: sequenceNumber.toString()
+							// 		},
+							// 		"event": {
+							// 			DataType: "String",
+							// 			StringValue: JSON.stringify(payload)
+							// 		},
+							// 		"failure_code": {
+							// 			DataType: "String",
+							// 			StringValue: failureCodes.PR_ERROR_1.code
+							// 		},
+							// 		"failure_message": {
+							// 			DataType: "String",
+							// 			StringValue: "validation error. Either event name or event status is not properly defined."
+							// 		}
+							// 	}
+							// });
+							HandleFailedEvents(sequenceNumber, "validation error. Either event name or event status is not properly defined.", payload, failureCodes.PR_ERROR_1.code)
 							logger.error("validation error. Either event name or event status is not properly defined.");
 							return innerCallback({
 								"error": "validation error. Either event name or event status is not properly defined."
@@ -274,41 +275,43 @@ module.exports.handler = (event, context, cb) => {
 
 									if (response.statusCode === 200) {
 										if (body.data === null || body.data === "") {
-											failedEvents.push({
-												Id: sequenceNumber,
-												DelaySeconds: 0,
-												MessageBody: "Unknown error while creating a new service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
-												MessageAttributes: {
-													"sequence_id": {
-														DataType: "String",
-														StringValue: sequenceNumber.toString()
-													},
-													"event": {
-														DataType: "String",
-														StringValue: JSON.stringify(payload)
-													},
-													"failure_code": {
-														DataType: "String",
-														StringValue: failureCodes.PR_ERROR_2.code
-													},
-													"failure_message": {
-														DataType: "String",
-														StringValue: failureCodes.PR_ERROR_2.message
-													}
-												}
-											});
+											// failedEvents.push({
+											// 	Id: sequenceNumber,
+											// 	DelaySeconds: 0,
+											// 	MessageBody: "Unknown error while creating a new service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
+											// 	MessageAttributes: {
+											// 		"sequence_id": {
+											// 			DataType: "String",
+											// 			StringValue: sequenceNumber.toString()
+											// 		},
+											// 		"event": {
+											// 			DataType: "String",
+											// 			StringValue: JSON.stringify(payload)
+											// 		},
+											// 		"failure_code": {
+											// 			DataType: "String",
+											// 			StringValue: failureCodes.PR_ERROR_2.code
+											// 		},
+											// 		"failure_message": {
+											// 			DataType: "String",
+											// 			StringValue: failureCodes.PR_ERROR_2.message
+											// 		}
+											// 	}
+											// });
+											HandleFailedEvents(sequenceNumber, failureCodes.PR_ERROR_2.message, payload, failureCodes.PR_ERROR_2.code)
 											logger.error("Unknown error while creating a new service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 											return innerCallback({
 												"error": "Unknown error while creating a new service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
 											});
 
 										} else {
-											processedEvents.push({
-												"sequence_id": sequenceNumber,
-												"event": payload,
-												"failure_code": null,
-												"failure_message": null
-											});
+											// processedEvents.push({
+											// 	"sequence_id": sequenceNumber,
+											// 	"event": payload,
+											// 	"failure_code": null,
+											// 	"failure_message": null
+											// });
+											HandleProcessedEvents(sequenceNumber, payload);
 											logger.verbose("created a new service in service catalog.");
 											return innerCallback(null, {
 												"message": "created a new service in service catalog."
@@ -316,29 +319,30 @@ module.exports.handler = (event, context, cb) => {
 										}
 
 									} else {
-										failedEvents.push({
-											Id: sequenceNumber,
-											DelaySeconds: 0,
-											MessageBody: "Processing error while creating a new service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
-											MessageAttributes: {
-												"sequence_id": {
-													DataType: "String",
-													StringValue: sequenceNumber.toString()
-												},
-												"event": {
-													DataType: "String",
-													StringValue: JSON.stringify(payload)
-												},
-												"failure_code": {
-													DataType: "String",
-													StringValue: failureCodes.PR_ERROR_3.code
-												},
-												"failure_message": {
-													DataType: "String",
-													StringValue: response.body.message
-												}
-											}
-										});
+										// failedEvents.push({
+										// 	Id: sequenceNumber,
+										// 	DelaySeconds: 0,
+										// 	MessageBody: "Processing error while creating a new service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
+										// 	MessageAttributes: {
+										// 		"sequence_id": {
+										// 			DataType: "String",
+										// 			StringValue: sequenceNumber.toString()
+										// 		},
+										// 		"event": {
+										// 			DataType: "String",
+										// 			StringValue: JSON.stringify(payload)
+										// 		},
+										// 		"failure_code": {
+										// 			DataType: "String",
+										// 			StringValue: failureCodes.PR_ERROR_3.code
+										// 		},
+										// 		"failure_message": {
+										// 			DataType: "String",
+										// 			StringValue: response.body.message
+										// 		}
+										// 	}
+										// });
+										HandleFailedEvents(sequenceNumber, response.body.message, payload, failureCodes.PR_ERROR_3.code)
 										logger.error("Processing error while creating a new service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 										logger.error(response.body.message);
 										return innerCallback({
@@ -368,29 +372,30 @@ module.exports.handler = (event, context, cb) => {
 									if (response.statusCode === 200) {
 										var output = JSON.parse(body);
 										if (output.data === null || output.data === "" || output.data === undefined || output.data.length === undefined || output.data.length === 0 ) {
-											failedEvents.push({
-												Id: sequenceNumber,
-												DelaySeconds: 0,
-												MessageBody: "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog",
-												MessageAttributes: {
-													"sequence_id": {
-														DataType: "String",
-														StringValue: sequenceNumber.toString()
-													},
-													"event": {
-														DataType: "String",
-														StringValue: JSON.stringify(payload)
-													},
-													"failure_code": {
-														DataType: "String",
-														StringValue: failureCodes.PR_ERROR_4.code
-													},
-													"failure_message": {
-														DataType: "String",
-														StringValue: "service " + domain + "." + payload.SERVICE_NAME.S + " not available in service catalog"
-													}
-												}
-											});
+											// failedEvents.push({
+											// 	Id: sequenceNumber,
+											// 	DelaySeconds: 0,
+											// 	MessageBody: "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog",
+											// 	MessageAttributes: {
+											// 		"sequence_id": {
+											// 			DataType: "String",
+											// 			StringValue: sequenceNumber.toString()
+											// 		},
+											// 		"event": {
+											// 			DataType: "String",
+											// 			StringValue: JSON.stringify(payload)
+											// 		},
+											// 		"failure_code": {
+											// 			DataType: "String",
+											// 			StringValue: failureCodes.PR_ERROR_4.code
+											// 		},
+											// 		"failure_message": {
+											// 			DataType: "String",
+											// 			StringValue: "service " + domain + "." + payload.SERVICE_NAME.S + " not available in service catalog"
+											// 		}
+											// 	}
+											// });
+											HandleFailedEvents(sequenceNumber, "service " + domain + "." + payload.SERVICE_NAME.S + " not available in service catalog", payload, failureCodes.PR_ERROR_4.code)
 											logger.error("error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog");
 											return innerCallback({
 												"error": "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog"
@@ -423,41 +428,43 @@ module.exports.handler = (event, context, cb) => {
 											request(svcPayload, function (error, response, body) {
 												if (response.statusCode === 200) {
 													if (body.data === null || body.data === "") {
-														failedEvents.push({
-															Id: sequenceNumber,
-															DelaySeconds: 0,
-															MessageBody: "Processing error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
-															MessageAttributes: {
-																"sequence_id": {
-																	DataType: "String",
-																	StringValue: sequenceNumber.toString()
-																},
-																"event": {
-																	DataType: "String",
-																	StringValue: JSON.stringify(payload)
-																},
-																"failure_code": {
-																	DataType: "String",
-																	StringValue: failureCodes.PR_ERROR_2.code
-																},
-																"failure_message": {
-																	DataType: "String",
-																	StringValue: "unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
-																}
-															}
-														});
+														// failedEvents.push({
+														// 	Id: sequenceNumber,
+														// 	DelaySeconds: 0,
+														// 	MessageBody: "Processing error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
+														// 	MessageAttributes: {
+														// 		"sequence_id": {
+														// 			DataType: "String",
+														// 			StringValue: sequenceNumber.toString()
+														// 		},
+														// 		"event": {
+														// 			DataType: "String",
+														// 			StringValue: JSON.stringify(payload)
+														// 		},
+														// 		"failure_code": {
+														// 			DataType: "String",
+														// 			StringValue: failureCodes.PR_ERROR_2.code
+														// 		},
+														// 		"failure_message": {
+														// 			DataType: "String",
+														// 			StringValue: "unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
+														// 		}
+														// 	}
+														// });
+														HandleFailedEvents(sequenceNumber, "unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.", payload, failureCodes.PR_ERROR_2.code)
 														logger.error("unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback({
 															"error": "unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
 														});
 
 													} else {
-														processedEvents.push({
-															"sequence_id": sequenceNumber,
-															"event": payload,
-															"failure_code": null,
-															"failure_message": null
-														});
+														// processedEvents.push({
+														// 	"sequence_id": sequenceNumber,
+														// 	"event": payload,
+														// 	"failure_code": null,
+														// 	"failure_message": null
+														// });
+														HandleProcessedEvents(sequenceNumber, payload);
 														logger.verbose("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback(null, {
 															"message": "updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
@@ -465,29 +472,30 @@ module.exports.handler = (event, context, cb) => {
 													}
 
 												} else {
-													failedEvents.push({
-														Id: sequenceNumber,
-														DelaySeconds: 0,
-														MessageBody: "Processing error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
-														MessageAttributes: {
-															"sequence_id": {
-																DataType: "String",
-																StringValue: sequenceNumber.toString()
-															},
-															"event": {
-																DataType: "String",
-																StringValue: JSON.stringify(payload)
-															},
-															"failure_code": {
-																DataType: "String",
-																StringValue: failureCodes.PR_ERROR_3.code
-															},
-															"failure_message": {
-																DataType: "String",
-																StringValue: response.body.message
-															}
-														}
-													});
+													// failedEvents.push({
+													// 	Id: sequenceNumber,
+													// 	DelaySeconds: 0,
+													// 	MessageBody: "Processing error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
+													// 	MessageAttributes: {
+													// 		"sequence_id": {
+													// 			DataType: "String",
+													// 			StringValue: sequenceNumber.toString()
+													// 		},
+													// 		"event": {
+													// 			DataType: "String",
+													// 			StringValue: JSON.stringify(payload)
+													// 		},
+													// 		"failure_code": {
+													// 			DataType: "String",
+													// 			StringValue: failureCodes.PR_ERROR_3.code
+													// 		},
+													// 		"failure_message": {
+													// 			DataType: "String",
+													// 			StringValue: response.body.message
+													// 		}
+													// 	}
+													// });
+													HandleFailedEvents(sequenceNumber, response.body.message, payload, failureCodes.PR_ERROR_3.code)
 													logger.error("error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 													logger.error(response.body.message);
 													return innerCallback({
@@ -498,29 +506,30 @@ module.exports.handler = (event, context, cb) => {
 										}
 
 									} else {
-										failedEvents.push({
-											Id: sequenceNumber,
-											DelaySeconds: 0,
-											MessageBody: "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog",
-											MessageAttributes: {
-												"sequence_id": {
-													DataType: "String",
-													StringValue: sequenceNumber.toString()
-												},
-												"event": {
-													DataType: "String",
-													StringValue: JSON.stringify(payload)
-												},
-												"failure_code": {
-													DataType: "String",
-													StringValue: failureCodes.PR_ERROR_3.code
-												},
-												"failure_message": {
-													DataType: "String",
-													StringValue: response.body.message
-												}
-											}
-										});
+										// failedEvents.push({
+										// 	Id: sequenceNumber,
+										// 	DelaySeconds: 0,
+										// 	MessageBody: "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog",
+										// 	MessageAttributes: {
+										// 		"sequence_id": {
+										// 			DataType: "String",
+										// 			StringValue: sequenceNumber.toString()
+										// 		},
+										// 		"event": {
+										// 			DataType: "String",
+										// 			StringValue: JSON.stringify(payload)
+										// 		},
+										// 		"failure_code": {
+										// 			DataType: "String",
+										// 			StringValue: failureCodes.PR_ERROR_3.code
+										// 		},
+										// 		"failure_message": {
+										// 			DataType: "String",
+										// 			StringValue: response.body.message
+										// 		}
+										// 	}
+										// });
+										HandleFailedEvents(sequenceNumber, response.body.message, payload, failureCodes.PR_ERROR_3.code)
 										logger.error("error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog");
 										logger.error(response.body.message);
 										return innerCallback({
@@ -546,29 +555,30 @@ module.exports.handler = (event, context, cb) => {
 									if (response.statusCode === 200) {
 										var output = JSON.parse(body);
 										if (output.data === null || output.data === "" || output.data === undefined || output.data.length === undefined || output.data.length === 0) {
-											failedEvents.push({
-												Id: sequenceNumber,
-												DelaySeconds: 0,
-												MessageBody: "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog",
-												MessageAttributes: {
-													"sequence_id": {
-														DataType: "String",
-														StringValue: sequenceNumber.toString()
-													},
-													"event": {
-														DataType: "String",
-														StringValue: JSON.stringify(payload)
-													},
-													"failure_code": {
-														DataType: "String",
-														StringValue: failureCodes.PR_ERROR_4.code
-													},
-													"failure_message": {
-														DataType: "String",
-														StringValue: "service " + domain + "." + payload.SERVICE_NAME.S + " not available in service catalog"
-													}
-												}
-											});
+											// failedEvents.push({
+											// 	Id: sequenceNumber,
+											// 	DelaySeconds: 0,
+											// 	MessageBody: "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog",
+											// 	MessageAttributes: {
+											// 		"sequence_id": {
+											// 			DataType: "String",
+											// 			StringValue: sequenceNumber.toString()
+											// 		},
+											// 		"event": {
+											// 			DataType: "String",
+											// 			StringValue: JSON.stringify(payload)
+											// 		},
+											// 		"failure_code": {
+											// 			DataType: "String",
+											// 			StringValue: failureCodes.PR_ERROR_4.code
+											// 		},
+											// 		"failure_message": {
+											// 			DataType: "String",
+											// 			StringValue: "service " + domain + "." + payload.SERVICE_NAME.S + " not available in service catalog"
+											// 		}
+											// 	}
+											// });
+											HandleFailedEvents(sequenceNumber, "service " + domain + "." + payload.SERVICE_NAME.S + " not available in service catalog", payload, failureCodes.PR_ERROR_4.code)
 											logger.error("error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog");
 											return innerCallback({
 												"error": "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog"
@@ -598,41 +608,43 @@ module.exports.handler = (event, context, cb) => {
 											request(svcPayload, function (error, response, body) {
 												if (response.statusCode === 200) {
 													if (body.data === null || body.data === "") {
-														failedEvents.push({
-															Id: sequenceNumber,
-															DelaySeconds: 0,
-															MessageBody: "Processing error while updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
-															MessageAttributes: {
-																"sequence_id": {
-																	DataType: "String",
-																	StringValue: sequenceNumber.toString()
-																},
-																"event": {
-																	DataType: "String",
-																	StringValue: JSON.stringify(payload)
-																},
-																"failure_code": {
-																	DataType: "String",
-																	StringValue: failureCodes.PR_ERROR_2.code
-																},
-																"failure_message": {
-																	DataType: "String",
-																	StringValue: "unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
-																}
-															}
-														});
+														// failedEvents.push({
+														// 	Id: sequenceNumber,
+														// 	DelaySeconds: 0,
+														// 	MessageBody: "Processing error while updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
+														// 	MessageAttributes: {
+														// 		"sequence_id": {
+														// 			DataType: "String",
+														// 			StringValue: sequenceNumber.toString()
+														// 		},
+														// 		"event": {
+														// 			DataType: "String",
+														// 			StringValue: JSON.stringify(payload)
+														// 		},
+														// 		"failure_code": {
+														// 			DataType: "String",
+														// 			StringValue: failureCodes.PR_ERROR_2.code
+														// 		},
+														// 		"failure_message": {
+														// 			DataType: "String",
+														// 			StringValue: "unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
+														// 		}
+														// 	}
+														// });
+														HandleFailedEvents(sequenceNumber, "unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.", payload, failureCodes.PR_ERROR_2.code)
 														logger.error("unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback({
 															"error": "unknown error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
 														});
 
 													} else {
-														processedEvents.push({
-															"sequence_id": sequenceNumber,
-															"event": payload,
-															"failure_code": null,
-															"failure_message": null
-														});
+														// processedEvents.push({
+														// 	"sequence_id": sequenceNumber,
+														// 	"event": payload,
+														// 	"failure_code": null,
+														// 	"failure_message": null
+														// });
+														HandleProcessedEvents(sequenceNumber, payload);
 														logger.verbose("updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 														return innerCallback(null, {
 															"message": "updated service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog."
@@ -640,29 +652,30 @@ module.exports.handler = (event, context, cb) => {
 													}
 
 												} else {
-													failedEvents.push({
-														Id: sequenceNumber,
-														DelaySeconds: 0,
-														MessageBody: "Processing error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
-														MessageAttributes: {
-															"sequence_id": {
-																DataType: "String",
-																StringValue: sequenceNumber.toString()
-															},
-															"event": {
-																DataType: "String",
-																StringValue: JSON.stringify(payload)
-															},
-															"failure_code": {
-																DataType: "String",
-																StringValue: failureCodes.PR_ERROR_3.code
-															},
-															"failure_message": {
-																DataType: "String",
-																StringValue: response.body.message
-															}
-														}
-													});
+													// failedEvents.push({
+													// 	Id: sequenceNumber,
+													// 	DelaySeconds: 0,
+													// 	MessageBody: "Processing error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.",
+													// 	MessageAttributes: {
+													// 		"sequence_id": {
+													// 			DataType: "String",
+													// 			StringValue: sequenceNumber.toString()
+													// 		},
+													// 		"event": {
+													// 			DataType: "String",
+													// 			StringValue: JSON.stringify(payload)
+													// 		},
+													// 		"failure_code": {
+													// 			DataType: "String",
+													// 			StringValue: failureCodes.PR_ERROR_3.code
+													// 		},
+													// 		"failure_message": {
+													// 			DataType: "String",
+													// 			StringValue: response.body.message
+													// 		}
+													// 	}
+													// });
+													HandleFailedEvents(sequenceNumber, response.body.message, payload, failureCodes.PR_ERROR_3.code)
 													logger.error("error updating service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog.");
 													logger.error(response.body.message);
 													return innerCallback({
@@ -673,29 +686,30 @@ module.exports.handler = (event, context, cb) => {
 										}
 
 									} else {
-										failedEvents.push({
-											Id: sequenceNumber,
-											DelaySeconds: 0,
-											MessageBody: "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog",
-											MessageAttributes: {
-												"sequence_id": {
-													DataType: "String",
-													StringValue: sequenceNumber.toString()
-												},
-												"event": {
-													DataType: "String",
-													StringValue: JSON.stringify(payload)
-												},
-												"failure_code": {
-													DataType: "String",
-													StringValue: failureCodes.PR_ERROR_3.code
-												},
-												"failure_message": {
-													DataType: "String",
-													StringValue: response.body.message
-												}
-											}
-										});
+										// failedEvents.push({
+										// 	Id: sequenceNumber,
+										// 	DelaySeconds: 0,
+										// 	MessageBody: "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog",
+										// 	MessageAttributes: {
+										// 		"sequence_id": {
+										// 			DataType: "String",
+										// 			StringValue: sequenceNumber.toString()
+										// 		},
+										// 		"event": {
+										// 			DataType: "String",
+										// 			StringValue: JSON.stringify(payload)
+										// 		},
+										// 		"failure_code": {
+										// 			DataType: "String",
+										// 			StringValue: failureCodes.PR_ERROR_3.code
+										// 		},
+										// 		"failure_message": {
+										// 			DataType: "String",
+										// 			StringValue: response.body.message
+										// 		}
+										// 	}
+										// });
+										HandleFailedEvents(sequenceNumber, response.body.message, payload, failureCodes.PR_ERROR_3.code)
 										logger.error("error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog");
 										return innerCallback({
 											"error": "error finding service " + domain + "." + payload.SERVICE_NAME.S + " in service catalog"
@@ -768,4 +782,38 @@ module.exports.handler = (event, context, cb) => {
 
 	});
 
+	function HandleFailedEvents(id, error, event, failureCode) {
+		failedEvents.push({
+			Id: id,
+			DelaySeconds: 0,
+			MessageBody: error,
+			MessageAttributes: {
+				"sequence_id": {
+					DataType: "String",
+					StringValue: id.toString()
+				},
+				"event": {
+					DataType: "String",
+					StringValue: JSON.stringify(event)
+				},
+				"failure_code": {
+					DataType: "String",
+					StringValue: failureCode
+				},
+				"failure_message": {
+					DataType: "String",
+					StringValue: error
+				}
+			}
+		});
+	}
+
+	function HandleProcessedEvents(id, event) {
+		processedEvents.push({
+			"sequence_id": id,
+			"event": event,
+			"failure_code": null,
+			"failure_message": null
+		});
+	}
 };

@@ -82,11 +82,14 @@ describe('Platform_services-handler', function() {
   it("should indicate error if event.Record is undefined", ()=>{
     event.Records = undefined;
     logMessage = "events failed";
+    stub = sinon.stub(callbackObj, 'callback', spy);
     logStub = sinon.stub(logger, 'verbose', spy);
-    var callFunction = index.handler(event, context, callback);
+    var callFunction = index.handler(event, context, callbackObj.callback);
     var logCheck = logStub.args[0][0].includes(logMessage);
+    var cbCheck = (stub.args[0][1].failed_events + stub.args[0][1].processed_events) === 0;
+    stub.restore();
     logStub.restore();
-    assert.isTrue(logCheck);
+    assert.isTrue(logCheck && cbCheck);
   })
 
   it("should indicate error if partitionKey is undefined from kinesis record", ()=>{
@@ -124,14 +127,17 @@ describe('Platform_services-handler', function() {
     event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIiINCgkJfSwNCgkJIlNFUlZJQ0VfTkFNRSI6IHsNCgkJCSJTIjogInRlc3Q4Ig0KCQl9LA0KCQkiRVZFTlRfU1RBVFVTIjogew0KCQkJIlMiOiAiIg0KCQl9LA0KCQkiRVZFTlRfVFlQRSI6IHsNCgkJCSJTIjogIlNFUlZJQ0VfQ1JFQVRJT04iDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInN2Y19jcHRfam5rX2F1dGhfcHJkIg0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0sDQoJCSJBQUEiOiB7DQoJCQkiTlVMTCI6IHRydWUNCgkJfSwNCgkJIkJCQiI6IHsNCgkJCSJTIjogInZhbCINCgkJfQ0KCX0sDQoJIlJldHVybkNvbnN1bWVkQ2FwYWNpdHkiOiAiVE9UQUwiLA0KCSJUYWJsZU5hbWUiOiAiRXZlbnRzX0RldiINCn0=";
     logMessage = "SQS error";
     logStub = sinon.stub(logger, 'error', spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
       return cb(err)
     });
-    var callFunction = index.handler(event, context, callback);
-    var logCheck = logStub.args[2][0].includes(logMessage);
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logCheck = logStub.args[logStub.args.length-1][0].includes(logMessage);
+    var cbCheck = stub.args[0][0].errorType === err.errorType && stub.args[0][0].message === err.message
     AWS.restore("SQS");
     logStub.restore();
-    assert.isTrue(logCheck);
+    stub.restore();
+    assert.isTrue(cbCheck && logCheck);
   });
 
   it("should indicate validation error if kinesis record contain invalid EVENT_NAME or EVENT_STATUS", ()=>{
@@ -139,14 +145,17 @@ describe('Platform_services-handler', function() {
     event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIiINCgkJfSwNCgkJIlNFUlZJQ0VfTkFNRSI6IHsNCgkJCSJTIjogInRlc3Q4Ig0KCQl9LA0KCQkiRVZFTlRfU1RBVFVTIjogew0KCQkJIlMiOiAiIg0KCQl9LA0KCQkiRVZFTlRfVFlQRSI6IHsNCgkJCSJTIjogIlNFUlZJQ0VfQ1JFQVRJT04iDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInN2Y19jcHRfam5rX2F1dGhfcHJkIg0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0sDQoJCSJBQUEiOiB7DQoJCQkiTlVMTCI6IHRydWUNCgkJfSwNCgkJIkJCQiI6IHsNCgkJCSJTIjogInZhbCINCgkJfQ0KCX0sDQoJIlJldHVybkNvbnN1bWVkQ2FwYWNpdHkiOiAiVE9UQUwiLA0KCSJUYWJsZU5hbWUiOiAiRXZlbnRzX0RldiINCn0=";
     logMessage = "validation error. Either event name or event status is not properly defined.";
     logStub = sinon.stub(logger, 'error', spy);
+    stub = sinon.stub(callbackObj, 'callback', spy);
     AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
       return cb(null, callbackObj)
     });
     var callFunction = index.handler(event, context, callbackObj.callback);
+    var cbCkeck = stub.args[0][1].failed_events === event.Records.length;
     var logCheck = logStub.args[0][0].includes(logMessage);
     AWS.restore("SQS");
     logStub.restore();
-    assert.isTrue(logCheck);
+    stub.restore();
+    assert.isTrue(logCheck && cbCkeck);
   });
 
   it("should indicate success from 200 response if kinesis data is defined for startingEvent", ()=>{
@@ -157,15 +166,18 @@ describe('Platform_services-handler', function() {
       data : "hello"
     }
     logMessage = 'created a new service in service catalog';
+    stub = sinon.stub(callbackObj, 'callback', spy);
     logStub = sinon.stub(logger,'verbose', spy);
     reqStub = sinon.stub(request, "Request", (obj) => {
       return obj.callback(null, responseObject, bodyObj);
     });
-    var callFunction = index.handler(event, context, callback);
+    var callFunction = index.handler(event, context, callbackObj.callback);
     var logCheck = logStub.args[0][0].includes(logMessage);
+    var cbCheck = (stub.args[0][1].failed_events + stub.args[0][1].processed_events) === event.Records.length;
     logStub.restore();
     reqStub.restore();
-    assert.isTrue(logCheck);
+    stub.restore();
+    assert.isTrue(logCheck && cbCheck);
   });
 
   it("should indicate error for 200 response with body.data undefined and kinesis data is defined for startingEvent", ()=>{
@@ -176,6 +188,7 @@ describe('Platform_services-handler', function() {
     var bodyObj={
       data:""
     };
+    stub = sinon.stub(callbackObj, 'callback', spy);
     logMessage = 'Unknown error while creating a new service';
     logStub = sinon.stub(logger,'error', spy);
     AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
@@ -187,12 +200,14 @@ describe('Platform_services-handler', function() {
         return obj.callback(null, responseObject, bodyObj);
       });
       var callFunction = index.handler(event, context, callbackObj.callback);
+      var cbCheck = (stub.args[0][1].failed_events + stub.args[0][1].processed_events) === event.Records.length;
       var logCheck = logStub.args[0][0].includes(logMessage);
       reqStub.restore();
     }
+    stub.restore();
     logStub.restore();
     AWS.restore("SQS");
-    assert.isTrue(logCheck);
+    assert.isTrue(logCheck && cbCheck);
   });
 
   it("should indicate error if response status code is not 200 and kinesis data is defined for startingEvent", ()=>{
@@ -203,18 +218,21 @@ describe('Platform_services-handler', function() {
     };
     logMessage = 'Processing error while creating a new service';
     logStub = sinon.stub(logger,'error', spy);
+    stub = sinon.stub(callbackObj, 'callback', spy);
     AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
       return cb(null, callbackObj)
     });
     reqStub = sinon.stub(request, "Request", (obj) => {
       return obj.callback(null, responseObject, null);
     });
-    var callFunction = index.handler(event, context, callback);
+    var callFunction = index.handler(event, context, callbackObj.callback);
     var logCheck = logStub.args[0][0].includes(logMessage);
+    var cbCheck = (stub.args[0][1].failed_events + stub.args[0][1].processed_events) === event.Records.length;
     logStub.restore();
     reqStub.restore();
+    stub.restore();
     AWS.restore("SQS");
-    assert.isTrue(logCheck);
+    assert.isTrue(logCheck && cbCheck);
   });
 
   it("should indicate error if response status code is not 200 and kinesis data is defined for failed EVENT_STATUS", ()=>{
@@ -227,16 +245,19 @@ describe('Platform_services-handler', function() {
     AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
       return cb(null, callbackObj)
     });
+    stub = sinon.stub(callbackObj, 'callback', spy);
     logStub = sinon.stub(logger, 'error', spy);
     reqStub = sinon.stub(request, "Request", (obj)=>{
       return obj.callback(null, responseObject, null);
     });
-    var callFunction = index.handler(event, context, callback);
+    var callFunction = index.handler(event, context, callbackObj.callback);
     var logCheck = logStub.args[0][0].includes(logMessage);
+    var cbCheck = (stub.args[0][1].failed_events + stub.args[0][1].processed_events) === event.Records.length;
+    stub.restore();
     logStub.restore();
     reqStub.restore();
     AWS.restore("SQS");
-    assert.isTrue(logCheck);
+    assert.isTrue(logCheck && cbCheck);
   });
 
   it("should indicate error if response status code is 200 with body.data undefined and kinesis data is defined for failed EVENT_STATUS", ()=>{
@@ -250,6 +271,7 @@ describe('Platform_services-handler', function() {
     AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
       return cb(null, callbackObj)
     });
+    stub = sinon.stub(callbackObj, 'callback', spy);
     logStub = sinon.stub(logger, 'error', spy);
     for(i in invalidArray){
       reqStub = sinon.stub(request, "Request", (obj) => {
@@ -257,13 +279,15 @@ describe('Platform_services-handler', function() {
         var body = JSON.stringify(bodyObj);
         return obj.callback(null, responseObject, bodyObj);
       });
-      var callFunction = index.handler(event, context, callback);
+      var callFunction = index.handler(event, context, callbackObj.callback);
       var logCheck = logStub.args[0][0].includes(logMessage);
+      var cbCheck = (stub.args[0][1].failed_events + stub.args[0][1].processed_events) === event.Records.length;
       reqStub.restore();
     }
     AWS.restore("SQS");
     logStub.restore();
-    assert.isTrue(logCheck);
+    stub.restore();
+    assert.isTrue(logCheck && cbCheck);
   });
 
   it("should indicate sucess from 200 response for the kinesis data with failed EVENT_STATUS",()=>{
@@ -278,14 +302,17 @@ describe('Platform_services-handler', function() {
       "message":"error updating service "
     };
     logStub = sinon.stub(logger, 'verbose', spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     getReqStub = sinon.stub(request,'Request', (obj)=>{
       return obj.callback(null, responseObjectGET, bodyObj);
     });
-    var callFunction = index.handler(event, context, callback);
+    var callFunction = index.handler(event, context, callbackObj.callback);
     var logCheck = logStub.args[0][0].includes(logMessage);
+    var cbCheck = (stub.args[0][1].failed_events + stub.args[0][1].processed_events) === event.Records.length;
     logStub.restore();
+    stub.restore();
     getReqStub.restore();
-    assert.isTrue(logCheck)
+    assert.isTrue(logCheck && cbCheck)
   });
 
   it("should indicate error if response code is not 200 and kinesis data is defined for complted endingEvent", ()=>{
@@ -298,16 +325,19 @@ describe('Platform_services-handler', function() {
     AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
       return cb(null, callbackObj)
     });
+    stub = sinon.stub(callbackObj, 'callback', spy);
     logStub = sinon.stub(logger, 'error', spy);
     reqStub = sinon.stub(request, "Request", (obj)=>{
       return obj.callback(null, responseObject, null);
     });
-    var callFunction = index.handler(event, context, callback);
+    var callFunction = index.handler(event, context, callbackObj.callback);
     var logCheck = logStub.args[0][0].includes(logMessage);
+    var cbCheck = (stub.args[0][1].failed_events + stub.args[0][1].processed_events) === event.Records.length;
     logStub.restore();
+    stub.restore();
     reqStub.restore();
     AWS.restore("SQS");
-    assert.isTrue(logCheck);
+    assert.isTrue(logCheck && cbCheck);
   });
   
   it("should indicate error if response status code is 200 with body.data undefined and kinesis data is defined for complted endingEvent", ()=>{
@@ -321,6 +351,7 @@ describe('Platform_services-handler', function() {
     AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
       return cb(null, callbackObj)
     });
+    stub = sinon.stub(callbackObj, 'callback', spy);
     logStub = sinon.stub(logger, 'error', spy);
     for(i in invalidArray){
       reqStub = sinon.stub(request, "Request", (obj) => {
@@ -328,13 +359,15 @@ describe('Platform_services-handler', function() {
         var body = JSON.stringify(bodyObj);
         return obj.callback(null, responseObject, bodyObj);
       });
-      var callFunction = index.handler(event, context, callback);
+      var callFunction = index.handler(event, context, callbackObj.callback);
       var logCheck = logStub.args[0][0].includes(logMessage);
+      var cbCheck = (stub.args[0][1].failed_events + stub.args[0][1].processed_events) === event.Records.length;
       reqStub.restore();
     };
     AWS.restore("SQS");
     logStub.restore();
-    assert.isTrue(logCheck);
+    stub.restore();
+    assert.isTrue(logCheck && cbCheck);
   });
 
   it("should indicate sucess from 200 response for the kinesis data with completed endingEvent",()=>{
@@ -348,13 +381,16 @@ describe('Platform_services-handler', function() {
       statusCode: 400,
       "message":"error updating service "
     };
+    stub = sinon.stub(callbackObj, 'callback', spy);
     logStub = sinon.stub(logger, 'verbose', spy);
     getReqStub = sinon.stub(request,'Request', (obj)=>{
       return obj.callback(null, responseObjectGET, bodyObj);
     });
-    var callFunction = index.handler(event, context, callback);
+    var callFunction = index.handler(event, context, callbackObj.callback);
     var logCheck = logStub.args[0][0].includes(logMessage);
+    var cbCheck = (stub.args[0][1].failed_events + stub.args[0][1].processed_events) === event.Records.length;
     logStub.restore();
+    stub.restore();
     getReqStub.restore();
     assert.isTrue(logCheck)
   });
