@@ -207,9 +207,11 @@ node() {
 						createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION,roleId);
 						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)						
 					}
+
 					updateApiDocUrl(current_environment)
 					sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
 					echo "completed deployment........."					
+					
 					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 					def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
 					send_status_email(config, 'COMPLETED',svc_status)	
