@@ -53,9 +53,15 @@ def loadServiceConfigurationData() {
 		}
 		
 		if ( (service_name.trim() == "platform_events") ) {
-			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./components/dev-config.json"
-			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./components/stg-config.json"
-			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./components/prod-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+		}
+		
+		if ( (service_name.trim() == "platform_events-handler") ) {
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
 		}
 		
 		if ( (service_name.trim() == "platform-services-handler") ) {
@@ -218,7 +224,7 @@ def setServiceName(serviceName){
 }
 
 def setKinesisStream(config){
-	if ( (config['service'].trim() == "platform-services-handler") ) {
+	if ( (config['service'].trim() == "platform-services-handler") || (config['service'].trim() == "platform_events-handler") ) {
 		def function_name =  "${service_config.INSTANCE_PREFIX}-" + config['service'] + "-" +  current_environment
 		def event_source_list = sh (
 			script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
