@@ -43,13 +43,13 @@ def loadServiceConfigurationData() {
 		if (fileExists('swagger/swagger.json')){
 			//Swagger SEDs
 			echo "Updating the Swagger SEDs"
-			sh "sed -i -- 's/{conf-role}/" + role_arn + "/g' ./swagger/swagger.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
-			sh "sed -i -- 's/{conf-accId}/" + role_id + "/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-role}/${role_arn}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
 		 }
 
 		if ((service_name.trim() == "delete-serverless-service") ) {
-			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkins_url + "/g' ./index.js"
+			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./index.js"
 		}
 		
 		if ( (service_name.trim() == "platform_events") ) {
@@ -69,28 +69,36 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.STG_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.PROD_ID}/g' ./config/prod-config.json"
 			
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 			
-			sh "sed -i -- 's/{conf-accId}/" + role_id + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-accId}/" + role_id + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-accId}/" + role_id + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./config/prod-config.json"
+			
+			sh "sed -i -- 's/{jazz_admin}/${service_config.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${service_config.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${service_config.JAZZ.ADMIN}/g' ./config/prod-config.json"
+			
+			sh "sed -i -- 's/{jazz_admin_creds}/${service_config.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${service_config.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${service_config.JAZZ.PASSWD}/g' ./config/prod-config.json"
 			
 		}
 		
 		if ( (service_name.trim() == "platform_login") || (service_name.trim() == "platform_logout") || (service_name.trim() == "cognito-authorizer")) {
 			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 		  
 			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 		  
 			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
 			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 		
 		if ( (service_name.trim() == "is-service-available")){
@@ -98,9 +106,9 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 
 		if ( (service_name.trim() == "create-serverless-service") ) {
@@ -110,27 +118,27 @@ def loadServiceConfigurationData() {
 		}
 		
 		if ( (service_name.trim() == "delete-serverless-service") || (service_name.trim() == "create-serverless-service") ) {
-			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkins_url + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkins_url + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkins_url + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/prod-config.json"
 
 			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 		  
 			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 		  
 			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
 			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 		
 		if (service_name.trim() == "platform_services") {
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 
 		if (service_name.trim() == "platform_logs") {
@@ -158,9 +166,9 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{user_client_id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{user_client_id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{region}/" + region + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{region}/" + region + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{region}/" + region + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{region}/${region}/g' ./config/prod-config.json"
 
 			sh "sed -i -- 's/{scm_type}/${service_config.SCM.TYPE}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{scm_type}/${service_config.SCM.TYPE}/g' ./config/stg-config.json"
@@ -193,9 +201,9 @@ def loadServiceConfigurationData() {
 
 		if (service_name.trim() == "platform_email") {
 			echo "Updating parameter specific to platform email"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 	}
 	catch(e){
@@ -224,7 +232,7 @@ def setServiceName(serviceName){
 }
 
 def setKinesisStream(config){
-	if ( (config['service'].trim() == "platform-services-handler") || (config['service'].trim() == "platform_events-handler") ) {
+	if ( (config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ) {
 		def function_name =  "${service_config.INSTANCE_PREFIX}-" + config['service'] + "-" +  current_environment
 		def event_source_list = sh (
 			script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
