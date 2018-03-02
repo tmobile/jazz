@@ -1,15 +1,17 @@
 #!groovy
-import groovy.json.JsonSlurper
+import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
+
 @Field def repo_credential_id
 @Field def repo_base
 @Field def repo_core
 @Field def scm_type
 
-//jenkins-build-pack-api
+
+
 //definitions
 def Event_Name =[
 	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
@@ -42,16 +44,11 @@ def Event_Status = [
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
+@Field def serviceConfigdata
 
-@Field def g_login_token = ''
-@Field def g_base_url = ''
+@Field def auth_token = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
-@Field def service_id = ''
-
-@Field def preserveEnvKey = ''
-@Field def preserveEnvValue = ''
-@Field def created_by = ''
-
+@Field def g_base_url = ''
 @Field def current_environment = ''
 @Field def g_base_url_for_swagger = ''
 
@@ -59,111 +56,96 @@ def Event_Status = [
 
 node() {
 	def jazzBuildModuleURL = getBuildModuleUrl()
-	loadConfigModule(jazzBuildModuleURL)
-	loadSCMModule(jazzBuildModuleURL)
+	loadBuildModule(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
-
+	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"	
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
 
     echo "Build triggered via branch: " + params.scm_branch
 
     def serviceName = params.service_name
-    def cfStackName = params.service_name
 	def branch = params.scm_branch
-
 	def repo_name = params.service_name
-
-	def config
-
-	if (params.scm_branch == 'master') {
+	
+	if (branch == 'master') {
 		current_environment = 'prod'
 	}else {
 		current_environment = 'dev'
 	}
 
+	def config
+	def domain = params.domain
+	
     stage('Checkout code base') {
-
-		if (domain  && domain.trim()!="") {
-			repo_name = params.domain + "-" + params.service_name
+		if (params.domain  && params.domain.trim() != "" ) {			
+			if(domain != "platform" && configLoader.SCM.TYPE != "gitlab"){
+				repo_name = params.domain + "-" + params.service_name				
+			}
 		 }else{
 			domain = ""
-		}
-
+		}	
+	
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
-
+		
+		def repocloneUrl
+		if(domain && domain == "platform"){
+			repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
+		}else{
+			auth_token = setCredentials()
+			repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
+		}
+		
 		dir(repo_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getRepoCloneUrl(repo_name)]]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
 		}
-
-		sh 'cd ' + repo_name
 
 		// @TODO: dir can be removed, needs to be refactored
 		def configObj = dir(repo_name)
 		{
 			return LoadConfiguration()
 		}
-
-		if(configObj.service_id){
-			def url = "$g_base_url/platform/services/"+configObj.service_id
-			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
-			serviceMetadata.setUrl(url)
-			def serviceData = serviceMetadata.loadServiceMetaData()
-			if(serviceData && serviceData.data){
-				config = serviceData.data['metadata']
-			}else{
-				error "Error while fetching service metadata"
-			}
+		
+		if(configObj.service_id){	
+			config = serviceConfigdata.loadServiceMetadata(configObj.service_id,configLoader)
 		}else{
 			error "Service Id is not available."
 		}
 	}
-
-	def domain = config['domain']
+	
+	domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
 
+	serviceName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
+	
 	def internalAccess = config['require_internal_access']
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
 
 	// @TODO: the below statement will be replaced with regular expression in very near future;
-	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
+	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))  	
 
-  	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-cloud-logs-streamer-prod"
-
-    if (domain  && domain.trim()!="") {
-        serviceName = domain.trim() + "-" + serviceName
-        cfStackName = cfStackName + "-" + domain.trim() //sets CF Stack name as service--domain-env
-	 }else{
-        domain = ""
-    }
-
-	serviceName = configLoader.INSTANCE_PREFIX + "-" + serviceName
-
-	cfStackName = serviceName
-
-	sh 'cd ' + repo_name
 
 	dir(repo_name)
 	{
-		loadServerlessConfig(runtime,config)
+		loadServerlessConfig(runtime)
 
-		sh "cp serverless.yml serverless-prod.yml"
-		sh "cp swagger/swagger.json swagger/swagger-prod.json"
-
-		stage('Pre-Build Validation') {
-			def currentendpointKey = ''
-			if (params.scm_branch == 'master') {
-				currentendpointKey = 'prod'
-			}else {
-				currentendpointKey = 'dev'
-			}
-
-			loadServiceInfo(params.service_name, domain, g_base_url + '/platform/services', currentendpointKey)
-
-			send_status_email(created_by, 'STARTED', params.service_name, '')
+		if(domain && domain == "platform"){
+			stage ('Update Service Template'){
+				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
+				echo "Inside Update service template"
+				try{
+					updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)	
+				}
+				catch(error){
+					sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.COMPLETED, "")
+					error "Error occured while updating service template."
+				}
+			}			
+	    }
+		stage('Pre-Build Validation') {				
+			send_status_email(config, 'STARTED',"")
 			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_INPUT, Event_Status.STARTED, "")
 
 			validateDeploymentConfigurations(config)
@@ -171,7 +153,7 @@ node() {
 
 			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_INPUT, Event_Status.COMPLETED, "")
 		}
-
+		
 		stage('Build') {
 		   // @TODO : Send Event feature coming soon
 			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.STARTED, "")
@@ -179,145 +161,66 @@ node() {
 			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.COMPLETED, "")
 		}
 
-		if (params.scm_branch == 'master') {
-			stage('Deployment to Production Env') {
+		def env_key
+		if(branch == "master") {
+			env_key = "PROD"
+		}else{
+			env_key = "DEV"
+		}
+		stage("Deployment to ${env_key} environment") {
+			sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
+			echo "starts Deployment to ${env_key} Env"
 
-				sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
-				echo "starts Deployment to Production Env"
-
-				sh "cp serverless-prod.yml serverless.yml"
-				sh "cp swagger/swagger-prod.json swagger/swagger.json"
-				sh "rm -rf .serverless"
-
-
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-					echo "AWS Configure ......."
-					sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
-					//sh "serverless config credentials --provider aws --key $AWS_ACCESS_KEY_ID --secret $AWS_SECRET_ACCESS_KEY"
-
-					// Generate serverless yml file with domain added in function name
-					echo "Generate deployment env with domain for PRODUCTION"
-
-					writeServerlessFile(config)
-
-					generateServerlessYml(service, current_environment, serviceName, cfStackName)
-
-					setLambdaExecutionRole(configLoader.AWS.ROLEID);
-
-					echo "serverless deploy......."
-
-					sh "serverless deploy --stage prod -v --bucket " + configLoader.AWS.S3.PROD_BUCKET
-
-					createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION, logStreamer);
-
-					def svc_status = ''
-					if (fileExists('swagger/swagger.json')) {
-						// Generate swagger file based on environment
-						echo "Generating the swagger file for each environment"
-
-						def apiHostName = "${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" //Staging environment
-
-
-						generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, config)
-						//validateSwaggerFile( service, domain, apiHostName )
-						// import swagger api spec
-						echo "Deploying to staging API Gateway environment.."
-
-						sh "${aws_api_import} --region ${configLoader.AWS.REGION}  --update ${configLoader.AWS.API.PROD_ID} --deploy prod swagger/swagger.json "
-
-						//To be used once we remove the build-deploy-platform-services jenkinsjob
-						//Tagging the prod stage created for api deployment in the above shell step
-						//sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API.PROD_ID}/stages/prod --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX} --profile cloud-api"
-
-						def endpointUrl = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod/" + domain + "/" + params.service_name
-
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, endpointUrl)
-
-						updateApiDocUrl(current_environment)
-
-						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${params.service_name}/${current_environment} --recursive "
-
-						svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
-					}
-
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
-					updateServiceInDB(params.service_name, domain, g_base_url + '/platform/services', "active")
-					// resetCredentials()
-					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-				}
-			}//stage to prod ends here
-
-
-		} else {
-			stage('Deployment to Dev Env') {
-				sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
-				echo "starts Deployment to Development Env"
-
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 				echo "AWS Configure ......."
 				sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
-				loadServerlessConfig(runtime, config)
-
+				
 				// Generate serverless yml file with domain added in function name
-				echo "Generate deployment env with domain"
-
-				writeServerlessFile(config)
-
-				generateServerlessYml(service, current_environment, serviceName, cfStackName)
-
+				echo "Generate deployment env with domain for ${env_key}"
+				
+				writeServerlessFile(config, current_environment)				
+				
 				setLambdaExecutionRole(configLoader.AWS.ROLEID);
 
 				echo "serverless deploy......."
-
-				sh "serverless deploy --stage dev -v --bucket " + configLoader.AWS.S3.DEV_BUCKET
-
-				createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION, logStreamer);
-
-				def svc_status = ''
+				def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
+				sh "serverless deploy --stage ${current_environment} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+								
 				if (fileExists('swagger/swagger.json')) {
 					// Generate swagger file based on environment
 					echo "Generating the swagger file for each environment"
 
-					def apiHostName = "${configLoader.AWS.API.DEV_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" //Staging environment
-
-					generateSwaggerEnv(service, current_environment, service, apiHostName, domain, serviceName, config)
-					//validateSwaggerFile( service, domain, apiHostName )
-					// import swagger api spec
+					def api_key = env_key + "_ID"
+					def apiHostName = "${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" //Staging environment
+					generateSwaggerEnv(current_environment, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName,config)
 					echo "Deploying to staging API Gateway environment.."
-
-					sh "$aws_api_import --region ${configLoader.AWS.REGION} --update ${configLoader.AWS.API.DEV_ID} --deploy dev swagger/swagger.json"
-
-					//To be used once we remove the build-deploy-platform-services jenkinsjob
-					//Tagging the dev stage created for api deployment in the above shell step
-					//sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API.DEV_ID}/stages/dev --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX} --profile cloud-api"
-
-					def endpointUrl = "https://${configLoader.AWS.API.DEV_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/dev/" + domain + "/" + params.service_name
-					updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, endpointUrl)
-
-          			updateApiDocUrl(current_environment)
-
-					sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${params.service_name}/${current_environment} --recursive "
-
-					svc_status  = "Your service endpoint for production environment: $endpointUrl \n\nView and test your API here: $g_base_url_for_swagger$domain/$service/dev/swagger.json"
+					sh "aws apigateway put-rest-api --rest-api-id ${configLoader.AWS.API[api_key]} --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
+                    sh "aws apigateway create-deployment --rest-api-id ${configLoader.AWS.API[api_key]} --stage-name ${current_environment} --profile cloud-api"
+					
+					def endpointUrl = "https://${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/${current_environment}/" + domain + "/" + config['service']
+					if(domain != "platform"){
+						createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION,roleId);
+						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)						
+					}
+					updateApiDocUrl(current_environment)
+					sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
+					echo "completed deployment........."					
+					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
+					send_status_email(config, 'COMPLETED',svc_status)	
 				}
-
-				// @TODO : Resetting the credentials needs to be introduced. (Re-use of same profile on Async calls needs to be considered)
-				// resetCredentials()
-
-				send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
-				updateServiceInDB(params.service_name, domain, g_base_url + '/platform/services', "active")
-				// @TODO : Send Event feature coming soon
-				sendEvent(service, branch, runtime, "DEVELOPMENT", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-			  }
-			} //Stage to deploy ends here
-
-		}//if branch name ends here
+				if(domain && domain == "platform"){						
+					serviceConfigdata.setLogStreamPermission(config)					
+				}else{
+					updateServiceInDB(config, "active")					
+				}				
+				echo "completed deployment........."					
+				sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+								
+			}//stage to prod ends here
+		}
 	}//dir ends here
 }
 
@@ -326,97 +229,44 @@ def echoServerlessFile() {
 	echo "serverless file data $serverlessyml"
 }
 
-def addVpnDetails() {
-	echo "addVpndetails to serverless.yml file"
-	sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
-}
-
 def LoadConfiguration() {
-	def prop = [:]
 	def result = readFile('deployment-env.yml').trim()
 	echo "result of yaml parsing....$result"
+	def prop = [: ]
 	def resultList = result.tokenize("\n")
-	// delete commented lines
-	def cleanedList = []
-	for (i in resultList) {
-		if(!i.toLowerCase().startsWith("#")) {
-			cleanedList.add(i)
-		}
-	}
 
-	def newItem = ["subnetIds", ""]
-	for (item in cleanedList) {
-
-		// Clean up to avoid issues with more ":" in the values
+    // delete commented lines
+    def cleanedList = []
+    for (i in resultList) {
+        if (i.toLowerCase().startsWith("#")) {} else {
+            cleanedList.add(i)
+        }
+    }
+    // echo "result of yaml parsing after clean up....$cleanedList"
+    for (item in cleanedList) {
+        // Clean up to avoid issues with more ":" in the values
 		item = item.replaceAll(" ", "").replaceFirst(":", "#");
-
 		def eachItemList = item.tokenize("#")
-		//handle empty values
-		def value = "";
-		if(eachItemList[1]) {
-			value = eachItemList[1].trim();
-		}
-
-		if(eachItemList[0].trim() == "securityGroupIds")
-		{
-			if(value.indexOf('"') == -1)
-				value = "\"" + value + "\""
-		}
-
-		if(eachItemList[0].trim() == "subnetIds1" || eachItemList[0].trim()  == "subnetIds2" || eachItemList[0].trim()  == "subnetIds3")
-		{
-			if(newItem[1].trim()  == "")
-				newItem[1] = "\""  + eachItemList[1].trim()
-
-			else
-				newItem[1] =  newItem[1].trim()  + "," + eachItemList[1].trim()
-
-		}
-		else if(eachItemList[0]) {
-			prop.put(eachItemList[0].trim(), value)
-		}
-
-	}
-
-	if(newItem[1] != "")
-	{
-	 	newItem[1] =  newItem[1].trim()  + "\""
-		prop.put(newItem[0].trim(),  newItem[1].trim())
-	}
-
-	echo "Loaded configurations...$prop"
-
-	return prop
-}
-
-/**
- Run validation based on runtime
-*/
-def runValidation(String runtime) {
-    if (runtime.indexOf("nodejs") > -1) {
-        echo "running validations for $runtime"
-        sh "jshint *.js"
-    } else if (runtime.indexOf("java") > -1) {
-        echo "running validations for $runtime"
-
-        dir('_java') {
-            sh 'wget -q $CHECKSTYLE_LIB'
+        //handle empty values
+        def value = null;
+        if (eachItemList[1]) {
+            value = eachItemList[1].trim();
         }
 
-        sh 'java -cp _java/checkstyle-7.6-all.jar com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src'
+        if (eachItemList[0]) {
+            prop.put(eachItemList[0].trim(), value)
+        }
 
-    } else if (runtime.indexOf("python") > -1) {
-        echo "running validations for $runtime"
-        sh "pip install pep8"
-        sh "pep8 . --exclude=\"library/*\""
-        echo "validations for $runtime succeeded"
     }
+	echo "Loaded configurations....$prop"
+	return prop	
 }
+
 
 /**
 	Build project based on runtime
 */
-def buildLambda(String runtime) {
+def buildLambda(runtime) {
     echo "installing dependencies for $runtime"
     if (runtime.indexOf("nodejs") > -1) {
         sh "npm install --save"
@@ -438,78 +288,18 @@ def buildLambda(String runtime) {
 
 }
 
-/**
-	Run Test cases based on runtime
-*/
-def runTestCases(String runtime) {
-    echo "Run test cases for $runtime"
-    if (runtime.indexOf("nodejs") > -1) {
-        sh "npm test"
-    } else if (runtime.indexOf("java") > -1) {
-        sh "mvn test"
-    } else if (runtime.indexOf("python") > -1) {
-        sh """
-        . venv/bin/activate
-        pip install pytest
-		pytest test
-        """
-    }
-}
-
-/**
-	Parse Yml file and validate for
-	invalid configurations
-*/
-def validateUserConfigurationYml() {
-    echo "Validating serverless.yml configuration file"
-    def prop = [: ]
-    def result = readFile('serverless.yml').trim()
-    def resultList = result.tokenize("\n")
-
-    // delete commented lines
-    def cleanedList = []
-    for (i in resultList) {
-        if (i.toLowerCase().startsWith("#")) {} else {
-            cleanedList.add(i)
-        }
-    }
-
-    // echo "result of yaml parsing after clean up....$cleanedList"
-
-    for (item in cleanedList) {
-        // Clean up to avoid issues with more ":" in the values
-		item = item.replaceAll(" ", "").replaceFirst(":", "#");
-		def eachItemList = item.tokenize("#")
-        // def eachItemList = item.tokenize(":")
-        echo "result of yaml parsing eachItemList....$eachItemList"
-
-        //handle empty values
-        def value = null;
-        if (eachItemList[1]) {
-            value = eachItemList[1].trim();
-        }
-
-        if (eachItemList[0]) {
-            prop.put(eachItemList[0].trim(), value)
-        }
-    }
-
-    // validate for invalid configurations
-    if (prop.containsKey("events")) {
-        error "Wrong configuration. Key $prop['events'] is not allowed"
-    }
-}
 
 /**
 	Generate the swagger file specific to each environment
 */
-def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, serviceName, config) {
-    sh "sed -i -- 's/{lambda_function_name}/" + serviceName + "-" + env + "/g' swagger/swagger.json"
+def generateSwaggerEnv(env, deploymentNode, apiHostName,config) {
+    sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['service']}-${env}/g' swagger/swagger.json"
     sh "sed -i -- 's/{api_deployment_node_title}/" + deploymentNode + "/g' swagger/swagger.json" // {api_deployment_node_title}
-    sh "sed -i -- 's/{service_name}/" + service + "/g' swagger/swagger.json" // {service_name}
+    sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
     sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
-    sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json" // {domain}
-
+    sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
+	sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
+	sh "sed -i -- 's/{envmnt}/" + env + "/g' swagger/swagger.json" // {environment}
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
 
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;
@@ -520,16 +310,9 @@ def generateSwaggerEnv(service, env, deploymentNode, apiHostName, domain, servic
 	sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
 }
 
-/**
-	Generate the serverless yml file with domain name in lambda name
-*/
-def generateServerlessYml(service, env, serviceName, cfStackName) {
-    sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: " + serviceName + "-" + env + "/g' serverless.yml"
-    sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
-	sh "sed -i -- 's/{env-stage}/" + env + "/g' serverless.yml"
-}
-
-def writeServerlessFile(config){
+def writeServerlessFile(config, current_environment){
+	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['service']}/g' serverless.yml"
+	sh "sed -i -- 's/{env-stage}/" + current_environment + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
@@ -587,7 +370,7 @@ def validateDeploymentConfigurations(def prop) {
             error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 
         } else {
-            def validRuntimes = ["nodejs4.3", "python2.7", "java8"] //@TODO. Add more runtime supports. DSundar3
+            def validRuntimes = ["nodejs4.3","nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports. DSundar3
             def flag = false
             for (int i = 0; i < validRuntimes.size(); i++) {
                 if (_runtime == validRuntimes[i]) {
@@ -640,11 +423,7 @@ def validateDeploymentConfigurations(def prop) {
 
 }
 
-def loadServerlessConfig(String runtime, config) {
-
-	def subnetIds = config['subnetIds']
-	def securityGroupIds = config['securityGroupIds']
-	def internalAccess = config['require_internal_access']
+def loadServerlessConfig(runtime) {
     dir('_config') {
 		def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
 
@@ -701,16 +480,16 @@ def updateApiDocUrl(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(String service, String env, String region, String logStreamer) {
-	def lambda = "/aws/lambda/"+service+"-"+env
-	def cloudLogsStreamer = logStreamer
+def createSubscriptionFilters(service, env, region,roleId) {
+	def lambda = "/aws/lambda/${service}-${env}"
+	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-cloud-logs-streamer-prod"
 	try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
 	}catch(Exception ex) {}// ignore if already existing
 
 	try {
 		filter_json = sh (
-			script: "aws logs describe-subscription-filters --output json --log-group-name \""+lambda+"\" --region "+region ,
+			script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${region}" ,
 			returnStdout: true
 		).trim()
 		echo "${filter_json}"
@@ -719,139 +498,40 @@ def createSubscriptionFilters(String service, String env, String region, String 
         filtername = resultJson.subscriptionFilters[0].filterName
 		echo "removing existing filter... $filtername"
 		if(filtername != "" && !filtername.equals(lambda)) {
-			sh "aws logs delete-subscription-filter --output json --log-group-name \""+lambda+"\" --filter-name \""+filtername+"\" --region "+region
+			sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --region ${region}"
 		}
 	}catch(Exception ex) {}// ignore error if not created yet
-	sh "aws logs put-subscription-filter --output json --log-group-name \""+lambda+"\" --filter-name \""+lambda+"\" --filter-pattern \"\" --destination-arn \""+cloudLogsStreamer+"\" --region "+region
+	
+	sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region}"
 }
 
-/**
-    Read basepath from swagger
-*/
-def getBasePath() {
 
-    def propValue = "/"
-
-    if (fileExists('swagger/swagger.json')) {
-        def swaggerFile = readFile('swagger/swagger.json').trim()
-        def slurper = new groovy.json.JsonSlurper()
-        def result = slurper.parseText(swaggerFile)
-
-        propValue = result.basePath
-    }
-    def propVal = propValue.replace( /{domain}/, '' ).trim()
-    if (propVal.startsWith('/')) {
-        propVal = propVal.substring(1)
-    }
-    echo "getBasePath : $propValue -> $propVal"
-    return propVal
-}
-//Remove caching by default
-def removeResourceCaching(apiID, stage, basePath){
-    if (fileExists('swagger/swagger.json')) {
-        def json = createPathMethodList() //Returns a list maps of path and methods
-        //Loop through the list for each map entry
-        for (i = 0; i < json.size(); i++) {
-            def item = (Map)json.get(i)
-            def entries = get_map_entries(item) //Gets key value pair for path and methods
-            //Loop through each map entries
-            for (int j=0; j<entries.size(); j++){
-              String key = entries[j][0]
-              String value =  entries[j][1]
-
-              def pathVal = basePath.replaceFirst(/^(api)/,"") + key //Adds basepath to get the complete resource path and removes stage - api
-              def methodVal = value.toUpperCase()
-
-              def modifiedBasePath = pathVal.replaceAll("/", "~1")
-              sh "aws apigateway update-stage --rest-api-id $apiID --stage-name --output json $stage --patch-operations op=replace,path=/$modifiedBasePath/$methodVal/caching/enabled,value=false --region ${configLoader.AWS.REGION}"
-
-            }
-        }
-    }
-}
-//Creates a list consisting of all path-method combination from the swagger which is serializable.
-def createPathMethodList() { //Creates a list consisting of all path-method combination from the swagger
-    def swaggerFile = readFile('swagger/swagger.json').trim()
-    def lazyMap = new groovy.json.JsonSlurper().parseText(swaggerFile)
-    def jsonMap = [:]
-    jsonMap.putAll(lazyMap.paths)
-    def composedList = []
-
-    for (path in jsonMap){
-        def pathKey = path.key
-        def pathVal = [:]
-        pathVal.putAll(path.value)
-
-        //loop through all methods in path
-        for (method in pathVal){
-            def methodVal = method.key.toUpperCase()
-            def pathMap = [:]
-            pathMap[pathKey] = methodVal
-            composedList.add(pathMap)
-        }
-    }
-    return composedList;
-}
-@NonCPS
-List<List<Object>> get_map_entries(map) {
-    map.collect {k, v -> [k, v]}
-}
-
-/**
-*   Clear Virtualenvironment
-**/
-def clearVirtualEnv() {
-    // sh "virtualenv --clear venv" // to uninstall all the packages installed in venv
-    sh "rm -rf venv" // just delete the venv folder
-}
 
 def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
-	echo "Event on:" + service_name + " error:" + error
+	echo "Event on:$service_name  error: $error"
 }
 
-def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
+def updateServiceWithEndpointInfo(config,endpointKey, endpointVal) {
 
-	def token = setCredentials()
-
-	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
-
-	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
-	echo "curlOutput: $curlOutput"
-	def curlOutputJSON = jsonParse(curlOutput)
-
-	if (curlOutputJSON.data[0].id) {
-		service_id = curlOutputJSON.data[0].id
+	def updateJson = ['endpoints':[:]]
+	def serviceUrl = g_base_url + '/platform/services'	
+	if(config.endpoints){
+		for(item in config.endpoints){
+			updateJson['endpoints'][item.key] = item.value.S				
+		}
 	}
-
-	if (curlOutputJSON.data[0].endpoints) {
-		preserveEnvValue = curlOutputJSON.data[0].endpoints["$endpointKey"]
-	}
-
-	if (curlOutputJSON.data[0].created_by) {
-		created_by = curlOutputJSON.data[0].created_by
-	}
-}
-
-def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endpointVal) {
-
-	def updateJson = ''
-
-	if(preserveEnvValue) {
-		updateJson = "{ \"endpoints\": { \"$endpointKey\" : \"$endpointVal\", \"$preserveEnvKey\": \"$preserveEnvValue\"} }"
-	}else {
-		updateJson = "{ \"endpoints\": { \"$endpointKey\" : \"$endpointVal\"} }"
-	}
-
+	updateJson['endpoints'][endpointKey] = endpointVal	
+	def body = JsonOutput.toJson(updateJson)
+	
 	echo "new json $updateJson"
 
-	def serviceUpdateUrl = "$serviceUrl/$service_id"
+	def serviceUpdateUrl = "$serviceUrl/${config.service_id}"
 
 	def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
 		        -H \"accept: application/json\" \
 				-H \"Content-Type: application/json\" \
-				-H \"Authorization: $g_login_token\"  \
-				  -d \'${updateJson}\'", returnStdout:true)
+				-H \"Authorization: $auth_token\"  \
+				  -d \'${body}\'", returnStdout:true)
 
 	echo "service update result: $serviceUpdateOutput"
 }
@@ -881,7 +561,7 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 					$loginUrl \
 				-d \'${payload}\'", returnStdout:true).trim()
 
-			def tokenJson = jsonParse(token)
+			def tokenJson = parseJson(token)
 			tokenJson_token = tokenJson.data.token
 
 			return tokenJson_token
@@ -893,102 +573,109 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 	}
 }
 
- /**
- * Set Service
- * @return
- */
-def setAuthToken(token) {
-	g_login_token = token
-}
-
 /**
 * Send email to the recipient with the build status and any additional text content
 * Supported build status values = STARTED, FAILED & COMPLETED
 * @return
 */
-def send_status_email (email_id, build_status, service, email_content) {
-   	echo "Sending build notification to " + email_id
-	def body_subject = ''
-	def body_text = ''
-	def cc_email = ''
-	def body_html = ''
-   	if (build_status == 'STARTED') {
-		echo "email status started"
-		body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + service
-   	} else if (build_status == 'FAILED') {
-		echo "email status failed"
-		def build_url = env.BUILD_URL + 'console'
-		body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + service
-		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
-   	} else if (build_status == 'COMPLETED'){
-		body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
-   	} else {
-		echo "Unsupported build status, nothing to email.."
-		return
-   	}
-   	if (email_content != ''){
-		body_text = body_text + '\n\n' + email_content
-	}
-	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
-	body = JsonOutput.toJson([
-					from : fromStr,
-					to : email_id,
-					subject : body_subject,
-					text : body_text,
-					cc : cc_email,
-					html : body_html
-			    ])
-
-   	try{
-		def sendMail = sh (script: "curl -X POST \
-				${g_base_url}/platform/email \
-				-k -v -H \"Authorization: $g_login_token\" \
-				-H \"Content-Type: application/json\" \
-				-d \'${body}\'", returnStdout: true).trim()
-		def responseJSON = parseJson(sendMail)
-		if(responseJSON.data){
-			echo "successfully sent e-mail to $email_id"
+def send_status_email (config, build_status, email_content) {
+	if(domain != "platform"){
+		echo "Sending build notification to ${config['created_by']}"
+		def body_subject = ''
+		def body_text = ''
+		def cc_email = ''
+		def body_html = ''
+		if (build_status == 'STARTED') {
+			echo "email status started"
+			body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + config['service']
+		} else if (build_status == 'FAILED') {
+			echo "email status failed"
+			def build_url = env.BUILD_URL + 'console'
+			body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + config['service']
+			body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
+		} else if (build_status == 'COMPLETED'){
+			body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + config['service']
 		} else {
-			echo "exception occured while sending e-mail: $responseJSON"
+			echo "Unsupported build status, nothing to email.."
+			return
 		}
-   	} catch (e){
-       echo "Failed while sending build status notification"
-   	}
-}
+		if (email_content != ''){
+			body_text = body_text + '\n\n' + email_content
+		}
+		def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
+		body = JsonOutput.toJson([
+						from : fromStr,
+						to : config['created_by'],
+						subject : body_subject,
+						text : body_text,
+						cc : cc_email,
+						html : body_html
+					])
 
-def updateServiceInDB(service, domain, serviceUrl,status) {
+		try{
+			def sendMail = sh (script: "curl -X POST \
+					${g_base_url}/platform/email \
+					-k -v -H \"Authorization: $auth_token\" \
+					-H \"Content-Type: application/json\" \
+					-d \'${body}\'", returnStdout: true).trim()
+			def responseJSON = parseJson(sendMail)
+			if(responseJSON.data){
+				echo "successfully sent e-mail to ${config['created_by']}"
+			} else {
+				echo "exception occured while sending e-mail: $responseJSON"
+			}
+		} catch (e){
+		   echo "Failed while sending build status notification"
+		}
+	}
+}
+def updateServiceInDB(config,status) {
 
 	def updateJson = ''
-
+	def serviceUrl = g_base_url + '/platform/services'
 	if(status) {
 		updateJson = "{ \"status\": \"$status\" }"
 
 		echo "new json $updateJson"
 
-		def serviceUpdateUrl = "$serviceUrl/$service_id?isAdmin=true"
+		def serviceUpdateUrl = "$serviceUrl/${config['service_id']}?isAdmin=true"
 
 		def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
 					-H \"accept: application/json\" \
 					-H \"Content-Type: application/json\" \
-					-H \"Authorization: $g_login_token\"  \
+					-H \"Authorization: $auth_token\"  \
 					-d \'${updateJson}\'", returnStdout:true)
 
 		echo "service update result: $serviceUpdateOutput"
 	}
 }
+def updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)	{
+	echo "loadServerlessConfig......."
+	def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
+	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name)
+	serviceConfigdata.loadServiceConfigurationData()
+}
 
 @NonCPS
 def parseJson(jsonString) {
-    def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
+    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
     def m = [:]
     m.putAll(lazyMap)
     return m
 }
 
+def getBuildModuleUrl() {
+    if (scm_type && scm_type != "bitbucket") {
+      // right now only bitbucket has this additional tag scm in its git clone path
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+    }else {
+      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    } 
+} 
 /*
 * Load environment variables from build module
 */
-def loadConfigModule(buildModuleUrl){
+def loadBuildModule(buildModuleUrl){
 
 	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
@@ -1000,70 +687,11 @@ def loadConfigModule(buildModuleUrl){
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
+		
+		scmModule = load "scm-module.groovy"
+		scmModule.initialize(configLoader)
+		
+		serviceConfigdata = load "service-configuration-data-loader.groovy"
+		
 	}
-}
-
-/**
- * Load metadata module groovy file
- *
- */
-def loadServiceMetadataModule(buildURL) {
-	try {
-		echo "loading serviceMetaData, checking repos"
-
-		dir('service-metadata') {
-			checkout([$class: 'GitSCM', branches: [
-				[name: '*/master']
-			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: buildURL]
-			]])
-			serviceMetadata = load "service-metadata-loader.groovy"
-			serviceMetadata.setAuthToken(setCredentials())
-
-			// Load and set dependent utility module.
-			echo "loading util module"
-			Util = load "utility-loader.groovy"
-			serviceMetadata.setUtil(Util)
-			return serviceMetadata
-		}
-
-	}catch(ex) {
-		error "loadServiceMetadataModule Failed. "+ex.getMessage()
-	}
-}
-
-/*
-load scm module
-*/
-def loadSCMModule(buildModuleUrl){
-
-	try {
-		dir('scm-loader') {
-			checkout([$class: 'GitSCM', branches: [
-				[name: '*/master']
-			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: buildModuleUrl]
-			]])
-
-			scmModule = load "scm-module.groovy"
-			scmModule.initialize(configLoader)
-		}
-	}catch(ex) {
-		error "loadSCMModule failed " + ex.toString()
-	}
-}
-
-def getBuildModuleUrl() {
-    if (scm_type && scm_type != "bitbucket") {
-      // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git"
-    }else {
-      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    }
-}
-
-@NonCPS
-def jsonParse(jsonString) {
-    def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-    return nonLazyMap
 }

@@ -12,21 +12,18 @@ import groovy.json.JsonSlurper
 @Field def repo_core
 @Field def scm_type
 
+
+
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
+@Field def serviceConfigdata
 
-@Field def g_login_token = ''
-@Field def g_base_url = ''
-@Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 
 node  {
     
     def jazzBuildModuleURL = getBuildModuleUrl()
-	loadConfigModule(jazzBuildModuleURL)
-	loadSCMModule(jazzBuildModuleURL)
-
-    g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+	loadBuildModule(jazzBuildModuleURL)
 	
     def gitlab_repo_name  = env.gitlabSourceRepoName
     def config 
@@ -34,11 +31,12 @@ node  {
 
     try{
         sh 'rm -rf $gitlab_repo_name*'
+		def repocloneUrl = getRepoCloneUrl()
+		echo "repocloneUrl : $repocloneUrl"
     	dir(gitlab_repo_name){
-    		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getRepoUrl(gitlab_repo_name)]]])
-    	    config = getServiceConfiguration(jazzBuildModuleURL)    	   
+    		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: repocloneUrl]]])
+    	    config = getServiceConfiguration()    	   
     	}
-
     	sh 'rm -rf $gitlab_repo_name*'
     }
     catch(ex){
@@ -57,7 +55,7 @@ node  {
     def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
     if ( config['type']  != '' && config['service']  != '' && config['domain']  != '') {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: configLoader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){        
-			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"   \"${job_url}&service_name=${config['service']}&domain=${config['domain']}&scm_branch=${env.gitlabBranch}\""
+			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"   \"${job_url}&service_name=${gitlab_repo_name}&domain=${config['domain']}&scm_branch=${env.gitlabBranch}\""
 		}
 	}else  {
         error "Error: service type or service name or namespace is empty"
@@ -68,9 +66,10 @@ node  {
 	Reads deployment-env.yml.
     Returns Property Map
 */
-def getServiceConfiguration(jazzBuildModuleURL) {
+def getServiceConfiguration() {
     def prop = [:]
     if (fileExists('deployment-env.yml')){
+		echo "Reading from deployment.yml file "
         def result = readFile('deployment-env.yml').trim()
 
         def resultList = result.tokenize("\n")
@@ -98,69 +97,20 @@ def getServiceConfiguration(jazzBuildModuleURL) {
             }
         }
 
-        if(prop.service_id){	
-			def url = "$g_base_url/platform/services/${prop.service_id}"
-			
-			def serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
-			serviceMetadata.setUrl(url)			
-            def serviceData = serviceMetadata.loadServiceMetaData()
-
-			if(serviceData && serviceData.data){	
-				config = serviceData.data['metadata']
-				config['type'] = serviceData.data.type
-                return config
-			}else{
-				error "Error while fetching service metadata"
-			}
+        if(prop.service_id){			
+			def serviceData = serviceConfigdata.loadServiceMetadata(prop.service_id,configLoader)
+			return serviceData
 		}else{
 			error "Service Id is not available."
 		}
     }
-    error "Unable to find deployment-env file"
+    
 }
 
-@NonCPS
-def parseJson(jsonString) {
-    def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
-    def m = [:]
-    m.putAll(lazyMap)
-    return m
-}
-
- def setCredentials() {
-	def loginUrl = g_base_url + '/platform/login'
-	def token
-	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-		echo "user name is $UNAME"
-
-		def login_json = []
-
-		login_json = [
-			'username': UNAME,
-			'password': PWD
-		]
-		def tokenJson_token = null
-		def payload = JsonOutput.toJson(login_json)
-
-		try {
-			token = sh (script: "curl --silent -X POST -k -v \
-				-H \"Content-Type: application/json\" \
-					$loginUrl \
-				-d \'${payload}\'", returnStdout:true).trim()
-
-			def tokenJson = parseJson(token)
-			tokenJson_token = tokenJson.data.token
-			
-			return tokenJson_token
-		}
-		catch(e){
-			echo "error occured: " + e.getMessage()
-			error "error occured: " + e.getMessage()
-		}
-	}
-}
-
-def loadConfigModule(buildModuleUrl){
+/*
+* Load environment variables from build module
+*/
+def loadBuildModule(buildModuleUrl){
 
 	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
@@ -172,55 +122,15 @@ def loadConfigModule(buildModuleUrl){
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
+		
+		scmModule = load "scm-module.groovy"
+		scmModule.initialize(configLoader)
+		
+		serviceConfigdata = load "service-configuration-data-loader.groovy"
+		
 	}
 }
 
-/*
-load scm module
-*/
-def loadSCMModule(buildModuleUrl){
-
-	try {	
-		dir('scm-loader') {
-			checkout([$class: 'GitSCM', branches: [
-				[name: '*/master']
-			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: buildModuleUrl]
-			]])
-
-			scmModule = load "scm-module.groovy"
-			scmModule.initialize(configLoader)
-		}
-	}catch(ex) {
-		error "loadSCMModule failed: " + ex.toString()
-	}
-}
-
-/**
- * Load metadata module groovy file
- *
- */
-def loadServiceMetadataModule(buildURL) {
-	try {						
-		dir('service-metadata') {
-			checkout([$class: 'GitSCM', branches: [
-				[name: '*/master']
-			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: buildURL]
-			]])
-			def serviceMetadata = load "service-metadata-loader.groovy"			
-			serviceMetadata.setAuthToken(setCredentials())
-
-			// Load and set dependent utility module.
-			Util = load "utility-loader.groovy"
-			serviceMetadata.setUtil(Util)
-			return serviceMetadata 
-		}
-	
-	}catch(ex) {
-		error "loadServiceMetadataModule failed: "+ex.toString()
-	}
-}
 
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
@@ -229,4 +139,11 @@ def getBuildModuleUrl() {
     }else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     } 
+}
+
+def getRepoCloneUrl(){
+	def srcUrl = env.gitlabSourceRepoURL.tokenize(':')
+	return "http://${repo_base}/${srcUrl[1]}"
+	
 } 
+
