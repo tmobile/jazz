@@ -7,6 +7,7 @@ import groovy.transform.Field
 @Field def repo_credential_id
 @Field def repo_base
 @Field def repo_core
+@Field def scm_type
 
 //definitions
 def Event_Name = [
@@ -39,86 +40,61 @@ def Event_Status = [
 
 @Field def configModule
 @Field def configLoader
-@Field def var_api_key
-@Field def var_api_id_dev
-@Field def var_aws_credential_id
-@Field def var_env_name_prefix
-@Field def var_repo_core
-@Field def var_repo_loc
-@Field def var_credentialsId
-@Field def var_bitbucket_base
-@Field def var_bitbucket_email
+@Field def scmModule
 
 @Field def g_login_token = ''
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
+
 @Field def service_id = ''
 @Field def preserveEnvKey = ''
 @Field def preserveEnvValue = ''
 @Field def created_by = ''
-@Field def current_environment = ''
-@Field def env_prefix = ''
-@Field def region = ''
-@Field def jq = '/usr/local/bin/jq'
+@Field def environment = ''
 
 node ()  {
-	jazzBuildModuleURL = "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadConfigModule(jazzBuildModuleURL)
-	var_api_key 				= configLoader.API.API_KEY
-	var_api_id_dev = configLoader.API.API_ID_DEV
-	var_aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	var_env_name_prefix = configLoader.env_name_prefix
-	var_repo_core = configLoader.REPOSITORY.REPO_CORE
-	var_repo_loc = configLoader.REPOSITORY.REPO_LOC
-	var_credentialsId 			= configLoader.REPOSITORY.REPO_CREDENTIAL_ID
-	var_bitbucket_base			= configLoader.REPOSITORY.REPO_BASE
-	var_bitbucket_email 		= configLoader.REPOSITORY.REPO_EMAIL
-	region = configLoader.JAZZ.jazz_region
+	loadSCMModule(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.API.API_KEY}.execute-api.${region}.amazonaws.com/prod"
-	def jazzBuildModuleURL = "http://${var_bitbucket_base}/scm/"+ var_repo_core +"/jazz-build-module.git"
-
-	role = configLoader.JAZZ.jazz_roleId
-	api_doc_s3_bucket = configLoader.JAZZ_S3.jazz_s3_api_doc
-
+	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+	
 	echo "Build Pack website params: " + params
 
     def service = params.service_name
 	def branch = params.scm_branch
 	def domain = params.domain
 
-    def bitbucket_name = params.service_name
-
-	def var_bitbucket_framework_url = "http://${var_bitbucket_base}/scm/${params.scm_project}/"
+	def repo_name = params.service_name
 
 	def config
 
 	if (params.scm_branch == 'master') {
-		current_environment = 'prod'
+		environment = 'prod'
 	}else {
-		current_environment = 'dev'
+		environment = 'dev'
 	}
-
-	env_prefix = var_env_name_prefix
 
     stage('Checkout code base') {
 
 		if (domain && domain.trim()!="") {
-			bitbucket_name = params.domain + "-" + service
+			if(configLoader.SCM.TYPE != "gitlab" ){
+				repo_name = params.domain + "-" + service
+			}
 		 }else{
 			domain = ""
 		}
 
-		sh 'rm -rf ' + bitbucket_name
-		sh 'mkdir ' + bitbucket_name
+		sh 'rm -rf ' + repo_name
+		sh 'mkdir ' + repo_name
 
-		dir(bitbucket_name)
+		dir(repo_name)
 		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: var_bitbucket_framework_url + bitbucket_name + '.git']]])
+			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getRepoCloneUrl(repo_name)]]])
 		}
 
 		// @TODO: dir can be removed, needs to be refactored
-		def configObj = dir(bitbucket_name)
+		def configObj = dir(repo_name)
 		{
 			return LoadConfiguration()
 		}
@@ -137,12 +113,11 @@ node ()  {
 			error "Service Id is not available."
 		}
 	
-	}	
-	
+	}
 	
 	def create_cloudfront_url
 
-	dir(bitbucket_name)
+	dir(repo_name)
 	{
 		stage ('Pre-Build Validation'){
 
@@ -163,31 +138,31 @@ node ()  {
 
 				echo "create_cloudfront_url====" + create_cloudfront_url
 
-				loadServiceInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment)
+				loadServiceInfo(config['service'], domain, g_base_url + '/platform/services', environment)
 
-				send_status_email(created_by, 'STARTED', params.service_name, '')
+				send_status_email(created_by, 'STARTED', config['service'], '')
 
 				validateTemplate()
 				validateDeploymentConfigurations(config)
 			}catch(ex) {
-				send_status_email(created_by, 'FAILED', params.service_name, '')
+				send_status_email(created_by, 'FAILED', config['service'], '')
 				sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
 				error ex.getMessage()
 			}
 			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
 		}
 
-	  def s3StgBucket  = configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
-	  def s3ProdBucket = configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
-	  def s3DevBucket  = configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
+	  def s3StgBucket  = configLoader.JAZZ.S3.WEBSITE_STG_BUCKET;
+	  def s3ProdBucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
+	  def s3DevBucket  = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 
 	  if (branch == 'master'){
 		stage ('Deployment to Production Env'){
 		  sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
-			sh "aws configure set profile.cloud-api.region ${region}"
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -205,41 +180,41 @@ node ()  {
 				sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.STARTED, assetInfo)
 				try {
 					echo "website with name $service already exists, syncing new files"
-					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" "
+					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
 
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
-						updateCloudFrontPolicy(service, s3ProdBucket)
+						loadBucketPolicy(service, s3ProdBucket, true)
 
-						def cfDetails = getCloudFrontDetails(current_environment, service)
+						def cfDetails = getCloudFrontDetails(environment, service)
 
 						if (cfDetails) {
 							echo "id is ${cfDetails[0]}, domain: ${cfDetails[1]}"
 						}
 
-						updateEnableCompressConfig(current_environment, service, cfDetails[0])
+						updateEnableCompressConfig(environment, service, cfDetails[0])
 
 						invalidateCloudFrontCache(cfDetails[0], service)
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, url)
+							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
 						}
 					} else{
-						def siteUrl = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, siteUrl)
-
-						url = updateS3BucketPolicy(service, s3ProdBucket)
+						loadBucketPolicy(service, s3Bucket, false)
+						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
+						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
 					}
 
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
+					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
 					sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
 					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', params.service_name, '')
+					send_status_email(created_by, 'FAILED', config['service'], '')
 					sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
 					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
 				}
@@ -250,33 +225,34 @@ node ()  {
 				echo "uploading a new website with name $service"
 				sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.STARTED, assetInfo)
 				try {
-					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" "
+					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+
 					def url = ''
 					if (create_cloudfront_url == true) {
 						loadDistributionConfig()
-						generateDistributionConfig(service, current_environment, config)
+						generateDistributionConfig(service, environment, config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3ProdBucket)
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						loadBucketPolicy(service, s3ProdBucket, true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, "http://" + url.replaceAll("[\n\r]", ""))
+							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
 						}
 					}else{
-						def siteUrl = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, siteUrl)
-
-						url = updateS3BucketPolicy(service, s3ProdBucket)
+						loadBucketPolicy(service, s3Bucket, false)
+						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
+						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
+					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
 					sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
 					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', params.service_name, '')
+					send_status_email(created_by, 'FAILED', config['service'], '')
 					sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
 					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, "")
 				}
@@ -290,10 +266,10 @@ node ()  {
 	  else {
 		stage ('Deployment to Deployment Env'){
 		  sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: var_aws_credential_id, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
-			sh "aws configure set profile.cloud-api.region "+region
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -314,32 +290,31 @@ node ()  {
 					sh "aws s3 sync ./app s3://${s3DevBucket}/$service --exclude \".git/*\" --exclude \".gitignore\" "
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
-						updateCloudFrontPolicy(service, s3DevBucket)
+						loadBucketPolicy(service, s3DevBucket, true)
 
-						def cfDetails = getCloudFrontDetails(current_environment, service)
+						def cfDetails = getCloudFrontDetails(environment, service)
 
-						updateEnableCompressConfig(current_environment, service, cfDetails[0])
+						updateEnableCompressConfig(environment, service, cfDetails[0])
 
 						invalidateCloudFrontCache(cfDetails[0], service)
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(params.service_name, domain, "${g_base_url}/platform/services", current_environment, url)
+							updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/platform/services", environment, url)
 						}
 					} else{
-						def siteUrl = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, "${g_base_url}/platform/services", current_environment, siteUrl)
-
-						url = updateS3BucketPolicy(service, s3DevBucket)
+						loadBucketPolicy(service, s3Bucket, false)
+						url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
+						updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/platform/services", environment, url)
 					}
 					def svc_status = "You can access your website using following link: ${url}"
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
+					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', params.service_name, '')
+					send_status_email(created_by, 'FAILED', config['service'], '')
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
 				}
@@ -353,29 +328,28 @@ node ()  {
 					def url = 'n/a'
 					if (create_cloudfront_url == true) {
 						loadDistributionConfig()
-						generateDistributionConfig(service,current_environment,config)
+						generateDistributionConfig(service,environment,config)
 						sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
 
-						updateCloudFrontPolicy(service, s3DevBucket)
-						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-${current_environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
+						loadBucketPolicy(service, s3DevBucket, true)
+						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
-							updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, "http://" + url.replaceAll("[\n\r]", ""))
+							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
 						}
 					}else{
-						def siteUrl = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(params.service_name, domain, g_base_url + '/platform/services', current_environment, siteUrl)
-
-						url = updateS3BucketPolicy(service, s3DevBucket)
+						loadBucketPolicy(service, s3Bucket,false)
+						url = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
+						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', params.service_name, svc_status)
+					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', params.service_name, '')
+					send_status_email(created_by, 'FAILED', config['service'], '')
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
 					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, "")
 				}
@@ -392,14 +366,14 @@ node ()  {
 def getS3BucketName(String envname) {
 
 	if (envname == "dev") {
-		return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 	} else if (envname == "stg") {
-		return configLoader.WEBSITE_S3.WEBSITE_STG_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_STG_BUCKET;
 	} else if (envname == "prod") {
-		return configLoader.WEBSITE_S3.WEBSITE_PROD_S3BUCKET;
+		return configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
 	}
 
-	return configLoader.WEBSITE_S3.WEBSITE_DEV_S3BUCKET;
+	return configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 }
 
 def LoadConfiguration() {
@@ -451,8 +425,8 @@ def generateDistributionConfig(service, envname, config) {
 	sh "sed -i -- 's/{env}/"+envname+"/g' distribution_config_with_tags.json"
 
 	sh "sed -i -- 's/{conf_s3bucketname}/" + getS3BucketName(envname) + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's/{conf_stack_prefix}/" + var_env_name_prefix + "/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's:{conf_origin_id}:" + configLoader.CLOUDFRONT_ORIGIN_ID + ":g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's:{conf_origin_id}:${configLoader.AWS.CLOUDFRONT_ORIGIN_ID}:g' distribution_config_with_tags.json"
 
 	def owner = ''
 	try{
@@ -518,180 +492,110 @@ def validateTemplate() {
 
 def loadDistributionConfig() {
 
-	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: 'http://' + var_bitbucket_base + '/scm/' + var_repo_core + '/website-distribution-pack.git']]])
+	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url:  scmModule.getCoreRepoCloneUrl("website-distribution-pack")]]])
 
 }
 
-def loadBucketPolicy(String s3Bucket){
-	// fetch current policy and save to > bucket-policy.json
-	sh "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text > bucket-policy.json"
-
-	def bucketPolicy = readFile('bucket-policy.json').trim()
-	def jsonSlurper = new JsonSlurper()
-	def policyLazyMap = jsonSlurper.parseText(bucketPolicy)
-
-	def jsonMap = [:]
-
-    jsonMap.putAll(policyLazyMap)
-    def policyObject = [:]
-
-    def statementsList = []
-
-    // convert bucketPolicy from groovy.json.internal.LazyMap to normal map
-    try {
-	    policyObject["Id"] = jsonMap["Id"]
-	    policyObject["Version"] = jsonMap["Version"]
-	    for(st in jsonMap["Statement"]) {
-	    	statement = [:]
-	    	for ( e in st ) {
-	    		if (e.key == "Principal") {
-	    			if (e.value == '*') {
-	    				statement.put("Principal", "*")
-	    			} else {
-	    				principal = [:]
-		    			for ( p in e.value ) {
-		    				principal.put(p.key, p.value)
-		    			}
-		    			statement.put("Principal", principal)
-	    			}
-	    		} else if (e.key == "Condition") {
-	    			condition = [:]
-
-	    			for ( f in e.value ) {
-	    				f_value = [:]
-	    				for ( src in f.value ) {
-	    					src_list = []
-	    					f_value.put(src.key, src.value)
-	    				}
-	    				condition.put(f.key, f_value)
-	    			}
-	    			statement.put("Condition", condition)
-	    		} else{
-	    			statement.put(e.key, e.value)
-	    		}
-	    	}
-	    	statementsList << statement
-	    }
-	    policyObject["Statement"] = statementsList
-    }
-    catch(Exception e) {
-    	echo "error occured while parsing bucketPolicy " + e.toString()
-    }
-
-    echo "policyObject : $policyObject"
-	return policyObject
+def loadBucketPolicy(String service, String s3Bucket, Boolean create_cloudfront_url){
+	def policySpec = '{"Version":"2012-10-17","Id":"Policy For ","Statement":[]}'
+	def policyObj 
+	
+	try {
+		def policyJson = sh(returnStdout: true, script: "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text")
+		echo "policyJson: $policyJson"
+		policyObj = jsonParse(policyJson) 
+		echo "loadBucketPolicy readFile: $policyObj"
+	} catch(ex) {
+		echo "Bucket policy doesn't exists yet."
+		policyObj =  jsonParse(policySpec)
+		policyObj.Id += "$s3Bucket"
+	}
+	if(policyObj) {
+		updateS3BucketPolicy(service, s3Bucket, create_cloudfront_url, policyObj)
+	}
 }
 
 def loadIPList() {
 
   dir('_jenkins_buildpack') {
 
-		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: var_credentialsId , url: 'http://' + var_bitbucket_base + '/scm/' + var_repo_core + '/jenkins-build-pack-website.git']]])
-
+		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getCoreRepoCloneUrl("jenkins-build-pack-website")]]])
 	}
-
 }
-
 /*
 *	add restrictions so that Cloudfront endpoint can access S3
 */
-def updateS3BucketPolicy(String service, String s3Bucket){
+def updateS3BucketPolicy( service,  s3Bucket, isCloudfront, existingPolicyObj){
 	echo "updateS3BucketPolicy"
+	try{
+		def policy_filedata
+		def new_policy
+		def stmtS3 = '{"Sid":"","Effect":"Allow","Principal":{"AWS":"*"},"Action":"s3:GetObject","Resource":"arn:aws:s3:::","Condition":{"IpAddress":{"aws:SourceIp":[]}}}'
+		def stmtCf = '{"Sid":"","Effect":"Allow","Principal":{"AWS":""},"Action":"s3:GetObject","Resource":"arn:aws:s3:::"}'
+		def stmtCfList = '{"Sid":"ListBucket","Effect":"Allow","Principal":"*","Action":"s3:ListBucket","Resource":"arn:aws:s3:::"}'
+		def cleanupIndex = -1
 
-	def policy_filedata
-	def url
-	def new_policy
-	def isPolicyExists = false
+		def bucketPolicy = existingPolicyObj
+		def statements = bucketPolicy.Statement	
 
-	def bucketPolicy = loadBucketPolicy(s3Bucket)
-
-	if (bucketPolicy) {
-		def statements = bucketPolicy.Statement
-		//def principal = ["AWS": "*"]
-		def principal = "*"
+		def CFOAI = sh (
+			script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
+			--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\"",
+			returnStdout: true
+			).trim()
 
 		for(st in statements) {
+			cleanupIndex++
 			if(st['Sid'] == "$service") {
-				isPolicyExists = true
-				new_policy = st
+				echo "cleanupIndex...$cleanupIndex"
+				bucketPolicy.Statement[cleanupIndex] = null
+			} else if(st['Sid'] == "ListBucket") {
+				bucketPolicy.Statement[cleanupIndex] = null
 			}
 		}
-		if (isPolicyExists == false) {
-			// create new policy statement
-			new_policy = [:]
+		bucketPolicy.Statement.removeAll([null])
+
+		//add restrictions so that Cloudfront endpoint can access S3
+		if(isCloudfront){
+			echo "isCloudfront: $isCloudfront"
+			def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
+			new_policy =  jsonParse(stmtCf)
 			new_policy.put('Sid', "$service")
-			new_policy.put('Effect', "Allow")
-			new_policy.put('Action', "s3:GetObject")
 			new_policy.put('Principal', principal)
 			new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
+			bucketPolicy.Statement << new_policy
+
+			//add new list policy statement 
+			def listPolicyObject = jsonParse(stmtCfList)
+			listPolicyObject.put('Principal', principal)
+			listPolicyObject.put('Resource', "arn:aws:s3:::$s3Bucket")
+			bucketPolicy.Statement << listPolicyObject
+		} else{
+			echo "isCloudfront: $isCloudfront"
+			def principal = "*"
+			new_policy =  jsonParse(stmtS3)
+			new_policy.put('Sid', "$service")
+			new_policy.put('Principal', principal)
+			new_policy.put('Resource', "arn:aws:s3:::$s3Bucket/$service/*")
+			bucketPolicy.Statement << new_policy
 		}
 
-		if (isPolicyExists == false) {
-			// add new policy statement to
-			statements << new_policy
-		}
-
-		// return updated policy statements
 		echo "updated PolicyStatement : $statements"
 
 		policy_filedata = JsonOutput.prettyPrint(JsonOutput.toJson(bucketPolicy))
 
-		sh "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${policy_filedata}\'"
+		def putPolicyResponse = sh(returnStdout: true, script: "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${policy_filedata}\'")
+
+	} catch(ex){
+		echo "Bucket policy update failed. "+ex.getMessage()
+		error "Bucket policy update failed. "+ex.getMessage()
 	}
-
-	return "https://s3.amazonaws.com/$s3Bucket/$service/index.html"
-}
-
-/*
-*	add restrictions so that Cloudfront endpoint can access S3
-*/
-def updateCloudFrontPolicy(String service, String s3Bucket){
-	echo "updateCloudFrontPolicy"
-
-	def json_string
-	def isPolicyExists = false
-	def new_policy
-
-	def bucketPolicy = loadBucketPolicy(s3Bucket)
-	def statements = bucketPolicy.Statement
-
-//	def principal = ["AWS": env.CLOUDFRONT_OAI]
-	//def principal = ["AWS": "*"]
-	def principal = "*"
-
-	for(st in statements) {
-		if(st['Sid'] == "$service") {
-			isPolicyExists = true
-			new_policy = st
-		}
-	}
-	if (isPolicyExists == false) {
-		// create new policy statement
-		new_policy = [:]
-		new_policy.put('Sid',"$service")
-		new_policy.put('Effect',"Allow")
-		new_policy.put('Action',"s3:GetObject")
-		new_policy.put('Principal', principal)
-		new_policy.put('Resource',"arn:aws:s3:::$s3Bucket/$service/*")
-	}
-
-	if (isPolicyExists == false) {
-		// add new policy statement to
-		statements << new_policy
-	}
-
-
-	def jsonMap = [:]
-
-	json_string = JsonOutput.prettyPrint(JsonOutput.toJson(bucketPolicy))
-
-	sh "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${json_string}\'"
 }
 
 def getCloudFrontDetails(env, service) {
 
 	def distributionId = sh (script: "aws  cloudfront list-distributions --output text \
-									--query \"DistributionList.Items[?Origins.Items[?Id=='${env_prefix}-$env-static-website-origin-$service']].{j: Id, k: DomainName}\"",
+									--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-$env-static-website-origin-$service']].{j: Id, k: DomainName}\"",
 							returnStdout: true
 						).trim()
 
@@ -781,20 +685,21 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 	}
 
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\" | $jq -r '.data[0] | [.id, .endpoints[\"$preserveEnvKey\"], .created_by] | join(\",\")'", returnStdout: true)
+			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
+	echo "curlOutput: $curlOutput"
 
-	def values = curlOutput.split(',')
-
-	if (values[0]) {
-		service_id = values[0].replaceAll("[\n\r]", "")
+	def curlOutputJSON = jsonParse(curlOutput)
+	
+	if (curlOutputJSON.data[0].id) {
+		service_id = curlOutputJSON.data[0].id
 	}
 
-	if (values[1]) {
-		preserveEnvValue = values[1].replaceAll("[\n\r]", "")
+	if (curlOutputJSON.data[0].endpoints) {
+		preserveEnvValue = curlOutputJSON.data[0].endpoints["$preserveEnvKey"]
 	}
 
-	if (values[2]) {
-		created_by = values[2].replaceAll("[\n\r]", "")
+	if (curlOutputJSON.data[0].created_by) {
+		created_by = curlOutputJSON.data[0].created_by
 	}
 }
 
@@ -828,34 +733,34 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
  def setCredentials() {
 	def loginUrl = g_base_url + '/platform/login'
 	def token
-		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-			echo "user name is $UNAME"
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+		echo "user name is $UNAME"
 
-			def login_json = []
+		def login_json = []
 
-			login_json = [
-				'username': UNAME,
-				'password': PWD
-			]
+		login_json = [
+			'username': UNAME,
+			'password': PWD
+		]
+		def tokenJson_token = null
+		def payload = JsonOutput.toJson(login_json)
 
-			def payload = JsonOutput.toJson(login_json)
+		try {
+			token = sh (script: "curl --silent -X POST -k -v \
+				-H \"Content-Type: application/json\" \
+					$loginUrl \
+				-d \'${payload}\'", returnStdout:true).trim()
 
-			try {
-				token = sh (script: "curl --silent -X POST -k -v \
-					-H \"Content-Type: application/json\" \
-					 $loginUrl \
-					-d \'${payload}\' | $jq -r '.data.token'", returnStdout:true)
+			def tokenJson = jsonParse(token)
+			tokenJson_token = tokenJson.data.token
 
-				token = token.replaceAll("[\n\r]", "")
-				return token
-			}
-			catch(e){
-				echo "error occured: " + e.getMessage()
-				error "error occured: " + e.getMessage()
-			}
+			return tokenJson_token
 		}
- 	
-
+		catch(e){
+			echo "error occured: " + e.getMessage()
+			error "error occured: " + e.getMessage()
+		}
+	}
 }
 
 /**
@@ -886,7 +791,7 @@ def send_status_email (email_id, build_status, service, email_content) {
    	if (email_content != ''){
         	body_text = body_text + '\n\n' + email_content
 	}
-	def fromStr = 'JAZZ ADMIN <' + configLoader.JAZZ.JAZZ_ADMIN + '>'
+	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
 					to : email_id,
@@ -897,19 +802,19 @@ def send_status_email (email_id, build_status, service, email_content) {
 			    ])
 
    	try{
-				def sendMail = sh (script: "curl -X POST \
-								${g_base_url}/platform/email \
-								-k -v -H \"Authorization: $g_login_token\" \
-								-H \"Content-Type: application/json\" \
-								-d \'${body}\'", returnStdout: true).trim()
-				def responseJSON = parseJson(sendMail)
-				if(responseJSON.data){
-					echo "successfully sent e-mail to $email_id"
-				} else {
-					echo "exception occured while sending e-mail: $responseJSON"
-				}
+		def sendMail = sh (script: "curl -X POST \
+						${g_base_url}/platform/email \
+						-k -v -H \"Authorization: $g_login_token\" \
+						-H \"Content-Type: application/json\" \
+						-d \'${body}\'", returnStdout: true).trim()
+		def responseJSON = parseJson(sendMail)
+		if(responseJSON.data){
+			echo "successfully sent e-mail to $email_id"
+		} else {
+			echo "exception occured while sending e-mail: $responseJSON"
+		}
    	} catch (e){
-       		echo "Failed while sending build status notification"
+       	echo "Failed while sending build status notification  " + e.toString()
    	}
 }
 
@@ -931,6 +836,9 @@ def loadConfigModule(buildModuleUrl){
 	}
 }
 
+/**
+ * Non-lazy JSON parser
+ */
 @NonCPS
 def parseJson(jsonString) {
     def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
@@ -944,26 +852,61 @@ def parseJson(jsonString) {
  *
  */
 def loadServiceMetadataModule(buildURL) {
-		try {						
-			echo "loading serviceMetaData, checking repos"
+	try {						
+		echo "loading serviceMetaData, checking repos"
 
-			dir('service-metadata') {
-				checkout([$class: 'GitSCM', branches: [
-					[name: '*/master']
-				], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-					[credentialsId: repo_credential_id, url: buildURL]
-				]])
-				serviceMetadata = load "service-metadata-loader.groovy"			
-				serviceMetadata.setAuthToken(setCredentials())
+		dir('service-metadata') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildURL]
+			]])
+			serviceMetadata = load "service-metadata-loader.groovy"			
+			serviceMetadata.setAuthToken(setCredentials())
 
-				// Load and set dependent utility module.
-				echo "loading util module"
-				Util = load "utility-loader.groovy"
-				serviceMetadata.setUtil(Util)
-				return serviceMetadata 
-			}
-		
-		}catch(ex) {
-			error "loadServiceMetadataModule Failed. "+ex.getMessage()
+			// Load and set dependent utility module.
+			echo "loading util module"
+			Util = load "utility-loader.groovy"
+			serviceMetadata.setUtil(Util)
+			return serviceMetadata 
 		}
+	}catch(ex) {
+		error "loadServiceMetadataModule failed: "+ex.getMessage()
+	}
+}
+
+/*
+load scm module
+*/
+def loadSCMModule(buildModuleUrl){
+
+	try {	
+		dir('scm-loader') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildModuleUrl]
+			]])
+
+			scmModule = load "scm-module.groovy"
+			scmModule.initialize(configLoader)
+		}
+	}catch(ex) {
+		error "loadSCMModule failed: " + ex.toString()
+	}
+}
+
+def getBuildModuleUrl() {
+    if (scm_type && scm_type != "bitbucket") {
+      // right now only bitbucket has this additional tag scm in its git clone path
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+    }else {
+      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    } 
+} 
+
+@NonCPS
+def jsonParse(jsonString) {
+    def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    return nonLazyMap
 }

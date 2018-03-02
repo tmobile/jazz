@@ -1,0 +1,149 @@
+#!groovy.
+import groovy.json.JsonOutput
+import groovy.transform.Field
+import groovy.json.JsonSlurper
+/*
+* Module that handles managing gitlab webhooks and routes them to respective build packs
+*/
+
+// To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
+@Field def scm_type
+
+
+
+@Field def configModule
+@Field def configLoader
+@Field def scmModule
+@Field def serviceConfigdata
+
+
+node  {
+    
+    def jazzBuildModuleURL = getBuildModuleUrl()
+	loadBuildModule(jazzBuildModuleURL)
+	
+    def gitlab_repo_name  = env.gitlabSourceRepoName
+    def config 
+	def build_job
+
+    try{
+        sh 'rm -rf $gitlab_repo_name*'
+		def repocloneUrl = getRepoCloneUrl()
+		echo "repocloneUrl : $repocloneUrl"
+    	dir(gitlab_repo_name){
+    		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: repocloneUrl]]])
+    	    config = getServiceConfiguration()    	   
+    	}
+    	sh 'rm -rf $gitlab_repo_name*'
+    }
+    catch(ex){
+    	error "Error inside gitlab-buildpack ... " + ex.getMessage()
+    }
+
+    //Get the Build URL
+    if (config['type'] == 'api') {
+        build_job = configLoader.API.API_BUILD_URI
+    }else if(config['type']  == 'website') {
+        build_job = configLoader.WEBSITE.WEBSITE_BUILD_URI
+     } else if (config['type']  == 'lambda' || config['type']  == 'function'){
+        build_job = configLoader.LAMBDA.LAMBDA_BUILD_URI
+    }
+
+    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+    if ( config['type']  != '' && config['service']  != '' && config['domain']  != '') {
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: configLoader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){        
+			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"   \"${job_url}&service_name=${gitlab_repo_name}&domain=${config['domain']}&scm_branch=${env.gitlabBranch}\""
+		}
+	}else  {
+        error "Error: service type or service name or namespace is empty"
+     }
+}
+
+/**
+	Reads deployment-env.yml.
+    Returns Property Map
+*/
+def getServiceConfiguration() {
+    def prop = [:]
+    if (fileExists('deployment-env.yml')){
+		echo "Reading from deployment.yml file "
+        def result = readFile('deployment-env.yml').trim()
+
+        def resultList = result.tokenize("\n")
+
+        // delete commented lines
+        def cleanedList = []
+        for (i in resultList) {
+            if(!i.toLowerCase().startsWith("#")) {
+                cleanedList.add(i)
+            }
+        }//for
+
+        for (item in cleanedList) {
+            // Clean up to avoid issues with more ":" in the values
+            item = item.replaceAll(" ", "").replaceFirst(":", "#");
+            def eachItemList = item.tokenize("#")
+            //handle empty values
+            def value = "";
+            if(eachItemList[1]) {
+                value = eachItemList[1].trim();
+            }
+            
+            if(eachItemList[0]) {
+                prop.put(eachItemList[0].trim(), value)
+            }
+        }
+
+        if(prop.service_id){			
+			def serviceData = serviceConfigdata.loadServiceMetadata(prop.service_id,configLoader)
+			return serviceData
+		}else{
+			error "Service Id is not available."
+		}
+    }
+    
+}
+
+/*
+* Load environment variables from build module
+*/
+def loadBuildModule(buildModuleUrl){
+
+	dir('config-loader') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: repo_credential_id, url: buildModuleUrl]
+		]])
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
+		
+		scmModule = load "scm-module.groovy"
+		scmModule.initialize(configLoader)
+		
+		serviceConfigdata = load "service-configuration-data-loader.groovy"
+		
+	}
+}
+
+
+def getBuildModuleUrl() {
+    if (scm_type && scm_type != "bitbucket") {
+      // right now only bitbucket has this additional tag scm in its git clone path
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+    }else {
+      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    } 
+}
+
+def getRepoCloneUrl(){
+	def srcUrl = env.gitlabSourceRepoURL.tokenize(':')
+	return "http://${repo_base}/${srcUrl[1]}"
+	
+} 
+
