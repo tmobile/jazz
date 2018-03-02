@@ -195,18 +195,23 @@ node() {
 					def api_key = env_key + "_ID"
 					def apiHostName = "${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" //Staging environment
 					generateSwaggerEnv(current_environment, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName,config)
-					echo "Deploying to staging API Gateway environment.."
-					sh "aws apigateway put-rest-api --rest-api-id ${configLoader.AWS.API[api_key]} --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
-                    sh "aws apigateway create-deployment --rest-api-id ${configLoader.AWS.API[api_key]} --stage-name ${current_environment} --profile cloud-api"
 					
+					echo "Deploying to API Gateway environment.."
+					sh "aws apigateway put-rest-api --rest-api-id ${configLoader.AWS.API[api_key]} --mode merge --body 'file://swagger/swagger.json'"+" --profile cloud-api"
+					sh "aws apigateway create-deployment --rest-api-id ${configLoader.AWS.API[api_key]} --stage-name ${current_environment} --profile cloud-api"
+
+					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API[api_key]}/stages/prod --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+
 					def endpointUrl = "https://${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/${current_environment}/" + domain + "/" + config['service']
 					if(domain != "platform"){
 						createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION,roleId);
 						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)						
 					}
+
 					updateApiDocUrl(current_environment)
 					sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
 					echo "completed deployment........."					
+					
 					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 					def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
 					send_status_email(config, 'COMPLETED',svc_status)	
