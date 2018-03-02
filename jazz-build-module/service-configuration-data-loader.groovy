@@ -232,7 +232,7 @@ def setServiceName(serviceName){
 }
 
 def setKinesisStream(config){
-	if ( (config['service'].trim() == "platform-services-handler") || (config['service'].trim() == "platform_events-handler") ) {
+	if ( (config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ) {
 		def function_name =  "${service_config.INSTANCE_PREFIX}-" + config['service'] + "-" +  current_environment
 		def event_source_list = sh (
 			script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
