@@ -4,12 +4,12 @@ module.exports = (inputs, callback) => {
     
 	var jsonBody = {};
 	
-	if(inputs.SERVICE_NAME !== undefined && inputs.SERVICE_NAME !== null && inputs.SERVICE_NAME !== ""){jsonBody.service = inputs.SERVICE_NAME}
-	if(inputs.DOMAIN !== undefined && inputs.DOMAIN !== null && inputs.DOMAIN !==  ""){jsonBody.domain = inputs.DOMAIN}
-	if(inputs.DESCRIPTION !== undefined && inputs.DESCRIPTION !== null  ){jsonBody.description = inputs.DESCRIPTION}
-	if(inputs.TYPE !== undefined && inputs.TYPE !== null && inputs.TYPE !== "" ){jsonBody.type = inputs.TYPE}
-	if(inputs.RUNTIME!== undefined && inputs.RUNTIME !== null && inputs.RUNTIME !== ""){jsonBody.runtime = inputs.RUNTIME}
-	if(inputs.REGION!== undefined && inputs.REGION !== null && inputs.REGION !== ""){
+	if(inputs.SERVICE_NAME){jsonBody.service = inputs.SERVICE_NAME}
+	if(inputs.DOMAIN){jsonBody.domain = inputs.DOMAIN}
+	if(inputs.DESCRIPTION){jsonBody.description = inputs.DESCRIPTION}
+	if(inputs.TYPE){jsonBody.type = inputs.TYPE}
+	if(inputs.RUNTIME){jsonBody.runtime = inputs.RUNTIME}
+	if(inputs.REGION){
 		
 		if(typeof inputs.REGION === 'array' || inputs.REGION instanceof Array){
 			jsonBody.region = inputs.REGION;
@@ -24,14 +24,14 @@ module.exports = (inputs, callback) => {
 		}
 		
 	}
-	if(inputs.REPOSITORY!== undefined && inputs.REPOSITORY !== null && inputs.REPOSITORY !== ""){jsonBody.repository = inputs.REPOSITORY}
-	if(inputs.USERNAME!== undefined && inputs.USERNAME !== null && inputs.USERNAME !== ""){jsonBody.created_by = inputs.USERNAME}
-	if(inputs.EMAIL!== undefined && inputs.EMAIL !== null ){jsonBody.email = inputs.EMAIL}
-	if(inputs.SLACKCHANNEL!== undefined && inputs.SLACKCHANNEL !== null ){jsonBody.slack_channel = inputs.SLACKCHANNEL}
-	if(inputs.TAGS!== undefined && inputs.TAGS !== null ){jsonBody.tags = inputs.TAGS}
-	if(inputs.ENDPOINTS!== undefined && inputs.ENDPOINTS !== null ){jsonBody.endpoints = inputs.ENDPOINTS}
-	if(inputs.METADATA!== undefined && inputs.METADATA !== null ){jsonBody.metadata = inputs.METADATA}
-	if(inputs.STATUS!== undefined && inputs.STATUS !== null && inputs.STATUS !== ""){jsonBody.status = inputs.STATUS}
+	if(inputs.REPOSITORY){jsonBody.repository = inputs.REPOSITORY}
+	if(inputs.USERNAME){jsonBody.created_by = inputs.USERNAME}
+	if(inputs.EMAIL){jsonBody.email = inputs.EMAIL}
+	if(inputs.SLACKCHANNEL){jsonBody.slack_channel = inputs.SLACKCHANNEL}
+	if(inputs.TAGS){jsonBody.tags = inputs.TAGS}
+	if(inputs.ENDPOINTS){jsonBody.endpoints = inputs.ENDPOINTS}
+	if(inputs.METADATA){jsonBody.metadata = inputs.METADATA}
+	if(inputs.STATUS){jsonBody.status = inputs.STATUS}
 	
 	
 	var svcPayload = {
