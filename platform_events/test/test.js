@@ -44,7 +44,8 @@ describe('Sample', function() {
             "stage" : "test",
             "query" : {
                 "service_name" : "jazz-service",
-                "username" : "xyz"
+                "username" : "xyz",
+                "last_evaluated_key": undefined
             },
             "body": {
                 "service_context" : {},
@@ -54,7 +55,9 @@ describe('Sample', function() {
                 "event_status" : "COMPLETED",
                 "event_type" : "test",
                 "username" : "xyz",
-                "event_timestamp" : "2018-01-23T10:28:10:136"
+                "event_timestamp" : "2018-01-23T10:28:10:136",
+                "unimportant":"",
+                "NULL":null
             }
         };
         callback = (err, responseObj) => {
@@ -153,6 +156,18 @@ describe('Sample', function() {
         event.query = {
             "invalid" : "test"
         };
+        var dataObj = {
+            "Items": [{
+                SERVICE_CONTEXT :{ S: {}},
+                EVENT_HANDLER : {S:"JENKINS"},
+                EVENT_NAME : {S:"CREATE_SERVICE"},
+                SERVICE_NAME: {S:'jazztest'},
+                EVENT_STATUS : {S:"COMPLETED"},
+                EVENT_TYPE : {S:"test"},
+                USERNAME: {S:'xyz'},
+                EVENT_TIMESTAMP : {S:"2018-01-23T10:28:10:136"}
+            }]
+        }
         errType = "BadRequest"
         var errMessage = "Bad request.";
         AWS.mock("DynamoDB", "scan", (params, cb)=>{
@@ -170,11 +185,20 @@ describe('Sample', function() {
     it("should indicate success if method GET and query params are defined", ()=>{
         event.method = "GET";
         var dataObj = {
-            "Items": [event.query]
+            "Items": [{
+                SERVICE_CONTEXT :{ S: {}},
+                EVENT_HANDLER : {S:"JENKINS"},
+                EVENT_NAME : {S:"CREATE_SERVICE"},
+                SERVICE_NAME: {S:'jazztest'},
+                EVENT_STATUS : {S:"COMPLETED"},
+                EVENT_TYPE : {S:"test"},
+                USERNAME: {S:'xyz'},
+                EVENT_TIMESTAMP : {S:"2018-01-23T10:28:10:136"},
+                UNIMPORTANT:{NULL:''}
+            }]
         }
         //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
         AWS.mock("DynamoDB", "scan", (params, cb)=>{
-            // dataObj.LastEvaluatedKey = undefined;
             return cb(null, dataObj);
         });
         stub = sinon.stub(callbackObj, "callback", spy);
@@ -388,7 +412,7 @@ describe('Sample', function() {
         AWS.mock('DynamoDB', 'getItem',spy);
         AWS.mock("Kinesis","putRecord",spy);
         var callFunction = index.handler(event, context, callback);
-        var bool = spy.called; 
+        var bool = spy.called;
         AWS.restore('Kinesis');
         AWS.restore('DynamoDB');
         assert.isTrue(bool);
