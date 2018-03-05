@@ -40,6 +40,24 @@ var getDatabaseKeyName = function(key) {
     }
 };
 
+var getSchemaKeyName = function(key) {
+    // Convert database key name back, as per schema
+
+    if (key === undefined || key === null) {
+        return null;
+    }
+
+    if (key === "SERVICE_NAME") {
+        return "service";
+    } else if (key === "TIMESTAMP") {
+        return "timestamp";
+    } else if (key === "SERVICE_ID") {
+        return "id";
+    } else {
+        return key.replace(/^(SERVICE_)/, "").toLowerCase();
+    }
+};
+
 // convert object returned from the database, as per schema
 var formatService = function(service, format) {
     if (service === undefined || service === null) {
@@ -93,15 +111,15 @@ var formatService = function(service, format) {
             return (parsed_value);
         }
     };
-
-    global.config.service_return_fields.forEach(function(key) {
-        var key_name = getDatabaseKeyName(key);
-        var value = service[key_name];
+    // "service_required_fields": ["service", "domain", "type", "created_by", "runtime", "status"]
+    Object.keys(service).forEach(function(key) {
+        var key_name = getSchemaKeyName(key);
+        var value = service[key];
         if (value !== null && value !== undefined) {
             if (format !== undefined) {
-                service_obj[key] = parseValue(value);
+                service_obj[key_name] = parseValue(value);
             } else {
-                service_obj[key] = (value);
+                service_obj[key_name] = value;
             }
         }
     });

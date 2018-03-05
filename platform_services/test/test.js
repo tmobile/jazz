@@ -67,18 +67,15 @@ describe('platform_services', function() {
         "service" : "mAg!c",
         "domain" : "k!ngd0m",
         "region" : "mewni",
-        "type" : "mewm@n",
-        "runtime" : "m0n$ter",
+        "type" : "api",
+        "runtime" : "nodejs",
         "created_by" : "g10$saryck",
-        "status" : "mewbErTy"
+        "status" : "active"
       },
       "body" : {
         "description" : "g0nna_GET_a-L!tt1e_we!rd",
         "email" : "gonnaGetALittle@Wild.com",
-		"metadata":{
-			"service":"test-service2",
-			"securityGroupIds":"sg-cdb65db9"
-		}
+		    "metadata":"{\"service\":\"test-service2\",\"securityGroupIds\":\"sg-cdb65db9\"}"
       },
       "principalId": "g10$saryck"
     };
@@ -225,6 +222,7 @@ describe('platform_services', function() {
     var logResponse = logStub.args[0][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage);
+    console.log(stub.args)
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
@@ -824,7 +822,7 @@ describe('platform_services', function() {
     event.method = "POST";
     event.path.id = undefined;
     errType = "inputError";
-    errMessage = "Service Data cannot be empty";
+    errMessage = "Input payload cannot be empty";
     var invalidArray = [{}, null, undefined];
     var bool = true;
     //handler() should issue the above error messages for any invalid value for the body
@@ -834,7 +832,7 @@ describe('platform_services', function() {
       event.body = invalidArray[i];
       //trigger stub/spy by calling handler
       var callfunction = index.handler(event, context, callback);
-      var cbMessage = JSON.stringify(spy.args[i*4+1][0]);
+      var cbMessage = JSON.stringify(stub.args[0][0]);
       stub.restore();
       if(!cbMessage.includes(errType) || !cbMessage.includes(errMessage)){
         bool = false;
@@ -853,7 +851,7 @@ describe('platform_services', function() {
     event.method = "POST";
     event.path.id = undefined;
     errType = "inputError";
-    errMessage = "status cannot be empty";
+    errMessage = "Following field(s) are required -";
     var invalidArray = ["", null, undefined];
     var bool = true;
     //handler() should issue the above error messages for any invalid value for the body fields
@@ -863,7 +861,7 @@ describe('platform_services', function() {
       event.body.status = invalidArray[i];
       //trigger stub/spy by calling handler
       var callfunction = index.handler(event, context, callback);
-      var cbMessage = JSON.stringify(spy.args[i*4+1][0]);
+      var cbMessage = JSON.stringify(spy.args[0][0]);
       stub.restore();
       if(!cbMessage.includes(errType) || !cbMessage.includes(errMessage)){
         bool = false;
@@ -885,12 +883,12 @@ describe('platform_services', function() {
     event.method = "POST";
     event.path.id = undefined;
     errType = "inputError";
-    errMessage = "Invalid field " + "newProperty" + ". Only following fields can be updated ";
+    errMessage = "Following fields are invalid :  ";
     //wrap the logger responses
     stub = sinon.stub(logger, "error", spy);
     //trigger stub/spy by calling handler
     var callfunction = index.handler(event, context, callback);
-    var cbMessage = JSON.stringify(spy.args[1][0]);
+    var cbMessage = JSON.stringify(spy.args[0][0]);
     var cbCheck = cbMessage.includes(errType) && cbMessage.includes(errMessage);
     stub.restore();
     assert.isTrue(cbCheck);
@@ -904,8 +902,8 @@ describe('platform_services', function() {
   it("should attempt dynamoDB scan for matching services given a POST with valid body data", ()=>{
     //query has all required fields, cloning required fields to body
     Object.assign(event.body, event.query);
+    event.body.region = ["east", "west"];
     event.method = "POST";
-    event.path.id = undefined;
     event.path.id = undefined;
     var attemptBool = dynamoCheck("scan",spy);
     assert.isTrue(attemptBool);
@@ -920,6 +918,7 @@ describe('platform_services', function() {
   it("should indicate an InternalServerError occured if DynamoDB.scan fails during POST", ()=>{
     //query has all required fields, cloning required fields to body
     Object.assign(event.body, event.query);
+    event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     errType = "InternalServerError";
@@ -934,8 +933,9 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args[0][0];
+    var logResponse = logStub.args[1][0];
     var cbResponse = stub.args[0][0];
+    console.log(stub.args)
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB");
@@ -953,6 +953,7 @@ describe('platform_services', function() {
   it("should indicate service already exists if return obj from dynamoDB scan is non-empty", ()=>{
     //query has all required fields, cloning required fields to body
     Object.assign(event.body, event.query);
+    event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     errType = "BadRequest";
@@ -988,6 +989,7 @@ describe('platform_services', function() {
   it("should attempt to add service in dynamo for successful POST", function(){
     //query has all required fields, cloning required fields to body
     Object.assign(event.body, event.query);
+    event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
@@ -1008,6 +1010,7 @@ describe('platform_services', function() {
   it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.put fails", () =>{
     //query has all required fields, cloning required fields to body
     Object.assign(event.body, event.query);
+    event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     errType = "InternalServerError";

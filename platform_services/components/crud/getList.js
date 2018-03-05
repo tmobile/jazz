@@ -103,10 +103,10 @@ module.exports = (query, getAllRecords, onComplete) => {
 
     dynamodb.scan(scanparams, function(err, items) {
         if (err) {
+            console.log(err)
             onComplete(err);
         } else {
             var items_formatted = [];
-
             items.Items.forEach(function(item) {
                 items_formatted.push(utils.formatService(item, true));
                 // items_formatted.push(item);

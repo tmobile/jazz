@@ -26,6 +26,8 @@ const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const utils = require("./components/utils.js")();
 const crud = require("./components/crud")();
+const global_config = require("./config/global-config.json");
+const validateUtils = require("./components/validation")();
 
 const async = require('async');
 
@@ -36,8 +38,30 @@ module.exports.handler = (event, context, cb) => {
     logger.init(event, context);
     var config = configObj(event);
     global.config = config;
+    global.global_config = global_config;
+
+
+    var handleResponse = function(error, data, input) {
+        if (error) {
+            logger.error(JSON.stringify(error));
+            if (error.result === "inputError") {
+                cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+            } else if (error.result === "notFoundError") {
+                cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
+            } else if (error.result === "databaseError") {
+                cb(JSON.stringify(errorHandler.throwInternalServerError(error.message)));
+            } else {
+                cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occured")));
+            }
+        } else {
+            logger.debug("response data " + JSON.stringify(data));
+            cb(null, responseObj(data, input));
+        }
+    };
 
     try {
+        global.services_table = config.services_table;
+
         if (!event.method) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
         }
@@ -57,7 +81,6 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("service id is required")));
         }
 
-        global.services_table = config.services_table;
         global.userId = event.principalId;
         var getAllRecords;
         if(event.query && event.query.isAdmin){
@@ -274,76 +297,19 @@ module.exports.handler = (event, context, cb) => {
 
         // Create new service
         // 6: POST a service (/services)
-        if (event.method === 'POST' && !service_id) {
-            logger.info('Create new service');
-            var service_data = event.body;
+        if (event.method === 'POST' && !service_id) {            
+            var service_data = Object.assign({}, event.body);
+            logger.info("Create a new service with the following payload data : " + JSON.stringify(service_data));
 
             async.series({
                 // Validate service_data for adding new service
-                validateServiceData: function(onComplete) {
-                    // validate if input data is empty
-                    if (!service_data || Object.keys(service_data) == 0) {
-                        // return inputError
-                        onComplete({
-                            "result": "inputError",
-                            "message": "Service Data cannot be empty"
-                        });
-                    }
 
-                    // validate required fields
-                    var required_fields = config.service_required_fields;
-                    var field;
-
-                    for (var i = required_fields.length - 1; i >= 0; i--) {
-                        field = required_fields[i];
-                        var value = service_data[field];
-                        if (!value) {
-                            // return inputError
-                            onComplete({
-                                "result": "inputError",
-                                "message": (field + " cannot be empty")
-                            });
-                        }
-                    }
-
-                    var allowed_fields = required_fields.concat(config.service_optional_fields);
-
-                    // check if input contains fields other than allowed fields
-                    for (field in service_data) {
-                        if (service_data.hasOwnProperty(field)) {
-                            if (allowed_fields.indexOf(field) === -1) {
-                                onComplete({
-                                    "result": "inputError",
-                                    "message": "Invalid field " + field + ". Only following fields can be updated " + allowed_fields.join(", ")
-                                });
-                            }
-                        }
-                    }
-
-                    onComplete(null, {
-                        "result": "success",
-                        "input": service_data
+                validate: function(callback){
+                    validateUtils.validateCreatePayload(service_data,function onValidate(error, data) {
+                        callback(error, data);
                     });
                 },
-                // Check if a service with same domain and service_name combination exists
-                validateServiceExists: function(onComplete) {
-                    getAllRecords = "true";
-                    crud.getList({ 'service': service_data.service, 'domain': service_data.domain }, getAllRecords, function onServiceGet(error, data) {
-                        if (error) {
-                            onComplete(error, null);
-                        } else {
-                            if (data.length > 0) {
-                                logger.error('Service name in the specified domain already exists.');
-                                return cb(JSON.stringify(errorHandler.throwInputValidationError('Service name in the specified domain already exists.')));
-                            } else {
-                                onComplete(null, {
-                                    "result": "success",
-                                    "input": "Valid service_name - domain_name combination"
-                                });
-                            }
-                        }
-                    });
-                },
+                
                 // Add new service data to the dynamodb
                 addNewService: function(onComplete) {
                     crud.create(service_data, onComplete);
@@ -352,7 +318,7 @@ module.exports.handler = (event, context, cb) => {
                 // Handle error
                 if (error) {
                     logger.error('error occured while adding new service');
-                    logger.error(error);
+                    logger.error(error.result);
                     if (error.result === 'inputError') {
                         cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
                     } else {
