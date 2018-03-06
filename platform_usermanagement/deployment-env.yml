@@ -1,9 +1,1 @@
-service : usermanagement
-securityGroupIds: {inst_security_group_id}
-subnetIds: {inst_subnet_ids}
-providerRuntime : nodejs6.10
-providerMemorySize : 256
-providerTimeout : 160
-region: {inst_region}
-domain : platform
-iamRoleARN: {inst_role_lambda_basic_execution}
+service_id : {service_id}
