@@ -2,63 +2,52 @@
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
-// To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
+// To be replaced as @Field def repo_credential_id = "value" except for config_loader
 @Field def repo_credential_id
 @Field def repo_base
 @Field def repo_core
 @Field def scm_type
 
-@Field def configModule
-@Field def configLoader
-@Field def jenkins_credential_id
-@Field def region
-
-node {
-  loadConfigModule(getBuildModuleUrl())
-
-  jenkins_credential_id = configLoader.JENKINS.CREDENTIAL_ID
-  region = configLoader.AWS.REGION
-
-withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: jenkins_credential_id, passwordVariable: 'PWD',
-usernameVariable: 'UNAME']]){
-
-   echo "Build triggered via branch::${env.BRANCH_NAME}"
-   echo "Build triggered for JOBNAME::" + env.JOB_NAME
-
-   def projname = ''
-
-     if(env.JOB_NAME){
-      projname = env.JOB_NAME
-      names = projname.split('/')
-      projname = names[1]
-   }
-
-    echo "projname::" + projname
-
-    def build_job = configLoader.PLATFORM.PLATFORM_SERVICE_BUILD_URI
-    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
-
-    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=" + projname + "&admin_group=admin_group&region=${region}&scm_branch=${env.BRANCH_NAME}\""
- }
-
-}
+@Field def config_loader
 
 /*
 * Load environment variables from build module
 */
-def loadConfigModule(buildModuleUrl){
+def loadConfigModule(build_module_url){
+  dir('config-loader') {
+    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: build_module_url]]])
+    def result_json_string = readFile("jazz-installer-vars.json")
+    config_module = load "config-loader.groovy"
+    config_loader = config_module.initialize(result_json_string)
+  }
+}
 
-	dir('config-loader') {
-		checkout([$class: 'GitSCM', branches: [
-			[name: '*/master']
-		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: repo_credential_id, url: buildModuleUrl]
-		]])
+/*
+* Start the Pipeline stages
+*/
+node {
+  stage('Loading Config-Loader') {
+    loadConfigModule(getBuildModuleUrl())
+  }
 
-		def resultJsonString = readFile("jazz-installer-vars.json")
-		configModule = load "config-loader.groovy"
-		configLoader = configModule.initialize(resultJsonString)
-	}
+  stage('Triggering the Jenkins build') {
+    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+    echo "Build triggered via branch::${env.BRANCH_NAME}"
+
+	   def projname = ''
+
+	   if(env.JOB_NAME){
+		  projname = env.JOB_NAME
+		  names = projname.split('/')
+		  projname = names[1]
+	   }
+   
+    def build_job = config_loader.API.API_BUILD_URI
+    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+
+    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=${projname}&domain=platform&scm_branch=${env.BRANCH_NAME}\""
+    }
+  }
 }
 
 def getBuildModuleUrl() {
