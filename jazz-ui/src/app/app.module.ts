@@ -6,7 +6,7 @@ import { HttpModule } from '@angular/http';
 import { APP_INITIALIZER } from '@angular/core';
 
 import {MomentModule} from 'angular2-moment';
-import { DatePickerModule } from './primary-components/daterange-picker/ng2-datepicker';
+import { DatePickerModule } from 'ng2-datepicker';
 import { ChartsModule } from 'ng2-charts';
 
 import {ToasterModule } from 'angular2-toaster';
