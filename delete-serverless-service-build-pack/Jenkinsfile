@@ -924,7 +924,7 @@ def loadServiceInfo() {
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
 			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
 	
-	def curlOutputJSON = parseJson(curlOutput)
+	def curlOutputJSON = jsonParse(curlOutput)
 
 	if (curlOutputJSON.data[0].created_by) {
 		created_by = curlOutputJSON.data[0].created_by
@@ -953,7 +953,7 @@ def loadServiceInfo() {
 				 $url \
 				-d \'${payload}\'", returnStdout:true).trim()
 
-			def tokenJson = parseJson(token)
+			def tokenJson = jsonParse(token)
 			tokenJson_token = tokenJson.data.token
 			
 			return tokenJson_token
@@ -1110,4 +1110,10 @@ def getBuildModuleUrl() {
     }else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     } 
-} 
+}
+
+@NonCPS
+def jsonParse(jsonString) {
+    def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    return nonLazyMap
+}

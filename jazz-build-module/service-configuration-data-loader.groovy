@@ -10,46 +10,26 @@ echo "Service configuration module loaded successfully"
  * get it ready for Jenkins builds. It loads data for all service types.
 */
 
+@Field def service_config
 @Field def role_arn
 @Field def region
 @Field def role_id
 @Field def jenkins_url
-@Field def api_id_dev
-@Field def api_id_stg
-@Field def api_id_prod
 @Field def current_environment
-@Field def user_pool_id
-@Field def instance_prefix
-@Field def client_id
-@Field def repo_base
 @Field def es_hostname
-@Field def bitbucket_base
-@Field def bitbucket_username
-@Field def bitbucket_password
 @Field def service_name
 
 /**
  * Initialize the module
  */
-def initialize(role_arn, region, role_id, jenkins_url, api_id_dev, api_id_stg, api_id_prod, current_environment,user_pool_id,
-				instance_prefix, client_id, repo_base, es_hostname, bitbucket_base, bitbucket_username, bitbucket_password,service_name) {
+def initialize(config, role_arn, region, role_id, jenkins_url, current_environment, service_name) {
 	
+	service_config = config
 	setRoleARN(role_arn)
 	setRegion(region)
 	setRoleId(role_id)
 	setJenkinsUrl(jenkins_url)
-	setApiIdDev(api_id_dev)
-	setApiIdStg(api_id_stg)
-	setApiIdProd(api_id_prod)
 	setCurrentEnvironment(current_environment)
-	setUserPoolId(user_pool_id)
-	setEnvNamePrefix(instance_prefix)
-	setClientId(client_id)
-	setRepoBase(repo_base)
-	setEsHostName(es_hostname)
-	setBitbucketBase(bitbucket_base)
-	setBitbucketUserName(bitbucket_username)
-	setBitbucketPassword(bitbucket_password)	
 	setServiceName(service_name)
 }
 
@@ -68,23 +48,20 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-accId}/" + role_id + "/g' ./swagger/swagger.json"
 		 }
 
-		echo "Updating the index.js for create and delete services"
-		
-		// @TODO : These conditional statements could be removed and needs to be refactored
 		if ((service_name.trim() == "delete-serverless-service") ) {
 			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkins_url + "/g' ./index.js"
 		}
 		
 		if ( (service_name.trim() == "platform_events") ) {
-			sh "sed -i -- 's/{conf_stack_prefix}/" + instance_prefix + "/g' ./components/dev-config.json"
-			sh "sed -i -- 's/{conf_stack_prefix}/" + instance_prefix + "/g' ./components/stg-config.json"
-			sh "sed -i -- 's/{conf_stack_prefix}/" + instance_prefix + "/g' ./components/prod-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./components/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./components/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./components/prod-config.json"
 		}
 		
 		if ( (service_name.trim() == "platform-services-handler") ) {
-			sh "sed -i -- 's/{conf-apikey}/" + api_id_dev + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-apikey}/" + api_id_stg + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-apikey}/" + api_id_prod + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.DEV_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.STG_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.PROD_ID}/g' ./config/prod-config.json"
 			
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
@@ -96,118 +73,116 @@ def loadServiceConfigurationData() {
 			
 		}
 		
-		// @TODO : These conditional statements could be removed and needs to be refactored
 		if ( (service_name.trim() == "platform_login") || (service_name.trim() == "platform_logout") || (service_name.trim() == "cognito-authorizer")) {
-			echo "Updating configs for " + current_environment + " login and logout"
-			sh "sed -i -- 's/{conf-user-pool-id}/" + user_pool_id + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-client-id}/" + client_id + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
 		  
-			echo "Updating configs for stg"
-			sh "sed -i -- 's/{conf-user-pool-id}/" + user_pool_id + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-client-id}/" + client_id + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
 		  
-			echo "Updating configs for prod"
-			sh "sed -i -- 's/{conf-user-pool-id}/" + user_pool_id + "/g' ./config/prod-config.json"
-			sh "sed -i -- 's/{conf-client-id}/" + client_id + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
 		}
 		
-		if ( (service_name.trim() == "is-service-available"))   
-		{
-			sh "sed -i -- 's/{inst_stack_prefix}/" + instance_prefix + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{inst_stack_prefix}/" + instance_prefix + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{inst_stack_prefix}/" + instance_prefix + "/g' ./config/prod-config.json"
+		if ( (service_name.trim() == "is-service-available")){
+			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
 
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
 		}
 
-		// @TODO : These conditional statements could be removed and needs to refactored
 		if ( (service_name.trim() == "create-serverless-service") ) {
-			echo "Updating configs for repo base"
-			
-			sh "sed -i -- 's/{conf-repo-base}/" + repo_base + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-repo-base}/" + repo_base + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-repo-base}/" + repo_base + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/prod-config.json"
 		}
 		
-		// @TODO : These conditional statements could be removed and needs to refactored
 		if ( (service_name.trim() == "delete-serverless-service") || (service_name.trim() == "create-serverless-service") ) {
-			echo "Updating configs for jenkins host"
 			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkins_url + "/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkins_url + "/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-jenkins-host}/" + jenkins_url + "/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{conf-user-pool-id}/" + user_pool_id + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-client-id}/" + client_id + "/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
 		  
-			echo "Updating configs for stg"
-			sh "sed -i -- 's/{conf-user-pool-id}/" + user_pool_id + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-client-id}/" + client_id + "/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
 		  
-			echo "Updating configs for prod"
-			sh "sed -i -- 's/{conf-user-pool-id}/" + user_pool_id + "/g' ./config/prod-config.json"
-			sh "sed -i -- 's/{conf-client-id}/" + client_id + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
 		}
 		
-		// @TODO : These conditional statements could be removed and needs to refactored
 		if (service_name.trim() == "platform_services") {
-			echo "Updating parameter specific to platform-services"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./config/prod-config.json"
 		}
 
 		if (service_name.trim() == "platform_logs") {
-			echo "Updating parameter specific to platform_logs"
-			sh "sed -i -- 's/{env-prefix}/" + instance_prefix + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{env-prefix}/" + instance_prefix + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{env-prefix}/" + instance_prefix + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{env-prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{env-prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{env-prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${service_config.AWS.ES_HOSTNAME}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${service_config.AWS.ES_HOSTNAME}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${service_config.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
 		}
 
 		if (service_name.trim() == "cloud-logs-streamer") {
-			echo "Updating parameter specific to cloud-logs-streamer"
-			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{inst_elastic_search_hostname}/" + es_hostname + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${service_config.AWS.ES_HOSTNAME}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${service_config.AWS.ES_HOSTNAME}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${service_config.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
 		}
 
 		if (service_name.trim() == "platform_usermanagement") {
-			echo "Updating parameter specific to platform_usermanagement"
+			sh "sed -i -- 's/{user_pool_id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{user_pool_id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{user_pool_id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{user_pool_id}/" + user_pool_id + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{user_pool_id}/" + user_pool_id + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{user_pool_id}/" + user_pool_id + "/g' ./config/prod-config.json"
-
-			sh "sed -i -- 's/{user_client_id}/" + client_id + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{user_client_id}/" + client_id + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{user_client_id}/" + client_id + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{user_client_id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{user_client_id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{user_client_id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
 
 			sh "sed -i -- 's/{region}/" + region + "/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{region}/" + region + "/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{region}/" + region + "/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's,{bb_service_host}," + "http://" + bitbucket_base + ",g' ./config/dev-config.json"
-			sh "sed -i -- 's,{bb_service_host}," + "http://" + bitbucket_base + ",g' ./config/stg-config.json"
-			sh "sed -i -- 's,{bb_service_host}," + "http://" + bitbucket_base + ",g' ./config/prod-config.json"
-		
-			sh "sed -i -- 's/{bb_username}/" + bitbucket_username + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{bb_username}/" + bitbucket_username + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{bb_username}/" + bitbucket_username + "/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{scm_type}/${service_config.SCM.TYPE}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{scm_type}/${service_config.SCM.TYPE}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{scm_type}/${service_config.SCM.TYPE}/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{bb_password}/" + bitbucket_password + "/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{bb_password}/" + bitbucket_password + "/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{bb_password}/" + bitbucket_password + "/g' ./config/prod-config.json"
+			if (service_config.SCM.TYPE == "bitbucket") {
+				sh "sed -i -- 's,{bb_service_host},http://${service_config.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
+				sh "sed -i -- 's,{bb_service_host},http://${service_config.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
+				sh "sed -i -- 's,{bb_service_host},http://${service_config.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
+			
+				sh "sed -i -- 's/{bb_username}/${service_config.SCM.USERNAME}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{bb_username}/${service_config.SCM.USERNAME}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{bb_username}/${service_config.SCM.USERNAME}/g' ./config/prod-config.json"
+
+				sh "sed -i -- 's/{bb_password}/${service_config.SCM.PASSWORD}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{bb_password}/${service_config.SCM.PASSWORD}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{bb_password}/${service_config.SCM.PASSWORD}/g' ./config/prod-config.json"
+			}
+
+			if (service_config.SCM.TYPE == "gitlab") {
+				sh "sed -i -- 's,{gitlab_service_host},http://${service_config.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
+				sh "sed -i -- 's,{gitlab_service_host},http://${service_config.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
+				sh "sed -i -- 's,{gitlab_service_host},http://${service_config.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
+			
+				sh "sed -i -- 's/{gitlab_private_token}/${service_config.SCM.PRIVATE_TOKEN}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{gitlab_private_token}/${service_config.SCM.PRIVATE_TOKEN}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{gitlab_private_token}/${service_config.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
+			}	
 		}
 
 		if (service_name.trim() == "platform_email") {
@@ -235,45 +210,80 @@ def setRoleId(roleId){
 def setJenkinsUrl(jenkinsUrl){
 	jenkins_url = jenkinsUrl
 }
-def setApiIdDev(apiIdDev){
-	api_id_dev = apiIdDev
-}
-def setApiIdStg(apiIdStg){
-	api_id_stg = apiIdStg
-}
-def setApiIdProd(apiIdProd){
-	api_id_prod = apiIdProd
-}
 def setCurrentEnvironment(currentEnvironment){
 	current_environment = currentEnvironment
-}
-def setUserPoolId(userPoolId){
-	user_pool_id = userPoolId
-}
-def setEnvNamePrefix(envNamePrefix){
-	instance_prefix = envNamePrefix
-}
-def setClientId(clientId){
-	client_id = clientId
-}
-def setRepoBase(repoBase){
-	repo_base = repoBase
-}
-def setEsHostName(esHostname){
-	es_hostname = esHostname
-}
-def setBitbucketBase(bitbucketBase){
-	bitbucket_base = bitbucketBase
-}
-def setBitbucketUserName(bitbucketUsername){
-	bitbucket_username = bitbucketUsername
-}
-def setBitbucketPassword(bitbucketPassword){
-	bitbucket_password = bitbucketPassword
 }
 def setServiceName(serviceName){
 	service_name = serviceName
 }
 
-
+def setKinesisStream(config){
+	if ( (config['service'].trim() == "platform-services-handler") ) {
+		def function_name =  "${service_config.INSTANCE_PREFIX}-" + config['service'] + "-" +  current_environment
+		def event_source_list = sh (
+			script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"" ,
+			returnStdout: true
+		).trim()
+		echo "$event_source_list"
+		if (event_source_list == "[]"){
+			sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$role_id:stream/${service_config.INSTANCE_PREFIX}-events-hub-" + current_environment + " --function-name arn:aws:lambda:$region:$role_id:function:$function_name --starting-position LATEST --region " + region
+		}
+	}
+}
+def setLogStreamPermission(config){
+	if (config['service'] == "cloud-logs-streamer") {
+		echo "set permission for cloud-logs-streamer"
+		try {
+			def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()
+			sh "aws lambda add-permission --function-name arn:aws:lambda:${region}:${role_id}:function:${service_config.INSTANCE_PREFIX}-" + config['service'] + "-${current_environment} --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs.${region}.amazonaws.com --region ${region}"
+			echo "set permission for cloud-logs-streamer - success"
+		}catch(ss) {
+			//ignore if already registered permissions
+			echo(ss)
+			echo "set permission for cloud-logs-streamer - ok np"
+		}
+	}	
+}
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
+}
+def loadServiceMetadata(service_id,configLoader){
+	
+	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+		credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			
+		def table_name = "${configLoader.INSTANCE_PREFIX}_services_prod"
+		def service_Object = sh (
+				script: "aws --region ${configLoader.AWS.REGION} dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
+				returnStdout: true
+			).trim()
+		
+		
+		if(service_Object){
+			def service_data = parseJson(service_Object)
+			def data = service_data.Item.SERVICE_METADATA.M
+			def metadata = [:]
+			
+			for(item in data){
+				metadata[item.key] = item.value.S				
+			}
+			metadata['service_id'] = service_data.Item.SERVICE_ID.S
+			metadata['service'] = service_data.Item.SERVICE_NAME.S
+			metadata['domain'] = service_data.Item.SERVICE_DOMAIN.S
+			metadata['owner'] = service_data.Item.SERVICE_CREATED_BY.S
+			metadata['created_by'] = service_data.Item.SERVICE_CREATED_BY.S
+			metadata['type'] = service_data.Item.SERVICE_TYPE.S
+			metadata['region'] = configLoader.AWS.REGION
+			if(service_data.Item.SERVICE_ENDPOINTS)			
+				metadata['endpoints'] = service_data.Item.SERVICE_ENDPOINTS.M
+			
+			
+			return metadata
+		}
+	}
+}
 return this

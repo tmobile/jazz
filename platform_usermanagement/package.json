@@ -21,5 +21,8 @@
     "mocha": "^v3.0.0",
     "chai": "^3.5.0",
     "lambda-local": "^1.4.2"
+  },
+  "engines": {
+    "node": "6.10"
   }
 }
