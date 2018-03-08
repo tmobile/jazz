@@ -58,7 +58,7 @@ node() {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModule(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"	
+	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
 
     echo "Build triggered via branch: " + params.scm_branch
@@ -66,7 +66,7 @@ node() {
     def serviceName = params.service_name
 	def branch = params.scm_branch
 	def repo_name = params.service_name
-	
+
 	if (branch == 'master') {
 		current_environment = 'prod'
 	}else {
@@ -75,19 +75,19 @@ node() {
 
 	def config
 	def domain = params.domain
-	
+
     stage('Checkout code base') {
-		if (params.domain  && params.domain.trim() != "" ) {			
+		if (params.domain  && params.domain.trim() != "" ) {
 			if(domain != "platform" && configLoader.SCM.TYPE != "gitlab"){
-				repo_name = params.domain + "-" + params.service_name				
+				repo_name = params.domain + "-" + params.service_name
 			}
 		 }else{
 			domain = ""
-		}	
-	
+		}
+
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
-		
+
 		def repocloneUrl
 		if(domain && domain == "platform"){
 			repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
@@ -95,7 +95,7 @@ node() {
 			auth_token = setCredentials()
 			repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
 		}
-		
+
 		dir(repo_name)
 		{
 			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
@@ -106,25 +106,25 @@ node() {
 		{
 			return LoadConfiguration()
 		}
-		
-		if(configObj.service_id){	
+
+		if(configObj.service_id){
 			config = serviceConfigdata.loadServiceMetadata(configObj.service_id,configLoader)
 		}else{
 			error "Service Id is not available."
 		}
 	}
-	
+
 	domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
 
 	serviceName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
-	
+
 	def internalAccess = config['require_internal_access']
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
 
 	// @TODO: the below statement will be replaced with regular expression in very near future;
-	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))  	
+	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
 
 	dir(repo_name)
@@ -136,15 +136,15 @@ node() {
 				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 				echo "Inside Update service template"
 				try{
-					updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)	
+					updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)
 				}
 				catch(error){
 					sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.COMPLETED, "")
 					error "Error occured while updating service template."
 				}
-			}			
+			}
 	    }
-		stage('Pre-Build Validation') {				
+		stage('Pre-Build Validation') {
 			send_status_email(config, 'STARTED',"")
 			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_INPUT, Event_Status.STARTED, "")
 
@@ -153,7 +153,7 @@ node() {
 
 			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_INPUT, Event_Status.COMPLETED, "")
 		}
-		
+
 		stage('Build') {
 		   // @TODO : Send Event feature coming soon
 			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.STARTED, "")
@@ -176,18 +176,18 @@ node() {
 				sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-				
+
 				// Generate serverless yml file with domain added in function name
 				echo "Generate deployment env with domain for ${env_key}"
-				
-				writeServerlessFile(config, current_environment)				
-				
+
+				writeServerlessFile(config, current_environment)
+
 				setLambdaExecutionRole(configLoader.AWS.ROLEID);
 
 				echo "serverless deploy......."
 				def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 				sh "serverless deploy --stage ${current_environment} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
-								
+
 				if (fileExists('swagger/swagger.json')) {
 					// Generate swagger file based on environment
 					echo "Generating the swagger file for each environment"
@@ -195,35 +195,35 @@ node() {
 					def api_key = env_key + "_ID"
 					def apiHostName = "${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" //Staging environment
 					generateSwaggerEnv(current_environment, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName,config)
-					
+
 					echo "Deploying to API Gateway environment.."
 					sh "aws apigateway put-rest-api --rest-api-id ${configLoader.AWS.API[api_key]} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+" --profile cloud-api"
 					sh "aws apigateway create-deployment --rest-api-id ${configLoader.AWS.API[api_key]} --stage-name ${current_environment} --profile cloud-api"
 
-					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API[api_key]}/stages/prod --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API[api_key]}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
 
 					def endpointUrl = "https://${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/${current_environment}/" + domain + "/" + config['service']
 					if(domain != "platform"){
 						createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION,roleId);
-						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)						
+						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)
 					}
 
 					updateApiDocUrl(current_environment)
 					sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
-					echo "completed deployment........."					
-					
+					echo "completed deployment........."
+
 					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 					def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
-					send_status_email(config, 'COMPLETED',svc_status)	
+					send_status_email(config, 'COMPLETED',svc_status)
 				}
-				if(domain && domain == "platform"){						
-					serviceConfigdata.setLogStreamPermission(config)					
+				if(domain && domain == "platform"){
+					serviceConfigdata.setLogStreamPermission(config)
 				}else{
-					updateServiceInDB(config, "active")					
-				}				
-				echo "completed deployment........."					
+					updateServiceInDB(config, "active")
+				}
+				echo "completed deployment........."
 				sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-								
+
 			}//stage to prod ends here
 		}
 	}//dir ends here
@@ -264,7 +264,7 @@ def LoadConfiguration() {
 
     }
 	echo "Loaded configurations....$prop"
-	return prop	
+	return prop
 }
 
 
@@ -506,7 +506,7 @@ def createSubscriptionFilters(service, env, region,roleId) {
 			sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --region ${region}"
 		}
 	}catch(Exception ex) {}// ignore error if not created yet
-	
+
 	sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region}"
 }
 
@@ -519,15 +519,15 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 def updateServiceWithEndpointInfo(config,endpointKey, endpointVal) {
 
 	def updateJson = ['endpoints':[:]]
-	def serviceUrl = g_base_url + '/platform/services'	
+	def serviceUrl = g_base_url + '/platform/services'
 	if(config.endpoints){
 		for(item in config.endpoints){
-			updateJson['endpoints'][item.key] = item.value.S				
+			updateJson['endpoints'][item.key] = item.value.S
 		}
 	}
-	updateJson['endpoints'][endpointKey] = endpointVal	
+	updateJson['endpoints'][endpointKey] = endpointVal
 	def body = JsonOutput.toJson(updateJson)
-	
+
 	echo "new json $updateJson"
 
 	def serviceUpdateUrl = "$serviceUrl/${config.service_id}"
@@ -672,11 +672,11 @@ def parseJson(jsonString) {
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
       // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git"
     }else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    } 
-} 
+    }
+}
 /*
 * Load environment variables from build module
 */
@@ -692,11 +692,11 @@ def loadBuildModule(buildModuleUrl){
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
-		
+
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
-		
+
 		serviceConfigdata = load "service-configuration-data-loader.groovy"
-		
+
 	}
 }
