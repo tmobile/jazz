@@ -76,10 +76,12 @@ node  {
 		owner = params.username
 	}	
 
+	def repo_name = params.service_name
+	
 	echo "Starting new service on-boarding .. with params : $params"
 
 	if(params.domain && params.domain.trim() != ""){
-		repo_name = params.domain.trim() + "-" + service_name
+		repo_name = params.domain.trim() + "_" + service_name
 		domain = params.domain.trim()
 	}
 
@@ -409,7 +411,7 @@ node  {
 
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 
-		def loginUrl = g_base_url + "/platform/login"
+		def loginUrl = g_base_url + "/jazz/login"
 		def login_json = []
 
 		login_json = [
@@ -442,7 +444,7 @@ def sendEvent(service_type, service_name, domain, runtime, admin_group, event_na
 }
 
 def updateServiceInDB(service_id_in_db, apiId, region, statusval) {
-  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/prod/platform/services/${service_id_in_db}/"
+  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/prod/jazz/services/${service_id_in_db}/"
 }
 
 def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region,serviceMetadataJson) {
@@ -462,14 +464,14 @@ def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc,
 		])
 		
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '$body' https://${apiID}.execute-api.${region}.amazonaws.com/prod/platform/services/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '$body' https://${apiID}.execute-api.${region}.amazonaws.com/prod/jazz/services/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
 		def jsonParser = new groovy.json.JsonSlurper()
 		def resultJson = jsonParser.parseText(outputStr)
 		if(resultJson == null || resultJson.data == null || resultJson.data.service_id == null) {
-			error "platform/services/ Insert failed"
+			error "jazz/services/ Insert failed"
 		}
 		return resultJson.data.service_id;
 	}catch (ex) {
@@ -560,7 +562,7 @@ def send_status_email (email_id, build_status, service, domain) {
 
    	try{
 		def sendMail = sh (script: "curl -X POST \
-						${g_base_url}/platform/email \
+						${g_base_url}/jazz/email \
 						-k -v -H \"Authorization: $g_login_token\" \
 						-H \"Content-Type: application/json\" \
 						-d \'${body}\'", returnStdout: true).trim()
