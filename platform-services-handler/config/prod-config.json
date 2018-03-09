@@ -1,7 +1,0 @@
-{
-  "SERVICE_CREATION_EVENT_START":"CALL_ONBOARDING_WORKFLOW",
-  "SERVICE_CREATION_EVENT_END" : "ONBOARDING",
-  "SERVICE_API_URL" : "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
-  "SERVICE_API_RESOURCE" : "/prod/platform/services",
-  "FAILURE_QUEUE":"https://sqs.{conf-region}.amazonaws.com/{conf-accId}/Jazz_ServiceHandlerFailures"  
-}
