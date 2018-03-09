@@ -513,7 +513,7 @@ def createSubscriptionFilters(stackName, region,roleId) {
 
 def writeServerlessFile(config,current_environment){
 	sh "pwd"
-	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['service']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
 	sh "sed -i -- 's/{env-stage}/" + current_environment + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
