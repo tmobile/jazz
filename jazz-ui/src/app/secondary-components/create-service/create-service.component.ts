@@ -173,7 +173,7 @@ export class CreateServiceComponent implements OnInit {
   public validateChannelName() {
 
     this.slackChannelLoader = true;
-    this.http.get('/platform/is-slack-channel-available?slack_channel='+this.model.slackName)
+    this.http.get('/jazz/is-slack-channel-available?slack_channel='+this.model.slackName)
         .subscribe(
         (Response) => {
         var output = Response;
@@ -210,7 +210,7 @@ export class CreateServiceComponent implements OnInit {
     this.showLoader = true;
 
 
-    this.http.get('/platform/is-service-available/?service='+this.model.serviceName+'&domain='+this.model.domainName)
+    this.http.get('/jazz/is-service-available/?service='+this.model.serviceName+'&domain='+this.model.domainName)
         .subscribe(
         (Response) => {
 
@@ -330,7 +330,7 @@ export class CreateServiceComponent implements OnInit {
     }
 
     this.isLoading = true;
-    this.http.post('/platform/create-serverless-service' , payload)
+    this.http.post('/jazz/create-serverless-service' , payload)
         .subscribe(
         (Response) => {
           var output = Response;
