@@ -63,9 +63,12 @@ node() {
 
     echo "Build triggered via branch: " + params.scm_branch
 
-    def serviceName = params.service_name
-	def branch = params.scm_branch
+   	def branch = params.scm_branch
 	def repo_name = params.service_name
+	
+	if(domain && domain != ""){
+		repo_name = params.domain + "_" + params.service_name
+	}
 
 	if (branch == 'master') {
 		current_environment = 'prod'
@@ -77,19 +80,11 @@ node() {
 	def domain = params.domain
 
     stage('Checkout code base') {
-		if (params.domain  && params.domain.trim() != "" ) {
-			if(domain != "platform" && configLoader.SCM.TYPE != "gitlab"){
-				repo_name = params.domain + "-" + params.service_name
-			}
-		 }else{
-			domain = ""
-		}
-
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
 
 		def repocloneUrl
-		if(domain && domain == "platform"){
+		if(domain && domain == "jazz"){
 			repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
 		}else{
 			auth_token = setCredentials()
@@ -118,7 +113,7 @@ node() {
     def runtime = config['providerRuntime']
     def service = config['service']
 
-	serviceName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
+	def stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
 
 	def internalAccess = config['require_internal_access']
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
@@ -131,7 +126,7 @@ node() {
 	{
 		loadServerlessConfig(runtime)
 
-		if(domain && domain == "platform"){
+		if(domain && domain == "jazz"){
 			stage ('Update Service Template'){
 				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 				echo "Inside Update service template"
@@ -203,9 +198,10 @@ node() {
 					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API[api_key]}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
 
 					def endpointUrl = "https://${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/${current_environment}/" + domain + "/" + config['service']
-					if(domain != "platform"){
-						createSubscriptionFilters(serviceName, current_environment, configLoader.AWS.REGION,roleId);
-						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)
+
+					if(domain != "jazz"){
+						createSubscriptionFilters(stackName, configLoader.AWS.REGION,roleId);
+						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)						
 					}
 
 					updateApiDocUrl(current_environment)
@@ -216,8 +212,9 @@ node() {
 					def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
 					send_status_email(config, 'COMPLETED',svc_status)
 				}
-				if(domain && domain == "platform"){
-					serviceConfigdata.setLogStreamPermission(config)
+
+				if(domain && domain == "jazz"){						
+					serviceConfigdata.setLogStreamPermission(config)					
 				}else{
 					updateServiceInDB(config, "active")
 				}
@@ -485,8 +482,8 @@ def updateApiDocUrl(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(service, env, region,roleId) {
-	def lambda = "/aws/lambda/${service}-${env}"
+def createSubscriptionFilters(stackName, region,roleId) {
+	def lambda = "/aws/lambda/${stackName}"
 	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-cloud-logs-streamer-prod"
 	try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
@@ -519,7 +516,8 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 def updateServiceWithEndpointInfo(config,endpointKey, endpointVal) {
 
 	def updateJson = ['endpoints':[:]]
-	def serviceUrl = g_base_url + '/platform/services'
+	def serviceUrl = g_base_url + '/jazz/services'	
+
 	if(config.endpoints){
 		for(item in config.endpoints){
 			updateJson['endpoints'][item.key] = item.value.S
@@ -546,7 +544,7 @@ def updateServiceWithEndpointInfo(config,endpointKey, endpointVal) {
  * Must be a service account which has access to all services
  */
  def setCredentials() {
-	def loginUrl = g_base_url + '/platform/login'
+	def loginUrl = g_base_url + '/jazz/login'
 	def token
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		echo "user name is $UNAME"
@@ -584,7 +582,7 @@ def updateServiceWithEndpointInfo(config,endpointKey, endpointVal) {
 * @return
 */
 def send_status_email (config, build_status, email_content) {
-	if(domain != "platform"){
+	if(domain != "jazz"){
 		echo "Sending build notification to ${config['created_by']}"
 		def body_subject = ''
 		def body_text = ''
@@ -619,7 +617,7 @@ def send_status_email (config, build_status, email_content) {
 
 		try{
 			def sendMail = sh (script: "curl -X POST \
-					${g_base_url}/platform/email \
+					${g_base_url}/jazz/email \
 					-k -v -H \"Authorization: $auth_token\" \
 					-H \"Content-Type: application/json\" \
 					-d \'${body}\'", returnStdout: true).trim()
@@ -637,7 +635,7 @@ def send_status_email (config, build_status, email_content) {
 def updateServiceInDB(config,status) {
 
 	def updateJson = ''
-	def serviceUrl = g_base_url + '/platform/services'
+	def serviceUrl = g_base_url + '/jazz/services'
 	if(status) {
 		updateJson = "{ \"status\": \"$status\" }"
 

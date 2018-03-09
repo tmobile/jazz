@@ -1,0 +1,4 @@
+{
+  "SERVICES_TABLE": "{inst_stack_prefix}_services_dev",
+  "REGION": "{conf-region}"
+}
