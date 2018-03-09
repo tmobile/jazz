@@ -189,7 +189,7 @@ export class ServicesListComponent implements OnInit {
   selectedListData:any;
   prevActivePage: number = 0;
   message;
-  relativeUrl : string = '/platform/services';
+  relativeUrl : string = '/jazz/services';
   limitValue : number = 10;
   tableEmptyMessage: string = '';
 
@@ -517,7 +517,7 @@ export class ServicesListComponent implements OnInit {
     this.deletedServiceId = this.cache.get('deletedServiceId');
      this.fetchServices();
      this.paginatePage(1);
-     this.relativeUrl = '/platform/services?limit=' + this.limitValue + '&offset=' + 0 +'&';
+     this.relativeUrl = '/jazz/services?limit=' + this.limitValue + '&offset=' + 0 +'&';
      this.serviceCall();
     this.paginationInit();
     this.updateList = this.cache.get("updateServiceList");
