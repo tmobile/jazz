@@ -48,23 +48,23 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
 		 }
 
-		if ((service_name.trim() == "delete-serverless-service") ) {
+		if ((service_name.trim() == "jazz_delete-serverless-service") ) {
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./index.js"
 		}
 		
-		if ( (service_name.trim() == "platform_events") ) {
+		if ( (service_name.trim() == "jazz_events") ) {
 			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
 		}
 		
-		if ( (service_name.trim() == "platform_events-handler") ) {
+		if ( (service_name.trim() == "jazz_events-handler") ) {
 			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
 		}
 		
-		if ( (service_name.trim() == "platform-services-handler") ) {
+		if ( (service_name.trim() == "jazz_services-handler") ) {
 			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.DEV_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.STG_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.PROD_ID}/g' ./config/prod-config.json"
@@ -87,7 +87,7 @@ def loadServiceConfigurationData() {
 			
 		}
 		
-		if ( (service_name.trim() == "platform_login") || (service_name.trim() == "platform_logout") || (service_name.trim() == "cognito-authorizer")) {
+		if ( (service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer")) {
 			sh "sed -i -- 's/{conf-user-pool-id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-client-id}/${service_config.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
@@ -101,7 +101,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 		
-		if ( (service_name.trim() == "is-service-available")){
+		if ( (service_name.trim() == "jazz_is-service-available")){
 			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
@@ -111,13 +111,13 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 
-		if ( (service_name.trim() == "create-serverless-service") ) {
+		if ( (service_name.trim() == "jazz_create-serverless-service") ) {
 			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/prod-config.json"
 		}
 		
-		if ( (service_name.trim() == "delete-serverless-service") || (service_name.trim() == "create-serverless-service") ) {
+		if ( (service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service") ) {
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/prod-config.json"
@@ -135,13 +135,13 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 		
-		if (service_name.trim() == "platform_services") {
+		if (service_name.trim() == "jazz_services") {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 
-		if (service_name.trim() == "platform_logs") {
+		if (service_name.trim() == "jazz_logs") {
 			sh "sed -i -- 's/{env-prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{env-prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{env-prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
@@ -151,13 +151,13 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{inst_elastic_search_hostname}/${service_config.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
 		}
 
-		if (service_name.trim() == "cloud-logs-streamer") {
+		if (service_name.trim() == "jazz_cloud-logs-streamer") {
 			sh "sed -i -- 's/{inst_elastic_search_hostname}/${service_config.AWS.ES_HOSTNAME}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{inst_elastic_search_hostname}/${service_config.AWS.ES_HOSTNAME}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{inst_elastic_search_hostname}/${service_config.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
 		}
 
-		if (service_name.trim() == "platform_usermanagement") {
+		if (service_name.trim() == "jazz_usermanagement") {
 			sh "sed -i -- 's/{user_pool_id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{user_pool_id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{user_pool_id}/${service_config.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
@@ -199,7 +199,7 @@ def loadServiceConfigurationData() {
 			}	
 		}
 
-		if (service_name.trim() == "platform_email") {
+		if (service_name.trim() == "jazz_email") {
 			echo "Updating parameter specific to platform email"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
