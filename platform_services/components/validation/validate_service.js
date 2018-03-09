@@ -25,6 +25,7 @@
 const logger = require("../logger.js"); //Import the logging module.
 const crud = require("../crud")(); //Import the utils module.
 const _ = require("lodash");
+
 module.exports = (service_id, onComplete) => {
     logger.info("Inside Validate Service with service id: " + service_id);
 

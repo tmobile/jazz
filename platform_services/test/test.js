@@ -417,7 +417,8 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args[0][0];
+    console.log(logStub.args)
+    var logResponse = logStub.args[1][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
@@ -478,9 +479,9 @@ describe('platform_services', function() {
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
     var logResponse = logStub.args;
+    console.log(logStub.args)
     //should indicate function is validating info in event.body for the update in log notifications
-    var logCheck = logResponse[1][0].includes(logMessage) &&
-                    logResponse[2][0].description == event.body.description &&
+    var logCheck = logResponse[2][0].description == event.body.description &&
                     logResponse[2][0].email == event.body.email;
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
