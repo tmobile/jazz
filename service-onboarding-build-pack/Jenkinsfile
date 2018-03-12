@@ -76,8 +76,6 @@ node  {
 		owner = params.username
 	}	
 
-	def repo_name = params.service_name
-	
 	echo "Starting new service on-boarding .. with params : $params"
 
 	if(params.domain && params.domain.trim() != ""){

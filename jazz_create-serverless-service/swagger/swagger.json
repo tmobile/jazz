@@ -140,7 +140,7 @@
                 },
                "security": [
                   {
-                    "{envPrefix}-cognito-authorizer": []
+                    "{envPrefix}-{domain}-cognito-authorizer": []
                   }
                 ],             
                 "x-amazon-apigateway-integration": {
@@ -189,7 +189,7 @@
         }
     },
   	"securityDefinitions": {
-		"{envPrefix}-cognito-authorizer": {
+		"{envPrefix}-{domain}-cognito-authorizer": {
 		  "type": "apiKey",
 		  "name": "Authorization",
 		  "in": "header",
@@ -197,7 +197,7 @@
 		  "x-amazon-apigateway-authorizer": {
 			"authorizerCredentials": "{conf-role}",
 			"authorizerResultTtlInSeconds": 300,
-			"authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-cognito-authorizer-{envmnt}/invocations",
+			"authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
 			"type": "token"
 		  }
 		}

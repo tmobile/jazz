@@ -1,7 +1,7 @@
 {
   "name": "usermanagementservice",
   "version": "0.0.1",
-  "description": "Platform user management service",
+  "description": "Jazz user management service",
   "main": "index.js",
   "private": true,
   "author": {

@@ -63,7 +63,7 @@ node ()  {
 
 	def branch = params.scm_branch
 	def domain = params.domain
-
+	def service = params.service_name
 	def repo_name = params.service_name
 	
 	if(domain && domain != ""){
