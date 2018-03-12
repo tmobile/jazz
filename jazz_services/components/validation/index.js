@@ -15,32 +15,21 @@
 // =========================================================================
 
 /**
-	Get Service-Catalog by SERVICE_ID from dynamodb table
-  @module: get.js
-  @description: CRUD functions for service catalog
+    Validate functions for service catalog
+    @module: index.js
+    @description: Validation Utility functions.
 	@author: 
 	@version: 1.0
 **/
 
-const utils = require("../utils.js")(); 
+var _validateCreatePayload = require("./validate_create_payload");
+var _validateUpdatePayload = require("./validate_update_payload");
+var _validateServiceWithServiceId = require("./validate_service");
 
-module.exports = (service_id, onComplete) => {
-    var docClient = utils.initDocClient();
-
-    var params = {
-        TableName: global.services_table,
-        Key: {
-            "SERVICE_ID": service_id
-        }
+module.exports = () => {
+    return {
+        validateCreatePayload: _validateCreatePayload,
+        validateUpdatePayload: _validateUpdatePayload,
+        validateServiceWithServiceId: _validateServiceWithServiceId
     };
-
-
-    docClient.get(params, function(err, data) {
-        if (err) {
-            onComplete(err);
-        } else {
-            var service = utils.formatService(data.Item);
-            onComplete(null, service);
-        }
-    });
 };
