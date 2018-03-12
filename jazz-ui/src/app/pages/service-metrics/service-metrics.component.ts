@@ -203,7 +203,7 @@ export class ServiceMetricsComponent implements OnInit {
     	 if ( this.subscription ) {
       this.subscription.unsubscribe();
     }
-		this.subscription = this.http.post('/platform/metrics', this.payload).subscribe(
+		this.subscription = this.http.post('/jazz/metrics', this.payload).subscribe(
       response => {
           //Bind to view
         let serviceMetrics = response.data;

@@ -61,11 +61,14 @@ node ()  {
 	
 	echo "Build Pack website params: " + params
 
-    def service = params.service_name
 	def branch = params.scm_branch
 	def domain = params.domain
-
+	def service = params.service_name
 	def repo_name = params.service_name
+	
+	if(domain && domain != ""){
+		repo_name = params.domain + "_" + params.service_name
+	}
 
 	def config
 
@@ -76,14 +79,6 @@ node ()  {
 	}
 
     stage('Checkout code base') {
-
-		if (domain && domain.trim()!="") {
-			if(configLoader.SCM.TYPE != "gitlab" ){
-				repo_name = params.domain + "-" + service
-			}
-		 }else{
-			domain = ""
-		}
 
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
@@ -100,7 +95,7 @@ node ()  {
 		}
 		
 		if(configObj.service_id){	
-			def url = "$g_base_url/platform/services/"+configObj.service_id
+			def url = "$g_base_url/jazz/services/"+configObj.service_id
 			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
 			serviceMetadata.setUrl(url)
 			def serviceData = serviceMetadata.loadServiceMetaData()
@@ -138,7 +133,7 @@ node ()  {
 
 				echo "create_cloudfront_url====" + create_cloudfront_url
 
-				loadServiceInfo(config['service'], domain, g_base_url + '/platform/services', environment)
+				loadServiceInfo(config['service'], domain, g_base_url + '/jazz/services', environment)
 
 				send_status_email(created_by, 'STARTED', config['service'], '')
 
@@ -199,12 +194,12 @@ node ()  {
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
+							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 						}
 					} else{
 						loadBucketPolicy(service, s3Bucket, false)
 						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
+						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 					}
 
 					def svc_status = 'You can access your website using following link: ' + url
@@ -238,12 +233,12 @@ node ()  {
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
-							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
+							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
 						}
 					}else{
 						loadBucketPolicy(service, s3Bucket, false)
 						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
+						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
@@ -300,12 +295,12 @@ node ()  {
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/platform/services", environment, url)
+							updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/jazz/services", environment, url)
 						}
 					} else{
 						loadBucketPolicy(service, s3Bucket, false)
 						url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/platform/services", environment, url)
+						updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/jazz/services", environment, url)
 					}
 					def svc_status = "You can access your website using following link: ${url}"
 					echo svc_status
@@ -335,12 +330,12 @@ node ()  {
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 						if (url) {
-							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
+							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
 						}
 					}else{
 						loadBucketPolicy(service, s3Bucket,false)
 						url = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/platform/services', environment, url)
+						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
@@ -731,7 +726,7 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
  * Must be a service account which has access to all services
  */
  def setCredentials() {
-	def loginUrl = g_base_url + '/platform/login'
+	def loginUrl = g_base_url + '/jazz/login'
 	def token
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		echo "user name is $UNAME"
@@ -803,7 +798,7 @@ def send_status_email (email_id, build_status, service, email_content) {
 
    	try{
 		def sendMail = sh (script: "curl -X POST \
-						${g_base_url}/platform/email \
+						${g_base_url}/jazz/email \
 						-k -v -H \"Authorization: $g_login_token\" \
 						-H \"Content-Type: application/json\" \
 						-d \'${body}\'", returnStdout: true).trim()

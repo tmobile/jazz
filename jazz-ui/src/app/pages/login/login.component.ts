@@ -213,7 +213,7 @@ export class LoginComponent implements OnInit {
                             "userpassword":this.model.password,
                             "usercode":this.model.usercode
                         }
-            this.http.post('/platform/usermanagement', payload).subscribe(
+            this.http.post('/jazz/usermanagement', payload).subscribe(
                 response => { 
                     //Registration changes here
                     let message=this.toastmessage.successMessage("success","register");
@@ -251,7 +251,7 @@ export class LoginComponent implements OnInit {
                 let payload = {
                     'email': this.model.username
                 };
-                this.http.post('/platform/usermanagement/reset', payload).subscribe(
+                this.http.post('/jazz/usermanagement/reset', payload).subscribe(
                     response =>{
                         this.new_pwd_req = true;
                         this.userEmail = 'Registered Email';
@@ -292,7 +292,7 @@ export class LoginComponent implements OnInit {
                     'verificationCode': this.model.verificationCode,
                     'password': this.model.password
                 };
-                this.http.post('/platform/usermanagement/updatepwd', payload).subscribe(
+                this.http.post('/jazz/usermanagement/updatepwd', payload).subscribe(
                     response =>{
                             this.new_pwd_req=false;
                             this.register = false;
