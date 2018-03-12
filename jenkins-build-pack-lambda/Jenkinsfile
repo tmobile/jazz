@@ -69,17 +69,14 @@ node ()  {
 	def branch = params.scm_branch
 	def repo_name = params.service_name
 	
+	if(domain && domain != ""){
+		repo_name = params.domain + "_" + params.service_name
+	}
+	
 	def config
 	def domain = params.domain
 
-	if(params.domain && params.domain.trim() != ""){
-		if(params.domain != "platform" && configLoader.SCM.TYPE != "gitlab" ){
-			repo_name = params.domain.trim() + "-" + params.service_name.trim()			
-		}
-	}else{
-		domain = ""
-	}	
-		
+			
 	if (params.scm_branch == 'master') {
 		current_environment = 'prod'
 	}else {
@@ -93,7 +90,7 @@ node ()  {
         sh 'pwd'
 
 		def repocloneUrl
-		if(domain && domain == "platform"){
+		if(domain && domain == "jazz"){
 			repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
 		}else{					
 			auth_token = setCredentials()
@@ -131,14 +128,14 @@ node ()  {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 	
-	stackName = "${configLoader.INSTANCE_PREFIX}-${config['service']}-${current_environment}"
+	stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
 	
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
 		isEventSchdld = true
 	}
 	dir(repo_name){
 		loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
-		if(domain && domain == "platform"){
+		if(domain && domain == "jazz"){
 			stage ('Update Service Template'){
 				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 				echo "Inside Update service template"
@@ -215,13 +212,13 @@ node ()  {
 						echo "lambdaARN: ${lambdaARN}"
 						// reset Credentials
 						resetCredentials()					
-						if(domain != "platform"){
-							createSubscriptionFilters(stackName, current_environment, configLoader.AWS.REGION,roleId);							
+						if(domain != "jazz"){
+							createSubscriptionFilters(stackName,configLoader.AWS.REGION,roleId);							
 						}
 						_event = Event_Name.UPDATE_LOGGING_CONF
 						sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, _event, Event_Status.COMPLETED, "")
 					
-						if(domain && domain == "platform"){
+						if(domain && domain == "jazz"){
 							serviceConfigdata.setKinesisStream(config)
 						}else{
 							updateServiceInDB(config, "active")							
@@ -489,9 +486,9 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(service, env, region,roleId) {
-	def lambda = "/aws/lambda/"+service+"-"+env
-	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-cloud-logs-streamer-prod"
+def createSubscriptionFilters(stackName, region,roleId) {
+	def lambda = "/aws/lambda/${stackName}"
+	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
 	try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
 	}catch(Exception ex) {}// ignore if already existing
@@ -516,7 +513,7 @@ def createSubscriptionFilters(service, env, region,roleId) {
 
 def writeServerlessFile(config,current_environment){
 	sh "pwd"
-	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['service']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
 	sh "sed -i -- 's/{env-stage}/" + current_environment + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
@@ -558,7 +555,7 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
  * Must be a service account which has access to all services
  */
  def setCredentials() {
-	def loginUrl = g_base_url + '/platform/login'
+	def loginUrl = g_base_url + '/jazz/login'
 	def token
 	
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
@@ -597,7 +594,7 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 * @return
 */
 def send_status_email (config, build_status, email_content) {
-	if(domain != "platform"){
+	if(domain != "jazz"){
 		echo "Sending build notification to ${config['created_by']}"
 		def body_subject = ''
 		def body_text = ''
@@ -632,7 +629,7 @@ def send_status_email (config, build_status, email_content) {
 
 		try{
 			def sendMail = sh (script: "curl -X POST \
-					${g_base_url}/platform/email \
+					${g_base_url}/jazz/email \
 					-k -v -H \"Authorization: $auth_token\" \
 					-H \"Content-Type: application/json\" \
 					-d \'${body}\'", returnStdout: true).trim()
@@ -651,7 +648,7 @@ def send_status_email (config, build_status, email_content) {
 def updateServiceInDB(config,status) {
 
 	def updateJson = ''
-	def serviceUrl = g_base_url + '/platform/services'
+	def serviceUrl = g_base_url + '/jazz/services'
 	if(status) {
 		updateJson = "{ \"status\": \"$status\" }"
 

@@ -263,7 +263,7 @@ export class ServiceLogsComponent implements OnInit {
 		 if ( this.subscription ) {
 			this.subscription.unsubscribe();
 		}
-		this.subscription = this.http.post('/platform/logs', this.payload).subscribe(
+		this.subscription = this.http.post('/jazz/logs', this.payload).subscribe(
       response => {
 		  console.log("response:", response)
 	   this.logs  = response.data.data.logs;

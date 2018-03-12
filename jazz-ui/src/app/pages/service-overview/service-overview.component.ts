@@ -172,7 +172,7 @@ export class ServiceOverviewComponent implements OnInit {
                 "tags": this.service.tags || "",
                 "description": this.service.description  || ""
             };
-            this.http.put('/platform/services/'+this.service.id, payload)
+            this.http.put('/jazz/services/'+this.service.id, payload)
             .subscribe(
                 (Response)=>{
                     this.isLoadingService=false;
@@ -285,7 +285,7 @@ export class ServiceOverviewComponent implements OnInit {
             this.show_loader=false;
         }
         else{
-            this.http.get('/platform/is-slack-channel-available?slack_channel='+this.slackChannel_temp)
+            this.http.get('/jazz/is-slack-channel-available?slack_channel='+this.slackChannel_temp)
             .subscribe(
                 (Response) => {
                     let isAvailable = Response.data.is_available;

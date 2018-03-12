@@ -55,7 +55,7 @@ node  {
     def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
     if ( config['type']  != '' && config['service']  != '' && config['domain']  != '') {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: configLoader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){        
-			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"   \"${job_url}&service_name=${gitlab_repo_name}&domain=${config['domain']}&scm_branch=${env.gitlabBranch}\""
+			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"   \"${job_url}&service_name=${config['service']}&domain=${config['domain']}&scm_branch=${env.gitlabBranch}\""
 		}
 	}else  {
         error "Error: service type or service name or namespace is empty"

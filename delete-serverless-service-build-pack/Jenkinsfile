@@ -65,7 +65,7 @@ node {
 	}
 	repo_name = service_name
 	if(domain && domain != ""){
-		repo_name = domain + "-" + service_name
+		repo_name = domain + "_" + service_name
 	}
 
 	auth_token = setCredentials()
@@ -82,7 +82,7 @@ node {
 		}
 		
 		if(configObj.service_id){	
-			def url = "$g_base_url/platform/services/"+configObj.service_id
+			def url = "$g_base_url/jazz/services/"+configObj.service_id
 			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
 			serviceMetadata.setUrl(url)
 			def serviceData = serviceMetadata.loadServiceMetaData()
@@ -390,7 +390,7 @@ def checkServiceExists(service_name, domain, region) {
 
 	try {
 		def outputStr = sh (
-			script: "curl -H \"Authorization: ${auth_token}\" 'https://${configLoader.AWS.API.PROD_ID}.execute-api.${region}.amazonaws.com/prod/platform/is-service-available?domain=${domain}&service=${service_name}'" ,
+			script: "curl -H \"Authorization: ${auth_token}\" 'https://${configLoader.AWS.API.PROD_ID}.execute-api.${region}.amazonaws.com/prod/jazz/is-service-available?domain=${domain}&service=${service_name}'" ,
 			returnStdout: true
 		).trim()
 		echo outputStr
@@ -907,7 +907,7 @@ def loadServerlessConfig(String runtime) {
 
 def updateServiceInDB(service_id_in_db, apiID, region, statusval) {
   sh "curl -H \"Content-Type: application/json\"  -H \"Authorization: "+auth_token+"\" -X PUT -k -v -d \
-  		'{ \"status\": \"${statusval}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/prod/platform/services/${service_id_in_db}?isAdmin=true"
+  		'{ \"status\": \"${statusval}\"}' https://${apiID}.execute-api.${region}.amazonaws.com/prod/jazz/services/${service_id_in_db}?isAdmin=true"
 }
 
 
@@ -919,7 +919,7 @@ def loadEventsModule() {
 
 def loadServiceInfo() {
 	def token = setCredentials()
-	def url = "$g_base_url/platform/services?domain=$domain&service=$service&isAdmin=true"
+	def url = "$g_base_url/jazz/services?domain=$domain&service=$service&isAdmin=true"
 
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
 			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
@@ -937,7 +937,7 @@ def loadServiceInfo() {
  * Must be a service account which has access to all services
  */
  def setCredentials() {
-	def url = g_base_url + '/platform/login'
+	def url = g_base_url + '/jazz/login'
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		echo "user name is $UNAME"
 		def login_json = []
@@ -1010,7 +1010,7 @@ def loadServiceInfo() {
  					 ])
  		 try{
  			 def sendMail = sh (script: "curl -X POST \
-					 ${g_base_url}/platform/email \
+					 ${g_base_url}/jazz/email \
 					 -k -v -H \"Authorization: $g_login_token\" \
 					 -H \"Content-Type: application/json\" \
 					 -d \'${body}\'", returnStdout: true).trim()
@@ -1073,7 +1073,7 @@ def loadServiceMetadataModule(buildURL) {
 }
 
 def initialize(serviceMetadata, serviceType, service, domain){
-	def url = "$g_base_url/platform/services?domain=$domain&service=$service"
+	def url = "$g_base_url/jazz/services?domain=$domain&service=$service"
 	def dev = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET
 	def stg = configLoader.JAZZ.S3.WEBSITE_STG_BUCKET
 	def prd = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET
