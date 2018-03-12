@@ -484,7 +484,7 @@ def updateApiDocUrl(String env) {
 **/
 def createSubscriptionFilters(stackName, region,roleId) {
 	def lambda = "/aws/lambda/${stackName}"
-	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-cloud-logs-streamer-prod"
+	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
 	try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
 	}catch(Exception ex) {}// ignore if already existing

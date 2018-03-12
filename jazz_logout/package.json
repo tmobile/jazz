@@ -1,5 +1,5 @@
 {
-  "name": "platform_logout",
+  "name": "jazz_logout",
   "version": "0.0.1",
   "description": "Jazz logout service",
   "main": "index.js",
