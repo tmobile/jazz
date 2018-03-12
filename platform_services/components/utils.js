@@ -142,12 +142,40 @@ var initDynamodb = function() {
     return dynamodb;
 };
 
+//Assigning null to empty string as DynamoDB doesnot allow empty string.
+//But our usecase needs empty string for updation
+var getUpdateData = function(update_data) {
+    var input_data = {};
+    for (var field in update_data) {
+        if (update_data[field] === "" || update_data[field] === undefined) {
+            input_data[field] = null;
+        } else if (update_data[field] && update_data[field].constructor === Array) {
+            var array = update_data[field];
+            if (array.length > 0) {
+                var new_array = [];
+                for (var i = 0; i < array.length; i++) {
+                    if (array[i]) {
+                        new_array.push(array[i]);
+                    }
+                }
+                input_data[field] = new_array;
+            } else {
+                input_data[field] = [];
+            }
+        } else {
+            input_data[field] = update_data[field];
+        }
+    }
+    return input_data;
+};
+
 
 module.exports = () => {
     return {
         initDynamodb: initDynamodb,
         initDocClient: initDocClient,
         getDatabaseKeyName: getDatabaseKeyName,
-        formatService: formatService
+        formatService: formatService,
+        getUpdateData: getUpdateData
     };
 };

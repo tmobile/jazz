@@ -265,6 +265,89 @@ var validateRemoveEmptyValues = function(service_data, onComplete) {
     });
 };
 
+var validateNotEditableFieldsInUpdate = function(service_data, fields_list, onComplete) {
+    var invalid_fields = _.intersection(_.keys(service_data), _.values(fields_list));
+
+    _.forEach(invalid_fields, function(value, key) {
+        delete service_data[value];
+    });
+
+    onComplete(null, {
+        result: "success",
+        input: service_data
+    });
+};
+
+var validateEditableFieldsValue = function(service_data, fields_list, onComplete) {
+    var editable_fields = _.intersection(_.keys(service_data), _.values(fields_list));
+
+    var invalid_required_fields = [];
+    _.forEach(editable_fields, function(value, key) {
+        if (_.isEmpty(service_data[value]) && !_.isBoolean(service_data[value])) {
+            invalid_required_fields.push(value);
+        }
+    });
+
+    if (invalid_required_fields.length > 0) {
+        var message = "Following field(s) value cannot be empty - " + invalid_required_fields.join(", ");
+        onComplete({
+            result: "inputError",
+            message: message
+        });
+    } else {
+        onComplete(null, {
+            result: "success",
+            input: service_data
+        });
+    }
+};
+
+var validateStatusStateChange = function(update_data, service_data_from_db, onComplete) {
+    var message;
+    switch (service_data_from_db.status) {
+        case "creation_completed":
+            if (update_data.status === "creation_completed" || update_data.status === "creation_failed" || update_data.status === "creation_started") {
+                message = "Service creation already completed.";
+                onComplete({
+                    result: "inputError",
+                    message: message
+                });
+            } else {
+                onComplete(null, {
+                    service_updatable: true
+                });
+            }
+            break;
+        case "deletion_completed":
+            message = "Service already deleted.";
+            onComplete({
+                result: "inputError",
+                message: message
+            });
+            break;
+        case "deletion_started":
+            if (update_data.status === "deletion_completed" || update_data.status === "deletion_failed") {
+                onComplete(null, {
+                    result: "success",
+                    input: "Input value is valid"
+                });
+            } else {
+                message = "Service deletion already started.";
+                onComplete({
+                    result: "inputError",
+                    message: message
+                });
+            }
+            break;
+        default:
+            onComplete(null, {
+                result: "success",
+                input: "Input value is valid"
+            });
+            break;
+    }
+};
+
 module.exports = () => {
     return {
         validateIsEmptyInputData: validateIsEmptyInputData,
@@ -275,6 +358,9 @@ module.exports = () => {
         validateAllRequiredFieldsValue: validateAllRequiredFieldsValue,
         validateEmail: validateEmail,
         validateServiceTypeAndRuntimeRelation: validateServiceTypeAndRuntimeRelation,
-        validateRemoveEmptyValues: validateRemoveEmptyValues
+        validateRemoveEmptyValues: validateRemoveEmptyValues,
+        validateNotEditableFieldsInUpdate: validateNotEditableFieldsInUpdate,
+        validateEditableFieldsValue: validateEditableFieldsValue,
+        validateStatusStateChange: validateStatusStateChange
     };
 };

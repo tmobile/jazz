@@ -479,10 +479,9 @@ describe('platform_services', function() {
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
     var logResponse = logStub.args;
-    console.log(logStub.args)
+    console.log(logResponse[8][0])
     //should indicate function is validating info in event.body for the update in log notifications
-    var logCheck = logResponse[2][0].description == event.body.description &&
-                    logResponse[2][0].email == event.body.email;
+    var logCheck = logResponse[8][0].includes(event.body.description) 
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
     assert.isTrue(logCheck);
@@ -512,6 +511,7 @@ describe('platform_services', function() {
       event.body = invalidBodies[i];
       //trigger the mocked logic by calling handler()
       var callFunction = index.handler(event, context, callbackObj.callback);
+      console.log(logStub.args[i][0])
       var logResponse = logStub.args[i][0];
       var cbResponse = stub.args[i][0];
       if(!logResponse.includes(logMessage) || !cbResponse.includes(errType) ||
