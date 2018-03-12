@@ -1,5 +1,5 @@
 {
-  "name": "platform_services",
+  "name": "jazz_services",
   "version": "0.0.1",
   "description": "CRUD APIs for Service Catalog",
   "main": "index.js",

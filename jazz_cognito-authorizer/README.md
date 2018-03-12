@@ -12,5 +12,5 @@ Provides a custom authorizer that works with Cognito.
 
 ###### Environment
 ```
-API endpoint: https://{Configured Domain}.com/api/platform/cognito_authorizer
+API endpoint: https://{Configured Domain}.com/api/jazz/cognito_authorizer
 ```

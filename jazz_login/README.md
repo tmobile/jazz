@@ -25,13 +25,13 @@ Provides an API for authenticating a user against authentication backend.
 
 ###### Development Environment
 ```
-API endpoint: https://{Configured Domain}.com/api/platform/login
+API endpoint: https://{Configured Domain}.com/api/jazz/login
 ```
 ###### Stage Environment
 ```
-API endpoint: https://{Configured Domain}.com/api/platform/login
+API endpoint: https://{Configured Domain}.com/api/jazz/login
 ```
 ###### Production Environment
 ```
-API endpoint: https://{Configured Domain}.com/api/platform/login
+API endpoint: https://{Configured Domain}.com/api/jazz/login
 ```

@@ -12,7 +12,7 @@ version: The specific version to be deleted. This is an optional field and by de
 ````
 {
   "service_name": "my-service",
-  "domain": "platform",
+  "domain": "jazz",
   "version": "LATEST"
 }
 ````
