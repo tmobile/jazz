@@ -111,58 +111,6 @@ module.exports = (service_id, service_data, onComplete) => {
             logger.info("Inside validateStatusStateChange: ");
             validateUtils.validateStatusStateChange(service_data, service_data_from_db, onComplete);
         }
-        // ,
-
-        // validateInputData: function(onComplete) {
-    
-        //     logger.info('validateInputData ');
-        //     logger.info(service_data);
-    
-        //     // validate if input data is empty
-        //     // if (!service_data) {
-        //     //     // return inputError
-        //     //     logger.error(' input data is empty ');
-        //     //     return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
-        //     // } else if (Object.keys(service_data).length === 0 && service_data.constructor === Object) {
-        //     //     // return inputError
-        //     //     logger.error('input data is empty ');
-        //     //     return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
-        //     // }
-    
-        //     // list of fields that can be updated
-        //     // var fields_list = config.service_update_fields;
-    
-        //     // // check if input contains fields other than allowed fields
-        //     // for (var field in service_data) {
-        //     //     if (service_data.hasOwnProperty(field)) {
-        //     //         if (fields_list.indexOf(field) === -1) {
-        //     //             logger.error('input contains fields other than allowed fields');
-        //     //             return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid field " + field + ". Only following fields can be updated " + fields_list.join(", "))));
-        //     //             break;
-        //     //         }
-        //     //     }
-        //     // }
-    
-        //     // atleast one of the fields is required
-        //     // var field_exists = false;
-        //     // for (var i = fields_list.length - 1; i >= 0; i--) {
-        //     //     field = fields_list[i];
-        //     //     var value = service_data[field];
-        //     //     if (value) {
-        //     //         field_exists = true;
-        //     //         break;
-        //     //     }
-        //     // }
-        //     // if (field_exists === false) {
-        //     //     // return inputError
-        //     //     logger.error('No input data. Nothing to update service');
-        //     //     return cb(JSON.stringify(errorHandler.throwInputValidationError('No input data. Nothing to update service')));
-        //     // }
-        //     // onComplete(null, {
-        //     //     "result": "success",
-        //     //     "input": "Input Data is valid"
-        //     // });
-        // }
     },
     function(error, data) {
         if (error) {

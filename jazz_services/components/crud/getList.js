@@ -108,7 +108,6 @@ module.exports = (query, getAllRecords, onComplete) => {
             var items_formatted = [];
             items.Items.forEach(function(item) {
                 items_formatted.push(utils.formatService(item, true));
-                // items_formatted.push(item);
             });
 
             onComplete(null, items_formatted);
