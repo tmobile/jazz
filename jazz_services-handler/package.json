@@ -14,6 +14,7 @@
     "guid": "0.0.12",
     "async": "*",
     "deasync": "*",
+	"request-promise-native": "^1.0.5",
     "moment": "*"
   },
   "devDependencies": {

@@ -1,38 +1,8 @@
 const request = require('request');
 
-module.exports = (inputs, callback) => {
-    
-	var jsonBody = {};
+module.exports = (inputs, callback) => {	
 	
-	if(inputs.SERVICE_NAME){jsonBody.service = inputs.SERVICE_NAME}
-	if(inputs.DOMAIN){jsonBody.domain = inputs.DOMAIN}
-	if(inputs.DESCRIPTION){jsonBody.description = inputs.DESCRIPTION}
-	if(inputs.TYPE){jsonBody.type = inputs.TYPE}
-	if(inputs.RUNTIME){jsonBody.runtime = inputs.RUNTIME}
-	if(inputs.REGION){
-		
-		if(typeof inputs.REGION === 'array' || inputs.REGION instanceof Array){
-			jsonBody.region = inputs.REGION;
-		} else if (typeof inputs.REGION === 'string' || inputs.REGION instanceof String){
-			var region = [];
-			if(inputs.REGION.indexOf(',') !== -1){
-				region = inputs.REGION.split(',');
-			}else{
-				region.push(inputs.REGION);
-			}
-			jsonBody.region = region;
-		}
-	
-	}
-	if(inputs.REPOSITORY){jsonBody.repository = inputs.REPOSITORY}
-	if(inputs.USERNAME){jsonBody.created_by = inputs.USERNAME}
-	if(inputs.EMAIL){jsonBody.email = inputs.EMAIL}
-	if(inputs.SLACKCHANNEL){jsonBody.slack_channel = inputs.SLACKCHANNEL}
-	if(inputs.TAGS){jsonBody.tags = inputs.TAGS}
-	if(inputs.ENDPOINTS){jsonBody.endpoints = inputs.ENDPOINTS}
-	if(inputs.METADATA){jsonBody.metadata = inputs.METADATA}
-	if(inputs.STATUS){jsonBody.status = inputs.STATUS}
-	
+	var jsonBody = getServiceData(inputs);
 	var svcPayload = {
 		uri: inputs.SERVICE_API_URL + inputs.SERVICE_API_RESOURCE+ "/" + inputs.ID,
 		method: 'PUT',
@@ -52,4 +22,39 @@ module.exports = (inputs, callback) => {
 			});
 		}
 	});
+	
+	function getServiceData(inputs){
+		var jsonBody = {};
+	
+		if(inputs.SERVICE_NAME){jsonBody.service = inputs.SERVICE_NAME}
+		if(inputs.DOMAIN){jsonBody.domain = inputs.DOMAIN}
+		if(inputs.DESCRIPTION){jsonBody.description = inputs.DESCRIPTION}
+		if(inputs.TYPE){jsonBody.type = inputs.TYPE}
+		if(inputs.RUNTIME){jsonBody.runtime = inputs.RUNTIME}
+		if(inputs.REGION){
+			
+			if(typeof inputs.REGION === 'array' || inputs.REGION instanceof Array){
+				jsonBody.region = inputs.REGION;
+			} else if (typeof inputs.REGION === 'string' || inputs.REGION instanceof String){
+				var region = [];
+				if(inputs.REGION.indexOf(',') !== -1){
+					region = inputs.REGION.split(',');
+				}else{
+					region.push(inputs.REGION);
+				}
+				jsonBody.region = region;
+			}
+		
+		}
+		if(inputs.REPOSITORY){jsonBody.repository = inputs.REPOSITORY}
+		if(inputs.USERNAME){jsonBody.created_by = inputs.USERNAME}
+		if(inputs.EMAIL){jsonBody.email = inputs.EMAIL}
+		if(inputs.SLACKCHANNEL){jsonBody.slack_channel = inputs.SLACKCHANNEL}
+		if(inputs.TAGS){jsonBody.tags = inputs.TAGS}
+		if(inputs.ENDPOINTS){jsonBody.endpoints = inputs.ENDPOINTS}
+		if(inputs.METADATA){jsonBody.metadata = inputs.METADATA}
+		if(inputs.STATUS){jsonBody.status = inputs.STATUS}
+		
+		return jsonBody;
+	}
 };
