@@ -101,16 +101,30 @@ module.exports = (query, getAllRecords, onComplete) => {
         scanparams.ExpressionAttributeValues = attributeValues;
     }
 
-    dynamodb.scan(scanparams, function(err, items) {
-        if (err) {
-            onComplete(err);
-        } else {
-            var items_formatted = [];
-            items.Items.forEach(function(item) {
-                items_formatted.push(utils.formatService(item, true));
-            });
+    var scanExecute = function(onComplete) {
+        dynamodb.scan(scanparams, function(err, items) {
+            var count;
+            if (err) {
+                onComplete(err);
+            } else {
+                var items_formatted = [];
+                items.Items.forEach(function(item) {
+                    items_formatted.push(utils.formatService(item, true));
+                });
+                if (items_formatted.length > 0) {
+                    count = items_formatted.length;
+                    if (query.limit !== undefined && query.offset !== undefined) {
+                        items_formatted = utils.paginateUtil(items_formatted, parseInt(query.limit), parseInt(query.offset));
+                    }
+                }
+                var obj = {
+                    count: count,
+                    services: items_formatted
+                };
 
-            onComplete(null, items_formatted);
-        }
-    });
+                onComplete(null, obj);
+            }
+        });
+    };
+    scanExecute(onComplete);
 };

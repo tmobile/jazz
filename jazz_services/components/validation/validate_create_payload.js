@@ -91,7 +91,7 @@ module.exports = (service_data, onComplete)=>{
                 if (error) {
                     onComplete(error);
                 } else {
-                    if (data.length > 0) {
+                    if (data.services.length > 0) {
                         logger.error('Service name in the specified domain already exists.');
                         message = "Service name in the specified domain already exists.";
                         onComplete({

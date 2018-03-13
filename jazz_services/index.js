@@ -127,16 +127,17 @@ module.exports.handler = (event, context, cb) => {
                     crud.getList(query, getAllRecords, onComplete);
                 }
             }, function(error, result) {
+                var data = result.fetchServices;
                 // Handle error
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
                     handleResponse(error, data.getServiceByServiceId, event.query)
                 }
-                if (result.fetchServices && result.fetchServices.length === 0 && event.query) {
+                if (data && data.services.length === 0 && event.query) {
                     logger.error("Cannot find service with query: " + JSON.stringify(event.query));
                     return cb(JSON.stringify(errorHandler.throwNotFoundError("Cannot find service with query: " + JSON.stringify(event.query) + " for the user " + global.userId)));
                 }
-                handleResponse(error, result.fetchServices, event.query);
+                handleResponse(error, data, event.query);
             });
         }
 

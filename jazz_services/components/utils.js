@@ -169,6 +169,18 @@ var getUpdateData = function(update_data) {
     return input_data;
 };
 
+var paginateUtil = function(data, limit, offset) {
+    var newArr = [];
+    if (offset > data.length || offset == data.length || limit === 0) {
+        data = [];
+    } else if (data.length > limit + offset || data.length === limit + offset) {
+        data = data.slice(offset, offset + limit);
+    } else if (limit + offset > data.length) {
+        data = data.slice(offset, data.length);
+    }
+    return data;
+};
+
 
 module.exports = () => {
     return {
@@ -176,6 +188,7 @@ module.exports = () => {
         initDocClient: initDocClient,
         getDatabaseKeyName: getDatabaseKeyName,
         formatService: formatService,
-        getUpdateData: getUpdateData
+        getUpdateData: getUpdateData,
+        paginateUtil: paginateUtil
     };
 };
