@@ -220,8 +220,6 @@ node ()  {
 					
 						if(domain && domain == "jazz"){
 							serviceConfigdata.setKinesisStream(config)
-						}else{
-							updateServiceInDB(config, "active")							
 						}	
 						def svc_response = echoServiceInfo(current_environment)
 						send_status_email(config, 'COMPLETED',svc_response)
@@ -645,26 +643,6 @@ def send_status_email (config, build_status, email_content) {
 	}
 }
 
-def updateServiceInDB(config,status) {
-
-	def updateJson = ''
-	def serviceUrl = g_base_url + '/jazz/services'
-	if(status) {
-		updateJson = "{ \"status\": \"$status\" }"
-
-		echo "new json $updateJson"
-
-		def serviceUpdateUrl = "$serviceUrl/${config['service_id']}?isAdmin=true"
-
-		def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
-					-H \"accept: application/json\" \
-					-H \"Content-Type: application/json\" \
-					-H \"Authorization: $auth_token\"  \
-					-d \'${updateJson}\'", returnStdout:true)
-
-		echo "service update result: $serviceUpdateOutput"
-	}
-}
 
 
 

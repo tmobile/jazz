@@ -194,12 +194,10 @@ node ()  {
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 						}
 					} else{
 						loadBucketPolicy(service, s3Bucket, false)
 						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 					}
 
 					def svc_status = 'You can access your website using following link: ' + url
@@ -231,14 +229,10 @@ node ()  {
 
 						loadBucketPolicy(service, s3ProdBucket, true)
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
-
-						if (url) {
-							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
-						}
+						
 					}else{
 						loadBucketPolicy(service, s3Bucket, false)
 						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
@@ -295,12 +289,10 @@ node ()  {
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/jazz/services", environment, url)
 						}
 					} else{
 						loadBucketPolicy(service, s3Bucket, false)
 						url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/jazz/services", environment, url)
 					}
 					def svc_status = "You can access your website using following link: ${url}"
 					echo svc_status
@@ -329,13 +321,9 @@ node ()  {
 						loadBucketPolicy(service, s3DevBucket, true)
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
-						if (url) {
-							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
-						}
 					}else{
 						loadBucketPolicy(service, s3Bucket,false)
 						url = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
@@ -698,28 +686,6 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 	}
 }
 
-def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endpointVal) {
-
-	def updateJson = ''
-
-	if(preserveEnvValue) {
-		updateJson = "{ \"endpoints\": { \"$endpointKey\" : \"$endpointVal\", \"$preserveEnvKey\": \"$preserveEnvValue\"}, \"status\": \"active\"  }"
-	}else {
-		updateJson = "{ \"endpoints\": { \"$endpointKey\" : \"$endpointVal\"}, \"status\": \"active\" }"
-	}
-
-	echo "new json $updateJson"
-
-	def serviceUpdateUrl = "$serviceUrl/$service_id?isAdmin=true"
-
-	def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
-		        -H \"accept: application/json\" \
-				-H \"Content-Type: application/json\" \
-				-H \"Authorization: $g_login_token\"  \
-				  -d \'${updateJson}\'", returnStdout:true)
-
-	echo "service update result: $serviceUpdateOutput"
-}
 
 /**
  * For getting token to access catalog APIs.

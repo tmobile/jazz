@@ -201,7 +201,6 @@ node() {
 
 					if(domain != "jazz"){
 						createSubscriptionFilters(stackName, configLoader.AWS.REGION,roleId);
-						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)						
 					}
 
 					updateApiDocUrl(current_environment)
@@ -215,8 +214,6 @@ node() {
 
 				if(domain && domain == "jazz"){						
 					serviceConfigdata.setLogStreamPermission(config)					
-				}else{
-					updateServiceInDB(config, "active")
 				}
 				echo "completed deployment........."
 				sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
@@ -513,32 +510,6 @@ def sendEvent(service_name, branch, runtime, environment, region, domain, iam_ro
 	echo "Event on:$service_name  error: $error"
 }
 
-def updateServiceWithEndpointInfo(config,endpointKey, endpointVal) {
-
-	def updateJson = ['endpoints':[:]]
-	def serviceUrl = g_base_url + '/jazz/services'	
-
-	if(config.endpoints){
-		for(item in config.endpoints){
-			updateJson['endpoints'][item.key] = item.value.S
-		}
-	}
-	updateJson['endpoints'][endpointKey] = endpointVal
-	def body = JsonOutput.toJson(updateJson)
-
-	echo "new json $updateJson"
-
-	def serviceUpdateUrl = "$serviceUrl/${config.service_id}"
-
-	def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
-		        -H \"accept: application/json\" \
-				-H \"Content-Type: application/json\" \
-				-H \"Authorization: $auth_token\"  \
-				  -d \'${body}\'", returnStdout:true)
-
-	echo "service update result: $serviceUpdateOutput"
-}
-
 /**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
@@ -632,26 +603,7 @@ def send_status_email (config, build_status, email_content) {
 		}
 	}
 }
-def updateServiceInDB(config,status) {
 
-	def updateJson = ''
-	def serviceUrl = g_base_url + '/jazz/services'
-	if(status) {
-		updateJson = "{ \"status\": \"$status\" }"
-
-		echo "new json $updateJson"
-
-		def serviceUpdateUrl = "$serviceUrl/${config['service_id']}?isAdmin=true"
-
-		def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
-					-H \"accept: application/json\" \
-					-H \"Content-Type: application/json\" \
-					-H \"Authorization: $auth_token\"  \
-					-d \'${updateJson}\'", returnStdout:true)
-
-		echo "service update result: $serviceUpdateOutput"
-	}
-}
 def updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)	{
 	echo "loadServerlessConfig......."
 	def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
