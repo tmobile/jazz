@@ -173,7 +173,7 @@ describe('platform_services', function() {
   it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.get fails for GET", ()=>{
     event.method = "GET";
     errType = "InternalServerError";
-    errMessage = "Unexpected Error occured.";
+    errMessage = "unexpected error occured";
     logMessage = "Error occured.";
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
@@ -184,6 +184,7 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
+    console.log(stub.args[0][0])
     var logResponse = logStub.args[0][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage) && logResponse.includes(err.errorType) &&
@@ -364,7 +365,7 @@ describe('platform_services', function() {
     event.method = "GET";
     event.path.id = undefined;
     errType = "InternalServerError";
-    errMessage = "unexpected error occured";
+    errMessage = "Unexpected Error occured";
     logMessage = "Error occured. ";
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB", "scan", (params, cb) => {
@@ -375,6 +376,7 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
+    console.log(stub.args)
     var logResponse = logStub.args[0][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage) && logResponse.includes(err.errorType) &&
@@ -407,7 +409,7 @@ describe('platform_services', function() {
     event.method = "PUT";
     errType = "InternalServerError";
     errMessage = "unexpected error occured";
-    logMessage = "error occured while updating service";
+    logMessage = "Unknown error occured. ";
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
       return cb(err, null);
@@ -418,7 +420,7 @@ describe('platform_services', function() {
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
     console.log(logStub.args)
-    var logResponse = logStub.args[1][0];
+    var logResponse = logStub.args[0][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
@@ -479,9 +481,9 @@ describe('platform_services', function() {
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
     var logResponse = logStub.args;
-    console.log(logResponse[8][0])
+    console.log(logResponse)
     //should indicate function is validating info in event.body for the update in log notifications
-    var logCheck = logResponse[8][0].includes(event.body.description) 
+    var logCheck = logResponse[8][0].includes(event.body.description) && logResponse[8][0].includes(event.body.email)
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
     assert.isTrue(logCheck);
@@ -496,8 +498,8 @@ describe('platform_services', function() {
     event.method = "PUT";
     var invalidBodies = [{}, "", null, undefined];
     errType = "BadRequest";
-    errMessage = "Service Data cannot be empty";
-    logMessage = "input data is empty";
+    errMessage = "Input payload cannot be empty";
+    logMessage = "Input payload cannot be empty";
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
       return cb(null, dataObj);
@@ -511,8 +513,8 @@ describe('platform_services', function() {
       event.body = invalidBodies[i];
       //trigger the mocked logic by calling handler()
       var callFunction = index.handler(event, context, callbackObj.callback);
-      console.log(logStub.args[i][0])
-      var logResponse = logStub.args[i][0];
+      console.log(logStub.args)
+      var logResponse = logStub.args[i*4][0];
       var cbResponse = stub.args[i][0];
       if(!logResponse.includes(logMessage) || !cbResponse.includes(errType) ||
           !cbResponse.includes(errMessage)){
@@ -532,9 +534,9 @@ describe('platform_services', function() {
   */
   it("should inform that update is not allowed due to additional event.body properties", ()=>{
     event.method = "PUT";
-    logMessage = "input contains fields other than allowed fields";
+    logMessage = "The following field\'s value/type is not valid -";
     errType = "BadRequest";
-    errMessage = "Invalid field ";
+    errMessage = "The following field\'s value/type is not valid -";
     var errMessage2 = ". Only following fields can be updated ";
     event.body.newProperty = "Ludo!";
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
@@ -546,11 +548,11 @@ describe('platform_services', function() {
     stub = sinon.stub(callbackObj, "callback", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
+    console.log(stub.args);
     var logResponse = logStub.args[0][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage);
-    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage) &&
-                  cbResponse.includes(errMessage2);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
     stub.restore();
@@ -564,9 +566,9 @@ describe('platform_services', function() {
   */
   it("should inform that there is no input data to update with if all event.body props are empty", ()=>{
     event.method = "PUT";
-    logMessage = "No input data. Nothing to update service";
+    logMessage = "Following field(s) value cannot be empty -";
     errType = "BadRequest";
-    errMessage = "No input data. Nothing to update service";
+    errMessage = "Following field(s) value cannot be empty -";
     event.body.description = undefined;
     event.body.email = null;
     event.body.metadata = null;
@@ -580,6 +582,7 @@ describe('platform_services', function() {
     stub = sinon.stub(callbackObj, "callback", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
+    console.log(stub.args);
     var logResponse = logStub.args[0][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage);
@@ -613,8 +616,8 @@ describe('platform_services', function() {
   it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.update fails", () =>{
     event.method = "PUT";
     errType = "InternalServerError";
-    errMessage = "unexpected error occured";
-    logMessage = "error occured while updating service";
+    errMessage = "Error Updating Item ";
+    logMessage = "Error Updating Item ";
     //mocking DocumentClient from DynamoDB, get is mocked with successful return, update returns error
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
       return cb(null, dataObj);
@@ -627,7 +630,8 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args[0][0];
+    console.log(logStub.args)
+    var logResponse = logStub.args[2][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
@@ -657,7 +661,8 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger,"info",spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args[6][0];
+    console.log(logStub.args)
+    var logResponse = logStub.args[9][0];
     var logCheck = logResponse.includes(logMessage);
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
@@ -806,7 +811,8 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger,"info",spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args[3][0];
+    console.log(logStub.args)
+    var logResponse = logStub.args[2][0];
     var logCheck = logResponse.includes(logMessage);
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
@@ -1015,7 +1021,7 @@ describe('platform_services', function() {
     event.method = "POST";
     event.path.id = undefined;
     errType = "InternalServerError";
-    errMessage = "unexpected error occured ";
+    errMessage = "Error adding Item to dynamodb ";
     logMessage = "error occured while adding new service";
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB", "scan", (params, cb) => {
@@ -1030,6 +1036,7 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
+    console.log(stub.args)
     var logResponse = logStub.args[0][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage);

@@ -119,7 +119,7 @@ module.exports.handler = (event, context, cb) => {
         // 2: GET all services (/services)
         // 3: GET Filtered services (/services?field1=value&field2=value2&...)
         if (event.method === 'GET' && !service_id) {
-            logger.info('GET services');
+            // logger.info('GET services');
             async.series({
                 // fetch services list from dynamodb, filter if required
                 fetchServices: function(onComplete) {
@@ -172,20 +172,13 @@ module.exports.handler = (event, context, cb) => {
                 }
             }, function(error, data) {
                 // Handle error
-                logger.info('error');
-                logger.info(error);
-                logger.info(data);
                 if (error) {
                     logger.error('validateServiceExists ' + service_id);
                     logger.error(error);
                     handleResponse(error, data.updateServiceDataByServiceId, event.body)
                 } else {
-
                     var updatedService = data.updateServiceDataByServiceId;
-
                     logger.info('Updated service');
-                    logger.info(updatedService);
-
                     return cb(null, responseObj({ 'message': 'Successfully Updated service with id: ' + service_id, 'updatedService': updatedService }, event.body));
                 }
 
