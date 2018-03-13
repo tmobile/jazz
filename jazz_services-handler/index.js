@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
 //
@@ -20,6 +21,8 @@ This Handler looks for Service Creation events and updates Service Catalog
 @version: 1.0
  **/
 
+=======
+>>>>>>> 0fe91a8fe80bc39219cd8c53d7a328b18d1d0808
 const config = require('./components/config.js'); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
 const async = require("async");
@@ -63,10 +66,16 @@ module.exports.handler = (event, context, cb) => {
 							"auth_token": authToken
 						});
 					} else {
+<<<<<<< HEAD
 						logger.error('not interesting event');
 						//This is not an interesting event
 						innerCallback(null, {
 							"interested_event": false
+=======
+						mainCallback({
+							"error": "Could not get authentication token for updating Service catalog.",
+							"details": response.body.message
+>>>>>>> 0fe91a8fe80bc39219cd8c53d7a328b18d1d0808
 						});
 					}
 				});

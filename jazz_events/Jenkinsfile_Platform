@@ -33,7 +33,14 @@ node {
   stage('Triggering the Jenkins build') {
     withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
     echo "Build triggered via branch::${env.BRANCH_NAME}"
+<<<<<<< HEAD
 
+=======
+	
+	def build_job = config_loader.API.API_BUILD_URI
+    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+	
+>>>>>>> 0fe91a8fe80bc39219cd8c53d7a328b18d1d0808
     sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=events&domain=jazz&scm_branch=${env.BRANCH_NAME}\""
     }
   }
