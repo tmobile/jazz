@@ -223,7 +223,7 @@ node  {
 					def event_action_stream =  params.event_action_stream
 
 					if(rate_expression && rate_expression.trim() != ""){
-						serviceMetadataJson["eventScheduleRate"] = cron(rate_expression)
+						serviceMetadataJson["eventScheduleRate"] = "cron(${rate_expression})"
 					}
 					if(enable_eventschedule && enable_eventschedule != ""){
 						serviceMetadataJson["eventScheduleEnable"] = enable_eventschedule

@@ -254,20 +254,10 @@ def checkoutSCM(repo_name) {
  */
 def updateServiceNameConfig(envval,config) {
 	sh "rm serverless.yml"
-	sh "cp serverless-temp.yml serverless.yml"
-	//events.sendStartedEvent('UPDATE_DEPLOYMENT_CONF')
-	def fullServiceName = config['service']
-	def cfStackName = config['service']
-	if(config['domain'] && config['domain']!= ""){
-		fullServiceName = config['domain']+ "-" + config['service']
-		cfStackName = config['service'] + "-" + config['domain'] //sets CF Stack name as service--domain-env
-	}
-	fullServiceName = configLoader.INSTANCE_PREFIX + "-" + fullServiceName
-	cfStackName = fullServiceName
+	sh "cp serverless-temp.yml serverless.yml"	
 	try {
-		sh "sed -i -- 's/service: \${file(deployment-env.yml):service}/service: " + cfStackName + "/g' serverless.yml"
-		sh "sed -i -- 's/name: \${self:service}/name: " + fullServiceName+"/g' serverless.yml"
-		//events.sendCompletedEvent('UPDATE_DEPLOYMENT_CONF')
+		sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
+		sh "sed -i -- 's/name: \${self:service}/name: ${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
 		writeServerlessFile(config)
 	}catch(ex) {
 		updateServiceInDB(var_db_service_id, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "deletion_failed");
@@ -278,23 +268,23 @@ def updateServiceNameConfig(envval,config) {
 
 def writeServerlessFile(config){
 	sh "pwd"
-	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
-	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml" 	
-	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/" + config['providerRuntime'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/" + config['providerMemorySize'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/" + config['providerTimeout'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleRate}/" + config['eventScheduleRate'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/" + config['eventScheduleEnable'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/" + config['securityGroupIds'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/" + config['subnetIds'] + "/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['owner']}/g' serverless.yml"
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml" 	
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
+	sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${config['eventScheduleRate']}|g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds']}/g' serverless.yml"
 	
 	if(config['artifact']){
-		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/" + config['artifact'] + "/g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
 	}
 	if(config['mainClass']){
-		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/" + config['mainClass'] + "/g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
 	}
 }
 
@@ -308,8 +298,8 @@ def updateSwaggerConfig(domain, serviceName, api_key, config) {
 	//events.sendStartedEvent('UPDATE_SWAGGER')
 	try {
 		if (fileExists('swagger/swagger.json')) {
-			sh "sed -i -- 's/{service_name}/" + serviceName + "/g' swagger/swagger.json"
-			sh "sed -i -- 's/{domain}/" + domain + "/g' swagger/swagger.json"
+			sh "sed -i -- 's/{service_name}/${serviceName}/g' swagger/swagger.json"
+			sh "sed -i -- 's/{domain}/${domain}/g' swagger/swagger.json"
 
 			def region = config['region']
 			def roleARN = role.replaceAll("/", "\\\\/")
@@ -317,9 +307,9 @@ def updateSwaggerConfig(domain, serviceName, api_key, config) {
 			// TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-			sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
-			sh "sed -i -- 's/{conf-region}/" + region + "/g' ./swagger/swagger.json"
-			sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-role}/${roleARN}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 		}
 		//events.sendCompletedEvent('UPDATE_SWAGGER')
 	}catch(ex) {
