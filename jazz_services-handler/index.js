@@ -52,7 +52,7 @@ module.exports.handler = (event, context, cb) => {
 	
 	function validateAuthToken(result){
 		return new Promise((resolve, reject) => {
-			if (result.statusCode === 200 && typeof result.body !== undefined && typeof result.body.data !== undefined) {
+			if (result.statusCode === 200 && result.body && result.body.data) {
 				resolve(result.body.data.token);
 			}else{
 			   var err = new Error("Unauthorized " + result.statusCode);
@@ -71,7 +71,6 @@ module.exports.handler = (event, context, cb) => {
 	}
 	
 	function processRecord(configData, authToken){		
-		logger.error('event.Records.length: '+ event.Records.length);
 		return new Promise((resolve, reject) => {			
 			for (var i=0; i< event.Records.length; i++){
 				var record = event.Records[i];
@@ -117,7 +116,6 @@ module.exports.handler = (event, context, cb) => {
 	}
 	
 	function processEvent(payload,configData, authToken){
-		logger.error('processEvent: ');
 		return new Promise((resolve, reject) => {
 			var svcContext = JSON.parse(payload.SERVICE_CONTEXT.S);
 			var serviceContext = getServiceContext(svcContext);
@@ -128,12 +126,10 @@ module.exports.handler = (event, context, cb) => {
 			serviceContext.service = payload.SERVICE_NAME.S
 			serviceContext.created_by = payload.USERNAME.S
 			if (!payload.EVENT_NAME.S  || !payload.EVENT_STATUS.S ) {
-				logger.error("validation error. Either event name or event status is not properly defined.");
 				var err = handleError("NotFound","Either event name or event status is not properly defined.");
 				reject(err);
 			}
 			if (payload.EVENT_TYPE.S === "SERVICE_CREATION") {
-				logger.error('SERVICE_CREATION: ');
 				if (payload.EVENT_NAME.S === configData.SERVICE_CREATION_EVENT_START && payload.EVENT_STATUS.S === "COMPLETED") {
 					resolve(createService(serviceContext,configData, authToken));
 				} else if(payload.EVENT_NAME.S === configData.SERVICE_CREATION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED"){
@@ -142,7 +138,6 @@ module.exports.handler = (event, context, cb) => {
 					resolve(updateService(serviceContext,configData, authToken,"creation_failed"));
 				}										
 			} else if (payload.EVENT_TYPE.S === "SERVICE_DELETION") {
-				logger.error('SERVICE_DELETION: ');
 				if (payload.EVENT_NAME.S === configData.SERVICE_DELETION_EVENT_START && payload.EVENT_STATUS.S === "STARTED") {
 					resolve(updateService(serviceContext,configData, authToken,"deletion_started"));
 				} else if (payload.EVENT_NAME.S === configData.SERVICE_DELETION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
@@ -151,7 +146,6 @@ module.exports.handler = (event, context, cb) => {
 					resolve(updateService(serviceContext,configData, authToken,"deletion_failed"));
 				}
 			} else if (payload.EVENT_TYPE.S === "SERVICE_DEPLOYMENT") {
-				logger.error('SERVICE_DEPLOYMENT: ');
 				if (payload.EVENT_NAME.S === configData.SERVICE_DEPLOYMENT_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
 					resolve(updateService(serviceContext,configData, authToken,"active"));
 				}
@@ -201,7 +195,6 @@ module.exports.handler = (event, context, cb) => {
 	}
 	
 	function createService(serviceContext,configData, authToken){
-		logger.error('createService: ');
 		return new Promise((resolve, reject) => {
 			var inputs = {
 				"TOKEN": authToken,
@@ -234,7 +227,6 @@ module.exports.handler = (event, context, cb) => {
 	}
 	
 	function getService(serviceContext,configData, authToken){
-		logger.error('getService: ');
 		return new Promise((resolve, reject) => {
 			var inputs = {
 				"TOKEN": authToken,
@@ -244,8 +236,6 @@ module.exports.handler = (event, context, cb) => {
 				"SERVICE_NAME": serviceContext.service
 			};
 			crud.get(inputs, function (err, results) {
-				logger.error('getService crud get: ' + JSON.stringify(results));
-				logger.error('getService crud get: err' + JSON.stringify(err));
 				if (err) {
 					reject(err);
 				} else {
@@ -256,7 +246,6 @@ module.exports.handler = (event, context, cb) => {
 	}
 	
 	function updateService(serviceContext,configData, authToken,status){
-		logger.error('updateService: ');
 		return new Promise((resolve, reject) => {
 			getService(serviceContext,configData, authToken)
 			.then(function(result) {				
@@ -276,7 +265,6 @@ module.exports.handler = (event, context, cb) => {
 				};
 
 				crud.update(inputs, function (err, results) {
-					logger.error('updateService crud update: ' + JSON.stringify(results));
 					if (err) {
 						reject(err);
 					} else {

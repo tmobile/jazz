@@ -12,7 +12,7 @@ module.exports = (inputs, callback) => {
 	};	
 	
 	request(svcPayload, function (error, response, body) {
-		if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
+		if (response.statusCode === 200 && body && body.data) {
 			return callback(null, body);			
 		}else{
 			return callback({

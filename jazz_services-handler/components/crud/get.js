@@ -10,9 +10,8 @@ module.exports = (inputs, callback) => {
 		},
 		rejectUnauthorized: false
 	};
-	console.log("getttt....." + JSON.stringify(svcPayload));
 	request(svcPayload, function (error, response, body) {
-		if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
+		if (response.statusCode === 200 && body && body.data) {
 			var results = JSON.parse(body);
 			if (results.data && results.data.length > 0) {
 				return callback(null, results.data[0]);
