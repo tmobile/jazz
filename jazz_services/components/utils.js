@@ -181,6 +181,50 @@ var paginateUtil = function(data, limit, offset) {
     return data;
 };
 
+var sortUtil = function(data, sort_key, sort_direction) {
+    if (sort_key !== undefined && sort_key !== "timestamp") {
+        console.log('sort key defined')
+        data = data.sort(function(a, b) {
+            var x = a[sort_key];
+            var y = b[sort_key];
+            if (sort_direction === "asc") return x < y ? -1 : x > y ? 1 : 0;
+            else {
+                return x < y ? 1 : x > y ? -1 : 0;
+            }
+        });
+    } else {
+        console.log('sort key undefined')
+        data = data.sort(function(a, b) {
+            var val1 = a.timestamp.replace("T", " ");
+            var val2 = b.timestamp.replace("T", " ");
+            var x = new Date(val1).getTime();
+            var y = new Date(val2).getTime();
+            if (sort_direction === "asc") return x < y ? -1 : x > y ? 1 : 0;
+            else return x < y ? 1 : x > y ? -1 : 0;
+        });
+    }
+    return data;
+};
+
+var filterUtil = function(data, filter_value) {
+    console.log('filter util called....')
+    var newArr = [];
+    data.forEach(function(ele) {
+        for (var key in ele) {
+            var value = "";
+            if (typeof ele[key] == "string") value = ele[key].toLowerCase();
+            else if (ele[key] !== null && ele[key].length > 0) value = ele[key];
+
+            if (value.indexOf(filter_value.toLowerCase()) !== -1) {
+                newArr.push(ele);
+
+                break;
+            }
+        }
+    });
+    return newArr;
+};
+
 
 module.exports = () => {
     return {
@@ -188,6 +232,8 @@ module.exports = () => {
         initDocClient: initDocClient,
         getDatabaseKeyName: getDatabaseKeyName,
         formatService: formatService,
+        sortUtil: sortUtil,
+        filterUtil: filterUtil,
         getUpdateData: getUpdateData,
         paginateUtil: paginateUtil
     };

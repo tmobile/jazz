@@ -115,6 +115,33 @@
                     "in": "query",
                     "required": false,
                     "type": "string"
+                },{
+                    "name": "limit",
+                    "in": "query",
+                    "required": false,
+                    "type": "integer",
+                    "format": "int32"
+                },{
+                    "name": "offset",
+                    "in": "query",
+                    "required": false,
+                    "type": "integer",
+                    "format": "int32"
+                },{
+                    "name": "filter",
+                    "in": "query",
+                    "required": false,
+                    "type": "string"
+                },{
+                    "name": "sort_direction",
+                    "in": "query",
+                    "required": false,
+                    "type": "string"
+                },{
+                    "name": "sort_by",
+                    "in": "query",
+                    "required": false,
+                    "type": "string"
                 }],
                 "responses": {
                     "200": {
