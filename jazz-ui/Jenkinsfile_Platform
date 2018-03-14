@@ -33,7 +33,7 @@ def loadConfigModule(build_module_url){
 */
 def get_cloudfront_ID() {
   try {
-    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-originid']].{Id: Id}\" --output json" , returnStdout: true).trim()
+    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-originid']].{Id: Id}\" --output json --profile cloud-api" , returnStdout: true).trim()
     echo "cf_list_dists is: $cf_list_dists"
     def config_parser = new groovy.json.JsonSlurper()
     def cf_dists = config_parser.parseText(cf_list_dists)
@@ -52,13 +52,27 @@ def invalidate_cloudfront(cf_id) {
   //Using Jenkins build ID to form a unique callerReference
     def caller_reference = "JazzWeb_"+ env.BUILD_ID
     def invalidate_config= "{\"Paths\":{\"Quantity\":1,\"Items\":[\"/*\"]},\"CallerReference\":\"$caller_reference\"}"
-    def invalidate_status = sh (script: "aws cloudfront create-invalidation --distribution-id $cf_id --invalidation-batch '$invalidate_config' --output json" , returnStdout: true).trim()
+    def invalidate_status = sh (script: "aws cloudfront create-invalidation --distribution-id $cf_id --invalidation-batch '$invalidate_config' --output json --profile cloud-api" , returnStdout: true).trim()
     echo "Invalidated Cloud Front Cache:$invalidate_status"
   }catch(ex) {
     error "Failed while invalidate_cloudfront " + ex.toString()
   }
 }
 
+/*
+* Configure AWS CLI
+*/
+def aws_configure() {
+  withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: config_loader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+    try {
+    sh "aws configure set profile.cloud-api.region ${config_loader.AWS.REGION}"
+    sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+    sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+    } catch(ex) {
+    error "Failed while configuring AWS CLI " + ex.toString()
+    }
+  }
+}
 /*
 * Start the Pipeline stages
 */
@@ -68,17 +82,20 @@ node ()  {
 	  loadConfigModule(jazzBuildModuleURL)
 	  loadSCMModule(jazzBuildModuleURL)
   }
+  stage('Configure AWS CLI') {
+    aws_configure()
+  }
 
   stage('Checking out Jazz-UI repo') {
     dir('jazz-ui') {
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz-ui")]]])
-      
+
       sh "sed -i 's/{api_doc_name}/'${config_loader.AWS.S3.API_DOC}'/g' ./src/config/config.json"
       sh "sed -i 's/{api_doc_name}/'${config_loader.AWS.S3.API_DOC}'/g' ./src/config/config.prod.json"
 
       sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${config_loader.AWS.API.PROD_ID}/g' ./src/config/config.json"
       sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${config_loader.AWS.API.PROD_ID}/g' ./src/config/config.prod.json"
-      
+
       sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/config/config.json"
       sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/config/config.prod.json"
     }
@@ -101,9 +118,9 @@ node ()  {
   }
   stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
     sh """
-    aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB}
-    aws s3 cp jazz-ui/dist s3://${config_loader.JAZZ.S3_BUCKET_WEB} --recursive --include "*"
-    aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB}
+    aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB} --profile cloud-api
+    aws s3 cp jazz-ui/dist s3://${config_loader.JAZZ.S3_BUCKET_WEB} --recursive --include "*" --profile cloud-api
+    aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB} --profile cloud-api
     """
   }
   stage('Invalidating CloudFront') {
@@ -116,7 +133,7 @@ load scm module
 */
 def loadSCMModule(buildModuleUrl){
 
-	try {	
+	try {
 		dir('scm-loader') {
 			checkout([$class: 'GitSCM', branches: [
 				[name: '*/master']
@@ -135,8 +152,8 @@ def loadSCMModule(buildModuleUrl){
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
       // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git"
     }else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    } 
-} 
+    }
+}
