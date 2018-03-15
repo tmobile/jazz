@@ -183,7 +183,6 @@ var paginateUtil = function(data, limit, offset) {
 
 var sortUtil = function(data, sort_key, sort_direction) {
     if (sort_key !== undefined && sort_key !== "timestamp") {
-        console.log('sort key defined')
         data = data.sort(function(a, b) {
             var x = a[sort_key];
             var y = b[sort_key];
@@ -193,7 +192,6 @@ var sortUtil = function(data, sort_key, sort_direction) {
             }
         });
     } else {
-        console.log('sort key undefined')
         data = data.sort(function(a, b) {
             var val1 = a.timestamp.replace("T", " ");
             var val2 = b.timestamp.replace("T", " ");
@@ -207,7 +205,6 @@ var sortUtil = function(data, sort_key, sort_direction) {
 };
 
 var filterUtil = function(data, filter_value) {
-    console.log('filter util called....')
     var newArr = [];
     data.forEach(function(ele) {
         for (var key in ele) {

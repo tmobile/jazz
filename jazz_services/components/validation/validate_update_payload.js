@@ -50,10 +50,9 @@ module.exports = (service_id, service_data, onComplete) => {
 
     async.series({
         validateServiceExists: function(onComplete) {
-            // logger.info('crud.get ')
             crud.get(service_id, function onServiceGet(error, data) {
                 if (error) {
-                    logger.info('crud.get error')
+                    logger.info('crud.get error'+JSON.stringify(error));
                         onComplete({
                             service_exists: false,
                             error: { server_error: "Unknown error occured.  " + error }
