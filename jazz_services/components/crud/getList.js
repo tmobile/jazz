@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -101,18 +101,42 @@ module.exports = (query, getAllRecords, onComplete) => {
         scanparams.ExpressionAttributeValues = attributeValues;
     }
 
-    dynamodb.scan(scanparams, function(err, items) {
-        if (err) {
-            onComplete(err);
-        } else {
-            var items_formatted = [];
+    query.limit = query.limit || 10;
+    query.offset = query.offset || 0;
+    var scanExecute = function(onComplete) {
+        dynamodb.scan(scanparams, function(err, items) {
+            var count;
+            if (err) {
+                onComplete(err);
+            } else {
+                var items_formatted = [];
+                items.Items.forEach(function(item) {
+                    items_formatted.push(utils.formatService(item, true));
+                });
+                if (items.LastEvaluatedKey) {
+                    scanparams.ExclusiveStartKey = items.LastEvaluatedKey;
+                    scanExecute(onComplete);
+                } else {
+                if (items_formatted.length > 0) {
+                    count = items_formatted.length;
+                    items_formatted = utils.sortUtil(items_formatted, query.sort_by, query.sort_direction);
 
-            items.Items.forEach(function(item) {
-                items_formatted.push(utils.formatService(item, true));
-                // items_formatted.push(item);
-            });
+                    if (query.filter !== undefined && query.filter !== "") {
+                            items_formatted = utils.filterUtil(items_formatted, query.filter);
+                    }
+                    if (query.limit !== undefined && query.offset !== undefined) {
+                        items_formatted = utils.paginateUtil(items_formatted, parseInt(query.limit), parseInt(query.offset));
+                    }
+                }
+                var obj = {
+                    count: count,
+                    services: items_formatted
+                };
 
-            onComplete(null, items_formatted);
-        }
-    });
+                onComplete(null, obj);
+                }
+            }
+        });
+    };
+    scanExecute(onComplete);
 };
