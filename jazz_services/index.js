@@ -134,7 +134,7 @@ module.exports.handler = (event, context, cb) => {
                     handleResponse(error, data.getServiceByServiceId, event.query)
                 }
                 if (data && data.services.length === 0 && event.query) {
-                    logger.error("Cannot find service with query: " + JSON.stringify(event.query));
+                    logger.info("Cannot find service with query: " + JSON.stringify(event.query));
                     return cb(JSON.stringify(errorHandler.throwNotFoundError("Cannot find service with query: " + JSON.stringify(event.query) + " for the user " + global.userId)));
                 }
                 handleResponse(error, data, event.query);
