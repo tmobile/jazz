@@ -13,11 +13,11 @@ module.exports = (inputs, callback) => {
 
 	
 	request(svcPayload, function (error, response, body) {
-		if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
+		if (response.statusCode === 200 && body && body.data) {
 			return callback(null, body);			
 		}else{
 			return callback({
-				"error" : "Error updating service " + inputs.DOMAIN + "." + inputs.SERVICE_NAME + " in service catalog",
+				"error" : "Error updating service in service catalog",
 				"details" : response.body.message
 			});
 		}

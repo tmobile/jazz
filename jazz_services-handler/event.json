@@ -1,3 +1,20 @@
 {
-  "key": "value"
+    "Records": [
+        {
+            "kinesis": {
+                "kinesisSchemaVersion": "1.0",
+                "partitionKey": "MODIFY_TEMPLATE",
+                "sequenceNumber": "49582572405427780489171511215494788341040101909881421826",
+                "data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJkN2UyMmQyMC01OWUyLTQzNTMtYTYxZS1lYjRkODk2ZWJiZDAifSwiVElNRVNUQU1QIjp7IlMiOiIyMDE4LTAzLTE2VDE2OjUyOjU0OjQ1MyJ9LCJSRVFVRVNUX0lEIjp7IlMiOiJzYWRqYXNnZDEyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiRVZFTlRfTkFNRSI6eyJTIjoiTU9ESUZZX1RFTVBMQVRFIn0sIlNFUlZJQ0VfSUQiOnsiUyI6ImJhZmIyMjlmLThkYzMtNDU1MC1jZjYwLTZlNTFjNWRiMDQ3MyJ9LCJTRVJWSUNFX05BTUUiOnsiUyI6InRlc3QtbGFtYmRhLXNpbmktNiJ9LCJFVkVOVF9TVEFUVVMiOnsiUyI6IkNPTVBMRVRFRCJ9LCJFVkVOVF9UWVBFIjp7IlMiOiJTRVJWSUNFX0RFUExPWU1FTlQifSwiVVNFUk5BTUUiOnsiUyI6InNlcnZlcmxlc3NAdC1tb2JpbGUuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxOC0wMi0xNlQwNDo0MTo0Mzo5NDUifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcImxhbWJkYVwiLFwic2VydmljZV9pZFwiOlwiYmFmYjIyOWYtOGRjMy00NTUwLWNmNjAtNmU1MWM1ZGIwNDczXCIsXCJzZXJ2aWNlX25hbWVcIjpcInRlc3QtbGFtYmRhLXNpbmktNlwiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJ0ZXNpbmlcIixcImlhbV9yb2xlXCI6XCJhcm46YXdzOmlhbTo6MTkyMDA2MTQ1ODEyOnJvbGUvamF6ejIwMTgwMjI3X2xhbWJkYTJfYmFzaWNfZXhlY3V0aW9uXzFcIixcImVudmlyb25tZW50XCI6XCJOQVwiLFwicmVnaW9uXCI6XCJ1cy1lYXN0LTFcIixcIm1lc3NhZ2VcIjpcInNlcnZpY2UgIGNyZWF0aW9uIHN0YXJ0c1wiLFwibWV0YWRhdGFcIjp7XCJzdWJuZXQtaWRcIjpcInNhc2Zkc1wifSxcImNyZWF0ZWRfYnlcIjpcInNlcnZlcmxlc3NAdC1tb2JpbGUuY29tXCJ9In19fQ==",
+                "approximateArrivalTimestamp": 1521219174.605
+            },
+            "eventSource": "aws:kinesis",
+            "eventVersion": "1.0",
+            "eventID": "shardId-000000000000:49582572405427780489171511215494788341040101909881421826",
+            "eventName": "aws:kinesis:record",
+            "invokeIdentityArn": "arn:aws:iam::192006145812:role/gitlab180314_lambda2_basic_execution_1",
+            "awsRegion": "us-east-1",
+            "eventSourceARN": "arn:aws:kinesis:us-east-1:192006145812:stream/gitlab180314-events-hub-prod"
+        }
+    ]
 }

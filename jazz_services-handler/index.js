@@ -10,7 +10,6 @@ const fcodes = require('./utils/failure-codes.js');
 const crud = require("./components/crud")(); //Import the utils module.
 
 module.exports.handler = (event, context, cb) => {
-
 	//Initializations
 	var configData = config(context);
 	var errorHandler = errorHandlerModule(logger);
@@ -22,16 +21,30 @@ module.exports.handler = (event, context, cb) => {
 	var authToken;
 
 	rp(getToken(configData))
-	.then((result) => validateAuthToken(result))
-	.then((authToken) => processRecord(configData, authToken))		
-	.then(function(result){
+	.then(result => { return validateAuthToken(result); })
+	.then(authToken => { return processRecords(configData, authToken); })	
+	.then(result => {
+		var records = {
+			"processed_events": processedEvents.length,
+			"failed_events": failedEvents.length			
+		}
+		logger.info("Successfully processed events. " + JSON.stringify(records));
 		return cb(null, {
 			"processed_events": processedEvents.length,
-			"total_events":event.Records.length
+			"failed_events": failedEvents.length			
 		});
 	})
-	.catch(function(err){
-		return cb(JSON.stringify(err));
+	.catch(err => {
+		err.records = {
+			"processed_events": processedEvents.length,
+			"failed_events": failedEvents.length,
+			"total_events":event.Records.length
+		};
+		logger.error("Error processing events. " + JSON.stringify(err));
+		return cb(null, {
+			"processed_events": processedEvents.length,
+			"failed_events": failedEvents.length			
+		});
 	});
 
 	
@@ -53,52 +66,48 @@ module.exports.handler = (event, context, cb) => {
 	function validateAuthToken(result){
 		return new Promise((resolve, reject) => {
 			if (result.statusCode === 200 && result.body && result.body.data) {
-				resolve(result.body.data.token);
-			}else{
-			   var err = new Error("Unauthorized " + result.statusCode);
-				err.error = result.error;
-				return reject(err);
+				return resolve(result.body.data.token);
+			}else{			   
+				return reject(errorHandler.throwUnAuthorizedError("User is not authorized to access this service"));
 			}
 		}); //End of promise
 	}
 
 	function handleError(errorType,message){
-		var err = new Error();
-		err.error = {};
-		err.error.errorType =  errorType;
-		err.error.message = message;
-		return err;
+		var error = {};
+		error.failure_code =  errorType;
+		error.failure_message = message;
+		return error;
 	}
 	
-	function processRecord(configData, authToken){		
+	function processRecords(configData, authToken){
 		return new Promise((resolve, reject) => {			
-			for (var i=0; i< event.Records.length; i++){
-				var record = event.Records[i];
-				var sequenceNumber = record.kinesis.sequenceNumber;
-				var encodedPayload = record.kinesis.data;
-				checkInterest(encodedPayload,sequenceNumber)
-				.then(function(result) {
+			async.each(event.Records, function (record) {	
+				 var sequenceNumber = record.kinesis.sequenceNumber;
+				 var encodedPayload = record.kinesis.data;
+				 var payload;
+				 return checkInterest(encodedPayload,sequenceNumber)
+				.then(result => {
+					payload = result.payload;
 					if(result.interested_event){
-						processEvent(result.payload,configData, authToken);
-						processedEvents.push({
-							"sequence_id": sequenceNumber,
-							"event": result.payload,
-							"failure_code" : null,
-							"failure_message": null
-						});
+						return processEvent(payload,configData, authToken);
 					}else{
-						processedEvents.push({
-							"sequence_id": sequenceNumber,
-							"event": result.payload,
-							"failure_code" : null,
-							"failure_message": null
-						});
-					}					
-				})				
-			}//End of for loop			
+						handleProcessedEvents(sequenceNumber, payload);
+					}
+				})
+				.then(result => {
+					handleProcessedEvents(sequenceNumber, payload);
+					return resolve();
+				})
+				.catch(err => {
+					handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
+					return reject(err);
+				});
+			});//End of for loop	
+			
 		}); //End of promise		
 	}
-	
+		
 	function checkInterest(encodedPayload,sequenceNumber) {
 		return new Promise((resolve, reject) => {			
 			var payload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
@@ -109,48 +118,86 @@ module.exports.handler = (event, context, cb) => {
 					"payload": payload.Item
 				});
 			} else {
-				var err = handleError("NotFound","Not an interesting event");
-				reject(err);
+				resolve({
+					"interested_event": false,
+					"payload": payload.Item
+				});
 			}
 		}); //End of promise
 	}
 	
 	function processEvent(payload,configData, authToken){
 		return new Promise((resolve, reject) => {
+			if (!payload.EVENT_NAME.S  || !payload.EVENT_STATUS.S ) {
+				logger.error("validation error. Either event name or event status is not properly defined.");
+				var err = handleError(failureCodes.PR_ERROR_1.code,"Validation error while processing event for service");
+				return reject(err);
+			}
+						
+			logger.info("payload : " +JSON.stringify(payload));
 			var svcContext = JSON.parse(payload.SERVICE_CONTEXT.S);
 			var serviceContext = getServiceContext(svcContext);
-			if(!payload.SERVICE_NAME){
-				var err = handleError("NotFound","Service name required.");
-				reject(err);
-			}
 			serviceContext.service = payload.SERVICE_NAME.S
 			serviceContext.created_by = payload.USERNAME.S
-			if (!payload.EVENT_NAME.S  || !payload.EVENT_STATUS.S ) {
-				var err = handleError("NotFound","Either event name or event status is not properly defined.");
-				reject(err);
-			}
-			if (payload.EVENT_TYPE.S === "SERVICE_CREATION") {
-				if (payload.EVENT_NAME.S === configData.SERVICE_CREATION_EVENT_START && payload.EVENT_STATUS.S === "COMPLETED") {
-					resolve(createService(serviceContext,configData, authToken));
-				} else if(payload.EVENT_NAME.S === configData.SERVICE_CREATION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED"){
-					resolve(updateService(serviceContext,configData, authToken,"creation_completed"));
-				} else if(payload.EVENT_STATUS.S === "FAILED"){
-					resolve(updateService(serviceContext,configData, authToken,"creation_failed"));
-				}										
-			} else if (payload.EVENT_TYPE.S === "SERVICE_DELETION") {
-				if (payload.EVENT_NAME.S === configData.SERVICE_DELETION_EVENT_START && payload.EVENT_STATUS.S === "STARTED") {
-					resolve(updateService(serviceContext,configData, authToken,"deletion_started"));
-				} else if (payload.EVENT_NAME.S === configData.SERVICE_DELETION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
-					resolve(updateService(serviceContext,configData, authToken,"deletion_completed"));
-				} else if(payload.EVENT_STATUS.S === "FAILED"){
-					resolve(updateService(serviceContext,configData, authToken,"deletion_failed"));
-				}
-			} else if (payload.EVENT_TYPE.S === "SERVICE_DEPLOYMENT") {
-				if (payload.EVENT_NAME.S === configData.SERVICE_DEPLOYMENT_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
-					resolve(updateService(serviceContext,configData, authToken,"active"));
-				}
+			serviceContext.service_id = payload.SERVICE_ID.S
+			
+			var statusResponse = getUpdateServiceStatus(payload) ;
+			if(statusResponse.interested_event){
+				var inputs = {
+					"TOKEN": authToken,
+					"SERVICE_API_URL": configData.SERVICE_API_URL,
+					"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
+					"ID": serviceContext.service_id,
+					"DESCRIPTION": serviceContext.description,
+					"REPOSITORY": serviceContext.repository,
+					"EMAIL": serviceContext.email,
+					"SLACKCHANNEL": serviceContext.slackChannel,
+					"TAGS": serviceContext.tags,
+					"ENDPOINTS": serviceContext.endpoint,
+					"STATUS": statusResponse.status,
+					"METADATA": serviceContext.metadata
+				};
+				crud.update(inputs, function (err, results) {
+					if (err) {
+						logger.error("updateService- crud update" + JSON.stringify(err));
+						var error = handleError(failureCodes.PR_ERROR_2.code, err.error);
+						return reject(error);
+					} else {
+						logger.info("updated service "  + serviceContext.service + " in service catalog.");
+						return resolve({"message": "updated service "  + serviceContext.service + " in service catalog."});
+					}
+				});
+			}else{
+				return resolve({"message" : "Not an interesting event to process"});
 			}
 		}); //End of promise
+	}
+	
+	function getUpdateServiceStatus(payload){
+		var statusResponse = {};
+		if (payload.EVENT_TYPE.S === "SERVICE_CREATION") {
+			if(payload.EVENT_NAME.S === configData.SERVICE_CREATION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED"){
+				statusResponse = {'status' : "creation_completed" , 'interested_event' : true };
+			} else if(payload.EVENT_STATUS.S === "FAILED"){
+				statusResponse = {'status' : "creation_failed" , 'interested_event' : true };
+			}										
+		} else if (payload.EVENT_TYPE.S === "SERVICE_DELETION") {
+			if (payload.EVENT_NAME.S === configData.SERVICE_DELETION_EVENT_START && payload.EVENT_STATUS.S === "STARTED") {
+				statusResponse = {'status' : "deletion_started" , 'interested_event' : true };
+			} else if (payload.EVENT_NAME.S === configData.SERVICE_DELETION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
+				statusResponse = {'status' : "deletion_completed" , 'interested_event' : true };
+			} else if(payload.EVENT_STATUS.S === "FAILED"){
+				statusResponse = {'status' : "deletion_failed" , 'interested_event' : true };
+			}
+		} else if (payload.EVENT_TYPE.S === "SERVICE_DEPLOYMENT") {
+			if (payload.EVENT_NAME.S === configData.SERVICE_DEPLOYMENT_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
+				statusResponse = {'status' : "active" , 'interested_event' : true };
+			}
+		}else{
+			statusResponse = {'interested_event' : false };
+		}
+		
+		return statusResponse;
 	}
 	
 	function getServiceContext(svcContext){
@@ -193,93 +240,22 @@ module.exports.handler = (event, context, cb) => {
 		
 		return json;
 	}
+			
 	
-	function createService(serviceContext,configData, authToken){
-		return new Promise((resolve, reject) => {
-			var inputs = {
-				"TOKEN": authToken,
-				"SERVICE_API_URL": configData.SERVICE_API_URL,
-				"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-				"SERVICE_NAME": serviceContext.service,
-				"DOMAIN": serviceContext.domain,
-				"DESCRIPTION": serviceContext.description,
-				"TYPE": serviceContext.type,
-				"RUNTIME": serviceContext.runtime,
-				"REGION": serviceContext.region,
-				"REPOSITORY": serviceContext.repository,
-				"USERNAME": serviceContext.created_by,
-				"EMAIL": serviceContext.email,
-				"SLACKCHANNEL": serviceContext.slackChannel,
-				"TAGS": serviceContext.tags,
-				"ENDPOINTS": serviceContext.endpoint,
-				"STATUS": "creation_started",
-				"METADATA": serviceContext.metadata
-			};
-
-			crud.create(inputs, function (err, results) {
-				if (err) {
-					return reject(err);					
-				} else {
-					resolve({"message": "created a new service in service catalog."});
-				}
-			});
-		});//End of promise
+	
+	function handleFailedEvents(id, failure_message, payload, failure_code) {
+		failedEvents.push({
+			"sequence_id" : id,
+			"event": payload,
+			"failure_code" : failure_code,
+			"failure_message": failure_message
+		});
 	}
-	
-	function getService(serviceContext,configData, authToken){
-		return new Promise((resolve, reject) => {
-			var inputs = {
-				"TOKEN": authToken,
-				"SERVICE_API_URL": configData.SERVICE_API_URL,
-				"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-				"DOMAIN": serviceContext.domain,
-				"SERVICE_NAME": serviceContext.service
-			};
-			crud.get(inputs, function (err, results) {
-				if (err) {
-					reject(err);
-				} else {
-					resolve(results);
-				}
-			});
-		});//End of promise
-	}
-	
-	function updateService(serviceContext,configData, authToken,status){
-		return new Promise((resolve, reject) => {
-			getService(serviceContext,configData, authToken)
-			.then(function(result) {				
-				var inputs = {
-					"TOKEN": authToken,
-					"SERVICE_API_URL": configData.SERVICE_API_URL,
-					"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-					"ID": result.id,
-					"DESCRIPTION": serviceContext.description,
-					"REPOSITORY": serviceContext.repository,
-					"EMAIL": serviceContext.email,
-					"SLACKCHANNEL": serviceContext.slackChannel,
-					"TAGS": serviceContext.tags,
-					"ENDPOINTS": serviceContext.endpoint,
-					"STATUS": status,
-					"METADATA": serviceContext.metadata
-				};
 
-				crud.update(inputs, function (err, results) {
-					if (err) {
-						reject(err);
-					} else {
-						logger.info("updated service "  + serviceContext.service + " in service catalog.");
-						resolve({"message": "updated service "  + serviceContext.service + " in service catalog."});
-					}
-				});				
-			})
-			.then(function(result){
-				resolve(result) 
-			})
-			.catch(function(err){
-				reject(err);
-			});				
-				
-		});//End of promise
+	function handleProcessedEvents(id, payload) {
+		processedEvents.push({
+			"sequence_id": id,
+			"event": payload
+		});
 	}
 };
