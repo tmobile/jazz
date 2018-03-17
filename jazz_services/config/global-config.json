@@ -96,7 +96,7 @@
             "required": false,
             "editable": true,
             "isEmptyAllowed": false,
-            "type": "String"
+            "type": "Object"
         },
         {
             "key": "endpoints",
