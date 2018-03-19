@@ -108,9 +108,9 @@ module.exports.handler = (event, context, cb) => {
                 if(data.getServiceByServiceId){
                     var service_obj = data.getServiceByServiceId;
                     logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
-                    handleResponse(error, data.getServiceByServiceId, event.path)
+                    return handleResponse(error, data.getServiceByServiceId, event.path);
                 } else{
-                    handleResponse(error, data, event.path);
+                    return handleResponse(error, data, event.path);
                 }                
             });
         }
@@ -126,14 +126,15 @@ module.exports.handler = (event, context, cb) => {
                     var query = event.query;
                     crud.getList(query, getAllRecords, onComplete);
                 }
-            }, function(error, result) {
-                var data = result.fetchServices;
+            }, function(error, result) {           
                 // Handle error
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
-                    handleResponse(error, data.getServiceByServiceId, event.query)
-                }
-                handleResponse(error, data, event.query);
+                    return handleResponse(error, data.getServiceByServiceId, event.query);
+                } else{
+                    var data = result.fetchServices;
+                    return handleResponse(error, data, event.query);
+                } 
             });
         }
 
@@ -170,11 +171,11 @@ module.exports.handler = (event, context, cb) => {
                 // Handle error
                 if (error) {
                     logger.error('Error while updating service ' + JSON.stringify(error));
-                    handleResponse(error, data.updateServiceDataByServiceId, event.body)
+                    return handleResponse(error, data.updateServiceDataByServiceId, event.body);
                 } else {
                     var updatedService = data.updateServiceDataByServiceId;
                     logger.info('Updated service');
-                    handleResponse(error,{ 'message': 'Successfully Updated service with id: ' + service_id, 'updatedService': updatedService }, event.body)
+                    return handleResponse(error,{ 'message': 'Successfully Updated service with id: ' + service_id, 'updatedService': updatedService }, event.body);
                 }
 
             });
@@ -201,10 +202,11 @@ module.exports.handler = (event, context, cb) => {
                 // Handle error
                 if(error){
                     logger.error('Error in DeleteItem: ' + JSON.stringify(error, null, 2));
-                    handleResponse(error, data, event.path)
+                    return handleResponse(error, data, event.path);
+                } else{
+                    logger.info("DeleteItem succeeded");
+                    return handleResponse(error, { 'message': 'Service Successfully Deleted' }, event.path);
                 }
-                logger.info("DeleteItem succeeded");
-                handleResponse(error, { 'message': 'Service Successfully Deleted' }, event.path)
             });
         }
 
@@ -233,13 +235,13 @@ module.exports.handler = (event, context, cb) => {
                 if (error) {
                     logger.error('error occured while adding new service');
                     logger.error(error.result);
-                    handleResponse(error, data, service_data);
+                    return handleResponse(error, data, service_data);
+                } else{
+                    // data is now equal to: {validateServiceData: 1, addNewService: 2}
+                    var result = data.addNewService;
+                    // Add Item success
+                    return handleResponse(error, data.addNewService, service_data);
                 }
-                // data is now equal to: {validateServiceData: 1, addNewService: 2}
-                var result = data.addNewService;
-
-                // Add Item success
-                handleResponse(error, data.addNewService, service_data);
             });
         }
 
@@ -247,6 +249,6 @@ module.exports.handler = (event, context, cb) => {
         //Sample Error response for internal server error
         logger.error("Internal server error");
         logger.error(e);
-        cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured")));
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured")));
     }
 };
