@@ -25,9 +25,6 @@
     "chai-as-promised": "^7.1.1",
     "lambda-local": "^1.4.2",
     "mocha": "^v3.0.0",
-    "sinon": "^1.17.7",
-	"sinon": "^1.15.4",
-    "es6-promise": "^2.3.0",
-    "sinon-as-promised": "^4.0.0"
+    "sinon": "^1.17.7"
   }
 }
