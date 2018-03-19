@@ -118,6 +118,10 @@ var validateDataTypes = function(field, prop_value, fields_type) {
                 if (typeof prop_value == "boolean" || prop_value instanceof Boolean) {
                     field_status = true;
                 }
+            } else if (fields_type[type] === "Object") {
+                if (prop_value && prop_value instanceof Object) {
+                    field_status = true;
+                }
             }
         }
     }
