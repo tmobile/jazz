@@ -103,14 +103,14 @@
             "required": false,
             "editable": true,
             "isEmptyAllowed": false,
-            "type": "Boolean"
+            "type": "Object"
         },
         {
             "key": "tags",
             "required": false,
             "editable": true,
             "isEmptyAllowed": true,
-            "type": "array"
+            "type": "Array"
         }
     ],
     "SERVICE_STATUS": [
