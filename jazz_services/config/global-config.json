@@ -104,13 +104,6 @@
             "editable": true,
             "isEmptyAllowed": false,
             "type": "Object"
-        },
-        {
-            "key": "tags",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": true,
-            "type": "Array"
         }
     ],
     "SERVICE_STATUS": [
