@@ -119,13 +119,14 @@ module.exports = (query, getAllRecords, onComplete) => {
                     scanExecute(onComplete);
                 } else {
                 if (items_formatted.length > 0) {
-                    count = items_formatted.length;
+             
                     items_formatted = utils.sortUtil(items_formatted, query.sort_by, query.sort_direction);
 
-                        if (!query.filter) {
+                        if (query.filter) {
                                 items_formatted = utils.filterUtil(items_formatted, query.filter);
                         }
-                        if (!query.limit && !query.offset) {
+                        count = items_formatted.length;
+                        if (query.limit && query.offset) {
                             items_formatted = utils.paginateUtil(items_formatted, parseInt(query.limit), parseInt(query.offset));
                         }
                     }
