@@ -85,13 +85,6 @@
             "type": "Array"
         },
         {
-            "key": "is_public_endpoint",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": false,
-            "type": "Boolean"
-        },
-        {
             "key": "metadata",
             "required": false,
             "editable": true,
