@@ -108,9 +108,9 @@ module.exports.handler = (event, context, cb) => {
                 if(data.getServiceByServiceId){
                     var service_obj = data.getServiceByServiceId;
                     logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
-                    return handleResponse(error, data.getServiceByServiceId, event.path);
+                    return handleResponse(error, data.getServiceByServiceId.data, event.path);
                 } else{
-                    return handleResponse(error, data, event.path);
+                    return handleResponse(error, data.getServiceByServiceId.data, event.path);
                 }                
             });
         }
