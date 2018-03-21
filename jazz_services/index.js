@@ -110,7 +110,7 @@ module.exports.handler = (event, context, cb) => {
                     logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
                     return handleResponse(error, data.getServiceByServiceId.data, event.path);
                 } else{
-                    return handleResponse(error, data.getServiceByServiceId.data, event.path);
+                    return handleResponse(error, data, event.path);
                 }                
             });
         }
