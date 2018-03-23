@@ -916,8 +916,8 @@ def loadServiceInfo() {
 	
 	def curlOutputJSON = jsonParse(curlOutput)
 
-	if (curlOutputJSON.data[0].created_by) {
-		created_by = curlOutputJSON.data[0].created_by
+	if (curlOutputJSON.data.services[0].created_by) {
+		created_by = curlOutputJSON.data.services[0].created_by
 	}
 }
 
