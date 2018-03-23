@@ -4,15 +4,6 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 echo "Utility module loaded successfully"
 
-@Field def g_url
-
-/**
- * Set URL
- * @return
- */
-def setUrl(url) {
-	g_url = url
-}
 
 
 /**

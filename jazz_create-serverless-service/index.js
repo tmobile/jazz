@@ -25,6 +25,7 @@ const CronParser = require("./components/cron-parser.js");
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const util = require('util');
+const crud = require("./components/crud")(); //Import the utils module.
 
 /**
 	Serverless create service
@@ -42,6 +43,8 @@ module.exports.handler = (event, context, cb) => {
     var isValidName = function(name) {
         return /^[A-Za-z0-9\-]+$/.test(name);
     };
+
+    
 
     try {
         if (!event.body) {
@@ -91,6 +94,8 @@ module.exports.handler = (event, context, cb) => {
             description: event.body.description
         };
 
+        var serviceMetadataObj = {};
+
         // create-serverless-service API to take slack-channel as one more parameter(optional)
         if(event.body.slack_channel) {
             propertiesObject.slack_channel = event.body.slack_channel;
@@ -98,40 +103,81 @@ module.exports.handler = (event, context, cb) => {
 
         // create-serverless-service API to take require_internal_access as one more parameter
         if((event.body.service_type === "api" || event.body.service_type === "function") && (event.body.require_internal_access !== null)) {
-            propertiesObject.require_internal_access = event.body.require_internal_access;
+            serviceMetadataObj.require_internal_access = event.body.require_internal_access;
         }
 
         // allowing service creators to opt in/out of creating Cloudfront url.
         if (event.body.service_type === "website") {
             // by default Cloudfront url will not be created from now on.
             var create_cloudfront_url = event.body.create_cloudfront_url || false;
-            propertiesObject.create_cloudfront_url = create_cloudfront_url;
+            serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
         }
 
         // Add rate expression to the propertiesObject;
         if (event.body.service_type === "function") {
             if (event.body.rateExpression !== undefined) {
                 var cronExpValidator = CronParser.validateCronExpression(event.body.rateExpression);
-
                 // Validate cron expression. If valid add it to propertiesObject, else throw error
                 if (cronExpValidator.result === 'valid') {
-                    propertiesObject['rateExpression'] = event.body.rateExpression;
-
+                    var rate_expression = event.body.rateExpression;
+                    var enable_eventschedule ;
                     // enableEventSchedule is added here as an additional feature. It will be passed on to deployment-env.yml
                     // If it is set as false it will be picked by serverless and event schedule will be disabled.
                     // If the user chooses to stop the cron event, he can just disable and then re-enable it instead of deleting.
                     if (event.body.enableEventSchedule === false) {
-                        propertiesObject['enableEventSchedule'] = event.body.enableEventSchedule;
+                        enable_eventschedule = event.body.enableEventSchedule;
                     } else {
                         // enable by default
-                        propertiesObject['enableEventSchedule'] = true;
+                        enable_eventschedule = true;
                     }
+                    //-------------------------
+
+                    if(rate_expression && rate_expression.trim() != ""){
+						serviceMetadataObj["eventScheduleRate"] = "cron(" + rate_expression + ")";
+					}
+					if(enable_eventschedule && enable_eventschedule != ""){
+						serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule
+					}
+					if(event.body.event_source_ec2 && event.body.event_action_ec2){
+						serviceMetadataObj["event_action_ec2"] = event.body.event_source_ec2
+						serviceMetadataObj["event_action_ec2"] = event.body.event_action_ec2
+					}
+					if(event.body.event_source_s3 && event.body.event_action_s3){
+						serviceMetadataObj["event_source_s3"] = event.body.event_source_s3
+						serviceMetadataObj["event_action_s3"] = event.body.event_action_s3
+					}
+					if(event.body.event_source_dynamodb && event.body.event_action_dynamodb){
+						serviceMetadataObj["event_source_dynamodb"] = event.body.event_source_dynamodb
+						serviceMetadataObj["event_action_dynamodb"] = event.body.event_action_dynamodb
+					}
+					if(event.body.event_source_stream && event.body.event_action_stream){
+						serviceMetadataObj["event_source_stream"] = event.body.event_source_stream
+						serviceMetadataObj["event_action_stream"] = event.body.event_action_stream
+					}
+
+                    serviceMetadataObj.metadata = serviceMetadataObj;
+                    serviceMetadataObj.status = "creation_started";
                 } else {
                     logger.error('cronExpValidator : ', cronExpValidator);
                     return cb(JSON.stringify(errorHandler.throwInternalServerError(cronExpValidator.message)));
                 }
             }
         }
+
+        crud.create(inputs, function (err, results) {
+            if (err) {
+                logger.error(err.details);
+                return innerCallback({
+                    "error": err.error
+                });
+            } else {
+                logger.info("created a new service in service catalog.");
+                return innerCallback(null, {
+                    "message": "created a new service in service catalog."
+                });
+            }
+        });
+
 
         logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
 
