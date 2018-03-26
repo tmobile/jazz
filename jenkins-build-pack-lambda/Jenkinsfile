@@ -80,12 +80,7 @@ node ()  {
 	}
 
 	if(!events) { error "Can't load events module"	} //Fail here
-    events.setUrl(g_base_url + "jazz/events")
-	events.setConfigLoader(configLoader)
-	events.setServiceConfig(config)
-	events.setEventType("SERVICE_DEPLOYMENT")
-	events.setBranch(branch)
-	events.setEnvironment(current_environment)
+	events.initialize(configLoader,config,"SERVICE_DEPLOYMENT",branch,current_environment,g_base_url + "/jazz/events")
 	
 	
 	def runtime = config['providerRuntime']
@@ -164,21 +159,15 @@ node ()  {
 						sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 						sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-						_event = "GET_DEPLOYMENT_CONF"
-						events.sendStartedEvent(_event, '', context_map)
 						loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
-						events.sendCompletedEvent(_event, '', context_map, 'NA')
 
 						// Generate serverless yml file with domain added in function name
 						echo "Generate deployment env with domain"
-						_event = "UPDATE_DEPLOYMENT_CONF"
-						events.sendStartedEvent(_event, '', context_map)
 
 						writeServerlessFile(config,current_environment)
 						
 						echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
 						setLambdaExecutionRole(configLoader.AWS.ROLEID);
-						events.sendCompletedEvent(_event, '', context_map, 'NA')
 
 						def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 						sh "serverless deploy --stage ${current_environment} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
@@ -190,8 +179,7 @@ node ()  {
 						if(domain != "jazz"){
 							createSubscriptionFilters(stackName,configLoader.AWS.REGION,roleId);							
 						}
-						_event = "UPDATE_LOGGING_CONF"
-						events.sendCompletedEvent(_event, '', context_map, 'NA')
+					
 					
 						if(domain && domain == "jazz"){
 							serviceConfigdata.setKinesisStream(config)
@@ -200,10 +188,10 @@ node ()  {
 						send_status_email(config, 'COMPLETED',svc_response)
 					}catch(ex) {
 						send_status_email(config, 'FAILED','')						
-						events.sendFailureEvent(_event, ex.getMessage(), context_map)
+						events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 						error ex.getMessage()
 					}					
-					events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext)
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', context_map)
 				}//end of withCredentials
 		}//end of stage to production
 	}

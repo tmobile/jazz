@@ -5,11 +5,20 @@ import groovy.transform.Field
 echo "Utility module loaded successfully"
 
 
+@Field def config_loader
+
+
+
+def initialize(configLoader){
+	setConfigLoader(configLoader)	
+}
+
 
 /**
  * Generate a unique name for S3 bucket for deploying website
  *
  */
+
 def generateBucketNameForService(domain, service) {
 	def bucketName
 	def _hash
@@ -39,6 +48,21 @@ def generateBucketNameForService(domain, service) {
 	}
 }
 
+/**
+ * Get bucket name for environment
+ * @param stage environment
+ * @return  folder name
+ */
+def getBucket(stage) {
+	if(stage == 'dev') {
+		return config_loader.JAZZ.S3.WEBSITE_DEV_BUCKET
+	}else if (stage == 'stg') {
+		return config_loader.JAZZ.S3.WEBSITE_STG_BUCKET
+	} else if (stage == 'prod') {
+		return config_loader.JAZZ.S3.WEBSITE_PROD_BUCKET
+	}
+}
+
  /**
   * Jazz shebang that runs quietly and disable all console logs
   *
@@ -53,6 +77,15 @@ def jazz_quiet_sh(cmd) {
 @NonCPS
 def parseJson(def json) {
     new groovy.json.JsonSlurperClassic().parseText(json)
+}
+
+
+/**
+ * Set config_loader
+ * @return      
+ */
+def setConfigLoader(configLoader) {
+	config_loader = configLoader
 }
 
 

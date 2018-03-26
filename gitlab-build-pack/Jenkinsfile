@@ -99,6 +99,7 @@ def getServiceConfiguration() {
 
         if(prop.service_id){			
 			def serviceData = serviceMetadataLoader.loadServiceMetadata(prop.service_id)
+            echo "serviceData : " + JSON.stringify(serviceData);
 			return serviceData
 		}else{
 			error "Service Id is not available."
@@ -128,9 +129,6 @@ def loadBuildModule(buildModuleUrl){
 		scmModule.initialize(configLoader)		
 		echo "SCM module loaded successfully."
 		
-		events = load "events-module.groovy"
-		echo "Event module loaded successfully."
-
 		serviceMetadataLoader = load "service-metadata-loader.groovy"
 		serviceMetadataLoader.initialize(configLoader)
 		echo "Service metadata loader module loaded successfully."

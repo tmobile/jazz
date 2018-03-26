@@ -79,14 +79,8 @@ node() {
 			error "Service Id is not available."
 		}
 	}
-	
-    if(!events) { error "Can't load events module"	} //Fail here
-    events.setUrl(g_base_url + "jazz/events")
-	events.setConfigLoader(configLoader)
-	events.setServiceConfig(config)
-	events.setEventType("SERVICE_DEPLOYMENT")
-	events.setBranch(branch)
-	events.setEnvironment(current_environment)
+    if(!events) { error "Can't load events module"	} //Fail here    
+	events.initialize(configLoader,config,"SERVICE_DEPLOYMENT",branch,current_environment,g_base_url + "/jazz/events")
 	
 	
 	domain = config['domain']
@@ -180,8 +174,17 @@ node() {
 
 					if(domain != "jazz"){
 						createSubscriptionFilters(stackName, configLoader.AWS.REGION,roleId);
-					}
+						def endpoints = [:]
+						if(config.endpoints){
+							for(item in config.endpoints){
+								endpoints[item.key] = item.value.S
+							}
+						}
 
+						endpoints[current_environment] = endpointUrl
+						context_map['endpoints'] = endpoints
+					}
+ 
 					updateApiDocUrl(current_environment)
 					sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
 					echo "completed deployment........."
@@ -194,7 +197,7 @@ node() {
 					serviceConfigdata.setLogStreamPermission(config)					
 				}
 				echo "completed deployment........."
-				events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext)
+				events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', context_map)
 			}//stage to prod ends here
 		}
 	}//dir ends here

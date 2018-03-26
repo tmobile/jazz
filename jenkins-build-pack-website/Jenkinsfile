@@ -24,6 +24,7 @@ import groovy.transform.Field
 @Field def preserveEnvValue = ''
 @Field def created_by = ''
 @Field def environment = ''
+@Field def context_map = [:]
 
 node ()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
@@ -75,15 +76,10 @@ node ()  {
 	}
 	
 	if(!events) { error "Can't load events module"	} //Fail here
-    events.setUrl(g_base_url + "jazz/events")
-	events.setConfigLoader(configLoader)
-	events.setServiceConfig(config)
-	events.setEventType("SERVICE_DEPLOYMENT")
-	events.setBranch(branch)
-	events.setEnvironment(environment)
+	events.initialize(configLoader,config,"SERVICE_DEPLOYMENT",branch,environment,g_base_url + "/jazz/events")
 	
 	def create_cloudfront_url
-	def context_map = [created_by : config['created_by']]
+	context_map = [created_by : config['created_by']]
 	
 	dir(repo_name)
 	{
@@ -106,14 +102,12 @@ node ()  {
 
 				echo "create_cloudfront_url====" + create_cloudfront_url
 
-				loadServiceInfo(config['service'], domain, g_base_url + '/jazz/services', environment)
-
-				send_status_email(created_by, 'STARTED', config['service'], '')
+				send_status_email('STARTED', config, '')
 
 				validateTemplate()
 				validateDeploymentConfigurations(config)
 			}catch(ex) {
-				send_status_email(created_by, 'FAILED', config['service'], '')
+				send_status_email('FAILED', config, '')
 				events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map)
 				error ex.getMessage()
 			}
@@ -168,18 +162,18 @@ node ()  {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
 						}
 					} else{
-						loadBucketPolicy(service, s3Bucket, false)
+						loadBucketPolicy(service, s3ProdBucket, false)
 						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
 					}
 
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
+					send_status_email('COMPLETED', config,svc_status)
 					events.sendCompletedEvent('UPDATE_ASSET', 'update asset completed', context_map)
 					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', config['service'], '')
+					send_status_email('FAILED', config, '')
 					events.sendFailureEvent('UPDATE_ASSET', ex.getMessage(), context_map)
 					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 				}
@@ -203,17 +197,17 @@ node ()  {
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 						
 					}else{
-						loadBucketPolicy(service, s3Bucket, false)
+						loadBucketPolicy(service, s3ProdBucket, false)
 						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
+					send_status_email('COMPLETED', config,svc_status)
 					events.sendCompletedEvent('CREATE_ASSET', 'create assets completed', context_map)
 					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', config['service'], '')
+					send_status_email('FAILED', config, '')
 					events.sendFailureEvent('CREATE_ASSET', ex.getMessage(), context_map)
 					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 				}
@@ -262,17 +256,17 @@ node ()  {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
 						}
 					} else{
-						loadBucketPolicy(service, s3Bucket, false)
+						loadBucketPolicy(service, s3DevBucket, false)
 						url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
 					}
 					def svc_status = "You can access your website using following link: ${url}"
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
+					send_status_email('COMPLETED', config,svc_status)
 					events.sendCompletedEvent('UPDATE_ASSET', 'update assets completed', context_map)
 					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', config['service'], '')
+					send_status_email('FAILED', config, '')
 					events.sendFailureEvent('UPDATE_ASSET', ex.getMessage(), context_map)
 					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 				}
@@ -293,17 +287,17 @@ node ()  {
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
 					}else{
-						loadBucketPolicy(service, s3Bucket,false)
+						loadBucketPolicy(service, s3DevBucket,false)
 						url = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
+					send_status_email('COMPLETED', config,svc_status)
 					events.sendCompletedEvent('CREATE_ASSET', 'create assets completed', context_map)
 					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', config['service'], '')
+					send_status_email('FAILED', config, '')
 					events.sendFailureEvent('CREATE_ASSET', ex.getMessage(), context_map)
 					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 				}
@@ -608,36 +602,6 @@ def invalidateCloudFrontCache(distributionId, service) {
 }
 
 
-def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
-
-	def token = setCredentials()
-
-	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
-
-	if (endpointKey == 'dev') {
-		preserveEnvKey = 'prod'
-	}else if (endpointKey == 'prod') {
-		preserveEnvKey = 'dev'
-	}
-
-	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
-	echo "curlOutput: $curlOutput"
-
-	def curlOutputJSON = jsonParse(curlOutput)
-	
-	if (curlOutputJSON.data[0].id) {
-		service_id = curlOutputJSON.data[0].id
-	}
-
-	if (curlOutputJSON.data[0].endpoints) {
-		preserveEnvValue = curlOutputJSON.data[0].endpoints["$preserveEnvKey"]
-	}
-
-	if (curlOutputJSON.data[0].created_by) {
-		created_by = curlOutputJSON.data[0].created_by
-	}
-}
 
 
 /**
@@ -682,22 +646,22 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 * Supported build status values = STARTED, FAILED & COMPLETED
 * @return
 */
-def send_status_email (email_id, build_status, service, email_content) {
-   	echo "Sending build notification to " + email_id
+def send_status_email ( build_status,config,email_content) {
+   	echo "Sending build notification to ${config['created_by']}"
 	def body_subject = ''
 	def body_text = ''
 	def cc_email = ''
 	def body_html = ''
    	if (build_status == 'STARTED') {
 		echo "email status started"
-		body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + service
+		body_subject = "Jazz Build Notification: Deployment STARTED for service: ${config['service']}"
    	} else if (build_status == 'FAILED') {
 		echo "email status failed"
 		def build_url = env.BUILD_URL + 'console'
-		body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + service
+		body_subject = "Jazz Build Notification: Deployment FAILED for service: ${config['service']}"
 		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
    	} else if (build_status == 'COMPLETED'){
-        	body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
+        	body_subject = "Jazz Build Notification: Deployment COMPLETED successfully for service: ${config['service']}"
    	} else {
         	echo "Unsupported build status, nothing to email.."
         	return
@@ -708,7 +672,7 @@ def send_status_email (email_id, build_status, service, email_content) {
 	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
-					to : email_id,
+					to : config['created_by'],
 					subject : body_subject,
 					text : body_text,
 					cc : cc_email,
@@ -723,7 +687,7 @@ def send_status_email (email_id, build_status, service, email_content) {
 						-d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJson(sendMail)
 		if(responseJSON.data){
-			echo "successfully sent e-mail to $email_id"
+			echo "successfully sent e-mail to ${config['created_by']}"
 		} else {
 			echo "exception occured while sending e-mail: $responseJSON"
 		}

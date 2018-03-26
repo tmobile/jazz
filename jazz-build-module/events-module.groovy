@@ -1,5 +1,4 @@
 #!groovy?
-import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
 echo "Events module loaded successfully"
@@ -16,8 +15,8 @@ echo "Events module loaded successfully"
 @Field def g_event_handler = ""
 @Field def g_event_type = ""
 @Field def g_url
-@Field def service_config
-@Field def congig_loader
+@Field def service_metadata
+@Field def config_loader
 
 /**
  * These are the list of available event_names. Any new event names added here should be added to the events table in dynamoDB as well. 
@@ -49,7 +48,8 @@ echo "Events module loaded successfully"
 	'BUILD':'BUILD',
 	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
 	'CREATE_ASSET':'CREATE_ASSET',
-	'UPDATE_ASSET':'UPDATE_ASSET'
+	'UPDATE_ASSET':'UPDATE_ASSET',
+	'CALL_DELETE_WORKFLOW': 'CALL_DELETE_WORKFLOW'
 ]
 
 /**
@@ -62,14 +62,13 @@ echo "Events module loaded successfully"
 	'FAILED':'FAILED'
 ]
 
-/**
- * Send a started event.
- * @param event_name
- * @param message
- * @return      
- */
-def sendStartedEvent(event_name, message = null, moreCxtMap = null) {
-	sendStartedEvent(event_name, message, moreCxtMap)
+def initialize(configLoader, serviceConfig, eventType, branch, env, url){
+	setConfigLoader(configLoader)
+	setServiceConfig(serviceConfig)
+	setEventType(eventType)
+	setBranch(branch)
+	setEnvironment(env)
+	setUrl(url)
 }
 
 /**
@@ -83,24 +82,16 @@ def sendStartedEvent(event_name, message = null, moreCxtMap = null) {
 def sendStartedEvent(l_event_name, l_message, l_moreCxtMap) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
-	if(!l_moreCxtMap) {
+	if (!l_moreCxtMap) {
 		moreCxtMap = [:]
 	}
-	if(!l_message) {
+	if (!l_message) {
 		message = "No Message"
 	}
 	def event_name = getEventName(l_event_name)
-	if(!congig_loader.DISABLE_EVENTS || congig_loader.DISABLE_EVENTS == false)
+	if (!config_loader.DISABLE_EVENTS || config_loader.DISABLE_EVENTS == false)
 		sendEvent(event_name, Event_Status.STARTED, message, moreCxtMap)
 }
-
-/**
- * Send a completed event.
- * @return      
- */
-def sendCompletedEvent(event_name, message = null, moreCxtMap = null) {
-	sendCompletedEvent(event_name, message, moreCxtMap)
-} 
 
 /**
  * Send a completed event specific to an environment .
@@ -109,29 +100,21 @@ def sendCompletedEvent(event_name, message = null, moreCxtMap = null) {
  * @param moreCxt - more contexual info if needed as a map (key, value pair)
  * @param message
  * @return      
- */ 
+ */
 def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
-	if(!l_moreCxtMap) {
+	if (!l_moreCxtMap) {
 		moreCxtMap = [:]
 	}
-	if(!l_message) {
+	if (!l_message) {
 		message = "No Message"
-	}	
-	
+	}
+
 	def event_name = getEventName(l_event_name)
-	if(!congig_loader.DISABLE_EVENTS || congig_loader.DISABLE_EVENTS == false)
+	if (!config_loader.DISABLE_EVENTS || config_loader.DISABLE_EVENTS == false)
 		sendEvent(event_name, Event_Status.COMPLETED, message, moreCxtMap)
 }
- 
-/**
- * Send a failure event.
- * @return      
- */
-def sendFailureEvent(event_name, message = null, moreCxtMap = null) {
-	sendFailureEvent(event_name, message, moreCxtMap)
-} 
 
 /**
  * Send a failure event specific to an environment .
@@ -144,15 +127,15 @@ def sendFailureEvent(event_name, message = null, moreCxtMap = null) {
 def sendFailureEvent(l_event_name, l_message, l_moreCxtMap) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
-	if(!l_moreCxtMap) {
+	if (!l_moreCxtMap) {
 		moreCxtMap = [:]
 	}
-	if(!l_message) {
+	if (!l_message) {
 		message = "No Message"
-	}	
-	
-	def event_name = getEventName(l_event_name)	
-	if(!congig_loader.DISABLE_EVENTS || congig_loader.DISABLE_EVENTS == false)
+	}
+
+	def event_name = getEventName(l_event_name)
+	if (!config_loader.DISABLE_EVENTS || config_loader.DISABLE_EVENTS == false)
 		sendEvent(event_name, Event_Status.FAILED, message, moreCxtMap)
 }
 
@@ -164,70 +147,72 @@ def sendFailureEvent(l_event_name, l_message, l_moreCxtMap) {
 def getEventName(eventTxt) {
 	def _validEvent
 	_validEvent = Event_Names[eventTxt]
-	
-	if(_validEvent) {
+
+	if (_validEvent) {
 		echo "$_validEvent"
 		return _validEvent
 	} else {
-		error "EVENT NAME not defined. Please update the EventsName table"
+		error "EVENT NAME not defined- $eventTxt. Please update the EventsName table"
 	}
-	
-} 
+
+}
 
 /**
  * SendEvent method to record events.
  * @param  runtime
  * @return      
  */
- 
- 
+
+
 def sendEvent(event_name, event_status, message, moreCxtMap){
 
 	def context_json = []
 	def event_json = []
 	def moreCxt = moreCxtMap
-	
-	context_json =[
-			'service_type': service_config['type'],
-			'branch': g_branch,
-			'runtime': service_config['providerRuntime'],
-			'domain': service_config['domain'],
-			'iam_role': congig_loader.AWS.ROLEID,
-			'environment': g_environment,
-			'region': congig_loader.AWS.REGION,
-			'message': message
-		]
+
+	context_json = [
+		'service_type': service_metadata['type'],
+		'branch': g_branch,
+		'runtime': service_metadata['providerRuntime'],
+		'domain': service_metadata['domain'],
+		'iam_role': config_loader.AWS.ROLEID,
+		'environment': g_environment,
+		'region': config_loader.AWS.REGION,
+		'message': message
+	]
 	context_json.putAll(moreCxt)
-		
+
 	event_json = [
-	  'request_id': g_request_id,
-	  'event_handler': g_event_handler,
-	  'event_name': event_name,
-	  'service_name': service_config['service'],
-	  'service_id': service_config['service_id'],
-	  'event_status': event_status,
-	  'event_type': g_event_type,
-	  'username': service_config['created_by'],
-	  'event_timestamp':sh( script: "date -u +'%Y-%m-%dT%H:%M:%S:%3N'",  returnStdout: true ).trim(),
-	  'service_context': context_json
+		'request_id': g_request_id,
+		'event_handler': "JENKINS",
+		'event_name': event_name,
+		'service_name': service_metadata['service'],
+		'service_id': service_metadata['service_id'],
+		'event_status': event_status,
+		'event_type': g_event_type,
+		'username': service_metadata['created_by'],
+		'event_timestamp':sh(script: "date -u +'%Y-%m-%dT%H:%M:%S:%3N'", returnStdout: true).trim(),
+		'service_context': context_json
 	]
 
 	event_json.service_context = context_json
 	def payload = JsonOutput.toJson(event_json)
 	echo "$event_json"
 	
-	try{
-		def shcmd = "curl -X POST  -k -s\
-			-H \"Content-Type: application/json\" \
-			$g_url\
-			-d \'${payload}\' >/dev/null"
+	try {
+
+		def shcmd = sh(script: "curl --silent -X POST -k -v \
+				-H \"Content-Type: application/json\" \
+					$g_url \
+				-d \'${payload}\'", returnStdout:true).trim()
+
 		jazz_quiet_sh(shcmd)
-      
-      echo "------  Event send.........."
+
+		echo "------  Event send.........."
       
 	}
-	catch(e){
-		echo "error occured when recording event: " + e.getMessage() 
+	catch (e) {
+		echo "error occured when recording event: " + e.getMessage()
 	}
 }
 
@@ -245,7 +230,7 @@ def jazz_quiet_sh(cmd) {
  */
 def setRequestId(request_id) {
 	g_request_id = request_id
-	
+
 }
 
 /**
@@ -254,25 +239,23 @@ def setRequestId(request_id) {
  */
 def setBranch(branch) {
 	g_branch = branch
-	
+
 }
 
 /**
- * Set congig_loader
+ * Set config_loader
  * @return      
  */
 def setConfigLoader(configLoader) {
-	congig_loader = configLoader
-	
+	config_loader = configLoader
 }
 
 /**
- * Set service_config
+ * Set service_metadata
  * @return      
  */
 def setServiceConfig(serviceConfig) {
-	service_config = serviceConfig
-	
+	service_metadata = serviceConfig
 }
 
 /**
@@ -281,7 +264,7 @@ def setServiceConfig(serviceConfig) {
  */
 def setEnvironment(environment) {
 	g_environment = environment
-	
+
 }
 
 /**
@@ -290,7 +273,7 @@ def setEnvironment(environment) {
  */
 def setEventHandler(eventHandler) {
 	g_event_handler = eventHandler
-	
+
 }
 
 /**
@@ -299,7 +282,7 @@ def setEventHandler(eventHandler) {
  */
 def setEventType(eventType) {
 	g_event_type = eventType
-	
+
 }
 
 
@@ -309,7 +292,7 @@ def setEventType(eventType) {
  */
 def setUrl(url) {
 	g_url = url
-	
+
 }
 
 

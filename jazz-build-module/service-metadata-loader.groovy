@@ -23,7 +23,7 @@ def initialize(configData){
  * Load the service metadata from Catalog
  *
  */
-def loadServiceMetadata(service_id,configLoader){
+def loadServiceMetadata(service_id){
 	
 	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
 		credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
@@ -50,9 +50,11 @@ def loadServiceMetadata(service_id,configLoader){
 			metadata['domain'] = service_data.Item.SERVICE_DOMAIN.S
 			metadata['created_by'] = service_data.Item.SERVICE_CREATED_BY.S
 			metadata['type'] = service_data.Item.SERVICE_TYPE.S
+			metadata['runtime'] = service_data.Item.SERVICE_RUNTIME.S
 			metadata['region'] = configLoader.AWS.REGION
-			metadata['slack_channel'] = service_data.Item.SERVICE_SLACK_CHANNEL.S
 			metadata['catalog_metadata'] = catalog_metadata
+			if(service_data.Item.SERVICE_SLACK_CHANNEL)
+				metadata['slack_channel'] = service_data.Item.SERVICE_SLACK_CHANNEL.S			
 			if(service_data.Item.SERVICE_ENDPOINTS)			
 				metadata['endpoints'] = service_data.Item.SERVICE_ENDPOINTS.M
 			
