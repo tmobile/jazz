@@ -898,9 +898,8 @@ def loadServerlessConfig(String runtime) {
 }
 
 def updateServiceInDB(service_id_in_db, statusval) {
-	def apiId = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
-  	sh "curl -H \"Content-Type: application/json\"  -H \"Authorization: "+auth_token+"\" -X PUT -k -v -d \
-  		'{ \"status\": \"${statusval}\"}' https://${apiId}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod/jazz/services/${service_id_in_db}?isAdmin=true"
+	sh "curl -H \"Content-Type: application/json\"  -H \"Authorization: "+auth_token+"\" -X PUT -k -v -d \
+  		'{ \"status\": \"${statusval}\"}' ${g_base_url}/jazz/services/${service_id_in_db}?isAdmin=true"
 }
 
 
@@ -912,7 +911,7 @@ def loadEventsModule() {
 
 def loadServiceInfo() {
 	def token = setCredentials()
-	def url = "$g_base_url/jazz/services?domain=$domain&service=$service&isAdmin=true"
+	def url = "${g_base_url}/jazz/services?domain=$domain&service=$service&isAdmin=true"
 
 	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
 			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
