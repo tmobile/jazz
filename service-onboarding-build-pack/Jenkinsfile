@@ -39,6 +39,7 @@ def Event_Status = [
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
+@Field def utilModule
 
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def auth_token = ''
@@ -46,10 +47,10 @@ def Event_Status = [
 
 node  {
 	jazzBuildModuleURL = getBuildModuleUrl()
-	loadConfigModule(jazzBuildModuleURL)
-	loadSCMModule(jazzBuildModuleURL)
+	loadBuildModules(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
+	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	
 	auth_token = getAuthToken()
 
@@ -248,13 +249,13 @@ node  {
 
 				def repo_url = scmModule.getRepoUrl(repo_name)
 
-				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION,serviceMetadataJson);
+				service_id_in_db = createServiceInDB(service_name, domain, owner, runtime, repo_url, description, admin_group, service_type, serviceMetadataJson);
 				
-				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_started");
+				updateServiceInDB(service_id_in_db, "creation_started");
 			}
 		}
 		catch(error){
-			updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
+			updateServiceInDB(service_id_in_db, "creation_failed");
 			//do nothing
 		}
 	}
@@ -278,7 +279,7 @@ node  {
 			}
 		}
 		catch(error){
-			updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
+			updateServiceInDB(service_id_in_db, "creation_failed");
 
 			send_status_email (owner, "FAILED", service_name, domain)
 
@@ -298,7 +299,7 @@ node  {
 			}
 			catch (error)
 			{
-				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
+				updateServiceInDB(service_id_in_db, "creation_failed");
 
 				send_status_email (owner, "FAILED", service_name, domain)
 
@@ -344,7 +345,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
+					updateServiceInDB(service_id_in_db, "creation_failed");
 					send_status_email (owner, "FAILED", service_name, domain)
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WEBHOOK, Event_Status.FAILED, error.getMessage())
@@ -362,7 +363,7 @@ node  {
 				}
 				catch (error)
 				{
-					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
+					updateServiceInDB(service_id_in_db, "creation_failed");
 					send_status_email (owner, "FAILED", service_name, domain)
 
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.PUSH_TEMPLATE_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
@@ -376,7 +377,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
+					updateServiceInDB(service_id_in_db, "creation_failed");
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO, Event_Status.FAILED, error.getMessage())
 					echo error
 				}
@@ -387,7 +388,7 @@ node  {
 					sendEvent(service_type, service_name, domain, runtime, admin_group, Event_Name.LOCK_MASTER_BRANCH, Event_Status.COMPLETED, "")
 				}
 				catch(error){
-					updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_failed");
+					updateServiceInDB(service_id_in_db, "creation_failed");
 
 					send_status_email (owner, "FAILED", service_name, domain)
 
@@ -396,7 +397,7 @@ node  {
 				}				
 
 				echo "Calling update row in db ###################################################"
-				updateServiceInDB(service_id_in_db, configLoader.AWS.API.PROD_ID, configLoader.AWS.REGION, "creation_completed");
+				updateServiceInDB(service_id_in_db, "creation_completed");
 			}
 		}
 	}
@@ -441,13 +442,15 @@ def sendEvent(service_type, service_name, domain, runtime, admin_group, event_na
 	echo "send event" + error
 }
 
-def updateServiceInDB(service_id_in_db, apiId, region, statusval) {
-  sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\"}' https://${apiId}.execute-api.${region}.amazonaws.com/prod/jazz/services/${service_id_in_db}/"
+def updateServiceInDB(service_id_in_db, statusval) {
+	def apiId = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
+  	sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\"}' https://${apiId}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod/jazz/services/${service_id_in_db}/"
 }
 
 def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region,serviceMetadataJson) {
 
 	try {
+		def apiId = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
 		
 		def body = JsonOutput.toJson([
 			service:service_name,
@@ -462,20 +465,20 @@ def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc,
 		])
 		
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '$body' https://${apiID}.execute-api.${region}.amazonaws.com/prod/jazz/services/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '$body' https://${apiID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod/jazz/services/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
 		def jsonParser = new groovy.json.JsonSlurper()
 		def resultJson = jsonParser.parseText(outputStr)
 		if(resultJson == null || resultJson.data == null || resultJson.data.service_id == null) {
-			error "jazz/services/ Insert failed"
+			error "jazz/services/insert failed"
 		}
 		return resultJson.data.service_id;
 	}catch (ex) {
 		if(!((ex.getMessage()).indexOf("groovy.json.internal.LazyMap") > -1)) {
 			//events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage())
-			error "createServiceInDB Failed. "+ex.getMessage()
+			error "createServiceInDB failed: "+ex.getMessage()
 		} else {
 			//events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', "Service exists for deletion")
 		}
@@ -587,10 +590,10 @@ def parseJson(jsonString) {
 /*
 * Load environment variables from build module
 */
-def loadConfigModule(buildModuleUrl){
+def loadBuildModules(buildModuleUrl){
 	echo "loading env variables, checking repos..."
 
-	dir('config-loader') {
+	dir('build_modules') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -602,28 +605,11 @@ def loadConfigModule(buildModuleUrl){
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
-		echo "finished loading env module"
-	}
-}
+		
+		scmModule = load "scm-module.groovy"
+		scmModule.initialize(configLoader)
 
-/*
-load scm module
-*/
-def loadSCMModule(buildModuleUrl){
-
-	try {	
-		dir('scm-loader') {
-			checkout([$class: 'GitSCM', branches: [
-				[name: '*/master']
-			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: buildModuleUrl]
-			]])
-
-			scmModule = load "scm-module.groovy"
-			scmModule.initialize(configLoader)
-		}
-	}catch(ex) {
-		error "loadSCMModule failed " + ex.toString()
+		utilModule = load "utility-loader.groovy"
 	}
 }
 
