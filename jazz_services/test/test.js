@@ -67,18 +67,15 @@ describe('platform_services', function() {
         "service" : "mAg!c",
         "domain" : "k!ngd0m",
         "region" : "mewni",
-        "type" : "mewm@n",
-        "runtime" : "m0n$ter",
+        "type" : "api",
+        "runtime" : "nodejs",
         "created_by" : "g10$saryck",
-        "status" : "mewbErTy"
+        "status" : "active"
       },
       "body" : {
         "description" : "g0nna_GET_a-L!tt1e_we!rd",
         "email" : "gonnaGetALittle@Wild.com",
-		"metadata":{
-			"service":"test-service2",
-			"securityGroupIds":"sg-cdb65db9"
-		}
+		    "metadata":{"service":"test-service2","securityGroupIds":"sg-cdb65db9"}
       },
       "principalId": "g10$saryck"
     };
@@ -176,7 +173,7 @@ describe('platform_services', function() {
   it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.get fails for GET", ()=>{
     event.method = "GET";
     errType = "InternalServerError";
-    errMessage = "Unexpected Error occured.";
+    errMessage = "unexpected error occured";
     logMessage = "Error occured.";
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
@@ -366,7 +363,7 @@ describe('platform_services', function() {
     event.method = "GET";
     event.path.id = undefined;
     errType = "InternalServerError";
-    errMessage = "unexpected error occured";
+    errMessage = "Unexpected Error occured";
     logMessage = "Error occured. ";
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB", "scan", (params, cb) => {
@@ -409,7 +406,7 @@ describe('platform_services', function() {
     event.method = "PUT";
     errType = "InternalServerError";
     errMessage = "unexpected error occured";
-    logMessage = "error occured while updating service";
+    logMessage = "Unknown error occured. ";
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
       return cb(err, null);
@@ -481,9 +478,7 @@ describe('platform_services', function() {
     var callFunction = index.handler(event, context, callbackObj.callback);
     var logResponse = logStub.args;
     //should indicate function is validating info in event.body for the update in log notifications
-    var logCheck = logResponse[1][0].includes(logMessage) &&
-                    logResponse[2][0].description == event.body.description &&
-                    logResponse[2][0].email == event.body.email;
+    var logCheck = logResponse[8][0].includes(event.body.description) && logResponse[8][0].includes(event.body.email)
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
     assert.isTrue(logCheck);
@@ -498,8 +493,8 @@ describe('platform_services', function() {
     event.method = "PUT";
     var invalidBodies = [{}, "", null, undefined];
     errType = "BadRequest";
-    errMessage = "Service Data cannot be empty";
-    logMessage = "input data is empty";
+    errMessage = "Input payload cannot be empty";
+    logMessage = "Input payload cannot be empty";
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
       return cb(null, dataObj);
@@ -513,7 +508,7 @@ describe('platform_services', function() {
       event.body = invalidBodies[i];
       //trigger the mocked logic by calling handler()
       var callFunction = index.handler(event, context, callbackObj.callback);
-      var logResponse = logStub.args[i][0];
+      var logResponse = logStub.args[i*3][0];
       var cbResponse = stub.args[i][0];
       if(!logResponse.includes(logMessage) || !cbResponse.includes(errType) ||
           !cbResponse.includes(errMessage)){
@@ -533,9 +528,9 @@ describe('platform_services', function() {
   */
   it("should inform that update is not allowed due to additional event.body properties", ()=>{
     event.method = "PUT";
-    logMessage = "input contains fields other than allowed fields";
+    logMessage = "The following field\'s value/type is not valid -";
     errType = "BadRequest";
-    errMessage = "Invalid field ";
+    errMessage = "The following field\'s value/type is not valid -";
     var errMessage2 = ". Only following fields can be updated ";
     event.body.newProperty = "Ludo!";
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
@@ -550,8 +545,7 @@ describe('platform_services', function() {
     var logResponse = logStub.args[0][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage);
-    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage) &&
-                  cbResponse.includes(errMessage2);
+    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
     stub.restore();
@@ -565,9 +559,9 @@ describe('platform_services', function() {
   */
   it("should inform that there is no input data to update with if all event.body props are empty", ()=>{
     event.method = "PUT";
-    logMessage = "No input data. Nothing to update service";
+    logMessage = "Following field(s) value cannot be empty -";
     errType = "BadRequest";
-    errMessage = "No input data. Nothing to update service";
+    errMessage = "Following field(s) value cannot be empty -";
     event.body.description = undefined;
     event.body.email = null;
     event.body.metadata = null;
@@ -614,8 +608,8 @@ describe('platform_services', function() {
   it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.update fails", () =>{
     event.method = "PUT";
     errType = "InternalServerError";
-    errMessage = "unexpected error occured";
-    logMessage = "error occured while updating service";
+    errMessage = "Error Updating Item ";
+    logMessage = "Error Updating Item ";
     //mocking DocumentClient from DynamoDB, get is mocked with successful return, update returns error
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
       return cb(null, dataObj);
@@ -628,7 +622,7 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args[0][0];
+    var logResponse = logStub.args[1][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
@@ -658,7 +652,7 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger,"info",spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args[6][0];
+    var logResponse = logStub.args[9][0];
     var logCheck = logResponse.includes(logMessage);
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
@@ -807,7 +801,7 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger,"info",spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args[3][0];
+    var logResponse = logStub.args[2][0];
     var logCheck = logResponse.includes(logMessage);
     AWS.restore("DynamoDB.DocumentClient");
     logStub.restore();
@@ -824,7 +818,7 @@ describe('platform_services', function() {
     event.method = "POST";
     event.path.id = undefined;
     errType = "inputError";
-    errMessage = "Service Data cannot be empty";
+    errMessage = "Input payload cannot be empty";
     var invalidArray = [{}, null, undefined];
     var bool = true;
     //handler() should issue the above error messages for any invalid value for the body
@@ -834,7 +828,7 @@ describe('platform_services', function() {
       event.body = invalidArray[i];
       //trigger stub/spy by calling handler
       var callfunction = index.handler(event, context, callback);
-      var cbMessage = JSON.stringify(spy.args[i*4+1][0]);
+      var cbMessage = JSON.stringify(stub.args[0][0]);
       stub.restore();
       if(!cbMessage.includes(errType) || !cbMessage.includes(errMessage)){
         bool = false;
@@ -853,7 +847,7 @@ describe('platform_services', function() {
     event.method = "POST";
     event.path.id = undefined;
     errType = "inputError";
-    errMessage = "status cannot be empty";
+    errMessage = "Following field(s) are required -";
     var invalidArray = ["", null, undefined];
     var bool = true;
     //handler() should issue the above error messages for any invalid value for the body fields
@@ -863,7 +857,7 @@ describe('platform_services', function() {
       event.body.status = invalidArray[i];
       //trigger stub/spy by calling handler
       var callfunction = index.handler(event, context, callback);
-      var cbMessage = JSON.stringify(spy.args[i*4+1][0]);
+      var cbMessage = JSON.stringify(spy.args[0][0]);
       stub.restore();
       if(!cbMessage.includes(errType) || !cbMessage.includes(errMessage)){
         bool = false;
@@ -885,12 +879,12 @@ describe('platform_services', function() {
     event.method = "POST";
     event.path.id = undefined;
     errType = "inputError";
-    errMessage = "Invalid field " + "newProperty" + ". Only following fields can be updated ";
+    errMessage = "Following fields are invalid :  ";
     //wrap the logger responses
     stub = sinon.stub(logger, "error", spy);
     //trigger stub/spy by calling handler
     var callfunction = index.handler(event, context, callback);
-    var cbMessage = JSON.stringify(spy.args[1][0]);
+    var cbMessage = JSON.stringify(spy.args[0][0]);
     var cbCheck = cbMessage.includes(errType) && cbMessage.includes(errMessage);
     stub.restore();
     assert.isTrue(cbCheck);
@@ -904,8 +898,8 @@ describe('platform_services', function() {
   it("should attempt dynamoDB scan for matching services given a POST with valid body data", ()=>{
     //query has all required fields, cloning required fields to body
     Object.assign(event.body, event.query);
+    event.body.region = ["east", "west"];
     event.method = "POST";
-    event.path.id = undefined;
     event.path.id = undefined;
     var attemptBool = dynamoCheck("scan",spy);
     assert.isTrue(attemptBool);
@@ -920,6 +914,7 @@ describe('platform_services', function() {
   it("should indicate an InternalServerError occured if DynamoDB.scan fails during POST", ()=>{
     //query has all required fields, cloning required fields to body
     Object.assign(event.body, event.query);
+    event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     errType = "InternalServerError";
@@ -934,7 +929,7 @@ describe('platform_services', function() {
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args[0][0];
+    var logResponse = logStub.args[1][0];
     var cbResponse = stub.args[0][0];
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
@@ -953,6 +948,7 @@ describe('platform_services', function() {
   it("should indicate service already exists if return obj from dynamoDB scan is non-empty", ()=>{
     //query has all required fields, cloning required fields to body
     Object.assign(event.body, event.query);
+    event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     errType = "BadRequest";
@@ -988,6 +984,7 @@ describe('platform_services', function() {
   it("should attempt to add service in dynamo for successful POST", function(){
     //query has all required fields, cloning required fields to body
     Object.assign(event.body, event.query);
+    event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
@@ -1008,10 +1005,11 @@ describe('platform_services', function() {
   it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.put fails", () =>{
     //query has all required fields, cloning required fields to body
     Object.assign(event.body, event.query);
+    event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     errType = "InternalServerError";
-    errMessage = "unexpected error occured ";
+    errMessage = "Error adding Item to dynamodb ";
     logMessage = "error occured while adding new service";
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB", "scan", (params, cb) => {

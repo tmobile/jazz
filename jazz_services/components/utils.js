@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,6 +37,24 @@ var getDatabaseKeyName = function(key) {
         return 'SERVICE_NAME';
     } else {
         return 'SERVICE_' + key.toUpperCase();
+    }
+};
+
+var getSchemaKeyName = function(key) {
+    // Convert database key name back, as per schema
+
+    if (key === undefined || key === null) {
+        return null;
+    }
+
+    if (key === "SERVICE_NAME") {
+        return "service";
+    } else if (key === "TIMESTAMP") {
+        return "timestamp";
+    } else if (key === "SERVICE_ID") {
+        return "id";
+    } else {
+        return key.replace(/^(SERVICE_)/, "").toLowerCase();
     }
 };
 
@@ -93,15 +111,15 @@ var formatService = function(service, format) {
             return (parsed_value);
         }
     };
-
-    global.config.service_return_fields.forEach(function(key) {
-        var key_name = getDatabaseKeyName(key);
-        var value = service[key_name];
+    // "service_required_fields": ["service", "domain", "type", "created_by", "runtime", "status"]
+    Object.keys(service).forEach(function(key) {
+        var key_name = getSchemaKeyName(key);
+        var value = service[key];
         if (value !== null && value !== undefined) {
             if (format !== undefined) {
-                service_obj[key] = parseValue(value);
+                service_obj[key_name] = parseValue(value);
             } else {
-                service_obj[key] = (value);
+                service_obj[key_name] = value;
             }
         }
     });
@@ -124,12 +142,96 @@ var initDynamodb = function() {
     return dynamodb;
 };
 
+//Assigning null to empty string as DynamoDB doesnot allow empty string.
+//But our usecase needs empty string for updation
+var getUpdateData = function(update_data) {
+    var input_data = {};
+    for (var field in update_data) {
+        if (update_data[field] === "" || update_data[field] === undefined) {
+            input_data[field] = null;
+        } else if (update_data[field] && update_data[field].constructor === Array) {
+            var array = update_data[field];
+            if (array.length > 0) {
+                var new_array = [];
+                for (var i = 0; i < array.length; i++) {
+                    if (array[i]) {
+                        new_array.push(array[i]);
+                    }
+                }
+                input_data[field] = new_array;
+            } else {
+                input_data[field] = [];
+            }
+        } else {
+            input_data[field] = update_data[field];
+        }
+    }
+    return input_data;
+};
+
+var paginateUtil = function(data, limit, offset) {
+    var newArr = [];
+    if (offset > data.length || offset == data.length || limit === 0) {
+        data = [];
+    } else if (data.length > limit + offset || data.length === limit + offset) {
+        data = data.slice(offset, offset + limit);
+    } else if (limit + offset > data.length) {
+        data = data.slice(offset, data.length);
+    }
+    return data;
+};
+
+var sortUtil = function(data, sort_key, sort_direction) {
+    if (sort_key !== undefined && sort_key !== "timestamp") {
+        data = data.sort(function(a, b) {
+            var x = a[sort_key];
+            var y = b[sort_key];
+            if (sort_direction === "asc") return x < y ? -1 : x > y ? 1 : 0;
+            else {
+                return x < y ? 1 : x > y ? -1 : 0;
+            }
+        });
+    } else {
+        data = data.sort(function(a, b) {
+            var val1 = a.timestamp.replace("T", " ");
+            var val2 = b.timestamp.replace("T", " ");
+            var x = new Date(val1).getTime();
+            var y = new Date(val2).getTime();
+            if (sort_direction === "asc") return x < y ? -1 : x > y ? 1 : 0;
+            else return x < y ? 1 : x > y ? -1 : 0;
+        });
+    }
+    return data;
+};
+
+var filterUtil = function(data, filter_value) {
+    var newArr = [];
+    data.forEach(function(ele) {
+        for (var key in ele) {
+            var value = "";
+            if (typeof ele[key] == "string") value = ele[key].toLowerCase();
+            else if (ele[key] !== null && ele[key].length > 0) value = ele[key];
+
+            if (value.indexOf(filter_value.toLowerCase()) !== -1) {
+                newArr.push(ele);
+
+                break;
+            }
+        }
+    });
+    return newArr;
+};
+
 
 module.exports = () => {
     return {
         initDynamodb: initDynamodb,
         initDocClient: initDocClient,
         getDatabaseKeyName: getDatabaseKeyName,
-        formatService: formatService
+        formatService: formatService,
+        sortUtil: sortUtil,
+        filterUtil: filterUtil,
+        getUpdateData: getUpdateData,
+        paginateUtil: paginateUtil
     };
 };
