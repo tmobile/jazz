@@ -16,8 +16,8 @@
 
 /**
     Helper functions for Environment
-  @module: utils.js
-  @description: Defines functions like format the output as per Environment schema etc.
+    @module: utils.js
+    @description: Defines functions like format the output as per Environment schema etc.
     @author:
     @version: 1.0
 **/
@@ -25,25 +25,6 @@
 var AWS = require("aws-sdk");
 
 // Helper functions
-
-// function to convert key name in schema to database column name
-var getDatabaseKeyName = function(key) {
-    // Some of the keys in schema may be reserved keywords, so it may need some manipulation
-
-    if (key === undefined || key === null) {
-        return null;
-    }
-
-    if (key === "service") {
-        return "SERVICE_NAME";
-    }
-    if (key === "domain") {
-        return "SERVICE_DOMAIN";
-    } else {
-        return "ENVIRONMENT_" + key.toUpperCase();
-    }
-    //check for timestamp
-};
 
 // function to convert key name in schema to database column name
 var getEnvironmentDatabaseKeyName = function(key) {

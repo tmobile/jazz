@@ -46,7 +46,7 @@ module.exports = (query, tableName, onComplete) => {
 
         // Generate filter string
         keys_list.forEach(function(key) {
-            var key_name = utils.getDatabaseKeyName(key);
+            var key_name = utils.getEnvironmentDatabaseKeyName(key);
 
             if (query[key] !== undefined) {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
