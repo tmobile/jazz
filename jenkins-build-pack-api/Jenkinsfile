@@ -44,6 +44,7 @@ def Event_Status = [
 @Field def configLoader
 @Field def scmModule
 @Field def serviceConfigdata
+@Field def utilModule
 
 @Field def auth_token = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -57,7 +58,7 @@ node() {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModule(jazzBuildModuleURL)
 
-	def jazz_prod_api_id = getAPIId(configLoader.AWS.API["PROD"], "jazz", "*")
+	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
 	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
 
@@ -186,7 +187,7 @@ node() {
 				if (fileExists('swagger/swagger.json')) {
 					echo "Generating swagger file for environment: ${env_key}"
 	                
-					def api_id = getAPIId(configLoader.AWS.API[env_key], config)
+					def api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
 					
 					def apiHostName = "${api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" 
 					generateSwaggerEnv(current_environment, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName,config)
@@ -677,23 +678,6 @@ def getBuildModuleUrl() {
     }
 }
 
-/**
-getAPIId takes api Id mapping document and a config object to return an API Id
-*/
-def getAPIId(apiIdMapping, config) {
-	if (!apiIdMapping) {
-		error "No mapping document provided to lookup API Id!!"
-	}
-
-	if (apiIdMapping["${config['domain']}_${config['service']}"]) {
-		return apiIdMapping["${config['domain']}_${config['service']}"];
-	}else if (apiIdMapping["${config['domain']}_*"]) {
-		return apiIdMapping["${config['domain']}_*"];
-	}else {
-		apiIdMapping["*"];
-	}   
-}
-
 /*
 * Load environment variables from build module
 */
@@ -714,6 +698,8 @@ def loadBuildModule(buildModuleUrl){
 		scmModule.initialize(configLoader)
 
 		serviceConfigdata = load "service-configuration-data-loader.groovy"
+
+		utilModule = load "utility-loader.groovy"
 
 	}
 }
