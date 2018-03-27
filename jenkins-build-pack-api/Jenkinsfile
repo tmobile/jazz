@@ -11,7 +11,6 @@ import groovy.transform.Field
 @Field def scm_type
 
 
-
 //definitions
 def Event_Name =[
 	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
@@ -58,7 +57,8 @@ node() {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModule(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+	def jazz_prod_api_id = getAPIId(configLoader.AWS.API["PROD"], "jazz", "*")
+	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
 
     echo "Build triggered via branch: " + params.scm_branch
@@ -164,7 +164,7 @@ node() {
 		}
 		stage("Deployment to ${env_key} environment") {
 			sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
-			echo "starts Deployment to ${env_key} Env"
+			echo "starts deployment to ${env_key} Env"
 
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 				echo "AWS Configure ......."
@@ -184,20 +184,20 @@ node() {
 				sh "serverless deploy --stage ${current_environment} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
 				if (fileExists('swagger/swagger.json')) {
-					// Generate swagger file based on environment
-					echo "Generating the swagger file for each environment"
-
-					def api_key = env_key + "_ID"
-					def apiHostName = "${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" //Staging environment
+					echo "Generating swagger file for environment: ${env_key}"
+	                
+					def api_id = getAPIId(configLoader.AWS.API[env_key], config)
+					
+					def apiHostName = "${api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" 
 					generateSwaggerEnv(current_environment, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName,config)
 
 					echo "Deploying to API Gateway environment.."
-					sh "aws apigateway put-rest-api --rest-api-id ${configLoader.AWS.API[api_key]} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+" --profile cloud-api"
-					sh "aws apigateway create-deployment --rest-api-id ${configLoader.AWS.API[api_key]} --stage-name ${current_environment} --profile cloud-api"
+					sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+" --profile cloud-api"
+					sh "aws apigateway create-deployment --rest-api-id ${api_id} --stage-name ${current_environment} --profile cloud-api"
 
-					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API[api_key]}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
 
-					def endpointUrl = "https://${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/${current_environment}/" + domain + "/" + config['service']
+					def endpointUrl = "https://${apiHostName}/${current_environment}/" + domain + "/" + config['service']
 
 					if(domain != "jazz"){
 						createSubscriptionFilters(stackName, configLoader.AWS.REGION,roleId);
@@ -676,6 +676,24 @@ def getBuildModuleUrl() {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     }
 }
+
+/**
+getAPIId takes api Id mapping document and a config object to return an API Id
+*/
+def getAPIId(apiIdMapping, config) {
+	if (!apiIdMapping) {
+		error "No mapping document provided to lookup API Id!!"
+	}
+
+	if (apiIdMapping["${config['domain']}_${config['service']}"]) {
+		return apiIdMapping["${config['domain']}_${config['service']}"];
+	}else if (apiIdMapping["${config['domain']}_*"]) {
+		return apiIdMapping["${config['domain']}_*"];
+	}else {
+		apiIdMapping["*"];
+	}   
+}
+
 /*
 * Load environment variables from build module
 */
