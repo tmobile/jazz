@@ -140,7 +140,7 @@ var validateEnumValues = function(service_data, onComplete) {
                     }
                     break;
                 case "runtime":
-                    if (!_.includes(global.global_config.SERVICE_RUNTIMES, value)) {
+                    if (!_.includes(global.global_config.SERVICE_RUNTIMES, value) && service_data.type !== "website") {
                         invalid_fields.push(field);
                     }
                     break;
