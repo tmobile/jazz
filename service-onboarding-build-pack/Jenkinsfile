@@ -443,14 +443,12 @@ def sendEvent(service_type, service_name, domain, runtime, admin_group, event_na
 }
 
 def updateServiceInDB(service_id_in_db, statusval) {
-	def apiId = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
-  	sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\"}' https://${apiId}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod/jazz/services/${service_id_in_db}/"
+	sh "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token}\" -X PUT -k -v -d '{ \"status\": \"${statusval}\"}' ${g_base_url}/jazz/services/${service_id_in_db}/"
 }
 
-def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, apiID, region,serviceMetadataJson) {
+def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc, approver, servicetype, serviceMetadataJson) {
 
 	try {
-		def apiId = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
 		
 		def body = JsonOutput.toJson([
 			service:service_name,
@@ -465,7 +463,7 @@ def createServiceInDB(service_name, domain, created_by, runtime, repo_url, desc,
 		])
 		
 		def outputStr = sh (
-			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '$body' https://${apiID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod/jazz/services/",
+			script: "curl -H \"Content-Type: application/json\" -H \"Authorization: ${auth_token} \" -X POST -k -v -d '$body' ${g_base_url}/jazz/services/",
 			returnStdout: true
 		).trim()
 		echo "outputStr===============" + outputStr
