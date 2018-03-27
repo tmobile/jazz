@@ -56,7 +56,7 @@ def Event_Status = [
 
 node() {
 	def jazzBuildModuleURL = getBuildModuleUrl()
-	loadBuildModule(jazzBuildModuleURL)
+	loadBuildModules(jazzBuildModuleURL)
 
 	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
 	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
@@ -679,9 +679,9 @@ def getBuildModuleUrl() {
 }
 
 /*
-* Load environment variables from build module
+* Load build modules
 */
-def loadBuildModule(buildModuleUrl){
+def loadBuildModules(buildModuleUrl){
 
 	dir('config-loader') {
 		checkout([$class: 'GitSCM', branches: [
@@ -700,6 +700,5 @@ def loadBuildModule(buildModuleUrl){
 		serviceConfigdata = load "service-configuration-data-loader.groovy"
 
 		utilModule = load "utility-loader.groovy"
-
 	}
 }
