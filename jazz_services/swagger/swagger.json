@@ -1372,6 +1372,10 @@
                         "type": "string"
                     },
                     "description": "Tags for the service"
+                },
+                "endpoints": {
+					"type": "string",
+					"description": "Endpoint where the service is accessible"
                 }
             }
         },

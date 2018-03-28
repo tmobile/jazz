@@ -754,8 +754,6 @@ def loadServerlessConfig() {
 	sh "cp serverless.yml serverless-temp.yml"
 }
 
-
-
 /**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
