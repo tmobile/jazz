@@ -1,5 +1,6 @@
 const config = require('./components/config.js'); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
+const async = require("async");
 const AWS = require('aws-sdk');
 const rp = require('request-promise-native');
 const errorHandlerModule = require("./components/error-handler.js");
@@ -25,12 +26,11 @@ var handler = (event, context, cb) => {
 		.then(result => {
 			var records = getEventProcessStatus();
 			logger.info("Successfully processed events. " + JSON.stringify(records));
-			return cb(null, getEventProcessStatus());
+			return cb(null, records);
 		})
 		.catch(err => {
-			err.records = getEventProcessStatus();
 			logger.error("Error processing events. " + JSON.stringify(err));
-			return cb(null, getEventProcessStatus());
+			return cb(err);
 		});
 
 };
@@ -112,12 +112,7 @@ var checkInterest = function (encodedPayload, sequenceNumber) {
 				"interested_event": true,
 				"payload": payload.Item
 			});
-		} else {
-			resolve({
-				"interested_event": false,
-				"payload": payload.Item
-			});
-		}
+		} 
 	});
 }
 
@@ -147,14 +142,13 @@ var processEvent = function (payload, configData, authToken) {
 				"EMAIL": serviceContext.email,
 				"SLACKCHANNEL": serviceContext.slackChannel,
 				"TAGS": serviceContext.tags,
-				"ENDPOINTS": serviceContext.endpoints,
+				"ENDPOINTS": serviceContext.endpoint,
 				"STATUS": statusResponse.status,
 				"METADATA": serviceContext.metadata
 			};
 
 			crud.update(inputs, function (err, results) {
 				if (err) {
-					logger.error("updateService- " + JSON.stringify(err));
 					var error = handleError(failureCodes.PR_ERROR_2.code, err.error);
 					return reject(error);
 				} else {
@@ -235,7 +229,7 @@ var getServiceContext = function (svcContext) {
 		json.metadata = svcContext.metadata;
 	}
 	if (svcContext.endpoint) {
-		json.endpoints = svcContext.endpoints;
+		json.endpoint = svcContext.endpoint;
 	}
 
 	return json;
