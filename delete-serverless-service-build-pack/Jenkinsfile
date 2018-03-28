@@ -97,18 +97,16 @@ node {
 		switch (flowType) {
 			case "API":
 				stage('Undeploy Service') {
-					updateServiceNameConfig( "dev")
+					updateServiceNameConfig()
 					def path = getResourcePath()
 					cleanUpApiGatewayResources("dev", path)
 					cleanUpApiDocs("dev")
 					unDeployService('dev')
 
-					updateServiceNameConfig("stg")
 					cleanUpApiGatewayResources("stg", path)
 					cleanUpApiDocs("stg")
 					unDeployService('stg')
 
-					updateServiceNameConfig( "prod")
 					cleanUpApiGatewayResources("prod", path)
 					cleanUpApiDocs("prod")
 					unDeployService('prod')
@@ -117,11 +115,9 @@ node {
 
 			case "LAMBDA":
 				stage('Undeploy Service') {
-					updateServiceNameConfig( "dev")
+					updateServiceNameConfig()
 					unDeployService('dev')
-					updateServiceNameConfig( "stg")
 					unDeployService('stg')
-					updateServiceNameConfig( "prod")
 					unDeployService('prod')
 				}
 				break
@@ -200,7 +196,7 @@ def checkoutSCM(repo_name) {
  * @param  serviceName
  * @return
  */
-def updateServiceNameConfig(envval) {
+def updateServiceNameConfig() {
 	sh "rm serverless.yml"
 	sh "cp serverless-temp.yml serverless.yml"	
 	try {
@@ -580,7 +576,6 @@ def updateBucketPolicy(policy_json, bucketName){
  * @return
  */
 def cleanupCloudFrontDistribution(stage) {
-	//events.sendStartedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
@@ -601,11 +596,9 @@ def cleanupCloudFrontDistribution(stage) {
 				_Etag = generateDistributionConfigForDisable(distributionConfig)
 				_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
 			}
-			//events.sendCompletedEvent('DELETE_CLOUDFRONT', null, null, getEnvKey(stage))
 		} catch(ex) {
 			if((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
 				echo "Could not find a CloudFront distribution Id for service: ${service_config['service']} and environment $stage"
-				//events.sendCompletedEvent('DELETE_CLOUDFRONT', "CF resource not available", null, getEnvKey(stage))
 			} else {
 				send_status_email ("FAILED")
 				events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
@@ -705,7 +698,6 @@ def generateDistributionConfigForDisable(distributionConfig) {
  * @return
  */
 def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
-	//events.sendStartedEvent('DISABLE_CLOUDFRONT', "distributionID: "+distributionID, null, getEnvKey(stage))
 	def disableOutput
 	def eTag
 	try {
@@ -723,7 +715,6 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 			eTag = disableConfigObj.ETag
 		}
 		echo "disable eTag...$eTag"
-		//events.sendCompletedEvent('DISABLE_CLOUDFRONT', "distributionID: "+distributionID, null, getEnvKey(stage))
 		return eTag
 	}catch(ex){
 		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
