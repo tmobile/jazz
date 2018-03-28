@@ -296,50 +296,51 @@ def buildLambda(runtime) {
 */
 def generateSwaggerEnv(env, deploymentNode, apiHostName,config) {
     sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
-    sh "sed -i -- 's/{api_deployment_node_title}/" + deploymentNode + "/g' swagger/swagger.json" // {api_deployment_node_title}
+    sh "sed -i -- 's/{api_deployment_node_title}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
     sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
-    sh "sed -i -- 's/{api_host_name}/" + apiHostName + "/g' swagger/swagger.json" // {api_host_name}
+    sh "sed -i -- 's/{api_host_name}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
     sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
-	sh "sed -i -- 's/{envmnt}/" + env + "/g' swagger/swagger.json" // {environment}
+	sh "sed -i -- 's/{envmnt}/${env}/g' swagger/swagger.json" // {environment}
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
 
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-	sh "sed -i -- 's/{conf-role}/" + roleARN + "/g' ./swagger/swagger.json"
+	sh "sed -i -- 's/{conf-role}/${roleARN}/g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-region}/${configLoader.AWS.REGION}/g' ./swagger/swagger.json"
-	sh "sed -i -- 's/{conf-accId}/" + roleId + "/g' ./swagger/swagger.json"
+	sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 }
 
-def writeServerlessFile(config, current_environment){
+def writeServerlessFile(config,current_environment){
 	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
-	sh "sed -i -- 's/{env-stage}/" + current_environment + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):region}/" + config['region'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/" + config['domain'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/" + config['owner'] + "/g' serverless.yml"
-	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|" + config['iamRoleARN'] + "|g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/" + config['providerRuntime'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/" + config['providerMemorySize'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/" + config['providerTimeout'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleRate}/" + config['eventScheduleRate'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/" + config['eventScheduleEnable'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/" + config['securityGroupIds'] + "/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/" + config['subnetIds'] + "/g' serverless.yml"
-
+	sh "sed -i -- 's/{env-stage}/${current_environment}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['owner']}/g' serverless.yml"
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml" 	
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
+	sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${config['eventScheduleRate']}|g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
+	
 	if(config['artifact']){
-		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/" + config['artifact'] + "/g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
 	}
 	if(config['mainClass']){
-		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/" + config['mainClass'] + "/g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
 	}
+	
 }
 
 /**
 	Set the Lambda execution role. If user provided a custom role override the default.
 */
 def setLambdaExecutionRole(role) {
-	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#"+role+"#g' serverless.yml"
+	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#${role}#g' serverless.yml"
 }
 
 /**

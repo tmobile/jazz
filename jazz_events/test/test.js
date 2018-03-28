@@ -16,14 +16,11 @@
 
 const assert = require('chai').assert;
 const index = require('../index');
-const awsContext = require('aws-lambda-mock-context');
-const logger = require('../components/logger.js');
-const sinon = require('sinon');
-const AWS = require('aws-sdk-mock');
 
-var event, context, callback, err, errMessage, errType, logMessage, dataObj, callbackObj, logStub;
+describe('Sample', function() {
+    it('tests handler', function(done) {
 
-describe('platform_events', function() {
+    	index.handler({method:'GET'},{},function() {})
 
     var dynamoCheck = function(dynamoMethod, sinonSpy){
         var serviceName;

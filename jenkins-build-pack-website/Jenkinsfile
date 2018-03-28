@@ -685,16 +685,16 @@ def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
 
 	def curlOutputJSON = jsonParse(curlOutput)
 	
-	if (curlOutputJSON.data[0].id) {
-		service_id = curlOutputJSON.data[0].id
+	if (curlOutputJSON.data.services[0].id) {
+		service_id = curlOutputJSON.data.services[0].id
 	}
 
-	if (curlOutputJSON.data[0].endpoints) {
-		preserveEnvValue = curlOutputJSON.data[0].endpoints["$preserveEnvKey"]
+	if (curlOutputJSON.data.services[0].endpoints) {
+		preserveEnvValue = curlOutputJSON.data.services[0].endpoints["$preserveEnvKey"]
 	}
 
-	if (curlOutputJSON.data[0].created_by) {
-		created_by = curlOutputJSON.data[0].created_by
+	if (curlOutputJSON.data.services[0].created_by) {
+		created_by = curlOutputJSON.data.services[0].created_by
 	}
 }
 

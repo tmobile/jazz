@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,8 @@ const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const utils = require("./components/utils.js")();
 const crud = require("./components/crud")();
+const global_config = require("./config/global-config.json");
+const validateUtils = require("./components/validation")();
 
 const async = require('async');
 
@@ -36,8 +38,29 @@ module.exports.handler = (event, context, cb) => {
     logger.init(event, context);
     var config = configObj(event);
     global.config = config;
+    global.global_config = global_config;
+
+    var handleResponse = function(error, data, input) {
+        if (error) {
+            logger.error(JSON.stringify(error));
+            if (error.result === "inputError") {
+                cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+            } else if (error.result === "notFoundError") {
+                cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
+            } else if (error.result === "databaseError") {
+                cb(JSON.stringify(errorHandler.throwInternalServerError(error.message)));
+            } else {
+                cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occured")));
+            }
+        } else {
+            logger.debug("response data " + JSON.stringify(data));
+            cb(null, responseObj(data, input));
+        }
+    };
 
     try {
+        global.services_table = config.services_table;
+
         if (!event.method) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
         }
@@ -57,7 +80,6 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("service id is required")));
         }
 
-        global.services_table = config.services_table;
         global.userId = event.principalId;
         var getAllRecords;
         if(event.query && event.query.isAdmin){
@@ -73,23 +95,23 @@ module.exports.handler = (event, context, cb) => {
 
             async.series({
                 // Get service by SERVICE_ID
-                getServiceByID: function(onComplete) {
-                    crud.get(service_id, onComplete);
+                getServiceByServiceId: function(onComplete) {
+                    validateUtils.validateServiceWithServiceId(service_id, function onValidate(error, data) {
+                        onComplete(error, data);
+                    });
                 }
             }, function(error, data) {
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
-                    return cb(JSON.stringify(errorHandler.throwInternalServerError('Unexpected Error occured.')));
+                    
                 }
-                var service_obj = data.getServiceByID;
-
-                // throw error if no service exists with given service_id
-                if (Object.keys(service_obj).length === 0 && service_obj.constructor === Object) {
-                    logger.error('Cannot find service with id: ' + service_id);
-                    return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
-                }
-                logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
-                return cb(null, responseObj(data.getServiceByID, event.path));
+                if(data.getServiceByServiceId){
+                    var service_obj = data.getServiceByServiceId;
+                    logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
+                    return handleResponse(error, data.getServiceByServiceId.data, event.path);
+                } else{
+                    return handleResponse(error, data, event.path);
+                }                
             });
         }
 
@@ -97,21 +119,22 @@ module.exports.handler = (event, context, cb) => {
         // 2: GET all services (/services)
         // 3: GET Filtered services (/services?field1=value&field2=value2&...)
         if (event.method === 'GET' && !service_id) {
-            logger.info('GET services');
+            // logger.info('GET services');
             async.series({
                 // fetch services list from dynamodb, filter if required
                 fetchServices: function(onComplete) {
                     var query = event.query;
                     crud.getList(query, getAllRecords, onComplete);
                 }
-            }, function(error, result) {
+            }, function(error, result) {           
                 // Handle error
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
-                    return cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured')));
-                }
-
-                return cb(null, responseObj(result.fetchServices, event.query));
+                    return handleResponse(error, result.fetchServices, event.query);
+                } else{
+                    var data = result.fetchServices;
+                    return handleResponse(error, data, event.query);
+                } 
             });
         }
 
@@ -124,99 +147,35 @@ module.exports.handler = (event, context, cb) => {
             var update_data = event.body;
 
             async.series({
-                // Check if service exists
-                validateServiceExists: function(onComplete) {
-                    crud.get(service_id, function onServiceGet(error, data) {
-                        if (error) {
-                            onComplete(error, null);
-                        } else {
-                            if (Object.keys(data).length === 0 && data.constructor === Object) {
-                                logger.error('Cannot find service with id: ' + service_id);
-                                return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
-                            } else {
-                                onComplete(null, {
-                                    "result": "success",
-                                    "input": "service exists"
-                                });
-                            }
-                        }
-                    });
-                },
-                validateInputData: function(onComplete) {
-
-                    logger.info('validateInputData ');
-                    logger.info(update_data);
-
-                    // validate if input data is empty
-                    if (!update_data) {
-                        // return inputError
-                        logger.error(' input data is empty ');
-                        return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
-                    } else if (Object.keys(update_data).length === 0 && update_data.constructor === Object) {
-                        // return inputError
-                        logger.error('input data is empty ');
-                        return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Data cannot be empty")));
-                    }
-
-                    // list of fields that can be updated
-                    var fields_list = config.service_update_fields;
-
-                    // check if input contains fields other than allowed fields
-                    for (var field in update_data) {
-                        if (update_data.hasOwnProperty(field)) {
-                            if (fields_list.indexOf(field) === -1) {
-                                logger.error('input contains fields other than allowed fields');
-                                return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid field " + field + ". Only following fields can be updated " + fields_list.join(", "))));
-                                break;
-                            }
-                        }
-                    }
-
-                    // atleast one of the fields is required
-                    var field_exists = false;
-                    for (var i = fields_list.length - 1; i >= 0; i--) {
-                        field = fields_list[i];
-                        var value = update_data[field];
-                        if (value) {
-                            field_exists = true;
-                            break;
-                        }
-                    }
-                    if (field_exists === false) {
-                        // return inputError
-                        logger.error('No input data. Nothing to update service');
-                        return cb(JSON.stringify(errorHandler.throwInputValidationError('No input data. Nothing to update service')));
-                    }
-                    onComplete(null, {
-                        "result": "success",
-                        "input": "Input Data is valid"
+                validate:  function(callback){
+                    validateUtils.validateUpdatePayload(service_id, update_data, function onValidate(error, data) {
+                        callback(error, data);
                     });
                 },
                 // Update service by SERVICE_ID
-                updateServiceByID: function(onComplete) {
-                    if (update_data !== undefined && update_data !== null && update_data !== {}) {
-                        crud.update(service_id, update_data, onComplete);
+                updateServiceDataByServiceId: function(onComplete) {
+                    var new_update_data = utils.getUpdateData(update_data);
+                    if (new_update_data) {
+                        crud.update(service_id, new_update_data, function onUpdate(error, data) {
+                            onComplete(error, data);
+                        });
                     } else {
-                        onComplete(null, null);
+                        var message = "Service data is empty";
+                        onComplete({
+                            result: "inputError",
+                            message: message
+                        });
                     }
                 }
             }, function(error, data) {
                 // Handle error
-                logger.info('error');
-                logger.info(error);
-                logger.info(data);
                 if (error) {
-                    logger.error('error occured while updating service: ' + service_id);
-                    logger.error(error);
-                    return cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
+                    logger.error('Error while updating service ' + JSON.stringify(error));
+                    return handleResponse(error, data.updateServiceDataByServiceId, event.body);
                 } else {
-
-                    var updatedService = data.updateServiceByID;
-
+                    var updatedService = data.updateServiceDataByServiceId;
                     logger.info('Updated service');
-                    logger.info(updatedService);
-
-                    return cb(null, responseObj({ 'message': 'Successfully Updated service with id: ' + service_id, 'updatedService': updatedService }, event.body));
+                    return handleResponse(error,{ 'message': 'Successfully Updated service with id: ' + service_id, 'updatedService': updatedService }, event.body);
                 }
 
             });
@@ -231,20 +190,8 @@ module.exports.handler = (event, context, cb) => {
             async.series({
                 // Check if service exists
                 validateServiceExists: function(onComplete) {
-                    crud.get(service_id, function onServiceGet(error, data) {
-                        if (error) {
-                            onComplete(error, null);
-                        } else {
-                            if (Object.keys(data).length === 0 && data.constructor === Object) {
-                                logger.error('Cannot find service with id: ' + service_id);
-                                return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
-                            } else {
-                                onComplete(null, {
-                                    "result": "success",
-                                    "input": "service exists"
-                                });
-                            }
-                        }
+                    validateUtils.validateServiceWithServiceId(service_id, function onValidate(error, data) {
+                        onComplete(error, data);
                     });
                 },
                 // Delete service by SERVICE_ID
@@ -253,97 +200,32 @@ module.exports.handler = (event, context, cb) => {
                 }
             }, function onComplete(error, data) {
                 // Handle error
-                if (error) {
+                if(error){
                     logger.error('Error in DeleteItem: ' + JSON.stringify(error, null, 2));
-                    return cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
+                    return handleResponse(error, data, event.path);
+                } else{
+                    logger.info("DeleteItem succeeded");
+                    return handleResponse(error, { 'message': 'Service Successfully Deleted' }, event.path);
                 }
-
-                var deletedService = data.updateServiceByID;
-                logger.info('Deleted service Data');
-                logger.info(deletedService);
-
-                if (deletedService === null) {
-                    return cb(JSON.stringify(errorHandler.throwNotFoundError('Cannot find service with id: ' + service_id)));
-                }
-
-                logger.info("DeleteItem succeeded");
-                return cb(null, responseObj({ 'message': 'Service Successfully Deleted' }, event.path));
             });
         }
 
 
         // Create new service
         // 6: POST a service (/services)
-        if (event.method === 'POST' && !service_id) {
-            logger.info('Create new service');
-            var service_data = event.body;
+        if (event.method === 'POST' && !service_id) {            
+            var service_data = Object.assign({}, event.body);
+            logger.info("Create a new service with the following payload data : " + JSON.stringify(service_data));
 
             async.series({
                 // Validate service_data for adding new service
-                validateServiceData: function(onComplete) {
-                    // validate if input data is empty
-                    if (!service_data || Object.keys(service_data) == 0) {
-                        // return inputError
-                        onComplete({
-                            "result": "inputError",
-                            "message": "Service Data cannot be empty"
-                        });
-                    }
 
-                    // validate required fields
-                    var required_fields = config.service_required_fields;
-                    var field;
-
-                    for (var i = required_fields.length - 1; i >= 0; i--) {
-                        field = required_fields[i];
-                        var value = service_data[field];
-                        if (!value) {
-                            // return inputError
-                            onComplete({
-                                "result": "inputError",
-                                "message": (field + " cannot be empty")
-                            });
-                        }
-                    }
-
-                    var allowed_fields = required_fields.concat(config.service_optional_fields);
-
-                    // check if input contains fields other than allowed fields
-                    for (field in service_data) {
-                        if (service_data.hasOwnProperty(field)) {
-                            if (allowed_fields.indexOf(field) === -1) {
-                                onComplete({
-                                    "result": "inputError",
-                                    "message": "Invalid field " + field + ". Only following fields can be updated " + allowed_fields.join(", ")
-                                });
-                            }
-                        }
-                    }
-
-                    onComplete(null, {
-                        "result": "success",
-                        "input": service_data
+                validate: function(callback){
+                    validateUtils.validateCreatePayload(service_data,function onValidate(error, data) {
+                        callback(error, data);
                     });
                 },
-                // Check if a service with same domain and service_name combination exists
-                validateServiceExists: function(onComplete) {
-                    getAllRecords = "true";
-                    crud.getList({ 'service': service_data.service, 'domain': service_data.domain }, getAllRecords, function onServiceGet(error, data) {
-                        if (error) {
-                            onComplete(error, null);
-                        } else {
-                            if (data.length > 0) {
-                                logger.error('Service name in the specified domain already exists.');
-                                return cb(JSON.stringify(errorHandler.throwInputValidationError('Service name in the specified domain already exists.')));
-                            } else {
-                                onComplete(null, {
-                                    "result": "success",
-                                    "input": "Valid service_name - domain_name combination"
-                                });
-                            }
-                        }
-                    });
-                },
+                
                 // Add new service data to the dynamodb
                 addNewService: function(onComplete) {
                     crud.create(service_data, onComplete);
@@ -352,18 +234,14 @@ module.exports.handler = (event, context, cb) => {
                 // Handle error
                 if (error) {
                     logger.error('error occured while adding new service');
-                    logger.error(error);
-                    if (error.result === 'inputError') {
-                        cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-                    } else {
-                        cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured ')));
-                    }
+                    logger.error(error.result);
+                    return handleResponse(error, data, service_data);
+                } else{
+                    // data is now equal to: {validateServiceData: 1, addNewService: 2}
+                    var result = data.addNewService;
+                    // Add Item success
+                    return handleResponse(error, data.addNewService, service_data);
                 }
-                // data is now equal to: {validateServiceData: 1, addNewService: 2}
-                var result = data.addNewService;
-
-                // Add Item success
-                cb(null, responseObj(result, event.body));
             });
         }
 
@@ -371,6 +249,6 @@ module.exports.handler = (event, context, cb) => {
         //Sample Error response for internal server error
         logger.error("Internal server error");
         logger.error(e);
-        cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured")));
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured")));
     }
 };
