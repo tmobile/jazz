@@ -19,7 +19,6 @@ import groovy.transform.Field
 @Field def utilityModule
 @Field def serviceMetadataLoader
 
-@Field def serviceMetadata
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def auth_token = ''
@@ -745,8 +744,6 @@ def loadServerlessConfig() {
 	sh "cp serverless.yml serverless-temp.yml"
 }
 
-
-
 /**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
@@ -787,7 +784,6 @@ def loadServerlessConfig() {
  */
  def send_status_email (build_status) {
 	 def email_id = ''
-	 def service = ''
 
 	 def email_content = ''
  	 def body_subject = ''
@@ -796,14 +792,14 @@ def loadServerlessConfig() {
  	 def body_html = ''
  	 if (build_status == 'STARTED') {
  		 echo "email status started"
- 		 body_subject = 'Jazz Build Notification: Deletion STARTED for service: ' + service
+ 		 body_subject = "Jazz Build Notification: Deletion STARTED for service: ${service_config['service']}"
  	 } else if (build_status == 'FAILED') {
  		 echo "email status failed"
  		 def build_url = env.BUILD_URL + 'console'
- 		 body_subject = 'Jazz Build Notification: Deletion FAILED for service: ' + service
+ 		 body_subject = "Jazz Build Notification: Deletion FAILED for service: ${service_config['service']}"
  		 body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
  	 } else if (build_status == 'COMPLETED'){
- 				body_subject = 'Jazz Build Notification: Deletion COMPLETED successfully for service: ' + service
+ 				body_subject = "Jazz Build Notification: Deletion COMPLETED successfully for service: ${service_config['service']}"
  	 } else {
  				echo "Unsupported build status, nothing to email.."
  				return

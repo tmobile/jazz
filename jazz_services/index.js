@@ -108,7 +108,7 @@ module.exports.handler = (event, context, cb) => {
                 if(data.getServiceByServiceId){
                     var service_obj = data.getServiceByServiceId;
                     logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
-                    return handleResponse(error, data.getServiceByServiceId, event.path);
+                    return handleResponse(error, data.getServiceByServiceId.data, event.path);
                 } else{
                     return handleResponse(error, data, event.path);
                 }                
@@ -130,7 +130,7 @@ module.exports.handler = (event, context, cb) => {
                 // Handle error
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
-                    return handleResponse(error, data.getServiceByServiceId, event.query);
+                    return handleResponse(error, result.fetchServices, event.query);
                 } else{
                     var data = result.fetchServices;
                     return handleResponse(error, data, event.query);
