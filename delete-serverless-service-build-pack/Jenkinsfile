@@ -382,7 +382,7 @@ def checkServiceExists(service_name, domain, region) {
 
 	try {
 		def outputStr = sh (
-			script: "curl -H \"Authorization: ${auth_token}\" 'https://${configLoader.AWS.API.PROD_ID}.execute-api.${region}.amazonaws.com/prod/jazz/is-service-available?domain=${domain}&service=${service_name}'" ,
+          script: "curl -H \"Authorization: ${auth_token}\" '${g_base_url}/jazz/is-service-available?domain=${domain}&service=${service_name}'" ,
 			returnStdout: true
 		).trim()
 		echo outputStr
@@ -507,12 +507,13 @@ def getServiceBucket(stage) {
  * @return  api Id
  */
 def getApiId(stage) {
-	if(stage == 'dev') {
-		return configLoader.AWS.API.DEV_ID
+    echo "stage: $stage"
+  	if(stage == 'dev') {
+		return utilModule.getAPIIdForCore(configLoader.AWS.API["DEV"])
 	}else if (stage == 'stg') {
-		return configLoader.AWS.API.STG_ID
+		return utilModule.getAPIIdForCore(configLoader.AWS.API["STG"])
 	} else if (stage == 'prod') {
-		return configLoader.AWS.API.PROD_ID
+		return utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
 	}
 }
 
