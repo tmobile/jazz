@@ -201,7 +201,6 @@ module.exports = () => {
     return {
         initDynamodb: initDynamodb,
         initDocClient: initDocClient,
-        getDatabaseKeyName: getDatabaseKeyName,
         getEnvironmentDatabaseKeyName: getEnvironmentDatabaseKeyName,
         formatEnvironment: formatEnvironment,
         isEmpty: isEmpty,

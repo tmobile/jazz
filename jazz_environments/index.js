@@ -434,6 +434,7 @@ module.exports.handler = (event, context, cb) => {
                         svcGetPayload = {
                             uri: config.SERVICE_API_URL + config.SERVICE_API_RESOURCE + "?domain=" + service_domain + "&service=" + service_name,
                             method: "GET",
+                            headers: {'Authorization':event.headers.Authorization},
                             rejectUnauthorized: false
                         };
 
