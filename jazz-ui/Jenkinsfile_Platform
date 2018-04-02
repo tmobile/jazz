@@ -11,22 +11,7 @@ import groovy.transform.Field
 
 @Field def config_loader
 @Field def scmModule
-
-/*
-* Load environment variables from build module
-*/
-def loadConfigModule(build_module_url){
-  echo "loading environment variables, checking repos..."
-
-  dir('config-loader') {
-    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: build_module_url]]])
-    echo "loading installer variables..."
-    def result_json_string = readFile("jazz-installer-vars.json")
-    config_module = load "config-loader.groovy"
-    config_loader = config_module.initialize(result_json_string)
-    echo "Finished loading environment module"
-  }
-}
+@Field def utilModule
 
 /*
 * Get CloudFront DistID
@@ -79,8 +64,7 @@ def aws_configure() {
 node ()  {
   stage('Loading Config-Loader') {
     def jazzBuildModuleURL = getBuildModuleUrl()
-	  loadConfigModule(jazzBuildModuleURL)
-	  loadSCMModule(jazzBuildModuleURL)
+	  loadBuildModules(jazzBuildModuleURL)
   }
   stage('Configure AWS CLI') {
     aws_configure()
@@ -88,13 +72,14 @@ node ()  {
 
   stage('Checking out Jazz-UI repo') {
     dir('jazz-ui') {
-        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz-ui")]]])
-
+      checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz-ui")]]])
+	    def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
+      
       sh "sed -i 's/{api_doc_name}/'${config_loader.AWS.S3.API_DOC}'/g' ./src/config/config.json"
       sh "sed -i 's/{api_doc_name}/'${config_loader.AWS.S3.API_DOC}'/g' ./src/config/config.prod.json"
 
-      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${config_loader.AWS.API.PROD_ID}/g' ./src/config/config.json"
-      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${config_loader.AWS.API.PROD_ID}/g' ./src/config/config.prod.json"
+      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/config/config.json"
+      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/config/config.prod.json"
 
       sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/config/config.json"
       sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/config/config.prod.json"
@@ -129,9 +114,9 @@ node ()  {
 }
 
 /*
-load scm module
+load build modules
 */
-def loadSCMModule(buildModuleUrl){
+def loadBuildModules(buildModuleUrl){
 
 	try {
 		dir('scm-loader') {
@@ -141,11 +126,17 @@ def loadSCMModule(buildModuleUrl){
 				[credentialsId: repo_credential_id, url: buildModuleUrl]
 			]])
 
+      def result_json_string = readFile("jazz-installer-vars.json")
+      config_module = load "config-loader.groovy"
+      config_loader = config_module.initialize(result_json_string)
+
 			scmModule = load "scm-module.groovy"
 			scmModule.initialize(config_loader)
+            
+      utilModule = load "utility-loader.groovy"
 		}
 	}catch(ex) {
-		error "loadSCMModule failed: " + ex.toString()
+		error "loadBuildModules failed: " + ex.toString()
 	}
 }
 

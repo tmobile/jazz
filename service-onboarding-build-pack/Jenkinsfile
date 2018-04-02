@@ -25,6 +25,7 @@ import groovy.transform.Field
 @Field def events
 @Field def serviceMetadataLoader
 @Field def service_config
+@Field def utilModule
 
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def auth_token = ''
@@ -33,9 +34,10 @@ import groovy.transform.Field
 
 node  {
 	jazzBuildModuleURL = getBuildModuleUrl()
-	loadBuildModule(jazzBuildModuleURL)
+	loadBuildModules(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
+	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	
 	auth_token = getAuthToken()
 
@@ -313,7 +315,6 @@ node  {
 
  }
 
-
 def LoadConfiguration() {
 	def result = readFile('deployment-env.yml').trim()
 	echo "result of yaml parsing....$result"
@@ -417,7 +418,9 @@ def parseJson(jsonString) {
 /*
 * Load build module
 */
-def loadBuildModule(buildModuleUrl){ 
+
+def loadBuildModules(buildModuleUrl){
+	echo "loading env variables, checking repos..."
 
 	dir('build_modules') {
 		checkout([$class: 'GitSCM', branches: [
@@ -441,7 +444,8 @@ def loadBuildModule(buildModuleUrl){
 		serviceMetadataLoader = load "service-metadata-loader.groovy"
 		serviceMetadataLoader.initialize(configLoader)
 		echo "Service metadata loader module loaded successfully."
-
+    
+    utilModule = load "utility-loader.groovy"
 	}
 }
 

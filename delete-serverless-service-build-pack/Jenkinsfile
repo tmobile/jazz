@@ -16,7 +16,7 @@ import groovy.transform.Field
 @Field def configLoader
 @Field def scmModule
 @Field def events
-@Field def utilityModule
+@Field def utilModule
 @Field def serviceMetadataLoader
 
 @Field def g_base_url = ''
@@ -29,9 +29,12 @@ node {
 	echo "Starting delete service job with params : $params"
 
 	jazzBuildModuleURL = getBuildModuleUrl()
-	loadBuildModule(jazzBuildModuleURL)
+	loadBuildModules(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
+	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+
+
 	
 	def version
 	def repo_name
@@ -66,8 +69,8 @@ node {
 		context_map = [created_by : service_config['created_by']]
 
 		checkoutSCM(repo_name)
-
 		events.sendStartedEvent("CALL_DELETE_WORKFLOW", 'deletion starts', context_map)
+
 		dir(repo_name){
 			echo "loadServerlessConfig......."
 
@@ -362,12 +365,13 @@ def getServiceBucket(stage) {
  * @return  api Id
  */
 def getApiId(stage) {
-	if(stage == 'dev') {
-		return configLoader.AWS.API.DEV_ID
+    echo "stage: $stage"
+  	if(stage == 'dev') {
+		return utilModule.getAPIIdForCore(configLoader.AWS.API["DEV"])
 	}else if (stage == 'stg') {
-		return configLoader.AWS.API.STG_ID
+		return utilModule.getAPIIdForCore(configLoader.AWS.API["STG"])
 	} else if (stage == 'prod') {
-		return configLoader.AWS.API.PROD_ID
+		return utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
 	}
 }
 
@@ -462,7 +466,7 @@ def getResourcePath() {
  			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
  			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
  			sh "aws configure set preview.cloudfront true"
- 			def bucketName = utilityModule.getBucket(stage)
+ 			def bucketName = utilModule.getBucket(stage)
  			def bucketUrl = "${bucketName}/${service_config['domain']}-${service_config['service']}"
  			def _exists = checkIfWebsiteExists(bucketUrl)
  			if(_exists) {
@@ -744,6 +748,7 @@ def loadServerlessConfig() {
 	sh "cp serverless.yml serverless-temp.yml"
 }
 
+
 /**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
@@ -834,10 +839,9 @@ def loadServerlessConfig() {
  }
 
 /*
-* Load build module
+* Load build modules
 */
-def loadBuildModule(buildModuleUrl){ 
-
+def loadBuildModules(buildModuleUrl){
 	dir('build_modules') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
@@ -861,13 +865,12 @@ def loadBuildModule(buildModuleUrl){
 		serviceMetadataLoader.initialize(configLoader)
 		echo "Service metadata loader module loaded successfully."
 
-		utilityModule = load "utility-loader.groovy"
-		utilityModule.initialize(configLoader)
+		utilModule = load "utility-loader.groovy"
+		utilModule.initialize(configLoader)
 		echo "Service metadata loader module loaded successfully."	
 
 	}
 }
-
 
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {

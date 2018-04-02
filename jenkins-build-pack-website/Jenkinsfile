@@ -14,6 +14,7 @@ import groovy.transform.Field
 @Field def scmModule
 @Field def events
 @Field def serviceMetadataLoader
+@Field def utilModule
 
 @Field def g_login_token = ''
 @Field def g_base_url = ''
@@ -28,9 +29,11 @@ import groovy.transform.Field
 
 node ()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
-	loadBuildModule(jazzBuildModuleURL)
+	loadBuildModules(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
+
+	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	
 	echo "Build Pack website params: " + params
 
@@ -163,7 +166,7 @@ node ()  {
 						}
 					} else{
 						loadBucketPolicy(service, s3ProdBucket, false)
-						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
+						url = "https://s3.amazonaws.com/${s3ProdBucket}/${service}/index.html"
 					}
 
 					def svc_status = 'You can access your website using following link: ' + url
@@ -288,7 +291,7 @@ node ()  {
 
 					}else{
 						loadBucketPolicy(service, s3DevBucket,false)
-						url = "https://s3.amazonaws.com/" + s3DevBucket + "/${service}/index.html"
+						url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
@@ -693,11 +696,12 @@ def send_status_email ( build_status,config,email_content) {
    	}
 }
 
+
 /*
 * Load environment variables from build module
 */
 
-def loadBuildModule(buildModuleUrl){ 
+def loadBuildModules(buildModuleUrl){ 
 
 	dir('build_modules') {
 		checkout([$class: 'GitSCM', branches: [
@@ -721,6 +725,8 @@ def loadBuildModule(buildModuleUrl){
 		serviceMetadataLoader = load "service-metadata-loader.groovy"
 		serviceMetadataLoader.initialize(configLoader)
 		echo "Service metadata loader module loaded successfully."
+    
+    utilModule = load "utility-loader.groovy"
 
 	}
 }
@@ -735,6 +741,7 @@ def parseJson(jsonString) {
     m.putAll(lazyMap)
     return m
 }
+
 
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {

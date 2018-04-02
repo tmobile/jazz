@@ -79,6 +79,34 @@ def parseJson(def json) {
     new groovy.json.JsonSlurperClassic().parseText(json)
 }
 
+/**
+getAPIId takes api Id mapping document and a config object to return an API Id
+*/
+
+def getAPIId(apiIdMapping, config) {
+	return getAPIId(apiIdMapping, config['domain'], config['service'])
+}
+
+def getAPIId(apiIdMapping, namespace, service) {
+	if (!apiIdMapping) {
+		error "No mapping document provided to lookup API Id!!"
+	}
+
+	if (apiIdMapping["${namespace}_${service}"]) {
+		return apiIdMapping["${namespace}_${service}"];
+	}else if (apiIdMapping["${namespace}_*"]) {
+		return apiIdMapping["${namespace}_*"];
+	}else {
+		apiIdMapping["*"];
+	}   
+}
+
+/**
+getAPIIdForCore is a helper method to get apiId for jazz core services
+*/
+def getAPIIdForCore(apiIdMapping) {
+	return getAPIId(apiIdMapping, "jazz", "*")
+}
 
 /**
  * Set config_loader
