@@ -6,5 +6,10 @@
   "BIT_BUCKET_URL":"http://{conf-repo-base}/projects/CAS/repos/",
   "USER_POOL_ID":"{conf-user-pool-id}",
   "REGION": "{conf-region}",
-  "USER_CLIENT_ID": "{conf-client-id}"
+  "USER_CLIENT_ID": "{conf-client-id}",
+  "SERVICE_API_URL" : "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "SERVICE_API_RESOURCE" : "/stg/jazz/services",
+  "TOKEN_URL" : "/stg/jazz/login",
+  "SERVICE_USER" : "{jazz_admin}",
+  "TOKEN_CREDS" : "{jazz_admin_creds}"
 }

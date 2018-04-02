@@ -17,7 +17,7 @@ import groovy.json.JsonSlurper
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
-@Field def serviceConfigdata
+@Field def serviceMetadataLoader
 
 
 node  {
@@ -98,7 +98,8 @@ def getServiceConfiguration() {
         }
 
         if(prop.service_id){			
-			def serviceData = serviceConfigdata.loadServiceMetadata(prop.service_id,configLoader)
+			def serviceData = serviceMetadataLoader.loadServiceMetadata(prop.service_id)
+            echo "serviceData : " + JSON.stringify(serviceData);
 			return serviceData
 		}else{
 			error "Service Id is not available."
@@ -108,11 +109,11 @@ def getServiceConfiguration() {
 }
 
 /*
-* Load environment variables from build module
+* Load build module
 */
-def loadBuildModule(buildModuleUrl){
+def loadBuildModule(buildModuleUrl){ 
 
-	dir('config-loader') {
+	dir('build_modules') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -122,12 +123,16 @@ def loadBuildModule(buildModuleUrl){
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
+		echo "config loader loaded successfully."
 		
 		scmModule = load "scm-module.groovy"
-		scmModule.initialize(configLoader)
+		scmModule.initialize(configLoader)		
+		echo "SCM module loaded successfully."
 		
-		serviceConfigdata = load "service-configuration-data-loader.groovy"
-		
+		serviceMetadataLoader = load "service-metadata-loader.groovy"
+		serviceMetadataLoader.initialize(configLoader)
+		echo "Service metadata loader module loaded successfully."
+
 	}
 }
 

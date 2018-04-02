@@ -10,48 +10,12 @@ import groovy.transform.Field
 @Field def repo_core
 @Field def scm_type
 
-//definitions
-def Event_Name = [
-	'GENERATE_API_DOC':'GENERATE_API_DOC',
-	'UPLOAD_API_SPEC':'UPLOAD_API_SPEC',
-	'DISABLE_API_CACHE':'DISABLE_API_CACHE',
-	'UPDATE_SWAGGER':'UPDATE_SWAGGER',
-	'DEPLOY_SWAGGER_TO_APIGATEWAY':'DEPLOY_SWAGGER_TO_APIGATEWAY',
-	'UPDATE_DEPLOYMENT_CONF':'UPDATE_DEPLOYMENT_CONF',
-	'UPDATE_LOGGING_CONF':'UPDATE_LOGGING_CONF',
-	'GET_DEPLOYMENT_CONF':'GET_DEPLOYMENT_CONF',
-	'GET_SERVICE_CODE':'GET_SERVICE_CODE',
-	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
-	'CALL_ONBOARDING_WORKFLOW':'CALL_ONBOARDING_WORKFLOW',
-	'RAISE_PR':'RAISE_PR',
-	'VALIDATE_PRE_BUILD_CONF':'VALIDATE_PRE_BUILD_CONF',
-	'CALL_ONBOARDING_SERVICE':'CALL_ONBOARDING_SERVICE',
-	'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO':'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO',
-	'CREATE_SERVICE':'CREATE_SERVICE',
-	'BUILD':'BUILD',
-	'CODE_QUALITY_CHECK':'CODE_QUALITY_CHECK',
-	'UNIT_TEST':'UNIT_TEST',
-	'COMMIT_CODE':'COMMIT_CODE',
-	'APPROVE_PR':'APPROVE_PR',
-	'CREATE_SERVICE_REPO':'CREATE_SERVICE_REPO',
-	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
-	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
-	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
-	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
-	'CREATE_ASSET':'CREATE_ASSET',
-	'UPDATE_ASSET':'UPDATE_ASSET'
-]
-
-def Event_Status = [
-	'STARTED':'STARTED',
-	'COMPLETED':'COMPLETED',
-	'FAILED':'FAILED'
-]
-
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
 @Field def serviceConfigdata
+@Field def events
+@Field def serviceMetadataLoader
 @Field def utilModule
 
 @Field def auth_token = ''
@@ -110,13 +74,17 @@ node ()  {
 		}
 		
 		if(configObj.service_id){	
-			config = serviceConfigdata.loadServiceMetadata(configObj.service_id,configLoader)
+			config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
 		}else{
 			error "Service Id is not available."
 		}
 
 	}
 
+	if(!events) { error "Can't load events module"	} //Fail here
+	events.initialize(configLoader,config,"SERVICE_DEPLOYMENT",branch,current_environment,g_base_url + "/jazz/events")
+	
+	
 	def runtime = config['providerRuntime']
 	def service = config['service']
 	def isScheduleEnabled = isEnabled(config, "eventScheduleRate")
@@ -136,44 +104,45 @@ node ()  {
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled){
 		isEventSchdld = true
 	}
+	
+	def context_map = [created_by : config['created_by']]
+	
 	dir(repo_name){
 		loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
 		if(domain && domain == "jazz"){
 			stage ('Update Service Template'){
-				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
 				echo "Inside Update service template"
 				try{
 					updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)					
 				}
 				catch(error){
-					sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.COMPLETED, "")
 					error "Error occured while updating service template."
 				}
 			}			
 		}
 		stage ('Pre-Build Validation'){
-			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
+			events.sendStartedEvent("VALIDATE_INPUT", 'pre-build validation starts', context_map)
 			try {
 				send_status_email(config, 'STARTED',"")
 				validateDeploymentConfigurations(config)
 			}catch(ex) {
 				send_status_email(config, 'FAILED',"")
-				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
+				events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map)
 				error ex.getMessage()
 			}
-			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
+			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)
 		}			
 			
 
 		stage ('Build') {
-			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.STARTED, "")
+			events.sendStartedEvent('BUILD', 'build starts', context_map)
 			try {
 				buildLambda(runtime)				
 			}catch(ex) {
-				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.FAILED, ex.getMessage())
+				events.sendFailureEvent('BUILD', ex.getMessage(), context_map, 'NA')
 				error ex.getMessage()
 			}
-			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.COMPLETED, "")
+			events.sendCompletedEvent('BUILD', 'build completed', context_map)
 		}
 
 		def env_key
@@ -183,7 +152,8 @@ node ()  {
 			env_key = "DEV"
 		}
 		stage("Deployment to ${env_key} environment") {	
-			sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+			events.sendStartedEvent('DEPLOY_TO_AWS', 'starts deploying lambda function to AWS', context_map)
+			echo "starts Deployment to ${env_key} Env"
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					try {
 						// initialize aws credentials
@@ -191,22 +161,15 @@ node ()  {
 						sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 						sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-
-						_event = Event_Name.GET_DEPLOYMENT_CONF
-						sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, _event, Event_Status.STARTED, "")
 						loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
-						sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, _event, Event_Status.COMPLETED, "")
 
 						// Generate serverless yml file with domain added in function name
 						echo "Generate deployment env with domain"
-						_event = Event_Name.UPDATE_DEPLOYMENT_CONF
-						sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, _event, Event_Status.STARTED, "")
 
 						writeServerlessFile(config,current_environment)
 						
 						echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
 						setLambdaExecutionRole(configLoader.AWS.ROLEID);
-						sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, _event, Event_Status.COMPLETED, "")
 
 						def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 						sh "serverless deploy --stage ${current_environment} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
@@ -218,22 +181,19 @@ node ()  {
 						if(domain != "jazz"){
 							createSubscriptionFilters(stackName,configLoader.AWS.REGION,roleId);							
 						}
-						_event = Event_Name.UPDATE_LOGGING_CONF
-						sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, _event, Event_Status.COMPLETED, "")
+					
 					
 						if(domain && domain == "jazz"){
 							serviceConfigdata.setKinesisStream(config)
-						}else{
-							updateServiceInDB(config, "active")							
 						}	
 						def svc_response = echoServiceInfo(current_environment)
 						send_status_email(config, 'COMPLETED',svc_response)
 					}catch(ex) {
 						send_status_email(config, 'FAILED','')						
-						sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, _event, Event_Status.FAILED, ex.getMessage())
+						events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 						error ex.getMessage()
 					}					
-					sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', context_map)
 				}//end of withCredentials
 		}//end of stage to production
 	}
@@ -520,7 +480,7 @@ def writeServerlessFile(config,current_environment){
 	sh "sed -i -- 's/{env-stage}/${current_environment}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['owner']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
 	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml" 	
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
@@ -546,10 +506,6 @@ def setLambdaExecutionRole(role) {
 	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#${role}#g' serverless.yml"
 }
 
-
-def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
-
-}
 
 
 
@@ -648,26 +604,6 @@ def send_status_email (config, build_status, email_content) {
 	}
 }
 
-def updateServiceInDB(config,status) {
-
-	def updateJson = ''
-	def serviceUrl = g_base_url + '/jazz/services'
-	if(status) {
-		updateJson = "{ \"status\": \"$status\" }"
-
-		echo "new json $updateJson"
-
-		def serviceUpdateUrl = "$serviceUrl/${config['service_id']}?isAdmin=true"
-
-		def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
-					-H \"accept: application/json\" \
-					-H \"Content-Type: application/json\" \
-					-H \"Authorization: $auth_token\"  \
-					-d \'${updateJson}\'", returnStdout:true)
-
-		echo "service update result: $serviceUpdateOutput"
-	}
-}
 
 
 
@@ -748,8 +684,7 @@ def updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo
 * Load build modules
 */
 def loadBuildModules(buildModuleUrl){
-
-	dir('config-loader') {
+	dir('build_modules') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -759,13 +694,24 @@ def loadBuildModules(buildModuleUrl){
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
+		echo "config loader loaded successfully."
 		
 		scmModule = load "scm-module.groovy"
-		scmModule.initialize(configLoader)
-		
-		serviceConfigdata = load "service-configuration-data-loader.groovy"
+		scmModule.initialize(configLoader)		
+		echo "SCM module loaded successfully."
 
-		utilModule = load "utility-loader.groovy"
+		serviceConfigdata = load "service-configuration-data-loader.groovy"
+		echo "Service configuration module loaded successfully."
+		
+		events = load "events-module.groovy"
+		echo "Event module loaded successfully."
+
+		serviceMetadataLoader = load "service-metadata-loader.groovy"
+		serviceMetadataLoader.initialize(configLoader)
+		echo "Service metadata loader module loaded successfully."
+    
+    utilModule = load "utility-loader.groovy"
+
 	}
 }
 

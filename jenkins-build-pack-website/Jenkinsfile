@@ -9,38 +9,11 @@ import groovy.transform.Field
 @Field def repo_core
 @Field def scm_type
 
-//definitions
-def Event_Name = [
-	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
-	'CALL_ONBOARDING_WORKFLOW':'CALL_ONBOARDING_WORKFLOW',
-	'RAISE_PR':'RAISE_PR',
-	'VALIDATE_PRE_BUILD_CONF':'VALIDATE_PRE_BUILD_CONF',
-	'CALL_ONBOARDING_SERVICE':'CALL_ONBOARDING_SERVICE',
-	'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO':'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO',
-	'CREATE_SERVICE':'CREATE_SERVICE',
-	'BUILD':'BUILD',
-	'CODE_QUALITY_CHECK':'CODE_QUALITY_CHECK',
-	'UNIT_TEST':'UNIT_TEST',
-	'COMMIT_CODE':'COMMIT_CODE',
-	'APPROVE_PR':'APPROVE_PR',
-	'CREATE_SERVICE_REPO':'CREATE_SERVICE_REPO',
-	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
-	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
-	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
-	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
-	'CREATE_ASSET':'CREATE_ASSET',
-	'UPDATE_ASSET':'UPDATE_ASSET'
-]
-
-def Event_Status = [
-	'STARTED':'STARTED',
-	'COMPLETED':'COMPLETED',
-	'FAILED':'FAILED'
-]
-
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
+@Field def events
+@Field def serviceMetadataLoader
 @Field def utilModule
 
 @Field def g_login_token = ''
@@ -52,6 +25,7 @@ def Event_Status = [
 @Field def preserveEnvValue = ''
 @Field def created_by = ''
 @Field def environment = ''
+@Field def context_map = [:]
 
 node ()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
@@ -97,28 +71,24 @@ node ()  {
 		}
 		
 		if(configObj.service_id){	
-			def url = "$g_base_url/jazz/services/"+configObj.service_id
-			serviceMetadata = loadServiceMetadataModule(jazzBuildModuleURL)
-			serviceMetadata.setUrl(url)
-			def serviceData = serviceMetadata.loadServiceMetaData()
-			if(serviceData && serviceData.data){	
-				config = serviceData.data['metadata']
-			}else{
-				error "Error while fetching service metadata"
-			}
+			config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
 		}else{
 			error "Service Id is not available."
 		}
 	
 	}
 	
+	if(!events) { error "Can't load events module"	} //Fail here
+	events.initialize(configLoader,config,"SERVICE_DEPLOYMENT",branch,environment,g_base_url + "/jazz/events")
+	
 	def create_cloudfront_url
-
+	context_map = [created_by : config['created_by']]
+	
 	dir(repo_name)
 	{
 		stage ('Pre-Build Validation'){
 
-			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.STARTED, "")
+			events.sendStartedEvent("VALIDATE_INPUT", 'pre-build validation starts', context_map)
 			try {
 				service = config['service']
 				domain = config['domain']
@@ -135,18 +105,16 @@ node ()  {
 
 				echo "create_cloudfront_url====" + create_cloudfront_url
 
-				loadServiceInfo(config['service'], domain, g_base_url + '/jazz/services', environment)
-
-				send_status_email(created_by, 'STARTED', config['service'], '')
+				send_status_email('STARTED', config, '')
 
 				validateTemplate()
 				validateDeploymentConfigurations(config)
 			}catch(ex) {
-				send_status_email(created_by, 'FAILED', config['service'], '')
-				sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.FAILED, ex.getMessage())
+				send_status_email('FAILED', config, '')
+				events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map)
 				error ex.getMessage()
 			}
-			sendEvent(service, branch, "NA", Event_Name.VALIDATE_PRE_BUILD_CONF, Event_Status.COMPLETED, "")
+			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)
 		}
 
 	  def s3StgBucket  = configLoader.JAZZ.S3.WEBSITE_STG_BUCKET;
@@ -155,7 +123,7 @@ node ()  {
 
 	  if (branch == 'master'){
 		stage ('Deployment to Production Env'){
-		  sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+			events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
@@ -173,8 +141,7 @@ node ()  {
 				}catch(ex) {
 					error ex.getMessage()
 				}
-
-				sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.STARTED, assetInfo)
+				events.sendStartedEvent("UPDATE_ASSET", 'update assets starts', context_map)
 				try {
 					echo "website with name $service already exists, syncing new files"
 					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
@@ -196,31 +163,29 @@ node ()  {
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 						}
 					} else{
-						loadBucketPolicy(service, s3Bucket, false)
+						loadBucketPolicy(service, s3ProdBucket, false)
 						url = "https://s3.amazonaws.com/${s3ProdBucket}/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 					}
 
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
-					sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
-					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					send_status_email('COMPLETED', config,svc_status)
+					events.sendCompletedEvent('UPDATE_ASSET', 'update asset completed', context_map)
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', config['service'], '')
-					sendEvent(service, branch, "PRODUCTION", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
-					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
+					send_status_email('FAILED', config, '')
+					events.sendFailureEvent('UPDATE_ASSET', ex.getMessage(), context_map)
+					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 				}
 
 			 }
 			 catch (error)
 			 {
 				echo "uploading a new website with name $service"
-				sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.STARTED, assetInfo)
+				events.sendStartedEvent("CREATE_ASSET", 'create assets starts', context_map)
 				try {
 					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
 					sh "aws s3 sync ./app s3://" + s3ProdBucket + "/$service  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
@@ -233,25 +198,21 @@ node ()  {
 
 						loadBucketPolicy(service, s3ProdBucket, true)
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
-
-						if (url) {
-							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
-						}
+						
 					}else{
-						loadBucketPolicy(service, s3Bucket, false)
+						loadBucketPolicy(service, s3ProdBucket, false)
 						url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
-					sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
-					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					send_status_email('COMPLETED', config,svc_status)
+					events.sendCompletedEvent('CREATE_ASSET', 'create assets completed', context_map)
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', config['service'], '')
-					sendEvent(service, branch, "PRODUCTION", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
-					sendEvent(service, branch, "PRODUCTION", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, "")
+					send_status_email('FAILED', config, '')
+					events.sendFailureEvent('CREATE_ASSET', ex.getMessage(), context_map)
+					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 				}
 
 			 }
@@ -262,7 +223,7 @@ node ()  {
 	  }
 	  else {
 		stage ('Deployment to Deployment Env'){
-		  sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "")
+		  events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 			echo "AWS Configure ......."
 
@@ -280,8 +241,7 @@ node ()  {
 				}catch(ex) {
 					error ex.getMessage()
 				}
-
-				sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.STARTED, assetInfo)
+				events.sendStartedEvent("UPDATE_ASSET", 'update assets starts', context_map)
 				try {
 					echo "website with name $service already exists, syncing new files"
 					sh "aws s3 sync ./app s3://${s3DevBucket}/$service --exclude \".git/*\" --exclude \".gitignore\" "
@@ -297,29 +257,27 @@ node ()  {
 
 						if (cfDetails[1]) {
 							url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/jazz/services", environment, url)
 						}
 					} else{
-						loadBucketPolicy(service, s3Bucket, false)
+						loadBucketPolicy(service, s3DevBucket, false)
 						url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, "${g_base_url}/jazz/services", environment, url)
 					}
 					def svc_status = "You can access your website using following link: ${url}"
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.COMPLETED, assetInfo)
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					send_status_email('COMPLETED', config,svc_status)
+					events.sendCompletedEvent('UPDATE_ASSET', 'update assets completed', context_map)
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', config['service'], '')
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.UPDATE_ASSET , Event_Status.FAILED, ex.getMessage())
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, ex.getMessage())
+					send_status_email('FAILED', config, '')
+					events.sendFailureEvent('UPDATE_ASSET', ex.getMessage(), context_map)
+					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 				}
 			 }
 			 catch (error)
 			 {
 				echo "uploading a new website with name $service"
-				sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.STARTED, assetInfo)
+				events.sendStartedEvent("CREATE_ASSET", 'create assets starts', context_map)
 				try {
 					sh "aws s3 sync ./app s3://" + s3DevBucket + "/$service --exclude \".git/*\" --exclude \".gitignore\" "
 					def url = 'n/a'
@@ -331,24 +289,20 @@ node ()  {
 						loadBucketPolicy(service, s3DevBucket, true)
 						url = sh (script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
 
-						if (url) {
-							updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, "http://" + url.replaceAll("[\n\r]", ""))
-						}
 					}else{
-						loadBucketPolicy(service, s3Bucket,false)
+						loadBucketPolicy(service, s3DevBucket,false)
 						url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
-						updateServiceWithEndpointInfo(config['service'], domain, g_base_url + '/jazz/services', environment, url)
 					}
 					def svc_status = 'You can access your website using following link: ' + url
 					echo svc_status
 
-					send_status_email(created_by, 'COMPLETED', config['service'], svc_status)
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.COMPLETED, assetInfo)
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
+					send_status_email('COMPLETED', config,svc_status)
+					events.sendCompletedEvent('CREATE_ASSET', 'create assets completed', context_map)
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 				}catch(ex) {
-					send_status_email(created_by, 'FAILED', config['service'], '')
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.CREATE_ASSET , Event_Status.FAILED, ex.getMessage())
-					sendEvent(service, branch, "DEVELOPMENT", Event_Name.DEPLOY_TO_AWS, Event_Status.FAILED, "")
+					send_status_email('FAILED', config, '')
+					events.sendFailureEvent('CREATE_ASSET', ex.getMessage(), context_map)
+					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 				}
 			 }
 			// reset Credentials
@@ -417,31 +371,16 @@ def resetCredentials() {
 /**
 	Generate the distribution config file
 */
-def generateDistributionConfig(service, envname, config) {
-	sh "sed -i -- 's/{service_name}/"+service+"/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's/{env}/"+envname+"/g' distribution_config_with_tags.json"
+def generateDistributionConfig(envname, config) {
+	sh "sed -i -- 's/{service_name}/${config['service']}/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{env}/${envname}/g' distribution_config_with_tags.json"
 
-	sh "sed -i -- 's/{conf_s3bucketname}/" + getS3BucketName(envname) + "/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{conf_s3bucketname}/${getS3BucketName(envname)}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's:{conf_origin_id}:${configLoader.AWS.CLOUDFRONT_ORIGIN_ID}:g' distribution_config_with_tags.json"
 
-	def owner = ''
-	try{
-		if (config['owner']) {
-			owner = config['owner']
-		}
-	}
-	catch(Exception e) { }
-
-	def domain = ''
-	try{
-		if (config['domain']) {
-			domain = config['domain']
-		}
-	}
-	catch(Exception e) { }
-	sh "sed -i -- 's/{owner}/"+owner+"/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's/{domain_name}/"+domain+"/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{owner}/${config['created_by']}/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{domain_name}/${config['domain']}/g' distribution_config_with_tags.json"
 	def distribution_config_with_tags = readFile('distribution_config_with_tags.json').trim()
 	echo(distribution_config_with_tags)
 }
@@ -665,64 +604,6 @@ def invalidateCloudFrontCache(distributionId, service) {
 	}
 }
 
-def sendEvent(service_name, branch, environment, event_name, event_status, message){
-    echo "send event " + event_status + " message::" + message;
-}
-
-def loadServiceInfo(service, domain, serviceUrl, endpointKey) {
-
-	def token = setCredentials()
-
-	def url = "$serviceUrl?domain=$domain&service=$service&isAdmin=true"
-
-	if (endpointKey == 'dev') {
-		preserveEnvKey = 'prod'
-	}else if (endpointKey == 'prod') {
-		preserveEnvKey = 'dev'
-	}
-
-	def curlOutput = sh (script: "curl -H \"Content-Type: application/json\" \
-			-H \"Authorization: $token\" \"$url\"" ,returnStdout: true ).trim()
-	echo "curlOutput: $curlOutput"
-
-	def curlOutputJSON = jsonParse(curlOutput)
-	
-	if (curlOutputJSON.data.services[0].id) {
-		service_id = curlOutputJSON.data.services[0].id
-	}
-
-	if (curlOutputJSON.data.services[0].endpoints) {
-		preserveEnvValue = curlOutputJSON.data.services[0].endpoints["$preserveEnvKey"]
-	}
-
-	if (curlOutputJSON.data.services[0].created_by) {
-		created_by = curlOutputJSON.data.services[0].created_by
-	}
-}
-
-def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endpointVal) {
-
-	def updateJson = ''
-
-	if(preserveEnvValue) {
-		updateJson = "{ \"endpoints\": { \"$endpointKey\" : \"$endpointVal\", \"$preserveEnvKey\": \"$preserveEnvValue\"}, \"status\": \"active\"  }"
-	}else {
-		updateJson = "{ \"endpoints\": { \"$endpointKey\" : \"$endpointVal\"}, \"status\": \"active\" }"
-	}
-
-	echo "new json $updateJson"
-
-	def serviceUpdateUrl = "$serviceUrl/$service_id?isAdmin=true"
-
-	def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
-		        -H \"accept: application/json\" \
-				-H \"Content-Type: application/json\" \
-				-H \"Authorization: $g_login_token\"  \
-				  -d \'${updateJson}\'", returnStdout:true)
-
-	echo "service update result: $serviceUpdateOutput"
-}
-
 /**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
@@ -765,22 +646,22 @@ def updateServiceWithEndpointInfo(service, domain, serviceUrl, endpointKey, endp
 * Supported build status values = STARTED, FAILED & COMPLETED
 * @return
 */
-def send_status_email (email_id, build_status, service, email_content) {
-   	echo "Sending build notification to " + email_id
+def send_status_email ( build_status,config,email_content) {
+   	echo "Sending build notification to ${config['created_by']}"
 	def body_subject = ''
 	def body_text = ''
 	def cc_email = ''
 	def body_html = ''
    	if (build_status == 'STARTED') {
 		echo "email status started"
-		body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + service
+		body_subject = "Jazz Build Notification: Deployment STARTED for service: ${config['service']}"
    	} else if (build_status == 'FAILED') {
 		echo "email status failed"
 		def build_url = env.BUILD_URL + 'console'
-		body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + service
+		body_subject = "Jazz Build Notification: Deployment FAILED for service: ${config['service']}"
 		body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
    	} else if (build_status == 'COMPLETED'){
-        	body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + service
+        	body_subject = "Jazz Build Notification: Deployment COMPLETED successfully for service: ${config['service']}"
    	} else {
         	echo "Unsupported build status, nothing to email.."
         	return
@@ -791,7 +672,7 @@ def send_status_email (email_id, build_status, service, email_content) {
 	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 					from : fromStr,
-					to : email_id,
+					to : config['created_by'],
 					subject : body_subject,
 					text : body_text,
 					cc : cc_email,
@@ -806,13 +687,48 @@ def send_status_email (email_id, build_status, service, email_content) {
 						-d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJson(sendMail)
 		if(responseJSON.data){
-			echo "successfully sent e-mail to $email_id"
+			echo "successfully sent e-mail to ${config['created_by']}"
 		} else {
 			echo "exception occured while sending e-mail: $responseJSON"
 		}
    	} catch (e){
        	echo "Failed while sending build status notification  " + e.toString()
    	}
+}
+
+
+/*
+* Load environment variables from build module
+*/
+
+def loadBuildModules(buildModuleUrl){ 
+
+	dir('build_modules') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[credentialsId: repo_credential_id, url: buildModuleUrl]
+		]])
+
+		def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.initialize(resultJsonString)
+		echo "config loader loaded successfully."
+		
+		scmModule = load "scm-module.groovy"
+		scmModule.initialize(configLoader)		
+		echo "SCM module loaded successfully."
+		
+		events = load "events-module.groovy"
+		echo "Event module loaded successfully."
+
+		serviceMetadataLoader = load "service-metadata-loader.groovy"
+		serviceMetadataLoader.initialize(configLoader)
+		echo "Service metadata loader module loaded successfully."
+    
+    utilModule = load "utility-loader.groovy"
+
+	}
 }
 
 /**
@@ -826,33 +742,6 @@ def parseJson(jsonString) {
     return m
 }
 
-/**
- * Load metadata module groovy file
- *
- */
-def loadServiceMetadataModule(buildURL) {
-	try {						
-		echo "loading serviceMetaData, checking repos"
-
-		dir('service-metadata') {
-			checkout([$class: 'GitSCM', branches: [
-				[name: '*/master']
-			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: buildURL]
-			]])
-			serviceMetadata = load "service-metadata-loader.groovy"			
-			serviceMetadata.setAuthToken(setCredentials())
-
-			// Load and set dependent utility module.
-			echo "loading util module"
-			Util = load "utility-loader.groovy"
-			serviceMetadata.setUtil(Util)
-			return serviceMetadata 
-		}
-	}catch(ex) {
-		error "loadServiceMetadataModule failed: "+ex.getMessage()
-	}
-}
 
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
@@ -867,29 +756,4 @@ def getBuildModuleUrl() {
 def jsonParse(jsonString) {
     def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
     return nonLazyMap
-}
-
-/*
-* Load environment variables from build module
-*/
-def loadBuildModules(buildModuleUrl){
-
-	dir('build_modules') {
-		checkout([$class: 'GitSCM', branches: [
-			[name: '*/master']
-		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-			[credentialsId: repo_credential_id, url: buildModuleUrl]
-		]])
-
-		def resultJsonString = readFile("jazz-installer-vars.json")
-		configModule = load "config-loader.groovy"
-		configLoader = configModule.initialize(resultJsonString)
-
-		scmModule = load "scm-module.groovy"
-		scmModule.initialize(configLoader)
-
-		serviceConfigdata = load "service-configuration-data-loader.groovy"
-
-		utilModule = load "utility-loader.groovy"
-	}
 }

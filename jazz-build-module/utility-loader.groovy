@@ -4,14 +4,13 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 echo "Utility module loaded successfully"
 
-@Field def g_url
 
-/**
- * Set URL
- * @return
- */
-def setUrl(url) {
-	g_url = url
+@Field def config_loader
+
+
+
+def initialize(configLoader){
+	setConfigLoader(configLoader)	
 }
 
 
@@ -19,6 +18,7 @@ def setUrl(url) {
  * Generate a unique name for S3 bucket for deploying website
  *
  */
+
 def generateBucketNameForService(domain, service) {
 	def bucketName
 	def _hash
@@ -45,6 +45,21 @@ def generateBucketNameForService(domain, service) {
 		return bucketName.toLowerCase()
 	} else {
 		error "Could not generate bucket name for service"
+	}
+}
+
+/**
+ * Get bucket name for environment
+ * @param stage environment
+ * @return  folder name
+ */
+def getBucket(stage) {
+	if(stage == 'dev') {
+		return config_loader.JAZZ.S3.WEBSITE_DEV_BUCKET
+	}else if (stage == 'stg') {
+		return config_loader.JAZZ.S3.WEBSITE_STG_BUCKET
+	} else if (stage == 'prod') {
+		return config_loader.JAZZ.S3.WEBSITE_PROD_BUCKET
 	}
 }
 
@@ -92,5 +107,14 @@ getAPIIdForCore is a helper method to get apiId for jazz core services
 def getAPIIdForCore(apiIdMapping) {
 	return getAPIId(apiIdMapping, "jazz", "*")
 }
+
+/**
+ * Set config_loader
+ * @return      
+ */
+def setConfigLoader(configLoader) {
+	config_loader = configLoader
+}
+
 
 return this
