@@ -56,7 +56,6 @@ module.exports.handler = (event, context, cb) => {
         }
 
         var user_id = event.principalId;
-        var bitbucketName;
         if (!user_id) {
             logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
             return cb(JSON.stringify(errorHandler.throwUnAuthorizedError("User is not authorized to access this service")));
@@ -93,10 +92,6 @@ module.exports.handler = (event, context, cb) => {
                 var domain = (event.body.domain || "").toLowerCase();
                 var service_name = event.body.service_name.toLowerCase();
 
-                var bitbucketName = service_name;
-                if (domain.length) {
-                    bitbucketName = domain + "_" + bitbucketName;
-                }
                 userlist = approvers.reduce(function (stringSoFar, approver) {
                     return stringSoFar + util.format("name=%s&", approver);
                 }, "");
@@ -119,8 +114,7 @@ module.exports.handler = (event, context, cb) => {
                         reject(err);
                     } else {
                         if (response.statusCode <= 299) { // handle all 2xx response codes as success
-                            var messageToBeSent = "Your service code will be available at " + config.BIT_BUCKET_URL + bitbucketName + "/browse";
-                            resolve(messageToBeSent);
+                            resolve("Successfully created your service.");
                         } else {
                             logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
                             reject({ 'message': "Failed to kick off service creation job" });
@@ -208,7 +202,7 @@ module.exports.handler = (event, context, cb) => {
                 serviceMetadataObj.require_internal_access = event.body.require_internal_access;
             }
             if (event.body.service_type === "website") {
-                var create_cloudfront_url = event.body.create_cloudfront_url || false;
+                var create_cloudfront_url = true;
                 serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
                 inputs.RUNTIME = 'n/a';
             }

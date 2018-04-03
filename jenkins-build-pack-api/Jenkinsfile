@@ -587,7 +587,7 @@ def send_status_email (config, build_status, email_content) {
 def updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)	{
 	echo "loadServerlessConfig......."
 	def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name)
+	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name, utilModule)
 	serviceConfigdata.loadServiceConfigurationData()
 }
 
