@@ -17,7 +17,6 @@
     "ENVIRONMENT_CREATE_REQUIRED_FIELDS": ["domain", "branch", "created_by", "service_name"],
     "ENVIRONMENT_UPDATE_REQUIRED_FIELDS": ["domain", "service_name"],
     "ENVIRONMENT_PRODUCTION_PHYSICAL_ID": "master",
-	"ENVIRONMENT_INTEGRATION_BRANCH": "integration",
     "CREATE_ENVIRONMENT_STATUS": "inactive",
 	"ENVIRONMENT_DELETE_STARTED_STATUS": "deletion_started",
 	"ENVIRONMENT_DELETE_FAILED_STATUS": "deletion_failed",

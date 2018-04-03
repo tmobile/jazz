@@ -7,10 +7,10 @@
         "S": "2018-03-13T01:18:35:556"
       },
       "SERVICE_CONTEXT": {
-        "S": "{\"service_type\":\"nodejs\",\"branch\":\"feature/test\",\"runtime\":\"nodejs4.3\",\"domain\":\"jazztest\",\"iam_role\":\"arn:a:iam::302890901340:role/jazz_platform_services\",\"environment\":\"env_logical_id-dev\",\"region\":\"us-east-1\",\"service_id\":\"5e58d101-2e62-f39c-61ca-83d1e4b5e809\"}"
+        "S": "{\"service_type\":\"nodejs\",\"branch\":\"feature/test\",\"runtime\":\"nodejs4.3\",\"domain\":\"jazztest\",\"iam_role\":\"arn_platform_services_role\",\"environment\":\"env_logical_id-dev\",\"region\":\"us-east-1\",\"service_id\":\"5e58d101-2e62-f39c-61ca-83d1e4b5e809\"}"
       },
       "USERNAME": {
-        "S": "deepu.sundaresan@ust-global.com"
+        "S": "jazz-admin@abc.com"
       },
       "EVENT_TIMESTAMP": {
         "S": "2018-03-18T13:18:32:600"

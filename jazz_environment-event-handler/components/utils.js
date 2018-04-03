@@ -30,7 +30,7 @@ var getNotificationMessage = function(event_name, event_status, service_name, er
             });
             break;
         case "FAILED":
-            if (error === "" || error === undefined) {
+            if (error) {
                 message = format(notification_message.EVENT_NAME.FAILED_REASON, {
                     service_name: service_name,
                     event_name: event_name,

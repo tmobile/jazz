@@ -5,16 +5,16 @@
              "kinesisSchemaVersion": "1.0",
              "partitionKey": "CALL_DELETE_WORKFLOW",
              "sequenceNumber": "49582744145785831874147508989126673490865670161183014914",
-             "data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxOC0wMy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJmZWF0dXJlL3Rlc3RcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6dGVzdFwiLFwiaWFtX3JvbGVcIjpcImFybjphOmlhbTo6MzAyODkwOTAxMzQwOnJvbGUvamF6el9wbGF0Zm9ybV9zZXJ2aWNlc1wiLFwiZW52aXJvbm1lbnRcIjpcImVudl9sb2dpY2FsX2lkLWRldlwiLFwicmVnaW9uXCI6XCJ1cy1lYXN0LTFcIixcInNlcnZpY2VfaWRcIjpcIjVlNThkMTAxLTJlNjItZjM5Yy02MWNhLTgzZDFlNGI1ZTgwOVwifSJ9LCJVU0VSTkFNRSI6eyJTIjoiZGVlcHUuc3VuZGFyZXNhbkB1c3QtZ2xvYmFsLmNvbSJ9LCJFVkVOVF9USU1FU1RBTVAiOnsiUyI6IjIwMTgtMDMtMThUMTM6MTg6MzI6NjAwIn0sIkVWRU5UX1NUQVRVUyI6eyJTIjoiU1RBUlRFRCJ9LCJFVkVOVF9OQU1FIjp7IlMiOiJDT01NSVRfVEVNUExBVEUifSwiRVZFTlRfVFlQRSI6eyJTIjoiU0VSVklDRV9PTkJPQVJESU5HIn0sIlNFUlZJQ0VfTkFNRSI6eyJTIjoiamF6el9lbnZpcm9ubWVudC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
+             "data":"",
              "approximateArrivalTimestamp": 1521632408.682
          },
          "eventSource": "aws:kinesis",
          "eventVersion": "1.0",
          "eventID": "shardId-000000000000:49582744145785831874147508989126673490865670161183014914",
          "eventName": "aws:kinesis:record",
-         "invokeIdentityArn": "arn:aws:iam::192006145812:role/gitlab180319_lambda2_basic_execution_1",
+         "invokeIdentityArn": "",
          "awsRegion": "us-east-1",
-         "eventSourceARN": "arn:aws:kinesis:us-east-1:192006145812:stream/gitlab180319-events-hub-prod"
+         "eventSourceARN": ""
      }
  ]
 }
