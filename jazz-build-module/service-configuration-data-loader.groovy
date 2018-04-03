@@ -18,11 +18,12 @@ echo "Service configuration module loaded successfully"
 @Field def current_environment
 @Field def es_hostname
 @Field def service_name
+@Field def utilModule
 
 /**
  * Initialize the module
  */
-def initialize(config, role_arn, region, role_id, jenkins_url, current_environment, service_name) {
+def initialize(config, role_arn, region, role_id, jenkins_url, current_environment, service_name, utilModule) {
 	
 	service_config = config
 	setRoleARN(role_arn)
@@ -31,6 +32,7 @@ def initialize(config, role_arn, region, role_id, jenkins_url, current_environme
 	setJenkinsUrl(jenkins_url)
 	setCurrentEnvironment(current_environment)
 	setServiceName(service_name)
+	setUtilModule(utilModule)
 }
 
 /**
@@ -65,10 +67,10 @@ def loadServiceConfigurationData() {
 		}
 		
 		if ( (service_name.trim() == "jazz_services-handler") ) {
-			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.DEV_ID}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.STG_ID}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.PROD_ID}/g' ./config/prod-config.json"
-			
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["PROD"])}/g' ./config/prod-config.json"
+						
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
@@ -116,9 +118,9 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.DEV_ID}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.STG_ID}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-apikey}/${service_config.AWS.API.PROD_ID}/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["PROD"])}/g' ./config/prod-config.json"
 			
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
@@ -246,7 +248,9 @@ def setCurrentEnvironment(currentEnvironment){
 def setServiceName(serviceName){
 	service_name = serviceName
 }
-
+def setUtilModule(util){
+	utilModule = util
+}
 def setKinesisStream(config){
 	if ( (config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ) {
 		def function_name =  "${service_config.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"

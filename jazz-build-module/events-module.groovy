@@ -173,7 +173,7 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 	context_json = [
 		'service_type': service_metadata['type'],
 		'branch': g_branch,
-		'runtime': service_metadata['providerRuntime'],
+		'runtime': service_metadata['runtime'],
 		'domain': service_metadata['domain'],
 		'iam_role': config_loader.AWS.ROLEID,
 		'environment': g_environment,
@@ -195,7 +195,6 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 		'service_context': context_json
 	]
 
-	event_json.service_context = context_json
 	def payload = JsonOutput.toJson(event_json)
 	echo "$event_json"
 	
@@ -204,10 +203,8 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 		def shcmd = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 					$g_url \
-				-d \'${payload}\'", returnStdout:true).trim()
-
-		jazz_quiet_sh(shcmd)
-
+				-d \'${payload}\'", returnStdout:true).trim()	
+				
 		echo "------  Event send.........."
       
 	}
