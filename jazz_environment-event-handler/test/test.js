@@ -126,4 +126,11 @@ describe('jazz environment handler test suits - ', function() {
     
   });
 
+  it('Process events - DELETE_ENVIRONMENT', function () {
+    var callback = sinon.spy();
+    //var response = index.handler(event, context, callback);
+    //@TODO
+    
+  });
+
 });
