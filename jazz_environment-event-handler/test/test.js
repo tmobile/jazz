@@ -94,30 +94,35 @@ describe('jazz environment handler test suits - ', function() {
   it('Process events - COMMIT_TEMPLATE', function () {
     var callback = sinon.spy();
     //var response = index.handler(event, context, callback);
+    //@TODO
     
   });
 
   it('Process events - CREATE_BRANCH', function () {
     var callback = sinon.spy();
     //var response = index.handler(event, context, callback);
+    //@TODO
     
   });
 
   it('Process events - UPDATE_ENVIRONMENT', function () {
     var callback = sinon.spy();
     //var response = index.handler(event, context, callback);
+    //@TODO
     
   });
 
   it('Process events - DELETE_BRANCH', function () {
     var callback = sinon.spy();
     //var response = index.handler(event, context, callback);
+    //@TODO
     
   });
 
   it('Process events - DELETE_ENVIRONMENT', function () {
     var callback = sinon.spy();
     //var response = index.handler(event, context, callback);
+    //@TODO
     
   });
 
