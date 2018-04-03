@@ -31,7 +31,6 @@ module.exports.handler = (event, context, cb) => {
     //Initializations
     var configData = config(context);
     var errorHandler = errorHandlerModule();
-    var secretHandler = secretHandlerModule();
     var authToken;
 
     logger.init(event, context);
