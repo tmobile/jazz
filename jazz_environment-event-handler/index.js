@@ -239,13 +239,9 @@ module.exports.handler = (event, context, cb) => {
                                                 });
                                             } else {
                                                 environmentPayload.service = service_name;
-												if(serviceContxt.branch === configData.ENVIRONMENT_INTEGRATION_BRANCH) {
-													environmentPayload.logical_id = "integration";
-												} else {
-													var nano_id = nanoid(configData.RANDOM_CHARACTERS, configData.RANDOM_ID_CHARACTER_COUNT);
-													//environmentPayload.logical_id = "dev-" + short_id; For backward compatibility
-													environmentPayload.logical_id =  nano_id+"-dev";													
-												}
+                                                var nano_id = nanoid(configData.RANDOM_CHARACTERS, configData.RANDOM_ID_CHARACTER_COUNT);
+                                                //environmentPayload.logical_id = "dev-" + short_id; For backward compatibility
+                                                environmentPayload.logical_id =  nano_id+"-dev";	
 
                                                 if (serviceContxt.domain) {
                                                     environmentPayload.domain = serviceContxt.domain;
