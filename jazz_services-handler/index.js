@@ -1,6 +1,27 @@
+// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
+/**
+  CRUD APIs for Service Catalog
+  @author:
+  @version: 1.0
+**/
+
 const config = require('./components/config.js'); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const async = require("async");
 const AWS = require('aws-sdk');
 const rp = require('request-promise-native');
 const errorHandlerModule = require("./components/error-handler.js");
@@ -98,7 +119,7 @@ var processRecord = function (record, configData,authToken) {
 			})
 			.catch(err => {
 				handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
-				return reject(err);
+				return resolve();
 			});
 	});
 }
@@ -141,7 +162,7 @@ var processEvent = function (payload, configData, authToken) {
 				"EMAIL": serviceContext.email,
 				"SLACKCHANNEL": serviceContext.slackChannel,
 				"TAGS": serviceContext.tags,
-				"ENDPOINTS": serviceContext.endpoint,
+				"ENDPOINTS": serviceContext.endpoints,
 				"STATUS": statusResponse.status,
 				"METADATA": serviceContext.metadata
 			};
@@ -227,8 +248,8 @@ var getServiceContext = function (svcContext) {
 	if (svcContext.metadata) {
 		json.metadata = svcContext.metadata;
 	}
-	if (svcContext.endpoint) {
-		json.endpoint = svcContext.endpoint;
+	if (svcContext.endpoints) {
+		json.endpoints = svcContext.endpoints;
 	}
 
 	return json;
