@@ -25,7 +25,7 @@
 const utils = require("../utils.js")(); //Import the utils module.
 const logger = require("../logger.js"); //Import the logging module.
 
-module.exports = (query, tableName, onComplete) => {
+module.exports = (query, onComplete) => {
     // initialize dynamodb
     var dynamodb = utils.initDynamodb();
 
@@ -35,7 +35,7 @@ module.exports = (query, tableName, onComplete) => {
     var insertAndString = " AND ";
 
     var scanparams = {
-        TableName: tableName,
+        TableName: global.envTableName,
         ReturnConsumedCapacity: "TOTAL",
         Limit: "500"
     };
@@ -64,7 +64,6 @@ module.exports = (query, tableName, onComplete) => {
         scanparams.ExpressionAttributeValues = attributeValues;
     }
 
-    logger.info("Scanparams:" + JSON.stringify(scanparams));
     var items_formatted = [];
     var scanExecute = function (onComplete) {
         dynamodb.scan(scanparams, function(err, items) {

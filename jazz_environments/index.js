@@ -29,20 +29,22 @@ const crud = require("./components/crud")(); //Import the utils module.
 const request = require("request");
 const async = require("async");
 const _ = require("lodash");
+const validateUtils = require("./components/validation")();
 
 module.exports.handler = (event, context, cb) => {
-    //Initializations
-    var errorHandler = errorHandlerModule();
-    logger.init(event, context);
-    var config = configObj(event);
-    global.config = config;
 
-    try {
+  //Initializations
+  var errorHandler = errorHandlerModule();
+  var config = configObj(event);
+  logger.init(event, context);
+  logger.info("event:"+JSON.stringify(event));
+  global.config = config;
+
+  try {
         // event.method cannot be empty, throw error
         if (event === undefined || event.method === undefined) {
             cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
         }
-        logger.info("Event:" + JSON.stringify(event));
 
         // get environment_id from the path
         var service;
@@ -113,11 +115,14 @@ module.exports.handler = (event, context, cb) => {
         }
 
         global.userId = event.principalId;
+        global.authorization = event.headers.Authorization;
+        global.envTableName = global.config.services_environment_table;
 
         var envTableName = config.services_environment_table;
 
         // 1: GET environment by id and environent (/services/{service_id}/{environment})
         if (event.method === "GET" && (event.query !== undefined || event.path !== undefined)) {
+
             var query;
             if (
                 event.query !== undefined &&
@@ -145,26 +150,26 @@ module.exports.handler = (event, context, cb) => {
                 {
                     // Get service environment by service and domain OR with environment_id
                     getServiceEnvironmentByParams: function(onComplete) {
-                        crud.get(envTableName, service, domain, environment_id, onComplete);
+                        validateUtils.validateEnvironment(service, domain, environment_id, function onValidate(error, data){
+                            onComplete(error, data);
+                        });
                     }
                 },
                 function(error, data) {
                     if (error) {
-                        logger.error("Error occured. " + JSON.stringify(error, null, 2));
-                        return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured.")));
-                    } else {
-                        logger.info("data:" + JSON.stringify(data));
-                        var environment_obj = data.getServiceEnvironmentByParams;
-
-                        // throw error if no service exists with given service_id
-                        if (environment_obj.environment.length === 0) {
+                        if (error.result === 'notFoundError'){
                             logger.error("Cannot find any environment for the following query:" + JSON.stringify(query));
                             return cb(
                                 JSON.stringify(errorHandler.throwNotFoundError("Cannot find any environment for the following query:" + JSON.stringify(query)))
                             );
+                        } else{
+                            logger.error("Error occured. " + JSON.stringify(error, null, 2));
+                            return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured.")));
                         }
+                    } else {
+                        var environment_obj = data.getServiceEnvironmentByParams;
                         logger.verbose("Get Success. " + JSON.stringify(environment_obj, null, 2));
-                        return cb(null, responseObj(data.getServiceEnvironmentByParams, query));
+                        return cb(null, responseObj(environment_obj, query));
                     }
                 }
             );
@@ -195,94 +200,19 @@ module.exports.handler = (event, context, cb) => {
             async.series(
                 {
                     validateInputData: function(onComplete) {
-                        var message = "";
-
-                        logger.info("update_environment_payload:" + JSON.stringify(update_environment_payload));
-                        //### CHECK If payload is empty
-                        if (_.isEmpty(update_environment_payload)) {
-                            onComplete({
-                                result: "inputError",
-                                message: "Environment Data to be updated cannot be empty"
-                            });
-                        } else {
-                            // list of fields that cannot be updated
-                            var unchangeable_environment_fields = config.service_environment_unchangeable_fields;
-
-                            var update_payload_keys = _.keys(update_environment_payload);
-
-                            var unchangeable_fields_in_payload = _.intersection(update_payload_keys, unchangeable_environment_fields);
-
-                            //### CHECK If payloadcontains any unchangeable fields
-                            if (_.isEmpty(unchangeable_fields_in_payload)) {
-                                //### CHECK If "friendly_name" is present in update for "stg" or "prod" environment update
-                                if (
-                                    environment_id === config.service_environment_production_logical_id ||
-                                    environment_id === config.service_environment_stage_logical_id
-                                ) {
-                                    var friendlyNameKey = "friendly_name";
-                                    if (_.includes(_.keys(update_environment_payload), friendlyNameKey)) {
-                                        onComplete({
-                                            result: "inputError",
-                                            message: "Invalid field provided. 'friendly_name' cannot be modified if logical_id is 'stg' or 'prod'"
-                                        });
-                                    }
-                                }
-
-                                var valid_status_values = config.service_environment_status;
-                                var has_invalid_status_values = false;
-                                var statusFieldKey = "status";
-                                var statusValue = update_environment_payload[statusFieldKey];
-
-                                //### CHECK If status value is according to allowed values
-                                if (_.includes(_.keys(update_environment_payload), statusFieldKey) && !_.includes(valid_status_values, statusValue)) {
-                                    // returning inputError
-                                    onComplete({
-                                        result: "inputError",
-                                        message: "Only following values can be allowed for status field - " + valid_status_values.join(", ")
-                                    });
-                                }
-
-                                //### CHECK If any Extra fields are present
-                                var total_fields_for_update = config.service_environment_changeable_fields;
-                                var invalid_fields_for_update = _.difference(_.keys(environment_data), _.values(total_fields_for_update));
-                                if (!_.isEmpty(invalid_fields_for_update)) {
-                                    onComplete({
-                                        result: "inputError",
-                                        message:
-                                            "Invalid field(s) - " +
-                                            invalid_fields_for_update.join(", ") +
-                                            ". Only following fields are allowed - " +
-                                            total_fields_for_update.join(", ")
-                                    });
-                                }
-                                logger.info("#Validation complete for payload for updating environment");
-                                onComplete(null, {
-                                    result: "success",
-                                    message: "Input Data is valid"
-                                });
-                            } else {
-                                message =
-                                    "Invalid fields provided. Following fields cannot be updated - " +
-                                    unchangeable_fields_in_payload.join(", ") +
-                                    ". Please remove the fields and try again.";
-
-                                onComplete({
-                                    result: "inputError",
-                                    message: message
-                                });
-                            }
-                        }
+                        validateUtils.validateUpdatePayload(update_environment_payload, function onValidate(error, data){
+                            onComplete(error, data);
+                        });
                     },
                     // Check if environment exists
                     validateEnvironmentExists: function(onComplete) {
-                        // Get service environment by id
-
-                        crud.get(envTableName, service, domain, environment_id.toLowerCase(), function onServiceGet(error, data) {
+                        //crud.get for env
+                        crud.get(service, domain, environment_id.toLowerCase(), function onServiceGet(error, data) {
                             if (error) {
                                 onComplete(error, null);
                             } else {
                                 var environment_obj = data.environment[0];
-
+            
                                 // throw error if no environment exists
                                 if (environment_obj) {
                                     logger.info("Environment Exists" + JSON.stringify(environment_obj, null, 2));
@@ -311,7 +241,7 @@ module.exports.handler = (event, context, cb) => {
                     // Update service by SERVICE_ID
                     updateServiceEnvironment: function(onComplete) {
                         if (update_environment_payload) {
-                            crud.update(update_environment_payload, environment_key_id, envTableName, onComplete);
+                            crud.update(update_environment_payload, environment_key_id, onComplete);
                         } else {
                             onComplete(null, null);
                         }
@@ -328,22 +258,11 @@ module.exports.handler = (event, context, cb) => {
                         }
                     } else {
                         var updatedEnvironment = data.updateServiceEnvironment;
-                        return cb(
-                            null,
-                            responseObj(
-                                {
-                                    message:
-                                        "Successfully Updated environment for service:'" +
-                                        service +
-                                        "', domain:'" +
-                                        domain +
-                                        "', with logical_id: " +
-                                        environment_id,
-                                    updatedEnvironment: updatedEnvironment
-                                },
-                                update_environment_payload
-                            )
-                        );
+                        return cb(null,responseObj({
+                            message:"Successfully Updated environment for service:'" +
+                                service +"', domain:'" +domain +"', with logical_id: " +environment_id,
+                            updatedEnvironment: updatedEnvironment
+                        },update_environment_payload));
                     }
                 }
             );
@@ -358,179 +277,14 @@ module.exports.handler = (event, context, cb) => {
                 {
                     // Validate environment_data for adding new service
                     validateEnvironmentData: function(onComplete) {
-                        // validate if input data is empty
-                        if (environment_data === undefined || environment_data === null || environment_data === {}) {
-                            // return inputError
-                            onComplete({
-                                result: "inputError",
-                                message: "Environment Data cannot be empty"
-                            });
-                        }
-
-                        var required_fields = config.service_environment_required_fields;
-                        // validate required fields
-                        var missing_required_fields = _.difference(_.values(required_fields), _.keys(environment_data));
-                        if (missing_required_fields.length > 0) {
-                            // return inputError
-                            onComplete({
-                                result: "inputError",
-                                message: "Following field(s) are required - " + missing_required_fields.join(", ")
-                            });
-                        }
-
-                        var status_values = config.service_environment_status;
-                        var has_invalid_status_values = true;
-                        var statusFieldKey = "status";
-
-                        // check if input contains fields other than allowed fields
-                        if (_.includes(_.keys(environment_data), statusFieldKey)) {
-                            //checking "status" field contains the allowed values
-                            var statusValue = environment_data[statusFieldKey];
-                            has_invalid_status_values = !_.includes(status_values, statusValue);
-                        }
-                        if (has_invalid_status_values) {
-                            // return inputError
-                            onComplete({
-                                result: "inputError",
-                                message: "Only following values can be allowed for status field - " + status_values.join(", ")
-                            });
-                        }
-
-                        var friendlyNameKey = "friendly_name";
-                        if (
-                            environment_data.logical_id.toLowerCase() === config.service_environment_production_logical_id ||
-                            environment_data.logical_id.toLowerCase() === config.service_environment_stage_logical_id
-                        ) {
-                            if (_.includes(_.keys(environment_data), friendlyNameKey)) {
-                                onComplete({
-                                    result: "inputError",
-                                    message: "Invalid field(s) - " + friendlyNameKey + " is allowed only when logical id is not 'stg' or 'prod'"
-                                });
-                            }
-                        }
-
-                        var optional_fields = required_fields.concat(config.service_environment_changeable_fields);
-                        var invalid_fields = _.difference(_.keys(environment_data), _.values(optional_fields));
-                        if (invalid_fields.length > 0) {
-                            onComplete({
-                                result: "inputError",
-                                message:
-                                    "Invalid field(s) - " + invalid_fields.join(", ") + ". Only following fields are allowed - " + optional_fields.join(", ")
-                            });
-                        } else {
-                            // return on successfull validation
-                            onComplete(null, {
-                                result: "success",
-                                message: environment_data
-                            });
-                        }
-                    },
-
-                    validateServiceExists: function(onComplete) {
-                        var service_domain = environment_data.domain;
-                        var service_name = environment_data.service;
-                        var svcGetPayload;
-                        //call services get
-                        svcGetPayload = {
-                            uri: config.SERVICE_API_URL + config.SERVICE_API_RESOURCE + "?domain=" + service_domain + "&service=" + service_name,
-                            method: "GET",
-                            headers: {'Authorization':event.headers.Authorization},
-                            rejectUnauthorized: false
-                        };
-
-                        request(svcGetPayload, function(error, response, body) {
-                            if (response.statusCode === 200) {
-                                var output = JSON.parse(body);
-                                logger.info("Service avalaibility response:" + JSON.stringify(output));
-                                if (output.data === null || output.data === "" || output.data === undefined || output.data.available === undefined) {
-                                    onComplete({
-                                        result: "inputError",
-                                        message: "Error finding service: " + service_domain + "." + service_name + " in service catalog"
-                                    });
-                                } else if (output.data.available === false) {
-                                    onComplete(null, {
-                                        result: "success",
-                                        message: "Service is available!"
-                                    });
-                                } else if (output.data.available === true) {
-                                    onComplete({
-                                        result: "inputError",
-                                        message: "Service with domain: " + service_domain + " and service name:" + service_name + ", does not exist."
-                                    });
-                                }
-                            } else {
-                                onComplete({
-                                    result: "inputError",
-                                    message: "Error finding service: " + service_domain + "." + service_name + " in service catalog"
-                                });
-                            }
-                        });
-                    },
-
-                    // Check if a environment with same environment exists
-                    validateEnvironmentExists: function(onComplete) {
-                        var query;
-
-                        environment_data.logical_id = environment_data.logical_id.toLowerCase();
-                        environment_data.service = environment_data.service.toLowerCase();
-                        environment_data.domain = environment_data.domain.toLowerCase();
-
-                        query = { logical_id: environment_data.logical_id, service: environment_data.service, domain: environment_data.domain };
-
-                        crud.getList(query, envTableName, function onServiceGet(error, data) {
-                            if (error) {
-                                onComplete(error, null);
-                            } else {
-                                if (data.environment.length > 0) {
-                                    onComplete({
-                                        result: "inputError",
-                                        message: "The specified environment already exists, please choose a different logical id for your new environment"
-                                    });
-                                } else {
-                                    if (
-                                        environment_data.physical_id !== undefined &&
-                                        environment_data.physical_id !== "" &&
-                                        (environment_data.logical_id !== config.service_environment_production_logical_id &&
-                                            environment_data.logical_id !== config.service_environment_stage_logical_id)
-                                    ) {
-                                        query = {
-                                            physical_id: environment_data.physical_id,
-                                            service: environment_data.service,
-                                            domain: environment_data.domain
-                                        };
-
-                                        crud.getList(query, envTableName, function onServiceGet(error, data) {
-                                            if (error) {
-                                                onComplete(error, null);
-                                            } else {
-                                                if (data.environment.length > 0) {
-                                                    onComplete({
-                                                        result: "inputError",
-                                                        message:
-                                                            "The specified environment already exists, please choose a different physical id for your new environment"
-                                                    });
-                                                } else {
-                                                    onComplete(null, {
-                                                        result: "success",
-                                                        message: "Valid environment data"
-                                                    });
-                                                }
-                                            }
-                                        });
-                                    } else {
-                                        onComplete(null, {
-                                            result: "success",
-                                            message: "Valid environment data"
-                                        });
-                                    }
-                                }
-                            }
+                        validateUtils.validateCreatePayload(environment_data, function onValidation(error, data){
+                            onComplete(error, data);
                         });
                     },
 
                     // Add new service data to the dynamodb
                     addNewEnvironment: function(onComplete) {
-                        crud.create(environment_data, envTableName, onComplete);
+                        crud.create(environment_data, onComplete);
                     }
                 },
                 function onComplete(error, data) {
@@ -538,20 +292,20 @@ module.exports.handler = (event, context, cb) => {
                     if (error) {
                         logger.error("Error occured while adding new environment:" + JSON.stringify(error));
                         if (error.result === "inputError") {
-                            cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+                            return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
                         } else {
-                            cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occured ")));
+                            return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occured ")));
                         }
                     }
                     var result = data.addNewEnvironment;
 
                     // Add Item success
-                    cb(null, responseObj(result, event.body));
+                    return cb(null, responseObj(result, event.body));
                 }
             );
         }
     } catch (e) {
         logger.error("Internal server error:" + JSON.stringify(e));
-        cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured")));
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured")));
     }
 };

@@ -24,7 +24,7 @@
 const utils = require("../utils.js")(); //Import the utils module.
 const logger = require("../logger.js"); //Import the logging module.
 
-module.exports = (tableName, service, domain, environment_id, onComplete) => {
+module.exports = (service, domain, environment_id, onComplete) => {
     // initialize docCLient
     var docClient = utils.initDocClient();
 
@@ -32,34 +32,33 @@ module.exports = (tableName, service, domain, environment_id, onComplete) => {
 
     if (service !== undefined && domain !== undefined && environment_id !== undefined) {
         params = {
-            TableName: tableName,
-            FilterExpression: "SERVICE_NAME = :service_name AND SERVICE_DOMAIN = :service_domain AND ENVIRONMENT_LOGICAL_ID = :environment_logical_id",
+            TableName: global.envTableName,
+            FilterExpression: "SERVICE_NAME = :SERVICE_NAME AND SERVICE_DOMAIN = :SERVICE_DOMAIN AND ENVIRONMENT_LOGICAL_ID = :ENVIRONMENT_LOGICAL_ID",
             ExpressionAttributeValues: {
-                ":service_name": service,
-                ":service_domain": domain,
-                ":environment_logical_id": environment_id
+                ":SERVICE_NAME": service,
+                ":SERVICE_DOMAIN": domain,
+                ":ENVIRONMENT_LOGICAL_ID": environment_id
             }
         };
     } else if (service !== undefined && domain !== undefined && environment_id === undefined) {
         params = {
-            TableName: tableName,
-            FilterExpression: "SERVICE_NAME = :service_name AND SERVICE_DOMAIN = :service_domain",
+            TableName: global.envTableName,
+            FilterExpression: "SERVICE_NAME = :SERVICE_NAME AND SERVICE_DOMAIN = :SERVICE_DOMAIN",
             ExpressionAttributeValues: {
-                ":service_name": service,
-                ":service_domain": domain
+                ":SERVICE_NAME": service,
+                ":SERVICE_DOMAIN": domain
             }
         };
     } else if (environment_id !== undefined && (service === undefined || domain === undefined)) {
         params = {
-            TableName: tableName,
-            FilterExpression: "ENVIRONMENT_LOGICAL_ID = :environment_id",
+            TableName: global.envTableName,
+            FilterExpression: "ENVIRONMENT_LOGICAL_ID = :ENVIRONMENT_ID",
             ExpressionAttributeValues: {
-                ":environment_id": environment_id
+                ":ENVIRONMENT_LOGICAL_ID": environment_id
             }
         };
     }
-    logger.info("Scan Prams: " + JSON.stringify(params));
-
+    
     var scanExecute = function(onComplete) {
         docClient.scan(params, function(err, data) {
            

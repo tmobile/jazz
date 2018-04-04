@@ -23,6 +23,7 @@
 **/
 
 var AWS = require("aws-sdk");
+const logger = require("./logger.js");
 
 // Helper functions
 
@@ -126,14 +127,15 @@ var formatEnvironment = function(environment, format) {
 
 // initialize document CLient for dynamodb
 var initDocClient = function() {
-    AWS.config.update({ region: "us-west-2" });
+    // logger.info("configData:"+JSON.stringify(global.config.ddb-region));
+    AWS.config.update({ region: "us-east-1" });
     var docClient = new AWS.DynamoDB.DocumentClient();
 
     return docClient;
 };
 
 var initDynamodb = function() {
-    AWS.config.update({ region: "us-west-2" });
+    AWS.config.update({ region: "us-east-1" });
     var dynamodb = new AWS.DynamoDB();
 
     return dynamodb;
