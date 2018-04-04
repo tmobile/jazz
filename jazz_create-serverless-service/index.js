@@ -16,15 +16,14 @@
 
 'use strict';
 
-const https = require('https');
 const request = require('request');
-
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const CronParser = require("./components/cron-parser.js");
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const util = require('util');
+const crud = require("./components/crud")(); //Import the utils module.
 
 /**
 	Serverless create service
@@ -35,15 +34,15 @@ const util = require('util');
 module.exports.handler = (event, context, cb) => {
 
     var errorHandler = errorHandlerModule();
-	var config = configObj(event);
-	logger.init(event, context);
+    var config = configObj(event);
+    logger.init(event, context);
 
-    var messageToBeSent;
-    var isValidName = function(name) {
-        return /^[A-Za-z0-9\-]+$/.test(name);
-    };
 
     try {
+        var isValidName = function (name) {
+            return /^[A-Za-z0-9\-]+$/.test(name);
+        };
+
         if (!event.body) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("Service inputs are not defined")));
         } else if (!event.body.service_type) {
@@ -58,106 +57,200 @@ module.exports.handler = (event, context, cb) => {
 
         var user_id = event.principalId;
         if (!user_id) {
-          logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
-          return cb(JSON.stringify(errorHandler.throwUnAuthorizedError("User is not authorized to access this service")));
+            logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
+            return cb(JSON.stringify(errorHandler.throwUnAuthorizedError("User is not authorized to access this service")));
         }
 
-	    logger.info("Request event: " + JSON.stringify(event));
+        logger.info("Request event: " + JSON.stringify(event));
 
-		var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
 
-        var approvers = event.body.approvers;
-        var userlist = "";
-        var domain = (event.body.domain || "").toLowerCase();
-        var service_name = event.body.service_name.toLowerCase();
+        getToken(config)
+            .then((authToken) => getServiceData(event, authToken, config))
+            .then((inputs) => createService(inputs))
+            .then((service_id) => serviceOnboarding(event, config, service_id))
+            .then((result) => {
+                cb(null, responseObj(result, event.body));
+            })
+            .catch(function (err) {
+                logger.error('Error while creating a service : ' + JSON.stringify(err));
+                return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+            });
 
-        var bitbucketName = service_name;
-        if (domain.length) {
-            bitbucketName = domain + "-" + bitbucketName;
-        }
+    } catch (e) {
+        logger.error(e);
+        cb(JSON.stringify(errorHandler.throwInternalServerError(e)));
 
-		var userlist = approvers.reduce(function(stringSoFar, approver){
-            return stringSoFar + util.format("name=%s&", approver);
-        }, "");
+    }
 
-        var propertiesObject = {
-            token: config.BUILD_TOKEN,
-            service_type: event.body.service_type,
-            runtime: event.body.runtime,
-            service_name: service_name,
-            username: user_id,
-            admin_group: userlist,
-            domain: event.body.domain,
-            description: event.body.description
-        };
 
-        // create-serverless-service API to take slack-channel as one more parameter(optional)
-        if(event.body.slack_channel) {
-            propertiesObject.slack_channel = event.body.slack_channel;
-        }
+    function serviceOnboarding(event, config, service_id) {
+        return new Promise((resolve, reject) => {
+            try {
+                var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
+                var userlist = "";
+                var approvers = event.body.approvers;
+                var domain = (event.body.domain || "").toLowerCase();
+                var service_name = event.body.service_name.toLowerCase();
 
-        // create-serverless-service API to take require_internal_access as one more parameter
-        if((event.body.service_type === "api" || event.body.service_type === "function") && (event.body.require_internal_access !== null)) {
-            propertiesObject.require_internal_access = event.body.require_internal_access;
-        }
+                userlist = approvers.reduce(function (stringSoFar, approver) {
+                    return stringSoFar + util.format("name=%s&", approver);
+                }, "");
 
-        // allowing service creators to opt in/out of creating Cloudfront url.
-        if (event.body.service_type === "website") {
-            // by default Cloudfront url will not be created from now on.
-            var create_cloudfront_url = event.body.create_cloudfront_url || false;
-            propertiesObject.create_cloudfront_url = create_cloudfront_url;
-        }
-
-        // Add rate expression to the propertiesObject;
-        if (event.body.service_type === "function") {
-            if (event.body.rateExpression !== undefined) {
-                var cronExpValidator = CronParser.validateCronExpression(event.body.rateExpression);
-
-                // Validate cron expression. If valid add it to propertiesObject, else throw error
-                if (cronExpValidator.result === 'valid') {
-                    propertiesObject['rateExpression'] = event.body.rateExpression;
-
-                    // enableEventSchedule is added here as an additional feature. It will be passed on to deployment-env.yml
-                    // If it is set as false it will be picked by serverless and event schedule will be disabled.
-                    // If the user chooses to stop the cron event, he can just disable and then re-enable it instead of deleting.
-                    if (event.body.enableEventSchedule === false) {
-                        propertiesObject['enableEventSchedule'] = event.body.enableEventSchedule;
+                var input = {
+                    token: config.BUILD_TOKEN,
+                    admin_group: userlist,
+                    service_id: service_id
+                };
+                request({
+                    url: config.JOB_BUILD_URL,
+                    method: 'POST',
+                    headers: {
+                        "Authorization": base_auth_token
+                    },
+                    qs: input
+                }, function (err, response, body) {
+                    if (err) {
+                        logger.error('Error while starting Jenkins job: ' + err);
+                        reject(err);
                     } else {
-                        // enable by default
-                        propertiesObject['enableEventSchedule'] = true;
+                        if (response.statusCode <= 299) { // handle all 2xx response codes as success
+                            resolve("Successfully created your service.");
+                        } else {
+                            logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
+                            reject({ 'message': "Failed to kick off service creation job" });
+                        }
                     }
+                });
+            } catch (e) {
+                logger.error('Error : ' + e.message);
+                reject(e);
+            }
+
+        });
+    }
+
+    function getToken(configData) {
+        return new Promise((resolve, reject) => {
+            var svcPayload = {
+                uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
+                method: 'post',
+                json: {
+                    "username": configData.SERVICE_USER,
+                    "password": configData.TOKEN_CREDS
+                },
+                rejectUnauthorized: false
+            };
+
+            request(svcPayload, function (error, response, body) {
+                if (response.statusCode === 200 && body && body.data) {
+                    var authToken = body.data.token;
+                    return resolve(authToken);
                 } else {
-                    logger.error('cronExpValidator : ', cronExpValidator);
-                    return cb(JSON.stringify(errorHandler.throwInternalServerError(cronExpValidator.message)));
+                    return reject({
+                        "error": "Could not get authentication token for updating Service catalog.",
+                        "message": response.body.message
+                    });
+                }
+            });
+        });
+    }
+
+    function createService(service_data) {
+        return new Promise((resolve, reject) => {
+            crud.create(service_data, function (err, results) {
+                if (err) {
+                    reject({
+                        "message": err.error
+                    });
+                } else {
+                    logger.info("created a new service in service catalog.");
+                    resolve(results.data.service_id);
+                }
+            });
+        });
+    }
+
+    function getServiceData(event, authToken, configData) {
+        return new Promise((resolve, reject) => {
+            var inputs = {
+                "TOKEN": authToken,
+                "SERVICE_API_URL": configData.SERVICE_API_URL,
+                "SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
+                "SERVICE_NAME": event.body.service_name.toLowerCase(),
+                "DOMAIN": event.body.domain.toLowerCase(),
+                "DESCRIPTION": event.body.description,
+                "TYPE": event.body.service_type,
+                "RUNTIME": event.body.runtime,
+                "REGION": event.body.region,
+                "USERNAME": user_id,
+                "STATUS": "creation_started"
+            };
+
+            var serviceMetadataObj = {};
+            if (event.body.tags) {
+                inputs.TAGS = event.body.tags;
+            }
+
+            if (event.body.email) {
+                inputs.EMAIL = event.body.email;
+            }
+
+            if (event.body.slack_channel) {
+                inputs.SLACKCHANNEL = event.body.slack_channel;
+            }
+            if ((event.body.service_type === "api" || event.body.service_type === "function") && (event.body.require_internal_access !== null)) {
+                serviceMetadataObj.require_internal_access = event.body.require_internal_access;
+            }
+            if (event.body.service_type === "website") {
+                var create_cloudfront_url = true;
+                serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
+                inputs.RUNTIME = 'n/a';
+            }
+            // Add rate expression to the propertiesObject;
+            if (event.body.service_type === "function") {
+                if (event.body.rateExpression !== undefined) {
+                    var cronExpValidator = CronParser.validateCronExpression(event.body.rateExpression);
+                    if (cronExpValidator.result === 'valid') {
+                        var rate_expression = event.body.rateExpression;
+                        var enable_eventschedule;
+                        if (event.body.enableEventSchedule === false) {
+                            enable_eventschedule = event.body.enableEventSchedule;
+                        } else {
+                            enable_eventschedule = true;
+                        }
+
+                        if (rate_expression && rate_expression.trim() !== "") {
+                            serviceMetadataObj["eventScheduleRate"] = "cron(" + rate_expression + ")";
+                        }
+                        if (enable_eventschedule && enable_eventschedule !== "") {
+                            serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
+                        }
+                        if (event.body.event_source_ec2 && event.body.event_action_ec2) {
+                            serviceMetadataObj["event_action_ec2"] = event.body.event_source_ec2;
+                            serviceMetadataObj["event_action_ec2"] = event.body.event_action_ec2;
+                        }
+                        if (event.body.event_source_s3 && event.body.event_action_s3) {
+                            serviceMetadataObj["event_source_s3"] = event.body.event_source_s3;
+                            serviceMetadataObj["event_action_s3"] = event.body.event_action_s3;
+                        }
+                        if (event.body.event_source_dynamodb && event.body.event_action_dynamodb) {
+                            serviceMetadataObj["event_source_dynamodb"] = event.body.event_source_dynamodb;
+                            serviceMetadataObj["event_action_dynamodb"] = event.body.event_action_dynamodb;
+                        }
+                        if (event.body.event_source_stream && event.body.event_action_stream) {
+                            serviceMetadataObj["event_source_stream"] = event.body.event_source_stream;
+                            serviceMetadataObj["event_action_stream"] = event.body.event_action_stream;
+                        }
+
+                    } else {
+                        logger.error('cronExpValidator : ', cronExpValidator);
+                        reject(cronExpValidator);
+                    }
                 }
             }
-        }
 
-        logger.info("Raise a request to ServiceOnboarding job..: "+JSON.stringify(propertiesObject));
-
-        request({
-            url: config.JOB_BUILD_URL,
-            method: 'POST',
-            headers: {
-                "Authorization": base_auth_token
-            },
-            qs: propertiesObject
-            }, function(err, response, body) {
-                if (err) {
-                    logger.error('Error while starting Jenkins job: ' + err);
-                    return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
-                }else {
-                    if (response.statusCode <= 299) { // handle all 2xx response codes as success
-                        messageToBeSent = "Your service code will be available at "+config.BIT_BUCKET_URL+bitbucketName + "/browse";
-                        return cb(null, responseObj(messageToBeSent, event.body));
-                    } else {
-                        logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
-                        return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to kick off service creation job")));
-                    }
-                }
+            inputs.METADATA = serviceMetadataObj;
+            resolve(inputs);
         });
-    } catch (e) {
-        logger.error('Error : ' + e.message);
-        cb(JSON.stringify(errorHandler.throwInternalServerError(e.message)));
     }
 };

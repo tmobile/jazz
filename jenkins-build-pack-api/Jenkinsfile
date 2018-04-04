@@ -10,41 +10,14 @@ import groovy.transform.Field
 @Field def repo_core
 @Field def scm_type
 
-
-
-//definitions
-def Event_Name =[
-	'MODIFY_TEMPLATE':'MODIFY_TEMPLATE',
-	'CALL_ONBOARDING_WORKFLOW':'CALL_ONBOARDING_WORKFLOW',
-	'RAISE_PR':'RAISE_PR',
-	'VALIDATE_INPUT':'VALIDATE_INPUT',
-	'CALL_ONBOARDING_SERVICE':'CALL_ONBOARDING_SERVICE',
-	'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO':'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO',
-	'CREATE_SERVICE':'CREATE_SERVICE',
-	'BUILD':'BUILD',
-	'CODE_QUALITY_CHECK':'CODE_QUALITY_CHECK',
-	'UNIT_TEST':'UNIT_TEST',
-	'COMMIT_CODE':'COMMIT_CODE',
-	'APPROVE_PR':'APPROVE_PR',
-	'CREATE_SERVICE_REPO':'CREATE_SERVICE_REPO',
-	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
-	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
-	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
-	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
-	'CREATE_ASSET':'CREATE_ASSET',
-	'UPDATE_ASSET':'UPDATE_ASSET'
-]
-
-def Event_Status = [
-	'STARTED':'STARTED',
-	'COMPLETED':'COMPLETED',
-	'FAILED':'FAILED'
-]
-
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
 @Field def serviceConfigdata
+@Field def events
+@Field def serviceMetadataLoader
+@Field def utilModule
+
 
 @Field def auth_token = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -56,9 +29,10 @@ def Event_Status = [
 
 node() {
 	def jazzBuildModuleURL = getBuildModuleUrl()
-	loadBuildModule(jazzBuildModuleURL)
+	loadBuildModules(jazzBuildModuleURL)
 
-	g_base_url = "https://${configLoader.AWS.API.PROD_ID}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
+	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
 
     echo "Build triggered via branch: " + params.scm_branch
@@ -103,12 +77,15 @@ node() {
 		}
 
 		if(configObj.service_id){
-			config = serviceConfigdata.loadServiceMetadata(configObj.service_id,configLoader)
+			config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
 		}else{
 			error "Service Id is not available."
 		}
 	}
-
+    if(!events) { error "Can't load events module"	} //Fail here    
+	events.initialize(configLoader,config,"SERVICE_DEPLOYMENT",branch,current_environment,g_base_url + "/jazz/events")
+	
+	
 	domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
@@ -121,39 +98,37 @@ node() {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::")+2, roleARN.lastIndexOf(":"))
 
-
+	def context_map = [created_by : config['created_by']]
+	
 	dir(repo_name)
 	{
 		loadServerlessConfig(runtime)
 
 		if(domain && domain == "jazz"){
-			stage ('Update Service Template'){
-				sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.STARTED, "")
+			stage ('Update Service Template'){				
 				echo "Inside Update service template"
 				try{
 					updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)
 				}
 				catch(error){
-					sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.MODIFY_TEMPLATE, Event_Status.COMPLETED, "")
 					error "Error occured while updating service template."
 				}
 			}
 	    }
 		stage('Pre-Build Validation') {
+			events.sendStartedEvent("VALIDATE_INPUT", 'pre-build validation starts', context_map)
+			
 			send_status_email(config, 'STARTED',"")
-			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_INPUT, Event_Status.STARTED, "")
-
 			validateDeploymentConfigurations(config)
 			validateSwaggerSpec();
 
-			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.VALIDATE_INPUT, Event_Status.COMPLETED, "")
+			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)
 		}
 
 		stage('Build') {
-		   // @TODO : Send Event feature coming soon
-			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.STARTED, "")
+			events.sendStartedEvent('BUILD', 'build starts', context_map)
 			buildLambda(runtime)
-			sendEvent(service, branch, runtime, "NA", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.BUILD, Event_Status.COMPLETED, "")
+			events.sendCompletedEvent('BUILD', 'build completed', context_map)
 		}
 
 		def env_key
@@ -163,8 +138,9 @@ node() {
 			env_key = "DEV"
 		}
 		stage("Deployment to ${env_key} environment") {
-			sendEvent(service, branch, runtime, env_key, configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.STARTED, "starting")
+			events.sendStartedEvent('DEPLOY_TO_AWS', 'starts deploying lambda function to AWS', context_map)			
 			echo "starts Deployment to ${env_key} Env"
+
 
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 				echo "AWS Configure ......."
@@ -184,43 +160,47 @@ node() {
 				sh "serverless deploy --stage ${current_environment} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
 				if (fileExists('swagger/swagger.json')) {
-					// Generate swagger file based on environment
-					echo "Generating the swagger file for each environment"
-
-					def api_key = env_key + "_ID"
-					def apiHostName = "${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" //Staging environment
+					echo "Generating swagger file for environment: ${env_key}"
+	                
+					def api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
+					
+					def apiHostName = "${api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com" 
 					generateSwaggerEnv(current_environment, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName,config)
 
 					echo "Deploying to API Gateway environment.."
-					sh "aws apigateway put-rest-api --rest-api-id ${configLoader.AWS.API[api_key]} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+" --profile cloud-api"
-					sh "aws apigateway create-deployment --rest-api-id ${configLoader.AWS.API[api_key]} --stage-name ${current_environment} --profile cloud-api"
+					sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+" --profile cloud-api"
+					sh "aws apigateway create-deployment --rest-api-id ${api_id} --stage-name ${current_environment} --profile cloud-api"
 
-					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${configLoader.AWS.API[api_key]}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+					sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
 
-					def endpointUrl = "https://${configLoader.AWS.API[api_key]}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/${current_environment}/" + domain + "/" + config['service']
+					def endpointUrl = "https://${apiHostName}/${current_environment}/" + domain + "/" + config['service']
 
 					if(domain != "jazz"){
 						createSubscriptionFilters(stackName, configLoader.AWS.REGION,roleId);
-						updateServiceWithEndpointInfo(config, current_environment, endpointUrl)						
-					}
+						def endpoints = [:]
+						if(config.endpoints){
+							for(item in config.endpoints){
+								endpoints[item.key] = item.value.S
+							}
+						}
 
+						endpoints[current_environment] = endpointUrl
+						context_map['endpoints'] = endpoints
+					}
+ 
 					updateApiDocUrl(current_environment)
 					sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
 					echo "completed deployment........."
 
-					sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
 					def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
 					send_status_email(config, 'COMPLETED',svc_status)
 				}
 
 				if(domain && domain == "jazz"){						
 					serviceConfigdata.setLogStreamPermission(config)					
-				}else{
-					updateServiceInDB(config, "active")
 				}
 				echo "completed deployment........."
-				sendEvent(service, branch, runtime, "PRODUCTION", configLoader.AWS.REGION, domain, configLoader.AWS.ROLEID, Event_Name.DEPLOY_TO_AWS, Event_Status.COMPLETED, "")
-
+				events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', context_map)
 			}//stage to prod ends here
 		}
 	}//dir ends here
@@ -317,7 +297,7 @@ def writeServerlessFile(config,current_environment){
 	sh "sed -i -- 's/{env-stage}/${current_environment}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['owner']}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
 	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml" 	
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
@@ -510,36 +490,6 @@ def createSubscriptionFilters(stackName, region,roleId) {
 
 
 
-def sendEvent(service_name, branch, runtime, environment, region, domain, iam_role, event_name, event_status, error){
-	echo "Event on:$service_name  error: $error"
-}
-
-def updateServiceWithEndpointInfo(config,endpointKey, endpointVal) {
-
-	def updateJson = ['endpoints':[:]]
-	def serviceUrl = g_base_url + '/jazz/services'	
-
-	if(config.endpoints){
-		for(item in config.endpoints){
-			updateJson['endpoints'][item.key] = item.value.S
-		}
-	}
-	updateJson['endpoints'][endpointKey] = endpointVal
-	def body = JsonOutput.toJson(updateJson)
-
-	echo "new json $updateJson"
-
-	def serviceUpdateUrl = "$serviceUrl/${config.service_id}"
-
-	def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
-		        -H \"accept: application/json\" \
-				-H \"Content-Type: application/json\" \
-				-H \"Authorization: $auth_token\"  \
-				  -d \'${body}\'", returnStdout:true)
-
-	echo "service update result: $serviceUpdateOutput"
-}
-
 /**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
@@ -633,30 +583,11 @@ def send_status_email (config, build_status, email_content) {
 		}
 	}
 }
-def updateServiceInDB(config,status) {
 
-	def updateJson = ''
-	def serviceUrl = g_base_url + '/jazz/services'
-	if(status) {
-		updateJson = "{ \"status\": \"$status\" }"
-
-		echo "new json $updateJson"
-
-		def serviceUpdateUrl = "$serviceUrl/${config['service_id']}?isAdmin=true"
-
-		def serviceUpdateOutput = sh (script: "curl --silent -X PUT $serviceUpdateUrl \
-					-H \"accept: application/json\" \
-					-H \"Content-Type: application/json\" \
-					-H \"Authorization: $auth_token\"  \
-					-d \'${updateJson}\'", returnStdout:true)
-
-		echo "service update result: $serviceUpdateOutput"
-	}
-}
 def updatePlatformServiceTemplate(config,roleARN,roleId,current_environment,repo_name)	{
 	echo "loadServerlessConfig......."
 	def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name)
+	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name, utilModule)
 	serviceConfigdata.loadServiceConfigurationData()
 }
 
@@ -676,12 +607,14 @@ def getBuildModuleUrl() {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     }
 }
-/*
-* Load environment variables from build module
-*/
-def loadBuildModule(buildModuleUrl){
 
-	dir('config-loader') {
+/*
+* Load build modules
+*/
+
+def loadBuildModules(buildModuleUrl){
+
+	dir('build_modules') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -691,11 +624,22 @@ def loadBuildModule(buildModuleUrl){
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
-
+		echo "config loader loaded successfully."
+		
 		scmModule = load "scm-module.groovy"
-		scmModule.initialize(configLoader)
+		scmModule.initialize(configLoader)		
+		echo "SCM module loaded successfully."
 
 		serviceConfigdata = load "service-configuration-data-loader.groovy"
+		echo "Service configuration module loaded successfully."
+		
+		events = load "events-module.groovy"
+		echo "Event module loaded successfully."
 
+		serviceMetadataLoader = load "service-metadata-loader.groovy"
+		serviceMetadataLoader.initialize(configLoader)
+		echo "Service metadata loader module loaded successfully."
+
+		utilModule = load "utility-loader.groovy"
 	}
 }

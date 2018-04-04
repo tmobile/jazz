@@ -14,686 +14,632 @@
 // limitations under the License.
 // =========================================================================
 
+const chai = require('chai');
 const assert = require('chai').assert;
-const awsContext = require('aws-lambda-mock-context');
+const expect = require('chai').expect;
+const should = require('chai').should();
+const chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised);
+const sinon = require('sinon')
+const sinonTest = require('sinon-test')(sinon, {useFakeTimers: false});
+require('sinon-as-promised');
+const request = require('request');
+const rp = require('request-promise-native');
 const AWS = require('aws-sdk-mock');
-const sinon = require('sinon');
+const awsContext = require('aws-lambda-mock-context');
+
 const index = require('../index');
 const logger = require('../components/logger');
-const request = require('request');
 const config = require('../components/config');
 const crud = require('../components/crud')();
 
 
-var spy, event, context, callback, errType, errMessage, logMessage, tokenDataObj, cllabakObj, stub, logStub, reqStub, configData;
+var  event, context,  configData;
 
-describe('Platform_services-handler', function() {
 
-  beforeEach(()=>{
-    spy = sinon.spy();
-    tokenDataObj = {
-      statusCode:200,
-      body:{
-        data:{
-          token:"access"
-        }
-      }
-    };
-    let  kinesisObj= {
-      "kinesis": {
-        "kinesisSchemaVersion": "1.0",
-        "partitionKey": "VALIDATE_INPUT",
-        "sequenceNumber": "49574219880753003597816065353678073460941546253285588994",
-        "data": "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkNBTExfT05CT0FSRElOR19XT1JLRkxPVyINCgkJfSwNCgkJIlNFUlZJQ0VfTkFNRSI6IHsNCgkJCSJTIjogInRlc3Q4Ig0KCQl9LA0KCQkiRVZFTlRfU1RBVFVTIjogew0KCQkJIlMiOiAiQ09NUExFVEVEIg0KCQl9LA0KCQkiRVZFTlRfVFlQRSI6IHsNCgkJCSJTIjogIlNFUlZJQ0VfQ1JFQVRJT04iDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInN2Y19jcHRfam5rX2F1dGhfcHJkIg0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0sDQoJCSJBQUEiOiB7DQoJCQkiTlVMTCI6IHRydWUNCgkJfSwNCgkJIkJCQiI6IHsNCgkJCSJTIjogInZhbCINCgkJfQ0KCX0sDQoJIlJldHVybkNvbnN1bWVkQ2FwYWNpdHkiOiAiVE9UQUwiLA0KCSJUYWJsZU5hbWUiOiAiRXZlbnRzX0RldiINCn0==",
-        "approximateArrivalTimestamp": "1498499666.218"
-      },
-      "eventSource": "aws:kinesis",
-      "eventVersion": "1.0",
-      "eventID": "shardId-000000000000:49574219880753003597816065353678073460941546253285588994",
-      "eventName": "aws:kinesis:record",
-      "invokeIdentityArn": "arn:aws:iam::xxx:role/lambda_basic_execution",
-      "awsRegion": "us-west-2",
-      "eventSourceARN": "arn:aws:kinesis:us-west-2:xxx:stream/serverless-events-hub-dev"
-    }
-    event = {
-      "Records":[ kinesisObj ],
-      "MillisBehindLatest":24000,
-      "NextShardIterator":"AAAAAAAAAAEDOW3ugseWPE4503kqN1yN1UaodY8unE0sYslMUmC6lX9hlig5+t4RtZM0/tALfiI4QGjunVgJvQsjxjh2aLyxaAaPr+LaoENQ7eVs4EdYXgKyThTZGPcca2fVXYJWL3yafv9dsDwsYVedI66dbMZFC8rPMWc797zxQkv4pSKvPOZvrUIudb8UkH3VMzx58Is="
-    };
-    context = awsContext();
-    context.functionName = context.functionName+"-test"
-    callback = (err, responseObj) => {
-      if(err){
-        return err;
-      }
-      else{
-        return JSON.stringify(responseObj);
-      }
-    };
-    err = {
-      "errorType" : "svtfoe",
-      "message" : "starco"
-    };
-    callbackObj = {
-      "callback" : callback
-    };
-    configData = config(context);
-  });
+describe('jazz_services-handler', function () {
 
-  it("should attempt to make an http request if given valid inputs", function(){
-    //wrapping the Request() method that gets internally called by node request.js for any http method
-    reqStub = sinon.stub(request, "Request", spy);
-    //trigger the spy wrapping the request by calling handler() with valid params
-    var callFunction = index.handler(event, context, callback);
-    reqStub.restore();
-    assert.isTrue(spy.called);
-  });
+	beforeEach(function () {
+		event = {
+			"stage": "test",
+			"Records": [
+				{
+					"kinesis": {
+						"kinesisSchemaVersion": "1.0",
+						"partitionKey": "DEPLOY_TO_AWS",
+						"sequenceNumber": "abc123",
+						"data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJkN2UyMmQyMC01OWUyLTQzNTMtYTYxZS1lYjRkODk2ZWJiZDAifSwiVElNRVNUQU1QIjp7IlMiOiIyMDE4LTAzLTE2VDE2OjUyOjU0OjQ1MyJ9LCJSRVFVRVNUX0lEIjp7IlMiOiJzYWRqYXNnZDEyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiRVZFTlRfTkFNRSI6eyJTIjoiTU9ESUZZX1RFTVBMQVRFIn0sIlNFUlZJQ0VfSUQiOnsiUyI6ImJhZmIyMjlmLThkYzMtNDU1MC1jZjYwLTZlNTFjNWRiMDQ3MyJ9LCJTRVJWSUNFX05BTUUiOnsiUyI6InRlc3QtbGFtYmRhLXNpbmktNiJ9LCJFVkVOVF9TVEFUVVMiOnsiUyI6IkNPTVBMRVRFRCJ9LCJFVkVOVF9UWVBFIjp7IlMiOiJTRVJWSUNFX0RFUExPWU1FTlQifSwiVVNFUk5BTUUiOnsiUyI6InNlcnZlcmxlc3NAdC1tb2JpbGUuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxOC0wMi0xNlQwNDo0MTo0Mzo5NDUifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcImxhbWJkYVwiLFwic2VydmljZV9pZFwiOlwiYmFmYjIyOWYtOGRjMy00NTUwLWNmNjAtNmU1MWM1ZGIwNDczXCIsXCJzZXJ2aWNlX25hbWVcIjpcInRlc3QtbGFtYmRhLXNpbmktNlwiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJ0ZXNpbmlcIixcImlhbV9yb2xlXCI6XCJhcm46YXdzOmlhbTo6MTkyMDA2MTQ1ODEyOnJvbGUvamF6ejIwMTgwMjI3X2xhbWJkYTJfYmFzaWNfZXhlY3V0aW9uXzFcIixcImVudmlyb25tZW50XCI6XCJOQVwiLFwicmVnaW9uXCI6XCJ1cy1lYXN0LTFcIixcIm1lc3NhZ2VcIjpcInNlcnZpY2UgIGNyZWF0aW9uIHN0YXJ0c1wiLFwibWV0YWRhdGFcIjp7XCJzdWJuZXQtaWRcIjpcInNhc2Zkc1wifSxcImNyZWF0ZWRfYnlcIjpcInNlcnZlcmxlc3NAdC1tb2JpbGUuY29tXCJ9In19fQ==",
+						"approximateArrivalTimestamp": 1521219174.605
+					},
+					"eventSource": "abc",
+					"eventVersion": "1.0",
+					"eventID": "abc123",
+					"eventName": "abc",
+					"invokeIdentityArn": "abc",
+					"awsRegion": "abc",
+					"eventSourceARN": "abc"
+				}
+			]
+		};
+		context = awsContext();
+		context.functionName = context.functionName + "-test"
+		tokenResponseObj = {
+			statusCode: 200,
+			body: {
+				data: {
+					token: "abc"
+				}
+			}
+		};
+		configData = config(context);
+	});
 
-  it("should indicate error for failed response of  gettoken requset",()=>{
-    tokenDataObj.statusCode = 400;
-    tokenDataObj.body.message = "Error";
-    errMessage = "Could not get authentication token for updating Service catalog."
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      return obj.callback(null, tokenDataObj, tokenDataObj);
-    });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var cbResponse = stub.args[0][0];
-    var cbCheck = cbResponse.error === errMessage && cbResponse.details === tokenDataObj.body.message;
-    reqStub.restore();
-    stub.restore();
-    assert.isTrue(cbCheck);
+	
 
-  });
+	it('getToken should give valid response ', function () {
+		var authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
+		var getTokenPromise = index.getToken(configData);
+		expect(rp(getTokenPromise).then((res) => {
+			return res.statusCode;
+		})).to.become(200);
+		authStub.restore();
+	});
 
-  it("should indicate success for success response of gettoken requset and processBatch is undefined if event.Records is not defined", ()=>{
-    event.Records = undefined;
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var cbResponse = stub.args[0][1];
-    var cbCheck = cbResponse.getToken.auth_token === tokenDataObj.body.data.token && cbResponse.processBatch.processed_events === 0 && cbResponse.processBatch.failed_events === 0;
-    reqStub.restore();
-    stub.restore();
-    assert.isTrue(cbCheck);
-  });
+	it('getToken should give invalid response for invalid status code', function () {
+		tokenResponseObj.statusCode = 400;
+		var authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
+		var getTokenPromise = index.getToken(configData);
+		expect(rp(getTokenPromise).then((res) => {
+			return res.statusCode;
+		})).to.become(400);
+		authStub.restore();
+	});
 
-  it('should indicate error if kinesis data does not have EVENT_TYPE', ()=>{
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICJlODI1ZWY3Yi1jOGI3LThhODQtZDNmMC1kNzNiZDdhOGQ1NjYiDQoJCX0sDQoJCSJTRVJWSUNFX05BTUUiOiB7DQoJCQkiUyI6ICJ0ZXN0OCINCgkJfSwNCgkJIkJCQiI6IHsNCgkJCSJTIjogInZhbCINCgkJfQ0KCX0NCn0=";
-    logMessage = 'not interesting event';
-    errMessage = 'Missing EVENT_TYPE';
-    debgStub = sinon.stub(logger, 'debug', spy);
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var cbResponse =stub.args[0][1].processBatch;
-    var cbCheck = (cbResponse.failed_events + cbResponse.processed_events) === event.Records.length;
-    var logCheck = debgStub.args[0][0].includes(errMessage);
-    debgStub.restore();
-    reqStub.restore();
-    stub.restore();
-    assert.isTrue(logCheck && cbCheck);
-  });
+	it('validateAuthToken should return success promise for response data with status code 200', function () {
+		var validate = index.validateAuthToken(tokenResponseObj);
+		expect(validate.then(function (res) {
+			return res;
+		})).to.become(tokenResponseObj.body.data.token);
+	});
 
-  it("should indicate validation error if kinesis record contain invalid EVENT_NAME or EVENT_STATUS", ()=>{
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    // kinesis.data contain invalid EVENT_NAME or EVENT_STATUS
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIiINCgkJfSwNCgkJIlNFUlZJQ0VfTkFNRSI6IHsNCgkJCSJTIjogInRlc3Q4Ig0KCQl9LA0KCQkiRVZFTlRfU1RBVFVTIjogew0KCQkJIlMiOiAiIg0KCQl9LA0KCQkiRVZFTlRfVFlQRSI6IHsNCgkJCSJTIjogIlNFUlZJQ0VfQ1JFQVRJT04iDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInN2Y19jcHRfam5rX2F1dGhfcHJkIg0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0sDQoJCSJBQUEiOiB7DQoJCQkiTlVMTCI6IHRydWUNCgkJfSwNCgkJIkJCQiI6IHsNCgkJCSJTIjogInZhbCINCgkJfQ0KCX0sDQoJIlJldHVybkNvbnN1bWVkQ2FwYWNpdHkiOiAiVE9UQUwiLA0KCSJUYWJsZU5hbWUiOiAiRXZlbnRzX0RldiINCn0=";
-    logMessage = "validation error. Either event name or event status is not properly defined.";
-    logStub = sinon.stub(logger, 'error', spy);
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var cbCkeck = stub.args[0][0].error === logMessage;
-    var logCheck = logStub.args[0][0].includes(logMessage);
-    // AWS.restore("SQS");
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    assert.isTrue(logCheck && cbCkeck);
-  });
+	it('validateAuthToken should reject for response data with status code 400', function () {
+		tokenResponseObj.statusCode = 400;
+		var message = "User is not authorized to access this service";
+		var validate = index.validateAuthToken(tokenResponseObj);
+		expect(validate.then(function (res) {
+			return res;
+		})).to.be.rejectedWith(message);
+	});
 
-  it("should indicate success from 200 response if kinesis data is defined for startingEvent", ()=>{
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var cbResponse=stub.args[0][1].processBatch;
-    var cbCheck = (cbResponse.failed_events + cbResponse.processed_events) === event.Records.length;
-    reqStub.restore();
-    stub.restore();
-    assert.isTrue(cbCheck);
-  });
+	it('validateAuthToken should reject for response data with out response.body', function () {
+		tokenResponseObj.body = {};
+		var message = "User is not authorized to access this service";
+		var validate = index.validateAuthToken(tokenResponseObj);
+		expect(validate.then(function (res) {
+			return res;
+		})).to.be.rejectedWith(message);
+	});
 
-  it("should indicate error from crud.create when kinesis data is defined for startingEvent", ()=>{
-    var errObj={
-      statusCode:400,
-      body:{
-        message:"Error creating service"
-      }
-    }
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "POST" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        return obj.callback(null, errObj, errObj.body);
-      } else {
-        return obj.callback(null, tokenDataObj, tokenDataObj.body);
-      }
-    });
-    errMessage = "Error creating service";
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, "error", spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var cbCheck = stub.args[0][0].error.includes(errObj.body.message);
-    var logCheck = logStub.args[0][0].includes(errMessage);
-    reqStub.restore();
-    stub.restore();
-    logStub.restore();
-    assert.isTrue(cbCheck && logCheck);
-  });
+	it('validateAuthToken should reject for response  with out response.body.data', function () {
+		tokenResponseObj.body.data = null;
+		var message = "User is not authorized to access this service";
+		var validate = index.validateAuthToken(tokenResponseObj);
+		expect(validate.then(function (res) {
+			return res;
+		})).to.be.rejectedWith(message);
+	});
 
-  it("should indicate error if crud.get fails for kinesis data is defined for failed EVENT_STATUS", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error finding service"}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)) 
-      return obj.callback(null, responseObject, responseObject.body);
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIlBVU0hfVEVNUExBVEVfVE9fU0VSVklDRV9SRVBPIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJGQUlMRUQiDQoJCX0sDQoJCSJFVkVOVF9UWVBFIjogew0KCQkJIlMiOiAiU0VSVklDRV9DUkVBVElPTiINCgkJfSwNCgkJIlVTRVJOQU1FIjogew0KCQkJIlMiOiAic3ZjX2NwdF9qbmtfYXV0aF9wcmQiDQoJCX0sDQoJCSJFVkVOVF9USU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA1LTA1VDA2OjA2OjM3OjUzMyINCgkJfSwNCgkJIkFBQSI6IHsNCgkJCSJOVUxMIjogdHJ1ZQ0KCQl9LA0KCQkiQkJCIjogew0KCQkJIlMiOiAidmFsIg0KCQl9DQoJfSwNCgkiUmV0dXJuQ29uc3VtZWRDYXBhY2l0eSI6ICJUT1RBTCIsDQoJIlRhYmxlTmFtZSI6ICJFdmVudHNfRGV2Ig0KfQ=="
-    errMessage = 'Error finding service';
-    
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    stub.restore();
-    logStub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(logCheck && cbCheck);
-  });
+	it('handleError should return error response json for valid input', function () {
+		var errorJson = { "failure_code": 400, "failure_message": "Unauthorized" };
+		var handleError = index.handleError(400, "Unauthorized");		
+		assert(handleError,errorJson);
+	});
 
-  it("should indicate error if crud.update fails for the kinesis data with failed EVENT_STATUS",()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error updating service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else if(obj.method === "PUT" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-      return obj.callback(null, responseObject, responseObject.body);
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIlBVU0hfVEVNUExBVEVfVE9fU0VSVklDRV9SRVBPIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJGQUlMRUQiDQoJCX0sDQoJCSJFVkVOVF9UWVBFIjogew0KCQkJIlMiOiAiU0VSVklDRV9DUkVBVElPTiINCgkJfSwNCgkJIlVTRVJOQU1FIjogew0KCQkJIlMiOiAic3ZjX2NwdF9qbmtfYXV0aF9wcmQiDQoJCX0sDQoJCSJFVkVOVF9USU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA1LTA1VDA2OjA2OjM3OjUzMyINCgkJfSwNCgkJIkFBQSI6IHsNCgkJCSJOVUxMIjogdHJ1ZQ0KCQl9LA0KCQkiQkJCIjogew0KCQkJIlMiOiAidmFsIg0KCQl9DQoJfSwNCgkiUmV0dXJuQ29uc3VtZWRDYXBhY2l0eSI6ICJUT1RBTCIsDQoJIlRhYmxlTmFtZSI6ICJFdmVudHNfRGV2Ig0KfQ=="
-    stub = sinon.stub(callbackObj, "callback", spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var cbCheck = stub.args[0][0].error.includes(responseObject.body.message);
-    stub.restore();
-    reqStub.restore();
-    assert.isTrue(cbCheck)
-  });
+	it('handleProcessedEvents should push valid events', function () {
+		var sequenceNumber = event.Records[0].kinesis.sequenceNumber;
+		var encodedPayload = event.Records[0].kinesis.data;
+		var handleProcessedEvents = index.handleProcessedEvents(encodedPayload, sequenceNumber);
+		expect(index.getEventProcessStatus()).to.have.property('processed_events');
+	});
 
-  it("should indicate success if crud.get and crud.update are success for the kinesis data with failed EVENT_STATUS",()=>{
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIlBVU0hfVEVNUExBVEVfVE9fU0VSVklDRV9SRVBPIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJGQUlMRUQiDQoJCX0sDQoJCSJFVkVOVF9UWVBFIjogew0KCQkJIlMiOiAiU0VSVklDRV9DUkVBVElPTiINCgkJfSwNCgkJIlVTRVJOQU1FIjogew0KCQkJIlMiOiAic3ZjX2NwdF9qbmtfYXV0aF9wcmQiDQoJCX0sDQoJCSJFVkVOVF9USU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA1LTA1VDA2OjA2OjM3OjUzMyINCgkJfSwNCgkJIkFBQSI6IHsNCgkJCSJOVUxMIjogdHJ1ZQ0KCQl9LA0KCQkiQkJCIjogew0KCQkJIlMiOiAidmFsIg0KCQl9DQoJfSwNCgkiUmV0dXJuQ29uc3VtZWRDYXBhY2l0eSI6ICJUT1RBTCIsDQoJIlRhYmxlTmFtZSI6ICJFdmVudHNfRGV2Ig0KfQ=="
-    stub = sinon.stub(callbackObj, "callback", spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var cbResponse = stub.args[0][1].processBatch;
-    var cbCheck = (cbResponse.processed_events + cbResponse.failed_events) === event.Records.length;
-    stub.restore();
-    reqStub.restore();
-    assert.isTrue(cbCheck)
-  });
+	it('handleFailedEvents should push valid events', function () {
+		var sequenceNumber = event.Records[0].kinesis.sequenceNumber;
+		var encodedPayload = event.Records[0].kinesis.data;
+		var handleFailedEvents = index.handleFailedEvents(encodedPayload, sequenceNumber, "101", "failure");
+		expect(index.getEventProcessStatus()).to.have.property('failed_events');
+	});
 
-  it("should indicate error if crud.get fails for kinesis data with defined and complted endingEvent", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error finding service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-        return obj.callback(null, responseObject, JSON.stringify(responseObject.body));
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkxPQ0tfTUFTVEVSX0JSQU5DSCINCgkJfSwNCgkJIlNFUlZJQ0VfTkFNRSI6IHsNCgkJCSJTIjogInRlc3Q4Ig0KCQl9LA0KCQkiRVZFTlRfU1RBVFVTIjogew0KCQkJIlMiOiAiQ09NUExFVEVEIg0KCQl9LA0KCQkiRVZFTlRfVFlQRSI6IHsNCgkJCSJTIjogIlNFUlZJQ0VfQ1JFQVRJT04iDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInN2Y19jcHRfam5rX2F1dGhfcHJkIg0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0sDQoJCSJBQUEiOiB7DQoJCQkiTlVMTCI6IHRydWUNCgkJfSwNCgkJIkJCQiI6IHsNCgkJCSJTIjogInZhbCINCgkJfQ0KCX0sDQoJIlJldHVybkNvbnN1bWVkQ2FwYWNpdHkiOiAiVE9UQUwiLA0KCSJUYWJsZU5hbWUiOiAiRXZlbnRzX0RldiINCn0=";
-    errMessage = "Error finding service ";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck && logCheck);
-  });
+	it('getEventProcessStatus should return failed/processed records length', function () {
+		expect(index.getEventProcessStatus()).to.have.property('processed_events');
+		expect(index.getEventProcessStatus()).to.have.property('failed_events');
+		expect(index.getEventProcessStatus()).to.not.have.property('some_key');
+	});
 
-  it("should indicate error if crud.update fails for kinesis data with defined and complted endingEvent", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error updating service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else if(obj.method === "PUT" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-      return obj.callback(null, responseObject, responseObject.body);
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkxPQ0tfTUFTVEVSX0JSQU5DSCINCgkJfSwNCgkJIlNFUlZJQ0VfTkFNRSI6IHsNCgkJCSJTIjogInRlc3Q4Ig0KCQl9LA0KCQkiRVZFTlRfU1RBVFVTIjogew0KCQkJIlMiOiAiQ09NUExFVEVEIg0KCQl9LA0KCQkiRVZFTlRfVFlQRSI6IHsNCgkJCSJTIjogIlNFUlZJQ0VfQ1JFQVRJT04iDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInN2Y19jcHRfam5rX2F1dGhfcHJkIg0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0sDQoJCSJBQUEiOiB7DQoJCQkiTlVMTCI6IHRydWUNCgkJfSwNCgkJIkJCQiI6IHsNCgkJCSJTIjogInZhbCINCgkJfQ0KCX0sDQoJIlJldHVybkNvbnN1bWVkQ2FwYWNpdHkiOiAiVE9UQUwiLA0KCSJUYWJsZU5hbWUiOiAiRXZlbnRzX0RldiINCn0=";
-    errMessage = "unknown error updating service";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck && logCheck);
-  });
+	it('checkInterest should resolve for valid input', function () {
+		var sequenceNumber = event.Records[0].kinesis.sequenceNumber;
+		var encodedPayload = event.Records[0].kinesis.data;
+		var checkInterest = index.checkInterest(encodedPayload, sequenceNumber);
+		expect(checkInterest.then(function (res) {
+			return res.interested_event;
+		})).to.become(true);
+	});
 
-  it("should indicate success if crud.get and crud.update are success for for kinesis data with defined and complted endingEvent", ()=>{
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkxPQ0tfTUFTVEVSX0JSQU5DSCINCgkJfSwNCgkJIlNFUlZJQ0VfTkFNRSI6IHsNCgkJCSJTIjogInRlc3Q4Ig0KCQl9LA0KCQkiRVZFTlRfU1RBVFVTIjogew0KCQkJIlMiOiAiQ09NUExFVEVEIg0KCQl9LA0KCQkiRVZFTlRfVFlQRSI6IHsNCgkJCSJTIjogIlNFUlZJQ0VfQ1JFQVRJT04iDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInN2Y19jcHRfam5rX2F1dGhfcHJkIg0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0sDQoJCSJBQUEiOiB7DQoJCQkiTlVMTCI6IHRydWUNCgkJfSwNCgkJIkJCQiI6IHsNCgkJCSJTIjogInZhbCINCgkJfQ0KCX0sDQoJIlJldHVybkNvbnN1bWVkQ2FwYWNpdHkiOiAiVE9UQUwiLA0KCSJUYWJsZU5hbWUiOiAiRXZlbnRzX0RldiINCn0=";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    // logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    // var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbResponse = stub.args[0][1].processBatch;
-    var cbCheck = (cbResponse.processed_events + cbResponse.failed_events) === event.Records.length;
-    // logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck);
-  });
+	it('checkInterest should resolve with valid response for valid input', function () {
+		var sequenceNumber = event.Records[0].kinesis.sequenceNumber;
+		var encodedPayload = event.Records[0].kinesis.data;
+		var checkInterest = index.checkInterest(encodedPayload, sequenceNumber);
+		expect(checkInterest.then((res) => {
+			return res;
+		})).to.eventually.have.property('payload');
+	});
 
-  it("should indicate error if crud.get fails for kinesis data with defined and started event of service deletion", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error finding service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-        return obj.callback(null, responseObject, JSON.stringify(responseObject.body));
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkNBTExfREVMRVRFX1dPUktGTE9XIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJTVEFSVEVEIg0KCQl9LA0KCQkiRVZFTlRfVFlQRSI6IHsNCgkJCSJTIjogIlNFUlZJQ0VfREVMRVRJT04iDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInh5eiINCgkJfSwNCgkJIkVWRU5UX1RJTUVTVEFNUCI6IHsNCgkJCSJTIjogIjIwMTctMDUtMDVUMDY6MDY6Mzc6NTMzIg0KCQl9DQoJfSwNCgkiUmV0dXJuQ29uc3VtZWRDYXBhY2l0eSI6ICJUT1RBTCIsDQoJIlRhYmxlTmFtZSI6ICJFdmVudHNfVGVzdCINCn0=";
-    errMessage = "Error finding service ";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck && logCheck);
-  });
+	it('processEvent should reject error for empty payload', function () {
+		var payload = {};
+		var message = "Cannot read property \'S\' of undefined";
+		var processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
+		expect(processEvent.then(function (res) {
+			return res;
+		})).to.be.rejectedWith(message);
+	});
 
-  it("should indicate error if crud.update fails for kinesis data with defined and started event of service deletion", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error updating service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else if(obj.method === "PUT" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-      return obj.callback(null, responseObject, responseObject.body);
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkNBTExfREVMRVRFX1dPUktGTE9XIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJTVEFSVEVEIg0KCQl9LA0KCQkiRVZFTlRfVFlQRSI6IHsNCgkJCSJTIjogIlNFUlZJQ0VfREVMRVRJT04iDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInh5eiINCgkJfSwNCgkJIkVWRU5UX1RJTUVTVEFNUCI6IHsNCgkJCSJTIjogIjIwMTctMDUtMDVUMDY6MDY6Mzc6NTMzIg0KCQl9DQoJfSwNCgkiUmV0dXJuQ29uc3VtZWRDYXBhY2l0eSI6ICJUT1RBTCIsDQoJIlRhYmxlTmFtZSI6ICJFdmVudHNfVGVzdCINCn0=";
-    errMessage = "unknown error updating service";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck && logCheck);
-  });
+	it('processEvent should return response for invalid event name event type combination', function () {
+		var payload = { "EVENT_ID": { "S": "abc123" },  "REQUEST_ID": { "S": "sadjasgd12" },  "EVENT_NAME": { "S": "MODIFY_TEMPLATE" }, "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": { "S": "COMPLETED" }, "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"iam_role\":\"abc\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"abc\"},\"created_by\":\"abc@abc.com\"}" } };
+		var processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
+		var message = "Not an interesting event to process";
+		expect(processEvent.then(function (res) {
+			return res.message;
+		})).to.be.become(message);
+	});
 
-  it("should indicate success if crud.get and crud.update are success for for kinesis data with defined and started event of service deletion", ()=>{
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkNBTExfREVMRVRFX1dPUktGTE9XIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJTVEFSVEVEIg0KCQl9LA0KCQkiRVZFTlRfVFlQRSI6IHsNCgkJCSJTIjogIlNFUlZJQ0VfREVMRVRJT04iDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInh5eiINCgkJfSwNCgkJIkVWRU5UX1RJTUVTVEFNUCI6IHsNCgkJCSJTIjogIjIwMTctMDUtMDVUMDY6MDY6Mzc6NTMzIg0KCQl9DQoJfSwNCgkiUmV0dXJuQ29uc3VtZWRDYXBhY2l0eSI6ICJUT1RBTCIsDQoJIlRhYmxlTmFtZSI6ICJFdmVudHNfVGVzdCINCn0=";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    // logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    // var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbResponse = stub.args[0][1].processBatch;
-    var cbCheck = (cbResponse.processed_events + cbResponse.failed_events) === event.Records.length;
-    // logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck);
-  });
+	it('processEvent should indicate error if kinesis data does not have proper EVENT_NMAE', function () {
+		var payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME":  "MODIFY_TEMPLATE" , "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": { "S": "COMPLETED" }, "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
+		var processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
+		expect(processEvent.then(function (res) {
+			return res.message;
+		})).to.be.rejected;
+	});
 
-  it("should indicate error if crud.get fails for kinesis data with defined and failed event status of service deletion", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error finding service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-        return obj.callback(null, responseObject, JSON.stringify(responseObject.body));
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkJBQ0tVUF9QUk9KRUNUIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJGQUlMRUQiDQoJCX0sDQoJCSJFVkVOVF9UWVBFIjogew0KCQkJIlMiOiAiU0VSVklDRV9ERUxFVElPTiINCgkJfSwNCgkJIlVTRVJOQU1FIjogew0KCQkJIlMiOiAieHl6Ig0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0NCgl9LA0KCSJSZXR1cm5Db25zdW1lZENhcGFjaXR5IjogIlRPVEFMIiwNCgkiVGFibGVOYW1lIjogIkV2ZW50c19UZXN0Ig0KfQ==";
-    errMessage = "Error finding service ";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck && logCheck);
-  });
+	it('processEvent should indicate error if kinesis data does not have proper EVENT_STATUS', function () {
+		var payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME":  { "S": "MODIFY_TEMPLATE" } , "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": "COMPLETED", "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
+		var processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
+		expect(processEvent.then(function (res) {
+			return res.message;
+		})).to.be.rejected;
+	});
 
-  it("should indicate error if crud.update fails for kinesis data with defined and failed event status of service deletion", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error updating service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else if(obj.method === "PUT" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-      return obj.callback(null, responseObject, responseObject.body);
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkJBQ0tVUF9QUk9KRUNUIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJGQUlMRUQiDQoJCX0sDQoJCSJFVkVOVF9UWVBFIjogew0KCQkJIlMiOiAiU0VSVklDRV9ERUxFVElPTiINCgkJfSwNCgkJIlVTRVJOQU1FIjogew0KCQkJIlMiOiAieHl6Ig0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0NCgl9LA0KCSJSZXR1cm5Db25zdW1lZENhcGFjaXR5IjogIlRPVEFMIiwNCgkiVGFibGVOYW1lIjogIkV2ZW50c19UZXN0Ig0KfQ==";
-    errMessage = "Error updating service";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck && logCheck);
-  });
+	it('processEvent should resolve with updating', function () {
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
 
-  it("should indicate success if crud.get and crud.update are success for for kinesis data with defined and failed event status of service deletion", ()=>{
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkJBQ0tVUF9QUk9KRUNUIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJGQUlMRUQiDQoJCX0sDQoJCSJFVkVOVF9UWVBFIjogew0KCQkJIlMiOiAiU0VSVklDRV9ERUxFVElPTiINCgkJfSwNCgkJIlVTRVJOQU1FIjogew0KCQkJIlMiOiAieHl6Ig0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0NCgl9LA0KCSJSZXR1cm5Db25zdW1lZENhcGFjaXR5IjogIlRPVEFMIiwNCgkiVGFibGVOYW1lIjogIkV2ZW50c19UZXN0Ig0KfQ==";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    // logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    // var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbResponse = stub.args[0][1].processBatch;
-    var cbCheck = (cbResponse.processed_events + cbResponse.failed_events) === event.Records.length;
-    // logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck);
-  });
+		var responseObject = {
+			statusCode: 200,
+			body: {
+				data: {
+					"id": "ghd93-3240-2343"
+				}
+			}
+		};
+		var reqStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
+		var payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME": { "S": "DEPLOY_TO_AWS" }, "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": { "S": "COMPLETED" }, "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
+		var processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
+		var message = "updated service test-lambda in service catalog.";
+		expect(processEvent.then(function (res) {
+			return res.message;
+		})).to.be.become(message);
+		reqStub.restore();
+	});
 
-  it("should indicate error if crud.get fails for kinesis data with defined and completed event of service deletion", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error finding service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-        return obj.callback(null, responseObject, JSON.stringify(responseObject.body));
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkRFTEVURV9QUk9KRUNUIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJDT01QTEVURUQiDQoJCX0sDQoJCSJFVkVOVF9UWVBFIjogew0KCQkJIlMiOiAiU0VSVklDRV9ERUxFVElPTiINCgkJfSwNCgkJIlVTRVJOQU1FIjogew0KCQkJIlMiOiAieHl6Ig0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0NCgl9LA0KCSJSZXR1cm5Db25zdW1lZENhcGFjaXR5IjogIlRPVEFMIiwNCgkiVGFibGVOYW1lIjogIkV2ZW50c19UZXN0Ig0KfQ==";
-    errMessage = "Error finding service ";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck && logCheck);
-  });
+	it('processEvent should indicate error if crud.update fails for kinesis data with defined and completed endingEvent', function () {
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
 
-  it("should indicate error if crud.update fails for kinesis data with defined and completed event of service deletion", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error updating service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else if(obj.method === "PUT" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-      return obj.callback(null, responseObject, responseObject.body);
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkRFTEVURV9QUk9KRUNUIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJDT01QTEVURUQiDQoJCX0sDQoJCSJFVkVOVF9UWVBFIjogew0KCQkJIlMiOiAiU0VSVklDRV9ERUxFVElPTiINCgkJfSwNCgkJIlVTRVJOQU1FIjogew0KCQkJIlMiOiAieHl6Ig0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0NCgl9LA0KCSJSZXR1cm5Db25zdW1lZENhcGFjaXR5IjogIlRPVEFMIiwNCgkiVGFibGVOYW1lIjogIkV2ZW50c19UZXN0Ig0KfQ==";
-    errMessage = "unknown error updating service";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck && logCheck);
-  });
+		var responseObject = {
+			statusCode: 400,
+			body: {message : "Error updating service "}
+		};
+		var reqStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
+		var payload = {"EVENT_ID":{"S":"45fe8c82-ff1d-b31d-2aa5-a22d0911b7ec"},"SERVICE_ID": { "S": "abc123" }, "TIMESTAMP":{"S":"2017-06-26T17:54:26:086"},"SERVICE_CONTEXT":{"S":"{\"service_type\":\"api\",\"admin_group\":\"name=d&name=b&name=a&name=b&name=u&\"}"},"EVENT_HANDLER":{"S":"JENKINS"},"EVENT_NAME":{"S":"LOCK_MASTER_BRANCH"},"SERVICE_NAME":{"S":"test8"},"EVENT_STATUS":{"S":"COMPLETED"},"EVENT_TYPE":{"S":"SERVICE_CREATION"},"USERNAME":{"S":"svc_cpt_jnk_auth_prd"},"EVENT_TIMESTAMP":{"S":"2017-05-05T06:06:37:533"},"AAA":{"NULL":true},"BBB":{"S":"val"}};
+		var processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
+		expect(processEvent.then(function (res) {
+			return res;
+		})).to.be.rejected;
 
-  it("should indicate success if crud.get and crud.update are success for for kinesis data with defined and completed event of service deletion", ()=>{
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkRFTEVURV9QUk9KRUNUIg0KCQl9LA0KCQkiU0VSVklDRV9OQU1FIjogew0KCQkJIlMiOiAidGVzdDgiDQoJCX0sDQoJCSJFVkVOVF9TVEFUVVMiOiB7DQoJCQkiUyI6ICJDT01QTEVURUQiDQoJCX0sDQoJCSJFVkVOVF9UWVBFIjogew0KCQkJIlMiOiAiU0VSVklDRV9ERUxFVElPTiINCgkJfSwNCgkJIlVTRVJOQU1FIjogew0KCQkJIlMiOiAieHl6Ig0KCQl9LA0KCQkiRVZFTlRfVElNRVNUQU1QIjogew0KCQkJIlMiOiAiMjAxNy0wNS0wNVQwNjowNjozNzo1MzMiDQoJCX0NCgl9LA0KCSJSZXR1cm5Db25zdW1lZENhcGFjaXR5IjogIlRPVEFMIiwNCgkiVGFibGVOYW1lIjogIkV2ZW50c19UZXN0Ig0KfQ==";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    // logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    // var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbResponse = stub.args[0][1].processBatch;
-    var cbCheck = (cbResponse.processed_events + cbResponse.failed_events) === event.Records.length;
-    // logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck);
-  });
+		reqStub.restore();
+	});
 
-  it("should indicate error if crud.get fails for kinesis data with defined and completed event of service deployment", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error finding service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-        return obj.callback(null, responseObject, JSON.stringify(responseObject.body));
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkRFUExPWV9UT19BV1MiDQoJCX0sDQoJCSJTRVJWSUNFX05BTUUiOiB7DQoJCQkiUyI6ICJ0ZXN0OCINCgkJfSwNCgkJIkVWRU5UX1NUQVRVUyI6IHsNCgkJCSJTIjogIkNPTVBMRVRFRCINCgkJfSwNCgkJIkVWRU5UX1RZUEUiOiB7DQoJCQkiUyI6ICJTRVJWSUNFX0RFUExPWU1FTlQiDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInh5eiINCgkJfSwNCgkJIkVWRU5UX1RJTUVTVEFNUCI6IHsNCgkJCSJTIjogIjIwMTctMDUtMDVUMDY6MDY6Mzc6NTMzIg0KCQl9DQoJfSwNCgkiUmV0dXJuQ29uc3VtZWRDYXBhY2l0eSI6ICJUT1RBTCIsDQoJIlRhYmxlTmFtZSI6ICJFdmVudHNfVGVzdCINCn0=";
-    errMessage = "Error finding service ";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck && logCheck);
-  });
+	it('processRecords should return response for invalid event name event type combination',sinonTest(  function () {
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
 
-  it("should indicate error if crud.update fails for kinesis data with defined and completed event of service deployment", ()=>{
-    var responseObject = {
-      statusCode : 400,
-      body:{message : "Error updating service "}
-    };
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else if(obj.method === "PUT" && obj.uri.includes(configData.SERVICE_API_RESOURCE))
-      return obj.callback(null, responseObject, responseObject.body);
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkRFUExPWV9UT19BV1MiDQoJCX0sDQoJCSJTRVJWSUNFX05BTUUiOiB7DQoJCQkiUyI6ICJ0ZXN0OCINCgkJfSwNCgkJIkVWRU5UX1NUQVRVUyI6IHsNCgkJCSJTIjogIkNPTVBMRVRFRCINCgkJfSwNCgkJIkVWRU5UX1RZUEUiOiB7DQoJCQkiUyI6ICJTRVJWSUNFX0RFUExPWU1FTlQiDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInh5eiINCgkJfSwNCgkJIkVWRU5UX1RJTUVTVEFNUCI6IHsNCgkJCSJTIjogIjIwMTctMDUtMDVUMDY6MDY6Mzc6NTMzIg0KCQl9DQoJfSwNCgkiUmV0dXJuQ29uc3VtZWRDYXBhY2l0eSI6ICJUT1RBTCIsDQoJIlRhYmxlTmFtZSI6ICJFdmVudHNfVGVzdCINCn0=";
-    errMessage = "unknown error updating service";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbCheck = stub.args[0][0].error.includes(errMessage)
-    logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck && logCheck);
-  });
+		var responseObject = {
+			statusCode: 200,
+			body: {
+				data: {
+					"id": "ghd93-3240-2343"
+				}
+			}
+		};
+		var reqStub = this.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
 
-  it("should indicate success if crud.get and crud.update are success for for kinesis data with defined and completed event of service deployment", ()=>{
-    reqStub = sinon.stub(request, "Request", (obj)=>{
-      if(obj.method === "GET" && obj.uri.includes(configData.SERVICE_API_RESOURCE)){
-        var item = {};
-        tokenDataObj.body.data = [item];
-        return obj.callback(null, tokenDataObj, JSON.stringify(tokenDataObj.body));
-      }
-      else return obj.callback(null, tokenDataObj, tokenDataObj.body);
-    });
-    event.Records[0].kinesis.data = "ew0KCSJJdGVtIjogew0KCQkiRVZFTlRfSUQiOiB7DQoJCQkiUyI6ICI0NWZlOGM4Mi1mZjFkLWIzMWQtMmFhNS1hMjJkMDkxMWI3ZWMiDQoJCX0sDQoJCSJUSU1FU1RBTVAiOiB7DQoJCQkiUyI6ICIyMDE3LTA2LTI2VDE3OjU0OjI2OjA4NiINCgkJfSwNCgkJIlNFUlZJQ0VfQ09OVEVYVCI6IHsNCgkJCSJTIjogIntcInNlcnZpY2VfdHlwZVwiOlwiYXBpXCIsXCJydW50aW1lXCI6XCJub2RlanNcIixcImFkbWluX2dyb3VwXCI6XCJuYW1lPWQmbmFtZT1iJm5hbWU9YSZuYW1lPWImbmFtZT11JlwifSINCgkJfSwNCgkJIkVWRU5UX0hBTkRMRVIiOiB7DQoJCQkiUyI6ICJKRU5LSU5TIg0KCQl9LA0KCQkiRVZFTlRfTkFNRSI6IHsNCgkJCSJTIjogIkRFUExPWV9UT19BV1MiDQoJCX0sDQoJCSJTRVJWSUNFX05BTUUiOiB7DQoJCQkiUyI6ICJ0ZXN0OCINCgkJfSwNCgkJIkVWRU5UX1NUQVRVUyI6IHsNCgkJCSJTIjogIkNPTVBMRVRFRCINCgkJfSwNCgkJIkVWRU5UX1RZUEUiOiB7DQoJCQkiUyI6ICJTRVJWSUNFX0RFUExPWU1FTlQiDQoJCX0sDQoJCSJVU0VSTkFNRSI6IHsNCgkJCSJTIjogInh5eiINCgkJfSwNCgkJIkVWRU5UX1RJTUVTVEFNUCI6IHsNCgkJCSJTIjogIjIwMTctMDUtMDVUMDY6MDY6Mzc6NTMzIg0KCQl9DQoJfSwNCgkiUmV0dXJuQ29uc3VtZWRDYXBhY2l0eSI6ICJUT1RBTCIsDQoJIlRhYmxlTmFtZSI6ICJFdmVudHNfVGVzdCINCn0=";
-    // AWS.mock("SQS","sendMessageBatch", (params, cb)=>{
-    //   return cb(null, callbackObj)
-    // });
-    stub = sinon.stub(callbackObj, 'callback', spy);
-    // logStub = sinon.stub(logger, 'error', spy);
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    // var logCheck = logStub.args[0][0].includes(responseObject.body.message);
-    var cbResponse = stub.args[0][1].processBatch;
-    var cbCheck = (cbResponse.processed_events + cbResponse.failed_events) === event.Records.length;
-    // logStub.restore();
-    stub.restore();
-    reqStub.restore();
-    // AWS.restore("SQS");
-    assert.isTrue(cbCheck);
-  });
+		var processRecords = index.processRecords(event, configData, tokenResponseObj.body.data.token);
+		var message = "Not an interesting event to process";
+		expect(processRecords.then(function (res) {
+			return res[0].message;
+		})).to.be.become(message);
+	}));
 
-});
+	it('processRecords should resolve with updating',sinonTest( async function () {
+		event.Records =  [
+			{
+				"kinesis": {
+					"kinesisSchemaVersion": "1.0",
+					"partitionKey": "CALL_DELETE_WORKFLOW",
+					"sequenceNumber": "abc1234",
+					"data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
+					"approximateArrivalTimestamp": 1521632408.682
+				},
+				"eventSource": "abc",
+				"eventVersion": "1.0",
+				"eventID": "abc",
+				"eventName": "abc",
+				"invokeIdentityArn": "abc",
+				"awsRegion": "abc",
+				"eventSourceARN": "abc"
+			}
+		];
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
+
+		var responseObject = {
+			statusCode: 200,
+			body: {
+				data: {
+					"id": "ghd93-3240-2343"
+				}
+			}
+		};
+		reqStub = this.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
+
+		var processRecords = index.processRecords(event, configData, tokenResponseObj.body.data.token);
+		var message = "updated service email-event-handler in service catalog.";
+		expect(processRecords.then(function (res) {
+			return res[0].message;
+		})).to.be.become(message);
+	}));
+
+	it('processRecords should indicate error if crud.update fails for kinesis data with defined and completed endingEvent',sinonTest( async function () {
+		event.Records =  [
+			{
+				"kinesis": {
+					"kinesisSchemaVersion": "1.0",
+					"partitionKey": "CALL_DELETE_WORKFLOW",
+					"sequenceNumber": "abc1234",
+					"data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
+					"approximateArrivalTimestamp": 1521632408.682
+				},
+				"eventSource": "abc",
+				"eventVersion": "1.0",
+				"eventID": "abc",
+				"eventName": "abc",
+				"invokeIdentityArn": "abc",
+				"awsRegion": "abc",
+				"eventSourceARN": "abc"
+			}
+		];
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
+
+		var responseObject = {
+			statusCode: 400,
+			body: {message : "Error updating service "}
+		};
+		reqStub = this.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
+
+		var processRecords = index.processRecords(event, configData, tokenResponseObj.body.data.token);
+		var message = "updated service email-event-handler in service catalog.";
+		expect(processRecords.then(function (res) {
+			return res[0].message;
+		})).to.be.rejected;
+	}));
+	
+	it('getUpdateServiceStatus should return status for payload with interested events', function () {
+		var payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME": { "S": "DEPLOY_TO_AWS" }, "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": { "S": "COMPLETED" }, "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
+
+		var statusResponse = { "status": "active", "interested_event": true };
+		var getUpdateServiceStatus = index.getUpdateServiceStatus(payload, configData);
+        assert(getUpdateServiceStatus, statusResponse);
+	});
+
+	it('getUpdateServiceStatus should return status false for payload with not interested events', function () {
+		var payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME": { "S": "MODIFY_TEMPLATE" }, "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": { "S": "COMPLETED" }, "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
+
+		var statusResponse = { "status": "active", "interested_event": true };;
+		var getUpdateServiceStatus = index.getUpdateServiceStatus(payload, configData);
+        assert(getUpdateServiceStatus, statusResponse);
+	});
+
+	it('getServiceContext should return service context json for valid payload', function () {
+		var payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME": { "S": "MODIFY_TEMPLATE" }, "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": { "S": "COMPLETED" }, "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
+
+		var svcContext = JSON.parse(payload.SERVICE_CONTEXT.S);
+		var serviceContext = index.getServiceContext(svcContext);
+		var resp = { "domain": "test",  "region": "abc", "type": "lambda", "metadata": { "name": "sasfds" } };
+		assert(serviceContext, resp);
+	});	
+
+	it('processRecord should return response for invalid event name event type combination',sinonTest(  function () {
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
+
+		var responseObject = {
+			statusCode: 200,
+			body: {
+				data: {
+					"id": "ghd93-3240-2343"
+				}
+			}
+		};
+		var reqStub = this.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
+
+		var processRecord = index.processRecord(event.Records[0], configData, tokenResponseObj.body.data.token);
+		var message = "Not an interesting event to process";
+		expect(processRecord.then(function (res) {
+			return res.message;
+		})).to.be.become(message);
+	}));
+
+	it('processRecord should resolve with updating',sinonTest( async function () {
+		event.Records =  [
+			{
+				"kinesis": {
+					"kinesisSchemaVersion": "1.0",
+					"partitionKey": "CALL_DELETE_WORKFLOW",
+					"sequenceNumber": "abc1234",
+					"data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
+					"approximateArrivalTimestamp": 1521632408.682
+				},
+				"eventSource": "abc",
+				"eventVersion": "1.0",
+				"eventID": "abc",
+				"eventName": "abc",
+				"invokeIdentityArn": "abc",
+				"awsRegion": "abc",
+				"eventSourceARN": "abc"
+			}
+		];
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
+
+		var responseObject = {
+			statusCode: 200,
+			body: {
+				data: {
+					"id": "ghd93-3240-2343"
+				}
+			}
+		};
+		reqStub = this.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
+
+		var processRecord = index.processRecord(event.Records[0], configData, tokenResponseObj.body.data.token);
+		var message = "updated service email-event-handler in service catalog.";
+		expect(processRecord.then(function (res) {
+			return res.message;
+		})).to.be.become(message);
+	}));
+
+	it('processRecord should indicate error if crud.update fails for kinesis data with defined and completed endingEvent',sinonTest( async function () {
+		event.Records =  [
+			{
+				"kinesis": {
+					"kinesisSchemaVersion": "1.0",
+					"partitionKey": "CALL_DELETE_WORKFLOW",
+					"sequenceNumber": "abc1234",
+					"data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
+					"approximateArrivalTimestamp": 1521632408.682
+				},
+				"eventSource": "abc",
+				"eventVersion": "1.0",
+				"eventID": "abc",
+				"eventName": "abc",
+				"invokeIdentityArn": "abc",
+				"awsRegion": "abc",
+				"eventSourceARN": "abc"
+			}
+		];
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
+
+		var responseObject = {
+			statusCode: 400,
+			body: {message : "Error updating service "}
+		};
+		reqStub = this.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
+
+		var processRecord = index.processRecord(event.Records[0], configData, tokenResponseObj.body.data.token);
+		var message = "updated service email-event-handler in service catalog.";
+		expect(processRecord.then(function (res) {
+			return res.message;
+		})).to.be.rejected;
+	}));
+
+	it('index should fail for invalid authentication', function () {
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
+
+		var responseObject = {
+			statusCode: 400,
+			body: {"message" : "unautho"	}
+		};
+
+		var authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
+		var reqStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
+
+		index.handler(event, context, (err, res) => {
+			if (err) {
+				return err;
+			} else {				
+				res.should.have.property('processed_events');
+				return res;
+			}
+		});
+
+		authStub.restore();
+		reqStub.restore();
+	});
+
+	it('index should resolve for not interested events', function () {
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
+
+		tokenResponseObj.statusCode = 400;
+
+		var authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
+		var reqStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
+		var message = 'User is not authorized to access this service';
+		index.handler(event, context, (err, res) => {
+			if (err) {
+				return err;
+			} else {				
+				res.should.have.property('failed_events');
+				return res;
+			}
+		});
+
+		authStub.restore();
+		reqStub.restore();
+	});
+
+	it('index should resolve with updating', function () {
+		event.Records =  [
+			{
+				"kinesis": {
+					"kinesisSchemaVersion": "1.0",
+					"partitionKey": "CALL_DELETE_WORKFLOW",
+					"sequenceNumber": "abc1234",
+					"data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
+					"approximateArrivalTimestamp": 1521632408.682
+				},
+				"eventSource": "abc",
+				"eventVersion": "1.0",
+				"eventID": "abc",
+				"eventName": "abc",
+				"invokeIdentityArn": "abc",
+				"awsRegion": "abc",
+				"eventSourceARN": "abc"
+			}
+		];
+		var callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			}
+			else {
+				return JSON.stringify(responseObj);
+			}
+		};
+
+		var responseObject = {
+			statusCode: 200,
+			body: {
+				data: {
+					"id": "ghd93-3240-2343"
+				}
+			}
+		};
+
+		var authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
+		var reqStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+		});
+
+		index.handler(event, context, (err, res) => {
+			if (err) {
+				return err;
+			} else {
+				res.should.have.property('processed_events');
+				return res;
+			}
+		});
+
+	});
+});  
+
