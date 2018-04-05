@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-	CRUD functions for service catalog
+	CRUD functions for Environment catalog
     @module: index.js
     @description: create, get by id, get all, filter, update.
 	@author: 

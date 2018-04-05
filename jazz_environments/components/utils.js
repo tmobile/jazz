@@ -31,7 +31,7 @@ const logger = require("./logger.js");
 var getEnvironmentDatabaseKeyName = function(key) {
     // Some of the keys in schema may be reserved keywords, so it may need some manipulation
 
-    if (key === undefined || key === null) {
+    if (key === undefined || !key) {
         return null;
     }
 
@@ -48,7 +48,7 @@ var getEnvironmentDatabaseKeyName = function(key) {
 var getSchemaKeyName = function(key) {
     // Convert database key name back, as per schema
 
-    if (key === undefined || key === null) {
+    if (key === undefined || !key) {
         return null;
     }
 
@@ -65,7 +65,7 @@ var getSchemaKeyName = function(key) {
 
 // convert object returned from the database, as per schema
 var formatEnvironment = function(environment, format) {
-    if (environment === undefined || environment === null) {
+    if (environment === undefined || !environment) {
         return {};
     }
 
@@ -113,7 +113,7 @@ var formatEnvironment = function(environment, format) {
     Object.keys(environment).forEach(function(key) {
         var key_name = getSchemaKeyName(key);
         var value = environment[key];
-        if (value !== null && value !== undefined) {
+        if (value && value !== undefined) {
             if (format !== undefined) {
                 environment_obj[key_name] = parseValue(value);
             } else {
@@ -127,15 +127,14 @@ var formatEnvironment = function(environment, format) {
 
 // initialize document CLient for dynamodb
 var initDocClient = function() {
-    // logger.info("configData:"+JSON.stringify(global.config.ddb-region));
-    AWS.config.update({ region: "us-east-1" });
+    AWS.config.update({ region: global.config.ddb_region });
     var docClient = new AWS.DynamoDB.DocumentClient();
 
     return docClient;
 };
 
 var initDynamodb = function() {
-    AWS.config.update({ region: "us-east-1" });
+    AWS.config.update({ region: global.config.ddb_region });
     var dynamodb = new AWS.DynamoDB();
 
     return dynamodb;
@@ -169,7 +168,7 @@ var filterUtil = function(data, filter_value) {
         for (var key in ele) {
             var value = "";
             if (typeof ele[key] == "string") value = ele[key].toLowerCase();
-            else if (ele[key] !== null && ele[key].length > 0) value = ele[key];
+            else if (ele[key] && ele[key].length > 0) value = ele[key];
 
             if (value.indexOf(filter_value.toLowerCase()) !== -1) {
                 newArr.push(ele);

@@ -43,7 +43,7 @@ module.exports = (environmentData, onComplete) => {
             ENVIRONMENT_LAST_UPDATED: timestamp
         },
         ReturnConsumedCapacity: "TOTAL",
-        TableName: global.envTableName
+        TableName: global.env_tableName
     };
 
     environmentData.logical_id = environmentData.logical_id.toLowerCase();
@@ -53,7 +53,7 @@ module.exports = (environmentData, onComplete) => {
         var param_key = utils.getEnvironmentDatabaseKeyName(key);
         var param_value = environmentData[key];
 
-        if (param_value === null || param_value === undefined) {
+        if (!param_value || param_value === undefined) {
             params.Item[param_key] = null;
         } else {
             params.Item[param_key] = param_value;

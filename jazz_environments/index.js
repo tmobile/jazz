@@ -110,15 +110,14 @@ module.exports.handler = (event, context, cb) => {
         }
 
         // throw bad request error if user is unauthorized for GET
-        if (event.principalId === undefined || event.principalId === "" || event.principalId === null) {
+        if (event.principalId === undefined || !event.principalId) {
             return cb(JSON.stringify(errorHandler.throwUnauthorizedError("Unauthorized.")));
         }
 
         global.userId = event.principalId;
         global.authorization = event.headers.Authorization;
-        global.envTableName = global.config.services_environment_table;
-
-        var envTableName = config.services_environment_table;
+        global.env_tableName = global.config.services_environment_table;
+        logger.info("env_tableName:"+global.env_tableName);
 
         // 1: GET environment by id and environent (/services/{service_id}/{environment})
         if (event.method === "GET" && (event.query !== undefined || event.path !== undefined)) {
@@ -233,7 +232,7 @@ module.exports.handler = (event, context, cb) => {
                                             "', domain:'" +
                                             domain +
                                             "' to update"
-                                    });
+                                    }, null);
                                 }
                             }
                         });

@@ -35,12 +35,12 @@ module.exports = (query, onComplete) => {
     var insertAndString = " AND ";
 
     var scanparams = {
-        TableName: global.envTableName,
+        TableName: global.env_tableName,
         ReturnConsumedCapacity: "TOTAL",
         Limit: "500"
     };
 
-    if (query !== undefined && query !== null) {
+    if (query !== undefined && query) {
         // var keys_list = ['service', 'domain', 'region', 'type', 'runtime', 'created_by','timestamp'];
         var keys_list = global.config.service_environment_filter_params;
 

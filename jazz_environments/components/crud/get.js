@@ -17,7 +17,7 @@
 /**
 	Get Environment-Catalog by ENVIRONMET_ID from dynamodb table
     @module: get.js
-    @description: CRUD functions for service catalog
+    @description: CRUD functions for Environment catalog
 	@author: 
 	@version: 1.0
 **/
@@ -32,7 +32,7 @@ module.exports = (service, domain, environment_id, onComplete) => {
 
     if (service !== undefined && domain !== undefined && environment_id !== undefined) {
         params = {
-            TableName: global.envTableName,
+            TableName: global.env_tableName,
             FilterExpression: "SERVICE_NAME = :SERVICE_NAME AND SERVICE_DOMAIN = :SERVICE_DOMAIN AND ENVIRONMENT_LOGICAL_ID = :ENVIRONMENT_LOGICAL_ID",
             ExpressionAttributeValues: {
                 ":SERVICE_NAME": service,
@@ -42,7 +42,7 @@ module.exports = (service, domain, environment_id, onComplete) => {
         };
     } else if (service !== undefined && domain !== undefined && environment_id === undefined) {
         params = {
-            TableName: global.envTableName,
+            TableName: global.env_tableName,
             FilterExpression: "SERVICE_NAME = :SERVICE_NAME AND SERVICE_DOMAIN = :SERVICE_DOMAIN",
             ExpressionAttributeValues: {
                 ":SERVICE_NAME": service,
@@ -51,7 +51,7 @@ module.exports = (service, domain, environment_id, onComplete) => {
         };
     } else if (environment_id !== undefined && (service === undefined || domain === undefined)) {
         params = {
-            TableName: global.envTableName,
+            TableName: global.env_tableName,
             FilterExpression: "ENVIRONMENT_LOGICAL_ID = :ENVIRONMENT_ID",
             ExpressionAttributeValues: {
                 ":ENVIRONMENT_LOGICAL_ID": environment_id

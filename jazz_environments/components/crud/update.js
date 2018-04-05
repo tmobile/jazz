@@ -17,7 +17,7 @@
 /**
     Update Service-Catalog by SERVICE_ID
     @module: update.js
-    @description: CRUD functions for service catalog
+    @description: CRUD functions for Environment catalog
     @author: 
     @version: 1.0
 **/
@@ -34,7 +34,7 @@ module.exports = (environmentData, environment_key_id, onComplete) => {
         .format("YYYY-MM-DDTHH:mm:ss:SSS");
 
     var params = {
-        TableName: global.envTableName,
+        TableName: global.env_tableName,
         Key: {
             ENVIRONMENT_ID: environment_key_id
         }

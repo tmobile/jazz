@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-    Helper Validation functions for Service-Catalog
+    Helper Validation functions for Environment-Catalog
     @module: validate.js
     @description: Defines validate functions.
     @author:
@@ -38,7 +38,7 @@ module.exports = (service, domain, environment_id, onComplete) => {
                 onComplete({
                     result: "notFoundError",
                     message: "Cannot find environment with following params" + service, domain, environment_id
-                });
+                }, null);
             } else {
                 onComplete(null, {
                     result: "success",

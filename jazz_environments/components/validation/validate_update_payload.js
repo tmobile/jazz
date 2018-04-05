@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-    Helper Validation functions for Service-Catalog
+    Helper Validation functions for Environment-Catalog
     @module: validate.js
     @description: Defines validate functions.
     @author: 
@@ -78,7 +78,7 @@ module.exports = (environment_data, onComplete) => {
         if (error) {
             logger.info('#validate error')
             logger.error("# Validate Update Payload Error:" + JSON.stringify(error));
-            onComplete(error);
+            onComplete(error, null);
         } else {
             logger.info("# Validate Update Payload Data:" + JSON.stringify(data));
             onComplete(null);

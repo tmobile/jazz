@@ -30,7 +30,7 @@ var validateIsEmptyInputData = function(environment_data, onComplete) {
         onComplete({
             result: "inputError",
             message: "Input payload cannot be empty"
-        });
+        }, null);
     } else {
         onComplete(null, {
             result: "success",
@@ -46,7 +46,7 @@ var validateAllRequiredFields = function(environment_data, required_fields, onCo
         onComplete({
             result: "inputError",
             message: message
-        });
+        }, null);
     } else {
         onComplete(null, {
             result: "success",
@@ -62,7 +62,7 @@ var validateUnAllowedFieldsInInput = function(environment_data, fields_list, onC
         onComplete({
             result: "inputError",
             message: message
-        });
+        }, null);
     } else {
         onComplete(null, {
             result: "success",
@@ -84,7 +84,7 @@ var validateAllRequiredFieldsValue = function(environment_data, required_fields,
         onComplete({
             result: "inputError",
             message: message
-        });
+        }, null);
     } else {
         onComplete(null, {
             result: "success",
@@ -132,7 +132,7 @@ var validateEditableFieldsValue = function(environment_data, fields_list, onComp
         onComplete({
             result: "inputError",
             message: message
-        });
+        }, null);
     } else {
         onComplete(null, {
             result: "success",
@@ -151,7 +151,7 @@ var validateFriendlyName = function(environment_data, onComplete) {
             onComplete({
                 result: "inputError",
                 message: "Invalid field(s) - " + friendlyNameKey + " is allowed only when logical id is not 'stg' or 'prod'"
-            });
+            }, null);
         } else {
             onComplete(null, {
                 result: "success",
@@ -179,7 +179,7 @@ var validateStatusFieldValue = function(environment_data, status_values, onCompl
         onComplete({
             result: "inputError",
             message: "Only following values can be allowed for status field - " + status_values.join(", ")
-        });
+        }, null);
     } else {
         onComplete(null,{
             result: "success",

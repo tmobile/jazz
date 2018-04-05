@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-    Helper Validation functions for Service-Catalog
+    Helper Validation functions for Environment-Catalog
     @module: validate.js
     @description: Defines validate functions.
     @author:
@@ -93,11 +93,11 @@ module.exports = (environment_data, onComplete)=>{
             request(svcGetPayload, function(error, response, body) {
                 if (response.statusCode === 200) {
                     var output = JSON.parse(body);
-                    if (output.data === null || output.data === "" || output.data === undefined || output.data.available === undefined) {
+                    if (!output.data || !output.data || output.data.available === undefined) {
                         onComplete({
                             result: "inputError",
                             message: "Error finding service: " + service_domain + "." + service_name + " in service catalog"
-                        });
+                        }, null);
                     } else if (output.data.available === false) {
                         onComplete(null, {
                             result: "success",
@@ -107,13 +107,13 @@ module.exports = (environment_data, onComplete)=>{
                         onComplete({
                             result: "inputError",
                             message: "Service with domain: " + service_domain + " and service name:" + service_name + ", does not exist."
-                        });
+                        },null);
                     }
                 } else {
                     onComplete({
                         result: "inputError",
                         message: "Error finding service: " + service_domain + "." + service_name + " in service catalog"
-                    });
+                    }, null);
                 }
             });
         },
@@ -127,7 +127,7 @@ module.exports = (environment_data, onComplete)=>{
 
             query = { logical_id: environment_data.logical_id, service: environment_data.service, domain: environment_data.domain };
             logger.info("validateEnvironmentExists: "+JSON.stringify(query));
-            crud.getList(query, envTableName, function onServiceGet(error, data) {
+            crud.getList(query, function onServiceGet(error, data) {
                 if (error) {
                     onComplete(error, null);
                 } else {
@@ -135,11 +135,10 @@ module.exports = (environment_data, onComplete)=>{
                         onComplete({
                             result: "inputError",
                             message: "The specified environment already exists, please choose a different logical id for your new environment"
-                        });
+                        }, null);
                     } else {
                         if (
-                            environment_data.physical_id !== undefined &&
-                            environment_data.physical_id !== "" &&
+                            environment_data.physical_id &&
                             (environment_data.logical_id !== config.service_environment_production_logical_id &&
                                 environment_data.logical_id !== config.service_environment_stage_logical_id)
                         ) {
@@ -158,7 +157,7 @@ module.exports = (environment_data, onComplete)=>{
                                             result: "inputError",
                                             message:
                                                 "The specified environment already exists, please choose a different physical id for your new environment"
-                                        });
+                                        }, null);
                                     } else {
                                         onComplete(null, {
                                             result: "success",
@@ -181,7 +180,7 @@ module.exports = (environment_data, onComplete)=>{
     function(error, data){
         if (error) {
             logger.error("# Validate Create Payload Error:" + JSON.stringify(error));
-            onComplete(error);
+            onComplete(error, null);
         } else {
             logger.info("# Validate Create Payload Data:" + JSON.stringify(data));
             onComplete(null);
