@@ -12,8 +12,6 @@ import groovy.json.JsonSlurper
 @Field def repo_core
 @Field def scm_type
 
-
-
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
@@ -99,7 +97,6 @@ def getServiceConfiguration() {
 
         if(prop.service_id){			
 			def serviceData = serviceMetadataLoader.loadServiceMetadata(prop.service_id)
-            echo "serviceData : " + JSON.stringify(serviceData);
 			return serviceData
 		}else{
 			error "Service Id is not available."

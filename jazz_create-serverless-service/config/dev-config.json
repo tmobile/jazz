@@ -3,7 +3,6 @@
   "BUILD_TOKEN":"slf-ust-tm0621",
   "SVC_USER":"jobexec",
   "SVC_PASWD":"jenkinsadmin",
-  "BIT_BUCKET_URL":"http://{conf-repo-base}/projects/CAS/repos/",
   "USER_POOL_ID":"{conf-user-pool-id}",
   "REGION": "{conf-region}",
   "USER_CLIENT_ID": "{conf-client-id}",
