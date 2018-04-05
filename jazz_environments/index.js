@@ -33,14 +33,14 @@ const validateUtils = require("./components/validation")();
 
 module.exports.handler = (event, context, cb) => {
 
-  //Initializations
-  var errorHandler = errorHandlerModule();
-  var config = configObj(event);
-  logger.init(event, context);
-  logger.info("event:"+JSON.stringify(event));
-  global.config = config;
+    //Initializations
+    var errorHandler = errorHandlerModule();
+    var config = configObj(event);
+    logger.init(event, context);
+    logger.info("event:" + JSON.stringify(event));
+    global.config = config;
 
-  try {
+    try {
         // event.method cannot be empty, throw error
         if (event === undefined || event.method === undefined) {
             cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
@@ -117,7 +117,7 @@ module.exports.handler = (event, context, cb) => {
         global.userId = event.principalId;
         global.authorization = event.headers.Authorization;
         global.env_tableName = global.config.services_environment_table;
-        logger.info("env_tableName:"+global.env_tableName);
+        logger.info("env_tableName:" + global.env_tableName);
 
         // 1: GET environment by id and environent (/services/{service_id}/{environment})
         if (event.method === "GET" && (event.query !== undefined || event.path !== undefined)) {
@@ -130,7 +130,10 @@ module.exports.handler = (event, context, cb) => {
             ) {
                 service = event.query.service.toLowerCase();
                 domain = event.query.domain.toLowerCase();
-                query = { service: service, domain: domain };
+                query = {
+                    service: service,
+                    domain: domain
+                };
             } else if (
                 event.path !== undefined &&
                 event.path.environment_id !== undefined &&
@@ -140,28 +143,31 @@ module.exports.handler = (event, context, cb) => {
                 environment_id = event.path.environment_id.toLowerCase();
                 service = event.query.service.toLowerCase();
                 domain = event.query.domain.toLowerCase();
-                query = { logical_id: environment_id, service: service, domain: domain };
+                query = {
+                    logical_id: environment_id,
+                    service: service,
+                    domain: domain
+                };
             } else {
                 return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid set of parameters for the GET API")));
             }
 
-            async.series(
-                {
+            async.series({
                     // Get service environment by service and domain OR with environment_id
-                    getServiceEnvironmentByParams: function(onComplete) {
-                        validateUtils.validateEnvironment(service, domain, environment_id, function onValidate(error, data){
+                    getServiceEnvironmentByParams: function (onComplete) {
+                        validateUtils.validateEnvironment(service, domain, environment_id, function onValidate(error, data) {
                             onComplete(error, data);
                         });
                     }
                 },
-                function(error, data) {
+                function (error, data) {
                     if (error) {
-                        if (error.result === 'notFoundError'){
+                        if (error.result === 'notFoundError') {
                             logger.error("Cannot find any environment for the following query:" + JSON.stringify(query));
                             return cb(
                                 JSON.stringify(errorHandler.throwNotFoundError("Cannot find any environment for the following query:" + JSON.stringify(query)))
                             );
-                        } else{
+                        } else {
                             logger.error("Error occured. " + JSON.stringify(error, null, 2));
                             return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured.")));
                         }
@@ -196,22 +202,21 @@ module.exports.handler = (event, context, cb) => {
 
             var update_environment_payload = Object.assign({}, event.body);
 
-            async.series(
-                {
-                    validateInputData: function(onComplete) {
-                        validateUtils.validateUpdatePayload(update_environment_payload, function onValidate(error, data){
+            async.series({
+                    validateInputData: function (onComplete) {
+                        validateUtils.validateUpdatePayload(update_environment_payload, function onValidate(error, data) {
                             onComplete(error, data);
                         });
                     },
                     // Check if environment exists
-                    validateEnvironmentExists: function(onComplete) {
+                    validateEnvironmentExists: function (onComplete) {
                         //crud.get for env
                         crud.get(service, domain, environment_id.toLowerCase(), function onServiceGet(error, data) {
                             if (error) {
                                 onComplete(error, null);
                             } else {
                                 var environment_obj = data.environment[0];
-            
+
                                 // throw error if no environment exists
                                 if (environment_obj) {
                                     logger.info("Environment Exists" + JSON.stringify(environment_obj, null, 2));
@@ -224,8 +229,7 @@ module.exports.handler = (event, context, cb) => {
                                     // returning inputError
                                     onComplete({
                                         result: "inputError",
-                                        message:
-                                            "Cannot find environment  with id: '" +
+                                        message: "Cannot find environment  with id: '" +
                                             environment_id +
                                             "', for service:'" +
                                             service +
@@ -238,7 +242,7 @@ module.exports.handler = (event, context, cb) => {
                         });
                     },
                     // Update service by SERVICE_ID
-                    updateServiceEnvironment: function(onComplete) {
+                    updateServiceEnvironment: function (onComplete) {
                         if (update_environment_payload) {
                             crud.update(update_environment_payload, environment_key_id, onComplete);
                         } else {
@@ -246,7 +250,7 @@ module.exports.handler = (event, context, cb) => {
                         }
                     }
                 },
-                function(error, data) {
+                function (error, data) {
                     // Handle error
                     if (error) {
                         logger.error("Error occured while updating environment:" + JSON.stringify(error));
@@ -257,11 +261,11 @@ module.exports.handler = (event, context, cb) => {
                         }
                     } else {
                         var updatedEnvironment = data.updateServiceEnvironment;
-                        return cb(null,responseObj({
-                            message:"Successfully Updated environment for service:'" +
-                                service +"', domain:'" +domain +"', with logical_id: " +environment_id,
+                        return cb(null, responseObj({
+                            message: "Successfully Updated environment for service:'" +
+                                service + "', domain:'" + domain + "', with logical_id: " + environment_id,
                             updatedEnvironment: updatedEnvironment
-                        },update_environment_payload));
+                        }, update_environment_payload));
                     }
                 }
             );
@@ -272,17 +276,16 @@ module.exports.handler = (event, context, cb) => {
         if (event.method === "POST" && environment_data !== undefined) {
             logger.info("Create new environment with the following data:" + JSON.stringify(environment_data));
 
-            async.series(
-                {
+            async.series({
                     // Validate environment_data for adding new service
-                    validateEnvironmentData: function(onComplete) {
-                        validateUtils.validateCreatePayload(environment_data, function onValidation(error, data){
+                    validateEnvironmentData: function (onComplete) {
+                        validateUtils.validateCreatePayload(environment_data, function onValidation(error, data) {
                             onComplete(error, data);
                         });
                     },
 
                     // Add new service data to the dynamodb
-                    addNewEnvironment: function(onComplete) {
+                    addNewEnvironment: function (onComplete) {
                         crud.create(environment_data, onComplete);
                     }
                 },
