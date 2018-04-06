@@ -42,7 +42,7 @@ module.exports.handler = (event, context, cb) => {
 
     try {
         // event.method cannot be empty, throw error
-        if (event === undefined || event.method === undefined) {
+        if (!event || !event.method) {
             cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
         }
 
@@ -50,13 +50,7 @@ module.exports.handler = (event, context, cb) => {
         var service;
         var domain;
         var environment_id;
-        if (
-            event !== undefined &&
-            event.path !== undefined &&
-            event.path.environment_id !== undefined &&
-            Object.keys(event.path).length > 0 &&
-            event.path.environment_id !== ""
-        ) {
+        if (event && event.path && event.path.environment_id && Object.keys(event.path).length > 0 && event.path.environment_id) {
             environment_id = event.path.environment_id;
         }
 
@@ -70,19 +64,19 @@ module.exports.handler = (event, context, cb) => {
             );
         }
 
-        if (event.method === "GET" && (event.query !== undefined && (event.query.service === undefined || event.query.domain === undefined))) {
+        if (event.method === "GET" && (event.query && (!event.query.service || !event.query.domain))) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("GET API requires the following query params: domain and service")));
         }
 
-        if (event.method === "GET" && event.query !== undefined && Object.keys(event.query).length > 0) {
-            if (event.query.domain === undefined || event.query.service === undefined) {
+        if (event.method === "GET" && event.query && Object.keys(event.query).length > 0) {
+            if (!event.query.domain || !event.query.service) {
                 return cb(JSON.stringify(errorHandler.throwInputValidationError("GET API can be called only with following query params: domain and service")));
             }
         }
 
         if (
-            (event.method === "PUT" && (event.path !== undefined && event.path.environment_id === undefined)) ||
-            (event.method === "PUT" && (event.query !== undefined && (event.query.domain === undefined || event.query.service === undefined)))
+            (event.method === "PUT" && (event.path && !event.path.environment_id)) ||
+            (event.method === "PUT" && (event.query && (!event.query.domain || !event.query.service)))
         ) {
             return cb(
                 JSON.stringify(
@@ -94,23 +88,23 @@ module.exports.handler = (event, context, cb) => {
         }
 
         // throw bad request error if body not specified for POST
-        if (event !== undefined && event.method === "POST" && event.body === undefined) {
+        if (event && event.method === "POST" && !event.body) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("Environment data is required for creating an environment")));
         }
 
         // throw bad request error if body not specified for PUT
-        if (event !== undefined && event.method === "PUT" && event.body === undefined) {
+        if (event && event.method === "PUT" && !event.body) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("Environment data is required for updating an environment")));
         }
 
         // get environment data from body
         var environment_data;
-        if (event !== undefined && event.body !== undefined) {
+        if (event && event.body) {
             environment_data = event.body;
         }
 
         // throw bad request error if user is unauthorized for GET
-        if (event.principalId === undefined || !event.principalId) {
+        if (!event.principalId) {
             return cb(JSON.stringify(errorHandler.throwUnauthorizedError("Unauthorized.")));
         }
 
@@ -120,13 +114,12 @@ module.exports.handler = (event, context, cb) => {
         logger.info("env_tableName:" + global.env_tableName);
 
         // 1: GET environment by id and environent (/services/{service_id}/{environment})
-        if (event.method === "GET" && (event.query !== undefined || event.path !== undefined)) {
+        if (event.method === "GET" && (event.query || event.path)) {
 
             var query;
             if (
-                event.query !== undefined &&
-                (event.query.domain !== undefined && event.query.service !== undefined) &&
-                (event.path !== undefined && event.path.environment_id === undefined)
+                event.query && (event.query.domain && event.query.service) &&
+                (event.path && !event.path.environment_id)
             ) {
                 service = event.query.service.toLowerCase();
                 domain = event.query.domain.toLowerCase();
@@ -135,9 +128,8 @@ module.exports.handler = (event, context, cb) => {
                     domain: domain
                 };
             } else if (
-                event.path !== undefined &&
-                event.path.environment_id !== undefined &&
-                (event.query !== undefined && (event.query.domain !== undefined && event.query.service !== undefined))
+                event.path && event.path.environment_id &&
+                (event.query && (event.query.domain && event.query.service))
             ) {
                 logger.info("environment_id:" + environment_id);
                 environment_id = event.path.environment_id.toLowerCase();
@@ -184,14 +176,9 @@ module.exports.handler = (event, context, cb) => {
         // 2: PUT environment by environment_logical_id and service and domain as query params
         //(/environment/{environment_logical_id}?service=service&domain=domain)
         if (
-            event.method === "PUT" &&
-            event.path !== undefined &&
-            Object.keys(event.path).length > 0 &&
-            event.path.environment_id !== undefined &&
-            event.query !== undefined &&
-            Object.keys(event.query).length > 0 &&
-            event.query.service !== undefined &&
-            event.query.domain !== undefined
+            event.method === "PUT" && event.path && Object.keys(event.path).length > 0 &&
+            event.path.environment_id && event.query && Object.keys(event.query).length > 0 &&
+            event.query.service && event.query.domain
         ) {
             var update_environment_data = {};
             var environment_key_id;
@@ -273,7 +260,7 @@ module.exports.handler = (event, context, cb) => {
 
         // Create new service environment
         // 6: POST a service
-        if (event.method === "POST" && environment_data !== undefined) {
+        if (event.method === "POST" && environment_data) {
             logger.info("Create new environment with the following data:" + JSON.stringify(environment_data));
 
             async.series({

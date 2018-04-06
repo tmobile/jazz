@@ -95,7 +95,7 @@ var validateAllRequiredFieldsValue = function(environment_data, required_fields,
 
 var validateRemoveEmptyValues = function(environment_data, onComplete) {
     for (var field in environment_data) {
-        if (environment_data[field] === undefined || environment_data[field] === "") {
+        if (!environment_data[field]) {
             delete environment_data[field];
         }
     }

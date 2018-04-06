@@ -93,7 +93,7 @@ module.exports = (environment_data, onComplete)=>{
             request(svcGetPayload, function(error, response, body) {
                 if (response.statusCode === 200) {
                     var output = JSON.parse(body);
-                    if (!output.data || !output.data || output.data.available === undefined) {
+                    if (!output.data || !output.data || output.data.available == null) {
                         onComplete({
                             result: "inputError",
                             message: "Error finding service: " + service_domain + "." + service_name + " in service catalog"

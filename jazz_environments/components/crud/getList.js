@@ -40,7 +40,7 @@ module.exports = (query, onComplete) => {
         Limit: "500"
     };
 
-    if (query !== undefined && query) {
+    if (query) {
         // var keys_list = ['service', 'domain', 'region', 'type', 'runtime', 'created_by','timestamp'];
         var keys_list = global.config.service_environment_filter_params;
 
@@ -48,7 +48,7 @@ module.exports = (query, onComplete) => {
         keys_list.forEach(function(key) {
             var key_name = utils.getEnvironmentDatabaseKeyName(key);
 
-            if (query[key] !== undefined) {
+            if (query[key]) {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
                 attributeValues[":" + key_name] = {
                     S: query[key]

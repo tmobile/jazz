@@ -30,7 +30,7 @@ module.exports = (service, domain, environment_id, onComplete) => {
 
     var params;
 
-    if (service !== undefined && domain !== undefined && environment_id !== undefined) {
+    if (service && domain && environment_id) {
         params = {
             TableName: global.env_tableName,
             FilterExpression: "SERVICE_NAME = :SERVICE_NAME AND SERVICE_DOMAIN = :SERVICE_DOMAIN AND ENVIRONMENT_LOGICAL_ID = :ENVIRONMENT_LOGICAL_ID",
@@ -40,7 +40,7 @@ module.exports = (service, domain, environment_id, onComplete) => {
                 ":ENVIRONMENT_LOGICAL_ID": environment_id
             }
         };
-    } else if (service !== undefined && domain !== undefined && environment_id === undefined) {
+    } else if (service && domain && !environment_id) {
         params = {
             TableName: global.env_tableName,
             FilterExpression: "SERVICE_NAME = :SERVICE_NAME AND SERVICE_DOMAIN = :SERVICE_DOMAIN",
@@ -49,7 +49,7 @@ module.exports = (service, domain, environment_id, onComplete) => {
                 ":SERVICE_DOMAIN": domain
             }
         };
-    } else if (environment_id !== undefined && (service === undefined || domain === undefined)) {
+    } else if (environment_id && (!service || !domain)) {
         params = {
             TableName: global.env_tableName,
             FilterExpression: "ENVIRONMENT_LOGICAL_ID = :ENVIRONMENT_ID",

@@ -50,7 +50,7 @@ module.exports = function() {
     var setLevel = function(level) {
         // LOG_LEVEL is 'info' by default
 
-        if (level !== undefined && logLevels[level] !== undefined) {
+        if (level && logLevels[level]) {
             // If LOG_LEVEL if explicitly specified , set it as the curLogLevel
             config.curLogLevel = level;
             return level;
@@ -61,7 +61,7 @@ module.exports = function() {
             } catch (e) {
                 error('error trying to access LOG_LEVEL');
             }
-            if (level !== undefined && logLevels[level] !== undefined) {
+            if (level && logLevels[level]) {
                 config.curLogLevel = level;
                 return level;
             }

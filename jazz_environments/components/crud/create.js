@@ -53,7 +53,7 @@ module.exports = (environmentData, onComplete) => {
         var param_key = utils.getEnvironmentDatabaseKeyName(key);
         var param_value = environmentData[key];
 
-        if (!param_value || param_value === undefined) {
+        if (!param_value) {
             params.Item[param_key] = null;
         } else {
             params.Item[param_key] = param_value;

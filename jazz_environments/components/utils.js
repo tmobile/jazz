@@ -31,7 +31,7 @@ const logger = require("./logger.js");
 var getEnvironmentDatabaseKeyName = function(key) {
     // Some of the keys in schema may be reserved keywords, so it may need some manipulation
 
-    if (key === undefined || !key) {
+    if (!key) {
         return null;
     }
 
@@ -48,7 +48,7 @@ var getEnvironmentDatabaseKeyName = function(key) {
 var getSchemaKeyName = function(key) {
     // Convert database key name back, as per schema
 
-    if (key === undefined || !key) {
+    if (!key) {
         return null;
     }
 
@@ -65,13 +65,13 @@ var getSchemaKeyName = function(key) {
 
 // convert object returned from the database, as per schema
 var formatEnvironment = function(environment, format) {
-    if (environment === undefined || !environment) {
+    if (!environment) {
         return {};
     }
 
     var environment_obj;
 
-    if (format !== undefined) {
+    if (format) {
         environment_obj = {
             service: environment.SERVICE_NAME.S,
             environment: environment.SERVICE_DOMAIN.S
@@ -113,8 +113,8 @@ var formatEnvironment = function(environment, format) {
     Object.keys(environment).forEach(function(key) {
         var key_name = getSchemaKeyName(key);
         var value = environment[key];
-        if (value && value !== undefined) {
-            if (format !== undefined) {
+        if (value) {
+            if (format) {
                 environment_obj[key_name] = parseValue(value);
             } else {
                 environment_obj[key_name] = value;
@@ -140,7 +140,7 @@ var initDynamodb = function() {
     return dynamodb;
 };
 var sortUtil = function(data, sort_key, sort_direction) {
-    if (sort_key !== undefined && sort_key !== "timestamp") {
+    if (sort_key && sort_key !== "timestamp") {
         data = data.sort(function(a, b) {
             var x = a[sort_key];
             var y = b[sort_key];

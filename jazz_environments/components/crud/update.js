@@ -50,7 +50,7 @@ module.exports = (environmentData, environment_key_id, onComplete) => {
         var param_key = utils.getEnvironmentDatabaseKeyName(key);
         var param_value = environmentData[key];
 
-        if (param_value !== undefined) {
+        if (param_value) {
             update_exp = update_exp + param_key + " = :" + param_key + ", ";
             attributeValues[":" + param_key] = param_value;
         }
