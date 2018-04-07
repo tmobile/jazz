@@ -112,6 +112,7 @@ module.exports.handler = (event, context, cb) => {
         global.authorization = event.headers.Authorization;
         global.env_tableName = global.config.services_environment_table;
         logger.info("env_tableName:" + global.env_tableName);
+        var envIndexName = global.config.services_environment_index;
 
         // 1: GET environment by id and environent (/services/{service_id}/{environment})
         if (event.method === "GET" && (event.query || event.path)) {
@@ -147,7 +148,7 @@ module.exports.handler = (event, context, cb) => {
             async.series({
                     // Get service environment by service and domain OR with environment_id
                     getServiceEnvironmentByParams: function (onComplete) {
-                        validateUtils.validateEnvironment(service, domain, environment_id, function onValidate(error, data) {
+                        validateUtils.validateEnvironment(service, domain, envIndexName, environment_id, function onValidate(error, data) {
                             onComplete(error, data);
                         });
                     }
@@ -198,7 +199,7 @@ module.exports.handler = (event, context, cb) => {
                     // Check if environment exists
                     validateEnvironmentExists: function (onComplete) {
                         //crud.get for env
-                        crud.get(service, domain, environment_id.toLowerCase(), function onServiceGet(error, data) {
+                        crud.get(service, domain, envIndexName, environment_id.toLowerCase(), function onServiceGet(error, data) {
                             if (error) {
                                 onComplete(error, null);
                             } else {
@@ -266,7 +267,7 @@ module.exports.handler = (event, context, cb) => {
             async.series({
                     // Validate environment_data for adding new service
                     validateEnvironmentData: function (onComplete) {
-                        validateUtils.validateCreatePayload(environment_data, function onValidation(error, data) {
+                        validateUtils.validateCreatePayload(environment_data, envIndexName, function onValidation(error, data) {
                             onComplete(error, data);
                         });
                     },

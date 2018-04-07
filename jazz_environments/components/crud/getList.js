@@ -17,7 +17,7 @@
 /**
     Get List of Service-Catalogs
     @module: getList.js
-    @description: CRUD functions for service catalog
+    @description: CRUD functions for Environment catalog
     @author:
     @version: 1.0
  **/
@@ -25,19 +25,20 @@
 const utils = require("../utils.js")(); //Import the utils module.
 const logger = require("../logger.js"); //Import the logging module.
 
-module.exports = (query, onComplete) => {
+module.exports = ( query, indexName, onComplete) => {
     // initialize dynamodb
-    var dynamodb = utils.initDynamodb();
-
+    var docClient = utils.initDocClient();
     var filter = "";
-    var attributeValues = {};
-
     var insertAndString = " AND ";
 
-    var scanparams = {
-        TableName: global.env_tableName,
-        ReturnConsumedCapacity: "TOTAL",
-        Limit: "500"
+    var params = {
+        TableName: tableName,
+        IndexName: indexName,
+        KeyConditionExpression: "SERVICE_DOMAIN = :SERVICE_DOMAIN and SERVICE_NAME  = :SERVICE_NAME",
+        ExpressionAttributeValues: {
+            ":SERVICE_NAME": query.service,
+            ":SERVICE_DOMAIN": query.domain
+        }
     };
 
     if (query) {
@@ -50,9 +51,7 @@ module.exports = (query, onComplete) => {
 
             if (query[key]) {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
-                attributeValues[":" + key_name] = {
-                    S: query[key]
-                };
+                params.ExpressionAttributeValues[":" + key_name] = query[key]
             }
         });
     }
@@ -60,13 +59,12 @@ module.exports = (query, onComplete) => {
     filter = filter.substring(0, filter.length - insertAndString.length); // remove the " AND " at the end
 
     if (filter !== "") {
-        scanparams.FilterExpression = filter;
-        scanparams.ExpressionAttributeValues = attributeValues;
+        params.FilterExpression = filter;
     }
 
     var items_formatted = [];
-    var scanExecute = function (onComplete) {
-        dynamodb.scan(scanparams, function(err, items) {
+    var queryExecute = function (onComplete) {
+        docClient.query(params, function(err, items) {
             var count;
             if (err) {
                 onComplete(err);
@@ -76,8 +74,8 @@ module.exports = (query, onComplete) => {
                 });
 
       			if (items.LastEvaluatedKey) {
-					scanparams.ExclusiveStartKey = items.LastEvaluatedKey;
-					scanExecute(onComplete);
+					params.ExclusiveStartKey = items.LastEvaluatedKey;
+					queryExecute(onComplete);
                 } else {
                     var obj = {
                         count: items_formatted.length,
@@ -89,5 +87,5 @@ module.exports = (query, onComplete) => {
             }
         });
     }
-    scanExecute(onComplete);
+    queryExecute(onComplete);
 };
