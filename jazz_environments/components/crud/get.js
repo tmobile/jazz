@@ -24,7 +24,7 @@
 const utils = require("../utils.js")(); //Import the utils module.
 const logger = require("../logger.js"); //Import the logging module.
 
-module.exports = (service, domain, indexName, environment_id, onComplete) => {
+module.exports = (service, domain, environment_id, onComplete) => {
     // initialize docCLient
     var docClient = utils.initDocClient();
 
@@ -33,9 +33,7 @@ module.exports = (service, domain, indexName, environment_id, onComplete) => {
     if (service && domain && environment_id) {
         params = {
             TableName: global.env_tableName,
-            IndexName: indexName,
-            FilterExpression: "ENVIRONMENT_LOGICAL_ID = :ENVIRONMENT_LOGICAL_ID",
-            KeyConditionExpression: "SERVICE_DOMAIN = :SERVICE_DOMAIN and SERVICE_NAME  = :SERVICE_NAME",
+            FilterExpression: "SERVICE_NAME = :SERVICE_NAME AND SERVICE_DOMAIN = :SERVICE_DOMAIN AND ENVIRONMENT_LOGICAL_ID = :ENVIRONMENT_LOGICAL_ID",
             ExpressionAttributeValues: {
                 ":SERVICE_NAME": service,
                 ":SERVICE_DOMAIN": domain,
@@ -45,29 +43,29 @@ module.exports = (service, domain, indexName, environment_id, onComplete) => {
     } else if (service && domain && !environment_id) {
         params = {
             TableName: global.env_tableName,
-            IndexName: indexName,
-            KeyConditionExpression: "SERVICE_DOMAIN = :SERVICE_DOMAIN and SERVICE_NAME  = :SERVICE_NAME",
+            FilterExpression: "SERVICE_NAME = :SERVICE_NAME AND SERVICE_DOMAIN = :SERVICE_DOMAIN",
             ExpressionAttributeValues: {
                 ":SERVICE_NAME": service,
                 ":SERVICE_DOMAIN": domain
             }
         };
     }
-
+    
     var items_formatted = [];
-    var queryExecute = function(onComplete) {
-        docClient.query(params, function(err, data) {
+    var scanExecute = function(onComplete) {
+        docClient.scan(params, function(err, data) {
+           
             if (err) {
                 onComplete(err);
             } else {
 
-                data.Items.forEach(function (item) {
+                data.Items.forEach(function(item) {
                     items_formatted.push(utils.formatEnvironment(item));
                 });
 
                 if (data.LastEvaluatedKey) {
                     params.ExclusiveStartKey = data.LastEvaluatedKey;
-                    queryExecute(onComplete);
+                    scanExecute(onComplete);
                 } else {
                     var obj = {
                         count: items_formatted.length,
@@ -79,5 +77,5 @@ module.exports = (service, domain, indexName, environment_id, onComplete) => {
         });
     };
 
-    queryExecute(onComplete);
+    scanExecute(onComplete);
 };

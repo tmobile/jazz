@@ -4,7 +4,9 @@
     "description": "CRUD APIs for Environments",
     "main": "index.js",
     "private": true,
-    "author": [],
+    "author": {
+        "name": "Jazz"
+    },
     "scripts": {
         "test": "mocha"
     },
@@ -25,5 +27,8 @@
         "chai-as-promised": "^7.1.1",
         "mocha": "^v3.0.0",
         "sinon": "^1.17.7"
+    },
+    "engines": {
+      "node": "6.10"
     }
 }

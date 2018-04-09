@@ -29,11 +29,12 @@ const async = require("async");
 const crud = require("../crud")(); //Import the utils module.
 const request = require("request");
 
-module.exports = (environment_data, envIndexName, onComplete)=>{
+module.exports = (environment_data, onComplete)=>{
     logger.info("Inside Validate Create Payload: " + JSON.stringify(environment_data));
     
     var required_fields_create = global.config.service_environment_required_fields;
     var service_field_list = required_fields_create.concat(global.config.service_environment_changeable_fields);
+    var status_field_list = global.config.service_environment_status;
 
     async.series({
         validateIsEmptyInputData: function(onComplete){
@@ -51,7 +52,7 @@ module.exports = (environment_data, envIndexName, onComplete)=>{
         validateStatusFieldValue: function(onComplete) {
             //check for valid status 
             logger.info("Inside validateStatusFieldValue: ");
-            validateUtils.validateAllRequiredFieldsValue(environment_data, global.config.service_environment_required_fields, onComplete);
+            validateUtils.validateStatusFieldValue(environment_data, status_field_list, onComplete);
         },
 
         validateUnAllowedFieldsInInput: function(onComplete) {
@@ -63,7 +64,7 @@ module.exports = (environment_data, envIndexName, onComplete)=>{
         validateFriendlyName: function(onComplete){
             //check for friendly name
             logger.info("Inside validateFriendlyName: "+JSON.stringify(environment_data));
-            validateUtils.validateFriendlyName(environment_data, onComplete);
+            validateUtils.validateFriendlyName(environment_data, environment_data.logical_id, onComplete);
         },
 
         validateAllRequiredFieldsValue: function(onComplete) {
@@ -126,8 +127,7 @@ module.exports = (environment_data, envIndexName, onComplete)=>{
             environment_data.domain = environment_data.domain.toLowerCase();
 
             query = { logical_id: environment_data.logical_id, service: environment_data.service, domain: environment_data.domain };
-            logger.info("validateEnvironmentExists: "+JSON.stringify(query));
-            crud.getList(query, envIndexName, function onServiceGet(error, data) {
+            crud.getList(query, function onServiceGet(error, data) {
                 if (error) {
                     onComplete(error, null);
                 } else {
@@ -148,7 +148,7 @@ module.exports = (environment_data, envIndexName, onComplete)=>{
                                 domain: environment_data.domain
                             };
 
-                            crud.getList(query, envIndexName, function onServiceGet(error, data) {
+                            crud.getList(query, function onServiceGet(error, data) {
                                 if (error) {
                                     onComplete(error, null);
                                 } else {

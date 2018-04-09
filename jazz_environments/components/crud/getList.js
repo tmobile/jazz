@@ -25,20 +25,19 @@
 const utils = require("../utils.js")(); //Import the utils module.
 const logger = require("../logger.js"); //Import the logging module.
 
-module.exports = ( query, indexName, onComplete) => {
+module.exports = (query, onComplete) => {
     // initialize dynamodb
-    var docClient = utils.initDocClient();
+    var dynamodb = utils.initDynamodb();
+
     var filter = "";
+    var attributeValues = {};
+
     var insertAndString = " AND ";
 
-    var params = {
-        TableName: tableName,
-        IndexName: indexName,
-        KeyConditionExpression: "SERVICE_DOMAIN = :SERVICE_DOMAIN and SERVICE_NAME  = :SERVICE_NAME",
-        ExpressionAttributeValues: {
-            ":SERVICE_NAME": query.service,
-            ":SERVICE_DOMAIN": query.domain
-        }
+    var scanparams = {
+        TableName: global.env_tableName,
+        ReturnConsumedCapacity: "TOTAL",
+        Limit: "500"
     };
 
     if (query) {
@@ -51,7 +50,9 @@ module.exports = ( query, indexName, onComplete) => {
 
             if (query[key]) {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
-                params.ExpressionAttributeValues[":" + key_name] = query[key]
+                attributeValues[":" + key_name] = {
+                    S: query[key]
+                };
             }
         });
     }
@@ -59,12 +60,13 @@ module.exports = ( query, indexName, onComplete) => {
     filter = filter.substring(0, filter.length - insertAndString.length); // remove the " AND " at the end
 
     if (filter !== "") {
-        params.FilterExpression = filter;
+        scanparams.FilterExpression = filter;
+        scanparams.ExpressionAttributeValues = attributeValues;
     }
 
     var items_formatted = [];
-    var queryExecute = function (onComplete) {
-        docClient.query(params, function(err, items) {
+    var scanExecute = function (onComplete) {
+        dynamodb.scan(scanparams, function(err, items) {
             var count;
             if (err) {
                 onComplete(err);
@@ -74,18 +76,17 @@ module.exports = ( query, indexName, onComplete) => {
                 });
 
       			if (items.LastEvaluatedKey) {
-					params.ExclusiveStartKey = items.LastEvaluatedKey;
-					queryExecute(onComplete);
+					scanparams.ExclusiveStartKey = items.LastEvaluatedKey;
+					scanExecute(onComplete);
                 } else {
                     var obj = {
                         count: items_formatted.length,
                         environment: items_formatted
                     };
-                    logger.info("Database Result:" + JSON.stringify(obj));
                     onComplete(null, obj);
                 }
             }
         });
     }
-    queryExecute(onComplete);
+    scanExecute(onComplete);
 };

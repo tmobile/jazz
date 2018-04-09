@@ -141,11 +141,11 @@ var validateEditableFieldsValue = function(environment_data, fields_list, onComp
     }
 };
 
-var validateFriendlyName = function(environment_data, onComplete) {
+var validateFriendlyName = function(environment_data, logical_id, onComplete) {
     var friendlyNameKey = "friendly_name";
-    if (environment_data.logical_id &&
-        (environment_data.logical_id.toLowerCase() === global.config.service_environment_production_logical_id ||
-        environment_data.logical_id.toLowerCase() === global.config.service_environment_stage_logical_id)
+    if (logical_id &&
+        (logical_id.toLowerCase() === global.config.service_environment_production_logical_id ||
+        logical_id.toLowerCase() === global.config.service_environment_stage_logical_id)
     ) {
         if (_.includes(_.keys(environment_data), friendlyNameKey)) {
             onComplete({

@@ -29,7 +29,7 @@ var validateUtils = require("./common.js")();
 const async = require("async");
 const crud = require("../crud")(); //Import the utils module.
 
-module.exports = (environment_data, onComplete) => {
+module.exports = (environment_data, environment_id, onComplete) => {
     logger.info("Inside Validate Update Payload: " + JSON.stringify(environment_data));
 
     var non_editable_fields_for_update = global.config.service_environment_unchangeable_fields;
@@ -46,7 +46,7 @@ module.exports = (environment_data, onComplete) => {
         validateFriendlyName: function(onComplete) {
             //check for friendly name
             logger.info("Inside validateFriendlyName: ");
-            validateUtils.validateFriendlyName(environment_data, onComplete);
+            validateUtils.validateFriendlyName(environment_data, environment_id, onComplete);
         },
 
         validateNotEditableFieldsInUpdate: function(onComplete) {
