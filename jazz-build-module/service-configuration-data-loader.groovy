@@ -113,10 +113,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 
-		if ( (service_name.trim() == "jazz_create-serverless-service") ) {
-			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-repo-base}/${service_config.REPOSITORY.BASE_URL}/g' ./config/prod-config.json"
+		if ( (service_name.trim() == "jazz_create-serverless-service") ) {		
 
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["STG"])}/g' ./config/stg-config.json"

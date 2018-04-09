@@ -67,7 +67,7 @@ module.exports.handler = (event, context, cb) => {
         getToken(config)
             .then((authToken) => getServiceData(event, authToken, config))
             .then((inputs) => createService(inputs))
-            .then((service_id) => serviceOnboarding(event, config, service_id))
+            .then((service_id) => startServiceOnboarding(event, config, service_id))
             .then((result) => {
                 cb(null, responseObj(result, event.body));
             })
@@ -83,7 +83,7 @@ module.exports.handler = (event, context, cb) => {
     }
 
 
-    function serviceOnboarding(event, config, service_id) {
+    function startServiceOnboarding(event, config, service_id) {
         return new Promise((resolve, reject) => {
             try {
                 var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
@@ -202,7 +202,7 @@ module.exports.handler = (event, context, cb) => {
                 serviceMetadataObj.require_internal_access = event.body.require_internal_access;
             }
             if (event.body.service_type === "website") {
-                var create_cloudfront_url = true;
+                var create_cloudfront_url = "true";
                 serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
                 inputs.RUNTIME = 'n/a';
             }

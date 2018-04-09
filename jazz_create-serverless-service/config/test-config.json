@@ -3,7 +3,6 @@
   "BUILD_TOKEN":"tst-testing-@T-Mo",
   "SVC_USER":"jobexec",
   "SVC_PASWD":"jenkinsadmin",
-  "BIT_BUCKET_URL":"http://{conf-repo-base}/projects/CAS/repos/",
   "USER_POOL_ID":"ap-northeast-1_2x3yztest",
   "REGION": "us-east-testing",
   "CLIENT_ID":"conf-client-id"
