@@ -1,0 +1,12 @@
+{
+  "SERVICE_CREATION_EVENT_START":"CALL_ONBOARDING_WORKFLOW",
+  "SERVICE_CREATION_EVENT_END" : "LOCK_MASTER_BRANCH",
+  "SERVICE_DELETION_EVENT_START": "CALL_DELETE_WORKFLOW",
+  "SERVICE_DELETION_EVENT_END" : "DELETE_PROJECT",
+  "SERVICE_DEPLOYMENT_EVENT_END" : "DEPLOY_TO_AWS",
+  "SERVICE_API_URL" : "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "SERVICE_API_RESOURCE" : "/dev/jazz/services",
+  "TOKEN_URL" : "/dev/jazz/login",
+  "SERVICE_USER" : "{jazz_admin}",
+  "TOKEN_CREDS" : "{jazz_admin_creds}"  
+}

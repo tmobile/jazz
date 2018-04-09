@@ -134,7 +134,7 @@ export class ServiceDetailComponent implements OnInit {
                 this.tabData = ['OVERVIEW', 'ACCESS CONTROL', 'COST', 'METRICS'];
             }
         } else{
-            this.http.get('/platform/services/'+id).subscribe(
+            this.http.get('/jazz/services/'+id).subscribe(
               response => {
                     let service = response.data;
                      if(response.data.type === "website")
@@ -213,7 +213,7 @@ export class ServiceDetailComponent implements OnInit {
                 "id" : this.service.id
             };
        this.deleteServiceStatus.emit(this.deleteServiceVal);
-       this.subscription = this.http.post('/platform/delete-serverless-service' , payload)
+       this.subscription = this.http.post('/jazz/delete-serverless-service' , payload)
        .subscribe(
         (Response) => {
             var update = {
@@ -227,7 +227,7 @@ export class ServiceDetailComponent implements OnInit {
 
             this.cache.set('deletedServiceId',this.service.id)
             this.cache.set("updateServiceList", true);
-            this.http.put('/platform/services/'+this.service.id , update)
+            this.http.put('/jazz/services/'+this.service.id , update)
             .subscribe(
                 (Response)=>{
                     this.isLoading=false;

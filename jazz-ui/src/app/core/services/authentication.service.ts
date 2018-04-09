@@ -36,7 +36,7 @@ export class AuthenticationService {
     login(username: string, password: string): Observable<boolean> {
         let headers = new Headers({ 'Content-Type': 'application/json', 'accept':'application/json' });
         let options = new RequestOptions({ headers: headers });
-        return this.http.post(this.baseurl + '/platform/login', JSON.stringify({ username: username, password: password }), options)
+        return this.http.post(this.baseurl + '/jazz/login', JSON.stringify({ username: username, password: password }), options)
             .map((response: Response) => {
                 // login successful if there's a jwt token in the response
                 let token;
@@ -66,7 +66,7 @@ export class AuthenticationService {
         let options = new RequestOptions({ headers: headers });
         this.token = null;
         localStorage.removeItem('currentUser');
-        return this.http.post(this.baseurl + '/platform/logout', JSON.stringify({}), options)
+        return this.http.post(this.baseurl + '/jazz/logout', JSON.stringify({}), options)
             .map((response: Response) => {
                 // login successful if there's a jwt token in the response
                 let response_data = response.json() && response.json().data;

@@ -12,12 +12,10 @@ import groovy.json.JsonSlurper
 @Field def repo_core
 @Field def scm_type
 
-
-
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
-@Field def serviceConfigdata
+@Field def serviceMetadataLoader
 
 
 node  {
@@ -55,7 +53,7 @@ node  {
     def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
     if ( config['type']  != '' && config['service']  != '' && config['domain']  != '') {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: configLoader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){        
-			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"   \"${job_url}&service_name=${gitlab_repo_name}&domain=${config['domain']}&scm_branch=${env.gitlabBranch}\""
+			sh "curl -X GET -k -v -u \"$UNAME:$PWD\"   \"${job_url}&service_name=${config['service']}&domain=${config['domain']}&scm_branch=${env.gitlabBranch}\""
 		}
 	}else  {
         error "Error: service type or service name or namespace is empty"
@@ -98,7 +96,7 @@ def getServiceConfiguration() {
         }
 
         if(prop.service_id){			
-			def serviceData = serviceConfigdata.loadServiceMetadata(prop.service_id,configLoader)
+			def serviceData = serviceMetadataLoader.loadServiceMetadata(prop.service_id)
 			return serviceData
 		}else{
 			error "Service Id is not available."
@@ -108,11 +106,11 @@ def getServiceConfiguration() {
 }
 
 /*
-* Load environment variables from build module
+* Load build module
 */
-def loadBuildModule(buildModuleUrl){
+def loadBuildModule(buildModuleUrl){ 
 
-	dir('config-loader') {
+	dir('build_modules') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
@@ -122,12 +120,16 @@ def loadBuildModule(buildModuleUrl){
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
+		echo "config loader loaded successfully."
 		
 		scmModule = load "scm-module.groovy"
-		scmModule.initialize(configLoader)
+		scmModule.initialize(configLoader)		
+		echo "SCM module loaded successfully."
 		
-		serviceConfigdata = load "service-configuration-data-loader.groovy"
-		
+		serviceMetadataLoader = load "service-metadata-loader.groovy"
+		serviceMetadataLoader.initialize(configLoader)
+		echo "Service metadata loader module loaded successfully."
+
 	}
 }
 
