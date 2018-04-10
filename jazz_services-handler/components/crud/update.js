@@ -72,7 +72,6 @@ module.exports = (inputs, callback) => {
 		if(inputs.EMAIL){jsonBody.email = inputs.EMAIL}
 		if(inputs.SLACKCHANNEL){jsonBody.slack_channel = inputs.SLACKCHANNEL}
 		if(inputs.TAGS){jsonBody.tags = inputs.TAGS}
-		if(inputs.ENDPOINTS){jsonBody.endpoints = inputs.ENDPOINTS}
 		if(inputs.METADATA){jsonBody.metadata = inputs.METADATA}
 		if(inputs.STATUS){jsonBody.status = inputs.STATUS}
 		

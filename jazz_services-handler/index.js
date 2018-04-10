@@ -162,7 +162,6 @@ var processEvent = function (payload, configData, authToken) {
 				"EMAIL": serviceContext.email,
 				"SLACKCHANNEL": serviceContext.slackChannel,
 				"TAGS": serviceContext.tags,
-				"ENDPOINTS": serviceContext.endpoints,
 				"STATUS": statusResponse.status,
 				"METADATA": serviceContext.metadata
 			};
@@ -248,10 +247,7 @@ var getServiceContext = function (svcContext) {
 	if (svcContext.metadata) {
 		json.metadata = svcContext.metadata;
 	}
-	if (svcContext.endpoints) {
-		json.endpoints = svcContext.endpoints;
-	}
-
+	
 	return json;
 }
 

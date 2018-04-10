@@ -54,8 +54,8 @@ describe('platform_logs', function() {
       "stage" : "test",
       "body_get":{},
       "body_put":{
-        "endpoints" : {
-          "dev": "newval"
+        "metadata" : {
+          "subnetid": "abc"
         }
       },
       "body":{

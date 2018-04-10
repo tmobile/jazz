@@ -3,7 +3,7 @@
     "body_get":{
     },
     "body_put":{
-        "endpoints": {"dev": "newval"}
+        "metadata": {"subnetid": "abc"}
     },
     "body":{
         "environment": "sTg",

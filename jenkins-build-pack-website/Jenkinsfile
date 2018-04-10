@@ -170,16 +170,6 @@ node()  {
 								url = "https://s3.amazonaws.com/${s3ProdBucket}/${service}/index.html"
 							}
 
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints["prod"] = url
-							context_map['endpoints'] = endpoints
-
 							def svc_status = 'You can access your website using following link: ' + url
 							echo svc_status
 
@@ -213,16 +203,6 @@ node()  {
 								loadBucketPolicy(service, s3ProdBucket, false)
 								url = "https://s3.amazonaws.com/" + s3ProdBucket + "/${service}/index.html"
 							}
-
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints["prod"] = url
-							context_map['endpoints'] = endpoints
 
 							def svc_status = 'You can access your website using following link: ' + url
 							echo svc_status
@@ -283,16 +263,6 @@ node()  {
 								url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
 							}
 
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints["dev"] = url
-							context_map['endpoints'] = endpoints
-
 							def svc_status = "You can access your website using following link: ${url}"
 							echo svc_status
 
@@ -323,16 +293,7 @@ node()  {
 								loadBucketPolicy(service, s3DevBucket, false)
 								url = "https://s3.amazonaws.com/${s3DevBucket}/${service}/index.html"
 							}
-
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints["dev"] = url
-							context_map['endpoints'] = endpoints
+						
 							def svc_status = 'You can access your website using following link: ' + url
 							echo svc_status
 
