@@ -129,7 +129,6 @@ var formatEnvironment = function(environment, format) {
 var initDocClient = function() {
     AWS.config.update({ region: global.config.ddb_region });
     var docClient = new AWS.DynamoDB.DocumentClient();
-
     return docClient;
 };
 

@@ -31,19 +31,18 @@ const async = require("async");
 const _ = require("lodash");
 const validateUtils = require("./components/validation")();
 
-module.exports.handler = (event, context, cb) => {
-
+var handler = (event, context, cb) => {
     //Initializations
     var errorHandler = errorHandlerModule();
     var config = configObj(event);
     logger.init(event, context);
-    logger.info("event:" + JSON.stringify(event));
+    // logger.info("event:" + JSON.stringify(event));
     global.config = config;
 
     try {
         // event.method cannot be empty, throw error
         if (!event || !event.method) {
-            cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("method cannot be empty")));
         }
 
         // get environment_id from the path
@@ -111,11 +110,12 @@ module.exports.handler = (event, context, cb) => {
         global.userId = event.principalId;
         global.authorization = event.headers.Authorization;
         global.env_tableName = global.config.services_environment_table;
+        var indexName = global.config.services_environment_index;
 
         // 1: GET environment by id and environent (/services/{service_id}/{environment})
         if (event.method === "GET" && (event.query || event.path)) {
             validateGetInput(event)
-            .then((result) => getServiceEnvironmentByParams(result))
+            .then((result) => getServiceEnvironmentByParams(result, indexName))
             .then(function(result){
                 var environment_obj = result.data
                 logger.info("List of environments:"+JSON.stringify(environment_obj));
@@ -180,7 +180,7 @@ module.exports.handler = (event, context, cb) => {
         if (event.method === "POST" && environment_data) {
             logger.info("Create new environment with the following data:" + JSON.stringify(environment_data));
 
-            validateEnvironmentData(environment_data)
+            validateEnvironmentData(environment_data, indexName)
             .then(() => addNewEnvironment(environment_data))
             .then(function(result){
                 logger.info("New environment created:"+JSON.stringify(result));
@@ -209,7 +209,7 @@ module.exports.handler = (event, context, cb) => {
 function validateGetInput(event){
     return new Promise((resolve, reject) => {
         var query;
-        logger.info("Inside validateGetInput:"+JSON.stringify(event));
+        logger.info("Inside validateGetInput:");
         if (
             event.query && (event.query.domain && event.query.service) &&
             (event.path && !event.path.environment_id)
@@ -245,9 +245,10 @@ function validateGetInput(event){
     });
 };
 
-function getServiceEnvironmentByParams(query){
+function getServiceEnvironmentByParams(query, indexName){
+    logger.info("Inside getServiceEnvironmentByParams:")
     return new Promise((resolve, reject) => {
-        validateUtils.validateEnvironment(query.service, query.domain, query.logical_id, function onValidate(error, data){
+        validateUtils.validateEnvironment(indexName, query.service, query.domain, query.logical_id, function onValidate(error, data){
             if(error){
                 reject(error);
             } else{
@@ -261,9 +262,9 @@ function getServiceEnvironmentByParams(query){
     });
 }
 
-function validateEnvironmentData(environment_data){
+function validateEnvironmentData(environment_data, indexName){
     return new Promise((resolve, reject)=>{
-        validateUtils.validateCreatePayload(environment_data, function onValidate(error, data){
+        validateUtils.validateCreatePayload(environment_data, indexName, function onValidate(error, data){
             if(error){
                 reject(error);
             } else {
@@ -297,9 +298,9 @@ function validateUpdateInput(update_payload, environment_id){
     })
 };
 
-function validateEnvironmentExists(service, domain, environment_id){
+function validateEnvironmentExists(indexName, service, domain, environment_id){
     return new Promise((resolve, reject) => {
-        crud.get(service, domain, environment_id.toLowerCase(), function onServiceGet(error, data) {
+        crud.get(indexName, service, domain, environment_id.toLowerCase(), function onServiceGet(error, data) {
             if (error) {
                 reject(error);
             } else {
@@ -346,6 +347,13 @@ function updateServiceEnvironment(update_payload, environment_key_id) {
     });
 };
 
-function first(value){
-    return value+2
+module.exports = {
+    validateGetInput: validateGetInput,
+    getServiceEnvironmentByParams: getServiceEnvironmentByParams,
+    validateEnvironmentData: validateEnvironmentData,
+    addNewEnvironment: addNewEnvironment,
+    validateUpdateInput: validateUpdateInput,
+    validateEnvironmentExists: validateEnvironmentExists,
+    updateServiceEnvironment: updateServiceEnvironment,
+    handler: handler
 }

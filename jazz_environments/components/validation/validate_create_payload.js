@@ -29,7 +29,7 @@ const async = require("async");
 const crud = require("../crud")(); //Import the utils module.
 const request = require("request");
 
-module.exports = (environment_data, onComplete)=>{
+module.exports = (environment_data, indexName, onComplete)=>{
     logger.info("Inside Validate Create Payload: " + JSON.stringify(environment_data));
     
     var required_fields_create = global.config.service_environment_required_fields;
@@ -127,7 +127,7 @@ module.exports = (environment_data, onComplete)=>{
             environment_data.domain = environment_data.domain.toLowerCase();
 
             query = { logical_id: environment_data.logical_id, service: environment_data.service, domain: environment_data.domain };
-            crud.getList(query, function onServiceGet(error, data) {
+            crud.getList(query, indexName, function onServiceGet(error, data) {
                 if (error) {
                     onComplete(error, null);
                 } else {
@@ -148,7 +148,7 @@ module.exports = (environment_data, onComplete)=>{
                                 domain: environment_data.domain
                             };
 
-                            crud.getList(query, function onServiceGet(error, data) {
+                            crud.getList(query, indexName, function onServiceGet(error, data) {
                                 if (error) {
                                     onComplete(error, null);
                                 } else {
