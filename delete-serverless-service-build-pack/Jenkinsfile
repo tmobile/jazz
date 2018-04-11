@@ -18,6 +18,7 @@ import groovy.transform.Field
 @Field def events
 @Field def utilModule
 @Field def serviceMetadataLoader
+@Field def environmentMetadataLoader
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -61,6 +62,8 @@ node {
 		}else{
 			error "Service Id is not available."
 		}
+
+		environmentMetadataLoader.initialize(service_config['service'],  service_config['domain'], null, null, null,  g_base_url)
 	
 		if(!events) { error "Can't load events module"	} //Fail here
 		events.initialize(configLoader,service_config,"SERVICE_DELETION","","",g_base_url + "/jazz/events")
@@ -867,7 +870,10 @@ def loadBuildModules(buildModuleUrl){
 
 		utilModule = load "utility-loader.groovy"
 		utilModule.initialize(configLoader)
-		echo "Service metadata loader module loaded successfully."	
+		echo "Util module loaded successfully."	
+
+		environmentMetadataLoader = load "environment-deployment-metadata-loader.groovy"
+		echo "Environment metadata loader module loaded successfully."
 
 	}
 }
