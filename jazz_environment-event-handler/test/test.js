@@ -18,116 +18,207 @@ const chai = require('chai');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
 const should = require('chai').should();
+const chaiAsPromised = require('chai-as-promised'); chai.use(chaiAsPromised);
 const request = require('request');
 const AWS = require('aws-sdk-mock');
 const awsContext = require('aws-lambda-mock-context');
 const async = require("async");
 const sinon = require('sinon')
-
+const rp = require('request-promise-native');
 const index = require('../index');
 const logger = require('../components/logger');
 const config = require('../components/config');
-const errorHandlerModule = require("../components/error-handler.js");
-const utils = require("../components/utils.js")(); //Import the utils module.
+const fs = require('fs');
 
-var  event, context, configData;
+var  event, context, configData, tokenResponseObj, kinesisPayload;
 
-describe('jazz environment handler test suits - ', function() {
+describe('jazz environment handler tests: ', function() {
   var sandbox;
   beforeEach(function() {
     sandbox = sinon.sandbox.create();
 
-    // set event here. Convert payload to base64 encoded and attach to event for processing
-    // @TODO
-
     context = awsContext();
-		context.functionName = context.functionName + "-dev"
-		tokenResponseObj = {
-			statusCode: 200,
-			body: {
-				data: {
-					token: "auth_token_from_service"
-				}
-			}
-		};
+    context.functionName = context.functionName + "-dev"
+    var payloadFormat = fs.readFileSync('test/KINESIS_PAYLOAD.json');  
+    kinesisPayload = JSON.parse(payloadFormat);
+		tokenResponseObj200 = {
+      "statusCode": 200,
+      "body": {
+        "data": {
+          "user_id": "JazzAdmin",
+          "name": "Jazz Admin",
+          "email": "jazz@T-Mobile.com",
+          "token": "JAZZLOGINTOKENTEST"
+        },
+        "input": {
+          "usrname": "jazzAdmin"
+        }
+      }
+    };
+
+    tokenResponseObj401 = {
+      "statusCode": 401,
+      "message": {
+        "errorMessage": "401 - {\"errorCode\":\"100\",\"errorType\":\"Unauthorized\",\"message\":\"Authentication Failed for user: jazzAdmin- with message: 80090308: LdapErr: DSID-0C0903D0, comment: AcceptSecurityContext error, data 52e, v2580\\u0000\"}",
+        "errorType": "StatusCodeError",
+        "stackTrace": [
+          "new StatusCodeError (test message)"
+        ]
+      }
+    };
+    
+    tokenResponseObjInvalid = {
+      "statusCode": 200,
+      "body": {
+        "data": "",
+        "input": {
+          "usrname": "jazzAdmin"
+        }
+      }
+    };
 		configData = config(context);
 
   });
-
 
   afterEach(function() {
     sandbox.restore();
   });
 
  
-  it('Check jazz modules are loaded & initialized', function() {
-    var callback = sinon.spy();
-    //var spylogger = sinon.stub(logger);
-    //var spyutil = sinon.stub(utils);
-    //var spyConfig = sinon.spy(config, "config");
-    //var spyerrorHandler = sinon.spy(errorHandlerModule);
+	it('Verified getToken returned a valid 200 response ', function () {
+		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj200));
+    var getTokenRequest = index.getTokenRequest(configData);
 
-    //var response = index.handler(event, context, callback);
-
-    //assert(spylogger.called);
-    //assert(spyutil.called);
-    //assert(spyconfig.called);
-    //assert(spyerrorHandler.called);
-
+    rp(getTokenRequest)
+    .then(res => {
+      var status = res.statusCode
+      expect(status, "Invalid status Code from getToken").to.eql(200)
+    })
+    requestPromoiseStub.restore()
   });
 
-	it('getToken should give valid response ', function () {
-    var asyncspy = sinon.spy();
-    var callback = sinon.spy();
 
-		var asyncStub = sinon.stub(async, "series", asyncspy);
-    var response = index.handler(event, context, callback);
-   
-    console.log(asyncspy);
-    //console.log(response);
+	it('Verified getToken returned a Unauthorized 401 response ', function () {
+		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj401));
+    var getTokenRequest = index.getTokenRequest(configData);
 
-    assert(asyncspy.called);
-    //assert(callback.called);
+    rp(getTokenRequest)
+    .then(res => {
+      var status = res.statusCode
+      expect(status, "Error code is not 401/Unauthorized").to.eql(401)
+    })
+
+    requestPromoiseStub.restore()
   });
 
+  
+	it('Verified getToken returned a Invalid response ', function () {
+		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObjInvalid));
+    var getTokenRequest = index.getTokenRequest(configData);
+
+    rp(getTokenRequest)
+    .then(result => {
+      return index.getAuthResponse(result); 
+    })
+    .catch(err => {
+      var msg = "Invalid token response from API";
+      expect(err.message, "Promise should be rejected").to.eql(msg);
+    });
+
+    requestPromoiseStub.restore()
+  });
+
+  it('Verified getToken returned a Invalid response ', function () {
+    tokenResponseObjInvalid.body = null
+		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObjInvalid));
+    var getTokenRequest = index.getTokenRequest(configData);
+
+    rp(getTokenRequest)
+    .then(result => {
+      return index.getAuthResponse(result); 
+    })
+    .catch(err => {
+      var msg = "Invalid token response from API";
+      expect(err.message, "Promise should be rejected").to.eql(msg);
+    });
+
+    requestPromoiseStub.restore()
+  });
 
   it('Process events - COMMIT_TEMPLATE', function () {
-    var callback = sinon.spy();
+    var event_COMMIT_TEMPLATE = fs.readFileSync('test/COMMIT_TEMPLATE.json');  
+    var event_COMMIT_TEMPLATE_64 = new Buffer(event_COMMIT_TEMPLATE).toString("base64");
+
+    kinesisPayload.Records[0].data = event_COMMIT_TEMPLATE_64;
+    console.log(kinesisPayload);
+
+
     //var response = index.handler(event, context, callback);
     //@TODO
     
   });
 
   it('Process events - CREATE_BRANCH', function () {
-    var callback = sinon.spy();
+    var event_CREATE_BRANCH = fs.readFileSync('test/CREATE_BRANCH.json');  
+    var event_CREATE_BRANCH_64 = new Buffer(event_CREATE_BRANCH).toString("base64");
+
+    kinesisPayload.Records[0].data = event_CREATE_BRANCH_64;
+    console.log(kinesisPayload);
     //var response = index.handler(event, context, callback);
     //@TODO
     
   });
 
   it('Process events - UPDATE_ENVIRONMENT', function () {
-    var callback = sinon.spy();
+    var event_UPDATE_ENVIRONMENT = fs.readFileSync('test/UPDATE_ENVIRONMENT.json');  
+    var event_UPDATE_ENVIRONMENT_64 = new Buffer(event_UPDATE_ENVIRONMENT).toString("base64");
+
+    kinesisPayload.Records[0].data = event_UPDATE_ENVIRONMENT_64;
+    console.log(kinesisPayload);
     //var response = index.handler(event, context, callback);
     //@TODO
     
   });
 
   it('Process events - DELETE_BRANCH', function () {
-    var callback = sinon.spy();
+    var event_DELETE_BRANCH = fs.readFileSync('test/DELETE_BRANCH.json');  
+    var event_DELETE_BRANCH_64 = new Buffer(event_DELETE_BRANCH).toString("base64");
+
+    kinesisPayload.Records[0].data = event_DELETE_BRANCH_64;
+    console.log(kinesisPayload);
     //var response = index.handler(event, context, callback);
     //@TODO
     
   });
 
   it('Process events - DELETE_ENVIRONMENT', function () {
-    var callback = sinon.spy();
+    var event_DELETE_ENVIRONMENT = fs.readFileSync('test/DELETE_ENVIRONMENT.json');  
+    var event_DELETE_ENVIRONMENT_64 = new Buffer(event_DELETE_ENVIRONMENT).toString("base64");
+
+    kinesisPayload.Records[0].data = event_DELETE_ENVIRONMENT_64;
+    console.log(kinesisPayload);
     //var response = index.handler(event, context, callback);
     //@TODO
     
   });
 
-  it('Process events - DELETE_ENVIRONMENT', function () {
-    var callback = sinon.spy();
+  it('Process events - INVALID_EVENT', function () {
+    var event_INVALID_EVENT = fs.readFileSync('test/INVALID_EVENT.json');  
+    var event_INVALID_EVENT_64 = new Buffer(event_INVALID_EVENT).toString("base64");
+
+    kinesisPayload.Records[0].data = event_INVALID_EVENT_64;
+    console.log(kinesisPayload);
+    //var response = index.handler(event, context, callback);
+    //@TODO
+    
+  });
+
+  it('Process events - INVALID_EVENT_TYPE', function () {
+    var event_INVALID_EVENT_TYPE = fs.readFileSync('test/INVALID_EVENT_TYPE.json');  
+    var event_INVALID_EVENT_TYPE_64 = new Buffer(event_INVALID_EVENT_TYPE).toString("base64");
+
+    kinesisPayload.Records[0].data = event_INVALID_EVENT_TYPE_64;
+    console.log(kinesisPayload);
     //var response = index.handler(event, context, callback);
     //@TODO
     
