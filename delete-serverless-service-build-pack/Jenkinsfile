@@ -64,6 +64,7 @@ node {
 		}
 
 		environmentMetadataLoader.initialize(service_config['service'],  service_config['domain'], null, null, null,  g_base_url)
+		environmentMetadataLoader.setAuthToken(auth_token)
 	
 		if(!events) { error "Can't load events module"	} //Fail here
 		events.initialize(configLoader,service_config,"SERVICE_DELETION","","",g_base_url + "/jazz/events")
