@@ -133,7 +133,7 @@ node {
 
 					for (_envId in environmentIds){
 					try{
-						def branch = EnvironmentMetadata.getEnvironmentBranchName(_envId)
+						def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 						if(branch && branch != 'NA'){
 							events.setBranch(branch)
 							branch = 'NA'
@@ -150,15 +150,25 @@ node {
 				break
 
 			case "WEBSITE":
-				stage('Undeploy Service') {
-					cleanupCloudFrontDistribution("dev")
-					unDeployWebsite("dev")
-					
-					cleanupCloudFrontDistribution("stg")
-					unDeployWebsite("stg")
-
-					cleanupCloudFrontDistribution("prod")
-					unDeployWebsite("prod")
+				stage('Undeploy Website') {
+					for (_envId in environmentIds){
+						try {
+							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+							if(branch && branch != 'NA'){
+								events.setBranch(branch)
+								branch = 'NA'
+							}
+							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
+							if (cloudfrontEnabled == "true") {
+								cleanupCloudFrontDistribution(service_name, domain, _envId)
+							}
+							unDeployWebsite( _envId)
+							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" completed", null, _envId)
+						} catch (ex){
+							echo "error occured when Deleting  Environment: " + ex
+							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" failed! "+ ex.getMessage(), null, _envId)
+						}
+					}
 
 				}
 				break
