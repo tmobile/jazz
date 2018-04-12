@@ -113,17 +113,27 @@ node {
 				stage('Undeploy Service') {
 					updateServiceNameConfig()
 					def path = getResourcePath()
-					cleanUpApiGatewayResources("dev", path)
-					cleanUpApiDocs("dev")
-					unDeployService('dev')
-
-					cleanUpApiGatewayResources("stg", path)
-					cleanUpApiDocs("stg")
-					unDeployService('stg')
-
-					cleanUpApiGatewayResources("prod", path)
-					cleanUpApiDocs("prod")
-					unDeployService('prod')
+					for (_envId in environmentIds){
+						try{
+							def endpoint_type = ServiceMetadata.getEndpointType()
+							echo "Endpoint Type: $endpoint_type"
+							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+							if(branch && branch != 'NA'){
+								events.setBranch(branch)
+								branch = 'NA'
+							}
+							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
+							echo 'undeploying service for environment: ' + _envId
+							
+							cleanUpApiGatewayResources(_envId, path)
+							cleanUpApiDocs(_envId)
+							unDeployService(_envId)
+							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" completed", null, _envId)
+						} catch (ex){
+							echo "Environment Deletion failed for envId: $_envId . Error Details:" + ex
+							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" failed! "+ ex.getMessage(), null, _envId)
+						}
+					}
 				}
 				break
 
@@ -132,19 +142,19 @@ node {
 					updateServiceNameConfig()
 
 					for (_envId in environmentIds){
-					try{
-						def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
-						if(branch && branch != 'NA'){
-							events.setBranch(branch)
-							branch = 'NA'
+						try{
+							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+							if(branch && branch != 'NA'){
+								events.setBranch(branch)
+								branch = 'NA'
+							}
+							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
+							echo 'undeploying function for environment: '+ _envId
+							unDeployService(_envId)
+							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" completed", null, _envId)
+						} catch (ex){
+							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" failed! "+ ex.getMessage(), null, _envId)
 						}
-						events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
-						echo 'undeploying function for environment: '+ _envId
-						unDeployService(_envId)
-						events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" completed", null, _envId)
-					} catch (ex){
-						events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" failed! "+ ex.getMessage(), null, _envId)
-					}
 				}	
 				}
 				break
