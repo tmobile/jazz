@@ -130,9 +130,6 @@ node {
 			case "LAMBDA":
 				stage('Undeploy Service') {
 					updateServiceNameConfig()
-					unDeployService('dev')
-					unDeployService('stg')
-					unDeployService('prod')
 
 					for (_envId in environmentIds){
 					try{
@@ -168,10 +165,13 @@ node {
 		}
 	}
 
-	stage('Cleanup SCM') {
-		cleanup(repo_name)
-		events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
+	if(is_service_deletion){
+		stage('Cleanup SCM') {
+			cleanup(repo_name)
+			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
+		}
 	}
+	
 }
 
 /**
