@@ -43,6 +43,8 @@ node {
 	def cloudfrontEnabled
 	def flowType	
 	def service_id = params.db_service_id
+	def environmentIds = []
+	def is_service_deletion = true;
 	
 	
 	if(params.version){
@@ -51,6 +53,12 @@ node {
 
 	if(params.tracking_id){
 		tracking_id = params.tracking_id.trim()
+	}
+
+	if(params.environment_id){
+		environment_id = params.environment_id 
+		environmentIds.push(environment_id.trim())
+		is_service_deletion = false
 	}	
 
 	auth_token = setCredentials()
@@ -125,6 +133,22 @@ node {
 					unDeployService('dev')
 					unDeployService('stg')
 					unDeployService('prod')
+
+					for (_envId in environmentIds){
+					try{
+						def branch = EnvironmentMetadata.getEnvironmentBranchName(_envId)
+						if(branch && branch != 'NA'){
+							events.setBranch(branch)
+							branch = 'NA'
+						}
+						events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
+						echo 'undeploying function for environment: '+ _envId
+						unDeployService(_envId)
+						events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" completed", null, _envId)
+					} catch (ex){
+						events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" failed! "+ ex.getMessage(), null, _envId)
+					}
+				}	
 				}
 				break
 
@@ -163,7 +187,16 @@ def unDeployService(stage) {
 			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			sh "serverless remove --stage ${stage} --verbose --bucket " + getServiceBucket(stage)
+			if(getStage(environment).equals('dev')){
+				//Resetting the S3 bucket name to 'dev' if it has logicalId
+				setDeploymentBucketName('\${opt:stage}', getStage(environment))
+				sh "serverless remove --stage "+ environment +" --verbose"
+				//Resetting the S3 bucket name back to default 
+				setDeploymentBucketName(getStage(environment), '\${opt:stage}')
+			} else {
+				sh "serverless remove --stage "+ environment +" --verbose"
+			}
+			//sh "serverless remove --stage ${stage} --verbose --bucket " + getServiceBucket(stage)
 			echo "Service undeployed"
 		}catch(ex) {
 			events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
@@ -886,6 +919,17 @@ def getBuildModuleUrl() {
     }else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     } 
+}
+
+def getStage(environment){
+	if(environment.equals('dev') || environment.endsWith('-dev')){
+		environment = 'dev'
+	}
+	return environment
+}
+
+def setDeploymentBucketName(stage, environment){
+	sh "sed -i -- 's/oaf-apis-deployment-bucket-" + stage + "/oaf-apis-deployment-bucket-" + environment + "/g' serverless.yml"
 }
 
 @NonCPS
