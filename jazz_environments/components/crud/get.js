@@ -32,7 +32,7 @@ module.exports = (indexName, service, domain, environment_id, onComplete) => {
 
     if (service && domain && environment_id) {
         params = {
-            TableName: tableName,
+            TableName: global.env_tableName,
             IndexName: indexName,
             FilterExpression: "ENVIRONMENT_LOGICAL_ID = :ENVIRONMENT_LOGICAL_ID",
             KeyConditionExpression: "SERVICE_DOMAIN = :SERVICE_DOMAIN and SERVICE_NAME  = :SERVICE_NAME",
@@ -52,8 +52,12 @@ module.exports = (indexName, service, domain, environment_id, onComplete) => {
                 ":SERVICE_DOMAIN": domain
             }
         };
+    } else {
+        onComplete("Not enough inputs to get environment details");
     }
     
+    logger.info("Scan Prams: " + JSON.stringify(params));
+
     var items_formatted = [];
     var queryExecute = function(onComplete) {
         docClient.query(params, function(err, data) {

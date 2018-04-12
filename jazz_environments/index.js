@@ -36,7 +36,7 @@ var handler = (event, context, cb) => {
     var errorHandler = errorHandlerModule();
     var config = configObj(event);
     logger.init(event, context);
-    // logger.info("event:" + JSON.stringify(event));
+    logger.info("event:" + JSON.stringify(event));
     global.config = config;
 
     try {
@@ -154,7 +154,7 @@ var handler = (event, context, cb) => {
             var update_environment_payload = Object.assign({}, event.body);
 
             validateUpdateInput(update_environment_payload, environment_id)
-            .then(() => validateEnvironmentExists(service, domain, environment_id))
+            .then(() => validateEnvironmentExists(indexName, service, domain, environment_id))
             .then((result) => updateServiceEnvironment(update_environment_payload, result.data))
             .then(function(result){
                 logger.info("Environment update success:"+JSON.stringify(result));

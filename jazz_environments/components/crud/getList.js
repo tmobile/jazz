@@ -32,12 +32,12 @@ module.exports = (query, indexName, onComplete) => {
     var insertAndString = " AND ";
 
     var params = {
-        TableName: tableName,
+        TableName: global.env_tableName,
         IndexName: indexName,
-        KeyConditionExpression: "SERVICE_DOMAIN = :service_domain and SERVICE_NAME  = :service_name",
+        KeyConditionExpression: "SERVICE_DOMAIN = :SERVICE_DOMAIN and SERVICE_NAME  = :SERVICE_NAME",
         ExpressionAttributeValues: {
-            ":service_name": query.service,
-            ":service_domain":query.domain
+            ":SERVICE_NAME": query.service,
+            ":SERVICE_DOMAIN":query.domain
         }
     };
 
@@ -49,7 +49,7 @@ module.exports = (query, indexName, onComplete) => {
         keys_list.forEach(function(key) {
             var key_name = utils.getEnvironmentDatabaseKeyName(key);
 
-            if (query[key]) {
+            if (query[key] && key_name !== "SERVICE_DOMAIN" && key_name !== "SERVICE_NAME") {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
                 params.ExpressionAttributeValues[":" + key_name] = query[key]
             }
@@ -58,7 +58,7 @@ module.exports = (query, indexName, onComplete) => {
 
     filter = filter.substring(0, filter.length - insertAndString.length); // remove the " AND " at the end
 
-    if (filter !== "") {
+    if (filter) {
         params.FilterExpression = filter;
     }
 

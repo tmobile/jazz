@@ -28,7 +28,7 @@ const _ = require("lodash");
 
 module.exports = (indexName, service, domain, environment_id, onComplete) => {
     // check for query param ,path params and crud.get
-    logger.info("Inside Validate Environment: " + service + domain + environment_id);
+    logger.info("Inside Validate Environment: "+indexName + service + domain + environment_id);
 
     crud.get(indexName, service, domain, environment_id, function onEnvironmentGet(error, data) {
         if (error) {
