@@ -26,11 +26,11 @@ const logger = require("../logger.js"); //Import the logging module.
 const crud = require("../crud")(); //Import the utils module.
 const _ = require("lodash");
 
-module.exports = (indexName, service, domain, environment_id, onComplete) => {
+module.exports = (tableName, indexName, service, domain, environment_id, onComplete) => {
     // check for query param ,path params and crud.get
     logger.info("Inside Validate Environment: "+indexName + service + domain + environment_id);
 
-    crud.get(indexName, service, domain, environment_id, function onEnvironmentGet(error, data) {
+    crud.get(tableName, indexName, service, domain, environment_id, function onEnvironmentGet(error, data) {
         if (error) {
             onComplete(error, null);
         } else {

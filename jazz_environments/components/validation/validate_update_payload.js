@@ -24,9 +24,7 @@
 
 const logger = require("../logger"); //Import the logging module.
 const utils = require("../utils.js")(); //Import the utils module.
-const _ = require("lodash");
-var validateUtils = require("./common.js")();
-const async = require("async");
+const validateUtils = require("./common.js")();
 const crud = require("../crud")(); //Import the utils module.
 
 module.exports = (environment_data, environment_id, onComplete) => {
@@ -37,52 +35,103 @@ module.exports = (environment_data, environment_id, onComplete) => {
     var status_field_list = global.config.service_environment_status
     var service_data_from_db = {};
 
-    async.series({
-        validateIsEmptyInputData: function(onComplete) {
-            //check for empty fields
-            logger.info("Inside validateIsEmptyInputData: ");
-            validateUtils.validateIsEmptyInputData(environment_data, onComplete);
-        },
-        validateFriendlyName: function(onComplete) {
-            //check for friendly name
-            logger.info("Inside validateFriendlyName: ");
-            validateUtils.validateFriendlyName(environment_data, environment_id, onComplete);
-        },
-
-        validateNotEditableFieldsInUpdate: function(onComplete) {
-            // check for non-editable
-            logger.info("Inside validateNotEditableFieldsInUpdate: ");
-            validateUtils.validateNotEditableFieldsInUpdate(environment_data, non_editable_fields_for_update, onComplete);
-        },
-
-        validateEditableFieldsValue: function(onComplete) {
-            //check for editable fields
-            logger.info("Inside validateEditableFieldsValue: ");
-            validateUtils.validateEditableFieldsValue(environment_data, editable_fields_for_update, onComplete);
-        },
-
-        
-        validateUnAllowedFieldsInInput: function(onComplete){
-            // check for unallowed fields
-            logger.info("Inside validateUnAllowedFieldsInInput:");
-            validateUtils.validateUnAllowedFieldsInInput(environment_data, editable_fields_for_update, onComplete);
-        },
-
-        validateStatusFieldValue: function(onComplete) {
-            // check for invalid status values
-            logger.info("Inside validateStatusStateChange: ");
-            validateUtils.validateStatusFieldValue(environment_data, status_field_list, onComplete);
-        }
-    },
-    function(error, data) {
-        if (error) {
-            logger.info('#validate error')
-            logger.error("# Validate Update Payload Error:" + JSON.stringify(error));
-            onComplete(error, null);
-        } else {
-            logger.info("# Validate Update Payload Data:" + JSON.stringify(data));
-            onComplete(null);
-        }
+    validateIsEmptyInputData(environment_data)
+    .then(() => validateFriendlyName(environment_data, environment_id))
+    .then(() => validateNotEditableFieldsInUpdate(environment_data, non_editable_fields_for_update))
+    .then(() => validateEditableFieldsValue(environment_data, editable_fields_for_update))
+    .then(() => validateUnAllowedFieldsInInput(environment_data, editable_fields_for_update))
+    .then(() => validateStatusFieldValue(environment_data, status_field_list))
+    .then(function(result){
+        logger.info("# Validate Update Payload Data:" + JSON.stringify(result));
+        onComplete(null);
+    })
+    .catch(function(error){
+        logger.info('#validate error')
+        logger.error("# Validate Update Payload Error:" + JSON.stringify(error));
+        onComplete(error, null);
     });
-    
 }
+
+function validateIsEmptyInputData(environment_data) {
+    //check for empty fields
+    logger.info("Inside validateIsEmptyInputData: ");
+    return new Promise((resolve, reject) => {
+        validateUtils.validateIsEmptyInputData(environment_data, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+};
+
+function validateFriendlyName(environment_data, environment_id) {
+    //check for friendly name
+    logger.info("Inside validateFriendlyName: ");
+    return new Promise((resolve, reject) =>{
+        validateUtils.validateFriendlyName(environment_data, environment_id, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+};
+
+function validateNotEditableFieldsInUpdate(environment_data, non_editable_fields_for_update) {
+    // check for non-editable
+    logger.info("Inside validateNotEditableFieldsInUpdate: ");
+    return new Promise((resolve, reject) =>{
+        validateUtils.validateNotEditableFieldsInUpdate(environment_data, non_editable_fields_for_update, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+};
+
+function validateEditableFieldsValue(environment_data, editable_fields_for_update) {
+    //check for editable fields
+    logger.info("Inside validateEditableFieldsValue: ");
+    return new Promise((resolve, reject) =>{
+        validateUtils.validateEditableFieldsValue(environment_data, editable_fields_for_update, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+};
+
+function validateUnAllowedFieldsInInput(environment_data, editable_fields_for_update) {
+    // check for unallowed fields
+    logger.info("Inside validateUnAllowedFieldsInInput:");
+    return new Promise((resolve, reject) =>{
+        validateUtils.validateUnAllowedFieldsInInput(environment_data, editable_fields_for_update, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+};
+
+function validateStatusFieldValue(environment_data, status_field_list) {
+    // check for invalid status values
+    logger.info("Inside validateStatusStateChange: ");
+    return new Promise((resolve, reject) => {
+        validateUtils.validateStatusFieldValue(environment_data, status_field_list, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+};

@@ -23,7 +23,6 @@
 **/
 
 const _ = require("lodash");
-const logger = require("../logger.js"); //Import the logging module.
 
 var validateIsEmptyInputData = function(environment_data, onComplete) {
     if (_.isEmpty(environment_data)) {

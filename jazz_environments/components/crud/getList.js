@@ -25,14 +25,14 @@
 const utils = require("../utils.js")(); //Import the utils module.
 const logger = require("../logger.js"); //Import the logging module.
 
-module.exports = (query, indexName, onComplete) => {
+module.exports = (tableName, query, indexName, onComplete) => {
     // initialize dynamodb
     var docClient = utils.initDocClient();
     var filter = "";
     var insertAndString = " AND ";
 
     var params = {
-        TableName: global.env_tableName,
+        TableName: tableName,
         IndexName: indexName,
         KeyConditionExpression: "SERVICE_DOMAIN = :SERVICE_DOMAIN and SERVICE_NAME  = :SERVICE_NAME",
         ExpressionAttributeValues: {

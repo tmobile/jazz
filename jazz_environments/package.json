@@ -14,7 +14,6 @@
         "json-query": "*",
         "request": "*",
         "guid": "0.0.12",
-        "async": "*",
         "deasync": "*",
         "moment": "*",
         "lodash": "*"

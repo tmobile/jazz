@@ -25,7 +25,7 @@
 const utils = require("../utils.js")(); //Import the utils module.
 const moment = require("moment");
 
-module.exports = (environmentData, environment_key_id, onComplete) => {
+module.exports = (tableName, environmentData, environment_key_id, onComplete) => {
     // initialize docCLient
     var docClient = utils.initDocClient();
 
@@ -34,7 +34,7 @@ module.exports = (environmentData, environment_key_id, onComplete) => {
         .format("YYYY-MM-DDTHH:mm:ss:SSS");
 
     var params = {
-        TableName: global.env_tableName,
+        TableName: tableName,
         Key: {
             ENVIRONMENT_ID: environment_key_id
         }

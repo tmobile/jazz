@@ -23,168 +23,234 @@
 **/
 
 const logger = require("../logger.js"); //Import the logging module.
-const _ = require("lodash");
-var validateUtils = require("./common.js")();
-const async = require("async");
+const validateUtils = require("./common.js")();
 const crud = require("../crud")(); //Import the utils module.
 const request = require("request");
 
-module.exports = (environment_data, indexName, onComplete)=>{
+module.exports = (tableName, environment_data, indexName, onComplete)=>{
     logger.info("Inside Validate Create Payload: " + JSON.stringify(environment_data));
     
     var required_fields_create = global.config.service_environment_required_fields;
     var service_field_list = required_fields_create.concat(global.config.service_environment_changeable_fields);
     var status_field_list = global.config.service_environment_status;
 
-    async.series({
-        validateIsEmptyInputData: function(onComplete){
-            //check for empty body
-            logger.info("Inside validateIsEmptyInputData: ");
-            validateUtils.validateIsEmptyInputData(environment_data, onComplete)
-        },
+    validateIsEmptyInputData(environment_data)
+    .then(() => validateAllRequiredFields(environment_data, required_fields_create))
+    .then(() => validateStatusFieldValue(environment_data, status_field_list))
+    .then(() => validateUnAllowedFieldsInInput(environment_data, service_field_list))
+    .then(() => validateFriendlyName(environment_data))
+    .then(() => validateAllRequiredFieldsValue(environment_data, required_fields_create))
+    .then(() => validateRemoveEmptyValues(environment_data))
+    .then(() => validateServiceExists(environment_data))
+    .then(() => validateEnvironmentExists(environment_data, indexName, tableName))
+    .then((result) =>{
+        logger.info("# Validate Create Payload Data:" + JSON.stringify(result));
+        onComplete(null);
+    })
+    .catch((error) => {
+        logger.error("# Validate Create Payload Error:" + JSON.stringify(error));
+        onComplete(error, null);
+    });
+}
 
-        validateAllRequiredFields: function(onComplete){
-            //check for required fields
-            logger.info("Inside validateAllRequiredFields: ");
-            validateUtils.validateAllRequiredFields(environment_data, required_fields_create, onComplete);
-        },
+function validateIsEmptyInputData(environment_data){
+    logger.info("Inside validateIsEmptyInputData: ");
+    return new Promise((resolve, reject)=>{
+        //check for empty body
+        validateUtils.validateIsEmptyInputData(environment_data, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+};
 
-        validateStatusFieldValue: function(onComplete) {
-            //check for valid status 
-            logger.info("Inside validateStatusFieldValue: ");
-            validateUtils.validateStatusFieldValue(environment_data, status_field_list, onComplete);
-        },
+function validateAllRequiredFields(environment_data, required_fields_create){
+    logger.info("Inside validateAllRequiredFields: ");
+    return new Promise((resolve, reject)=>{
+        //check for required fields 
+        validateUtils.validateAllRequiredFields(environment_data, required_fields_create, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else{
+                resolve(data);
+            }
+        });
+    });
+};
 
-        validateUnAllowedFieldsInInput: function(onComplete) {
-            //check for unchangable fields
-            logger.info("Inside validateUnAllowedFieldsInInput: ");
-            validateUtils.validateUnAllowedFieldsInInput(environment_data, service_field_list, onComplete);
-        },
+function validateStatusFieldValue(environment_data, status_field_list) {
+    //check for valid status
+    logger.info("Inside validateStatusFieldValue: ");
+    return new Promise((resolve, reject)=>{
+        validateUtils.validateStatusFieldValue(environment_data, status_field_list, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else{
+                resolve(data);
+            }
+        });
+    });
+};
 
-        validateFriendlyName: function(onComplete){
-            //check for friendly name
-            logger.info("Inside validateFriendlyName: "+JSON.stringify(environment_data));
-            validateUtils.validateFriendlyName(environment_data, environment_data.logical_id, onComplete);
-        },
+function validateUnAllowedFieldsInInput(environment_data, service_field_list) {
+    //check for unchangable fields
+    logger.info("Inside validateUnAllowedFieldsInInput: ");
+    return new Promise((resolve, reject) => {
+        validateUtils.validateUnAllowedFieldsInInput(environment_data, service_field_list, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else{
+                resolve(data);
+            }
+        });
+    });
+};
 
-        validateAllRequiredFieldsValue: function(onComplete) {
-            //check for required fields
-            logger.info("Inside validateAllRequiredFieldsValue: ");
-            validateUtils.validateAllRequiredFieldsValue(environment_data, required_fields_create, onComplete);
-        },
+function validateFriendlyName(environment_data){
+    //check for friendly name
+    logger.info("Inside validateFriendlyName: "+JSON.stringify(environment_data));
+    return new Promise((resolve, reject) => {
+        validateUtils.validateFriendlyName(environment_data, environment_data.logical_id, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else{
+                resolve(data);
+            }
+        });
+    });
+};
 
-        validateRemoveEmptyValues: function(onComplete) {
-            // check for empty values before updating environments table
-            logger.info("Inside validateRemoveEmptyValues: ");
-            validateUtils.validateRemoveEmptyValues(environment_data, onComplete);
-        },
-        // Check if a service with same domain and service_name combination exists
-        validateServiceExists: function(onComplete) {
-            logger.info("validateServiceExists: ");
-            var service_domain = environment_data.domain;
-            var service_name = environment_data.service;
-            var svcGetPayload;
-            //call services get
-            svcGetPayload = {
-                uri: global.config.SERVICE_API_URL + global.config.SERVICE_API_RESOURCE + "?domain=" + service_domain + "&service=" + service_name,
-                method: "GET",
-                headers: {'Authorization':global.authorization},
-                rejectUnauthorized: false
-            };
-            request(svcGetPayload, function(error, response, body) {
-                if (response.statusCode === 200) {
-                    var output = JSON.parse(body);
-                    if (!output.data || !output.data || output.data.available == null) {
-                        onComplete({
-                            result: "inputError",
-                            message: "Error finding service: " + service_domain + "." + service_name + " in service catalog"
-                        }, null);
-                    } else if (output.data.available === false) {
-                        onComplete(null, {
-                            result: "success",
-                            message: "Service is available!"
-                        });
-                    } else if (output.data.available === true) {
-                        onComplete({
-                            result: "inputError",
-                            message: "Service with domain: " + service_domain + " and service name:" + service_name + ", does not exist."
-                        },null);
-                    }
-                } else {
-                    onComplete({
+function validateAllRequiredFieldsValue(environment_data, required_fields_create) {
+    //check for required fields
+    logger.info("Inside validateAllRequiredFieldsValue: ");
+    return new Promise((resolve, reject) => {
+        validateUtils.validateAllRequiredFieldsValue(environment_data, required_fields_create, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else{
+                resolve(data);
+            }
+        });
+    });
+};
+
+function validateRemoveEmptyValues(environment_data) {
+    // check for empty values before updating environments table
+    logger.info("Inside validateRemoveEmptyValues: ");
+    return new Promise((resolve, reject) =>{
+        validateUtils.validateRemoveEmptyValues(environment_data, function onValidate(error, data){
+            if(error){
+                reject(error);
+            } else{
+                resolve(data);
+            }
+        });
+    });
+};
+
+function validateServiceExists(environment_data) {
+    logger.info("validateServiceExists: ");
+    return new Promise((resolve, reject) =>{
+        var service_domain = environment_data.domain;
+        var service_name = environment_data.service;
+        var svcGetPayload;
+        //call services get
+        svcGetPayload = {
+            uri: global.config.SERVICE_API_URL + global.config.SERVICE_API_RESOURCE + "?domain=" + service_domain + "&service=" + service_name,
+            method: "GET",
+            headers: {'Authorization':global.authorization},
+            rejectUnauthorized: false
+        };
+        request(svcGetPayload, function(error, response, body) {
+            if (response.statusCode === 200) {
+                var output = JSON.parse(body);
+                if (!output.data || !output.data || output.data.available == null) {
+                    reject({
                         result: "inputError",
                         message: "Error finding service: " + service_domain + "." + service_name + " in service catalog"
-                    }, null);
+                    });
+                } else if (output.data.available === false) {
+                    resolve({
+                        result: "success",
+                        message: "Service is available!"
+                    });
+                } else if (output.data.available === true) {
+                    reject({
+                        result: "inputError",
+                        message: "Service with domain: " + service_domain + " and service name:" + service_name + ", does not exist."
+                    });
                 }
-            });
-        },
-        validateEnvironmentExists: function(onComplete) {
-            // Check if a environment with same environment exists
-            var query;
+            } else {
+                reject({
+                    result: "inputError",
+                    message: "Error finding service: " + service_domain + "." + service_name + " in service catalog"
+                });
+            }
+        });
+    });
+};
 
-            environment_data.logical_id = environment_data.logical_id.toLowerCase();
-            environment_data.service = environment_data.service.toLowerCase();
-            environment_data.domain = environment_data.domain.toLowerCase();
-            environment_data.physical_id = environment_data.physical_id.toLowerCase();
+function validateEnvironmentExists(environment_data, indexName, tableName) {
+    // Check if a environment with same environment exists
+    logger.info("Inside validateEnvironmentExists");
+    return new Promise((resolve, reject) => {
+        var query;
 
-            query = { logical_id: environment_data.logical_id, service: environment_data.service, domain: environment_data.domain, physical_id: environment_data.physical_id };
-            crud.getList(query, indexName, function onServiceGet(error, data) {
-                if (error) {
-                    onComplete(error, null);
+        environment_data.logical_id = environment_data.logical_id.toLowerCase();
+        environment_data.service = environment_data.service.toLowerCase();
+        environment_data.domain = environment_data.domain.toLowerCase();
+        environment_data.physical_id = environment_data.physical_id.toLowerCase();
+        query = { logical_id: environment_data.logical_id, service: environment_data.service, domain: environment_data.domain, physical_id: environment_data.physical_id };
+        crud.getList(tableName, query, indexName, function onServiceGet(error, data) {
+            if (error) {
+                reject(error);
+            } else {
+                if (data.environment.length > 0) {
+                    reject({
+                        result: "inputError",
+                        message: "The specified environment already exists, please choose a different logical id for your new environment"
+                    });
                 } else {
-                    if (data.environment.length > 0) {
-                        onComplete({
-                            result: "inputError",
-                            message: "The specified environment already exists, please choose a different logical id for your new environment"
-                        }, null);
-                    } else {
-                        if (
-                            environment_data.physical_id &&
-                            (environment_data.logical_id !== config.service_environment_production_logical_id &&
-                                environment_data.logical_id !== config.service_environment_stage_logical_id)
-                        ) {
-                            query = {
-                                physical_id: environment_data.physical_id,
-                                service: environment_data.service,
-                                domain: environment_data.domain
-                            };
+                    if (
+                        environment_data.physical_id &&
+                        (environment_data.logical_id !== config.service_environment_production_logical_id &&
+                            environment_data.logical_id !== config.service_environment_stage_logical_id)
+                    ) {
+                        query = {
+                            physical_id: environment_data.physical_id,
+                            service: environment_data.service,
+                            domain: environment_data.domain
+                        };
 
-                            crud.getList(query, indexName, function onServiceGet(error, data) {
-                                if (error) {
-                                    onComplete(error, null);
+                        crud.getList(tableName, query, indexName, function onServiceGet(error, data) {
+                            if (error) {
+                                reject(error);
+                            } else {
+                                if (data.environment.length > 0) {
+                                    reject({
+                                        result: "inputError",
+                                        message:
+                                            "The specified environment already exists, please choose a different physical id for your new environment"
+                                    });
                                 } else {
-                                    if (data.environment.length > 0) {
-                                        onComplete({
-                                            result: "inputError",
-                                            message:
-                                                "The specified environment already exists, please choose a different physical id for your new environment"
-                                        }, null);
-                                    } else {
-                                        onComplete(null, {
-                                            result: "success",
-                                            message: "Valid environment data"
-                                        });
-                                    }
+                                    resolve({
+                                        result: "success",
+                                        message: "Valid environment data"
+                                    });
                                 }
-                            });
-                        } else {
-                            onComplete(null, {
-                                result: "success",
-                                message: "Valid environment data"
-                            });
-                        }
+                            }
+                        });
+                    } else {
+                        resolve({
+                            result: "success",
+                            message: "Valid environment data"
+                        });
                     }
                 }
-            });
-        }
-    },
-    function(error, data){
-        if (error) {
-            logger.error("# Validate Create Payload Error:" + JSON.stringify(error));
-            onComplete(error, null);
-        } else {
-            logger.info("# Validate Create Payload Data:" + JSON.stringify(data));
-            onComplete(null);
-        }
-    })
+            }
+        });
+    });
 }

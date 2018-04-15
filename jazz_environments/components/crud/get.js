@@ -24,7 +24,7 @@
 const utils = require("../utils.js")(); //Import the utils module.
 const logger = require("../logger.js"); //Import the logging module.
 
-module.exports = (indexName, service, domain, environment_id, onComplete) => {
+module.exports = (tableName, indexName, service, domain, environment_id, onComplete) => {
     // initialize docCLient
     var docClient = utils.initDocClient();
 
@@ -32,7 +32,7 @@ module.exports = (indexName, service, domain, environment_id, onComplete) => {
 
     if (service && domain && environment_id) {
         params = {
-            TableName: global.env_tableName,
+            TableName: tableName,
             IndexName: indexName,
             FilterExpression: "ENVIRONMENT_LOGICAL_ID = :ENVIRONMENT_LOGICAL_ID",
             KeyConditionExpression: "SERVICE_DOMAIN = :SERVICE_DOMAIN and SERVICE_NAME  = :SERVICE_NAME",
@@ -44,7 +44,7 @@ module.exports = (indexName, service, domain, environment_id, onComplete) => {
         };
     } else if (service && domain && !environment_id) {
         params = {
-            TableName: global.env_tableName,
+            TableName: tableName,
             IndexName: indexName,
             KeyConditionExpression: "SERVICE_DOMAIN = :SERVICE_DOMAIN and SERVICE_NAME  = :SERVICE_NAME",
             ExpressionAttributeValues: {
@@ -55,8 +55,6 @@ module.exports = (indexName, service, domain, environment_id, onComplete) => {
     } else {
         onComplete("Not enough inputs to get environment details");
     }
-    
-    logger.info("Scan Prams: " + JSON.stringify(params));
 
     var items_formatted = [];
     var queryExecute = function(onComplete) {

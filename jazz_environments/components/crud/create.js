@@ -26,7 +26,7 @@ const utils = require("../utils.js")(); //Import the utils module.
 const Guid = require("guid");
 const moment = require("moment");
 
-module.exports = (environmentData, onComplete) => {
+module.exports = (environmentData, tableName, onComplete) => {
     // initialize dynamodb
     var docClient = utils.initDocClient();
 
@@ -43,7 +43,7 @@ module.exports = (environmentData, onComplete) => {
             ENVIRONMENT_LAST_UPDATED: timestamp
         },
         ReturnConsumedCapacity: "TOTAL",
-        TableName: global.env_tableName
+        TableName: tableName
     };
 
     environmentData.logical_id = environmentData.logical_id.toLowerCase();
