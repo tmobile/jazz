@@ -30,7 +30,7 @@ export class CreateServiceComponent implements OnInit {
 
   @Output() onClose: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-
+  docs_int_jazz:string;
   typeOfService: string = "api";
   typeOfPlatform: string = "aws";
   disablePlatform = true;

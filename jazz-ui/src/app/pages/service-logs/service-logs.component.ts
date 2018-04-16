@@ -187,12 +187,7 @@ export class ServiceLogsComponent implements OnInit {
 			logLevel: 'DEBUG',
 			message: 'enter function loop capi328'
 		},
-		{
-			time: '2017-05-30T09:36:13.815Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'VERBOSE',
-			message: 'after appending vpc { uri: \'https://cloud-api.corporate.t-mobile.com/api/jazz/create-serverless-service\', method: \'POST\', json:  { service_type: \'api\', service_name: \'testService-capi32830d\', runtime: \'java\', username: \'aanand12\', approvers: [ \'AAnand12\' ], domain: \'domain\', request_id: \'6b85e4e0-451b-11e7-b7ca-73e8a165d222\', slack_channel: \'general\', require_internal_access: true }, rejectUnauthorized: false } '
-		},
+		
 		{
 			time: '2017-05-30T09:36:14.703Z',
 			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
@@ -211,12 +206,7 @@ export class ServiceLogsComponent implements OnInit {
 			logLevel: 'INFO',
 			message: 'Event was recorded: [object Object]'
 		},
-		{
-			time: '2017-05-30T09:36:16.146Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'VERBOSE',
-			message: '{ return_result: { signin: { data: [Object], input: [Object] }, create_service: { data: \'Your Service Code will be available at https://bitbucket.corporate.t-mobile.com/projects/CAS/repos/domain_testservice-capi32830d/browse\', input: [Object] } }'
-		},
+		
 		{
 			time: '2017-05-30T09:36:16.866Z',
 			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',

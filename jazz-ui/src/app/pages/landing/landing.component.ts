@@ -44,11 +44,13 @@ export class LandingComponent implements OnInit {
         this.goToLogin = false;
         this.closed = true;
     }
+    privacyPolicy:string;
+    jazz_int_docs:string;
     onNavigate(event){
         if(event.target.innerText === "Privacy"){
-            window.open('https://www.t-mobile.com/company/website/privacypolicy.aspx');                    
+            window.open(this.privacyPolicy);   
         } else if(event.target.innerText === "Docs"){
-            window.open('https://docs.jazz.corporate.t-mobile.com/');        
+            window.open(this.jazz_int_docs);        
             
         }
     }
@@ -108,7 +110,6 @@ export class LandingComponent implements OnInit {
     };
     isOSS:boolean=false
     ngOnInit() {
-      console.log('changed build - gitlab 16/4');
       if(environment.envName == "oss") this.isOSS = true;
         if(this.authenticationservice.isLoggedIn()){
             this.buttonText ='GO TO SERVICES' ;
@@ -141,8 +142,10 @@ export class LandingComponent implements OnInit {
 
          this.run(4000, 4); 
     };
+    reportEmail:string;
+
     sendmail(){
-        window.open('mailto:serverless@t-mobile.com?body='+this.json);
+        window.open('mailto:'+this.reportEmail+'?body='+this.json);
     }
 
     public run(interval, frames) {

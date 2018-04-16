@@ -23,12 +23,14 @@ export class FooterComponent implements OnInit {
  }
 docs_url:string = '';
 isOSS:boolean=false;
+docs_int_jazz:string;
+docs_oss_jazz:string='https://github.com/tmobile/jazz/wiki';
   ngOnInit() {
     if(environment.envName=="oss"){
       this.isOSS=true;
-      this.docs_url= 'https://github.com/tmobile/jazz/wiki';
+      this.docs_url= this.docs_oss_jazz;
     }
-    else this.docs_url= 'https://docs.jazz.corporate.t-mobile.com';
+    else this.docs_url= this.docs_int_jazz;
     
   }
 

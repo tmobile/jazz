@@ -850,9 +850,10 @@ export class ServiceOverviewComponent implements OnInit {
 					this.feedbackResErr=false;
 					this.isLoading = false;
 					this.buttonText='SUBMIT';
-				}
+                }
+                reportEmail:string;
 				mailTo(){
-					location.href='mailto:serverless@t-mobile.com?subject=Jazz : Issue reported by'+" "+ this.authenticationservice.getUserId() +'&body='+this.sjson;
+					location.href='mailto:'+this.reportEmail+'?subject=Jazz : Issue reported by'+" "+ this.authenticationservice.getUserId() +'&body='+this.sjson;
 				}
 				errorIncluded(){
 				}
@@ -1040,13 +1041,7 @@ export class ServiceOverviewComponent implements OnInit {
     
     }
 
-    public getJSON(): Observable<any> {
-        return this.http.get('./../../../../'+environment.configFile)
-        .map( (response: Response) => {
-           const data = response.json();
-           return data;
-        });
-    }
+   
 
     internal_build:boolean = true;
     ngOnChanges(x:any){

@@ -99,7 +99,8 @@ public closeSidebar (eve){
     this.goToLogin = false;
     this.closed = true;
 }
-
+cloudapiURL:string; 
+editor_cloudapiURL:string; 
   ngOnInit() {
     var ENV='';
     this.activatedroute.queryParams.subscribe((params: Params) => {
@@ -120,8 +121,8 @@ public closeSidebar (eve){
       ENV='/'+this.envSelected;
       this.envSelected='dev-';
     }   
-    this.isServiceAvail = 'http://'+this.envSelected+'cloud-api-doc.corporate.t-mobile.com/' + this.domainName + '_' + this.serviceName +ENV +'/swagger.json'    
-    this.swaggerUrl = 'http://editor.cloud-api.corporate.t-mobile.com/?url='+this.isServiceAvail;
+    this.isServiceAvail = 'http://'+this.envSelected+this.cloudapiURL+'/' + this.domainName + '_' + this.serviceName +ENV +'/swagger.json'    
+    this.swaggerUrl = this.editor_cloudapiURL+this.isServiceAvail;
     this.isSwaggerAvailable();
     // console.log(this.swaggerUrl);
   }

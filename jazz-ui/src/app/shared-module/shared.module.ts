@@ -60,7 +60,9 @@ if(environment.envName == 'oss'){
 let importsArray = [];
 let declarationsArray=[];
 
-
+// for(let i in specificModules){
+//  importsArray.push(specificModules[i]);
+// }
 
 for(let i in specificComponents){
  declarationsArray.push(specificComponents[i]);

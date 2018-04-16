@@ -36,7 +36,7 @@ import { TabsComponent } from '../../../primary-components/tabs/tabs.component';
 import { OnlyNumber } from '../../../secondary-components/create-service/onlyNumbers';
 import { SidebarComponent } from '../../../secondary-components/sidebar/sidebar.component';
 
-import { LoginComponent } from '../../../pages/login/login.component';
+import { LoginComponent } from '../../../pages/login/internal/login.component';
 import { ServiceOverviewComponent } from '../../../pages/service-overview/service-overview.component';
 import { InputComponent } from '../../../primary-components/input/input.component';
 import { BtnPrimaryWithIconComponent } from '../../../primary-components/btn-primary-with-icon/btn-primary-with-icon.component';

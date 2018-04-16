@@ -690,9 +690,10 @@ export class ServiceCostComponent implements OnInit {
         this.feedbackResErr=false;
         this.isLoading = false;
         this.buttonText='SUBMIT';
-    }
+		}
+		reportEmail:string;
     mailTo(){
-        location.href='mailto:serverless@t-mobile.com?subject=Jazz : Issue reported by'+" "+ this.authenticationservice.getUserId() +'&body='+this.sjson;
+        location.href='mailto:'+this.reportEmail+'?subject=Jazz : Issue reported by'+" "+ this.authenticationservice.getUserId() +'&body='+this.sjson;
 	}
 	errorIncluded(){
 	}

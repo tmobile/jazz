@@ -65,7 +65,6 @@ export class LoginComponent implements OnInit {
         this.toasterService = toasterService;
         this.toastmessage =messageservice;
         this.http = request;
-        // alert('sssosss')
 
     }
 
@@ -155,7 +154,6 @@ export class LoginComponent implements OnInit {
             this.loading = true;
             this.authenticationService.login(this.model.username.replace('CORP\\',''), this.model.password)
                 .subscribe(result => {
-                    this.loading = false;
                     if (result === true) {
                         // login successful
                         this.router.navigate(['/services']);

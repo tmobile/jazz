@@ -74,13 +74,16 @@ isOSS:boolean=false;
         if(environment.envName=='oss')
         {
             this.isOSS=true;
-            window.open('https://github.com/tmobile/jazz/wiki')
+            window.open(this.docs_oss_jazz)
         }
             
         else
-            window.open('https://docs.jazz.corporate.t-mobile.com')
+            window.open(this.docs_int_jazz)
 
     }
+    docs_int_jazz:string;
+docs_oss_jazz:string='https://github.com/tmobile/jazz/wiki';
+  
 
     goToLanding(){
         this.router.navigateByUrl('');// Route to landing page
@@ -147,8 +150,9 @@ isOSS:boolean=false;
         this.isLoading = false;
         this.buttonText='SUBMIT';
     }
+    reportEmail:string;
     mailTo(){
-        location.href='mailto:serverless@t-mobile.com?subject=Jazz: Feedback/Issue&body=' + this.model.userFeedback;
+        location.href='mailto:'+this.reportEmail+'?subject=Jazz: Feedback/Issue&body=' + this.model.userFeedback;
     }
 
     submitFeedback(action){
