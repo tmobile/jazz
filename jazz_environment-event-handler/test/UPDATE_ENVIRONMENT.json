@@ -1,37 +1,40 @@
 {
     "Item": {
       "EVENT_ID": {
-        "S": "a21a6b17-6035-4bcd-90eb-14c7788433a5-007"
+        "S": "1ce51243-e670-4874-bb5a-f01068ac92c2"
       },
       "TIMESTAMP": {
-        "S": "2018-03-13T01:18:35:556"
+        "S": "2018-04-16T16:38:39:807"
       },
-      "SERVICE_CONTEXT": {
-        "S": "{\"service_type\":\"api\",\"branch\":\"bugfix/test_02\",\"runtime\":\"nodejs4.3\",\"status\":\"active\",\"endpoint\":\"http://test.com/api/endpoint\",\"domain\":\"jazztesting\",\"iam_role\":\"arn_platform_services_role\",\"environment\":\"test-env_logical_id-dev\",\"region\":\"us-east-1\",\"service_id\":\"d100ea55-2805-d09e-e2e6-9c38ae7c0c42\"}"
-      },
-      "USERNAME": {
-        "S": "jazz-admin@abc.com"
-      },
-      "EVENT_TIMESTAMP": {
-        "S": "2018-03-18T13:18:32:600"
-      },
-      "EVENT_STATUS": {
-        "S": "STARTED"
-      },
-      "EVENT_NAME": {
-        "S": "UPDATE_ENVIRONMENT"
-      },
-      "EVENT_TYPE": {
-        "S": "SERVICE_ONBOARDING"
-      },
-      "SERVICE_NAME": {
-        "S": "test-env-oss-3"
+      "REQUEST_ID": {
+        "S": "2519b9dc-94e6-4fe6-8b0d-5a31420a6af7"
       },
       "EVENT_HANDLER": {
         "S": "JENKINS"
       },
+      "EVENT_NAME": {
+        "S": "UPDATE_ENVIRONMENT"
+      },
+      "SERVICE_NAME": {
+        "S": "test-env-oss-3"
+      },
       "SERVICE_ID": {
-        "S": "d100ea55-2805-d09e-e2e6-9c38ae7c0c42"
+        "S": "a0144c91-b858-5ae0-7ef7-31228b8abed0"
+      },
+      "EVENT_STATUS": {
+        "S": "STARTED"
+      },
+      "EVENT_TYPE": {
+        "S": "SERVICE_DEPLOYMENT"
+      },
+      "USERNAME": {
+        "S": "DSundar3"
+      },
+      "EVENT_TIMESTAMP": {
+        "S": "2018-04-16T16:38:39:144"
+      },
+      "SERVICE_CONTEXT": {
+        "S": "{\"service_type\":\"website\",\"branch\":\"master\",\"runtime\":\"\",\"domain\":\"jazztesting\",\"iam_role\":\"DSundar3\",\"environment\":\"stg\",\"region\":\"\",\"message\":\"Environment Update event for deployment completion\",\"status\":\"deployment_completed\",\"logical_id\":\"stg\",\"endpoint\":\"http://jazztesting-test-debug-deepu-a06bfd3e.s3-website-us-west-2.amazonaws.com/stg/index.html\"}"
       }
     }
   }

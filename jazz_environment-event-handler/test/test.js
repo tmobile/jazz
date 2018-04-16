@@ -38,7 +38,7 @@ describe('jazz environment handler tests: ', function() {
     sandbox = sinon.sandbox.create();
 
     context = awsContext();
-    context.functionName = context.functionName + "-dev"
+    context.functionName = context.functionName + "-test"
     var payloadFormat = fs.readFileSync('test/KINESIS_PAYLOAD.json');  
     kinesisPayload = JSON.parse(payloadFormat);
 		tokenResponseObj200 = {
@@ -223,5 +223,41 @@ describe('jazz environment handler tests: ', function() {
     //@TODO
     
   });
+
+  it('processEachEvent should reject for invalid event name and event type combination', function () {
+    var event_INVALID_EVENT_TYPE = fs.readFileSync('test/INVALID_EVENT_TYPE.json');  
+    var event_INVALID_EVENT_TYPE_64 = new Buffer(event_INVALID_EVENT_TYPE).toString("base64");
+    kinesisPayload.Records[0].data = event_INVALID_EVENT_TYPE_64;
+
+		var responseObject = {
+			statusCode: 200,
+			body: {
+				data: {
+					"id": "ghd93-3240-2343"
+				}
+			}
+    };
+    
+    var reqStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, responseObject, responseObject.body);
+    });
+    
+    var processEvent = index.processEachEvent(event_INVALID_EVENT_TYPE, configData, tokenResponseObj200.body.data.token);
+    var message = "Not an interesting event to process";
+    
+
+    processEvent
+    .then((result)=>{
+      console.log("processEvent================"+JSON.stringify(result));
+    })
+    .catch((err)=>{
+      console.log("processEvent err================"+JSON.stringify(err));
+    })
+
+
+  });
+  
+  
+
 
 });

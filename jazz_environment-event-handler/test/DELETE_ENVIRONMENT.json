@@ -1,37 +1,40 @@
 {
-    "Item": {
-      "EVENT_ID": {
-        "S": "a21a6b17-6035-4bcd-90eb-14c7788433a5-007"
-      },
-      "TIMESTAMP": {
-        "S": "2018-03-13T01:18:35:556"
-      },
-      "SERVICE_CONTEXT": {
-        "S": "{\"service_type\":\"api\",\"branch\":\"bugfix/test_02\",\"runtime\":\"nodejs4.3\",\"domain\":\"jazztesting\",\"iam_role\":\"arn_platform_services_role\",\"environment\":\"test-env_logical_id-dev\",\"region\":\"us-east-1\",\"service_id\":\"d100ea55-2805-d09e-e2e6-9c38ae7c0c42\"}"
-      },
-      "USERNAME": {
-        "S": "jazz-admin@abc.com"
-      },
-      "EVENT_TIMESTAMP": {
-        "S": "2018-03-18T13:18:32:600"
-      },
-      "EVENT_STATUS": {
-        "S": "COMPLETED"
-      },
-      "EVENT_NAME": {
-        "S": "DELETE_ENVIRONMENT"
-      },
-      "EVENT_TYPE": {
-        "S": "SERVICE_ONBOARDING"
-      },
-      "SERVICE_NAME": {
-        "S": "test-env-oss-3"
-      },
-      "EVENT_HANDLER": {
-        "S": "JENKINS"
-      },
-      "SERVICE_ID": {
-        "S": "d100ea55-2805-d09e-e2e6-9c38ae7c0c42"
-      }
+  "Item": {
+    "EVENT_ID": {
+      "S": "6a0c0ae4-00ff-43ec-92e7-f46d4f317f10"
+    },
+    "TIMESTAMP": {
+      "S": "2018-04-16T19:16:52:352"
+    },
+    "REQUEST_ID": {
+      "S": "a4220f38-0738-6e40-e17c-e99c47102925"
+    },
+    "EVENT_HANDLER": {
+      "S": "JENKINS"
+    },
+    "EVENT_NAME": {
+      "S": "DELETE_ENVIRONMENT"
+    },
+    "SERVICE_NAME": {
+      "S": "test-env-oss-3"
+    },
+    "SERVICE_ID": {
+      "S": "f9f2d3e4-a8bb-dca5-1b51-1f821d60e7eb"
+    },
+    "EVENT_STATUS": {
+      "S": "COMPLETED"
+    },
+    "EVENT_TYPE": {
+      "S": "SERVICE_DELETION"
+    },
+    "USERNAME": {
+      "S": "svc_cpt_mon_prd_syn"
+    },
+    "EVENT_TIMESTAMP": {
+      "S": "2018-04-16T19:16:51:812"
+    },
+    "SERVICE_CONTEXT": {
+      "S": "{\"service_type\":\"website\",\"branch\":\"bugfix/test_02\",\"runtime\":null,\"domain\":\"jazztesting\",\"iam_role\":\"svc_cpt_mon_prd_syn\",\"environment\":\"ehrswzx36b-dev\",\"region\":\"us-west-2\",\"message\":\"Environment cleanup for ua3lixoiso-dev started\"}"
     }
   }
+}

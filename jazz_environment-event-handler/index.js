@@ -36,8 +36,21 @@ var processedEvents = [];
 var failedEvents = [];
 
 var handler = (event, context, cb) => {
+	////////////////////////////////////////////////////// event mocked ///////////////
+	context.functionName = context.functionName + "-test" // @TODO Local testing
+	//var _event = fs.readFileSync('test/CREATE_BRANCH.json');  	
+	//var _event = fs.readFileSync('test/UPDATE_ENVIRONMENT.json'); 
+	//var _event = fs.readFileSync('test/UPDATE_ENVIRONMENT.BRANCH.json'); 
+	//var _event = fs.readFileSync('test/DELETE_ENVIRONMENT.json');
+	//var _event = fs.readFileSync('test/DELETE_ENVIRONMENT.1.json');
+	//var _event = fs.readFileSync('test/DELETE_BRANCH.json'); 
+	var _event = fs.readFileSync('test/INVALID_EVENT_TYPE.json'); 
+	//var _event = fs.readFileSync('test/INVALID_EVENT.json'); 
+	
+	var _event_64 = new Buffer(_event).toString("base64");
+	event.Records[0].kinesis.data = _event_64;
+	////////////////////////////////////////////////////// event mocked ///////////////
     var configData = config(context);
-
     var authToken;
 
     rp(getTokenRequest(configData))
@@ -173,17 +186,30 @@ var processItem = function (eventPayload, configData, authToken) {
 			.catch(err => {return reject(err)})
 			
         } else if(eventPayload.EVENT_NAME.S === configData.EVENTS.UPDATE_ENVIRONMENT) {
-			//environmentApiPayload.friendly_name = svcContext.branch;
 			environmentApiPayload.status = svcContext.status;
 			environmentApiPayload.endpoint = svcContext.endpoint;
-			environmentApiPayload.friendly_name = svcContext.friendly_name;
-			
-			process_UPDATE_ENVIRONMENT(environmentApiPayload, configData, authToken)
-			.then(result => {return resolve(result)})
-			.catch(err => {return reject(err)})
+			environmentApiPayload.friendly_name = svcContext.friendly_name;			
+
+			if(!svcContext.logical_id) {
+				getEnvironmentLogicalId(environmentApiPayload, configData, authToken)
+				.then((logical_id) =>{
+					environmentApiPayload.logical_id = logical_id;
+					process_UPDATE_ENVIRONMENT(environmentApiPayload, configData, authToken)
+						.then(result => {return resolve(result)})
+						.catch(err => {return reject(err)})
+				});
+
+			} else {
+				environmentApiPayload.logical_id = svcContext.logical_id;
+				process_UPDATE_ENVIRONMENT(environmentApiPayload, configData, authToken)
+				.then(result => {return resolve(result)})
+				.catch(err => {return reject(err)})
+			}
 			
         } else if(eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_ENVIRONMENT) {
 			environmentApiPayload.endpoint = svcContext.endpoint;
+			environmentApiPayload.logical_id = svcContext.environment;
+
 			var event_status = eventPayload.EVENT_STATUS.S;												
 			if(event_status === 'STARTED'){
 				environmentApiPayload.status = configData.ENVIRONMENT_DELETE_STARTED_STATUS;
@@ -325,7 +351,7 @@ var process_DELETE_BRANCH = function (environmentPayload, configData, authToken)
 				}
 				
 			});			
-		})
+		});
 
 	});
     
@@ -334,40 +360,35 @@ var process_DELETE_BRANCH = function (environmentPayload, configData, authToken)
 var process_UPDATE_ENVIRONMENT = function (environmentPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 
-		getEnvironmentLogicalId(environmentPayload, configData, authToken)
-		.then((logical_id) =>{
-			console.log("logical_id"+logical_id);
-			environmentPayload.logical_id = logical_id;
+		var updatePayload = {};
+		updatePayload.status = environmentPayload.status;
+		updatePayload.endpoint = environmentPayload.endpoint;
+		updatePayload.friendly_name = environmentPayload.friendly_name;
 
-			var updatePayload = {};
-			updatePayload.status = environmentPayload.status;
-			updatePayload.endpoint = environmentPayload.endpoint;
-			updatePayload.friendly_name = environmentPayload.friendly_name;
+		var svcPayload = {
+			uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "/" + environmentPayload.logical_id +
+				"?domain=" +
+				environmentPayload.domain +
+				"&service=" +
+				environmentPayload.service,
+			method: "PUT",
+			headers: { Authorization: authToken },
+			json: updatePayload,
+			rejectUnauthorized: false
+		};
 
-			var svcPayload = {
-				uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "/" + environmentPayload.logical_id +
-					"?domain=" +
-					environmentPayload.domain +
-					"&service=" +
-					environmentPayload.service,
-				method: "PUT",
-				headers: { Authorization: authToken },
-				json: updatePayload,
-				rejectUnauthorized: false
-			};
+		request(svcPayload, function (error, response, body) {
+			if(response.statusCode && response.statusCode === 200) {
+				return resolve(body);
+			} else {
+				return reject({
+					"error" : "Error updating the environment",
+					"details" : response.body.message
+				});
+			}
+			
+		});		
 
-			request(svcPayload, function (error, response, body) {
-				if(response.statusCode && response.statusCode === 200) {
-					return resolve(body);
-				} else {
-					return reject({
-						"error" : "Error creating triggering the delete environment",
-						"details" : response.body.message
-					});
-				}
-				
-			});		
-		})
 	});
     
 }

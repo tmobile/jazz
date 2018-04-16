@@ -1,37 +1,34 @@
 {
   "Item": {
     "EVENT_ID": {
-      "S": "a21a6b17-6035-4bcd-90eb-14c7788433a5-007"
+      "S": "bf12cc7b-7ecd-423e-a902-2f56f8ced1b3"
     },
     "TIMESTAMP": {
-      "S": "2018-03-13T01:18:35:556"
+      "S": "2018-04-16T16:35:49:539"
     },
-    "SERVICE_CONTEXT": {
-      "S": "{\"service_type\":\"api\",\"branch\":\"master\",\"runtime\":\"nodejs4.3\",\"domain\":\"jazztesting\",\"iam_role\":\"arn_platform_services_role\",\"environment\":\"test-env_logical_id-dev\",\"region\":\"us-east-1\",\"service_id\":\"d100ea55-2805-d09e-e2e6-9c38ae7c0c42\"}"
-    },
-    "USERNAME": {
-      "S": "jazz-admin@abc.com"
-    },
-    "EVENT_TIMESTAMP": {
-      "S": "2018-03-18T13:18:32:600"
-    },
-    "EVENT_STATUS": {
-      "S": "STARTED"
+    "EVENT_HANDLER": {
+      "S": "BITBUCKET"
     },
     "EVENT_NAME": {
       "S": "COMMIT_TEMPLATE"
     },
-    "EVENT_TYPE": {
-      "S": "SERVICE_ONBOARDING"
-    },
     "SERVICE_NAME": {
       "S": "test-env-oss-3"
     },
-    "EVENT_HANDLER": {
-      "S": "JENKINS"
+    "EVENT_STATUS": {
+      "S": "COMPLETED"
     },
-    "SERVICE_ID": {
-      "S": "d100ea55-2805-d09e-e2e6-9c38ae7c0c42"
+    "EVENT_TYPE": {
+      "S": "SERVICE_ONBOARDING"
+    },
+    "USERNAME": {
+      "S": "c1bcc4bbe5b8a159"
+    },
+    "EVENT_TIMESTAMP": {
+      "S": "2018-04-16T16:35:49:186"
+    },
+    "SERVICE_CONTEXT": {
+      "S": "{\"repository\":\"https://bitbucket.corporate.t-mobile.com/projects/CAS/repos/jazztesting_test-debug-deepu/browse\",\"domain\":\"jazztesting\",\"branch\":\"master\"}"
     }
   }
 }
