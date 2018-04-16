@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { JazzHeaderComponent } from '../jazz-header/jazz-header.component'
 import {DataCacheService } from '../../core/services/index';
+import {environment} from './../../../environments/environment';
 
 @Component({
   selector: 'footer',
@@ -20,8 +21,15 @@ export class FooterComponent implements OnInit {
     this.cache.set('scroll_flag',true);
     this.cache.set('scroll_id',hash);
  }
-
+docs_url:string = '';
+isOSS:boolean=false;
   ngOnInit() {
+    if(environment.envName=="oss"){
+      this.isOSS=true;
+      this.docs_url= 'https://github.com/tmobile/jazz/wiki';
+    }
+    else this.docs_url= 'https://docs.jazz.corporate.t-mobile.com';
+    
   }
 
 }

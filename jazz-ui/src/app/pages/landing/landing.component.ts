@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import {AuthenticationService} from '../../core/services/index';
 import { ToasterService} from 'angular2-toaster';
 import {DataCacheService } from '../../core/services/index';
+import {environment} from './../../../environments/environment';
 
 @Component({
     selector: 'landing',
@@ -17,38 +18,22 @@ export class LandingComponent implements OnInit {
     safeTransformX: number=0;
     min: boolean=true;
     max: boolean=false;
-    disableSlack:boolean=true;
+    json:any;
     cardActive:boolean=true;
     title = 'Create. Manage. Self-Service.';
     subtitle = 'Our API Services system allows you to seamlessly create, deploy, and manage all you API needs.';
-
+    override = false;
     private IDLE_TIMEOUT = 60*10; //seconds
 
-    // features = [
-    //     {
-    //         'title' : 'Create',
-    //         'description' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, dolore magna aliqua.',
-    //         'imageSrc' : 'assets/images/icons/icon-create.png'
-    //     }, {
-    //         'title' : 'Deploy',
-    //         'description' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit,',
-    //         'imageSrc' : 'assets/images/icons/icon-deploy.png'
-    //     }, {
-    //         'title' : 'Manage',
-    //         'description' : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.',
-    //         'imageSrc' : 'assets/images/icons/icon-manage.png'
-    //     }
-    //   ];
-
     public getStartedNow(){
-
+       
         if(this.authenticationservice.isLoggedIn()){
             this.router.navigateByUrl('/services');
         } else {
             this.goToLogin = true;
             this.onLoginClicked(true);
         }
-
+        
     }
     public onLoginClicked (goToLogin) {
         this.goToLogin = goToLogin;
@@ -58,6 +43,14 @@ export class LandingComponent implements OnInit {
     public closeSidebar (eve){
         this.goToLogin = false;
         this.closed = true;
+    }
+    onNavigate(event){
+        if(event.target.innerText === "Privacy"){
+            window.open('https://www.t-mobile.com/company/website/privacypolicy.aspx');                    
+        } else if(event.target.innerText === "Docs"){
+            window.open('https://docs.jazz.corporate.t-mobile.com/');        
+            
+        }
     }
     public shiftLeft(){
         var visibleWindow = document.getElementById('scroll-me').offsetLeft;
@@ -72,7 +65,7 @@ export class LandingComponent implements OnInit {
                     if(this.safeTransformX==(-(noOfChildren-4)*innerwidth)){
                         this.max=true;
                     }
-                }
+                } 
             } else if(document.body.clientWidth<840){
                 if(this.safeTransformX>(-(noOfChildren-1)*innerwidth)){
                     this.safeTransformX = this.safeTransformX - innerwidth;
@@ -111,9 +104,12 @@ export class LandingComponent implements OnInit {
         private toasterservice:ToasterService,
         private cache: DataCacheService
     ) {
-
+        
     };
+    isOSS:boolean=false
     ngOnInit() {
+      console.log('changed build - gitlab 16/4');
+      if(environment.envName == "oss") this.isOSS = true;
         if(this.authenticationservice.isLoggedIn()){
             this.buttonText ='GO TO SERVICES' ;
         } else{
@@ -122,13 +118,16 @@ export class LandingComponent implements OnInit {
          if(this.authenticationservice.isLoggedIn() && this.router.url == "/"){
             this.router.navigateByUrl('/services');
         }
-
+        
         var scroll_flag = this.cache.get('scroll_flag');
         var scroll_id = this.cache.get('scroll_id');
 
+        var x = this.cache.get('json');
+        this.json = JSON.stringify(x);
+       
         if(scroll_flag == true)
         {
-            var top = document.getElementById(scroll_id).offsetTop ;
+            var top = document.getElementById(scroll_id).offsetTop ;                
             scrollTo(top,600);
         }
         setTimeout(function(){
@@ -137,15 +136,18 @@ export class LandingComponent implements OnInit {
             } catch(e){
                 console.log(e)
             }
-
+            
         },700)
 
-         this.run(4000, 4);
+         this.run(4000, 4); 
     };
+    sendmail(){
+        window.open('mailto:serverless@t-mobile.com?body='+this.json);
+    }
 
     public run(interval, frames) {
         var int = 2;
-
+        
         function func() {
             var el = document.getElementsByClassName("parallax-2");
             if (el[0] !== undefined) {
@@ -154,12 +156,12 @@ export class LandingComponent implements OnInit {
                 if(int === frames) { int = 1; }
             }
         }
-
+        
         var swap = window.setInterval(func, interval);
     }
 }
 
-export function scrollTo(to, duration) {
+export function scrollTo(to, duration) {    
     var el = document.getElementsByTagName("main")[0];
     if (el.scrollTop == to) return;
     let direction = true;

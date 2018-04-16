@@ -1,7 +1,9 @@
 @import './../../../main-styles';
 button.btn-primary {
+    display:flex;
     border-radius: 30px;
     padding: 10px 16px;
+    height:2.7rem;
     padding: 7px 16px;
     letter-spacing: .3px;
     background-color: #ed008c;
@@ -17,6 +19,14 @@ button.btn-primary {
         display: inline-block;
         margin-right: 5px;
     }
+}
+
+.icon-icon-add{
+    margin:2px 5px 2px 0;
+}
+
+.btn-text{
+    margin:1px 0;
 }
 
 button.btn-primary:hover,

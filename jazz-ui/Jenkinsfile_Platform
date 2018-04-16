@@ -5,9 +5,9 @@ import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" except for config_loader. instance_prefix, jazz_bucket_web to be taken from the config_loader.
 @Field def repo_credential_id
-@Field def repo_base
-@Field def repo_core
-@Field def scm_type
+@Field def repo_base 
+@Field def repo_core 
+@Field def scm_type 
 
 @Field def config_loader
 @Field def scmModule
@@ -74,15 +74,17 @@ node ()  {
     dir('jazz-ui') {
       checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz-ui")]]])
 	    def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
-      
-      sh "sed -i 's/{api_doc_name}/'${config_loader.AWS.S3.API_DOC}'/g' ./src/config/config.json"
-      sh "sed -i 's/{api_doc_name}/'${config_loader.AWS.S3.API_DOC}'/g' ./src/config/config.prod.json"
+     
 
-      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/config/config.json"
-      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/config/config.prod.json"
+      sh "sed -i 's/{api_doc_name}/${config_loader.AWS.S3.API_DOC}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{multi_env}/${config_loader.UI_CONFIG.feature.multi_env}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{service_tabs}/${config_loader.UI_CONFIG.service_tabs}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{environment_tabs}/${config_loader.UI_CONFIG.environment_tabs}/g' ./src/environments/environment.oss.ts"
 
-      sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/config/config.json"
-      sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/config/config.prod.json"
+      def envFile = readFile('./src/environments/environment.oss.ts');
+      echo "$envFile";
     }
   }
   stage('Building the UI - NPM build') {
@@ -93,7 +95,7 @@ node ()  {
     rm -rf node_modules
     npm install
     ng set --global warnings.versionMismatch=false
-    ng build --prod --aot=false
+    ng build --env=oss --prod --aot=false
     cd ..
     '''
   }
@@ -127,6 +129,7 @@ def loadBuildModules(buildModuleUrl){
 			]])
 
       def result_json_string = readFile("jazz-installer-vars.json")
+      console.log('jazz vars',result_json_string);
       config_module = load "config-loader.groovy"
       config_loader = config_module.initialize(result_json_string)
 

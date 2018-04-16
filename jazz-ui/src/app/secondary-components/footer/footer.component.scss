@@ -5,18 +5,21 @@ section{
     width: calc(100% + 73px);
     margin-left:-36px;
     margin-top:37px;
+
 }
 
 .ft-links
 {
     margin:15px 0;
     overflow: auto;
+    font-size: 1rem;
 }
 
 .ft-links ul
 {
     list-style: none;
     text-align: center;
+    // margin:0 30%;
     margin: 1rem auto;
     padding:0;
 }
@@ -24,8 +27,10 @@ section{
 .ft-links li{
     padding:0 15px;
     text-align: center;
+    // float:left;
     display: inline-block;
     cursor: pointer;
+    vertical-align: middle;
 }
 .ft-links .mid{
     border-right:2px solid #acacac;
@@ -36,10 +41,15 @@ a{color:#ed008c;font-weight: bold;}
 
 .ft-text{
     display: none;
+    // overflow: auto;
+    // margin-top:25px;
+    // padding-bottom: 25px;
 }
 
 .ft-text ul{
     list-style: none;
+    // margin:0 33%;
+
     display: block;
     width: fit-content;
     padding: 0;
@@ -47,6 +57,10 @@ a{color:#ed008c;font-weight: bold;}
 }
 
 .ft-text li{
+    // float:left;
+    // color:rgb(150,150,150);
+    // font-size: 0.9rem;
+
     display: inline-flex;
     color: #969696;
     font-size: 0.9rem;
@@ -65,6 +79,8 @@ a{color:#ed008c;font-weight: bold;}
 
 .ft-logo
 {
+    line-height: 17px;
+    font-size: 8rem;
     position: absolute;
     left: 37px;
     width: 8rem;

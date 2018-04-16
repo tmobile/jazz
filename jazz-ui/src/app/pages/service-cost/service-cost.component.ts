@@ -1,22 +1,64 @@
-import { Component, OnInit, ElementRef ,EventEmitter, Output, Inject, Input} from '@angular/core';
+import { Component, OnInit, ComponentFactoryResolver, ReflectiveInjector, ElementRef ,EventEmitter, Output, Inject, Input,ViewChild} from '@angular/core';
 import { ToasterService} from 'angular2-toaster';
 import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
 import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
-import { RequestService, MessageService } from '../../core/services/index';
+import { RequestService, MessageService , AuthenticationService } from '../../core/services/index';
 import { Router } from '@angular/router';
-
+import {DataCacheService } from '../../core/services/index';
+import {FilterTagsComponent} from '../../secondary-components/filter-tags/filter-tags.component';
+import {IonRangeSliderModule} from "ng2-ion-range-slider"
+import {AdvancedFiltersComponent} from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
+import {AdvancedFilterService} from './../../advanced-filter.service';
+import {AdvFilters} from './../../adv-filter.directive';
+import {environment} from './../../../environments/environment.internal';
 
 @Component({
-  selector: 'service-cost',
+	selector: 'service-cost',
+	
   templateUrl: './service-cost.component.html',
-  providers: [RequestService, MessageService],
-  styleUrls: ['./service-cost.component.scss']
+	providers: [RequestService, MessageService, AdvancedFilterService],
+	
+	styleUrls: ['./service-cost.component.scss']
 })
 export class ServiceCostComponent implements OnInit {
 
 	@Input() service: any = {};
+	@ViewChild('sliderElement') sliderElement: IonRangeSliderModule;
+	@ViewChild(AdvFilters) advFilters: AdvFilters;
+	
+	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
+	// @ViewChild('advanced_filters') advanced_filters: advanced_filter;
+	componentFactoryResolver:ComponentFactoryResolver;
 	 private subscription:any;
-
+	 advanced_filter_input:any = {
+    time_range:{
+        show:true,
+    },
+    slider:{
+        show:true,
+    },
+    period:{
+        show:true,
+    },
+    statistics:{
+        show:true,
+    },
+    path:{
+        show:false,
+    },
+    environment:{
+        show:true,
+    },
+    method:{
+        show:true,
+    },
+    account:{
+        show:true,
+    },
+    region:{
+        show:true,
+    }
+}
 	cost = {
 		perYear: {
 			value: '0.00',
@@ -41,6 +83,23 @@ export class ServiceCostComponent implements OnInit {
 		}
 	}
 
+
+
+	methodList:Array<string>  = ['POST','GET','DELETE','PUT'];
+	methodSelected:string = this.methodList[0];
+	timerangeSelected:any;
+	selectedTimeRange:any = 'Day';
+	statisticSelected:any = 'Average';
+	rangeList: Array<string> = ['Day', 'Week', 'Month', 'Year'];
+	periodList: Array<string> = ['15 Minutes','1 Hour','6 Hours','1 Day','7 Days','30 Days'];
+  
+	statisticList: Array<string> = ['Average', 'Sum', 'Maximum','Minimum'];
+
+	slider:any;
+	sliderFrom = 1;
+	sliderPercentFrom;
+	sliderMax:number = 7;
+	
 	today = new Date();
 	yesterday = this.today.setDate(this.today.getDate()-1);
 
@@ -51,12 +110,23 @@ export class ServiceCostComponent implements OnInit {
 	errBody: any;
 	parsedErrBody: any;
 	errMessage: any;
-
+	errorTime:any;
+	errorURL:any;
+	errorAPI:any;
+	errorRequest:any={};
+	errorResponse:any={};
+	errorUser:any;
+	errorChecked:boolean=true;
+	errorInclude:any="";
+	json:any={};
+	sjson:any={};
+	djson:any={};
 	environment = 'dev';
-	environmentList = ['prod', 'dev'];
+	environmentList = ['prod', 'stg'];
 	filterSelected: boolean = false;
 	private http:any;
 	serviceCostList=[];
+
 	env =this.environmentList[0];
 	interval:any;
 	start_date:any;
@@ -64,6 +134,7 @@ export class ServiceCostComponent implements OnInit {
 	isDataNotAvailable:boolean=false;
 	noTotalCost:boolean=true;
 	loadingState:string='default';
+	
 
 	private toastmessage:any;
 	noYearlyCost:boolean=true;
@@ -73,6 +144,7 @@ export class ServiceCostComponent implements OnInit {
 		'filter': 'filter1',
 		'environment': this.env
 	}
+	
 
 	costTableData = {
 		'filter': 'filter1',
@@ -95,25 +167,303 @@ export class ServiceCostComponent implements OnInit {
 
 
 
-	constructor( @Inject(ElementRef) elementRef: ElementRef, private request: RequestService, private messageservice: MessageService, private toasterService: ToasterService,private router: Router) {
+	constructor( @Inject(ElementRef) elementRef: ElementRef, @Inject(ComponentFactoryResolver) componentFactoryResolver,private advancedFilters: AdvancedFilterService , private cache: DataCacheService , private authenticationservice: AuthenticationService , private request: RequestService, private messageservice: MessageService, private toasterService: ToasterService,private router: Router) {
 
 		var el:HTMLElement = elementRef.nativeElement;
     	this.root = el;
 		this.toasterService = toasterService;
 		this.http = request;
 		this.toastmessage=messageservice;
+		
+		this.componentFactoryResolver = componentFactoryResolver;
+		var comp = this;
+		setTimeout(function(){
+			comp.getFilter(advancedFilters);
+		},3000);
+		
 	}
-	ngOnChanges(x:any){
+
+	accList=['tmodevops','tmonpe'];
+  regList=['us-west-2', 'us-east-1'];
+	accSelected:string = 'tmodevops';
+	regSelected:string = 'us-west-2';
+	 
+	instance_yes;
+	getFilter(filterServ){
+		// let viewContainerRef = this.advanced_filters.viewContainerRef;
+		// viewContainerRef.clear();
+		// filterServ.setRootViewContainerRef(viewContainerRef);
+		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
+		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
+		var comp = this;
+		// this.advfilters.clearView();
+		let viewContainerRef = this.advFilters.viewContainerRef;
+		viewContainerRef.clear();
+		let componentRef = viewContainerRef.createComponent(componentFactory);
+		this.instance_yes=(<AdvancedFiltersComponent>componentRef.instance);
+		(<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
+		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
+			// alert("1");
+			comp.onFilterSelect(event);
+		});
 
 	}
-	onEnvSelected(env){
+	onFilterSelect(event){
+    // alert('key: '+event.key+'  value: '+event.value);
+    switch(event.key){
+      case 'slider':{
+				event.value.from_percent = 0;
+        this.getRangefunc(event.value);
+        break;
+      }
+      case 'period':{
+				this.FilterTags.notify('filter-Period',event.value);
+				// this.cache.set('filter-Period',period);
+						break;
+      }
+      case 'range':{
+
+        this.FilterTags.notify('filter-TimeRange',event.value);
+		this.sendDefaults(event.value);
+		
+		// this.cache.set('filter-TimeRange',range);
+		this.timerangeSelected=event.value;
+		this.sliderFrom =1;
+		this.FilterTags.notify('filter-TimeRangeSlider',this.sliderFrom);		
+		var resetdate = this.getStartDate(event.value, this.sliderFrom);
+		this.selectedTimeRange = event.value;
+        break;
+      }
+      case 'environment':{
+				var envt = event.value;
+				this.FilterTags.notify('filter-Env',envt);
+				this.costGraphData.environment=envt;
+				var env_list=this.cache.get('envList');
+				var fName = env_list.friendly_name;
+				var index = fName.indexOf(envt);
+				var env = env_list.env[index];
+				this.env = env;
+				this.collectInputData(env);
+        break;
+      }
+      case 'statistics':{
+			 // this.payload.statistics = statistics;
+			 var statistics = event.value;
+				this.FilterTags.notify('filter-Statistic',statistics);
+		
+				// this.cache.set('filter-Statistic',statistics);
+				this.statisticSelected = statistics;
+        break;
+
+      }
+      case 'method':{
+				// alert('eneterd -> cost -> method')
+				if(event.value == undefined){
+					this.FilterTags.notify('filter-Method',event);
+				}
+				var method=event.value;
+				// alert('notifying tags')
+				this.FilterTags.notify('filter-Method',method);
+	// alert('notified tags');
+				this.methodSelected=method;
+				break;
+      }
+     
+      case 'account':{
+				this.FilterTags.notify('filter-Account',event.value);
+				this.accSelected=event.value;
+        break;
+      }
+      case 'region':{ 
+        this.FilterTags.notify('filter-Region',event.value);
+        this.regSelected=event.value;
+        break;
+            
+      }
+
+   
+    }
+    
+  }
+   onaccSelected(event){
+    this.FilterTags.notify('filter-Account',event);
+    this.accSelected=event;
+
+   }
+	onregSelected(event){
+    this.FilterTags.notify('filter-Region',event);
+    this.regSelected=event;
+	 }
+	 
+	 
+
+	ngOnChanges(x:any){
+		this.fetchEnvlist();
+
+	}
+	getStartDate(filter, sliderFrom){
+		var todayDate = new Date();
+		switch(filter){
+		  case "Day":
+			this.sliderMax = 7;
+			var resetdate = new Date(todayDate.setDate(todayDate.getDate()-sliderFrom)).toISOString();
+			break;
+		  case "Week":
+			this.sliderMax = 5;
+			var resetdate = new Date(todayDate.setDate(todayDate.getDate()-(sliderFrom*7))).toISOString();
+			break;
+		  case "Month":
+			this.sliderMax = 12;
+			var currentMonth = new Date ((todayDate).toISOString()).getMonth();
+			var currentDay = new Date((todayDate).toISOString()).getDate();
+			currentMonth++;
+			var currentYear = new Date ((todayDate).toISOString()).getFullYear();
+			var diffMonth = currentMonth - sliderFrom;
+			if(diffMonth>0){
+			  var resetYear = currentYear;
+			  var resetMonth = diffMonth;
+			} else if(diffMonth===0){
+			  var resetYear = currentYear-1;
+			  var resetMonth = 12;
+			} else if(diffMonth<0){
+			  var resetYear = currentYear - 1;
+			  // var resetMonth = sliderFrom - currentMonth;
+			  var resetMonth = 12 + diffMonth;
+			}
+			if(currentDay==31)currentDay=30;
+			var newStartDateString = resetYear + "-" + resetMonth + "-" + currentDay + " 00:00:00"
+			var newStartDate = new Date(newStartDateString);
+			var resetdate = newStartDate.toISOString();
+			break;
+		  case "Year":
+			this.sliderMax = 6;
+			var currentYear = new Date((todayDate).toISOString()).getFullYear();
+			var newStartDateString = (currentYear - sliderFrom).toString() + "/" + "1" + "/" + "1";
+			var newStartDate = new Date(newStartDateString);
+			var resetdate = newStartDate.toISOString();
+			break;
+		}
+		return resetdate;
+	  }
+	// onEnvSelected(env){
+		// this.isDataNotAvailable=false;
+		// this.isGraphLoading=true;
+		
+	onEnvSelected(envt){
+		this.FilterTags.notify('filter-Env',envt);
+		this.costGraphData.environment=envt;
+		var env_list=this.cache.get('envList');
+		var fName = env_list.friendly_name;
+		var index = fName.indexOf(envt);
+		var env = env_list.env[index];
 		this.env = env;
 		this.collectInputData(env);
 	}
 
 	onRowClicked(row){
 	}
+	cancelFilter(event){
 
+		switch(event){
+		  case 'time-range':{this.instance_yes.onRangeListSelected('Day'); 
+			break;
+		  }
+			case 'time-range-slider':{this.instance_yes.resetslider(1);
+			break;
+		  }
+		  case 'period':{ this.instance_yes.onPeriodSelected('15 Minutes');
+			break;
+		  }
+		  case 'statistic':{      this.instance_yes.onStatisticSelected('Average');
+		  
+			break;
+		  }
+		  case 'account':{      this.instance_yes.onaccSelected('Acc 1');
+		  
+			break;
+		  }
+		  case 'region':{      this.instance_yes.onregSelected('reg 1');
+		  
+			break;
+		  }
+		  case 'env':{      this.instance_yes.onEnvSelected('prod');
+		  
+			break;
+		  }
+		  case 'method':{      
+				
+				this.instance_yes.onMethodListSelected('POST');
+		  
+			break;
+		  }
+		  case 'all':{ this.instance_yes.onRangeListSelected('Day');    
+				this.instance_yes.onPeriodSelected('15 Minutes');
+				this.instance_yes.onStatisticSelected('Average');
+				this.instance_yes.onaccSelected('Acc 1');
+				this.instance_yes.onregSelected('reg 1');
+				this.instance_yes.onEnvSelected('prod');
+				this.instance_yes.onMethodListSelected('POST');
+				break;
+		  	}
+		}
+	   
+		this.getRange(1);
+}
+	  onMethodListSelected(method){
+
+		this.FilterTags.notify('filter-Method',method);
+	
+		this.methodSelected=method;
+	  }
+	
+	  onPeriodSelected(period){
+		this.FilterTags.notify('filter-Period',period);
+		// this.cache.set('filter-Period',period);
+	  }
+	
+	  sendDefaults(range){
+		switch(range){
+			case 'Day':{     this.FilterTags.notify('filter-Period','15 Minutes')
+				break;
+			}
+			case 'Week':{   this.FilterTags.notify('filter-Period','1 Hour')
+				break;
+			}
+			case 'Month':{ 
+			   this.FilterTags.notify('filter-Period','6 Hours')
+				break;
+			}
+			case 'Year':{   this.FilterTags.notify('filter-Period','7 Days')
+				break;
+			}
+		}
+	} 
+	  onRangeListSelected(range){
+		this.FilterTags.notify('filter-TimeRange',range);
+		this.sendDefaults(range);
+		
+		// this.cache.set('filter-TimeRange',range);
+		this.timerangeSelected=range;
+		this.sliderFrom = 1;
+
+		this.FilterTags.notify('filter-TimeRangeSlider',this.sliderFrom);
+		
+		var resetdate = this.getStartDate(range, this.sliderFrom);
+		this.selectedTimeRange = range;
+	  }
+	
+	  
+	
+	  onStatisticSelected(statistics){
+		// this.payload.statistics = statistics;
+		this.FilterTags.notify('filter-Statistic',statistics);
+		
+		// this.cache.set('filter-Statistic',statistics);
+		this.statisticSelected = statistics;
+	  }
+	
+	 
+	
   onServiceSearch(searchString){
     this.costTableData.body  = this.filter.searchFunction("any" , searchString);
   };
@@ -128,8 +478,46 @@ export class ServiceCostComponent implements OnInit {
 	  setTimeout(() => {
 		tst.classList.remove('toaster-anim');
 	  }, 7000);
-  }
+	}
+	
+  getRangefunc(e){
+    this.FilterTags.notify('filter-TimeRangeSlider',e.from);
+    
+    this.sliderFrom=1;
+    this.sliderPercentFrom=0;
+		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom); 
+		this.refreshCostData('');
+	
+	}
 
+	getRangefunction(e){
+		this.FilterTags.notify('filter-TimeRangeSlider',e);
+		this.sliderFrom=1;
+		this.cache.set('sliderFrom',this.sliderFrom);
+	}
+	
+  getRange(e){
+    this.FilterTags.notify('filter-TimeRangeSlider',e);
+}
+  onClickFilter(){
+
+		
+    
+    //ng2-ion-range-slider
+      // alert('sda')
+    var slider = document.getElementById('sliderElement');
+    
+    slider.getElementsByClassName('irs-line-mid')[0].setAttribute('style','border-radius:10px;')
+    slider.getElementsByClassName('irs-bar-edge')[0].setAttribute('style',' background: none;background-color: #ed008c;border-bottom-left-radius:10px;border-top-left-radius:10px;width: 10px;');
+    slider.getElementsByClassName('irs-single')[0].setAttribute('style',' background: none;background-color: #ed008c;left:'+this.sliderPercentFrom+'%');
+    slider.getElementsByClassName('irs-bar')[0].setAttribute('style',' background: none;left:10px;background-color: #ed008c;width:'+this.sliderPercentFrom+'%');
+    slider.getElementsByClassName('irs-slider single')[0].setAttribute('style','width: 20px;top: 20px;height: 20px;border-radius: 50%;cursor:pointer;background: none; background-color: #fff;left:'+this.sliderPercentFrom+'%');
+    slider.getElementsByClassName('irs-max')[0].setAttribute('style','background: none');
+		slider.getElementsByClassName('irs-min')[0].setAttribute('style','background: none');
+		
+		
+    
+  }
   processServiceList(serviceCost,serviceInput){
 	if (serviceCost === undefined || serviceCost.cost.length === undefined) {
 		return [];
@@ -179,89 +567,17 @@ export class ServiceCostComponent implements OnInit {
 			"interval": inputParams[0].setInterval,
 			"group_by":["environments"]
 		};
-		let mockCost:any = {
-			"data": {
-				"totalCostYear": {
-					"key": "2017-04-01 00:00:00",
-					"cost": 0.36712248072083753
-				},
-				"totalCostMonth": {
-					"key": "2017-10-01 00:00:00",
-					"cost": 0.014299193244525554
-				},
-				"totalCostWeek": {
-					"key": "2017-10-09 00:00:00",
-					"cost": 0.008796081443250614
-				},
-				"totalCostDay": {
-					"key": "2017-10-09 00:00:00",
-					"cost": 0.0018929634201185763
-				},
-				"cost": [
-					{
-						"key": "2017-07-31 00:00:00",
-						"cost": 0.015356270021641194
-					},
-					{
-						"key": "2017-08-07 00:00:00",
-						"cost": 0.01665646010008004
-					},
-					{
-						"key": "2017-08-14 00:00:00",
-						"cost": 0.027630850040580412
-					},
-					{
-						"key": "2017-08-21 00:00:00",
-						"cost": 0.018311100101826128
-					},
-					{
-						"key": "2017-08-28 00:00:00",
-						"cost": 0.016806625976300893
-					},
-					{
-						"key": "2017-09-04 00:00:00",
-						"cost": 0.00019572208466726693
-					},
-					{
-						"key": "2017-09-11 00:00:00",
-						"cost": 0.0029940571347196965
-					},
-					{
-						"key": "2017-09-18 00:00:00",
-						"cost": 0.00015370311081682075
-					},
-					{
-						"key": "2017-09-25 00:00:00",
-						"cost": 0.0001795176893706696
-					},
-					{
-						"key": "2017-10-02 00:00:00",
-						"cost": 0.00011646751236042974
-					},
-					{
-						"key": "2017-10-09 00:00:00",
-						"cost": 0.000018929634201185763
-					}
-				]
-			},
-			"input": {
-				"start_date": "2017-08-01",
-				"end_date": "2017-10-10",
-				"service": "events",
-				"environments": [
-					"prod"
-				],
-				"domain": "platform",
-				"interval": "Weekly",
-				"group_by": [
-					"environments"
-				]
-			}
-		};
-				let serviceCost:any = mockCost.data;
-				let serviceInput:any = mockCost.input;
+  		//TODO: Remove call to dev after TECH training
+		  	 if ( this.subscription ) {
+      this.subscription.unsubscribe();
+    }
+		this.subscription = this.http.post('/jazz/service-cost', payload).subscribe(
+      	response => {
+          //Bind to view
+		  let serviceCost = response.data;
+			let serviceInput = response.input;
 			
-			if(serviceCost.totalCostDay !== undefined && serviceCost.totalCostMonth !== "" && serviceCost.totalCostWeek !== "" && serviceCost.totalCostYear !== "" && serviceCost.totalCostDay !== undefined && serviceCost.totalCostMonth !== undefined && serviceCost.totalCostWeek !== undefined && serviceCost.totalCostYear !== undefined){
+			if(serviceCost.totalCostDay !== "" && serviceCost.totalCostMonth !== "" && serviceCost.totalCostWeek !== "" && serviceCost.totalCostYear !== "" && serviceCost.totalCostDay !== undefined && serviceCost.totalCostMonth !== undefined && serviceCost.totalCostWeek !== undefined && serviceCost.totalCostYear !== undefined){
 				this.cost.perDay.value = serviceCost.totalCostDay.cost.toFixed(2).toString();
 				this.cost.perDay.date = serviceCost.totalCostDay.key.substring(0,10);;
 				this.cost.perWeek.value = serviceCost.totalCostWeek.cost.toFixed(2).toString();
@@ -291,6 +607,34 @@ export class ServiceCostComponent implements OnInit {
 			this.noTotalCost = true;
 			this.isGraphLoading=true;
 		  }
+        },
+        err => {
+			this.noTotalCost = true;
+			// this.isDataNotAvailable=true;
+			this.isGraphLoading=false;
+			// Log errors if any
+			this.loadingState = 'error';
+			this.errBody = err._body;
+			
+            this.errMessage = this.toastmessage.errorMessage(err,"serviceCost"); 
+            try {
+				this.parsedErrBody = JSON.parse(this.errBody);
+				if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
+				  this.errMessage = this.parsedErrBody.message;
+				}
+			  } catch(e) {
+				  console.log('JSON Parse Error', e);
+			  }
+			  this.getTime();
+			  this.errorURL = window.location.href;
+			  this.errorAPI = environment.baseurl+"/jazz/service-cost";
+			  this.errorRequest = payload;
+			  this.errorUser = this.authenticationservice.getUserId();
+			  this.errorResponse = JSON.parse(err._body);
+
+			// let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
+            // this.popToast('error', 'Oops!', errorMessage);
+		})
 	};
 	refreshCostData(event){
 		this.isGraphLoading=true;
@@ -299,9 +643,123 @@ export class ServiceCostComponent implements OnInit {
 		this.fetchGraphData('Day');
 	}
 
+	getTime() {
+		var now = new Date();
+		this.errorTime = ((now.getMonth() + 1) + '/' + (now.getDate()) + '/' + now.getFullYear() + " " + now.getHours() + ':'
+		+ ((now.getMinutes() < 10) ? ("0" + now.getMinutes()) : (now.getMinutes())) + ':' + ((now.getSeconds() < 10) ? ("0" + now.getSeconds()) : (now.getSeconds())));
+	  }
+
+	feedbackRes:boolean=false;
+	openModal:boolean=false;
+    feedbackMsg:string='';
+    feedbackResSuccess:boolean=false;
+	feedbackResErr:boolean=false;
+	isFeedback:boolean=false;
+    toast:any;
+    model:any={
+        userFeedback : ''
+	};
+	buttonText:string='SUBMIT';
+	isLoading:boolean=false;
+	reportIssue(){
+
+		// this.json = this.model.userFeedback ;
+
+		this.json = {
+			"user_reported_issue" : this.model.userFeedback,
+			"API": this.errorAPI,
+			"REQUEST":this.errorRequest,
+			"RESPONSE":this.errorResponse,
+			"URL": this.errorURL,
+			"TIME OF ERROR":this.errorTime,
+			"LOGGED IN USER":this.errorUser
+	}
+
+	
+		this.openModal=true;
+		this.errorChecked=true;
+		this.isLoading=false;
+		this.errorInclude = JSON.stringify(this.djson);
+		this.sjson = JSON.stringify(this.json);
+	}
+    openFeedbackForm(){
+        this.isFeedback=true;
+        this.model.userFeedback='';
+        this.feedbackRes=false;
+        this.feedbackResSuccess=false;
+        this.feedbackResErr=false;
+        this.isLoading = false;
+        this.buttonText='SUBMIT';
+    }
+    mailTo(){
+        location.href='mailto:serverless@t-mobile.com?subject=Jazz : Issue reported by'+" "+ this.authenticationservice.getUserId() +'&body='+this.sjson;
+	}
+	errorIncluded(){
+	}
+
+    submitFeedback(action){
+
+        this.errorChecked = (<HTMLInputElement>document.getElementById("checkbox-slack")).checked;
+		if( this.errorChecked == true ){
+			this.json = {
+					"user_reported_issue" : this.model.userFeedback,
+					"API": this.errorAPI,
+					"REQUEST":this.errorRequest,
+					"RESPONSE":this.errorResponse,
+					"URL": this.errorURL,
+					"TIME OF ERROR":this.errorTime,
+					"LOGGED IN USER":this.errorUser
+			}
+		}else{
+			this.json = this.model.userFeedback ;
+		}
+		this.sjson = JSON.stringify(this.json);
+
+        this.isLoading = true;
+
+        if(action == 'DONE'){
+            this.openModal=false;
+            return;
+		}
+
+        var payload={
+            "title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
+            "project_id": "CAPI",
+            "priority": "P4",
+			"description": this.json,
+            "created_by": this.authenticationservice.getUserId(),
+            "issue_type" :"bug"
+        }
+        this.http.post('/jazz/jira-issues', payload).subscribe(
+            response => {
+                this.buttonText='DONE';
+                this.isLoading = false;
+                this.model.userFeedback='';
+                var respData = response.data;
+                this.feedbackRes = true;
+                this.feedbackResSuccess= true;
+                if(respData != undefined && respData != null && respData != ""){
+                    this.feedbackMsg = "Thanks for reporting the issue. We’ll use your input to improve Jazz experience for everyone!";
+                } 
+            },
+            error => {
+                this.buttonText='DONE';
+                this.isLoading = false;
+                this.feedbackResErr = true;
+                this.feedbackRes = true;
+                this.feedbackMsg = this.toastmessage.errorMessage(error, 'jiraTicket');
+              }
+        );
+	}
+	
+	
+
 	ngOnInit() {
 		this.filter = new Filter(this.costTableData.body);
 		this.sort = new Sort(this.costTableData.body);
+		// Draw graph for for day interval on init
+		// this.dayCost();
+		// this.yearlyCost();
 		this.fetchGraphData("Day");
 	}
 	collectInputData(input){
@@ -327,8 +785,9 @@ export class ServiceCostComponent implements OnInit {
 	}
 
     fetchGraphData(range){
-		//Based on filter selected generate start date and interval params for payload
-		
+		//Based on filter selected geerate start date and interval params for payload
+		// this.isDataNotAvailable=false;
+		// this.isGraphLoading=true;
 		var graphDataInterval =[];
 		var todayDate = new Date();
 		var graphDataList = ["Daily", "Weekly", "Monthly",  "Yearly"];
@@ -379,9 +838,23 @@ export class ServiceCostComponent implements OnInit {
 				graphDataInterval.push(filteredData);
 				break;
 		}
-
 		this.collectInputData(graphDataInterval);
   }
+  public goToAbout(hash){
+		  this.router.navigateByUrl('landing');
+		  this.cache.set('scroll_flag',true);
+		  this.cache.set('scroll_id',hash);
+	}
+		
+		
+	fetchEnvlist(){
+		var env_list=this.cache.get('envList');
+		if(env_list != undefined){
+		  this.environmentList=env_list.friendly_name;
+		}
+	
+	  }
+	 
 
   onTypeSelected(event){}
 

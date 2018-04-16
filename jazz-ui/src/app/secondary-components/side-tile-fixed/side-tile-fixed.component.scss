@@ -5,6 +5,7 @@
     background-color: #242c34;
     height: 80%; //fallback
     height: calc(100vh - 4.7rem);
+    //overflow: auto;
     position: fixed;
     transition: 0.4s ease;
     top: 56px;

@@ -1,5 +1,11 @@
-import { Component, OnInit } from '@angular/core';
-import { RequestService, DataCacheService, MessageService } from "../../core/services";
+import { Component, OnInit, Input } from '@angular/core';
+import { RequestService , MessageService , AuthenticationService } from "../../core/services";
+import { Router, ActivatedRoute } from '@angular/router';
+import { HttpModule } from '@angular/http';
+import {DataCacheService } from '../../core/services/index';
+import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
+import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
+import { ToasterService } from 'angular2-toaster';
 
 @Component({
   selector: 'jenkins-status',
@@ -10,13 +16,22 @@ export class JenkinsStatusComponent implements OnInit {
   
 
   constructor(
+    private authService: AuthenticationService, 
     private http: RequestService,
+    private route: ActivatedRoute,
+		private router: Router,
     private cache: DataCacheService,
-    private messageservice: MessageService) { }
+    private toasterService: ToasterService,
+    private messageservice: MessageService) { this.toastmessage = messageservice;}
     message : string = "";
+    successmessage : string = "";
+    private toastmessage:any = '';
+    serviceID:any;
     action : string;
     noLink:boolean = true;
     goToLogin:boolean = false;
+    rebuild_deployments:boolean = false;
+    
 
   public onLoginClicked (goToLogin) {
     this.goToLogin = goToLogin;
@@ -27,6 +42,66 @@ export class JenkinsStatusComponent implements OnInit {
       this.goToLogin = false;
       this.closed = true;
   }
+
+  gotoService(){
+    let allow = this.authService.isLoggedIn();
+  	if (allow === false) {
+      let currentUrl = this.router.url;
+      this.goToLogin = true;
+      this.closed = false;
+      // this.serviceID = "serviceID"
+      // this.cache.set('serviceID',this.serviceID);
+      // this.router.navigate(['']);
+    
+  	}else{
+      this.router.navigateByUrl('services');
+    }
+    return allow;
+  }
+
+ refresh(event){
+  this.status = 'loading';
+  this.ngOnInit();
+ }
+
+
+  rebuild(event){
+   
+    var url_search = window.location.search;
+    var urlParams = new URLSearchParams(url_search);
+    let action = urlParams.get("action"); 
+    let id = urlParams.get("id"); 
+  //  this.http.post('/jazz/deployments/a10acabd-a26e-4325-9e3c-ca38e23069e9/re-build',{}).subscribe(
+    this.http.post("/jazz/deployments/"+id+"/re-build",{}).subscribe(
+      (response) => {
+        // let successMessage = this.toastmessage.successMessage(response, "updateObj");
+        let successMessage = (response.data.message).replace("."," ");
+        this.toast_pop('success', "", successMessage+"successfully");
+      },
+      (error) => {
+        // let errorMessage = this.toastmessage.errorMessage(error, "updateObj");
+        let errorMessage = JSON.parse(error._body).message;
+
+        this.toast_pop('error', 'Oops!', errorMessage)
+      })
+      // this.isLoading = true;
+      setTimeout(() => {
+        this.status = 'loading';
+        this.ngOnInit();
+      }, 5000);
+       
+  }
+
+  toast_pop(error,oops,errorMessage)
+    {
+      var tst = document.getElementById('toast-container');
+        tst.classList.add('toaster-anim');
+        this.toasterService.pop(error,oops,errorMessage);
+        setTimeout(() => {
+            tst.classList.remove('toaster-anim');
+          }, 3000);
+    }
+ 
 
   ngOnInit() {
      var url_search = window.location.search;
@@ -73,14 +148,14 @@ export class JenkinsStatusComponent implements OnInit {
           this.status = 'rejected';
           this.message = output.data.message;
         }
-        else if(output.data !== undefined && (output.data.status === 'ABORTED'))
+        else if(output.data !== undefined && (output.data.status === 'ABORTED') || (output.data.status === 'ALREADY_ABORTED'))
         {
           this.status = 'aborted';
           this.message = output.data.message;
         }
         else{
           this.status = 'success';
-          this.message = "Deployment request to production environment is " + this.action ;
+          this.message = "Deployment request to production environment is " + this.action + "ed" ;
         }
       },
       (error) => {

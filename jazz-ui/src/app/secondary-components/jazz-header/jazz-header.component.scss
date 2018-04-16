@@ -1,7 +1,7 @@
 @import './../../../main-styles';
 
-$break-medium: 1250px;
-$break-small: 840px;
+$break-medium         : 1250px;
+$break-small         : 840px;
 .jazz-header{
     background: #2b343e;
     height: 56px;
@@ -9,6 +9,7 @@ $break-small: 840px;
     align-items: center;
     padding: 0 2.4rem;
     color: #fff;
+    // text-transform: uppercase;
     font-size: 11px;
 }
 .header-section.left{
@@ -37,6 +38,7 @@ $break-small: 840px;
 	}
 }
 .header-tabs{
+    /*margin-left: 4rem;*/
     margin-top: 1px;
     font-size: 13px;
 }
@@ -57,8 +59,15 @@ $break-small: 840px;
     opacity: 0.9;
 }
 .header-profile-section{
-    height: 2.0833;
+    // height: 2.0833;
     margin-top: 1.25rem;
+    .notification.active, .profile{
+        vertical-align: middle;
+    }
+    .icon-icon-notifcation{
+        font-size: 1.5rem;
+        cursor: pointer;
+    }
 }
 .notification{
     display: inline-block;
@@ -79,13 +88,13 @@ $break-small: 840px;
     display: inline-block;
     position: relative;
 }
-.profile img{
-    background-color: #fff;
-    border-radius: 50%;
-    width: 25px;
-    height: 25px;
-    cursor: pointer;
-}
+// .profile img{
+//     background-color: #fff;
+//     border-radius: 50%;
+//     width: 25px;
+//     height: 25px;
+//     cursor: pointer;
+// }
 
 .profile-options {
     visibility: hidden;
@@ -161,6 +170,11 @@ $break-small: 840px;
     width:auto;
     float: right;
     display: table-row;
+    // margin-right: 17.5rem;
+    @media screen and (max-width: $break-medium ) {
+        // width:74vw;
+        // margin-right: 15vw;
+    }
     @media screen and (max-width: $break-small ) {
          display: none;	
 	}
@@ -218,6 +232,8 @@ $break-small: 840px;
     display: table-cell;
     vertical-align: middle;
     height: 55px;
+    // float: right;
+    // margin: 2.2rem 2rem 2rem 2rem;
     padding: 0 2rem;
     font-family: Helvetica;
     font-size: 12px;
@@ -241,6 +257,10 @@ $break-small: 840px;
 }
 .login
 {
+    // width: 10rem;
+    // right:0px;
+    // top:  0.7rem;
+    // position: absolute;
     @media screen and (max-width: $break-small ) {
 		display: none;	
 	}
@@ -251,5 +271,119 @@ $break-small: 840px;
     img{
         height: 100%;
         cursor: pointer;
+    }
+}
+.feedback-overlay{
+    position: fixed;
+    width:100%;
+    height:100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    top:0;
+    text-align: center;
+    .separator-row{
+        border-bottom: 1px solid #ccc;
+        margin-top: 2rem;
+    }
+    .feedback-wrap{
+        min-width: 500px;
+        width:45%;
+        max-width: 600px;
+        top:20%;
+        margin: 0 auto;
+        align-self: center;
+        background-color: #fff;
+        padding:2rem;
+        font-size: 16px;
+        .feedback-hdr{
+            font-size: 2rem;
+            font-weight: bold;
+        }
+    }
+    .feedback-text-wrap{
+        p{
+            padding: 1.5rem 0;
+        }
+        textarea{
+            padding: 10px 10px;
+            width: 100% !important;
+            height: 100px !important;
+
+        }
+        
+    }
+    .feedback-text-wrap.feedbackRes{
+        position: absolute;
+        padding: 0 3rem;
+        top: 46%;
+        left: 0;
+        .show{
+            &.feedbackResSuccess{   
+                // margin:4rem 0;
+                div{
+                    // padding-top: 2rem;
+                }
+            }
+            &.feedbackResErr{
+                // padding: 4rem 0;
+            }
+        }
+    }
+    .feedback-btn-wrap{
+        font-size:13px;
+        text-align: right;
+        // position: absolute;
+        // right: 0;
+        // padding: 2rem;
+        // bottom: 0;
+        a{
+            margin:5px;
+            cursor: pointer;
+        }
+        .feedback-submit{
+            /deep/ button.btn-primary{
+                line-height:3rem;
+            }
+        }
+    }
+    /deep/ button.btn-primary:focus, button.btn-primary:active{
+        background-color: #ed008c !important;
+        color: #fff !important;
+        border: 1px solid #ed008c !important;
+    }
+}
+.loading-row {
+    display: none;
+    position: absolute;
+    width: 100%;
+    z-index: 2;
+    background: #fff;
+    top: 50%;
+    left: 0;
+    .loading-circle {
+        top: calc(50% - 2.5rem);
+    }
+}
+.icon-icon-profile{
+    font-size: 2.25rem;
+    cursor: pointer;
+}
+.override-url-wrap{
+    background-color: red;
+    padding: 1rem 2.4rem;
+    text-align: center;
+    .override-text{
+        display: inline-flex;
+        color: #fff;
+        padding: 0 2rem;
+    }
+    btn-jazz-primary{
+        display: inline-flex;
+        text-align: right;
+        padding: 0px 2rem;
+        /deep/ button.btn-primary{
+            height: 3rem;
+            background-color: #fff;
+            color: red;
+        }
     }
 }

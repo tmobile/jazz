@@ -8,6 +8,7 @@
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
     border-radius: 3px;
     font-size: 12px;
+    border-top:1px solid #eee;
     .caret {
         position: absolute;
         top: 13px;
@@ -38,6 +39,19 @@
     }
 }
 
-.dropdown {
-    min-width: 200px;
+.drop-menu{
+    overflow-y: scroll;
+    max-height: 207px;
+}
+
+.drop-btn{
+    min-width: 142px;
+}
+
+// .dropdown {
+//     min-width: 200px;
+// }
+
+/deep/.padding-right{
+    padding-right: 1.5rem!important;
 }

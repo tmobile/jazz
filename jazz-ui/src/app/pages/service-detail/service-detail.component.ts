@@ -7,9 +7,15 @@ import { Http, Headers, Response } from '@angular/http';
 import { Component, OnInit , Output, EventEmitter } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SharedService } from "../../SharedService.service";
+import { AfterViewInit, ViewChild } from '@angular/core';
+
+// import { RequestService, DataCacheService } from "../../core/services";
 import { ToasterService} from 'angular2-toaster';
 import { BarGraphComponent} from '../../secondary-components/bar-graph/bar-graph.component';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
+import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
+import {environment} from './../../../environments/environment';
+
 @Component({
     selector: 'service-detail',
     templateUrl: './service-detail.component.html',
@@ -18,9 +24,10 @@ import { RequestService, DataCacheService, MessageService, AuthenticationService
 })
 
 export class ServiceDetailComponent implements OnInit {
-
+    
 
     constructor(
+        
         private toasterService: ToasterService,
         private route: ActivatedRoute,
         private router: Router,
@@ -37,29 +44,40 @@ export class ServiceDetailComponent implements OnInit {
 
     @Output() deleteServiceStatus:EventEmitter<boolean> = new EventEmitter<boolean>();
 
+
     disblebtn:boolean = true;
     ServiceName:string;
     deleteServiceVal:boolean;
     id: string;
-
+    errMessage:string='';
     isLoadingService: boolean = false;
     isLoading: boolean = false;
     selectedTab = 0;
     selected:string = 'All';
     service: any = {};
+    isGraphLoading:boolean=false;
     stageOverview: any = {};
     showPopUp:boolean = false;
     success:boolean = false;
     thisIndex : number = 0;
+    err_flag:boolean = false;
+    serviceDeleted:boolean = false;
+    serviceDeleteFailed:boolean = false;
     serviceRequestFailure:boolean = false;
     serviceRequestSuccess:boolean = false;
+    canDelete:boolean =true;
+    successMessage: string = "";
+    errorMessage: string = "";
+    test:any="delete testing";
+    disabled_tab:boolean=false;
+
 
     private sub: any;
     private subscription:any;
     private toastmessage:any;
 
     statusData = ['All','Active','Pending','Stopped'];
-    tabData = ['OVERVIEW', 'ACCESS CONTROL', 'COST', 'METRICS', 'LOGS'];
+    tabData = ['overview', 'access control', 'metrics', 'logs' , 'cost'];
 
     breadcrumbs = []
 
@@ -70,16 +88,26 @@ export class ServiceDetailComponent implements OnInit {
                 serviceType : 'API',
                 runtime : 'Python',
                 status : 'Active',
-                description : 'Sample Description',
+                description : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
                 approvers : 'Jane Smith',
-                domain : 'jazz.com',
-                email : 'api@jazz.com',
+                domain : 'tmo.com',
+                email : 'api@tmo.com',
                 slackChannel : 'Cloud Notifications',
                 repository : 'View on BitBucket',
                 tags : 'Pacman, MyService'
         }
     };
 
+    opnSidebar(event){
+        this.closeSidebar(true);
+    }
+
+    public closeSidebar (eve){
+        this.closed = true;
+        this.close = eve;
+    }
+    close:boolean=false;
+    closed:boolean = false;
     processService(service){
         if (service === undefined) {
             return {};
@@ -105,6 +133,10 @@ export class ServiceDetailComponent implements OnInit {
     onDataFetched(service) {
 
       if (service !== undefined && service !== "") {
+        if (!service.id && service.data){
+            service = service.data;
+        }
+
         this.service = this.processService(service);
 
         // Update breadcrumbs
@@ -114,6 +146,8 @@ export class ServiceDetailComponent implements OnInit {
             'link' : ''
         }]
         this.isLoadingService = false;
+        if(service.status == 'deletion_completed' || service.status == 'deletion_started' || service.status == 'creation_started' || service.status == 'creation_failed')
+        this.canDelete = false;
       } else{
         this.isLoadingService = false;
         let errorMessage = this.toastmessage.successMessage(service,"serviceDetail");
@@ -126,28 +160,37 @@ export class ServiceDetailComponent implements OnInit {
         this.isLoadingService = true;
 
         let cachedData = this.cache.get(id);
-
         if (cachedData) {
+            this.isGraphLoading=false;
             this.onDataFetched(cachedData)
              if(this.service.serviceType == "website")
             {
-                this.tabData = ['OVERVIEW', 'ACCESS CONTROL', 'COST', 'METRICS'];
+                this.tabData = ['overview', 'access control', 'metrics' , 'cost'];
             }
         } else{
             this.http.get('/jazz/services/'+id).subscribe(
               response => {
+
                     let service = response.data;
                      if(response.data.type === "website")
                     {
-                         this.tabData = ['OVERVIEW', 'ACCESS CONTROL', 'COST', 'METRICS'];
+                        this.tabData = ['overview', 'access control', 'metrics' , 'cost'];
                     }
                     this.cache.set(id, service);
                     this.onDataFetched(service);
+                    this.isGraphLoading=false;
                 },
                 err => {
+                    if( err.status == "404"){
+                        this.router.navigateByUrl('404');
+                    }
                     this.isLoadingService = false;
-                    let errorMessage = this.toastmessage.errorMessage(err,"serviceDetail");
-                    this.toast_pop('error', 'Oops!', errorMessage)
+                    let errorMessage = 'OOPS! something went wrong while fetching data';
+                    this.isGraphLoading=false;
+                    errorMessage = this.toastmessage.errorMessage(err,"serviceDetail");
+                    this.errMessage = errorMessage;
+                    this.err_flag=true;
+                    // this.toast_pop('error', 'Oops!', errorMessage)
                 }
             )
         }
@@ -157,20 +200,34 @@ export class ServiceDetailComponent implements OnInit {
 
 
     onSelectedDr(selected){
-         if(selected == 3 || selected == 2 || selected == 1)
-            return;
-        else
-            this.selectedTab = selected;
+        this.selectedTab = selected;
     }
 
     tabChanged (i) {
-       
-            this.selectedTab = i;
+        this.selectedTab = i;
+        if( i == 4){
+            this.disabled_tab = true;
+        }
     };
 
     statusFilter(item){
         this.selected = item;
+        // this.filterByStatus();
     };
+
+    env(event){
+        if( (event != 'creation failed') && (event != 'creation started') && (event != 'deletion started') && (event != 'deletion completed') ){
+            this.canDelete = true;
+        }else{
+            this.canDelete = false;
+        }
+    }
+
+    public goToAbout(hash){
+        this.router.navigateByUrl('landing');
+        this.cache.set('scroll_flag',true);
+        this.cache.set('scroll_id',hash);
+     }
 
     deleteService(x){
         if (!this.service.status || this.service.status == 'deletion_completed' || this.service.status == 'deletion_started') {
@@ -179,6 +236,11 @@ export class ServiceDetailComponent implements OnInit {
         this.showPopUp = true;
         this.success = false;
     };
+    refreshServ()    
+    {
+    this.isGraphLoading=true;
+    this.fetchService(this.id);
+    }
 
     hideDeletePopup(x){
         if(this.success){
@@ -202,6 +264,11 @@ export class ServiceDetailComponent implements OnInit {
         this.sharedService.sharedMessage = this.message;
     };
 
+    refreshCostData(event){
+        this.isLoading=true;
+        this.deleteServiveInit()
+    }
+
 
     deleteServiveInit(){
 
@@ -209,8 +276,8 @@ export class ServiceDetailComponent implements OnInit {
         this.disblebtn =true;
         var payload = {
                 "service_name": this.service.name,
-                "domain": this.service.domain,
-                "id" : this.service.id
+                "domain": this.service.domain
+                // "version": "LATEST"
             };
        this.deleteServiceStatus.emit(this.deleteServiceVal);
        this.subscription = this.http.post('/jazz/delete-serverless-service' , payload)
@@ -219,42 +286,57 @@ export class ServiceDetailComponent implements OnInit {
             var update = {
                 "status":"Deleting"
             }
+            var service = payload.service_name;
+            var domain = payload.domain;
+            var reqId = Response.data.request_id;
+            localStorage.setItem('request_id'+"_"+payload.service_name+"_"+payload.domain, JSON.stringify({ service: service, domain: domain, request_id: reqId }));
             this.serviceRequestSuccess = true;
             this.serviceRequestFailure = false;
             let successMessage = this.toastmessage.successMessage(Response,"serviceDelete")
-            this.toast_pop('success',"", "Service: "+this.service.name +" "+successMessage);
+            this.successMessage = successMessage;
+            this.success = true;
+            this.serviceDeleted = true;
+            // this.toast_pop('success',"", "Service: "+this.service.name +" "+successMessage);
             this.isLoading = false;
-
+            // this.cache.set('request_id',this.test);
             this.cache.set('deletedServiceId',this.service.id)
             this.cache.set("updateServiceList", true);
-            this.http.put('/jazz/services/'+this.service.id , update)
-            .subscribe(
-                (Response)=>{
-                    this.isLoading=false;
-                    this.showPopUp=false;
-                    setTimeout(() => {
-                      this.router.navigateByUrl('services');
-                    }, 3000);
-
-                },
-                (Error)=>{
-                    this.isLoading=false;
-                    this.showPopUp=false;
-                    setTimeout(() => {
-                      this.router.navigateByUrl('services');
-                    }, 3000);
-                }
-            )
+            this.serviceDeleteFailed = false;
+          
         },
         (error) => {
             this.serviceRequestSuccess = false;
             this.serviceRequestFailure = true;
             let errorMessage = this.toastmessage.errorMessage(error,"serviceDelete");
-            this.toast_pop('error','Oops!', errorMessage);
+            this.errorMessage = errorMessage;
+            this.success = true;
+            this.serviceDeleteFailed = true;
+            // this.toast_pop('error','Oops!', errorMessage);
             this.isLoading = false;
+            this.serviceDeleted = false;
         }
         );
+
+
+
+
     };
+
+    backtoservice(){
+        this.router.navigateByUrl('services');
+    }
+
+    backtoserviceid(){
+        this.showPopUp = false;
+        if(this.serviceDeleted == true){
+        this.serviceDeleted = false;
+        }else if(this.serviceDeleteFailed == true){
+            this.serviceDeleteFailed = false;
+        }
+        if(this.subscription){
+            this.subscription.unsubscribe();
+        }
+    }
 
 
     onServiceNameChange(){
@@ -266,12 +348,14 @@ export class ServiceDetailComponent implements OnInit {
         }
     }
 
+    
     changeTabIndex(index){
         this.thisIndex = index;
     }
 
     handleTabs(index){
         this.selectedTab = index;
+
     }
 
     toast_pop(error,oops,errorMessage)
@@ -285,6 +369,7 @@ export class ServiceDetailComponent implements OnInit {
     }
 
     ngOnInit() {
+
         this.breadcrumbs = [
         {
             'name' : this.service['name'],
@@ -294,9 +379,9 @@ export class ServiceDetailComponent implements OnInit {
             this.id = params['id'];
             this.fetchService(this.id);
         });
+        
     }
-    ngOnChange(){
-
-  }
-
+    ngOnChanges(x:any){
+         
+    }
 }

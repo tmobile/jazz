@@ -1,0 +1,68 @@
+<div class="row page-section section-top relative">
+    <div>
+        <!-- <template adv-filters></template> -->
+    </div>
+    <!-- <advanced-filters #adv_filters (onFilterSelect)='onFilterSelect($event)'  [service]='service' [advanced_filter_input]='advanced_filter_input'></advanced-filters> -->
+    <filter-tags #filtertags (OnCancel)='cancelFilter($event)'></filter-tags>
+
+    <div class="filter-wrp">
+        <filters class="filters" [filtersList]="filtersList" [multiple]="false" [selectedList]="selected" (onSelected)="onFilterSelected($event)" [logs]='true'></filters>
+
+        <!-- <filters class="filters" [filtersList]="filtersList" (onSelected)="onFilterSelected($event)" [multiple]='false' [selectedList]="selected"></filters> -->
+        <div class="filter-icon hide">
+            <span class="icon-icon-filter-unselected" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
+        </span>
+        </div>
+        
+        <div class='drp-wrp'>
+            <span title='Collapse all' *ngIf='expandText == "Collapse all"' class="icon-Collapse-All expandbtn" (click)='collapseall()'></span>
+            <span title='Expand all' *ngIf='expandText == "Expand all"' class="icon-Expand-All expandbtn" (click)='expandall()'></span>
+            
+                <!-- <div class="filter-icon relative hide">
+                    <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; onClickFilter()"></span>
+                    <div [class.show]='filterSelected' class="filter-wrap">
+                        <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>                    
+                        <div class="filter-inner-wrap">
+                            <div class='view-label'>View by:</div>
+                            <div class="eachFilter"> 
+                                <div><div class='hori-line'></div>TIME RANGE</div>
+                                <dropdown class="dropdown-3" title="Select enviroment" [dropdwnContent]="rangeList" [selected]="selectedTimeRange" (onSelected)="onRangeListSelected($event)"></dropdown>
+                                <div class='in-logs'>
+                                    <ion-range-slider #sliderElement id='sliderElement' min=1 [max]='sliderMax' [from]='sliderFrom' step=1  (onFinish)='getRange($event)' (onUpdate)="onClickFilter()"></ion-range-slider>
+                                </div>
+
+                            </div>
+                            <div class="eachFilter" *ngIf='service.serviceType == "function"'>
+                                <div><div class='hori-line'></div>ACCOUNT</div>
+                                <dropdown class="dropdown-3" [dropdwnContent]="accList" title="Select enviroment" [selected]="accSelected" (onSelected)="onaccSelected($event)"></dropdown>            
+                            </div>
+                            <div class="eachFilter" *ngIf='service.serviceType == "function"'>
+                                <div><div class='hori-line'></div>REGION</div>
+                                <dropdown class="dropdown-3"  [dropdwnContent]="regList" title="Select enviroment" [selected]="regSelected" (onSelected)="onregSelected($event)"></dropdown>            
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div> -->
+
+            <div class='pointer refresh icon-icon-refresh' title="Refresh" (click)='callLogsFunc()' height="19"></div>
+        </div>
+
+    </div>
+
+
+    <table-template class="table-container env-logs" [message]="errMessage" [state]="loadingState" (refreshData)="callLogsFunc()" [type]="'accordian'" [header]="tableHeader"  (onFilter)="onFilter($event)" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected"  (paginatePage)="paginatePage($event)" [totalPageNum]="totalPagesTable" >
+                <div class="table-row-wrp" *ngFor="let row of logs; let i = index" [class.expanded]="row.expanded">
+            <div class="table-row" (click)="onRowClicked(row, i)">
+                <div class="column">{{row.timestamp | amDateFormat: 'YYYY-MM-DD HH:mm:ss'}}</div>
+                <div class="column">{{row.message}}</div>
+                <div class="column">{{row.request_id}}</div>
+                <div class="column">{{row.type}}</div>
+            </div>
+            <div class="table-row-expanded">
+                <b>Request Id:</b> {{row.request_id}}<br>
+            <b>Message:</b>{{row.message}}
+            </div>
+        </div>
+    </table-template>
+</div>

@@ -4,7 +4,7 @@
   * @author
 */
 
-import { Component, OnInit, EventEmitter, Output} from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, ViewChild} from '@angular/core';
 import { ToasterService} from 'angular2-toaster';
 import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
 import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
@@ -14,6 +14,9 @@ import { Router, ActivatedRoute } from '@angular/router';
 import 'rxjs/Rx';
 import {Observable} from 'rxjs/Rx';
 import { Subscription } from 'rxjs/Subscription';
+import { FilterTagsServicesComponent } from '../../secondary-components/filter-tags-services/filter-tags-services.component';
+import { TableTemplateComponent} from '../../secondary-components/table-template/table-template.component';
+import {SearchBoxComponent} from './../../primary-components/search-box/search-box.component';
 
 declare var $:any;
 
@@ -25,12 +28,17 @@ declare var $:any;
 })
 
 export class ServicesListComponent implements OnInit {
+
+@ViewChild('filtertags') FilterTags: FilterTagsServicesComponent;
+@ViewChild('tabletemplate') tableTemplate:TableTemplateComponent;
+@ViewChild('searchbox') searchBox:SearchBoxComponent;
   private toastMessage:any;
   private subscription:any;
   errBody: any;
 	parsedErrBody: any;
   errMessage: any;
   selectedList:string='all';
+  // @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
 
   constructor(private sharedService: SharedService,
             private router: Router,
@@ -60,6 +68,10 @@ export class ServicesListComponent implements OnInit {
   showAddService: boolean = false;
   selected:string = "Status (All)";
   thisIndex: number = 0;
+  // breadcrumbs = [{
+  //   'name' : 'Services',
+  //   'link' : 'services'
+  // }]
   serviceList = [];
 
   tableHeader2 = [
@@ -91,6 +103,13 @@ export class ServicesListComponent implements OnInit {
       filter: {
         type: 'dateRange'
       }
+    // },{
+    //   label: 'Health',
+    //   key: 'health',
+    //   sort: true,
+    //   filter: {
+    //     type: ''
+    //   }
     },{
       label: 'Status',
       key: 'status',
@@ -104,77 +123,14 @@ export class ServicesListComponent implements OnInit {
 
   tableHeader = [{"name" : "Name","field" : "name","FilterType":"input"},
   {"name" : "Type","field" : "type","FilterType":"none"},
-  {"name" : "Domain","field" : "domain","FilterType":"input"},
+  {"name" : "Namespace","field" : "domain","FilterType":"input"},
   {"name" : "Last modified","field" : "lastModified","FilterType":"date"},
   {"name" : "Health","field" : "health","FilterType":"none"},
   {"name" : "Status","field" : "status","FilterType":"dropdown"}];
 
-  //'Name','Type','Domain','Last modified','health','status'
+  //'Name','Type','Namespace','Last modified','health','status'
   statusData = ['Status (All)','Status (Active)','Status (Pending)','Status (Stopped)'];
   tabData = ['all','api','function','website'];
-
-  recentActivities = [
-    {
-      title : 'Production deployment',
-      details : 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium',
-      path: '../assets/images/icons/icon-deployment@3x.png',
-      time: '10-10-17, 11:59:59 PST'
-    },
-    {
-      title : 'Merge to Master',
-      details : 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium',
-      path: '../assets/images/icons/icon-merge@3x.png',
-      time: '10-10-17, 11:59:59 PST'
-    },
-    {
-      title : 'ALERT: Deployment Failed',
-      details : 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium',
-      path: '../assets/images/icons/icon-alert@3x.png',
-      time: '10-10-17, 11:59:59 PST'
-    },
-    {
-      title : 'Production deployment',
-      details : 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium',
-      path: '../assets/images/icons/icon-deployment@3x.png',
-      time: '10-10-17, 11:59:59 PST'
-    },
-    {
-      title : 'Pending Approval',
-      details : 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium',
-      path: '../assets/images/icons/icon-pendingapproval@3x.png',
-      time: '10-10-17, 11:59:59 PST'
-    },
-    {
-      title : 'Pending Approval',
-      details : 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium',
-      path: '../assets/images/icons/icon-pendingapproval@3x.png',
-      time: '10-10-17, 11:59:59 PST'
-    },
-    {
-      title : 'Pending Approval',
-      details : 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium',
-      path: '../assets/images/icons/icon-pendingapproval@3x.png',
-      time: '10-10-17, 11:59:59 PST'
-    },
-    {
-      title : 'Pending Approval',
-      details : 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium',
-      path: '../assets/images/icons/icon-pendingapproval@3x.png',
-      time: '10-10-17, 11:59:59 PST'
-    },
-    {
-      title : 'Pending Approval',
-      details : 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium',
-      path: '../assets/images/icons/icon-pendingapproval@3x.png',
-      time: '10-10-17, 11:59:59 PST'
-    },
-    {
-      title : 'Pending Approval',
-      details : 'Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium',
-      path: '../assets/images/icons/icon-pendingapproval@3x.png',
-      time: '10-10-17, 11:59:59 PST'
-    }
-  ];
 
   filterSelected: Boolean = false;
   paginationSelected: Boolean = true;
@@ -217,11 +173,12 @@ export class ServicesListComponent implements OnInit {
     return _serviceList;
   };
   serviceCall(){
+
     this.serviceList = [];
     this.loadingState = 'loading';
     if(this.relativeUrl.indexOf('status=') == -1)
     {
-      this.addQueryParam("status=", "creation_started,creation_failed,creation_completed,deletion_started,deletion_failed,active",  true);
+      this.addQueryParam("status=", "creation_started,creation_failed,creation_completed,deletion_started,deletion_failed,active,inactive",  true);
       return;
     }
     if ( this.subscription ) {
@@ -236,6 +193,7 @@ export class ServicesListComponent implements OnInit {
           if (services !== undefined && services !== "" && services.length !== undefined) {
             if (services.length == 0) {
               this.serviceListEmpty = true;
+             // this.tableEmptyMessage = this.toastMessage.successMessage(response,"serviceList");
               this.totalPagesTable = 0;
               this.loadingState = 'empty';
             } else{
@@ -254,20 +212,30 @@ export class ServicesListComponent implements OnInit {
 
           } else{
             this.loadingState = 'error';
+            // let errorMessage = this.toastMessage.successMessage(response,"serviceList");
+            // this.popToast('error', 'Oops!', errorMessage);
           }
+          // console.log("loadingState ",this.loadingState);
         },
         err => {
             this.loadingState = 'error';
             this.errBody = err._body;
-            this.errMessage = 'OOPS! something went wrong while fetching data';
+
+            this.errMessage= this.toastMessage.errorMessage(err,"serviceList");
             try {
-              this.parsedErrBody = (this.errBody);
+              this.parsedErrBody = JSON.parse(this.errBody);
               if(this.parsedErrBody.message != undefined && this.parsedErrBody.message !== '' ) {
                 this.errMessage = this.parsedErrBody.message;
               }
               } catch(e) {
                 console.log('JSON Parse Error', e);
               }
+
+
+
+            // let errorMessage = this.toastMessage.errorMessage(err,"serviceList");
+            // this.popToast('error', 'Oops!', errorMessage);
+            // Log errors if any
         }
     );
   }
@@ -276,6 +244,7 @@ export class ServicesListComponent implements OnInit {
   };
   onRowClicked (rowData){
       if (rowData != undefined) {
+        // console.log("rowdata", rowData);
         this.cache.set(rowData.id, rowData.data);
           if (rowData.link != undefined) {
               this.router.navigateByUrl(rowData.link);
@@ -294,6 +263,7 @@ export class ServicesListComponent implements OnInit {
         string = string + param.key + "=" + param.value + "&"
       }
     });
+    // console.log("formStringFrmObj ", string);
     return string;
   }
   replaceIfKeyExists(array, newkey, newvalue){
@@ -302,6 +272,7 @@ export class ServicesListComponent implements OnInit {
         param.value = newvalue;
       }
     });
+    // console.log("replaceIfKeyExists old ", array);
     return array;
   }
   formKeyValuePairFrmUrl(){
@@ -322,9 +293,13 @@ export class ServicesListComponent implements OnInit {
         }
       }
     });
+    // console.log("formKeyValuePairFrmUrl ", array);
     return array;
   }
   addQueryParam(queryParamKey, queryParamValue, makeCall){
+    // console.log("queryParamKey ", queryParamKey);
+    // console.log("queryParamValue ", queryParamValue);
+
     if( this.relativeUrl.indexOf('?') == -1 ){
         this.relativeUrl += '?';
       }
@@ -343,59 +318,238 @@ export class ServicesListComponent implements OnInit {
       }
 
       if(makeCall){
+        // console.log("relativeUrl"+this.relativeUrl);
         this.serviceCall();
       }
   }
-  onFilter(event){
+
+
+  onFilter(event) {
+
+    // event=eventOBJ;
+    // console.log('event is to be made like this', event)
+    
     this.serviceList = this.backupdata;
-
+    
     for (var i = 0; i < this.tableHeader2.length; i++) {
-      var col = this.tableHeader2[i];
-      if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined){
-        var colFilterVal = col.filter['_value'].toLowerCase().replace(' ','_');
-      }
-      else if (col.filter['type'] === 'input'){
-        var colFilterVal = col.filter['value'] ;
-      }
-
-      if (col.filter != undefined && colFilterVal != undefined) {
-        // adding ?
-        if( this.relativeUrl.indexOf('?') == -1 ){
-          this.relativeUrl += '?';
-        }
-
-        if (col.filter['type'] == 'dateRange') {
-          // code...
-
-
-        } else if( col.filter['type'] == 'dropdown' || (event.filter['type'] === 'input' && (event.keyCode === 13)) ){
-          var queryParamKey = 'offset=';
-          var offsetValue = 0;
-          var queryParamValue = offsetValue;
-          $(".pagination.justify-content-center li:nth-child(2)")[0].click();
-          this.addQueryParam(queryParamKey, queryParamValue, false );
-
-          if(event.key == col.key){
-            queryParamKey = col.key + '=';
-            if(queryParamKey == "name="){
-              queryParamKey = "service=";
-            }
-            else if(queryParamKey == "lastModified="){
-              queryParamKey = "timestamp=";
-            }
-            queryParamValue = colFilterVal;
-            this.addQueryParam(queryParamKey, queryParamValue, true );
-          }
-
-        }
-      }
+    // console.log('i=',i);
+    // console.log('tableheader',this.tableHeader2[i]);
+    var col = this.tableHeader2[i];
+    if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined) {
+    var colFilterVal = col.filter['_value'].toLowerCase().replace(' ', '_');
+    if (colFilterVal != undefined) {
+    this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
     }
-  };
+    } else if (col.filter['type'] === 'input') {
+    var colFilterVal = col.filter['value'];
+    if (event.keyCode == 13 && colFilterVal != undefined) {
+    this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
+    }
+    }
+    
+    if (col.filter != undefined && colFilterVal != undefined) {
+    // adding ?
+    if (this.relativeUrl.indexOf('?') == -1) {
+    this.relativeUrl += '?';
+    }
+    
+    if (col.filter['type'] == 'dateRange') {
+    // code...
+    
+    
+    } else if (col.filter['type'] == 'dropdown' || (event.filter['type'] === 'input' && (event.keyCode === 13))) {
+    
+    // console.log("event ",event);
+    // console.log("col ",col);
+    
+    var queryParamKey = 'offset=';
+    var offsetValue = 0;
+    var queryParamValue = offsetValue;
+    $(".pagination.justify-content-center li:nth-child(2)")[0].click();
+    // this.pageSelected = 1;
+    
+    this.addQueryParam(queryParamKey, queryParamValue, false);
+    
+    if (event.key == col.key) {
+    queryParamKey = col.key + '=';
+    if (queryParamKey == "name=") {
+    queryParamKey = "service=";
+    } else if (queryParamKey == "lastModified=") {
+    queryParamKey = "timestamp=";
+    }
+    queryParamValue = colFilterVal;
+    // console.log("queryParamKey onFilter******",queryParamKey);
+    // console.log("queryParamValue onFilter*******",queryParamValue);
+    this.addQueryParam(queryParamKey, queryParamValue, true);
+    }
+    
+    }
+    }
+    }
+    }
+    
+    CancelFilters(event){
+switch(event){
+case 'name':{
+var a={
+filterType:'input',
+filterValue:'',
+key:'name',
+keyCode:13,
+label:'Name'
+};
+// var ip=document.getElementById('inputfilter').setAttribute('ng-reflect-model','');
+this.tableTemplate.resetInput('name',a);
+// ip.ng-reglect-model
+// console.log('inputfilter@(#(#*',ip);
+// ip.text='';
+this.onFilterCancel(a); 
+break;
+}
+case "domain":{
+var a={
+filterType:'input',
+filterValue:'',
+key:'domain',
+keyCode:13,
+label:'Namespace'
+};
+this.tableTemplate.resetInput('domain',a);
+
+this.onFilterCancel(a);
+break;
+}
+case "status":{
+var b={
+filterType:'dropdown',
+filterValue:'',
+key:'status',
+keyCode:undefined,
+label:'Status'
+};
+this.tableTemplate.resetInput('status',b);
+
+this.onFilterCancel(b);
+break;
+}
+case "search":{
+var c={
+keyCode:13,
+searchString:""
+}
+this.onServiceSearch(c);
+this.searchBox.clearSearchbox('');
+break; 
+}
+case "all":{
+var OBJ={
+filterType:'input',
+filterValue:'',
+key:'name',
+keyCode:13,
+label:'Name'
+};
+this.tableTemplate.resetInput('name',OBJ);
+this.onFilterCancel(OBJ); 
+OBJ.key='domain';
+OBJ.label="Namespace"; 
+this.tableTemplate.resetInput('domain',OBJ);
+this.onFilterCancel(OBJ);
+OBJ.filterType='dropdown';
+OBJ.filterValue='';
+OBJ.key='status';
+OBJ.keyCode=undefined;
+OBJ.label='Status';
+this.tableTemplate.resetInput('status',OBJ);
+this.onFilterCancel(OBJ);
+var obj={
+keyCode:13,
+searchString:""
+}
+this.onServiceSearch(obj);
+break;
+}
+}
+}
+
+
+
+onFilterCancel(event) {
+
+  for (var i = 0; i < this.tableHeader2.length; i++) {
+  // console.log('i=',i);
+  // console.log('tableheader',this.tableHeader2[i]);
+  var col = this.tableHeader2[i];
+  if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined) {
+  var colFilterVal = event.filterValue.toLowerCase().replace(' ', '_');
+  if (colFilterVal != undefined) {
+  this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
+  }
+  } else if (col.filter['type'] === 'input') {
+  var colFilterVal = event.filterValue;
+  if (event.keyCode == 13 && colFilterVal != undefined) {
+  this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
+  }
+  }
+  
+  if (col.filter != undefined && colFilterVal != undefined) {
+  // adding ?
+  if (this.relativeUrl.indexOf('?') == -1) {
+  this.relativeUrl += '?';
+  }
+  
+  if (col.filter['type'] == 'dateRange') {
+  // code...
+  
+  
+  } else if (col.filter['type'] == 'dropdown' || (event.filterType == 'input' && (event.keyCode === 13))) {
+  
+  // console.log("event ",event);
+  // console.log("col ",col);
+  
+  var queryParamKey = 'offset=';
+  var offsetValue = 0;
+  var queryParamValue = offsetValue;
+  $(".pagination.justify-content-center li:nth-child(2)")[0].click();
+  // this.pageSelected = 1;
+  
+  this.addQueryParam(queryParamKey, queryParamValue, false);
+  
+  if (event.key == col.key) {
+  queryParamKey = col.key + '=';
+  if (queryParamKey == "name=") {
+  queryParamKey = "service=";
+  
+  } else if (queryParamKey == "lastModified=") {
+  queryParamKey = "timestamp=";
+  }
+  queryParamValue = colFilterVal;
+  this.addQueryParam(queryParamKey, queryParamValue, true);
+  }
+  
+  }
+  }
+  }
+  }
+
+
   onFilterSelected(selectedList){
     this.selectedListData = selectedList;
+    // this.serviceList = this.filter.filterListFunction('type' , this.selectedListData , this.backupdata);
+    //   this.serviceList  = this.filter.searchFunction("any" , this.searchbar , this.serviceList);
+
+    // this.relativeUrl = '/jazz/services?filter_by='+this.selectedListData;
+
+    // if( this.relativeUrl.indexOf('?') > -1 ){
+    //   this.relativeUrl += '?';
+    // }
+
+    // this.relativeUrl += 'filter='+ this.selectedListData + '&';
+    // this.serviceCall();
     var queryParamKey = 'offset=';
     var offsetValue = 0;
     $(".pagination.justify-content-center li:nth-child(2)")[0].click();
+    // this.pageSelected = 1;
     this.addQueryParam(queryParamKey, offsetValue, false );
 
     queryParamKey = 'type=';
@@ -403,6 +557,7 @@ export class ServicesListComponent implements OnInit {
     if(queryParamValue == "all"){
       queryParamValue = "";
     }
+    // console.log("this.selectedListData onFilterSelected********", this.selectedListData)
     this.addQueryParam(queryParamKey, queryParamValue,  true);
   }
   statusFilter(item){
@@ -417,6 +572,8 @@ export class ServicesListComponent implements OnInit {
       reverse = true;
       sort_dir = "asc";
     }
+    // this.serviceList = this.sort.sortByColumn(col , reverse , function(x:any){return x;}, this.serviceList);
+
     var queryParamKey = 'sort_by=';
     var queryParamValue = col;
     if(queryParamValue == "name"){
@@ -425,6 +582,7 @@ export class ServicesListComponent implements OnInit {
     else if(queryParamValue == "lastModified"){
       queryParamValue = "timestamp";
     }
+    // console.log("sortData*******");
     this.addQueryParam(queryParamKey, queryParamValue,  false);
     queryParamKey = 'sort_direction=';
     queryParamValue = sort_dir;
@@ -433,18 +591,25 @@ export class ServicesListComponent implements OnInit {
   paginatePage(currentlyActivePage){
     if(this.prevActivePage != currentlyActivePage){
       this.prevActivePage = currentlyActivePage;
-      this.pageSelected = currentlyActivePage;
+      // this.pageSelected = currentlyActivePage;
       this.serviceList = [];
       this.backupdata = [];
-      this.fetchServices();  /** call fetch services*/
+      //this.fetchServices();  /** call fetch services
 
-      var queryParamKey = 'limit=';
-      var queryParamValue = this.limitValue;
-      this.addQueryParam(queryParamKey, queryParamValue, false );
+      // var queryParamKey = 'limit=';
+      // var queryParamValue = this.limitValue;
+      // this.addQueryParam(queryParamKey, queryParamValue, false );
 
 
       var queryParamKey = 'offset=';
+      // console.log("this.limitValue",this.limitValue);
+      // console.log("currentlyActivePage",currentlyActivePage);
+      // console.log("this.limitValue * currentlyActivePage ",this.limitValue * currentlyActivePage);
+
       var offsetValue = (this.limitValue * (currentlyActivePage-1));
+
+      // console.log("offsetValue paginatePage ******",offsetValue);
+
       var queryParamValue = offsetValue;
       this.addQueryParam(queryParamKey, queryParamValue, true );
       /*
@@ -454,21 +619,24 @@ export class ServicesListComponent implements OnInit {
       */
     }
     else{
+      // console.log("page not changed");
     }
   }
   onServiceSearch(searchbar){
-      this.searchbar = searchbar;
-      if(searchbar.keyCode == 13){
-        var queryParamKey = 'offset=';
-        $(".pagination.justify-content-center li:nth-child(2)")[0].click();
-        var offsetValue = 0;
-        var queryParamValue = offsetValue;
-        this.addQueryParam(queryParamKey, queryParamValue, false );
-        queryParamKey = 'filter=';
-        queryParamValue = searchbar.searchString;
-        this.addQueryParam(queryParamKey, queryParamValue,  true);
-      }
-  };
+    this.searchbar = searchbar; 
+    if(searchbar.keyCode == 13){
+    this.FilterTags.notifyServices("search",searchbar.searchString);
+    
+    var queryParamKey = 'offset=';
+    $(".pagination.justify-content-center li:nth-child(2)")[0].click();
+    var offsetValue = 0;
+    var queryParamValue = offsetValue;
+    this.addQueryParam(queryParamKey, queryParamValue, false );
+    queryParamKey = 'filter=';
+    var queryParamValue2 = searchbar.searchString;
+    this.addQueryParam(queryParamKey, queryParamValue2, true);
+    }
+    };
   tabChanged (i){
     this.selectedTab = i;
   };
@@ -515,10 +683,10 @@ export class ServicesListComponent implements OnInit {
     }, 3000);
 
     this.deletedServiceId = this.cache.get('deletedServiceId');
-     this.fetchServices();
-     this.paginatePage(1);
-     this.relativeUrl = '/jazz/services?limit=' + this.limitValue + '&offset=' + 0 +'&';
-     this.serviceCall();
+    // this.fetchServices();
+    // this.paginatePage(1);
+    // this.relativeUrl = '/jazz/services?limit=' + this.limitValue + '&offset=' + 0;
+    // this.serviceCall();
     this.paginationInit();
     this.updateList = this.cache.get("updateServiceList");
     this.updateServices(this.updateList);
@@ -564,4 +732,11 @@ export class ServicesListComponent implements OnInit {
       this.intervalSubscription.unsubscribe();
     }
   }
+  ngOnChange(){
+  }
+
+
 }
+
+// $( document ).ready(function() {
+// });

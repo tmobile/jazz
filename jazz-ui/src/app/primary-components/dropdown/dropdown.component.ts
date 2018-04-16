@@ -15,6 +15,8 @@ import { Component, OnInit, Input, Output, EventEmitter  } from '@angular/core';
 export class DropdownComponent implements OnInit {
 
   @Input() dropdwnContent;
+  @Input() IsEnvList:boolean=false;
+
   @Input() selected;
   @Input() public statusFilter: Function;
   @Output() onSelected:EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -27,7 +29,11 @@ export class DropdownComponent implements OnInit {
   }
   onDropdownClose(){
   }
+  notifyDropdown(value){
+    this.selected = value;
+    this.onSelected.emit(value)
 
+  }
   constructor() { }
 
   ngOnInit() {

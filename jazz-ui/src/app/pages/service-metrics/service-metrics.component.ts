@@ -1,24 +1,82 @@
-import { Component, OnInit, ElementRef, Inject, Input } from '@angular/core';
+import { Component, OnInit, ComponentFactoryResolver, ReflectiveInjector, ElementRef ,EventEmitter, Output, Inject, Input,ViewChild} from '@angular/core';
 import { DayData, WeekData, MonthData, Month6Data, YearData } from './data';
-import { AfterViewInit, ViewChild } from '@angular/core';
+import { AfterViewInit } from '@angular/core';
 import { ToasterService} from 'angular2-toaster';
-import { RequestService, MessageService } from '../../core/services/index';
+import { RequestService, MessageService , AuthenticationService } from '../../core/services/index';
+import {DataCacheService } from '../../core/services/index';
+import { Router, ActivatedRoute } from '@angular/router';
+import {IonRangeSliderModule} from "ng2-ion-range-slider"
+import {FilterTagsComponent} from '../../secondary-components/filter-tags/filter-tags.component';
+import {AdvancedFiltersComponent} from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
+import {AdvancedFilterService} from './../../advanced-filter.service';
+import {AdvFilters} from './../../adv-filter.directive';
+import {environment} from './../../../environments/environment.internal';
 
-@Component({
+
+
+// import { LineGraphComponent }  from './../../secondary-components/line-graph/line-graph.component';
+
+@Component({ 
   selector: 'service-metrics',
   templateUrl: './service-metrics.component.html',
-  providers: [RequestService, MessageService],
+  providers: [RequestService, MessageService,AdvancedFilterService],
   styleUrls: ['./service-metrics.component.scss']
 })
 export class ServiceMetricsComponent implements OnInit {
 
-	// @ViewChild(LineGraphComponent)
+  // @ViewChild(LineGraphComponent)
 
+  @ViewChild('sliderElement') sliderElement: IonRangeSliderModule;
+  @ViewChild('filtertags') FilterTags: FilterTagsComponent;
+  // @ViewChild('adv_filters') adv_filters: AdvancedFiltersComponent;
+	@ViewChild(AdvFilters) advFilters: AdvFilters;
+  componentFactoryResolver:ComponentFactoryResolver;
+
+  
+
+	// public lineGraph: LineGraphComponent;
   @Input() service: any = {};
   private subscription:any;
+  public min:any;
+  public max:any;
+  public from:any;
+  public step:any;
+  
+  advanced_filter_input:any = {
+    time_range:{
+        show:true,
+    },
+    slider:{
+        show:true,
+    },
+    period:{
+        show:true,
+    },
+    statistics:{
+        show:true,
+    },
+    path:{
+        show:true,
+    },
+    environment:{
+        show:true,
+    },
+    method:{
+        show:true,
+    },
+    account:{
+        show:true,
+    },
+    region:{
+        show:true,
+    }
+}
+
+  envList:any=['prod','stg'];
 
 
   filtersList: Array<string> = ['7 Days', '4 Weeks', '6 Months', '1 Year'];
+  rangeList: Array<string> = ['Day', 'Week', 'Month', 'Year'];
   allPeriodList: Array<any> = [
   {
     min : '15 Minutes',
@@ -44,32 +102,73 @@ export class ServiceMetricsComponent implements OnInit {
   periodListSeconds: Array<string> = ['900','3600','21600','86400','604800','2592000'];
 
   graphTypeList: Array<string> = ['Line'];
-  environmentList: Array<string> = ['prod', 'dev'];
-  statisticList: Array<string> = ['Average', 'Sum', 'SampleCount','Maximun','Minimum'];
+  // environmentList: Array<string> = ['prod', 'stg', 'dev'];
+  envSelected:string = this.envList[0];
+  // serviceTypeList : Array<string> = ['api', 'lambda', 'website'];
+
+  statisticList: Array<string> = ['Average', 'Sum', 'Maximum','Minimum'];//sampleCount is been removed
+  statisticSelected:string= this.statisticList[0];
   viewBox = "0 0 300 150";
   today = new Date();
   yesterday = this.today.setDate(this.today.getDate()-1);
-  selected = this.filtersList[0];
   payload:any;
   errBody: any;
 	parsedErrBody: any;
-	errMessage: any;
-
+  errMessage: any;
+  safeTransformX=0;
+  maxCards:boolean = false;
+  minCards:boolean = false;
+  envUpdate:boolean = false;
+  filtersApplied:any;
   private http:any;
-  selectedTimeRange:string= this.filtersList[0];
-  serviceMetricsList: Array<string>=[];
+  selectedTimeRange:string= this.rangeList[0];
+  serviceMetricsList: Array<any>=[];
   isGraphLoading:boolean=true;
   isDataNotAvailable:boolean=false;
   isError:boolean=false;
   private toastmessage:any;
   root: any;
+  pathList:Array<string>=[];
+  methodList:Array<string>  = ['POST','GET','DELETE','PUT'];
+
+  // typeList:Array<string>  = ["apigateway","lambda","s3"];
+  // typeSelected: string=this.typeList[0];
+  pathSelected:string = '';
+  methodSelected:string = this.methodList[0];
+  metricsList:Array<any>=[{
+    metric_name : "",
+    xAxis : "",
+    yAxis : "",
+    data : "",
+    metricSum: 0
+  }];
+  
+  
+  
 
   // temporary graph data
   graphs: Array<any>;
   graphsOld: Array<any>;
+  graphInput:Array<any>;
+  slider:any;
+  sliderFrom = 1;
+  sliderPercentFrom = 0;
+  sliderMax:number = 7;
+  service_api:boolean = true;
+  metricsIndex:number=0;
+  filterSelected:boolean;
+	errorTime:any;
+	errorURL:any;
+	errorAPI:any;
+	errorRequest:any={};
+	errorResponse:any={};
+	errorUser:any;
+	errorChecked:boolean=true;
+	errorInclude:any="";
+	json:any={};
 
 
-  constructor(@Inject(ElementRef) elementRef: ElementRef, private request: RequestService,private toasterService: ToasterService,private messageservice: MessageService) {
+  constructor(@Inject(ElementRef) elementRef: ElementRef, @Inject(ComponentFactoryResolver) componentFactoryResolver,private advancedFilters: AdvancedFilterService , private authenticationservice: AuthenticationService , private cache: DataCacheService,private router:Router, private request: RequestService,private toasterService: ToasterService,private messageservice: MessageService) {
     var el:HTMLElement = elementRef.nativeElement;
     this.root = el;
     this.graphs = DayData;
@@ -77,19 +176,183 @@ export class ServiceMetricsComponent implements OnInit {
     this.toasterService = toasterService;
     this.http = request;
     this.toastmessage= messageservice;
+    this.componentFactoryResolver = componentFactoryResolver;
+		var comp = this;
+		setTimeout(function(){
+			comp.getFilter(advancedFilters);
+		},3000);
+		
   }
+ 
+	accList=['tmodevops','tmonpe'];
+  regList=['us-west-2', 'us-east-1'];
+	accSelected:string = 'tmodevops';
+  regSelected:string = 'us-west-2';
+  instance_yes;
 
+   onaccSelected(event){
+    this.FilterTags.notify('filter-Account',event);
+    this.accSelected=event;
+
+   }
+	onregSelected(event){
+    this.FilterTags.notify('filter-Region',event);
+    this.regSelected=event;
+   }
+  notifyByEnv(envList){
+    if(envList.length>2){
+      this.envList=envList;
+    }
+  }
+  getStartDate(filter, sliderFrom){
+    var todayDate = new Date();
+    switch(filter){
+      case "Day":
+        this.sliderMax = 7;
+        var resetdate = new Date(todayDate.setDate(todayDate.getDate()-sliderFrom)).toISOString();
+        break;
+      case "Week":
+        this.sliderMax = 5;
+        var  resetdate = new Date(todayDate.setDate(todayDate.getDate()-(sliderFrom*7))).toISOString();
+        break;
+      case "Month":
+        this.sliderMax = 12;
+        var currentMonth = new Date ((todayDate).toISOString()).getMonth();
+        var currentDay = new Date((todayDate).toISOString()).getDate();
+        currentMonth++;
+        var currentYear = new Date ((todayDate).toISOString()).getFullYear();
+        var diffMonth = currentMonth - sliderFrom;
+        if(diffMonth>0){
+          var resetYear = currentYear;
+          var resetMonth = diffMonth;
+        } else if(diffMonth===0){
+          var resetYear = currentYear-1;
+          var resetMonth = 12;
+        } else if(diffMonth<0){
+          var resetYear = currentYear - 1;
+          // var resetMonth = sliderFrom - currentMonth;
+          var resetMonth = 12 + diffMonth;
+        }
+        if(currentDay==31)currentDay=30;
+        var newStartDateString = resetYear + "-" + resetMonth + "-" + currentDay + " 00:00:00"
+        var newStartDate = new Date(newStartDateString);
+        var resetdate = newStartDate.toISOString();
+        break;
+      case "Year":
+        this.sliderMax = 6;
+        var currentYear = new Date((todayDate).toISOString()).getFullYear();
+        var newStartDateString = (currentYear - sliderFrom).toString() + "/" + "1" + "/" + "1";
+        var newStartDate = new Date(newStartDateString);
+        var resetdate = newStartDate.toISOString();
+        break;
+    }
+    return resetdate;
+  }
+  fetchEnvlist(){
+    var env_list=this.cache.get('envList');
+    if(env_list != undefined){
+      this.envList=env_list.friendly_name;
+    }
+  }
+  onFilterSelect(event){
+    // alert('key: '+event.key+'  value: '+event.value);
+    switch(event.key){
+      case 'slider':{
+        this.getRange(event.value);
+        break;
+      }
+      case 'period':{
+        this.FilterTags.notify('filter-Period',event.value);
+        this.payload.interval = this.periodListSeconds[this.periodList.indexOf(event.value)];
+        this.callMetricsFunc();
+        break;
+      }
+      case 'range':{
+        this.FilterTags.notify('filter-TimeRange',event.value);
+        this.sendDefaults(event.value); 
+        this.timerangeSelected=event.value;
+        this.sliderFrom =1;
+        this.FilterTags.notify('filter-TimeRangeSlider',this.sliderFrom);        
+        var resetdate = this.getStartDate(event.value, this.sliderFrom);
+        this.resetPeriodList(event.value);
+        this.selectedTimeRange = event.value;
+        this.payload.start_time = resetdate;
+        this.callMetricsFunc();
+        // this.adv_filters.setSlider(this.sliderMax);
+        break;
+      }
+      case 'environment':{
+        var envt = event.value;
+        this.FilterTags.notify('filter-Env',envt);
+        this.envSelected = envt;
+        this.payload.environment = envt;
+        var env_list=this.cache.get('envList');
+        var fName = env_list.friendly_name;
+        var index = fName.indexOf(envt);
+        var env = env_list.env[index];
+        this.envSelected = envt;
+        this.payload.environment = env;
+        this.callMetricsFunc();
+        this.envUpdate = true;
+        break;
+      }
+      case 'statistics':{
+        var statistics=event.value;
+        // this.payload.statistics = statistics;
+        this.FilterTags.notify('filter-Statistic',statistics);
+        
+        // this.cache.set('filter-Statistic',statistics);
+        this.statisticSelected = statistics;
+        this.payload.statistics = statistics;
+        this.callMetricsFunc();
+        break;
+
+      }
+      case 'method':{
+        var method=event.value;
+        this.FilterTags.notify('filter-Method',method);
+
+        this.methodSelected=method;
+        this.displayMetrics();
+      }
+      case 'path':{
+        this.pathSelected=event.value;
+        this.displayMetrics();
+        break;
+      }
+      case 'account':{
+          this.FilterTags.notify('filter-Account',event.value);
+        this.accSelected=event.value;
+        break;
+      }
+      case 'region':{ 
+        this.FilterTags.notify('filter-Region',event.value);
+        this.regSelected=event.value;
+        break;
+            
+      }
+
+   
+    }
+    
+  }
   ngOnInit() {
-    this.resetPeriodList(this.selected); 
+    this.cache.set("codequality",false)
+    if(this.service.serviceType === 'api'){
+      this.service_api = false;
+    }
+
+    this.resetPeriodList(this.selectedTimeRange); //  to set periodListValue such that total num of datapoints < 1440 .. http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricStatistics.html
     this.payload = {
-        "service":this.service.name || "events",
-        "domain": this.service.domain || "platform",
-        "environment": this.environmentList[0],
+        "service":this.service.name,// this.service.name,//hotfix for Tech Training - Aug 31
+        "domain": this.service.domain,//this.service.domain,//hotfix for Tech Training - Aug 31
+        "environment": this.envList[0],//hotfix for Tech Training - Aug 21this.environmentList[0],
         "end_time": (new Date().toISOString()).toString(),
-        "start_time": this.getStartDate(this.selected),
+        "start_time": this.getStartDate(this.selectedTimeRange, this.sliderFrom),
         "interval": this.periodListSeconds[this.periodList.indexOf(this.periodList[0])],
-        "statistics": this.statisticList[0]
+        "statistics": this.statisticSelected
     };
+  
     if(!this.service.serviceType){
       if(this.payload.service == "services"){
         this.service.serviceType = "api"; 
@@ -108,10 +371,19 @@ export class ServiceMetricsComponent implements OnInit {
     }
     this.callMetricsFunc();
   }
+  filterTags(){
+    this.filtersApplied='day';
+  }
+  ngOnChanges(x:any){
+    this.filterTags();
+    this.fetchEnvlist();
 
+    this.pathList = ['/'+this.service.domain+'/'+this.service.name];
+    this.pathSelected = this.pathList[0];
+    }
   popToast(type, title, message) {
     var tst = document.getElementById('toast-container');
-    tst.classList.add('toaster-anim');                 
+    tst.classList.add('toaster-anim');
       this.toasterService.pop(type, title, message);
       setTimeout(() => {
         tst.classList.remove('toaster-anim');
@@ -138,7 +410,7 @@ export class ServiceMetricsComponent implements OnInit {
     };
 
     serviceMetric.assets.forEach(function(eachAsset){
-
+      // temporary fix as /jazz/services backfilling is not done due to which we will not get proper value in of service.serviceType
       if( (_this.service.serviceType == "api" && eachAsset.type == "apigateway" )|| ((_this.service.serviceType == "function" || _this.service.serviceType == "lambda") && eachAsset.type == "lambda" ) || (_this.service.serviceType == "website" && eachAsset.type == "cloudfront" ) ){
         var eachAssetMetric = [];
         var stat = eachAsset.statistics;
@@ -146,7 +418,7 @@ export class ServiceMetricsComponent implements OnInit {
         var asset_name_array = _this.generateArray(asset_name);
         _serviceMetricList.push({
           type : eachAsset.type,
-          asset_properties : asset_name_array,
+          asset_properties : asset_name,
           statistics : eachAsset.statistics,
           metrics : eachAssetMetric,
           oldMetrics : [] // TODO oldG
@@ -156,13 +428,17 @@ export class ServiceMetricsComponent implements OnInit {
           var datapointArray = eachMetric.datapoints.sort(compare);
           eachAssetMetric.push({
             metric_name : eachMetric.metric_name,
-            xAxis: { label: 'TIME', range: selectedTimeRange.toLowerCase() },
-            yAxis: { label: datapointArray.length > 0 ? "" : "-"},
+            xAxis: { label: 'TIME (UTC)', range: selectedTimeRange.toLowerCase() },
+            yAxis: { label: datapointArray.length > 0 ? datapointArray[0].Unit : " "}, // commenting metrics y axis label
+            // yAxis: { label: datapointArray.length > 0 ? "" : "-"},
             data : eachMetricDatapoint,
+            // dataOld: [] // TODO oldGraphObj ? oldGraphObj.datapoints || eachMetricDatapoint : []
           });
           if(datapointArray && datapointArray.length > 0){
             datapointArray.forEach(function(eachDatapoint){
               var modifiedkey = eachDatapoint.Timestamp;
+              // modifiedkey = modifiedkey.replace(/[-]/g, '/');
+
               var eachDate=new Date(modifiedkey);
               var monthIndex=eachDate.getMonth();
               let graphDataDate="";
@@ -177,12 +453,18 @@ export class ServiceMetricsComponent implements OnInit {
             }); // end of datapointArray
           }
           else{
-           
+            // let serviceRow = {
+            //   date: "", // graphDataDate
+            //   value: "",
+            //   unit: ""
+            // };
+            // eachMetricDatapoint.push(serviceRow);
             eachMetricDatapoint = [];
           }
         }); // end of eachAsset.metrics
       }       // ***** uncomment
       else{
+       
       }
     }); // end of serviceMetric.assets
       if(_serviceMetricList.length > 0){
@@ -195,28 +477,46 @@ export class ServiceMetricsComponent implements OnInit {
 
     return _serviceMetricList;
   }
-
+ 
+  refreshCostData(event){
+		
+		this.callMetricsFunc();
+  }
+  
   callMetricsFunc(){
     this.isGraphLoading=true;
     this.isDataNotAvailable = false;
     this.isError = false;
+    //this.payload = {"service":"events","domain":"platform","environment":"prod","end_time":"2017-08-30T09:28:42.279Z","start_time":"2017-08-24T09:28:42.279Z","interval":"900","statistics":"Average"}
     	 if ( this.subscription ) {
       this.subscription.unsubscribe();
     }
 		this.subscription = this.http.post('/jazz/metrics', this.payload).subscribe(
+    // this.http.get('https://api.myjson.com/bins/x4j5f').subscribe(
       response => {
+        
           //Bind to view
         let serviceMetrics = response.data;
-
+        
         // let serviceInput = response.input;
         if (serviceMetrics !== undefined && serviceMetrics !== "" && serviceMetrics.assets !== undefined && serviceMetrics.assets.length > 0 ) {
             this.serviceMetricsList = this.processServiceList(serviceMetrics);
+            if(this.service.serviceType === 'api') {
+              this.dropDownSelecters();
+            }
+            this.displayMetrics();
+            if(serviceMetrics === "serviceMetrics !== undefined"){
+              // let errorMessage = this.toastmessage.successMessage(response,"serviceMetrics");
+              // this.popToast('error', 'Oops!', errorMessage)
+              this.isGraphLoading = false;
+              this.isDataNotAvailable = true;
+            }
         } else if(serviceMetrics !== undefined && serviceMetrics === "" || serviceMetrics.assets.length == 0 ){
           this.isGraphLoading = false;
           this.isDataNotAvailable = true;
           if(serviceMetrics === ""){
             let errorMessage = this.toastmessage.successMessage(response,"serviceMetrics");
-            this.popToast('error', 'Oops!', errorMessage)
+            // this.popToast('error', 'Oops!', errorMessage)
           }
         } else{
           this.isGraphLoading = false;
@@ -242,79 +542,378 @@ export class ServiceMetricsComponent implements OnInit {
         // Log errors if any
         let errorMessage;
         errorMessage=this.toastmessage.errorMessage(err,"serviceMetrics");
-    })
+        this.getTime();
+			  this.errorURL = window.location.href;
+			  this.errorAPI = environment.baseurl+"/jazz/metrics";
+			  this.errorRequest = this.payload;
+        this.errorUser = this.authenticationservice.getUserId();
+        this.errorResponse = JSON.parse(err._body);
+			// let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
+            // this.popToast('error', 'Oops!', errorMessage);
+		})
+	};
+
+	getTime() {
+		var now = new Date();
+		this.errorTime = ((now.getMonth() + 1) + '/' + (now.getDate()) + '/' + now.getFullYear() + " " + now.getHours() + ':'
+		+ ((now.getMinutes() < 10) ? ("0" + now.getMinutes()) : (now.getMinutes())) + ':' + ((now.getSeconds() < 10) ? ("0" + now.getSeconds()) : (now.getSeconds())));
+	  }
+
+	feedbackRes:boolean=false;
+  openModal:boolean=false;
+  timerangeSelected:any;
+    feedbackMsg:string='';
+    feedbackResSuccess:boolean=false;
+	feedbackResErr:boolean=false;
+	isFeedback:boolean=false;
+    toast:any;
+    model:any={
+        userFeedback : ''
+	};
+	buttonText:string='SUBMIT';
+	isLoading:boolean=false;
+	sjson:any={};
+  djson:any={};
+  // isLoading:boolean=false;
+  reportIssue(){
+    
+        this.json = {
+          "user_reported_issue" : this.model.userFeedback,
+          "API": this.errorAPI,
+          "REQUEST":this.errorRequest,
+          "RESPONSE":this.errorResponse,
+          "URL": this.errorURL,
+          "TIME OF ERROR":this.errorTime,
+          "LOGGED IN USER":this.errorUser
+      }
+      
+        this.openModal=true;
+        this.errorChecked=true;
+        this.isLoading=false;
+        this.errorInclude = JSON.stringify(this.djson);
+        this.sjson = JSON.stringify(this.json);
+      }
+    
+      openFeedbackForm(){
+        this.isFeedback=true;
+        this.model.userFeedback='';
+        this.feedbackRes=false;
+        this.feedbackResSuccess=false;
+        this.feedbackResErr=false;
+        this.isLoading = false;
+        this.buttonText='SUBMIT';
+      }
+      mailTo(){
+        location.href='mailto:serverless@t-mobile.com?subject=Jazz : Issue reported by'+" "+ this.authenticationservice.getUserId() +'&body='+this.sjson;
+      }
+      errorIncluded(){
+      }
+     
+      submitFeedback(action){
+    
+        this.errorChecked = (<HTMLInputElement>document.getElementById("checkbox-slack")).checked;
+        if( this.errorChecked == true ){
+          this.json = {
+              "user_reported_issue" : this.model.userFeedback,
+              "API": this.errorAPI,
+              "REQUEST":this.errorRequest,
+              "RESPONSE":this.errorResponse,
+              "URL": this.errorURL,
+              "TIME OF ERROR":this.errorTime,
+              "LOGGED IN USER":this.errorUser
+          }
+        }else{
+          this.json = this.model.userFeedback ;
+        }
+        this.sjson = JSON.stringify(this.json);
+    
+        this.isLoading = true;
+    
+        if(action == 'DONE'){
+          this.openModal=false;
+          return;
+        }
+    
+        var payload={
+          "title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
+          "project_id": "CAPI",
+          "priority": "P4",
+          "description": this.json,
+          "created_by": this.authenticationservice.getUserId(),
+          "issue_type" :"bug"
+        }
+        this.http.post('/jazz/jira-issues', payload).subscribe(
+          response => {
+            this.buttonText='DONE';
+            this.isLoading = false;
+            this.model.userFeedback='';
+            var respData = response.data;
+            this.feedbackRes = true;
+            this.feedbackResSuccess= true;
+            if(respData != undefined && respData != null && respData != ""){
+              this.feedbackMsg = "Thanks for reporting the issue. We’ll use your input to improve Jazz experience for everyone!";
+            } 
+          },
+          error => {
+            this.buttonText='DONE';
+            this.isLoading = false;
+            this.feedbackResErr = true;
+            this.feedbackRes = true;
+            this.feedbackMsg = this.toastmessage.errorMessage(error, 'jiraTicket');
+            }
+        );
+      }
+  
+  dropDownSelecters(){
+    var thisele=this;
+    var methodlist=[], pathlist=[];
+    this.serviceMetricsList.forEach(function(each){
+      var pathi = pathlist.indexOf(each.asset_properties.Resource);
+      if(pathi<0){
+        pathlist.push(each.asset_properties.Resource);
+      }
+      var methodi = methodlist.indexOf(each.asset_properties.Method);
+      if(methodi<0){
+        methodlist.push(each.asset_properties.Method);
+      }
+      thisele.pathList = pathlist;
+      thisele.methodList = methodlist;
+      if(thisele.envUpdate){
+        thisele.methodSelected = thisele.methodList[0];
+        thisele.envUpdate = !thisele.envUpdate;
+      }
+    });
   }
 
-  onTypeSelected(type){
+  abbreviate_number = function(num, fixed) {
+    if (num === null) { return null; } // terminate early
+    if (num === 0) { return '0'; } // terminate early
+    fixed = (!fixed || fixed < 0) ? 0 : fixed; // number of decimal places to show
+    var b = (num).toPrecision(2).split("e"), // get power
+        k = b.length === 1 ? 0 : Math.floor(Math.min(b[1].slice(1), 14) / 3), // floor at decimals, ceiling at trillions
+        c = k < 1 ? num.toFixed(0 + fixed) : (num / Math.pow(10, k * 3) ).toFixed(1 + fixed), // divide by power
+        d = c < 0 ? c : Math.abs(c), // enforce -0 is 0
+        e = d + ['', 'K', 'M', 'B', 'T'][k]; // append power
+    return e;
+  }
+
+  displayMetrics(){
+    var thisele=this, max = null, min = null;
+    thisele.isGraphLoading = true;
+    thisele.metricsList=[];
+    this.graphInput=[];
+    this.serviceMetricsList.forEach(function(each){
+      if( each.asset_properties.Method == thisele.methodSelected && each.asset_properties.Resource == thisele.pathSelected){
+        each.metrics.forEach(eachSet => {
+          var sum=0; var value =0;
+          eachSet.data.forEach(element => {
+            var elem =parseInt( element.value);
+            sum = sum+parseInt(element.value);
+            if(max==null || max<elem) max = elem;
+            if(min==null || min>elem) min = elem; 
+          });
+          switch(each.statistics){
+            case 'Average':
+              if(sum == 0){
+                value = sum;
+              } else{
+                value = sum/eachSet.data.length;
+              }
+              break;
+            case 'Sum':
+              value = sum;
+              break;
+            case 'Maximum':
+              value = max;
+              break;
+            case 'Minimum':
+              value = min;
+              break;
+          }
+          let cardInfo = {
+            metric_name : eachSet.metric_name,
+            xAxis : eachSet.xAxis,
+            yAxis : eachSet.yAxis,
+            data : eachSet.data,
+            metricSum: thisele.abbreviate_number(value,0),
+            statistics:each.statistics
+          }
+          thisele.metricsList.push(cardInfo);
+          thisele.isGraphLoading =false;
+        });
+      }
+    });
+    if(thisele.metricsList.length === 0 || thisele.metricsList[0].data.length === 0){
+      this.isDataNotAvailable = true;
+      this.isGraphLoading = false;
+    } else if(thisele.metricsList[0].data.length > 0 && thisele.metricsList[0] != undefined){
+      this.isDataNotAvailable = false;
+      this.isGraphLoading = false;
+      this.graphInput= thisele.metricsList[this.metricsIndex];
+      setTimeout(function(){
+        if(thisele.metricsList.length>0){
+          var ele = document.getElementsByClassName('metrics-card');
+          var eachCardWidth =ele[0].clientHeight + 24;
+          for(var i = 0; i< ele.length; i++){
+            ele[i].setAttribute('style','min-height:'+ele[0].clientHeight+'px');
+          }
+          var mainEle = document.getElementsByClassName('scroll-cards-wrap')[0].clientWidth;
+          var limit = document.getElementsByClassName('metrics-cards-wrap')[0].clientWidth;
+          document.getElementsByClassName('metrics-cards-wrap')[0].setAttribute('style','height:'+eachCardWidth+'px')      
+          this.maxCards = true;
+          if(mainEle > limit){
+            thisele.maxCards = true;
+          } else {
+            thisele.maxCards = false;
+            thisele.minCards = false;
+          }
+        } else{
+          this.isDataNotAvailable = true;
+        }
+      },10)
+    } else{
+    }
+  }
+  
+  cancelFilter(event){
+		switch(event){
+      case 'time-range':{this.instance_yes.onRangeListSelected('Day'); 
+      this.getRangefunc(1);
+			break;
+		  }
+      case 'time-range-slider':{this.instance_yes.resetslider(1);
+        this.getRangefunc(1);
+			break;
+		  }
+		  case 'period':{ this.instance_yes.onPeriodSelected('15 Minutes');
+			break;
+		  }
+		  case 'statistic':{      this.instance_yes.onStatisticSelected('Average');
+		  
+			break;
+		  }
+		  case 'account':{      this.instance_yes.onaccSelected('Acc 1');
+		  
+			break;
+		  }
+		  case 'region':{      this.instance_yes.onregSelected('reg 1');
+		  
+			break;
+		  }
+		  case 'env':{      this.instance_yes.onEnvSelected('prod');
+		  
+			break;
+		  }
+		  case 'method':{      
+				
+				this.instance_yes.onMethodListSelected('POST');
+		  
+			break;
+		  }
+      case 'all':{ this.instance_yes.onRangeListSelected('Day');   
+				this.instance_yes.onPeriodSelected('15 Minutes');
+				this.instance_yes.onStatisticSelected('Average');
+				this.instance_yes.onaccSelected('Acc 1');
+				this.instance_yes.onregSelected('reg 1');
+				this.instance_yes.onEnvSelected('prod');
+        this.instance_yes.onMethodListSelected('POST');
+        this.getRangefunc(1);
+        this.instance_yes.resetslider(1); 
+				break;
+		  	}
+		}
+		// this.getRangefunc(1);
+}
+  onPathListicSelected(path){
+    this.pathSelected=path;
+    this.displayMetrics();
+  }
+  onMethodListSelected(method){
+
+    this.FilterTags.notify('filter-Method',method);
+
+    this.methodSelected=method;
+    this.displayMetrics();
   }
 
   onPeriodSelected(period){
+    this.FilterTags.notify('filter-Period',period);
+    // this.cache.set('filter-Period',period);
     this.payload.interval = this.periodListSeconds[this.periodList.indexOf(period)];
     this.callMetricsFunc();
   }
 
-  onEnvSelected(environment){
-    this.payload.environment = environment;
+  sendDefaults(range){
+    switch(range){
+        case 'Day':{     this.FilterTags.notify('filter-Period','15 Minutes')
+            break;
+        }
+        case 'Week':{   this.FilterTags.notify('filter-Period','1 Hour')
+            break;
+        }
+        case 'Month':{ 
+           this.FilterTags.notify('filter-Period','6 Hours')
+            break;
+        }
+        case 'Year':{   this.FilterTags.notify('filter-Period','7 Days')
+            break;
+        }
+    }
+} 
+  onRangeListSelected(range){
+    this.FilterTags.notify('filter-TimeRange',range);
+    this.sendDefaults(range);
+    
+    // this.cache.set('filter-TimeRange',range);
+    this.timerangeSelected=range;
+    this.sliderFrom =1;
+    this.FilterTags.notify('filter-TimeRangeSlider',this.sliderFrom);
+    
+    var resetdate = this.getStartDate(range, this.sliderFrom);
+    this.resetPeriodList(range);
+    this.selectedTimeRange = range;
+    this.payload.start_time = resetdate;
     this.callMetricsFunc();
   }
 
+  // onEnvSelected(environment){
+    
+  onEnvSelected(envt){
+    this.FilterTags.notify('filter-Env',envt);
+    this.envSelected = envt;
+    this.payload.environment = envt;
+    var env_list=this.cache.get('envList');
+		var fName = env_list.friendly_name;
+		var index = fName.indexOf(envt);
+		var env = env_list.env[index];
+    this.envSelected = envt;
+    this.payload.environment = env;
+    this.callMetricsFunc();
+    this.envUpdate = true;
+    // this.methodSelected = this.methodList[0];
+  }
+
   onStatisticSelected(statistics){
+    // this.payload.statistics = statistics;
+    this.FilterTags.notify('filter-Statistic',statistics);
+    
+    // this.cache.set('filter-Statistic',statistics);
+    this.statisticSelected = statistics;
     this.payload.statistics = statistics;
     this.callMetricsFunc();
   }
 
-  getStartDate(filter){
-    var todayDate = new Date();
-    switch(filter){
-      case "1 day":
-        var resetdate = new Date(todayDate.setDate(todayDate.getDate()-1)).toISOString();
-        break;
-      case "7 Days":
-        var resetdate = new Date(todayDate.setDate(todayDate.getDate()-6)).toISOString();
-        break;
-      case "4 Weeks":
-        var  resetdate = new Date(todayDate.setDate(todayDate.getDate()-(5*6))).toISOString();
-        break;
-      case "6 Months":
-        var currentMonth = new Date ((todayDate).toISOString()).getMonth();
-        var currentYear = new Date ((todayDate).toISOString()).getFullYear();
-        if(++currentMonth>6){
-          var resetMonth = (currentMonth) - 6;
-          var resetYear = currentYear;
-        } else{
-          var resetMonth= (currentMonth) + 6;
-          var resetyear = --currentYear;
-        }
-        var newStartDateString = resetYear.toString()+"/"+resetMonth.toString()+"/"+"1";
-        var newStartDate = new Date(newStartDateString);
-        var resetdate = newStartDate.toISOString();
-        break;
-      case "1 Year":
-        var currentYear = new Date((todayDate).toISOString()).getFullYear();
-        var newStartDateString = (currentYear).toString()+"/"+"1"+"/"+"1";
-        var newStartDate = new Date(newStartDateString);
-        var resetdate = newStartDate.toISOString();
-        break;
-      case "6 Years":
-        var currentYear = new Date((todayDate).toISOString()).getFullYear();
-        var newStartDateString = (currentYear-6).toString()+"/"+"1"+"/"+"1";
-        var newStartDate = new Date(newStartDateString);
-        var resetdate = newStartDate.toISOString();
-        break;
-    }
-    return resetdate.toString();
-  }
+ 
 
   resetPeriodList(filter){
-    var resetdate = this.getStartDate(filter);
+    var resetdate = this.getStartDate(filter, this.sliderFrom);
     let newStartDate = new Date(resetdate);
     let endDate = new Date();
     var timeDiff = Math.abs(endDate.getTime() - newStartDate.getTime());
     var diffSec = Math.ceil(timeDiff / (1000));
-    var limitDatapoints = diffSec / 1400;
+    var limitDatapoints = diffSec / 500;
     this.periodList = [];
     this.periodListSeconds = [];
-
     var _this = this;
     this.allPeriodList.forEach(function(obj){
       if(limitDatapoints < parseInt(obj.sec) ){
@@ -322,22 +921,108 @@ export class ServiceMetricsComponent implements OnInit {
         _this.periodListSeconds.push(obj.sec);
       }
     });
+    
     if(this.payload != undefined && this.payload.interval != undefined){
       this.payload.interval = this.periodListSeconds[this.periodList.indexOf(this.periodList[0])];
     }
+    // this.adv_filters.resetPeriodList(this.periodList);
+  }
+  public goToAbout(hash){
+    this.router.navigateByUrl('landing');
+    this.cache.set('scroll_flag',true);
+    this.cache.set('scroll_id',hash);
+ }
+
+  setAttributes(el, attrs) {
+    for(var key in attrs) {
+      el.setAttribute(key, attrs[key]);
+    }
+  }
+  getRangefunc(e){
+    this.FilterTags.notify('filter-TimeRangeSlider',e);    
   }
 
-  onFilterSelected(filters){
-    var filter = 'Day';
-    if (filters[0]) {
-      filter = filters[0];
-    }
-
-    this.selectedTimeRange = filter;
-    var resetdate = this.getStartDate(filter);
-    this.resetPeriodList(filter);
+  getRange(e){
+    this.FilterTags.notify('filter-TimeRangeSlider',e.from);
+    
+    this.sliderFrom =e.from;
+    this.sliderPercentFrom=e.from_percent;
+    var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
     this.payload.start_time = resetdate;
     this.callMetricsFunc();
+    }
+  
+  onClickFilter(){
+    
+    //ng2-ion-range-slider
+      
+    var slider = document.getElementById('sliderElement');
+    
+    slider.getElementsByClassName('irs-line-mid')[0].setAttribute('style','border-radius:10px;')
+    slider.getElementsByClassName('irs-bar-edge')[0].setAttribute('style',' background: none;background-color: #ed008c;border-bottom-left-radius:10px;border-top-left-radius:10px;width: 10px;');
+    slider.getElementsByClassName('irs-single')[0].setAttribute('style',' background: none;background-color: #ed008c;left:'+this.sliderPercentFrom+'%');
+    slider.getElementsByClassName('irs-bar')[0].setAttribute('style',' background: none;left:10px;background-color: #ed008c;width:'+this.sliderPercentFrom+'%');
+    slider.getElementsByClassName('irs-slider single')[0].setAttribute('style','width: 20px;top: 20px;height: 20px;border-radius: 50%;cursor:pointer;background: none; background-color: #fff;left:'+this.sliderPercentFrom+'%');
+    slider.getElementsByClassName('irs-max')[0].setAttribute('style','background: none');
+    slider.getElementsByClassName('irs-min')[0].setAttribute('style','background: none');
+    
   }
 
+  getFilter(filterServ){
+	
+		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
+		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
+		var comp = this;
+		// this.advfilters.clearView();
+		let viewContainerRef = this.advFilters.viewContainerRef;
+		viewContainerRef.clear();
+		let componentRef = viewContainerRef.createComponent(componentFactory);
+		this.instance_yes=(<AdvancedFiltersComponent>componentRef.instance);
+		(<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
+		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
+			// alert("1");
+			comp.onFilterSelect(event);
+		});
+
+	}
+
+  selectedMetrics(index){
+    this.metricsIndex=index;
+    this.graphInput = this.metricsList[index];
+    var ele = document.getElementsByClassName('metrics-card');
+    for(var i=0;i<ele.length;i++){
+      ele[i].classList.remove('arrow_box');
+    }
+    ele[index].className += ' arrow_box';
+  }
+
+
+
+
+  leftArrowClick(){
+    var mainEle = document.getElementsByClassName('scroll-cards-wrap');
+    var innerWidth = (mainEle[0].clientWidth + 12)/this.metricsList.length;
+    this.maxCards = true;
+    if(this.safeTransformX < 0){
+      this.minCards = true;
+      this.safeTransformX = this.safeTransformX + innerWidth;
+      if(this.safeTransformX >= 0){
+        this.minCards = false;
+      }
+    }
+  }
+
+  rightArrowClick(){
+    var mainEle = document.getElementsByClassName('scroll-cards-wrap');
+    var limit = document.getElementsByClassName('metrics-cards-wrap')[0].clientWidth;
+    var innerWidth = (mainEle[0].clientWidth)/this.metricsList.length;
+    this.minCards=true;
+    if(this.safeTransformX > (-mainEle[0].clientWidth+limit)){
+      this.maxCards = true;
+      this.safeTransformX = this.safeTransformX - innerWidth;
+      if(this.safeTransformX <= (-mainEle[0].clientWidth+limit)){
+        this.maxCards = false;
+      }
+    }
+  }
 }

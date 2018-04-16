@@ -1,0 +1,206 @@
+@import './../../../main-styles';
+@import './../../pages/services-list/services-list.component.scss';
+// @import './../../pages/environment-overview/env-overview-section.component.scss';
+// @import './../../pages/service-overview/service-overview.component.scss';
+.bar-cover{
+   
+        min-height: 100vh;
+        min-width: 47rem;
+        right:0;
+        top:0;
+        z-index:2;
+        background: #faf9f9;
+        border:2px solid #efefef;    
+        padding:2.5rem;
+
+    
+}
+
+.title{
+    span{
+        font-size: 2rem;
+        font-weight: bold;
+    }
+    div{
+        float:right;
+        color:#ed008c;
+
+        &::before{
+            color:#ed008c;
+            font-size: 1.5rem;
+        }
+    }
+}
+
+.new-pop{
+    visibility: hidden;
+    z-index: 3;
+    position: fixed;
+    background:#D5D7D9;
+    padding:3px 7px;
+    border-radius:3px;
+    margin-top:1rem;
+    &::after{
+        content: "";
+
+        position: absolute;
+        top: -16px;
+        left: 73%;
+        border-width: 8px;
+        transform: rotate(180deg);
+        border-style: solid;
+        border-color: #D5D7D9 transparent transparent transparent;
+        
+    }
+
+}
+.endp-visible{
+    visibility: visible;
+    transition:1s all;
+}
+.table-section{
+    background: white;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+    margin-top: 2rem;
+}
+
+.popup-endp{
+    height: 0;
+    z-index: 3;
+    position: absolute;
+    background:#D5D7D9;
+    padding:3px 7px;
+    border-radius:3px;
+    margin-top:1rem;
+    &::after{
+        content: "";
+
+        position: absolute;
+        top: -60%;
+        left: 29%;
+        border-width: 8px;
+        transform: rotate(180deg);
+        border-style: solid;
+        border-color: #D5D7D9 transparent transparent transparent;
+        
+    }
+   
+}
+
+
+.endpoints-table{
+    padding: 20px 0;
+    @media (min-width: $screen-md) {
+        padding: 20px 20px;
+    }
+    /deep/ .table-header .column {
+        color: #000;
+    }
+    .column,
+    /deep/ .column {
+        &:nth-child(1) {
+            width: 200px;
+            padding-left: 20px;
+            @media (min-width: $screen-md) {
+                padding-left: 15px;
+            }
+            @media (min-width: $screen-lg) {
+                width:40%;
+            }
+        }
+        &:nth-child(2) {
+            width: 40%;
+        }
+        &:nth-child(3) {
+            text-align: center;
+            img{
+                height: 1.5rem;
+                transform: rotate(-45deg);
+            }
+            width: 20%;
+            // dispay: none;
+            @media (min-width: $screen-md) {
+                display: block;
+            }
+        }
+       
+        .table-filters-row {
+            .input-wrapper,
+            input.textForm {
+                max-width: 80%;
+            }
+            
+        }
+    }
+    /deep/ .table-filters-row{
+
+        /deep/.textForm,.input-wrapper
+        {
+            width:10rem !important;
+        }
+        /deep/.input-wrapper:last-child{
+            margin-left: 0 !important;
+        }
+        &.open {
+            height: 50px;
+        }
+        .column{
+            padding: 10px 5px !important;
+        }
+    }
+    
+    /deep/ .table-body {
+        .column {
+            &:nth-child(1) {
+                color: #ed008c;
+                font-weight: 700;
+            }
+            &:last-child{
+                max-width: 135px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+        }
+        .column.status {
+            &.Active {
+                color: #60b602;
+            }
+            &.Pending {
+                color: #aaa;
+            }
+            &.Stopped {
+                color: #d0021b;
+            }
+        }
+    }
+    /deep/ .table-row {
+        border: none;
+        height: 50px;
+        text-transform: lowercase;
+        &:nth-child(odd) {
+            background-color: #efefef;
+        }
+        &:nth-child(even) {
+            background-color: #fff;
+        }
+        &:hover {
+            background-color: rgba(221, 221, 221, 0.87);
+        }
+    }
+    
+}
+
+.search-filter-wrap{
+    text-align: right;
+    padding: 1rem 1rem 0 0;
+}
+
+
+#myid{
+    
+        opacity: 0;
+        position: absolute;
+        z-index: -100000;
+
+}

@@ -1,40 +1,29 @@
- <!-- TODO: Remove disclaimer after techtraining -->
+<!-- Filter styling fixed according to design -->
  <div class="disclaimer-static-data hide">
     <i>This data is for representational purpose only and may not be accurate</i>
     <div>Meanwhile you can access logs <a (click)="navigateTo($event)">here</a></div>
 </div>
 <div class="row page-section section-top"> 
+    <div>
+        <template adv-filters></template>
+    </div>
+    <!-- <advanced-filters #adv_filters (onFilterSelect)='onFilterSelect($event)' [logs]='fromlogs' [service]='service' [advanced_filter_input]='advanced_filter_input'></advanced-filters> -->
+    <filter-tags #filtertags (OnCancel)='cancelFilter($event)'></filter-tags>
+
     <div class="filter-wrp">
 
-        <filters class="filters" [filtersList]="filtersList" [multiple]="false" [selectedList]="selected" (onSelected)="onFilterSelected($event)"></filters>
-        <div class='drp-wrp'>
-                
-            <div class="filter-icon relative">
-                <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; onClickFilter()"></span>
-                <div [class.show]='filterSelected' class="filter-wrap">
-                    <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>                    
-                    <div class="filter-inner-wrap">
-                        <div>View by:</div>
-                        <div class="eachFilter">
-                            <div>- TIME RANGE</div>
-                            <dropdown class="dropdown-3" title="Select range" [dropdwnContent]="rangeList" [selected]="selectedTimeRange" (onSelected)="onRangeListSelected($event)"></dropdown>
-                            <div class='in-logs'>
-                                <ion-range-slider #sliderElement id='sliderElement' min=1 [max]='sliderMax' [from]='sliderFrom' step=1  (onFinish)='getRange($event)' (onUpdate)="onClickFilter()"></ion-range-slider>
-                            </div>
+        <filters class="filters" [filtersList]="filtersList" [multiple]="false" [selectedList]="selected" (onSelected)="onFilterSelected($event)" [logs]='true'></filters>
+        <!-- <div class='pointer refresh icon-icon-refresh' title="Refresh" (click)='callLogsFunc()' height="19"></div> -->
 
-                        </div>
-                        
-                    </div>
-        </div>
-            </div>
-            <!-- <img title='Expand all' *ngIf='expandText == "Expand all"' src='./../../../assets/images/icons/Expand-All.svg' class='expandbtn' (click)='expandall()'>
-            <img title='Collapse all' *ngIf='expandText == "Collapse all"' src='./../../../assets/images/icons/Collapse-All.svg' class='expandbtn' (click)='collapseall()'> -->
+        <div class='drp-wrp'>
+            <div class='pointer refresh icon-icon-refresh' title="Refresh" (click)='callLogsFunc()' height="19"></div>
+ 
             <span title='Collapse all' *ngIf='expandText == "Collapse all"' class="icon-Collapse-All expandbtn" (click)='collapseall()'></span>
             <span title='Expand all' *ngIf='expandText == "Expand all"' class="icon-Expand-All expandbtn" (click)='expandall()'></span>    
-            <dropdown [dropdwnContent]="environmentList" title="Select enviroment" [selected]="logsSearch.environment" (onSelected)="onEnvSelected($event)"></dropdown>            <div class='pointer refresh icon-icon-refresh' title="Refresh" (click)='callLogsFunc()' height="19"></div>
         </div>
     </div>
     <div class="relative logs-tabl">
+        
         <table-template class="table-container log-table-container relative" [message]="errMessage" [state]="loadingState" (refreshData)="refreshData($event)" [type]="'accordian'" [header]="tableHeader" (onFilter)="onFilter($event)" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected"  (paginatePage)="paginatePage($event)" [totalPageNum]="totalPagesTable">
             <div class="table-row-wrp" *ngFor="let row of logs; let i = index" [class.expanded]="row.expanded">
                 <div class="table-row" (click)="onRowClicked(row, i)">

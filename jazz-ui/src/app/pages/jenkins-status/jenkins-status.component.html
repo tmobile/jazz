@@ -7,80 +7,151 @@
     <section class="loading-screen content-section" [class.show]="status == 'loading'">
       <div class="loading-circle"></div>
     </section>
-		<section class="success-screen content-section" *ngIf="status == 'success'">
+		<!-- <section class="success-screen" *ngIf='serviceRequestSuccess'  *ngIf='serviceRequestFailure'> -->
+		<section class="success-screen content-section" *ngIf="status == 'success' && status != 'loading'">
 			<div class="status-row">
-				<img src="../assets/images/icons/icon-good@3x.png">
+        <div>
+          <span class='icon-icon-good'>
+            <span class="path1"></span><span class="path2"></span>
+          </span>
+        </div>
+				<!-- <img src="../assets/images/icons/icon-good@3x.png"> -->
 	      <p class="success-text">SUCCESS!</p>
 			</div>
       <div class="details-row">
         <p>{{message}}</p>
       </div>
-      <div class="action-row">
+      <!-- <div class="action-row">
         <a href=""></a>
-      </div>
+      </div> -->
+      <div class="column retry">
+        <!-- <btn-jazz-primary newclass='retry-btn' text='RETRY' (click)="rebuild($event)"></btn-jazz-primary> -->
+        <btn-jazz-primary class='retry-btn gotoService' text='GO BACK TO SERVICE' (click)="gotoService()"></btn-jazz-primary>
+    </div>
     </section>
-    <section class="error-screen content-section" *ngIf="status == 'expired'">
+    <section class="error-screen content-section" *ngIf="status == 'expired' && status != 'loading'">
+        <!-- <section class="error-screen content-section" *ngIf="true && status != 'loading'"> -->
+
       <div class="status-row">
-        <img src="../assets/images/icons/icon-bad@3x.png">
+        <div>
+          <span class='icon-icon-bad'>
+          <span class="path1"></span><span class="path2"></span>
+        </span>
+      </div>
         <p class="error-text">Oops!</p>
       </div>
       <div class="details-row">
          <p>{{message}}</p>
       </div>
-      <div class="action-row">
+      <!-- <div class="action-row">
         <a href=""></a>
-      </div>
+      </div> -->
+      <div class="column retry">
+        <btn-jazz-primary newclass='retry-btn' text='RETRY' (click)="rebuild($event)"></btn-jazz-primary>
+        <!-- <btn-jazz-primary newclass='retry-btn' text='GO BACK TO SERVICE' (click)="gotoService()"></btn-jazz-primary> -->
+    </div>
     </section>
-    <section class="error-screen content-section" *ngIf="status == 'error'">
+    <section class="error-screen content-section" *ngIf="status == 'error' && status != 'loading'">
+        <!-- <section class="error-screen content-section" *ngIf="status == 'false' && status != 'loading'"> -->
+
 	    <div class="status-row">
-	    	<img src="../assets/images/icons/icon-bad@3x.png">
+          <div>
+            <span class='icon-icon-bad'>
+            <span class="path1"></span><span class="path2"></span>
+          </span>
+        </div>
 	      <p class="error-text">Oops!</p>
 	    </div>
       <div class="details-row">
-        <p>Error while performing user action. Please email us at <a href="mailto:mail@tmail.com">email@mail.com</a></p>
+        <p>Error while deploying the service</p>
+        <p><a (click)="refresh($event)">REFRESH</a> to give it another try.</p>
+        <div class="column retry hide">
+            <btn-jazz-primary class='retry-btn retryService' text='RETRY' (click)="rebuild($event)"></btn-jazz-primary>
+        </div><br>
+        <p> If the problem persists, Please email us at <a href="mailto:serverlessdev@t-mobile.com">serverlessdev@t-mobile.com</a></p>
       </div>
-      <div class="action-row">
+      <!-- <div class="action-row">
         <a target="_blank" href=""></a>
-      </div>
+      </div> -->
+      <!-- <div class="column retry">
+        <btn-jazz-primary newclass='retry-btn' text='RETRY' (click)="rebuild($event)"></btn-jazz-primary>
+    </div> -->
     </section>
-    <section class="error-screen content-section" *ngIf="status == 'rejected'">
+    <section class="error-screen content-section" *ngIf="status == 'rejected' && status != 'loading'">
 	    <div class="status-row">
-	    	<img src="../assets/images/icons/icon-bad@3x.png">
+          <div>
+            <span class='icon-icon-bad'>
+            <span class="path1"></span><span class="path2"></span>
+          </span>
+        </div>
 	      <p class="error-text">Oops!</p>
 	    </div>
       <div class="details-row">
         <p>{{message}}</p>
       </div>
-      <div class="action-row">
+      <!-- <div class="action-row">
         <a target="_blank" href=""></a>
-      </div>
+      </div> -->
+      <div class="column retry">
+        <btn-jazz-primary newclass='retry-btn' text='RETRY' (click)="rebuild($event)"></btn-jazz-primary>
+        <!-- <btn-jazz-primary newclass='retry-btn' text='GO BACK TO SERVICE' (click)="gotoService()"></btn-jazz-primary> -->
+    </div>
     </section>
-    <section class="error-screen content-section" *ngIf="status == 'error2'">
+    <section class="error-screen content-section" *ngIf="status == 'error2' && status != 'loading'">
 	    <div class="status-row">
-	    	<img src="../assets/images/icons/icon-bad@3x.png">
+          <div>
+            <span class='icon-icon-bad'>
+            <span class="path1"></span><span class="path2"></span>
+          </span>
+        </div>
 	      <p class="error-text">Oops!</p>
 	    </div>
       <div class="details-row">
          <p>{{message}}</p>
       </div>
-      <div class="action-row">
+      <!-- <div class="action-row">
         <a target="_blank" href=""></a>
-      </div>
+      </div> -->
+      <div class="column retry">
+        <btn-jazz-primary newclass='retry-btn' text='RETRY' (click)="rebuild($event)"></btn-jazz-primary>
+        <!-- <btn-jazz-primary newclass='retry-btn' text='GO BACK TO SERVICE' (click)="gotoService()"></btn-jazz-primary> -->
+    </div>
     </section>
-    <section class="error-screen content-section" *ngIf="status == 'aborted'">
+    <section class="error-screen content-section" *ngIf="status == 'aborted' && status != 'loading'">
 	    <div class="status-row">
-	    	<img src="../assets/images/icons/icon-bad@3x.png">
+          <div>
+            <span class='icon-icon-bad'>
+            <span class="path1"></span><span class="path2"></span>
+          </span>
+        </div>
 	      <p class="error-text">Oops!</p>
 	    </div>
       <div class="details-row">
          <p>{{message}}</p>
       </div>
-      <div class="action-row">
+      <!-- <div class="action-row">
         <a target="_blank" href=""></a>
-      </div>
+      </div> -->
+      <div class="column retry">
+        <btn-jazz-primary newclass='retry-btn' text='RETRY' (click)="rebuild($event)"></btn-jazz-primary>
+        <!-- <btn-jazz-primary newclass='retry-btn' text='GO BACK TO SERVICE' (click)="gotoService()"></btn-jazz-primary> -->
+    </div>
     </section>
-	</div>
+    
+  </div>
+  <!-- <div class="column retry">
+      <btn-jazz-primary newclass='retry-btn' text='RETRY' (click)="rebuild($event)"></btn-jazz-primary>
+      <btn-jazz-primary newclass='retry-btn' text='GO BACK TO SERVICE' (click)="gotoService()"></btn-jazz-primary>
+  </div> -->
+ 
+    <!-- <p class="link" (click)="gotoService()">GO BACK TO SERVICE</p> -->
+ 
 </div>
 <sidebar (loginClick) = "onLoginClicked($event)" [show]="goToLogin" (onClose)="closeSidebar($event)">
   <login></login>
 </sidebar>
+
+<footer></footer>
+
+
+

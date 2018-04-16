@@ -30,10 +30,10 @@
         border-right: none;
         border-radius: 0 4px 4px 0;
         margin-right: 1px;
-        &.selected {
-            margin-right: 0px;
-            padding-right: 15px;
-        }
+        // &.selected {
+        //     margin-right: 0px;
+        //     padding-right: 15px;
+        // }
     }
     &:first-child {
         margin-left: 0;
@@ -54,13 +54,13 @@
     }
     &.selected:hover {
         color: #fff;
-        margin-right: 1px;
+        // margin-right: 1px;
     }
     &.selected:hover + .filter {
         border-left: 1px solid #ed008c !important;
     }
-    &.selected:hover:last-child {
-        border-right: 1px solid red;
-        margin-right: 1px;
-    }
+    // &.selected:hover:last-child {
+    //     border-right: 1px solid red;
+    //     margin-right: 1px;
+    // }
 }

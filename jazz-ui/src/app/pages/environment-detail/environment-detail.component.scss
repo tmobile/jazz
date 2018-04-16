@@ -1,4 +1,5 @@
 @import './../../../main-styles';
+@import '../services/services.component.scss';
 .page-title-wrap {
     overflow: hidden;
     padding: 26px 0 0 0;
@@ -9,6 +10,9 @@
         float: right;
     }
 }
+
+
+
 /deep/ .page-title-wrap button.btnT-radial-in {
     margin: 0px;
     border-radius: 30px;
@@ -25,6 +29,19 @@
     min-height: 5.65rem; // setting min-height coz, alignment breaks when jquery isnt loaded
 }
 
+    tabs{
+       /deep/ .tabs-wrap{
+           ul li{
+                &:last-child{
+                    pointer-events: none;
+                    opacity:0.6;
+                }
+            
+            }
+        }
+    }
+
+
 .testApiBtn{
     /deep/ .btnT-radial-in{
         outline: none;
@@ -38,48 +55,65 @@
     }
 }
 
-.content{
-    /deep/ .tabs-wrap   li:last-child{
-        cursor: not-allowed;
-        &.active {
-            color: #aaaaaa;
-            }
-            &:hover {
-            color: #aaaaaa;
-        }
+/deep/ footer
+{
+    section{
+        // width:107% !important;
     }
 }
 
-#copyapi{
-    opacity: 0;
-    position: absolute;
-    z-index: -100000;
+.status-container{
+    margin: 1rem 0;
 }
 
-.appa:hover .tooltip-content{
-    visibility: visible;
+.status-hdr{
+    font-size: 12px;
+    text-align: left;
+    color: #5cae01;
+}
+.status-state-oval{
+    display: inline-block;
+    margin: -1px 4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #5cae01;
 }
 
-.appa{
-    position: relative;
+.inactive{
+    color: rgb(208, 1, 27);
+}
+.inactive-bg{
+    background: rgb(208, 1, 27);;
+}
+.servie-details-container{
+    display: inline-block;
+}
+.in-disclaimer{
+    display: none;
+    margin-bottom:-15px;
+    margin-top:0;
 }
 
-.appa .tooltip-content {
-    visibility: hidden;
-    width: 160px;
-    background-color: #D5D7D9;
-    color: #4a4a4a;
+
+
+
+.tooltiptext {
+    display: none;
+    width: 120px;
+    background-color: black;
+    color: #fff;
     text-align: center;
     border-radius: 6px;
-    padding: 8px 4px;
+    padding: 5px 0;
     position: absolute;
     z-index: 1;
-    bottom: 115%;
+    bottom: 150%;
     left: 50%;
-    margin-left: -75px;
-    font-size: 12px;
-  }
-  .appa .tooltip-content::after {
+    margin-left: -60px;
+}
+
+.tooltiptext::after {
     content: "";
     position: absolute;
     top: 100%;
@@ -87,5 +121,30 @@
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
-    border-color: #D5D7D9 transparent transparent transparent;
+    border-color: black transparent transparent transparent;
+}
+
+
+.inactive-icon{
+    position: absolute;
+    top: -11px;
+    right: -11px;
+    font-size: 1rem;
+    &:before{
+        font-size: 1rem;
+    }
+}
+
+.jazz-header[_ngcontent-bey-7] {
+    background: #2b343e;
+    height: 56px;
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    padding: 0 2.4rem;
+    color: #fff;
+    font-size: 11px;
 }

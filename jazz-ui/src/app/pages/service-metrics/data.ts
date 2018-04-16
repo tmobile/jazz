@@ -10,7 +10,7 @@ export interface GraphData {
 }
 
 const dayData1: GraphData = {
-	xAxis: { label: 'TIME', range: 'day'},
+	xAxis: { label: 'TIME (UTC)', range: 'day'},
 	yAxis: { label: 'ERRORS'},
 	data: [
 	  {date: new Date("2017/06/14 04:00:00"), value: 0},
@@ -24,7 +24,7 @@ const dayData1: GraphData = {
 };
 
 const dayData2: GraphData = {
-	xAxis: { label: 'TIME', range: 'day'},
+	xAxis: { label: 'Time (UTC)', range: 'day'},
 	yAxis: { label: 'COST'},
 	data: [
 	  {date: new Date("2017/06/14 04:00:00"), value: 0},
@@ -38,7 +38,7 @@ const dayData2: GraphData = {
 };
 
 const dayData3: GraphData = {
-	xAxis: { label: 'TIME', range: 'day'},
+	xAxis: { label: 'Time (UTC)', range: 'day'},
 	yAxis: { label: 'COUNT'},
 	data: [
 	  {date: new Date("2017/06/14 04:00:00"), value: 20},
@@ -55,7 +55,7 @@ export const DayData: GraphData[] = [dayData1, dayData2, dayData3, dayData1, day
 
 
 const weekData1: GraphData = {
-	xAxis: { label: 'TIME', range: 'week'},
+	xAxis: { label: 'Time (UTC)', range: 'week'},
 	yAxis: { label: 'ERRORS'},
 	data: [
 	  {date: new Date("2017/06/08 04:00:00"), value: 24},
@@ -72,7 +72,7 @@ export const WeekData: GraphData[] = [weekData1, weekData1, weekData1, weekData1
 
 
 const monthData1: GraphData = {
-	xAxis: { label: 'TIME', range: 'month'},
+	xAxis: { label: 'Time (UTC)', range: 'month'},
 	yAxis: { label: 'ERRORS'},
 	data: [
 	  {date: new Date("2017/05/15 04:00:00"), value: 64},
@@ -86,7 +86,7 @@ const monthData1: GraphData = {
 };
 
 const monthData2: GraphData = {
-	xAxis: { label: 'TIME', range: 'month'},
+	xAxis: { label: 'Time (UTC)', range: 'month'},
 	yAxis: { label: 'COST'},
 	data: [
 	  {date: new Date("2017/05/15 04:00:00"), value: 46},
@@ -103,7 +103,7 @@ export const MonthData: GraphData[] = [monthData1, monthData2, monthData1, month
 
 
 const month6Data1: GraphData = {
-	xAxis: { label: 'TIME', range: '6month'},
+	xAxis: { label: 'Time (UTC)', range: '6month'},
 	yAxis: { label: 'ERRORS'},
 	data: [
 	  {date: new Date("2017/05/15 04:00:00"), value: 164},
@@ -117,7 +117,7 @@ const month6Data1: GraphData = {
 };
 
 const month6Data2: GraphData = {
-	xAxis: { label: 'TIME', range: '6month'},
+	xAxis: { label: 'Time (UTC)', range: '6month'},
 	yAxis: { label: 'COST'},
 	data: [
 	  {date: new Date("2017/05/15 04:00:00"), value: 146},
@@ -134,7 +134,7 @@ export const Month6Data: GraphData[] = [month6Data1, month6Data2, month6Data1, m
 
 
 const YearData1: GraphData = {
-	xAxis: { label: 'TIME', range: 'year'},
+	xAxis: { label: 'Time (UTC)', range: 'year'},
 	yAxis: { label: 'ERRORS'},
 	data: [
 	  {date: new Date("2017/05/15 04:00:00"), value: 264},
@@ -148,7 +148,7 @@ const YearData1: GraphData = {
 };
 
 const YearData2: GraphData = {
-	xAxis: { label: 'TIME', range: 'year'},
+	xAxis: { label: 'Time (UTC)', range: 'year'},
 	yAxis: { label: 'COUNT'},
 	data: [
 	  {date: new Date("2017/05/15 04:00:00"), value: 246},

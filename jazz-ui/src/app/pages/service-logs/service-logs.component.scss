@@ -1,3 +1,4 @@
+// Filter css fixes as per VD
 @import './../../../main-styles';
 @import './../service-detail/service-detail.component.scss';
 .section-top {
@@ -37,7 +38,7 @@
     .eachFilter{
         border-bottom: 1px solid #aaa;
         padding-bottom: 2rem;
-        font-weight: 500;
+        font-weight: 900;
         div{
             line-height: 3.5rem;
         }
@@ -46,16 +47,34 @@
             padding:0;
         }
     }
-    .dropdown-3 
-    /deep/ .dropdown{
-        margin-bottom: 1rem;
+    // .eachFilter{
+    //     border-bottom: 1px solid #aaa;
+    //     padding-top: 1.5rem;
+    //     font-weight: 500;
+    //     div
+    //     {
+    //         // line-height: 2.5rem;
+    //         font-weight: bold;
+    //     }
+        
+    //     &:last-child{
+    //         border-bottom:none;
+    //         // padding:0;
+    //     }
+    // }
+    .dropdown-3{
+        // margin:1rem 0
     }
 }
 
 .filter-wrap.show{
-    height: auto;
+    height: auto;   
 }
-
+filter-tags{
+    .row{
+        padding: 0 0 !important;
+    }    
+} 
 .refresh{
     // margin-top:7px;
     order:3;
@@ -72,7 +91,7 @@
     dropdown {
         display: block;
         margin-left: auto;
-        float: right;
+        // float: right;
         height: 32px;
         /deep/.dropdown{
             min-width:11rem;
@@ -82,9 +101,8 @@
             height: 32px;
         
         }
-        /deep/.dropdown-menu{
-            
-            
+        /deep/ .dropdown-menu>li>a{
+            padding:3px 12px;
         }
     }
     
@@ -121,7 +139,7 @@
     margin-bottom: 1rem;
 }
 .in-logs{
-    margin-top:5rem;
+    margin-top:1rem;
 }
 .table-container {
     padding-top: 2rem;
@@ -129,39 +147,39 @@
 .log-table-container{
     .column,
     /deep/ .column {
-        &:nth-child(1) {
+    &:nth-child(1) {
         width: 18rem;
-        }
-        &:nth-child(2) {
+    }
+    &:nth-child(2) {
         width: 50%;
         overflow: hidden;
         white-space: nowrap;
         text-overflow: ellipsis;
-            @media(max-width: $screen-sm){
-                display: none;
-            }
-        @media(max-width: $screen-md){
-                display: none;
-            }
+        @media(max-width: $screen-sm){
+            display: none;
         }
-        &:nth-child(3) {
+        @media(max-width: $screen-md){
+            display: none;
+        }
+    }
+    &:nth-child(3) {
         width: 15%;        
         overflow: hidden;        
-            white-space: nowrap;
+        white-space: nowrap;
         text-overflow: ellipsis;
         direction:rtl;
         text-align:left;
         
-            @media(max-width: $screen-sm){
-                display: none;
-            }
+        @media(max-width: $screen-sm){
+            display: none;
+        }
         @media(max-width: $screen-md){
             display: none;
         }
-        }
-        &:nth-child(4) {
+    }
+    &:nth-child(4) {
         width: 8rem;
-        }
+    }
     }
 }
 .log-table-container  /deep/ .table-body{
@@ -216,3 +234,34 @@ search-box {
     font-weight: bold;
 }
 
+.view-label{
+color:#666
+}
+
+.hori-line{
+    display: inline-block;
+    height: 2px;
+    width: 10px;
+    background: #000;
+    margin: 3px 6px 3px 0;
+    border-radius: 5px;
+}
+filter-tags{
+    /deep/.eachTag:first-child {
+        margin-left: 15px;
+    }
+    /deep/.row{
+        margin-top:0.6rem;
+        padding:0 0rem;
+    }
+}
+.slider-wrap{
+    padding-bottom: 1.5rem;
+
+}
+
+// /deep/.filter-inner-wrap{
+//     &:first-child{
+//         display: none;
+//     }
+// }

@@ -3,6 +3,7 @@
     height: auto;
     text-align: center;
     padding: 2rem 0rem;
+    // width: 430px;
     width: 100%;
     position: relative;
     @media (min-width: $screen-sm) {
@@ -42,6 +43,10 @@
     display: inline-block;
     vertical-align: bottom;
     text-transform: uppercase;
+}
+
+.sign-in-form {
+    // margin-top: 60px;
 }
 
 .form-row {
@@ -104,14 +109,11 @@
     width: 98%;
     vertical-align: middle;
     padding: 0 4rem;
-    input[type="text"], input[type="password"]{
-    // input[type='text'], input[type='password']{
-        margin-bottom: 5px;
-    }
 }
 
 :host {
     display: block;
+    // margin-top: 5px;
     position: relative;
 }
 
@@ -149,11 +151,9 @@ input {
 
 .hide-er
 {
-    display: none;
     opacity:0;
 }
 .error-msg {
-    display: block;
     color: #fff ;
     font-size: 1.15rem;
     letter-spacing: 0.25px;
@@ -184,31 +184,4 @@ input {
 .freezScroll{
     overflow-y: hidden;
     height: calc(100vh - 56px);
-}
-.bottom-2{
-  color:#fff;
-  p{
-      font-size: 1.1rem;
-  }
-}
-
-.login-form-errmsg
-{
-    color:rgb(255,0,0);
-    font-size: 1.1rem;
-}
-
-.reg-required{
-    font-size: 0.85rem;
-    margin-top: 1rem;
-}
-
-.usercode{
-    background-image: none!important;
-    img{
-        opacity: 0;
-    }
-}
-#__lpform_Usercode{
-    display: none!important;
 }

@@ -43,14 +43,28 @@ export const toastMessage = {
         "error404":"Something went wrong while we were fetching your services!",
         "error500":"Something went wrong while we were fetching your services!"
     },
+    "serviceLogs":{
+        "dataNull":"Looks like you don't have any logs yet.",
+        "error400":"Something went wrong while we were fetching your logs!",
+        "error401":"Token expired",
+        "error404":"Something went wrong while we were fetching your logs!",
+        "error500":"Something went wrong while we were fetching your logs!"
+    },
     "createService":{
-        "dataNull":"Your service will be available shortly. You can track the progress on service page ",
         "success":"Your service will be available shortly. You can track the progress on service page ",
         "error400":"Looks like we couldn't create your service. Please try again.",
         "error401":"Token expired",
         "error404":"Looks like we couldn't create your service. Please try again.",
         "error500":"Looks like we couldn't create your service. Please try again.",
         "error0":"Looks like we couldn't create your service. Please try again."
+    },
+    "createSlack":{
+        "success":"Slack channel succesfully created! ",
+        "error400":"Looks like we couldn't create your slack channel. Please try again.",
+        "error401":"Token expired",
+        "error404":"Looks like we couldn't create your slack channel. Please try again.",
+        "error500":"Looks like we couldn't create your slack channel. Please try again.",
+        "error0":"Looks like we couldn't create your slack channel. Please try again."
     },
     "envDetail":{
         "dataNull":"Something went wrong while we were fetching the environment details!",
@@ -71,7 +85,7 @@ export const toastMessage = {
     "login":{
         "fail":"Is that you? Your login failed. So please try again..",
         "error400":"Your login failed. Seems like something went wrong.",
-        "error401":"Token expired",
+        "error401":"Your login failed. Seems like something went wrong.",
         "error404":"Your login failed. Seems like something went wrong.",
         "error500":"Your login failed. Seems like something went wrong.",
         "error0":"Your login failed, seems like we can't reach our servers."
@@ -101,23 +115,40 @@ export const toastMessage = {
         "error404":"Something went wrong while checking the Slack Channel!",
         "error500":"Something went wrong while checking the Slack Channel!"
     },
-    "updateObj":{
-        "success":"updated succesfully",
-        "error400":"Something went wrong while updating the service details. Please try again",
-        "error500":"Something went wrong while updating the service details. Please try again",
+    "retryDeploy":{
+        "success":"Deployment triggered successfully for Service: ",
+        "error400":"Something went wrong while triggering the deployment. Please try again",
+        "error500":"Something went wrong while triggering the deployment. Please try again",
     },
-    "reset":{
-        "success":"Verification Code is sent to your registered email",
-        "error400":"Something went wrong while sending your request. Please try again",
-        "error401":"Token expired",
-        "error404":"Your request failed. Seems like something went wrong.",
-        "error500":"Your request failed. Seems like something went wrong."
+    "jiraTicket":{
+        "success":"Feedbck sent successfully",
+        "error0": "Looks like we are having trouble reaching our servers. Please try later!",
+        "error400":"Something went wrong while sending your feedback. Please try again",
+        "error404":"Something went wrong while sending your feedback. Please try again",
+        "error500":"Something went wrong while sending your feedback. Please try again"
     },
-    "updatepwd":{
-        "success":"Password updated successfully",
-        "error400":"Something went wrong while updating the password. Please try again",
+    "environment":{
+        "dataNull":"Something went wrong while we were fetching the environments!",
+        "error400":"Something went wrong while we were fetching the environments!",
         "error401":"Token expired",
-        "error404":"Your request to password update failed. Seems like something went wrong.",
-        "error500":"Your request to password update failed. Seems like something went wrong."
+        "error404":"Not found",
+        "error500":"Something went wrong while we were fetching the environments!"
+    },
+    "updateEnv":{
+        "success":"Environment data updated successfully.",
+        "error0": "Looks like we are having trouble reaching our servers. Please try later!",
+        "error400":"Something went wrong while updating the environment details. Please try again!",
+        "error404":"Something went wrong while updating the environment details. Please try again!",
+        "error500":"Something went wrong while updating the environment details. Please try again!"
+        
+    },
+    "updateService":{
+        "success":"updated successfully.",
+        "error0": "Looks like we are having trouble reaching our servers. Please try later!",
+        "error400":"Something went wrong while updating the service details. Please try again!",
+        "error404":"Something went wrong while updating the service details. Please try again!",
+        "error500":"Something went wrong while updating the service details. Please try again!"
+        
     }
+
 };

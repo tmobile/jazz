@@ -6,9 +6,9 @@
 
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { AuthenticationService, MessageService } from '../../core/services/index';
+import { AuthenticationService, MessageService, RequestService } from '../../core/services/index';
 import { ToasterService} from 'angular2-toaster';
-
+import {environment} from './../../../environments/environment';
 
 @Component({
     selector: 'jazz-header',
@@ -21,6 +21,8 @@ export class JazzHeaderComponent implements OnInit {
     @Input() type: string = 'default';
     @Input() closed: boolean;
     @Input() noLink:boolean;
+    @Input() override:boolean = false;
+    // @Output() loginClick = new EventEmitter<boolean>();
     @Output() loginClick:EventEmitter<boolean> = new EventEmitter<boolean>();
 
     selectedTab: string = 'services';
@@ -30,6 +32,22 @@ export class JazzHeaderComponent implements OnInit {
     notificationsAvailable: boolean = true;
     profileClicked: boolean = false;
     private toastmessage:any;
+    isFeedback:boolean=false;
+    private http:any;
+    toast:any;
+    model:any={
+        userFeedback : ''
+    };
+    isLoading:boolean=false;
+    feedbackRes:boolean=false;
+    feedbackMsg:string='';
+    feedbackResSuccess:boolean=false;
+    feedbackResErr:boolean=false;
+    // resMessage:string='';
+    buttonText:string='SUBMIT';
+    loggedinUser:string='';
+    overridingUrl:string = "";
+
 
     public toggleLoginPanel () {
         if(this.closed){
@@ -45,18 +63,24 @@ export class JazzHeaderComponent implements OnInit {
     }
 
     public goTosselected (link){
-
         setTimeout(this.goToAbout(link), 10000);
     }
 
     profileClick(){
         this.profileClicked = !this.profileClicked;
     }
-
+isOSS:boolean=false;
     onNavigate(){
-        window.open('https://github.com/tmobile/jazz/wiki')
-    }
+        if(environment.envName=='oss')
+        {
+            this.isOSS=true;
+            window.open('https://github.com/tmobile/jazz/wiki')
+        }
+            
+        else
+            window.open('https://docs.jazz.corporate.t-mobile.com')
 
+    }
 
     goToLanding(){
         this.router.navigateByUrl('');// Route to landing page
@@ -70,6 +94,7 @@ export class JazzHeaderComponent implements OnInit {
     }
 
     logout(){
+      localStorage.clear();
       this.loading = true;
       this.authenticationService.logout()
           .subscribe(result => {
@@ -77,6 +102,9 @@ export class JazzHeaderComponent implements OnInit {
               if (result === true) {
                   // Logout successful
                 this.isLoggedIn = this.authenticationService.isLoggedIn();
+                //Logout success toast message
+                // let successMessage  = this.toastmessage.successMessage("true", "logout");
+                //   this.toasterService.pop('success', successMessage);
                   this.router.navigateByUrl('');// Route to landing page
               } else {
                   // Logout failed
@@ -85,10 +113,108 @@ export class JazzHeaderComponent implements OnInit {
               }
           }, error => {
               this.loading = false;
+            //   let errorMessage  = this.toastmessage.errorMessage(error,"logout");
+            //   this.toasterService.pop('error', 'Oops!', errorMessage);
+
+               //for trmporary period till demo(21 aug '17)
                this.isLoggedIn = this.authenticationService.isLoggedIn();
                this.router.navigateByUrl('');// Route to landing page
           });
 
+    }
+
+    toast_pop(error,oops,errorMessage)
+    {
+        var tst = document.getElementById('toast-container');
+  
+         tst.classList.add('toaster-anim');                            
+        this.toast = this.toasterService.pop(error,oops,errorMessage);        
+        setTimeout(() => {
+            tst.classList.remove('toaster-anim');
+          }, 3000);
+        
+    }
+
+    preventDefault(e){
+        e.preventDefault();
+    }
+    openFeedbackForm(){
+        this.isFeedback=true;
+        this.model.userFeedback='';
+        this.feedbackRes=false;
+        this.feedbackResSuccess=false;
+        this.feedbackResErr=false;
+        this.isLoading = false;
+        this.buttonText='SUBMIT';
+    }
+    mailTo(){
+        location.href='mailto:serverless@t-mobile.com?subject=Jazz: Feedback/Issue&body=' + this.model.userFeedback;
+    }
+
+    submitFeedback(action){
+        this.isLoading = true;
+
+        if(action == 'DONE'){
+            this.isFeedback=false;
+            return;
+        }
+
+        var payload={
+            "title" : "Jazz: Feedback/Issue reported by "+ this.authenticationService.getUserId(),
+            "project_id": "CAPI",
+            "priority": "P4",
+            "description":this.model.userFeedback,
+            "created_by": this.authenticationService.getUserId(),
+            "issue_type" :"task"
+        }
+        this.http.post('/jazz/jira-issues', payload).subscribe(
+            response => {
+                this.buttonText='DONE';
+                this.isLoading = false;
+                this.model.userFeedback='';
+                var respData = response.data;
+                this.feedbackRes = true;
+                this.feedbackResSuccess= true;
+                if(respData != undefined && respData != null && respData != ""){
+                    // this.resMessage = this.toastmessage.successMessage(response, 'jiraTicket');
+                    this.feedbackMsg = "Thanks for taking the time to give us feedback. We’ll use your feedback to improve Jazz experience for everyone!";
+                } 
+            },
+            error => {
+                this.buttonText='DONE';
+                this.isLoading = false;
+                this.feedbackResErr = true;
+                this.feedbackRes = true;
+                this.feedbackMsg = this.toastmessage.errorMessage(error, 'jiraTicket');
+              }
+        );
+    }
+    //Close override - redirect to login.
+    closeOverride(){
+        window.stop();
+        this.override=false;
+        this.overridingUrl=''
+        this.authenticationService.logout();
+        localStorage.removeItem('overridehost');
+        this.router.navigateByUrl('');
+        window.location.reload();
+    }
+    //checks for the override parameters. 
+    checkUrl(){
+        if(this.overridingUrl){
+            this.overridingUrl = decodeURIComponent(this.overridingUrl);
+            localStorage.setItem('overridehost', 'https://'+this.overridingUrl);
+            this.override = true;
+            this.authenticationService.logout();
+            this.router.navigateByUrl('');
+            window.location.reload();
+        }else{
+            let overridingUrl = localStorage.getItem('overridehost');
+            if(overridingUrl){
+                this.override = true;
+                this.overridingUrl = overridingUrl;
+            }
+        }
     }
 
     constructor(
@@ -96,14 +222,31 @@ export class JazzHeaderComponent implements OnInit {
             private router: Router,
             private authenticationService: AuthenticationService,
             private toasterService: ToasterService,
-            private messageservice: MessageService
+            private messageservice: MessageService,
+            private request: RequestService
         ) {
             this.isLoginPanelOpen = route.snapshot.data['goToLogin'] || false;
             this.toastmessage = messageservice;
+            this.http = request;
         }
 
     ngOnInit() {
-      this.isLoggedIn = this.authenticationService.isLoggedIn();
+        if(environment.envName=='oss')
+        {
+            this.isOSS=true;
+        }
+        // Capture the access token and code
+        this.route
+        .queryParams
+        .subscribe(params => {
+            this.overridingUrl = params['apiurl'];
+        });
+
+        this.checkUrl();
+        this.isLoggedIn = this.authenticationService.isLoggedIn();
+        if(this.isLoggedIn){
+            this.loggedinUser = this.authenticationService.getUserId();
+        }
     }
 }
 

@@ -1,11 +1,12 @@
 @import './../../../main-styles';
+@import './../../pages/service-detail/service-detail.component.scss';
 :host {
     display: block;
 }
 
 .table-container {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: collapse; 
 }
 
 .table-filters-row {
@@ -15,7 +16,7 @@
     overflow: hidden;
     background-color: #ddd;
     margin: 0 -20px;
-    padding: 0rem 2rem;
+    margin: 0rem 0rem;
     &.open {
         height: 4.5rem;
         margin-top: -2px;
@@ -31,6 +32,7 @@
         max-width: 100%;
         min-height: 2.5rem;
         margin-bottom: 0;
+        margin-left:0.5rem;
     }
     .daterange-wrapper {
         position: relative;
@@ -174,6 +176,7 @@
     display: inline-block;
     height: 22px;
     width: 10px;
+    // visibility: hidden;
     vertical-align: middle;
     margin-top: -4px;
     margin-left: 4px;
@@ -257,16 +260,19 @@
 .empty-row {
     display: none;
     padding: 1rem 5px;
-    font-weight: 300;
+    // text-transform: uppercase;
+    font-weight: 500;
     font-size: 14px;
 }
 .empty-row.show {
     position: absolute;
     text-align: center;
-    top: 35%;
+    top: 20%;
     font-size: 18px;
     width:100%;
-    font-weight: 300;
+    // left: 45%;
+    // text-transform: uppercase;
+    font-weight: 500;
     &.nodata{
         font-size: 14px;
         color: #555;
@@ -290,11 +296,17 @@
     margin-bottom: 10px;
 }
 .table-wrp {
-    min-height: calc(100vh - 24rem - 20px);
+    min-height: calc(100vh - 22rem - 20px);
     position: relative;
 }
 
 .table-notification {
+    // position: absolute;
+    // bottom: 0;
+    // left: 50%;
+    // -webkit-transform: translate(-50%);
+    // transform: translate(-50%);
+    // width: 100%;
     min-height: 300px;
 }
 .table-body {
@@ -355,4 +367,110 @@ a.page-link.icon.right {
 }
 .pagination > li.disable > a.page-link.icon > span:before{
     color: #9c9c9c !important;
+}
+
+.feedback-overlay{
+    position: fixed;
+    right: 0;
+    width:100%;
+    height:100%;
+    background-color: rgba(0, 0, 0, 0.3);
+    top:0;
+    z-index: 1000;
+    text-align: center;
+    .separator-row{
+        border-bottom: 1px solid #ccc;
+        margin-top: 2rem;
+    }
+    .feedback-wrap{
+        min-width: 500px;
+        width:45%;
+        max-width: 600px;
+        top:20%;
+        margin: 0 auto;
+        align-self: center;
+        background-color: #fff;
+        padding:2rem;
+        font-size: 16px;
+        .feedback-hdr{
+            font-size: 2rem;
+            font-weight: bold;
+        }
+    }
+    .feedback-text-wrap{
+        p{
+            padding: 1.5rem 0;
+        }
+        textarea{
+            padding: 10px 10px;
+            width: 100% !important;
+            height: 100px !important;
+
+        }
+        
+    }
+    .feedback-text-wrap.feedbackRes{
+        position: absolute;
+        padding: 0 3rem;
+        top: 46%;
+        left: 0;
+        .show{
+            &.feedbackResSuccess{   
+                // margin:4rem 0;
+                div{
+                    // padding-top: 2rem;
+                }
+            }
+            &.feedbackResErr{
+                // padding: 4rem 0;
+            }
+        }
+    }
+    .feedback-btn-wrap{
+        font-size:13px;
+        text-align: right;
+        // position: absolute;
+        // right: 0;
+        // padding: 2rem;
+        // bottom: 0;
+        a{
+            margin:5px;
+            cursor: pointer;
+        }
+        .feedback-submit{
+            /deep/ button.btn-primary{
+                line-height:3rem;
+            }
+        }
+    }
+    /deep/ button.btn-primary:focus, button.btn-primary:active{
+        background-color: #ed008c !important;
+        color: #fff !important;
+        border: 1px solid #ed008c !important;
+    }
+}
+
+.includeError{
+    display: inline-block;
+    float: left;
+}
+
+.custom-cb{
+    label{
+        border: 1px solid #999;
+    }
+}
+.ops{
+font-size:1.65rem;
+font-weight: 900;
+color:#555;
+margin-top:1rem;
+}
+
+.crt-1{
+    a{
+        cursor:pointer;
+    }
+    font-size: 1.3rem;
+    margin-top:1rem;
 }

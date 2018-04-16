@@ -1,9 +1,12 @@
+//BREADCRUMBS MARGINS FIXED
 .navigation-bar-wrp {
     height: 3rem;
     background: #fff;
-    padding: 5.5px 13px;
+    padding: 5.5px 32px;
+    /*margin: 0 -37px;*/
     margin: 0 -53px 0 -37px;
     outline: none !important;
+    
 }
 
 .navigation-item {
@@ -41,4 +44,9 @@
     @media(max-width: 853px) {
         display: none;
     }
+}
+.icon-icon-back{
+    color: #ed008c;
+    font-size: 1rem;
+    vertical-align: middle;
 }

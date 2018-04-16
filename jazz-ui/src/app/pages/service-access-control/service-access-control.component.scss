@@ -42,6 +42,11 @@
         font-size: 1.33rem;
         cursor: pointer;
     }
+    &.read-only {
+        span {
+            //bottom: 1rem;
+        }
+    }
 }
 
 .header-sec {
@@ -180,4 +185,7 @@ input[type="text"] {
     background-repeat: no-repeat;
     background-size: 20rem auto;
     background-position: center;
+}
+.icon-icon-close{
+    color: #ed008c;
 }

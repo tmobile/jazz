@@ -1,36 +1,109 @@
+<div class='feedback-overlay' *ngIf="openModal">
+    <div class='feedback-wrap relative'>
+        <div class='feedback-hdr relative'>Report an issue</div>
+        <div class="separator-row"></div>
+        <div class="loading-row" [class.show]="isLoading">
+            <div class="loading-circle"></div>
+        </div>
+            <div class='feedback-text-wrap' [class.invisible]="isLoading || feedbackRes">
+                <p>Found a problem with the site? Please use the form below to describe the issue and we will fix it soon.</p>
+                <textarea rows="5" cols="50" type="text" name='userFeedback' id="userFeedback" placeholder="Report your issue here" [(ngModel)]="model.userFeedback"  #userFeedback='ngModel'></textarea>
+            </div>
+            <div class="feedback-text-wrap feedbackRes" [class.show]="feedbackRes">
+                <div class="hide feedbackResSuccess" [class.show]="feedbackResSuccess">
+                    <div>{{feedbackMsg}}</div>
+                </div>
+                <div class="hide feedbackResErr" [class.show]="feedbackResErr"> Oops! {{feedbackMsg}}
+                    <span> or <a (click)="mailTo()"> contact us</a> via email.</span>
+                </div>
+            </div>
+            <div class='feedback-btn-wrap'>
+                <!-- <div class="includeError">
+                    <input type="checkbox">
+                    <span></span>
+                </div> -->
+                <div class="slack-checkbox custom-cb includeError" [class.invisible]="isLoading || feedbackRes">
+                        <input type="checkbox" (click)="errorIncluded()"  id="checkbox-slack" [checked]="errorInclude">
+                        <label for="checkbox-slack"></label>
+                        <div class="cb-status-dets">Include error details</div>
+                    </div>
+                <a (click)='openModal = !openModal;isLoading=false'  [class.invisible]="isLoading || feedbackRes">CANCEL</a>
+                <btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading" [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'" (click)='submitFeedback(buttonText)'></btn-jazz-primary>
+            </div> 
+    </div>    
+</div>
+
 <div class="row page-section section-top">
+        <div>
+            <template adv-filters></template>
+        </div>
+        <!-- <advanced-filters #adv_filters (onFilterSelect)='onFilterSelect($event)' [service]='service' [advanced_filter_input]='advanced_filter_input'></advanced-filters> -->
     <!-- TODO: Remove disclaimer after techtraining -->
     <div class="disclaimer-static-data hide"><i>This data is for representational purpose only and may not be accurate</i></div>
-    <div class="filter-wrp">
-        <filters class="filters" [selectedList]="selected" [filtersList]="filtersList" [multiple]="false" (onSelected)="onFilterSelected($event)"></filters>
-        <div class="filter-section-right">
-            <dropdown class="dropdown-1" [dropdwnContent]="periodList" [selected]="periodList[0]" (onSelected)="onPeriodSelected($event)"></dropdown>
-            <dropdown class="dropdown-2" [dropdwnContent]="statisticList" [selected]="statisticList[0]" (onSelected)="onStatisticSelected($event)"></dropdown>
-            <dropdown class="dropdown-3" [dropdwnContent]="environmentList" [selected]="environmentList[0]" (onSelected)="onEnvSelected($event)"></dropdown>
-        </div>
-    </div>
-
+    
+    <filter-tags #filtertags (OnCancel)='cancelFilter($event)'></filter-tags>
+    
     <div class="graph-section-container">
         <div *ngIf=" isGraphLoading || isDataNotAvailable || isError" class='display-widget'>
-            <div class="loading-row" [class.show]="isGraphLoading">
+            <div class="loading-row-metrics" [class.show]="isGraphLoading">
                 <div class="loading-circle"></div>
             </div>
-            <div class="loading-row" [class.show]=" !isGraphLoading && isDataNotAvailable && !isError">
+            <div class="loading-row-metrics" [class.show]=" !isGraphLoading && isDataNotAvailable && !isError">
+                <!-- <div class="error-text">Data not available</div> -->
                 <div class="empty-row nodata with-refresh relative">
-                    <img src="assets/images/no-data-icon.png" alt="noData" width="100">
-                    <div><b>Oops, No Data Found</b><br>Looks like there is no data available here.</div>
+                    <div class="icon-icon-nodata"></div>
+                    <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
                 </div>
             </div>
             <div class="error-blk" [class.show]="isError">
                 <div class="empty-row with-refresh">
-                    <img src="assets/images/refresh.png" alt="errorimg" width="100">
-                    <div>{{errMessage}}<br><a (click)="callMetricsFunc()">REFRESH</a> to give it another try.</div>
+                    <div class="icon-icon-server-error">
+                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span>
+                    </div>
+                    <div class='oops'>Oops!</div>
+                    <div>{{errMessage}}<br><a (click)="refreshCostData($event)">REFRESH</a> to give it another try.</div>
+                    <br><div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
                 </div>
             </div>
         </div>
          
         <div class="graph-wrp asset-wrap" *ngIf=" !isGraphLoading && !isDataNotAvailable ">
-            <div class="graph-wrp asset-wrap clearfix" *ngFor=" let asset of serviceMetricsList; let i=index ">
+            <div *ngIf="graphInput.data.length" class="graph-title">{{graphInput.metric_name}} <span>({{statisticSelected}})</span></div>
+            <div class='graph-container'>
+                <line-graph *ngIf="graphInput.data.length" [timeRange]='selectedTimeRange' [graphData]="graphInput" [graphDataOld]="graphInput"></line-graph>
+                <div *ngIf="!graphInput.data.length">
+                    <div class="empty-row nodata with-refresh relative">
+                        <div class="icon-icon-nodata"></div>
+                        <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available in {{graphInput.metric_name}}.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class='metrics-cards-wrap relative'>
+                <div class='left-arrow' (click)='leftArrowClick()' *ngIf='metricsList.length && minCards'>
+                        <div class='icon-icon-rightArrow'></div>
+                </div>
+                <div class='right-arrow' (click)='rightArrowClick()' *ngIf='metricsList.length && maxCards'>
+                        <div class='icon-icon-rightArrow '></div>
+                </div>
+                <div class='scroll-cards-wrap' [style.transform]="'translateX('+safeTransformX+'px)'">
+                    <div class='metrics-card' *ngFor="let each of metricsList; let i=index" [class.arrow_box]='i===metricsIndex' (click)="selectedMetrics(i)">
+                        <div *ngIf="metricsList[i].data.length">
+                            <div class='metrics-name'>{{each.metric_name}}</div>
+                            <div class='metrics-unit'><span *ngIf='each.data[0].unit=="Milliseconds"'>({{each.data[0].unit}})</span></div>
+                            <div class='metrics-data'>{{each.metricSum}}</div>
+                            <div class='metrics-time-range'>({{each.statistics}} of last {{sliderFrom}} {{selectedTimeRange}}<span *ngIf='sliderFrom>1'>s</span>)</div>
+                        </div>
+                        <div *ngIf="!metricsList[i].data.length">
+                            <div class='metrics-name'>{{each.metric_name}}</div>
+                            <!-- <div><b>No Datapoints Found</b></div> -->
+                            <div class="metrics-unit"><br>Oops! doesn't look like there is any data available here.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            <!-- <div class="graph-wrp asset-wrap clearfix" *ngFor=" let asset of serviceMetricsList; let i=index ">
                 <div class="graph-title-text">
                     <span>{{asset.type}} </span>
                     <span *ngFor=" let assetProperty of asset.asset_properties " >
@@ -58,7 +131,7 @@
                     </div>
                 </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 
