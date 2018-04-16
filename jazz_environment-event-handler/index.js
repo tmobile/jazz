@@ -19,7 +19,6 @@
 const config = require("./components/config.js");
 const logger = require("./components/logger.js");
 const utils = require("./utils/utils.js")();
-const crud = require("./components/crud")();
 const errorHandlerModule = require("./components/error-handler.js");
 var errorHandler = errorHandlerModule(logger);
 const rp = require('request-promise-native');
@@ -30,15 +29,15 @@ const request = require("request");
 const async = require("async");
 const nanoid = require("nanoid/generate");
 const fcodes = require('./utils/failure-codes.js');
+const fs = require('fs');
 
 var failureCodes = fcodes();
 var processedEvents = [];
 var failedEvents = [];
 
 var handler = (event, context, cb) => {
-    context.functionName = context.functionName + "-test" // @TODO Local testing
     var configData = config(context);
-   
+
     var authToken;
 
     rp(getTokenRequest(configData))
@@ -102,12 +101,12 @@ var processEvents = function (event, configData, authToken) {
 	});
 }
 
-var processEachEvent = function (record, configData,authToken) {
+var processEachEvent = function (record, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var sequenceNumber = record.kinesis.sequenceNumber;
 		var encodedPayload = record.kinesis.data;
 		var payload;
-		return checkInterest(encodedPayload, sequenceNumber, configData)
+		return checkForInterestedEvents(encodedPayload, sequenceNumber, configData)
 			.then(result => {
 				payload = result.payload;
 				if (result.interested_event) {
@@ -125,21 +124,21 @@ var processEachEvent = function (record, configData,authToken) {
 	});
 }
 
-var checkInterest = function (encodedPayload, sequenceNumber, config) {
+var checkForInterestedEvents = function (encodedPayload, sequenceNumber, config) {
 	return new Promise((resolve, reject) => {
-		var payload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
-		if (payload.Item.EVENT_TYPE && payload.Item.EVENT_TYPE.S) {
-            if (_.includes(config.EVENTS.EVENT_TYPE, payload.Item.EVENT_TYPE.S) && 
-                _.includes(config.EVENTS.EVENT_NAME, payload.Item.EVENT_NAME.S)) {
-                logger.info("found " + payload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
+		var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
+		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
+            if (_.includes(config.EVENTS.EVENT_TYPE, kinesisPayload.Item.EVENT_TYPE.S) && 
+                _.includes(config.EVENTS.EVENT_NAME, kinesisPayload.Item.EVENT_NAME.S)) {
+                logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
                 resolve({
                     "interested_event": true,
-                    "payload": payload.Item
+                    "payload": kinesisPayload.Item
                 });
             } else {
                 resolve({
                     "interested_event": false,
-                    "payload": payload.Item
+                    "payload": kinesisPayload.Item
                 });  
             }
 		} 
@@ -147,82 +146,273 @@ var checkInterest = function (encodedPayload, sequenceNumber, config) {
 }
 
 /* validate and processs item. TODO update function name*/
-var processItem = function (payload, configData, authToken) {
+var processItem = function (eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
-		if (!payload.EVENT_NAME.S || !payload.EVENT_STATUS.S) {
-			logger.error("validation error. Either event name or event status is not properly defined.");
-			var err = handleError(failureCodes.PR_ERROR_1.code, "Validation error while processing event for service");
-			return reject(err);
-		}
 
-		var svcContext = JSON.parse(payload.SERVICE_CONTEXT.S);
-		var serviceContext = getServiceContext(svcContext);
-		serviceContext.service = payload.SERVICE_NAME.S
-		serviceContext.created_by = payload.USERNAME.S
-        serviceContext.service_id = payload.SERVICE_ID.S
+		var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
+		console.log("svcContext: "+JSON.stringify(svcContext));
+
+		var environmentApiPayload = {};
+		environmentApiPayload.service = eventPayload.SERVICE_NAME.S;			
+		environmentApiPayload.created_by =  eventPayload.USERNAME.S;
+
+		environmentApiPayload.domain = svcContext.domain;
+		environmentApiPayload.physical_id = svcContext.branch;
+		
+		//environmentApiPayload.endpoint = svcContext.endpoint;
         
-        if(payload.EVENT_NAME.S === configData.EVENTS.INITIAL_COMMIT) {
-			process_INITIAL_COMMIT(serviceContext, configData, authToken)
-			.then(result => {resolve(result)})
-			.catch(err => {reject(err)})
-        } else if(payload.EVENT_NAME.S === configData.EVENTS.CREATE_BRANCH) {
-            return process_INITIAL_COMMIT(configData);
-        } else if(payload.EVENT_NAME.S === configData.EVENTS.UPDATE_ENVIRONMENT) {
-            return process_UPDATE_ENVIRONMENT();
-        } else if(payload.EVENT_NAME.S === configData.EVENTS.DELETE_BRANCH) {
-            return process_DELETE_BRANCH();
-        } else if(payload.EVENT_NAME.S === configData.EVENTS.DELETE_ENVIRONMENT) {
-            return process_DELETE_ENVIRONMENT();
+        if(eventPayload.EVENT_NAME.S === configData.EVENTS.INITIAL_COMMIT) {
+			process_INITIAL_COMMIT(environmentApiPayload, configData, authToken)
+			.then(result => {return resolve(result)})
+			.catch(err => {return reject(err)})
+
+        } else if(eventPayload.EVENT_NAME.S === configData.EVENTS.CREATE_BRANCH) {
+			environmentApiPayload.friendly_name = svcContext.branch;
+			process_CREATE_BRANCH(environmentApiPayload, configData, authToken)
+			.then(result => {return resolve(result)})
+			.catch(err => {return reject(err)})
+			
+        } else if(eventPayload.EVENT_NAME.S === configData.EVENTS.UPDATE_ENVIRONMENT) {
+			//environmentApiPayload.friendly_name = svcContext.branch;
+			environmentApiPayload.status = svcContext.status;
+			environmentApiPayload.endpoint = svcContext.endpoint;
+			environmentApiPayload.friendly_name = svcContext.friendly_name;
+			
+			process_UPDATE_ENVIRONMENT(environmentApiPayload, configData, authToken)
+			.then(result => {return resolve(result)})
+			.catch(err => {return reject(err)})
+			
+        } else if(eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_ENVIRONMENT) {
+			environmentApiPayload.endpoint = svcContext.endpoint;
+			var event_status = eventPayload.EVENT_STATUS.S;												
+			if(event_status === 'STARTED'){
+				environmentApiPayload.status = configData.ENVIRONMENT_DELETE_STARTED_STATUS;
+			} else if(event_status === 'FAILED'){
+				environmentApiPayload.status = configData.ENVIRONMENT_DELETE_FAILED_STATUS;
+			} else if(event_status === 'COMPLETED'){
+				environmentApiPayload.status = configData.ENVIRONMENT_DELETE_COMPLETED_STATUS;
+			}
+
+			// Update with DELETE status
+			process_UPDATE_ENVIRONMENT(environmentApiPayload, configData, authToken)
+			.then(result => {return resolve(result)})
+			.catch(err => {return reject(err)})
+			
+        } else if(eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_BRANCH) {
+			environmentApiPayload.physical_id = svcContext.branch;
+
+			process_DELETE_BRANCH(environmentApiPayload, configData, authToken)
+			.then(result => {return resolve(result)})
+			.catch(err => {return reject(err)})
+			
         }
-		//var statusResponse = getUpdateServiceStatus(payload, configData);
 
 	});
 }
 
-var process_INITIAL_COMMIT = function (serviceContext, configData, authToken) {
+var process_INITIAL_COMMIT = function (environmentPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
-		var required_fields = configData.ENVIRONMENT_CREATE_REQUIRED_FIELDS;
-		var missing_required_fields = _.difference(_.values(required_fields), _.keys(serviceContext));
-		if (missing_required_fields.length > 0) {
-			return reject ("Following field(s) are required - " + missing_required_fields.join(", "));
+		if(environmentPayload.physical_id === configData.ENVIRONMENT_PRODUCTION_PHYSICAL_ID) {
+			environmentPayload.logical_id = "stg";	
+			environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
+	
+			var svcPayload = {
+					uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
+					method: "POST",
+					headers: { Authorization: authToken },
+					json: environmentPayload,
+					rejectUnauthorized: false
+			};
+	
+			console.log("svcPayload"+ JSON.stringify(svcPayload));
+			request(svcPayload, function (error, response, body) {
+				if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
+					return resolve(null, body);			
+				}else{
+					return reject({
+						"error" : "Error creating service " + svcPayload.DOMAIN + "." + svcPayload.SERVICE_NAME + " in service catalog",
+						"details" : response.body.message
+					});
+				}
+			});	
+
+			svcPayload.json.logical_id = "prod";	
+
+			console.log("svcPayload"+ JSON.stringify(svcPayload));
+			request(svcPayload, function (error, response, body) {
+				if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
+					return resolve(null, body);			
+				}else{
+					return reject({
+						"error" : "Error creating service " + svcPayload.DOMAIN + "." + svcPayload.SERVICE_NAME + " in service catalog",
+						"details" : response.body.message
+					});
+				}
+			});	
+
+		} else {
+			return reject ("INITIAL_COMMIT event should be triggered by a master commit. physical_id is "+environmentApiPayload.physical_id);
 		}
 
+	});
+    
+}
+
+var process_CREATE_BRANCH = function (environmentPayload, configData, authToken) {
+	return new Promise((resolve, reject) => {
+
 		var nano_id = nanoid(configData.RANDOM_CHARACTERS, configData.RANDOM_ID_CHARACTER_COUNT);
-		serviceContext.logical_id = nano_id+"-dev";	
-		serviceContext.status = configData.CREATE_ENVIRONMENT_STATUS;
+		environmentPayload.logical_id = nano_id+"-dev";	
+		environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
+
+		console.log("environmentPayload"+ JSON.stringify(environmentPayload));
+		var svcPayload = {
+				uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
+				method: "POST",
+				headers: { Authorization: authToken },
+				json: environmentPayload,
+				rejectUnauthorized: false
+		};
+
+		console.log("svcPayload"+ JSON.stringify(svcPayload));
+		request(svcPayload, function (error, response, body) {
+			if (response.statusCode && response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
+				return resolve(body);			
+			}else{
+				return reject({
+					"error" : "Error creating service " + svcPayload.DOMAIN + "." + svcPayload.SERVICE_NAME + " in service catalog",
+					"details" : response.body.message
+				});
+			}
+		});	
+	});
+    
+}
 	
-		crud.create(serviceContext, function(err, results){
-			if(err) {
+var process_DELETE_BRANCH = function (environmentPayload, configData, authToken) {
+	return new Promise((resolve, reject) => {
+
+		getEnvironmentLogicalId(environmentPayload, configData, authToken)
+		.then((logical_id) =>{
+			console.log("logical_id"+logical_id);
+			environmentPayload.logical_id = logical_id;
+
+			// Update catalog status first. @TODO
+
+			var deleteServiceEnvPayload = {
+				"service_name" : environmentPayload.service,
+				"domain":environmentPayload.domain,
+				"version": "LATEST",
+				"environment_id" : environmentPayload.logical_id
+			};
+
+			var delSerPayload = {
+				uri: configData.BASE_API_URL + configData.DELETE_ENVIRONMENT_API_RESOURCE,
+				method: "POST",
+				headers: { Authorization: authToken },
+				json: deleteServiceEnvPayload,
+				rejectUnauthorized: false
+			};
+
+			request(delSerPayload, function (error, response, body) {
+				if(response.statusCode && response.statusCode === 200) {
+					return resolve(body);
+				} else {
+					return reject({
+						"error" : "Error creating triggering the delete environment",
+						"details" : response.body.message
+					});
+				}
+				
+			});			
+		})
+
+	});
+    
+}
+
+var process_UPDATE_ENVIRONMENT = function (environmentPayload, configData, authToken) {
+	return new Promise((resolve, reject) => {
+
+		getEnvironmentLogicalId(environmentPayload, configData, authToken)
+		.then((logical_id) =>{
+			console.log("logical_id"+logical_id);
+			environmentPayload.logical_id = logical_id;
+
+			var updatePayload = {};
+			updatePayload.status = environmentPayload.status;
+			updatePayload.endpoint = environmentPayload.endpoint;
+			updatePayload.friendly_name = environmentPayload.friendly_name;
+
+			var svcPayload = {
+				uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "/" + environmentPayload.logical_id +
+					"?domain=" +
+					environmentPayload.domain +
+					"&service=" +
+					environmentPayload.service,
+				method: "PUT",
+				headers: { Authorization: authToken },
+				json: updatePayload,
+				rejectUnauthorized: false
+			};
+
+			request(svcPayload, function (error, response, body) {
+				if(response.statusCode && response.statusCode === 200) {
+					return resolve(body);
+				} else {
+					return reject({
+						"error" : "Error creating triggering the delete environment",
+						"details" : response.body.message
+					});
+				}
+				
+			});		
+		})
+	});
+    
+}
+
+
+var getEnvironmentLogicalId = function (environmentPayload, configData, authToken) {	
+	return new Promise((resolve, reject) => {
+		var svcPayload = {
+			uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE+"?domain=" +environmentPayload.domain+ "&service=" +environmentPayload.service,
+			method: "GET",
+			headers: { Authorization: authToken },
+			rejectUnauthorized: false
+		};
+
+		request(svcPayload, function (error, response, body) {
+			if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
+				console.log("body=="+body);
+
+				var env_logical_id = null;
+				var dataJson = JSON.parse(body);
+				if(dataJson.data && dataJson.data.environment) {
+					var envList = dataJson.data.environment;
+					for (var count = 0; count < envList.length; count++) {
+						if(envList[count]) {
+							if(envList[count].physical_id === environmentPayload.physical_id) {
+								env_logical_id = envList[count].logical_id;
+								return resolve(env_logical_id);
+							}
+						}
+					}
+				}	
 
 			} else {
-				
+				return reject({
+					"error" : "Could not get environment Id for service and domain",
+					"details" : response.body.message
+				});		
 			}
 
 		});
 
-
 	});
     
 }
-    
-var process_CREATE_BRANCH = function () {
-    
-    
-}
 
-var process_UPDATE_ENVIRONMENT = function () {
-    
-}
-
-var process_DELETE_BRANCH = function () {
-    
-    
-}
-
-var process_DELETE_ENVIRONMENT = function () {
-    
-    
-}
 
 var handleProcessedEvents = function (id, payload) {
 	processedEvents.push({
@@ -261,35 +451,27 @@ var getServiceContext = function (svcContext) {
 	} else {
 		json.domain = null;
 	}
-	if (svcContext.description) {
-		json.description = svcContext.description;
-	}
+
 	if (svcContext.runtime) {
 		json.runtime = svcContext.runtime;
 	}
 	if (svcContext.region) {
 		json.region = svcContext.region;
 	}
-	if (svcContext.repository) {
-		json.repository = svcContext.repository;
-	}
-	if (svcContext.email) {
-		json.email = svcContext.email;
-	}
-	if (svcContext.slack_channel) {
-		json.slackChannel = svcContext.slack_channel;
-	}
-	if (svcContext.tags) {
-		json.tags = svcContext.tags;
-	}
 	if (svcContext.service_type) {
 		json.type = svcContext.service_type;
 	}
-	if (svcContext.metadata) {
-		json.metadata = svcContext.metadata;
+	if (svcContext.branch) {
+		json.physical_id = svcContext.branch;
 	}
-	if (svcContext.endpoint) {
-		json.endpoint = svcContext.endpoint;
+	if (svcContext.branch) {
+		json.branch = svcContext.branch;
+	}
+	if (svcContext.service_id) {
+		json.service_id = svcContext.service_id;
+	}
+	if (svcContext.environment) {
+		json.environment = svcContext.environment;
 	}
 
 	return json;
@@ -301,7 +483,7 @@ module.exports = {
     handleError: handleError,
     processEvents: processEvents,
     processEachEvent: processEachEvent,
-    checkInterest: checkInterest,
+    checkForInterestedEvents: checkForInterestedEvents,
     processItem: processItem,
     handleProcessedEvents: handleProcessedEvents,
     handleFailedEvents: handleFailedEvents,
