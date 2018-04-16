@@ -129,7 +129,6 @@ def loadBuildModules(buildModuleUrl){
 			]])
 
       def result_json_string = readFile("jazz-installer-vars.json")
-      console.log('jazz vars',result_json_string);
       config_module = load "config-loader.groovy"
       config_loader = config_module.initialize(result_json_string)
 
