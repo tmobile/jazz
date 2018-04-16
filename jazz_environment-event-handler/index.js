@@ -36,20 +36,6 @@ var processedEvents = [];
 var failedEvents = [];
 
 var handler = (event, context, cb) => {
-	////////////////////////////////////////////////////// event mocked ///////////////
-	context.functionName = context.functionName + "-test" // @TODO Local testing
-	//var _event = fs.readFileSync('test/CREATE_BRANCH.json');  	
-	//var _event = fs.readFileSync('test/UPDATE_ENVIRONMENT.json'); 
-	//var _event = fs.readFileSync('test/UPDATE_ENVIRONMENT.BRANCH.json'); 
-	//var _event = fs.readFileSync('test/DELETE_ENVIRONMENT.json');
-	//var _event = fs.readFileSync('test/DELETE_ENVIRONMENT.1.json');
-	//var _event = fs.readFileSync('test/DELETE_BRANCH.json'); 
-	var _event = fs.readFileSync('test/INVALID_EVENT_TYPE.json'); 
-	//var _event = fs.readFileSync('test/INVALID_EVENT.json'); 
-	
-	var _event_64 = new Buffer(_event).toString("base64");
-	event.Records[0].kinesis.data = _event_64;
-	////////////////////////////////////////////////////// event mocked ///////////////
     var configData = config(context);
     var authToken;
 
@@ -124,6 +110,10 @@ var processEachEvent = function (record, configData, authToken) {
 				payload = result.payload;
 				if (result.interested_event) {
 					return processItem(payload, configData, authToken);
+				} else {
+					return new Promise((resolve, reject) => {
+						resolve({"message": "Not an interesting event"});
+					});
 				}
 			})
 			.then(result => {
