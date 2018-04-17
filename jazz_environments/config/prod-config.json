@@ -1,5 +1,5 @@
 {
-    "SERVICE_API_URL" : "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+    "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
     "SERVICE_API_RESOURCE": "/prod/jazz/is-service-available",
     "services_environment_table": "{inst_stack_prefix}_environments_prod",
     "service_environment_required_fields": ["logical_id", "service", "domain", "status", "created_by", "physical_id"],
@@ -10,6 +10,6 @@
     "service_environment_production_logical_id": "prod",
     "service_environment_stage_logical_id": "stg",
     "services_environment_index": "EnvironmentsDomainServiceIndex",
-    "ddb-region" : "{conf_region}",
+    "ddb-region": "{conf_region}",
     "admin_users": "{jazz_admin}"
 }

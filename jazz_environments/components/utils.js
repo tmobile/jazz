@@ -28,7 +28,7 @@ const logger = require("./logger.js");
 // Helper functions
 
 // function to convert key name in schema to database column name
-var getEnvironmentDatabaseKeyName = function(key) {
+var getEnvironmentDatabaseKeyName = function (key) {
     // Some of the keys in schema may be reserved keywords, so it may need some manipulation
 
     if (!key) {
@@ -45,7 +45,7 @@ var getEnvironmentDatabaseKeyName = function(key) {
     //check for timestamp
 };
 
-var getSchemaKeyName = function(key) {
+var getSchemaKeyName = function (key) {
     // Convert database key name back, as per schema
 
     if (!key) {
@@ -64,7 +64,7 @@ var getSchemaKeyName = function(key) {
 };
 
 // convert object returned from the database, as per schema
-var formatEnvironment = function(environment, format) {
+var formatEnvironment = function (environment, format) {
     if (!environment) {
         return {};
     }
@@ -83,7 +83,7 @@ var formatEnvironment = function(environment, format) {
         };
     }
 
-    var parseValue = function(value) {
+    var parseValue = function (value) {
         var type = Object.keys(value)[0];
         var parsed_value = value[type];
         if (type === "NULL") {
@@ -110,7 +110,7 @@ var formatEnvironment = function(environment, format) {
         }
     };
 
-    Object.keys(environment).forEach(function(key) {
+    Object.keys(environment).forEach(function (key) {
         var key_name = getSchemaKeyName(key);
         var value = environment[key];
         if (value) {
@@ -126,21 +126,25 @@ var formatEnvironment = function(environment, format) {
 };
 
 // initialize document CLient for dynamodb
-var initDocClient = function() {
-    AWS.config.update({ region: global.config.ddb_region });
+var initDocClient = function () {
+    AWS.config.update({
+        region: global.config.ddb_region
+    });
     var docClient = new AWS.DynamoDB.DocumentClient();
     return docClient;
 };
 
-var initDynamodb = function() {
-    AWS.config.update({ region: global.config.ddb_region });
+var initDynamodb = function () {
+    AWS.config.update({
+        region: global.config.ddb_region
+    });
     var dynamodb = new AWS.DynamoDB();
 
     return dynamodb;
 };
-var sortUtil = function(data, sort_key, sort_direction) {
+var sortUtil = function (data, sort_key, sort_direction) {
     if (sort_key && sort_key !== "timestamp") {
-        data = data.sort(function(a, b) {
+        data = data.sort(function (a, b) {
             var x = a[sort_key];
             var y = b[sort_key];
             if (sort_direction === "asc") return x < y ? -1 : x > y ? 1 : 0;
@@ -149,7 +153,7 @@ var sortUtil = function(data, sort_key, sort_direction) {
             }
         });
     } else {
-        data = data.sort(function(a, b) {
+        data = data.sort(function (a, b) {
             var val1 = a.timestamp.replace("T", " ");
             var val2 = b.timestamp.replace("T", " ");
             var x = new Date(val1).getTime();
@@ -161,9 +165,9 @@ var sortUtil = function(data, sort_key, sort_direction) {
     return data;
 };
 
-var filterUtil = function(data, filter_value) {
+var filterUtil = function (data, filter_value) {
     var newArr = [];
-    data.forEach(function(ele) {
+    data.forEach(function (ele) {
         for (var key in ele) {
             var value = "";
             if (typeof ele[key] == "string") value = ele[key].toLowerCase();
@@ -179,7 +183,7 @@ var filterUtil = function(data, filter_value) {
     return newArr;
 };
 
-var paginateUtil = function(data, limit, offset) {
+var paginateUtil = function (data, limit, offset) {
     var newArr = [];
 
     if (data.length - 1 > limit + offset) {
@@ -190,7 +194,7 @@ var paginateUtil = function(data, limit, offset) {
     return data;
 };
 
-var isEmpty = function(obj) {
+var isEmpty = function (obj) {
     for (var prop in obj) {
         if (obj.hasOwnProperty(prop)) return false;
     }

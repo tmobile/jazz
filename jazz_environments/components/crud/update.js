@@ -46,7 +46,7 @@ module.exports = (tableName, environmentData, environment_key_id, onComplete) =>
     environmentData.last_updated = timestamp;
 
     // Add all properties in input object to the params object
-    Object.keys(environmentData).forEach(function(key) {
+    Object.keys(environmentData).forEach(function (key) {
         var param_key = utils.getEnvironmentDatabaseKeyName(key);
         var param_value = environmentData[key];
 
@@ -61,11 +61,10 @@ module.exports = (tableName, environmentData, environment_key_id, onComplete) =>
         params.ExpressionAttributeValues = attributeValues;
         params.ReturnValues = "ALL_NEW";
 
-        docClient.update(params, function(err, data) {
+        docClient.update(params, function (err, data) {
             if (err) {
                 // database error
-                onComplete(
-                    {
+                onComplete({
                         result: "databaseError",
                         message: "Error Updating Item  " + err.message
                     },

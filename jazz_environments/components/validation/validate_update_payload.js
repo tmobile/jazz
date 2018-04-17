@@ -36,28 +36,28 @@ module.exports = (environment_data, environment_id, onComplete) => {
     var service_data_from_db = {};
 
     validateIsEmptyInputData(environment_data)
-    .then(() => validateFriendlyName(environment_data, environment_id))
-    .then(() => validateNotEditableFieldsInUpdate(environment_data, non_editable_fields_for_update))
-    .then(() => validateEditableFieldsValue(environment_data, editable_fields_for_update))
-    .then(() => validateUnAllowedFieldsInInput(environment_data, editable_fields_for_update))
-    .then(() => validateStatusFieldValue(environment_data, status_field_list))
-    .then(function(result){
-        logger.info("# Validate Update Payload Data:" + JSON.stringify(result));
-        onComplete(null);
-    })
-    .catch(function(error){
-        logger.info('#validate error')
-        logger.error("# Validate Update Payload Error:" + JSON.stringify(error));
-        onComplete(error, null);
-    });
+        .then(() => validateFriendlyName(environment_data, environment_id))
+        .then(() => validateNotEditableFieldsInUpdate(environment_data, non_editable_fields_for_update))
+        .then(() => validateEditableFieldsValue(environment_data, editable_fields_for_update))
+        .then(() => validateUnAllowedFieldsInInput(environment_data, editable_fields_for_update))
+        .then(() => validateStatusFieldValue(environment_data, status_field_list))
+        .then(function (result) {
+            logger.info("# Validate Update Payload Data:" + JSON.stringify(result));
+            onComplete(null);
+        })
+        .catch(function (error) {
+            logger.error("# Validate Update Payload Error:" + JSON.stringify(error));
+            onComplete(error, null);
+        });
 }
 
 function validateIsEmptyInputData(environment_data) {
     //check for empty fields
-    logger.info("Inside validateIsEmptyInputData: ");
+    logger.debug("Inside validateIsEmptyInputData: ");
     return new Promise((resolve, reject) => {
-        validateUtils.validateIsEmptyInputData(environment_data, function onValidate(error, data){
-            if(error){
+        validateUtils.validateIsEmptyInputData(environment_data, function onValidate(error, data) {
+            if (error) {
+                logger.error("Error in validateIsEmptyInputData: " + JSON.stringify(error));
                 reject(error);
             } else {
                 resolve(data);
@@ -68,10 +68,11 @@ function validateIsEmptyInputData(environment_data) {
 
 function validateFriendlyName(environment_data, environment_id) {
     //check for friendly name
-    logger.info("Inside validateFriendlyName: ");
-    return new Promise((resolve, reject) =>{
-        validateUtils.validateFriendlyName(environment_data, environment_id, function onValidate(error, data){
-            if(error){
+    logger.debug("Inside validateFriendlyName: ");
+    return new Promise((resolve, reject) => {
+        validateUtils.validateFriendlyName(environment_data, environment_id, function onValidate(error, data) {
+            if (error) {
+                logger.error("Error in validateFriendlyName: " + JSON.stringify(error));
                 reject(error);
             } else {
                 resolve(data);
@@ -82,10 +83,11 @@ function validateFriendlyName(environment_data, environment_id) {
 
 function validateNotEditableFieldsInUpdate(environment_data, non_editable_fields_for_update) {
     // check for non-editable
-    logger.info("Inside validateNotEditableFieldsInUpdate: ");
-    return new Promise((resolve, reject) =>{
-        validateUtils.validateNotEditableFieldsInUpdate(environment_data, non_editable_fields_for_update, function onValidate(error, data){
-            if(error){
+    logger.debug("Inside validateNotEditableFieldsInUpdate: ");
+    return new Promise((resolve, reject) => {
+        validateUtils.validateNotEditableFieldsInUpdate(environment_data, non_editable_fields_for_update, function onValidate(error, data) {
+            if (error) {
+                logger.error("Error in validateNotEditableFieldsInUpdate: " + JSON.stringify(error));
                 reject(error);
             } else {
                 resolve(data);
@@ -96,10 +98,11 @@ function validateNotEditableFieldsInUpdate(environment_data, non_editable_fields
 
 function validateEditableFieldsValue(environment_data, editable_fields_for_update) {
     //check for editable fields
-    logger.info("Inside validateEditableFieldsValue: ");
-    return new Promise((resolve, reject) =>{
-        validateUtils.validateEditableFieldsValue(environment_data, editable_fields_for_update, function onValidate(error, data){
-            if(error){
+    logger.debug("Inside validateEditableFieldsValue: ");
+    return new Promise((resolve, reject) => {
+        validateUtils.validateEditableFieldsValue(environment_data, editable_fields_for_update, function onValidate(error, data) {
+            if (error) {
+                logger.error("Error in validateEditableFieldsValue: " + JSON.stringify(error));
                 reject(error);
             } else {
                 resolve(data);
@@ -110,10 +113,11 @@ function validateEditableFieldsValue(environment_data, editable_fields_for_updat
 
 function validateUnAllowedFieldsInInput(environment_data, editable_fields_for_update) {
     // check for unallowed fields
-    logger.info("Inside validateUnAllowedFieldsInInput:");
-    return new Promise((resolve, reject) =>{
-        validateUtils.validateUnAllowedFieldsInInput(environment_data, editable_fields_for_update, function onValidate(error, data){
-            if(error){
+    logger.debug("Inside validateUnAllowedFieldsInInput:");
+    return new Promise((resolve, reject) => {
+        validateUtils.validateUnAllowedFieldsInInput(environment_data, editable_fields_for_update, function onValidate(error, data) {
+            if (error) {
+                logger.error("Error in validateUnAllowedFieldsInInput: " + JSON.stringify(error));
                 reject(error);
             } else {
                 resolve(data);
@@ -124,10 +128,11 @@ function validateUnAllowedFieldsInInput(environment_data, editable_fields_for_up
 
 function validateStatusFieldValue(environment_data, status_field_list) {
     // check for invalid status values
-    logger.info("Inside validateStatusStateChange: ");
+    logger.debug("Inside validateStatusStateChange: ");
     return new Promise((resolve, reject) => {
-        validateUtils.validateStatusFieldValue(environment_data, status_field_list, function onValidate(error, data){
-            if(error){
+        validateUtils.validateStatusFieldValue(environment_data, status_field_list, function onValidate(error, data) {
+            if (error) {
+                logger.error("Error in validateStatusFieldValue: " + JSON.stringify(error));
                 reject(error);
             } else {
                 resolve(data);

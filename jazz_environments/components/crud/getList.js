@@ -37,16 +37,15 @@ module.exports = (tableName, query, indexName, onComplete) => {
         KeyConditionExpression: "SERVICE_DOMAIN = :SERVICE_DOMAIN and SERVICE_NAME  = :SERVICE_NAME",
         ExpressionAttributeValues: {
             ":SERVICE_NAME": query.service,
-            ":SERVICE_DOMAIN":query.domain
+            ":SERVICE_DOMAIN": query.domain
         }
     };
 
     if (query) {
-        // var keys_list = ['service', 'domain', 'region', 'type', 'runtime', 'created_by','timestamp'];
         var keys_list = global.config.service_environment_filter_params;
 
         // Generate filter string
-        keys_list.forEach(function(key) {
+        keys_list.forEach(function (key) {
             var key_name = utils.getEnvironmentDatabaseKeyName(key);
 
             if (query[key] && key_name !== "SERVICE_DOMAIN" && key_name !== "SERVICE_NAME") {
@@ -64,18 +63,18 @@ module.exports = (tableName, query, indexName, onComplete) => {
 
     var items_formatted = [];
     var queryExecute = function (onComplete) {
-        docClient.query(params, function(err, items) {
+        docClient.query(params, function (err, items) {
             var count;
             if (err) {
                 onComplete(err);
             } else {
-                items.Items.forEach(function(item) {
+                items.Items.forEach(function (item) {
                     items_formatted.push(utils.formatEnvironment(item));
                 });
 
-      			if (items.LastEvaluatedKey) {
-					params.ExclusiveStartKey = items.LastEvaluatedKey;
-					queryExecute(onComplete);
+                if (items.LastEvaluatedKey) {
+                    params.ExclusiveStartKey = items.LastEvaluatedKey;
+                    queryExecute(onComplete);
                 } else {
                     var obj = {
                         count: items_formatted.length,

@@ -57,13 +57,13 @@ module.exports = (tableName, indexName, service, domain, environment_id, onCompl
     }
 
     var items_formatted = [];
-    var queryExecute = function(onComplete) {
-        docClient.query(params, function(err, data) {
+    var queryExecute = function (onComplete) {
+        docClient.query(params, function (err, data) {
             if (err) {
                 onComplete(err);
             } else {
 
-                data.Items.forEach(function(item) {
+                data.Items.forEach(function (item) {
                     items_formatted.push(utils.formatEnvironment(item));
                 });
 

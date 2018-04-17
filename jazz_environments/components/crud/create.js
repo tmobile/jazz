@@ -49,7 +49,7 @@ module.exports = (environmentData, tableName, onComplete) => {
     environmentData.logical_id = environmentData.logical_id.toLowerCase();
 
     // Add all properties in input object to the params object
-    Object.keys(environmentData).forEach(function(key) {
+    Object.keys(environmentData).forEach(function (key) {
         var param_key = utils.getEnvironmentDatabaseKeyName(key);
         var param_value = environmentData[key];
 
@@ -61,11 +61,10 @@ module.exports = (environmentData, tableName, onComplete) => {
     });
 
     // Add new item to database
-    docClient.put(params, function(err, data) {
+    docClient.put(params, function (err, data) {
         if (err) {
             // database error
-            onComplete(
-                {
+            onComplete({
                     result: "databaseError",
                     message: "Error adding Item to dynamodb " + err.message
                 },

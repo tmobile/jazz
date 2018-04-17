@@ -24,7 +24,7 @@
 
 const _ = require("lodash");
 
-var validateIsEmptyInputData = function(environment_data, onComplete) {
+var validateIsEmptyInputData = function (environment_data, onComplete) {
     if (_.isEmpty(environment_data)) {
         onComplete({
             result: "inputError",
@@ -38,7 +38,7 @@ var validateIsEmptyInputData = function(environment_data, onComplete) {
     }
 };
 
-var validateAllRequiredFields = function(environment_data, required_fields, onComplete) {
+var validateAllRequiredFields = function (environment_data, required_fields, onComplete) {
     var missing_required_fields = _.difference(_.values(required_fields), _.keys(environment_data));
     if (missing_required_fields.length > 0) {
         var message = "Following field(s) are required - " + missing_required_fields.join(", ");
@@ -54,7 +54,7 @@ var validateAllRequiredFields = function(environment_data, required_fields, onCo
     }
 };
 
-var validateUnAllowedFieldsInInput = function(environment_data, fields_list, onComplete) {
+var validateUnAllowedFieldsInInput = function (environment_data, fields_list, onComplete) {
     var invalid_fields = _.difference(_.keys(environment_data), _.values(fields_list));
     if (invalid_fields.length > 0) {
         var message = "Following fields are invalid :  " + invalid_fields.join(", ") + ". ";
@@ -70,9 +70,9 @@ var validateUnAllowedFieldsInInput = function(environment_data, fields_list, onC
     }
 };
 
-var validateAllRequiredFieldsValue = function(environment_data, required_fields, onComplete) {
+var validateAllRequiredFieldsValue = function (environment_data, required_fields, onComplete) {
     var invalid_required_fields = [];
-    _.forEach(required_fields, function(value, key) {
+    _.forEach(required_fields, function (value, key) {
         if (_.isEmpty(environment_data[value])) {
             invalid_required_fields.push(value);
         }
@@ -92,7 +92,7 @@ var validateAllRequiredFieldsValue = function(environment_data, required_fields,
     }
 };
 
-var validateRemoveEmptyValues = function(environment_data, onComplete) {
+var validateRemoveEmptyValues = function (environment_data, onComplete) {
     for (var field in environment_data) {
         if (!environment_data[field]) {
             delete environment_data[field];
@@ -104,23 +104,23 @@ var validateRemoveEmptyValues = function(environment_data, onComplete) {
     });
 };
 
-var validateNotEditableFieldsInUpdate = function(environment_data, fields_list, onComplete) {
+var validateNotEditableFieldsInUpdate = function (environment_data, fields_list, onComplete) {
     var invalid_fields = _.intersection(_.keys(environment_data), _.values(fields_list));
-    _.forEach(invalid_fields, function(value, key) {
+    _.forEach(invalid_fields, function (value, key) {
         delete environment_data[value];
     });
-    
+
     onComplete(null, {
         result: "success",
         input: environment_data
     });
 };
 
-var validateEditableFieldsValue = function(environment_data, fields_list, onComplete) {
+var validateEditableFieldsValue = function (environment_data, fields_list, onComplete) {
     var editable_fields = _.intersection(_.keys(environment_data), _.values(fields_list));
 
     var invalid_required_fields = [];
-    _.forEach(editable_fields, function(value, key) {
+    _.forEach(editable_fields, function (value, key) {
         if (_.isEmpty(environment_data[value]) && !_.isBoolean(environment_data[value])) {
             invalid_required_fields.push(value);
         }
@@ -140,11 +140,11 @@ var validateEditableFieldsValue = function(environment_data, fields_list, onComp
     }
 };
 
-var validateFriendlyName = function(environment_data, logical_id, onComplete) {
+var validateFriendlyName = function (environment_data, logical_id, onComplete) {
     var friendlyNameKey = "friendly_name";
     if (logical_id &&
         (logical_id.toLowerCase() === global.config.service_environment_production_logical_id ||
-        logical_id.toLowerCase() === global.config.service_environment_stage_logical_id)
+            logical_id.toLowerCase() === global.config.service_environment_stage_logical_id)
     ) {
         if (_.includes(_.keys(environment_data), friendlyNameKey)) {
             onComplete({
@@ -154,19 +154,20 @@ var validateFriendlyName = function(environment_data, logical_id, onComplete) {
         } else {
             onComplete(null, {
                 result: "success",
-                input:environment_data
+                input: environment_data
             });
         }
     } else {
         onComplete(null, {
             result: "success",
-            input:environment_data
+            input: environment_data
         });
     }
 };
 
-var validateStatusFieldValue = function(environment_data, status_values, onComplete) {
-    var statusFieldKey = "status", has_invalid_status_values=false;
+var validateStatusFieldValue = function (environment_data, status_values, onComplete) {
+    var statusFieldKey = "status",
+        has_invalid_status_values = false;
     //check if input contains fields other than allowed fields
     if (_.includes(_.keys(environment_data), statusFieldKey)) {
         //checking "status" field contains the allowed values
@@ -180,7 +181,7 @@ var validateStatusFieldValue = function(environment_data, status_values, onCompl
             message: "Only following values can be allowed for status field - " + status_values.join(", ")
         }, null);
     } else {
-        onComplete(null,{
+        onComplete(null, {
             result: "success",
             message: environment_data
         });

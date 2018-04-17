@@ -28,16 +28,17 @@ const _ = require("lodash");
 
 module.exports = (tableName, indexName, service, domain, environment_id, onComplete) => {
     // check for query param ,path params and crud.get
-    logger.info("Inside Validate Environment: "+indexName + service + domain + environment_id);
+    logger.info("Inside Validate Environment: " + indexName + service + domain + environment_id);
 
     crud.get(tableName, indexName, service, domain, environment_id, function onEnvironmentGet(error, data) {
         if (error) {
+            logger.error("Error in ValidateEnvironment: " + JSON.stringify(error));
             onComplete(error, null);
         } else {
             if (_.isEmpty(data.environment)) {
                 onComplete({
                     result: "notFoundError",
-                    message: "Cannot find environment with following params: service - " + service +", domain - "+ domain +", environment_id - "+ environment_id
+                    message: "Cannot find environment with following params: service - " + service + ", domain - " + domain + ", environment_id - " + environment_id
                 }, null);
             } else {
                 onComplete(null, {
