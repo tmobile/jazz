@@ -36,6 +36,22 @@ var processedEvents = [];
 var failedEvents = [];
 
 var handler = (event, context, cb) => {
+		////////////////////////////////////////////////////// event mocked ///////////////
+		context.functionName = context.functionName + "-test" // @TODO Local testing
+		var _event = fs.readFileSync('test/COMMIT_TEMPLATE.json'); 
+		//var _event = fs.readFileSync('test/CREATE_BRANCH.json');  	
+		//var _event = fs.readFileSync('test/UPDATE_ENVIRONMENT.json'); 
+		//var _event = fs.readFileSync('test/UPDATE_ENVIRONMENT.BRANCH.json'); 
+		//var _event = fs.readFileSync('test/DELETE_ENVIRONMENT.json');
+		//var _event = fs.readFileSync('test/DELETE_ENVIRONMENT.1.json');
+		//var _event = fs.readFileSync('test/DELETE_BRANCH.json'); 
+		//var _event = fs.readFileSync('test/INVALID_EVENT_TYPE.json'); 
+		//var _event = fs.readFileSync('test/INVALID_EVENT.json'); 
+		
+		var _event_64 = new Buffer(_event).toString("base64");
+		event.Records[0].kinesis.data = _event_64;
+		////////////////////////////////////////////////////// event mocked ///////////////
+		
     var configData = config(context);
     var authToken;
 
@@ -75,7 +91,7 @@ var getTokenRequest = function (configData) {
 };
 
 var getAuthResponse = function (result) {
-    console.log("result.statusCode"+result.statusCode)
+    logger.info("result.statusCode"+result.statusCode)
 	return new Promise((resolve, reject) => {
 		if (result.statusCode === 200 && result.body && result.body.data) {
 			return resolve(result.body.data.token);
@@ -93,7 +109,7 @@ var processEvents = function (event, configData, authToken) {
 		}
 		Promise.all(processEachEventPromises)
 			.then((result) => { 
-                console.log("result"+result);
+                logger.info("result"+result);
                 return resolve(result); 
             })
 			.catch((error) => { return reject(error); });
@@ -134,12 +150,12 @@ var checkForInterestedEvents = function (encodedPayload, sequenceNumber, config)
             if (_.includes(config.EVENTS.EVENT_TYPE, kinesisPayload.Item.EVENT_TYPE.S) && 
                 _.includes(config.EVENTS.EVENT_NAME, kinesisPayload.Item.EVENT_NAME.S)) {
                 logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
-                resolve({
+                return resolve({
                     "interested_event": true,
                     "payload": kinesisPayload.Item
                 });
             } else {
-                resolve({
+                return resolve({
                     "interested_event": false,
                     "payload": kinesisPayload.Item
                 });  
@@ -153,7 +169,7 @@ var processItem = function (eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 
 		var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
-		console.log("svcContext: "+JSON.stringify(svcContext));
+		logger.info("svcContext: "+JSON.stringify(svcContext));
 
 		var environmentApiPayload = {};
 		environmentApiPayload.service = eventPayload.SERVICE_NAME.S;			
@@ -240,7 +256,7 @@ var process_INITIAL_COMMIT = function (environmentPayload, configData, authToken
 					rejectUnauthorized: false
 			};
 	
-			console.log("svcPayload"+ JSON.stringify(svcPayload));
+			logger.info("svcPayload"+ JSON.stringify(svcPayload));
 			request(svcPayload, function (error, response, body) {
 				if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
 					return resolve(null, body);			
@@ -254,7 +270,7 @@ var process_INITIAL_COMMIT = function (environmentPayload, configData, authToken
 
 			svcPayload.json.logical_id = "prod";	
 
-			console.log("svcPayload"+ JSON.stringify(svcPayload));
+			logger.info("svcPayload"+ JSON.stringify(svcPayload));
 			request(svcPayload, function (error, response, body) {
 				if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
 					return resolve(null, body);			
@@ -281,7 +297,7 @@ var process_CREATE_BRANCH = function (environmentPayload, configData, authToken)
 		environmentPayload.logical_id = nano_id+"-dev";	
 		environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
 
-		console.log("environmentPayload"+ JSON.stringify(environmentPayload));
+		logger.info("environmentPayload"+ JSON.stringify(environmentPayload));
 		var svcPayload = {
 				uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
 				method: "POST",
@@ -290,7 +306,7 @@ var process_CREATE_BRANCH = function (environmentPayload, configData, authToken)
 				rejectUnauthorized: false
 		};
 
-		console.log("svcPayload"+ JSON.stringify(svcPayload));
+		logger.info("svcPayload"+ JSON.stringify(svcPayload));
 		request(svcPayload, function (error, response, body) {
 			if (response.statusCode && response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
 				return resolve(body);			
@@ -310,7 +326,7 @@ var process_DELETE_BRANCH = function (environmentPayload, configData, authToken)
 
 		getEnvironmentLogicalId(environmentPayload, configData, authToken)
 		.then((logical_id) =>{
-			console.log("logical_id"+logical_id);
+			logger.info("logical_id"+logical_id);
 			environmentPayload.logical_id = logical_id;
 
 			// Update catalog status first. @TODO
@@ -395,7 +411,7 @@ var getEnvironmentLogicalId = function (environmentPayload, configData, authToke
 
 		request(svcPayload, function (error, response, body) {
 			if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
-				console.log("body=="+body);
+				logger.info("body=="+body);
 
 				var env_logical_id = null;
 				var dataJson = JSON.parse(body);
