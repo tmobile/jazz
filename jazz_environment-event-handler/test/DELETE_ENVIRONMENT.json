@@ -28,13 +28,13 @@
       "S": "SERVICE_DELETION"
     },
     "USERNAME": {
-      "S": "svc_cpt_mon_prd_syn"
+      "S": "Tester"
     },
     "EVENT_TIMESTAMP": {
       "S": "2018-04-16T19:16:51:812"
     },
     "SERVICE_CONTEXT": {
-      "S": "{\"service_type\":\"website\",\"branch\":\"bugfix/test_02\",\"runtime\":null,\"domain\":\"jazztesting\",\"iam_role\":\"svc_cpt_mon_prd_syn\",\"environment\":\"ehrswzx36b-dev\",\"region\":\"us-west-2\",\"message\":\"Environment cleanup for ua3lixoiso-dev started\"}"
+      "S": "{\"service_type\":\"website\",\"branch\":\"bugfix/test_02\",\"runtime\":null,\"domain\":\"jazztesting\",\"iam_role\":\"test_role\",\"environment\":\"ehrswzx36b-dev\",\"region\":\"us-west-2\",\"message\":\"Environment cleanup for ua3lixoiso-dev started\"}"
     }
   }
 }

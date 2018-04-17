@@ -28,7 +28,7 @@
       "S": "2018-04-16T16:35:49:186"
     },
     "SERVICE_CONTEXT": {
-      "S": "{\"repository\":\"https://bitbucket.corporate.t-mobile.com/projects/CAS/repos/jazztesting_test-debug-deepu/browse\",\"domain\":\"jazztesting\",\"branch\":\"master\"}"
+      "S": "{\"repository\":\"https://testrepo.com/projects/CAS/repos/jazztesting_test-debug-deepu/browse\",\"domain\":\"jazztesting\",\"branch\":\"master\"}"
     }
   }
 }

@@ -28,13 +28,13 @@
         "S": "SERVICE_DEPLOYMENT"
       },
       "USERNAME": {
-        "S": "DSundar3"
+        "S": "Tester"
       },
       "EVENT_TIMESTAMP": {
         "S": "2018-04-16T16:38:39:144"
       },
       "SERVICE_CONTEXT": {
-        "S": "{\"service_type\":\"website\",\"branch\":\"bugfix/test_02\",\"runtime\":\"\",\"domain\":\"jazztesting\",\"iam_role\":\"DSundar3\",\"environment\":\"stg\",\"region\":\"\",\"message\":\"Environment Update event for deployment completion\",\"status\":\"deployment_started\",\"endpoint\":\"http://jazztesting-test-debug-deepu-a06bfd3e.s3-website-us-west-2.amazonaws.com/stg/index.html\"}"
+        "S": "{\"service_type\":\"website\",\"branch\":\"bugfix/test_02\",\"runtime\":\"\",\"domain\":\"jazztesting\",\"iam_role\":\"Tester\",\"environment\":\"stg\",\"region\":\"\",\"message\":\"Environment Update event for deployment completion\",\"status\":\"deployment_started\",\"endpoint\":\"http://testsite.com/stg/index.html\"}"
       }
     }
   }
