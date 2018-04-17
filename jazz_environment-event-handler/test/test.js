@@ -47,7 +47,7 @@ describe('jazz environment handler tests: ', function() {
         "data": {
           "user_id": "JazzAdmin",
           "name": "Jazz Admin",
-          "email": "jazz@T-Mobile.com",
+          "email": "jazz@serverless.com",
           "token": "JAZZLOGINTOKENTEST"
         },
         "input": {
@@ -225,24 +225,14 @@ describe('jazz environment handler tests: ', function() {
   });
 
   it('processEachEvent should reject for invalid event name and event type combination', function () {
-    var event_INVALID_EVENT_TYPE = fs.readFileSync('test/INVALID_EVENT_TYPE.json');  
-    var event_INVALID_EVENT_TYPE_64 = new Buffer(event_INVALID_EVENT_TYPE).toString("base64");
-    kinesisPayload.Records[0].data = event_INVALID_EVENT_TYPE_64;
-
-		var responseObject = {
-			statusCode: 200,
-			body: {
-				data: {
-					"id": "ghd93-3240-2343"
-				}
-			}
-    };
+    var event_UPDATE_ENVIRONMENT = fs.readFileSync('test/UPDATE_ENVIRONMENT.json');  
+    var event_UPDATE_ENVIRONMENT_64 = new Buffer(event_UPDATE_ENVIRONMENT).toString("base64");
+    kinesisPayload.Records[0].data = event_UPDATE_ENVIRONMENT_64;
     
-    var reqStub = sinon.stub(request, "Request", (obj) => {
-			return obj.callback(null, responseObject, responseObject.body);
-    });
+    var token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MjM5MjIzNDQsImRhdGEiOnsidXNlcm5hbWUiOiJEU3VuZGFyMyIsInRva2VuX2lkIjoiOGQwOGY0ZDAtMzgyYy02ZTQyLTdiZDAtMzFiNWZiZDZjN2EwIn0sImlhdCI6MTUyMzkxODc0NH0.fJWoMjOcnbHAxrzgef2IoInb_Qcyfyv3AKu1Lv09_BU";
+    var processEvent = index.processItem(event_UPDATE_ENVIRONMENT, configData, token);
     
-    var processEvent = index.processEachEvent(event_INVALID_EVENT_TYPE, configData, tokenResponseObj200.body.data.token);
+    console.log("processEvent================"+JSON.stringify(processEvent));
     var message = "Not an interesting event to process";
     
 
@@ -253,7 +243,6 @@ describe('jazz environment handler tests: ', function() {
     .catch((err)=>{
       console.log("processEvent err================"+JSON.stringify(err));
     })
-
 
   });
   
