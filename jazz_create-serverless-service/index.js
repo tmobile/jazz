@@ -37,6 +37,8 @@ module.exports.handler = (event, context, cb) => {
     var config = configObj(event);
     logger.init(event, context);
 
+    var serviceId;
+    var serviceDataObject;
 
     try {
         var isValidName = function (name) {
@@ -73,7 +75,26 @@ module.exports.handler = (event, context, cb) => {
             })
             .catch(function (err) {
                 logger.error('Error while creating a service : ' + JSON.stringify(err));
-                return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                if(err.jenkins_api_failure) {
+                        logger.error('Jenkins API Failed!!!');
+                        serviceDataObject.body = {
+                            "STATUS" : "creation_failed"
+                        };
+                        crud.update(serviceId, serviceDataObject, function (serviceUpdateError, results) {
+                            if (serviceUpdateError) {
+                                var errorMessage = {
+                                    "message": "Error occurred while updating service with failed statuss",
+                                    "error" : err
+                                };
+                                return cb(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
+                            } else {
+                                logger.error("Updated Service catalog with failed status");
+                                return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                            }
+                        });
+                } else {
+                     return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                }
             });
 
     } catch (e) {
@@ -111,13 +132,18 @@ module.exports.handler = (event, context, cb) => {
                 }, function (err, response, body) {
                     if (err) {
                         logger.error('Error while starting Jenkins job: ' + err);
+                        err.jenkins_api_failure = true;
                         reject(err);
                     } else {
                         if (response.statusCode <= 299) { // handle all 2xx response codes as success
                             resolve("Successfully created your service.");
                         } else {
                             logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
-                            reject({ 'message': "Failed to kick off service creation job" });
+                            var message = {
+                                 'message': "Failed to kick off service creation job",
+                                 'jenkins_api_failure' : true
+                            };
+                            reject(message);
                         }
                     }
                 });
@@ -164,6 +190,7 @@ module.exports.handler = (event, context, cb) => {
                     });
                 } else {
                     logger.info("created a new service in service catalog.");
+                    serviceId = results.data.service_id;
                     resolve(results.data.service_id);
                 }
             });
@@ -250,6 +277,7 @@ module.exports.handler = (event, context, cb) => {
             }
 
             inputs.METADATA = serviceMetadataObj;
+            serviceDataObject = inputs;
             resolve(inputs);
         });
     }
