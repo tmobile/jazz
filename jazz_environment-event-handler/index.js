@@ -29,8 +29,6 @@ const request = require("request");
 const async = require("async");
 const nanoid = require("nanoid/generate");
 const fcodes = require('./utils/failure-codes.js');
-const fs = require('fs');
-
 var failureCodes = fcodes();
 var processedEvents = [];
 var failedEvents = [];
@@ -93,7 +91,6 @@ var processEvents = function (event, configData, authToken) {
 		}
 		Promise.all(processEachEventPromises)
 			.then((result) => {
-				logger.info("result" + result);
 				return resolve(result);
 			})
 			.catch((error) => { return reject(error); });
@@ -148,7 +145,6 @@ var checkForInterestedEvents = function (encodedPayload, sequenceNumber, config)
 	});
 }
 
-/* validate and processs item. TODO update function name*/
 var processItem = function (eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 
@@ -161,8 +157,6 @@ var processItem = function (eventPayload, configData, authToken) {
 
 		environmentApiPayload.domain = svcContext.domain;
 		environmentApiPayload.physical_id = svcContext.branch;
-
-		//environmentApiPayload.endpoint = svcContext.endpoint;
 
 		if (eventPayload.EVENT_NAME.S === configData.EVENTS.INITIAL_COMMIT) {
 			process_INITIAL_COMMIT(environmentApiPayload, configData, authToken)
@@ -220,56 +214,79 @@ var processItem = function (eventPayload, configData, authToken) {
 			process_DELETE_BRANCH(environmentApiPayload, configData, authToken)
 				.then(result => { return resolve(result) })
 				.catch(err => { return reject(err) })
-
 		}
 
 	});
 }
 
 var process_INITIAL_COMMIT = function (environmentPayload, configData, authToken) {
+	var processStgEnv = new Promise((resolve, reject) => {
+		environmentPayload.logical_id = "stg";
+		environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
+
+		var svcPayloadStg = {
+			uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
+			method: "POST",
+			headers: { Authorization: authToken },
+			json: environmentPayload,
+			rejectUnauthorized: false
+		};
+
+		logger.info("svcPayloadStg" + JSON.stringify(svcPayloadStg));
+		request(svcPayloadStg, function (error, response, body) {
+			if (response.statusCode === 200 && body && body.data) {
+				return resolve(null, body);
+			} else {
+				return reject({
+					"error": "Error creating stg environment for " + environmentPayload.domain + "_" + environmentPayload.service + " in  catalog",
+					"details": response.body.message
+				});
+			}
+		});
+
+	});
+
+
+	var processProdEnv = new Promise((resolve, reject) => {
+		environmentPayload.logical_id = "prod";
+		environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
+
+		var svcPayloadProd = {
+			uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
+			method: "POST",
+			headers: { Authorization: authToken },
+			json: environmentPayload,
+			rejectUnauthorized: false
+		};
+
+		logger.info("svcPayloadProd" + JSON.stringify(svcPayloadProd));
+		request(svcPayloadProd, function (error, response, body) {
+			if (response.statusCode === 200 && body && body.data) {
+				return resolve(null, body);
+			} else {
+				return reject({
+					"error": "Error creating prod environment for " + environmentPayload.domain + "_" + environmentPayload.service + " in catalog",
+					"details": response.body.message
+				});
+			}
+		});
+
+	});
+
 	return new Promise((resolve, reject) => {
 		if (environmentPayload.physical_id === configData.ENVIRONMENT_PRODUCTION_PHYSICAL_ID) {
-			environmentPayload.logical_id = "stg";
-			environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
-
-			var svcPayload = {
-				uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
-				method: "POST",
-				headers: { Authorization: authToken },
-				json: environmentPayload,
-				rejectUnauthorized: false
-			};
-
-			logger.info("svcPayload" + JSON.stringify(svcPayload));
-			request(svcPayload, function (error, response, body) {
-				if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
-					return resolve(null, body);
-				} else {
-					return reject({
-						"error": "Error creating service " + svcPayload.DOMAIN + "." + svcPayload.SERVICE_NAME + " in service catalog",
-						"details": response.body.message
-					});
-				}
-			});
-
-			svcPayload.json.logical_id = "prod";
-
-			logger.info("svcPayload" + JSON.stringify(svcPayload));
-			request(svcPayload, function (error, response, body) {
-				if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
-					return resolve(null, body);
-				} else {
-					return reject({
-						"error": "Error creating service " + svcPayload.DOMAIN + "." + svcPayload.SERVICE_NAME + " in service catalog",
-						"details": response.body.message
-					});
-				}
-			});
-
+			Promise.all([processStgEnv, processProdEnv])
+				.then((result) => {
+					logger.info("result" + result);
+					return resolve({message: "Stage and Prod environments are created successfully"});
+				})
+				.catch((error) => {
+					logger.error(JSON.stringify(error));
+					return reject(error);
+				});
 		} else {
 			return reject("INITIAL_COMMIT event should be triggered by a master commit. physical_id is " + environmentApiPayload.physical_id);
 		}
-
 	});
 
 }
@@ -395,8 +412,6 @@ var getEnvironmentLogicalId = function (environmentPayload, configData, authToke
 
 		request(svcPayload, function (error, response, body) {
 			if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
-				logger.info("body==" + body);
-
 				var env_logical_id = null;
 				var dataJson = JSON.parse(body);
 				if (dataJson.data && dataJson.data.environment) {
@@ -455,39 +470,6 @@ var handleError = function (errorType, message) {
 	return error;
 }
 
-var getServiceContext = function (svcContext) {
-	var json = {};
-	if (svcContext.domain) {
-		json.domain = svcContext.domain;
-	} else {
-		json.domain = null;
-	}
-
-	if (svcContext.runtime) {
-		json.runtime = svcContext.runtime;
-	}
-	if (svcContext.region) {
-		json.region = svcContext.region;
-	}
-	if (svcContext.service_type) {
-		json.type = svcContext.service_type;
-	}
-	if (svcContext.branch) {
-		json.physical_id = svcContext.branch;
-	}
-	if (svcContext.branch) {
-		json.branch = svcContext.branch;
-	}
-	if (svcContext.service_id) {
-		json.service_id = svcContext.service_id;
-	}
-	if (svcContext.environment) {
-		json.environment = svcContext.environment;
-	}
-
-	return json;
-}
-
 module.exports = {
 	getTokenRequest: getTokenRequest,
 	getAuthResponse: getAuthResponse,
@@ -498,7 +480,8 @@ module.exports = {
 	processItem: processItem,
 	handleProcessedEvents: handleProcessedEvents,
 	handleFailedEvents: handleFailedEvents,
-	getServiceContext: getServiceContext,
 	getEventProcessStatus: getEventProcessStatus,
-	handler: handler
+	handler: handler,
+	process_DELETE_BRANCH:process_DELETE_BRANCH,
+	process_UPDATE_ENVIRONMENT: process_UPDATE_ENVIRONMENT
 }

@@ -24,59 +24,25 @@ const AWS = require('aws-sdk-mock');
 const awsContext = require('aws-lambda-mock-context');
 const async = require("async");
 const sinon = require('sinon')
+const sinonTest = require('sinon-test')(sinon, { useFakeTimers: false });
+require('sinon-as-promised');
 const rp = require('request-promise-native');
 const index = require('../index');
 const logger = require('../components/logger');
 const config = require('../components/config');
-const fs = require('fs');
+var testPayloads = require('./response_payloads.js')();
+var kinesisPayload = require('./KINESIS_PAYLOAD');
 
-var event, context, configData, tokenResponseObj, kinesisPayload;
+var event, context, configData, authToken
 
 describe('jazz environment handler tests: ', function () {
 	var sandbox;
 	beforeEach(function () {
 		sandbox = sinon.sandbox.create();
-
 		context = awsContext();
 		context.functionName = context.functionName + "-test"
-		var payloadFormat = fs.readFileSync('test/KINESIS_PAYLOAD.json');
-		kinesisPayload = JSON.parse(payloadFormat);
-		tokenResponseObj200 = {
-			"statusCode": 200,
-			"body": {
-				"data": {
-					"user_id": "JazzAdmin",
-					"name": "Jazz Admin",
-					"email": "jazz@serverless.com",
-					"token": "JAZZLOGINTOKENTEST"
-				},
-				"input": {
-					"usrname": "jazzAdmin"
-				}
-			}
-		};
-
-		tokenResponseObj401 = {
-			"statusCode": 401,
-			"message": {
-				"errorMessage": "401 - {\"errorCode\":\"100\",\"errorType\":\"Unauthorized\",\"message\":\"Authentication Failed for user: jazzAdmin- with message: 80090308: LdapErr: DSID-0C0903D0, comment: AcceptSecurityContext error, data 52e, v2580\\u0000\"}",
-				"errorType": "StatusCodeError",
-				"stackTrace": [
-					"new StatusCodeError (test message)"
-				]
-			}
-		};
-
-		tokenResponseObjInvalid = {
-			"statusCode": 200,
-			"body": {
-				"data": "",
-				"input": {
-					"usrname": "jazzAdmin"
-				}
-			}
-		};
 		configData = config(context);
+		authToken = testPayloads.tokenResponseObj200.body.data.token
 
 	});
 
@@ -84,39 +50,41 @@ describe('jazz environment handler tests: ', function () {
 		sandbox.restore();
 	});
 
-
 	it('Verified getToken returned a valid 200 response ', function () {
-		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj200));
+		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(testPayloads.tokenResponseObj200));
 		var getTokenRequest = index.getTokenRequest(configData);
 
-		rp(getTokenRequest)
+		var verified = rp(getTokenRequest)
 			.then(res => {
-				var status = res.statusCode
-				expect(status, "Invalid status Code from getToken").to.eql(200)
-			})
-		requestPromoiseStub.restore()
+				var status = res.statusCode;
+				expect(status, "Invalid status Code from getToken").to.eql(200);
+			});
+
+		requestPromoiseStub.restore();
+		return verified;
 	});
 
 
 	it('Verified getToken returned a Unauthorized 401 response ', function () {
-		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj401));
+		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(testPayloads.tokenResponseObj401));
 		var getTokenRequest = index.getTokenRequest(configData);
 
-		rp(getTokenRequest)
+		var verified = rp(getTokenRequest)
 			.then(res => {
 				var status = res.statusCode
-				expect(status, "Error code is not 401/Unauthorized").to.eql(401)
-			})
+				expect(status, "Error code is not 401/Unauthorized").to.eql(401);
+			});
 
-		requestPromoiseStub.restore()
+		requestPromoiseStub.restore();
+		return verified;
 	});
 
 
 	it('Verified getToken returned a Invalid response ', function () {
-		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObjInvalid));
+		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(testPayloads.tokenResponseObjInvalid));
 		var getTokenRequest = index.getTokenRequest(configData);
 
-		rp(getTokenRequest)
+		var verified = rp(getTokenRequest)
 			.then(result => {
 				return index.getAuthResponse(result);
 			})
@@ -125,113 +93,135 @@ describe('jazz environment handler tests: ', function () {
 				expect(err.message, "Promise should be rejected").to.eql(msg);
 			});
 
-		requestPromoiseStub.restore()
+		requestPromoiseStub.restore();
+		return verified;
 	});
 
-	it('Verified getToken returned a Invalid response ', function () {
-		tokenResponseObjInvalid.body = null
-		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObjInvalid));
+
+	it('Verified getToken returned a Invalid response - body is null', function () {
+		var invalidPayload = testPayloads.tokenResponseObjInvalid;
+		invalidPayload.body = null;
+		var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(invalidPayload));
 		var getTokenRequest = index.getTokenRequest(configData);
 
-		rp(getTokenRequest)
+		var verified = rp(getTokenRequest)
 			.then(result => {
 				return index.getAuthResponse(result);
 			})
 			.catch(err => {
 				var msg = "Invalid token response from API";
-				expect(err.message, "Promise should be rejected").to.eql(msg);
+				return expect(err.message, "Promise should be rejected").to.eql(msg);
 			});
 
-		requestPromoiseStub.restore()
+		requestPromoiseStub.restore();
+		return verified;
 	});
 
-	it('Process events - COMMIT_TEMPLATE', function () {
-		var event_COMMIT_TEMPLATE = fs.readFileSync('test/COMMIT_TEMPLATE.json');
-		var event_COMMIT_TEMPLATE_64 = new Buffer(event_COMMIT_TEMPLATE).toString("base64");
+	it('processEachEvent for COMMIT_TEMPLATE event', function () {
+		var event = require('./COMMIT_TEMPLATE');
+		var event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
+		kinesisPayload.Records[0].kinesis.data = event_BASE64;
+		var resMsg = "Stage and Prod environments are created successfully";
 
-		kinesisPayload.Records[0].data = event_COMMIT_TEMPLATE_64;
-		//console.log(kinesisPayload);
+		var requestPromoiseStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, testPayloads.envCreationResponseSuccess, testPayloads.envCreationResponseSuccess.body);
+		});
 
-
-		//var response = index.handler(event, context, callback);
-		//@TODO
-
+		var processEachEvent = index.processEachEvent(kinesisPayload.Records[0], configData, authToken);
+		return processEachEvent.then((res) => {
+			requestPromoiseStub.restore();
+			return expect(res.message).to.include(resMsg);;
+		});
 	});
 
-	it('Process events - CREATE_BRANCH', function () {
-		var event_CREATE_BRANCH = fs.readFileSync('test/CREATE_BRANCH.json');
-		var event_CREATE_BRANCH_64 = new Buffer(event_CREATE_BRANCH).toString("base64");
+	it('processEachEvent for UPDATE_ENVIRONMENT event', function () {
+		var event = require('./UPDATE_ENVIRONMENT');
+		var event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
+		kinesisPayload.Records[0].kinesis.data = event_BASE64;
+		var resMsg = "Successfully Updated environment for service";
 
-		kinesisPayload.Records[0].data = event_CREATE_BRANCH_64;
-		//console.log(kinesisPayload);
-		//var response = index.handler(event, context, callback);
-		//@TODO
+		var requestPromoiseStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+		});
 
+		var processEachEvent = index.processEachEvent(kinesisPayload.Records[0], configData, authToken);
+		return processEachEvent.then((res) => {
+			requestPromoiseStub.restore();
+			return expect(res.data.message).to.include(resMsg);;
+		});
 	});
 
-	it('Process events - UPDATE_ENVIRONMENT', function () {
-		var event_UPDATE_ENVIRONMENT = fs.readFileSync('test/UPDATE_ENVIRONMENT.json');
-		var event_UPDATE_ENVIRONMENT_64 = new Buffer(event_UPDATE_ENVIRONMENT).toString("base64");
+	it('process_UPDATE_ENVIRONMENT event', function () {
+		var resMsg = "Successfully Updated environment for service";
+		var environmentPayload = {};
+		var requestPromoiseStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+		});
 
-		kinesisPayload.Records[0].data = event_UPDATE_ENVIRONMENT_64;
-		//console.log(kinesisPayload);
-		//var response = index.handler(event, context, callback);
-		//@TODO
-
+		var processEachEvent = index.process_UPDATE_ENVIRONMENT(environmentPayload, configData, authToken);
+		return processEachEvent.then((res) => {
+			requestPromoiseStub.restore();
+			return expect(res.data.message).to.include(resMsg);;
+		});
 	});
 
-	it('Process events - DELETE_BRANCH', function () {
-		var event_DELETE_BRANCH = fs.readFileSync('test/DELETE_BRANCH.json');
-		var event_DELETE_BRANCH_64 = new Buffer(event_DELETE_BRANCH).toString("base64");
+	it('processEachEvent for DELETE_ENVIRONMENT event', function () {
+		var event = require('./DELETE_ENVIRONMENT');
+		var event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
+		kinesisPayload.Records[0].kinesis.data = event_BASE64;
+		var resMsg = "Successfully Updated environment for service";
 
-		kinesisPayload.Records[0].data = event_DELETE_BRANCH_64;
-		//console.log(kinesisPayload);
-		//var response = index.handler(event, context, callback);
-		//@TODO
+		var requestPromoiseStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+		});
 
+		var processEachEvent = index.processEachEvent(kinesisPayload.Records[0], configData, authToken);
+		return processEachEvent.then((res) => {
+			requestPromoiseStub.restore();
+			return expect(res.data.message).to.include(resMsg);;
+		});
 	});
 
-	it('Process events - DELETE_ENVIRONMENT', function () {
-		var event_DELETE_ENVIRONMENT = fs.readFileSync('test/DELETE_ENVIRONMENT.json');
-		var event_DELETE_ENVIRONMENT_64 = new Buffer(event_DELETE_ENVIRONMENT).toString("base64");
+	it('processEachEvent for CREATE_BRANCH event', function () {
+		var event = require('./CREATE_BRANCH');
+		var event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
+		kinesisPayload.Records[0].kinesis.data = event_BASE64;
+		var resMsg = "success";
 
-		kinesisPayload.Records[0].data = event_DELETE_ENVIRONMENT_64;
-		//console.log(kinesisPayload);
-		//var response = index.handler(event, context, callback);
-		//@TODO
+		var requestPromoiseStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, testPayloads.createBranchSuccess, testPayloads.createBranchSuccess.body);
+		});
 
+		var processEachEvent = index.processEachEvent(kinesisPayload.Records[0], configData, authToken);
+		return processEachEvent.then((res) => {
+			requestPromoiseStub.restore();
+			console.log(res);
+			return expect(res.data.result).to.include(resMsg);
+		});
 	});
 
-	it('Process events - INVALID_EVENT', function () {
-		var event_INVALID_EVENT = fs.readFileSync('test/INVALID_EVENT.json');
-		var event_INVALID_EVENT_64 = new Buffer(event_INVALID_EVENT).toString("base64");
+	it('processEachEvent for DELETE_BRANCH event', function () {
+		var event = require('./DELETE_BRANCH');
+		var event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
+		kinesisPayload.Records[0].kinesis.data = event_BASE64;
+		var resMsg = "success";
 
-		kinesisPayload.Records[0].data = event_INVALID_EVENT_64;
-		//console.log(kinesisPayload);
-		//var response = index.handler(event, context, callback);
-		//@TODO
-
+		var requestPromoiseStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, testPayloads.deleteBranchSuccess, testPayloads.deleteBranchSuccess.body);
+		});
+		var processEachEvent = index.processEachEvent(kinesisPayload.Records[0], configData, authToken);
+		requestPromoiseStub.restore();
+		// return processEachEvent.then((res) => {
+		// 	//processStub.restore();
+		// 	console.log("==========="+res);
+		// 	return expect(res.data.result).to.include(resMsg);
+		// });
+		// TODO
 	});
 
-	it('Process events - INVALID_EVENT_TYPE', function () {
-		var event_INVALID_EVENT_TYPE = fs.readFileSync('test/INVALID_EVENT_TYPE.json');
-		var event_INVALID_EVENT_TYPE_64 = new Buffer(event_INVALID_EVENT_TYPE).toString("base64");
 
-		kinesisPayload.Records[0].data = event_INVALID_EVENT_TYPE_64;
-		//console.log(kinesisPayload);
-		//var response = index.handler(event, context, callback);
-		//@TODO
-
-	});
-
-	it('processEachEvent should reject for invalid event name and event type combination', function () {
-		var event_UPDATE_ENVIRONMENT = fs.readFileSync('test/UPDATE_ENVIRONMENT.json');
-		var event_UPDATE_ENVIRONMENT_64 = new Buffer(event_UPDATE_ENVIRONMENT).toString("base64");
-		kinesisPayload.Records[0].data = event_UPDATE_ENVIRONMENT_64;
-
-		var processEvent = index.processItem(event_UPDATE_ENVIRONMENT, configData, tokenResponseObj200.body.data.token);
-
-
-	});
+	
 
 });
+
+
