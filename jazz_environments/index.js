@@ -161,7 +161,7 @@ var genericInputValidation = function (event) {
         if (event.method === "GET" && Object.keys(event.query).length === 0 && Object.keys(event.path).length === 0) {
             reject({
                 result: "inputError",
-                message: "GET API can be called only with following query params: domain and service OR GET API can be called only with environment_logical_id as path param along with the following query parameters: 'domain' and 'service."
+                message: "GET API can be called only with following query params: domain and service OR GET API can be called only with environment_logical_id as path param along with the following query parameters: 'domain' and 'service'."
             });
         }
 
