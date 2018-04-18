@@ -164,13 +164,16 @@ def setRepoPermissions(repo_owner, repo_name, admin_group) {
 }
 
 def addWebhook(repo_name, webhookName,scm_webhook_target_url) {
+    def scm_events_webhook_url = "https://${scm_config.API.PROD['*']}/api/jazz/scm-web-hook"	
     if(scm_config.SCM.TYPE == "gitlab"){
         def proj_id = getGitLabsProjectId(repo_name)
 		def scm_webhook_api = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/hooks?enable_ssl_verification=false&push_events=true&url="
 		sh "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X POST \"${scm_webhook_api}$scm_webhook_target_url\""
-    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        sh "curl --header \"Private-Token: ${scm_config.SCM.PRIVATE_TOKEN}\" -X POST \"${scm_webhook_api}$scm_events_webhook_url\""
+    }else if(scm_config.SCM.TYPE == "bitbucket"){        				
 		def scm_webhook_api = "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${scm_config.REPOSITORY.REPO_BASE_SERVICES}/repos/"
 		sh "curl -X PUT -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${scm_webhook_target_url}\" , \"enabled\": true}\'"
+        sh "curl -X PUT -k -v -u \"${scm_config.SCM.USERNAME}:${scm_config.SCM.PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"notify-events\", \"url\": \"${scm_events_webhook_url}\" , \"enabled\": true}\'"
     }
 }
 
