@@ -49,7 +49,7 @@ node()  {
 	def s3Bucket
 	def config
 
-	def environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId(); 
+	def environment_logical_id = "dev"; //environmentDeploymentMetadata.getEnvironmentLogicalId(); TODO: To be uncommented once the env. metadata is in place
 	if (params.scm_branch == 'master') {
 		environment = 'prod'
 		s3Bucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
