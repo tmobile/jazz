@@ -207,20 +207,41 @@ describe('jazz environment handler tests: ', function () {
 		var resMsg = "success";
 
 		var requestPromoiseStub = sinon.stub(request, "Request", (obj) => {
-			return obj.callback(null, testPayloads.deleteBranchSuccess, testPayloads.deleteBranchSuccess.body);
+			return obj.callback(null, testPayloads.deleteBranchSuccess, JSON.stringify(testPayloads.deleteBranchSuccess.body));
 		});
 		var processEachEvent = index.processEachEvent(kinesisPayload.Records[0], configData, authToken);
 		requestPromoiseStub.restore();
 		// return processEachEvent.then((res) => {
 		// 	//processStub.restore();
-		// 	console.log("==========="+res);
+		// 	console.log("==========="+JSON.stringify(res));
 		// 	return expect(res.data.result).to.include(resMsg);
 		// });
 		// TODO
 	});
 
 
-	
+	it('getEnvironmentLogicalId return a valid logical Id for a branch', function () {
+		var environmentPayload = {
+			"service": "test-env-oss-3",
+			"created_by": "Tester",
+			"domain": "jazztesting",
+			"physical_id": "bugfix/test_02",
+			"status": "deployment_started",
+			"endpoint": "http://testsite.com/stg/index.html"
+		  };
+		var logical_id = "6knr9d33tt-dev";
+
+		var requestPromoiseStub = sinon.stub(request, "Request", (obj) => {
+			return obj.callback(null, testPayloads.getEnvironmentLogicalId, JSON.stringify(testPayloads.getEnvironmentLogicalId.body));
+		});
+
+		var logicalIdPromise = index.getEnvironmentLogicalId(environmentPayload, configData, authToken);
+		return logicalIdPromise.then((res) => {
+			requestPromoiseStub.restore();
+			return expect(res).to.eql(logical_id);
+		});
+
+	});
 
 });
 

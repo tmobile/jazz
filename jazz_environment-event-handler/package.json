@@ -10,7 +10,6 @@
     },
     "dependencies": {
         "string-template": "*",
-        "async": "*",
         "guid": "0.0.12",
         "nanoid": "*",
         "json-query": "*",

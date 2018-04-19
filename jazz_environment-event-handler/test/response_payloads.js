@@ -6,7 +6,8 @@ module.exports = () => {
         "apiResponse": apiResponse,
         "envCreationResponseSuccess": envCreationResponseSuccess,
         "envCreationResponseError": envCreationResponseError,
-        "createBranchSuccess": createBranchSuccess
+        "createBranchSuccess": createBranchSuccess,
+        "getEnvironmentLogicalId": getEnvironmentLogicalId
     };
 };
 
@@ -132,3 +133,31 @@ var deleteBranchSuccess = {
         }
     }
 };
+
+var getEnvironmentLogicalId = {
+    "statusCode": 200,
+    "body": {
+      "data": {
+        "count": 2,
+        "environment": [
+          {
+            "service": "test-env-oss-3",
+            "domain": "jazztesting",
+            "last_updated": "2018-04-18T22:05:50:198",
+            "status": "deployment_started",
+            "friendly_name": "bugfix/test_02",
+            "created_by": "jazz-admin@abc.com",
+            "physical_id": "bugfix/test_02",
+            "endpoint": "http://testsite.com/stg/index.html",
+            "created": "2018-04-18T14:12:11:076",
+            "id": "581486f5-1381-cc8f-04cf-e33939d0f5e3",
+            "logical_id": "6knr9d33tt-dev"
+          }
+        ]
+      },
+      "input": {
+        "service": "test-env-oss-3",
+        "domain": "jazztesting"
+      }
+    }
+  };
