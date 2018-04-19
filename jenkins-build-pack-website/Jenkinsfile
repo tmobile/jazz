@@ -49,11 +49,17 @@ node()  {
 	def s3Bucket
 	def config
 
+	//def environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();  TODO: To be uncommented
+	def environment_logical_id = "sidd19042018-dev"
 	if (params.scm_branch == 'master') {
 		environment = 'prod'
 		s3Bucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
 	} else {
-		environment = 'dev'
+		if(environment_logical_id) {
+			environment = environment_logical_id
+		} else {
+			error "The environment has not been created yet and its missing the logical Id"
+		}		
 		s3Bucket = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 	}
 
@@ -136,19 +142,19 @@ node()  {
 					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 					sh "aws configure set preview.cloudfront true"
 
-					def assetInfo = "S3 Folder - /${s3Bucket}/${service}"
+					def assetInfo = "S3 Folder - /${s3Bucket}/${service}/${environment}"
 					try {
 						try {
 							echo "Checking if the website already exists.."
-							sh "aws s3 ls s3://${s3Bucket}/$service"
+							sh "aws s3 ls s3://${s3Bucket}/${service}/${environment}"
 						} catch (ex) {
 							error ex.getMessage()
 						}
 						events.sendStartedEvent("UPDATE_ASSET", 'update assets starts', context_map)
 						try {
 							echo "website with name $service already exists, syncing new files"
-							sh "aws s3 sync ./app s3://${s3Bucket}/$service  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-							sh "aws s3 sync ./app s3://${s3Bucket}/$service  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+							sh "aws s3 sync ./app s3://${s3Bucket}/${service}/${environment}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+							sh "aws s3 sync ./app s3://${s3Bucket}/${service}/${environment}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
 							
 
 							def url = 'n/a'
@@ -170,7 +176,7 @@ node()  {
 								}
 							} else {
 								loadBucketPolicy(service, s3Bucket, false)
-								url = "https://s3.amazonaws.com/${s3Bucket}/${service}/index.html"
+								url = "https://s3.amazonaws.com/${s3Bucket}/${service}/${environment}/index.html"
 							}
 
 							def endpoints = [:]
@@ -199,8 +205,8 @@ node()  {
 						echo "uploading a new website with name $service"
 						events.sendStartedEvent("CREATE_ASSET", 'create assets starts', context_map)
 						try {
-							sh "aws s3 sync ./app s3://${s3Bucket}/$service  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-							sh "aws s3 sync ./app s3://${s3Bucket}/$service  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+							sh "aws s3 sync ./app s3://${s3Bucket}/$service/${environment}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+							sh "aws s3 sync ./app s3://${s3Bucket}/$service/${environment}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
 
 							def url = 'n/a'
 							if (create_cloudfront_url == true) {
@@ -213,7 +219,7 @@ node()  {
 
 							} else {
 								loadBucketPolicy(service, s3Bucket, false)
-								url = "https://s3.amazonaws.com/${s3Bucket}/${service}/index.html"
+								url = "https://s3.amazonaws.com/${s3Bucket}/${service}/${environment}/index.html"
 							}
 
 							def endpoints = [:]
