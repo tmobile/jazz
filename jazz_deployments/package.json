@@ -1,0 +1,25 @@
+{
+  "name": "deployments",
+  "version": "0.0.1",
+  "description": "CRUD APIs for Deployments",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "*",
+    "deasync": "*",
+	"async": "*",
+	"uuid" : "*",
+	"json-query": "*",
+	"aws-sdk": "*",
+	"moment": "*",
+    "lodash": "*"
+  },
+  "devDependencies": {
+    "mocha": "^v3.0.0",
+    "chai": "^3.5.0"
+  }
+}
