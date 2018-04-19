@@ -203,8 +203,8 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 		def shcmd = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 					$g_url \
-				-d \'${payload}\'", returnStdout:true).trim()	
-				
+				-d \'${payload}\'", returnStdout:true).trim()
+
 		echo "------  Event send.........."
       
 	}
