@@ -10,6 +10,6 @@
     "service_environment_production_logical_id": "prod",
     "service_environment_stage_logical_id": "stg",
     "services_environment_index": "EnvironmentsDomainServiceIndex",
-    "ddb-region": "{conf_region}",
+    "ddb-region": "{conf-region}",
     "admin_users": "{jazz_admin}"
 }
