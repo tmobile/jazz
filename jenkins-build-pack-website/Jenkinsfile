@@ -126,8 +126,7 @@ node()  {
 		def s3ProdBucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
 		def s3DevBucket  = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 
-		if (branch == 'master') {
-			stage('Deployment to ${environment} Env'){
+		stage('Deployment to ${environment} Env'){
 				events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
@@ -241,123 +240,6 @@ node()  {
 					// reset Credentials
 					resetCredentials()
 				}
-			}
-		}
-		else {
-			stage('Deployment to ${environment} Env'){
-				events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
-				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-					echo "AWS Configure ......."
-
-					sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-					sh "aws configure set preview.cloudfront true"
-
-					def assetInfo = "S3 Folder - /${s3Bucket}/${service}"
-					try {
-						try {
-							echo "Checking if the website already exists.."
-							sh "aws s3 ls s3://${s3Bucket}/$service"
-						} catch (ex) {
-							error ex.getMessage()
-						}
-						events.sendStartedEvent("UPDATE_ASSET", 'update assets starts', context_map)
-						try {
-							echo "website with name $service already exists, syncing new files"
-							sh "aws s3 sync ./app s3://${s3Bucket}/$service  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-							sh "aws s3 sync ./app s3://${s3Bucket}/$service  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
-
-							def url = 'n/a'
-							if (create_cloudfront_url == true) {
-								loadBucketPolicy(service, s3Bucket, true)
-
-								def cfDetails = getCloudFrontDetails(environment, service)
-
-								if (cfDetails) {
-									echo "id is ${cfDetails[0]}, domain: ${cfDetails[1]}"
-								}
-
-								updateEnableCompressConfig(environment, service, cfDetails[0])
-
-								invalidateCloudFrontCache(cfDetails[0], service)
-
-								if (cfDetails[1]) {
-									url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-								}
-							} else {
-								loadBucketPolicy(service, s3Bucket, false)
-								url = "https://s3.amazonaws.com/${s3Bucket}/${service}/index.html"
-							}
-
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints[environment] = url
-							context_map['endpoints'] = endpoints
-
-							def svc_status = "You can access your website using following link: ${url}"
-							echo svc_status
-
-							send_status_email('COMPLETED', config, svc_status)
-							events.sendCompletedEvent('UPDATE_ASSET', 'update assets completed', context_map)
-							events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
-						} catch (ex) {
-							send_status_email('FAILED', config, '')
-							events.sendFailureEvent('UPDATE_ASSET', ex.getMessage(), context_map)
-							events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
-						}
-					}
-					catch (error) {
-						echo "uploading a new website with name $service"
-						events.sendStartedEvent("CREATE_ASSET", 'create assets starts', context_map)
-						try {
-							sh "aws s3 sync ./app s3://${s3Bucket}/$service  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-							sh "aws s3 sync ./app s3://${s3Bucket}/$service  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
-							
-							def url = 'n/a'
-							if (create_cloudfront_url == true) {
-								loadDistributionConfig()
-								generateDistributionConfig( environment, config)
-								sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
-
-								loadBucketPolicy(service, s3Bucket, true)
-								url = sh(script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
-
-							} else {
-								loadBucketPolicy(service, s3Bucket, false)
-								url = "https://s3.amazonaws.com/${s3Bucket}/${service}/index.html"
-							}
-
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints[environment] = url
-							context_map['endpoints'] = endpoints
-							def svc_status = "You can access your website using following link: ${url}"
-							echo svc_status
-
-							send_status_email('COMPLETED', config, svc_status)
-							events.sendCompletedEvent('CREATE_ASSET', 'create assets completed', context_map)
-							events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
-						} catch (ex) {
-							send_status_email('FAILED', config, '')
-							events.sendFailureEvent('CREATE_ASSET', ex.getMessage(), context_map)
-							events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
-						}
-					}
-					// reset Credentials
-					resetCredentials()
-				}
-			}
 		}
 	}
 }
