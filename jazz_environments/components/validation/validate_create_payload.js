@@ -45,7 +45,7 @@ module.exports = (tableName, environment_data, indexName, onComplete) => {
         .then(() => validateEnvironmentExists(environment_data, indexName, tableName))
         .then((result) => {
             logger.info("# Validate Create Payload Data:" + JSON.stringify(result));
-            onComplete(null);
+            onComplete(null,result);
         })
         .catch((error) => {
             logger.error("# Validate Create Payload Error:" + JSON.stringify(error));
@@ -175,7 +175,7 @@ function validateServiceExists(environment_data) {
         };
         request(svcGetPayload, function (error, response, body) {
             if (response.statusCode === 200) {
-                var output = JSON.parse(body);
+                var output = body;
                 if (!output.data || !output.data || output.data.available == null) {
                     reject({
                         result: "inputError",
