@@ -194,7 +194,7 @@ def getEnvironmentLogicalIds() {
 				}
 			}
 		}
-        return env_logical_ids
+                return env_logical_ids
 	}
 	catch (e) {
 		echo "error occured while fetching environment id list: " + e.getMessage()
@@ -222,7 +222,7 @@ def getEnvironmentBranchName(logical_id) {
 				}
 			}
 		}
-        return branchName
+                return branchName
 	}
 	catch (e) {
 		echo "error occured while finding branch name of $logical_id: " + e.getMessage()
@@ -302,7 +302,6 @@ def getGitToken() {
 			echo "Git Token: $gitToken"
 			g_git_token = gitToken
 		}
-		echo "GIT Token: $g_git_token"
 		return g_git_token
 	}
 	catch (e) {
@@ -311,7 +310,7 @@ def getGitToken() {
 }
 
 def getRepoCommitterInfo() {
-    def committerId = null
+        def committerId = null
 	if (getRepoCommitHash() != null) {
 		if (config_loader.SCM.TYPE == "gitlab") {
 			def repo_name = getRepoName()
@@ -339,7 +338,6 @@ def getRepoCommitterInfo() {
 			}
 		}
 
-		echo "committerId:$committerId"
 		return committerId
 	}
 
