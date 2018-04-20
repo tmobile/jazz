@@ -105,11 +105,9 @@ function transform(payload) {
 		if(_apiDomain) {
 			data.domain = _apiDomain;
 			data.servicename = apiDomainAndService.substring(_apiDomain.length+1);
-			
 		} else {
 			data.domain = "";
 			data.servicename = apiDomainAndService;
-			
 		}      
         
         data.path = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.path); 
@@ -144,7 +142,6 @@ function transform(payload) {
         
         data = {};
 		data.request_id = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.Lambda_request_id);
-
 		if(data.request_id) {
             data.environment = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_environment,2);
             var domainAndservice;
@@ -155,7 +152,6 @@ function transform(payload) {
 			} else {
 				domainAndservice = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_domain_service, 1);
 			}
-
 			var _domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
 			if (_domain) {
 				data.domain = _domain;
@@ -166,9 +162,7 @@ function transform(payload) {
 			}
 			if(data.servicename) {
 				payload.logEvents.forEach(function(logEvent) {
-
 					data.request_id = utils.getSubInfo(logEvent.message, globalConfig.PATTERNS.guid_regex, 0);
-
 					data.platform_log_group = payload.logGroup;
 					data.platform_log_stream = payload.logStream;
 					data.timestamp = new Date(1 * logEvent.timestamp).toISOString();
@@ -180,27 +174,20 @@ function transform(payload) {
 					}else {
 						data.message = message;
 					}
-
 					data.log_level = utils.getSubInfo(logEvent.message, globalConfig.PATTERNS.log_level, 0); 
 					if(_.isEmpty(data.log_level)) {
 						data.log_level =  globalConfig.DEFAULT_LOG_LEVEL;
 					}
-
 					if(!(data.message.startsWith("REPORT") || data.message.startsWith("START") || data.message.startsWith("END"))) {
 						var timestmp = utils.getSubInfo(data.message, globalConfig.PATTERNS.timestamp_pattern, 0);
 						data.message = data.message.replace(timestmp,  "");
-
 						var guid = utils.getSubInfo(data.message, globalConfig.PATTERNS.guid_regex, 0);
 						data.message = data.message.replace(guid, "");
-
 						data.message = data.message.replace(data.log_level, "");
 					}
-
 					data.message = data.message.trim();
-		
-					
-					
-					var indexName = "applicationlogs";
+
+                    var indexName = "applicationlogs";
 					var action = { "index": {} };
 					action.index._index = indexName;
 					action.index._type = data.environment;
@@ -211,18 +198,14 @@ function transform(payload) {
 						JSON.stringify(data),
 					].join('\n') + '\n';
 				});
-				
 			} else {
 				logger.error("invalid lambda logs event..: "+JSON.stringify(payload));
 			}
-			
 			logger.debug("bulkRequestBody-/aws/lambda/..:"+bulkRequestBody);
 			return bulkRequestBody;	
-			
 		}else 
 			return null;
 	}
-
 	return null;
 }
 
@@ -234,17 +217,14 @@ function buildSource(message, extractedFields) {
 			logger.debug("key from buildSource..:"+JSON.stringify(key));
             if (extractedFields.hasOwnProperty(key) && extractedFields[key]) {
                 var value = extractedFields[key];
-
                 if (utils.isNumeric(value)) {
                     source[key] = 1 * value;
                     continue;
                 }
-
                 var jsonSubString = utils.extractJson(value);
                 if (jsonSubString !== null) {
                     source['$' + key] = JSON.parse(jsonSubString);
                 }
-
                 source[key] = value;
             }
         }
@@ -255,13 +235,11 @@ function buildSource(message, extractedFields) {
     if (jsonMessage !== null) {
         return JSON.parse(jsonMessage);
     }
-
     return {};
 }
 
 function post(config, body, callback) {
     var requestParams = buildRequest(config.ES_ENDPOINT, body);
-
     var request = https.request(requestParams, function(response) {
         var responseBody = '';
         response.on('data', function(chunk) {
@@ -277,7 +255,6 @@ function post(config, body, callback) {
                 failedItems = info.items.filter(function(x) {
                     return x.index.status >= 300;
                 });
-
                 success = {
                     "attemptedItems": info.items.length,
                     "successfulItems": info.items.length - failedItems.length,
@@ -289,7 +266,6 @@ function post(config, body, callback) {
                 "statusCode": response.statusCode,
                 "responseBody": responseBody
             } : null;
-
             callback(error, success, response.statusCode, failedItems);
         });
     }).on('error', function(e) {
