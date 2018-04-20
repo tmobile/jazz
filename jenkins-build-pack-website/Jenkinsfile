@@ -15,6 +15,7 @@ import groovy.transform.Field
 @Field def events
 @Field def serviceMetadataLoader
 @Field def utilModule
+@Field def environmentDeploymentMetadata
 
 @Field def auth_token = ''
 @Field def g_base_url = ''
@@ -90,6 +91,8 @@ node()  {
 
 	if (!events) { error "Can't load events module"	} //Fail here
 	events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, environment, g_base_url + "/jazz/events")
+
+	environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments",auth_token)
 
 	def create_cloudfront_url
 	context_map = [created_by : config['created_by']]
@@ -662,6 +665,9 @@ def loadBuildModules(buildModuleUrl){
 		echo "Service metadata loader module loaded successfully."
     
 		utilModule = load "utility-loader.groovy"
+
+		environmentDeploymentMetadata = load "environment-deployment-metadata-loader"		
+		environmentDeploymentMetadata.setUtil(utilModule)
 
 	}
 }
