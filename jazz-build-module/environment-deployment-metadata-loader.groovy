@@ -30,7 +30,7 @@ echo "Environment and deployment metadata module loaded successfully"
 /**
  * Initialize the module
  */
-def initialize(service_config, config_loader, scm_module, branch, buildUrl, buildId, baseUrl) {
+def initialize(service_config, config_loader, scm_module, branch, buildUrl, buildId, baseUrl,token) {
 	setServiceConfig(service_config)
 	setServiceConfig(scm_module)
 	setConfigLoader(config_loader)
@@ -38,6 +38,7 @@ def initialize(service_config, config_loader, scm_module, branch, buildUrl, buil
 	setBuildId(buildId)
 	setBuildUrl(buildUrl)
 	setBaseUrl(baseUrl)
+	setAuthToken(token)
 }
 
 
@@ -77,9 +78,8 @@ def getRepoURL() {
 
 def getEnvironmentLogicalId() {
 	if (g_environment_logical_id == null) {
-		def token = g_login_token
 		def API_ENVIRONMENT_QUERY_URL = "${g_base_url}?service=${service_config['service']}&domain=${service_config['domain']}"
-		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$token -X GET \"${g_base_url}?service=${service_config['service']}&domain=${service_config['domain']}\" ", returnStdout: true).trim()
+		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_base_url}?service=${service_config['service']}&domain=${service_config['domain']}\" ", returnStdout: true).trim()
 		def environmentOutput
 		def environment_logical_id
 		if (getEnvironments != null) {
@@ -151,9 +151,8 @@ def checkIfEnvironmentAvailable(environment_logical_id) {
 	def isAvailable = false
 	try {
 		if (environment_logical_id) {
-			def token = g_login_token
 			def API_ENVIRONMENT_QUERY_URL = "${g_base_url}?service=${service_config['service']}&domain=${service_config['domain']}"
-			def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$token -X GET \"${g_base_url}?service=$s{ervice_config['service']}&domain=${service_config['domain']}\" ", returnStdout: true).trim()
+			def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_base_url}?service=$s{ervice_config['service']}&domain=${service_config['domain']}\" ", returnStdout: true).trim()
 			def environmentOutput
 			if (getEnvironments) {
 				environmentOutput = parseJson(getEnvironments)
@@ -280,32 +279,9 @@ def generateDeleteDeploymentMap() {
 	return serviceCtxMap;
 }
 
-def setCredentials(catalog_sv_account) {	
-	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: catalog_sv_account, passwordVariable: 'Password', usernameVariable: 'Username']]) {
-		setCredentials(Username, Password)
-	}
-}
-
 def setGitCredentials(repo_credential_id) {	
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		setGitCredentials(UNAME, PWD)
-	}
-}
-
-/**
-* For setting token to access SCM APIs.
-*/
-def getGitToken() {
-	try {
-		if (g_git_token == null) {
-			def gitToken = "Basic " + config_loader.SCM.USERNAME.bytes.encodeBase64().toString() + ":" + config_loader.SCM.PASSWORD.bytes.encodeBase64().toString()
-			echo "Git Token: $gitToken"
-			g_git_token = gitToken
-		}
-		return g_git_token
-	}
-	catch (e) {
-		error "error occured while generating Git token: " + e.getMessage()
 	}
 }
 
@@ -450,7 +426,6 @@ def getRepoCommitterInfo() {
 	 */
 	def setUtil(utilModule) {
 		Util = utilModule
-
 	}
 
 	/**
