@@ -14,30 +14,6 @@
 // limitations under the License.
 // =========================================================================
 
-
-/*
-USAGE
-
-    logger = require('./components/logger.js')
-
-    logger.init(event, context); // by default logging level is info
-
-    logger.warn('The following waring message will be logged');
-    logger.verbose('The following waring message will not be logged')
-
-
-    // Sample logging messages.
-    logger.error('Runtime errors or unexpected conditions.');
-    logger.warn('Runtime situations that are undesirable or unexpected, but not necessarily "wrong".');
-    logger.info('Interesting runtime events (Eg. connection established, data fetched etc).');
-    logger.verbose('Generally speaking, most lines logged by your application should be written as verbose.');
-    logger.debug('Detailed information on the flow through the system.);
-
-    // Alternate usage
-    logger.log('error', 'message');
-    logger.log('info', 'message');
-
-*/
 module.exports = function() {
     var logLevels = {
         error: 4,
@@ -60,17 +36,6 @@ module.exports = function() {
     // To add request specific details, which will be prepended in all the logs for ease of debugging in CloudWatch logs
     var setRequestDetails = function(someContextSpecificId) {
         return;
-
-        // Timestamp and requestID are prepended in cloudwatch log by default; If any other details are required it can be done here.
-
-        /*
-        if (someContextSpecificId != undefined && someContextSpecificId != '') {
-            config.someContextSpecificId = someContextSpecificId;
-            config.requestDetails = 'someContextSpecificId : ' + someContextSpecificId + ' =>\t'
-        } else{
-            config.requestDetails = ''
-        };
-        */
     };
 
     // set current logLevel; Only logs which are above the curLogLevel will be logged;
