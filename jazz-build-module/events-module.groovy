@@ -49,7 +49,9 @@ echo "Events module loaded successfully"
 	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
 	'CREATE_ASSET':'CREATE_ASSET',
 	'UPDATE_ASSET':'UPDATE_ASSET',
-	'CALL_DELETE_WORKFLOW': 'CALL_DELETE_WORKFLOW'
+	'CALL_DELETE_WORKFLOW': 'CALL_DELETE_WORKFLOW',
+	'CREATE_DEPLOYMENT': 'CREATE_DEPLOYMENT',
+	'UPDATE_DEPLOYMENT': 'UPDATE_DEPLOYMENT'
 ]
 
 /**
@@ -72,6 +74,17 @@ def initialize(configLoader, serviceConfig, eventType, branch, env, url){
 }
 
 /**
+ * Send a started event.
+ * @param event_name
+ * @param message
+ * @return      
+ */
+def sendStartedEvent(event_name, message = null, moreCxtMap = null) {
+	def environment = g_environment
+	sendStartedEvent(event_name, message, moreCxtMap, environment)
+}
+
+/**
  * Send a started event specific to an environment.
  * @param event_name
  * @param message
@@ -79,7 +92,7 @@ def initialize(configLoader, serviceConfig, eventType, branch, env, url){
  * @param message
  * @return      
  */
-def sendStartedEvent(l_event_name, l_message, l_moreCxtMap) {
+ def sendStartedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
 	if (!l_moreCxtMap) {
@@ -94,14 +107,23 @@ def sendStartedEvent(l_event_name, l_message, l_moreCxtMap) {
 }
 
 /**
+ * Send a completed event.
+ * @return      
+ */
+def sendCompletedEvent(event_name, message = null, moreCxtMap = null) {
+	def environment = g_environment
+	sendCompletedEvent(event_name, message, moreCxtMap, environment)
+} 
+
+/**
  * Send a completed event specific to an environment .
  * @param event_name
  * @param message
  * @param moreCxt - more contexual info if needed as a map (key, value pair)
  * @param message
  * @return      
- */
-def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap) {
+ */ 
+def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
 	if (!l_moreCxtMap) {
@@ -117,6 +139,15 @@ def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap) {
 }
 
 /**
+ * Send a failure event.
+ * @return      
+ */
+def sendFailureEvent(event_name, message = null, moreCxtMap = null) {
+	def environment = g_environment
+	sendFailureEvent(event_name, message, moreCxtMap, environment)
+} 
+
+/**
  * Send a failure event specific to an environment .
  * @param event_name
  * @param message
@@ -124,7 +155,7 @@ def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap) {
  * @param message
  * @return      
  */
-def sendFailureEvent(l_event_name, l_message, l_moreCxtMap) {
+def sendFailureEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
 	if (!l_moreCxtMap) {
