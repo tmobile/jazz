@@ -19,7 +19,6 @@ echo "Environment and deployment metadata module loaded successfully"
 @Field def g_service_branch 
 @Field def g_git_commit_hash
 @Field def g_git_repo_url
-@Field def g_git_token
 @Field def g_build_url
 @Field def g_build_id
 @Field def g_environment_logical_id
@@ -30,7 +29,7 @@ echo "Environment and deployment metadata module loaded successfully"
 /**
  * Initialize the module
  */
-def initialize(service_config, config_loader, scm_module, branch, buildUrl, buildId, baseUrl) {
+def initialize(service_config, config_loader, scm_module, branch, buildUrl, buildId, baseUrl, token) {
 	setServiceConfig(service_config)
 	setServiceConfig(scm_module)
 	setConfigLoader(config_loader)
@@ -38,6 +37,7 @@ def initialize(service_config, config_loader, scm_module, branch, buildUrl, buil
 	setBuildId(buildId)
 	setBuildUrl(buildUrl)
 	setBaseUrl(baseUrl)
+	setAuthToken(token)
 }
 
 
@@ -76,10 +76,9 @@ def getRepoURL() {
 }
 
 def getEnvironmentLogicalId() {
-	if (g_environment_logical_id == null) {
-		def token = g_login_token
+	if (g_environment_logical_id == null && service_config['domain'] != "jazz") {
 		def API_ENVIRONMENT_QUERY_URL = "${g_base_url}?service=${service_config['service']}&domain=${service_config['domain']}"
-		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$token -X GET \"${g_base_url}?service=${service_config['service']}&domain=${service_config['domain']}\" ", returnStdout: true).trim()
+		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_base_url}?service=${service_config['service']}&domain=${service_config['domain']}\" ", returnStdout: true).trim()
 		def environmentOutput
 		def environment_logical_id
 		if (getEnvironments != null) {
@@ -108,7 +107,7 @@ def getEnvironmentLogicalId() {
  */
 def createPromotedEnvironment(environment_logical_id, created_by) {
 	def isAvailable = checkIfEnvironmentAvailable(environment_logical_id)
-	if (!isAvailable) { // create a new environment
+	if (!isAvailable && service_config['domain'] != "jazz") { // create a new environment
 		try {
 			def params = [
 				"service": service_config['service'],
@@ -150,10 +149,9 @@ def createPromotedEnvironment(environment_logical_id, created_by) {
 def checkIfEnvironmentAvailable(environment_logical_id) {	
 	def isAvailable = false
 	try {
-		if (environment_logical_id) {
-			def token = g_login_token
+		if (environment_logical_id && service_config['domain'] != "jazz") {
 			def API_ENVIRONMENT_QUERY_URL = "${g_base_url}?service=${service_config['service']}&domain=${service_config['domain']}"
-			def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$token -X GET \"${g_base_url}?service=$s{ervice_config['service']}&domain=${service_config['domain']}\" ", returnStdout: true).trim()
+			def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_base_url}?service=$s{ervice_config['service']}&domain=${service_config['domain']}\" ", returnStdout: true).trim()
 			def environmentOutput
 			if (getEnvironments) {
 				environmentOutput = parseJson(getEnvironments)
@@ -177,24 +175,26 @@ def checkIfEnvironmentAvailable(environment_logical_id) {
 def getEnvironmentLogicalIds() {
 	def env_logical_ids = []
 	try {
-		def environment_data = sh(script: "curl GET  \
+		if (service_config['domain'] != "jazz") {
+			def environment_data = sh(script: "curl GET  \
 			-H \"Content-Type: application/json\" \
 			-H \"Authorization: $g_login_token\" \
 			\"${g_base_url}?domain=${service_config['domain']}&service=${service_config['service']}\"", returnStdout: true)
-		if (environment_data) {
-			def environment_dataObj = parseJson(environment_data)
-			if (environment_dataObj && environment_dataObj.data && environment_dataObj.data.environment) {
-				def env_collection = environment_dataObj.data.environment
-				if (env_collection.size() > 0) {
-					for (_env in env_collection) {
-						if (_env.status != 'archived') {
-							env_logical_ids.push(_env.logical_id)
+			if (environment_data) {
+				def environment_dataObj = parseJson(environment_data)
+				if (environment_dataObj && environment_dataObj.data && environment_dataObj.data.environment) {
+					def env_collection = environment_dataObj.data.environment
+					if (env_collection.size() > 0) {
+						for (_env in env_collection) {
+							if (_env.status != 'archived') {
+								env_logical_ids.push(_env.logical_id)
+							}
 						}
 					}
 				}
 			}
 		}
-                return env_logical_ids
+		return env_logical_ids
 	}
 	catch (e) {
 		echo "error occured while fetching environment id list: " + e.getMessage()
@@ -205,24 +205,26 @@ def getEnvironmentLogicalIds() {
 def getEnvironmentBranchName(logical_id) {
 	def branchName
 	try {
-		def environment_data = sh(script: "curl GET  \
+		if (service_config['domain'] != "jazz") {
+			def environment_data = sh(script: "curl GET  \
 			-H \"Content-Type: application/json\" \
 			-H \"Authorization: $g_login_token\" \
 			\"${g_base_url}?domain=${service_config['domain']}&service=${service_config['service']}\"", returnStdout: true)
-		if (environment_data) {
-			def environment_dataObj = parseJson(environment_data)
-			if (environment_dataObj && environment_dataObj.data && environment_dataObj.data.environment) {
-				def env_collection = environment_dataObj.data.environment
-				if (env_collection.size() > 0) {
-					for (_env in env_collection) {
-						if (_env.logical_id == logical_id) {
-							branchName = _env.physical_id
+			if (environment_data) {
+				def environment_dataObj = parseJson(environment_data)
+				if (environment_dataObj && environment_dataObj.data && environment_dataObj.data.environment) {
+					def env_collection = environment_dataObj.data.environment
+					if (env_collection.size() > 0) {
+						for (_env in env_collection) {
+							if (_env.logical_id == logical_id) {
+								branchName = _env.physical_id
+							}
 						}
 					}
 				}
 			}
 		}
-                return branchName
+		return branchName
 	}
 	catch (e) {
 		echo "error occured while finding branch name of $logical_id: " + e.getMessage()
@@ -280,37 +282,8 @@ def generateDeleteDeploymentMap() {
 	return serviceCtxMap;
 }
 
-def setCredentials(catalog_sv_account) {	
-	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: catalog_sv_account, passwordVariable: 'Password', usernameVariable: 'Username']]) {
-		setCredentials(Username, Password)
-	}
-}
-
-def setGitCredentials(repo_credential_id) {	
-	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-		setGitCredentials(UNAME, PWD)
-	}
-}
-
-/**
-* For setting token to access SCM APIs.
-*/
-def getGitToken() {
-	try {
-		if (g_git_token == null) {
-			def gitToken = "Basic " + config_loader.SCM.USERNAME.bytes.encodeBase64().toString() + ":" + config_loader.SCM.PASSWORD.bytes.encodeBase64().toString()
-			echo "Git Token: $gitToken"
-			g_git_token = gitToken
-		}
-		return g_git_token
-	}
-	catch (e) {
-		error "error occured while generating Git token: " + e.getMessage()
-	}
-}
-
 def getRepoCommitterInfo() {
-        def committerId = null
+	def committerId = null
 	if (getRepoCommitHash() != null) {
 		if (config_loader.SCM.TYPE == "gitlab") {
 			def repo_name = getRepoName()
@@ -450,7 +423,6 @@ def getRepoCommitterInfo() {
 	 */
 	def setUtil(utilModule) {
 		Util = utilModule
-
 	}
 
 	/**

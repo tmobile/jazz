@@ -92,7 +92,7 @@ def sendStartedEvent(event_name, message = null, moreCxtMap = null) {
  * @param message
  * @return      
  */
- def sendStartedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
+def sendStartedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
 	if (!l_moreCxtMap) {
@@ -113,7 +113,7 @@ def sendStartedEvent(event_name, message = null, moreCxtMap = null) {
 def sendCompletedEvent(event_name, message = null, moreCxtMap = null) {
 	def environment = g_environment
 	sendCompletedEvent(event_name, message, moreCxtMap, environment)
-} 
+}
 
 /**
  * Send a completed event specific to an environment .
@@ -122,7 +122,7 @@ def sendCompletedEvent(event_name, message = null, moreCxtMap = null) {
  * @param moreCxt - more contexual info if needed as a map (key, value pair)
  * @param message
  * @return      
- */ 
+ */
 def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
@@ -145,7 +145,7 @@ def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 def sendFailureEvent(event_name, message = null, moreCxtMap = null) {
 	def environment = g_environment
 	sendFailureEvent(event_name, message, moreCxtMap, environment)
-} 
+}
 
 /**
  * Send a failure event specific to an environment .
@@ -230,14 +230,14 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 	echo "$event_json"
 	
 	try {
-
-		def shcmd = sh(script: "curl --silent -X POST -k -v \
+		if (service_metadata['domain'] != "jazz") {
+			def shcmd = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 					$g_url \
-				-d \'${payload}\'", returnStdout:true).trim()	
-				
-		echo "------  Event send.........."
-      
+				-d \'${payload}\'", returnStdout:true).trim()
+
+			echo "------  Event send.........."
+		}
 	}
 	catch (e) {
 		echo "error occured when recording event: " + e.getMessage()
