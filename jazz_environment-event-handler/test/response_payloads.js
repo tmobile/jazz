@@ -7,7 +7,8 @@ module.exports = () => {
         "envCreationResponseSuccess": envCreationResponseSuccess,
         "envCreationResponseError": envCreationResponseError,
         "createBranchSuccess": createBranchSuccess,
-        "getEnvironmentLogicalId": getEnvironmentLogicalId
+        "getEnvironmentLogicalId": getEnvironmentLogicalId,
+        "environmentPayload": environmentPayload
     };
 };
 
@@ -161,3 +162,12 @@ var getEnvironmentLogicalId = {
       }
     }
   };
+
+  var environmentPayload = {
+    "service": "test-env-oss-3",
+    "created_by": "Tester",
+    "domain": "jazztesting",
+    "physical_id": "bugfix/test_02",
+    "status": "deployment_started",
+    "endpoint": "http://testsite.com/stg/index.html"
+};

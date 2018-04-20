@@ -221,14 +221,7 @@ describe('jazz environment handler tests: ', function () {
 
 
 	it('getEnvironmentLogicalId return a valid logical Id for a branch', function () {
-		var environmentPayload = {
-			"service": "test-env-oss-3",
-			"created_by": "Tester",
-			"domain": "jazztesting",
-			"physical_id": "bugfix/test_02",
-			"status": "deployment_started",
-			"endpoint": "http://testsite.com/stg/index.html"
-		  };
+		var environmentPayload = testPayloads.environmentPayload
 		var logical_id = "6knr9d33tt-dev";
 
 		var requestPromoiseStub = sinon.stub(request, "Request", (obj) => {
