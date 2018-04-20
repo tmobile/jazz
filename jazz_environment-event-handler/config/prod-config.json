@@ -1,10 +1,10 @@
 {
     "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
     "ENVIRONMENT_API_RESOURCE": "/prod/jazz/environments",
-	"DELETE_ENVIRONMENT_API_RESOURCE": "/prod/jazz/delete-serverless-service",
+    "DELETE_ENVIRONMENT_API_RESOURCE": "/prod/jazz/delete-serverless-service",
     "TOKEN_URL": "/prod/jazz/login",
     "SERVICE_USER": "{jazz_admin}",
-	"TOKEN_CREDS": "{jazz_admin_creds}",
+    "TOKEN_CREDS": "{jazz_admin_creds}",
     "EVENTS": {
         "EVENT_TYPE": ["SERVICE_DEPLOYMENT", "SERVICE_ONBOARDING", "SERVICE_DELETION"],
         "EVENT_NAME": ["COMMIT_TEMPLATE", "CREATE_BRANCH", "UPDATE_ENVIRONMENT", "DELETE_BRANCH", "DELETE_ENVIRONMENT"],
