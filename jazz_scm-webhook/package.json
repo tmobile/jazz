@@ -1,0 +1,22 @@
+{
+  "name": "test_webhook-api",
+  "version": "0.0.1",
+  "description": "API to record SCM activity",
+  "main": "index.js",
+  "private": true,
+    "author": {
+        "name": "Jazz"
+    },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "*",
+    "deasync": "*",
+    "moment":"*"
+  },
+  "devDependencies": {
+    "mocha": "^v3.0.0",
+    "chai": "^3.5.0"
+  }
+}

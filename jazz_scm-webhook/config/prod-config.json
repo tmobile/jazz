@@ -1,0 +1,37 @@
+{
+  "EVENTS_URL": "/prod/jazz/events",
+  "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "TOKEN_URL": "/prod/jazz/login",
+  "EVENT_STATUS": {
+    "completed": "COMPLETED"
+  },
+  "EVENT_HANDLER": {
+    "bitbucket": "BITBUCKET"
+  },
+  "EVENT_TYPE": {
+    "onboarding": "SERVICE_ONBOARDING",
+    "deployment": "SERVICE_DEPLOYMENT",
+    "deletion": "SERVICE_DELETION"
+  },
+  "EVENT_NAME": [
+    "CREATE_BRANCH",
+    "CREATE_TAG",
+    "COMMIT_TEMPLATE",
+    "COMMIT_CODE",
+    "DELETE_BRANCH",
+    "RAISE_PR",
+    "MERGE_PR",
+    "DECLINE_PR",
+    "UPDATE_PR",
+    "COMMENT_PR",
+    "DELETE_TAG"
+  ],
+  "SERVICE_USER": "{jazz_admin}",
+  "TOKEN_CREDS": "{jazz_admin_creds}",
+  "SCM_MAPPINGS": {
+    "identifier": {
+      "bitbucket": "X-Bitbucket-Type",
+      "gitlab": "X-Gitlab-Event"
+    }
+  }
+}
