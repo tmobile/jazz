@@ -76,7 +76,6 @@ module.exports.handler = (event, context, cb) => {
             .catch(function (err) {
                 logger.error('Error while creating a service : ' + JSON.stringify(err));
                 if(err.jenkins_api_failure) {
-                        logger.error('Jenkins API Failed!!!');
                         serviceDataObject.body = {
                             "STATUS" : "creation_failed"
                         };
