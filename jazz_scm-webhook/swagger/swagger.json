@@ -526,7 +526,7 @@
             "COMMENT_PR"
           ],
           "type": "string",
-          "description": "Describes the action that is taking place in the Bitbucket."
+          "description": "Describes the action that is taking place in the SCM."
         },
         "service_name": {
           "type": "string",

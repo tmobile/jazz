@@ -1,11 +1,25 @@
+// =========================================================================
+// Copyright � 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
 /**
 API to record SCM activity
-@author: Aanand12
+@author:
 @version: 1.0
  **/
 
-
-//123
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
@@ -21,9 +35,9 @@ module.exports.handler = (event, context, cb) => {
 	logger.init(event, context);
 	logger.info("Webhook-events:" + JSON.stringify(event));
 	
-	if(event === undefined || event.body === undefined ){
-		logger.error("Events is empty! so unable to find the scm activity!");
-		return cb(JSON.stringify(errorHandler.throwInputValidationError("Unable to find the bitbucket activity!")));
+	if( !event|| !event.body){
+		logger.error("Events is empty! So unable to find the SCM activity!");
+		return cb(JSON.stringify(errorHandler.throwInputValidationError("Unable to find the SCM activity!")));
 	} 
 	var scmMap = config.scm_mappings;
 	var scmSource, scmIdentifier = scmMap.identifier;
@@ -71,14 +85,12 @@ module.exports.handler = (event, context, cb) => {
 		for (var idx in possibleEventName ){
 			if ((servContext.event_name).toLowerCase() == possibleEventName[idx].toLowerCase()){
 				isvalidEventName = true;
+				break;
 			} 
 		}
-		
-		logger.info("bodyObj::" +JSON.stringify(bodyObj));
-		logger.info("config.events_url::" + config.events_url);
 
 		if(isvalidEventName){
-			//Invoking platform events api to record bit bucket activity.	
+			//Invoking platform events api to record git activity.	
 			var options = {
 				url: config.events_url,
 				method: 'POST',
@@ -92,16 +104,14 @@ module.exports.handler = (event, context, cb) => {
 			};
 			request(options, function (error, response, body) {
 				if (error) {
-					logger.error('Error invoking service: ' + error);
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured,"+ error)));
+					logger.error('Error invoking service: ' + JSON.stringify(error));
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured,"+ JSON.stringify(error))));
 				} else {
 					if(response.statusCode === 200){
 						var output = {
-							message: 'successfully recorded bitbucket activity to jazz_events.',
+							message: 'successfully recorded git activity to jazz_events.',
 							event_id : body.data.event_id
 						};
-						logger.info("OutPut: " +JSON.stringify(output));
-						logger.info("Input: " +JSON.stringify(body.input));
 						cb(null, responseObj(output, body.input));
 					} else {
 						logger.error("StatusCode :"+ response.statusCode);
@@ -132,7 +142,7 @@ module.exports.handler = (event, context, cb) => {
 		
 		switch (value) {
 			case 'repo:push': 					
-				if(changes.created && !changes.closed && changes.old === null && changes.new !== null) {
+				if(changes && changes.created && !changes.closed && !changes.old && changes.new) {
 					var type = changes.new.type;
 					result.branch = changes.new.name;
 					if(type === 'tag'){
@@ -143,7 +153,7 @@ module.exports.handler = (event, context, cb) => {
 					} else {
 						result.event_name = 'CREATE_BRANCH';
 					}					
-				} else if(!changes.created && changes.closed){
+				} else if(changes && !changes.created && changes.closed){
 					var objtype = changes.old.type;
 					result.branch = changes.old.name;
 					if(objtype === 'tag'){
@@ -152,7 +162,7 @@ module.exports.handler = (event, context, cb) => {
 						result.event_type = config.event_type.deletion;
 						result.event_name = 'DELETE_BRANCH';
 					} 		
-				} else if(!changes.created && !changes.closed && changes.old !== null){
+				} else if(changes && !changes.created && !changes.closed && changes.old){
 					result.branch = changes.new.name;
 					result.hash = changes.new.target.hash;
 					result.event_name = 'COMMIT_CODE';
