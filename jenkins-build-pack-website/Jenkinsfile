@@ -49,7 +49,7 @@ node()  {
 	def s3Bucket
 	def config
 
-	def environment_logical_id = "dev"; //environmentDeploymentMetadata.getEnvironmentLogicalId(); TODO: To be uncommented once the env. metadata is in place
+	def environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId(); 
 	if (params.scm_branch == 'master') {
 		environment = 'prod'
 		s3Bucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
@@ -64,7 +64,7 @@ node()  {
 
 	auth_token = setCredentials()
 
-    stage('Checkout code base') {
+        stage('Checkout code base') {
 
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
