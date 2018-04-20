@@ -141,6 +141,7 @@ var checkForInterestedEvents = function (encodedPayload, sequenceNumber, config)
 					"payload": kinesisPayload.Item
 				});
 			} else {
+				logger.error("Not an interested event or event type");
 				return resolve({
 					"interested_event": false,
 					"payload": kinesisPayload.Item
@@ -164,19 +165,19 @@ var processItem = function (eventPayload, configData, authToken) {
 		environmentApiPayload.physical_id = svcContext.branch;
 
 		if (eventPayload.EVENT_NAME.S === configData.EVENTS.INITIAL_COMMIT) {
-			process_INITIAL_COMMIT(environmentApiPayload, configData, authToken)
+			processEventInitialCommit(environmentApiPayload, configData, authToken)
 				.then(result => { return resolve(result) })
 				.catch(err => { 
-					logger.error("process_INITIAL_COMMIT Failed" + err);
+					logger.error("processEventInitialCommit Failed" + err);
 					return reject(err) 
 				})
 
 		} else if (eventPayload.EVENT_NAME.S === configData.EVENTS.CREATE_BRANCH) {
 			environmentApiPayload.friendly_name = svcContext.branch;
-			process_CREATE_BRANCH(environmentApiPayload, configData, authToken)
+			processEventCreateBranch(environmentApiPayload, configData, authToken)
 				.then(result => { return resolve(result) })
 				.catch(err => { 
-					logger.error("process_CREATE_BRANCH Failed" + err);
+					logger.error("processEventCreateBranch Failed" + err);
 					return reject(err) 
 				})
 
@@ -189,7 +190,7 @@ var processItem = function (eventPayload, configData, authToken) {
 				getEnvironmentLogicalId(environmentApiPayload, configData, authToken)
 					.then((logical_id) => {
 						environmentApiPayload.logical_id = logical_id;
-						process_UPDATE_ENVIRONMENT(environmentApiPayload, configData, authToken)
+						processEventUpdateEnvironment(environmentApiPayload, configData, authToken)
 							.then(result => { return resolve(result) })
 							.catch(err => { 
 								logger.error("getEnvironmentLogicalId Failed" + err);
@@ -199,10 +200,10 @@ var processItem = function (eventPayload, configData, authToken) {
 
 			} else {
 				environmentApiPayload.logical_id = svcContext.logical_id;
-				process_UPDATE_ENVIRONMENT(environmentApiPayload, configData, authToken)
+				processEventUpdateEnvironment(environmentApiPayload, configData, authToken)
 					.then(result => { return resolve(result) })
 					.catch(err => { 
-						logger.error("process_UPDATE_ENVIRONMENT Failed" + err);
+						logger.error("processEventUpdateEnvironment Failed" + err);
 						return reject(err) 
 					})
 			}
@@ -221,20 +222,20 @@ var processItem = function (eventPayload, configData, authToken) {
 			}
 
 			// Update with DELETE status
-			process_UPDATE_ENVIRONMENT(environmentApiPayload, configData, authToken)
+			processEventUpdateEnvironment(environmentApiPayload, configData, authToken)
 				.then(result => { return resolve(result) })
 				.catch(err => {
-					logger.error("process_UPDATE_ENVIRONMENT Failed" + err);
+					logger.error("processEventUpdateEnvironment Failed" + err);
 					return reject(err) 
 				})
 
 		} else if (eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_BRANCH) {
 			environmentApiPayload.physical_id = svcContext.branch;
 
-			process_DELETE_BRANCH(environmentApiPayload, configData, authToken)
+			processEventDeleteBranch(environmentApiPayload, configData, authToken)
 				.then(result => { return resolve(result) })
 				.catch(err => { 
-					logger.error("process_DELETE_BRANCH Failed" + err);
+					logger.error("processEventDeleteBranch Failed" + err);
 					return reject(err) 
 				})
 		}
@@ -242,7 +243,7 @@ var processItem = function (eventPayload, configData, authToken) {
 	});
 }
 
-var process_INITIAL_COMMIT = function (environmentPayload, configData, authToken) {
+var processEventInitialCommit = function (environmentPayload, configData, authToken) {
 	var processStgEnv = new Promise((resolve, reject) => {
 		environmentPayload.logical_id = "stg";
 		environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
@@ -317,7 +318,7 @@ var process_INITIAL_COMMIT = function (environmentPayload, configData, authToken
 
 }
 
-var process_CREATE_BRANCH = function (environmentPayload, configData, authToken) {
+var processEventCreateBranch = function (environmentPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 
 		var nano_id = nanoid(configData.RANDOM_CHARACTERS, configData.RANDOM_ID_CHARACTER_COUNT);
@@ -349,7 +350,7 @@ var process_CREATE_BRANCH = function (environmentPayload, configData, authToken)
 
 }
 
-var process_DELETE_BRANCH = function (environmentPayload, configData, authToken) {
+var processEventDeleteBranch = function (environmentPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 
 		getEnvironmentLogicalId(environmentPayload, configData, authToken)
@@ -392,7 +393,7 @@ var process_DELETE_BRANCH = function (environmentPayload, configData, authToken)
 
 }
 
-var process_UPDATE_ENVIRONMENT = function (environmentPayload, configData, authToken) {
+var processEventUpdateEnvironment = function (environmentPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 
 		var updatePayload = {};
@@ -513,7 +514,9 @@ module.exports = {
 	handleFailedEvents: handleFailedEvents,
 	getEventProcessStatus: getEventProcessStatus,
 	handler: handler,
-	process_DELETE_BRANCH:process_DELETE_BRANCH,
-	process_UPDATE_ENVIRONMENT: process_UPDATE_ENVIRONMENT,
+	processEventDeleteBranch:processEventDeleteBranch,
+	processEventUpdateEnvironment: processEventUpdateEnvironment,
+	processEventCreateBranch: processEventCreateBranch,
+	processEventInitialCommit: processEventInitialCommit,
 	getEnvironmentLogicalId: getEnvironmentLogicalId
 }

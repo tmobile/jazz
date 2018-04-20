@@ -151,14 +151,14 @@ describe('jazz environment handler tests: ', function () {
 		});
 	});
 
-	it('process_UPDATE_ENVIRONMENT event', function () {
+	it('processEventUpdateEnvironment event', function () {
 		var resMsg = "Successfully Updated environment for service";
 		var environmentPayload = {};
 		var requestPromoiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
 		});
 
-		var processEachEvent = index.process_UPDATE_ENVIRONMENT(environmentPayload, configData, authToken);
+		var processEachEvent = index.processEventUpdateEnvironment(environmentPayload, configData, authToken);
 		return processEachEvent.then((res) => {
 			requestPromoiseStub.restore();
 			return expect(res.data.message).to.include(resMsg);;
