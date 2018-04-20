@@ -33,7 +33,7 @@ node {
     def build_job = config_loader.LAMBDA.LAMBDA_BUILD_URI
     def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
 
-      sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=services-handler&domain=jazz&scm_branch=${env.BRANCH_NAME}\""
+      sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=environment-event-handler&domain=jazz&scm_branch=${env.BRANCH_NAME}\""
   }
 }
 

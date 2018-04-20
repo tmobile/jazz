@@ -26,7 +26,6 @@ const rp = require('request-promise-native');
 const AWS = require("aws-sdk");
 const _ = require("lodash");
 const request = require("request");
-const async = require("async");
 const nanoid = require("nanoid/generate");
 const fcodes = require('./utils/failure-codes.js');
 var failureCodes = fcodes();
@@ -442,7 +441,7 @@ var getEnvironmentLogicalId = function (environmentPayload, configData, authToke
 		};
 
 		request(svcPayload, function (error, response, body) {
-			if (response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
+			if (response.statusCode === 200 && body && body.data) {
 				var env_logical_id = null;
 				var dataJson = JSON.parse(body);
 				if (dataJson.data && dataJson.data.environment) {
