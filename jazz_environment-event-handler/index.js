@@ -45,12 +45,12 @@ var handler = (event, context, cb) => {
 		})
 		.then(result => {
 			var records = getEventProcessStatus();
-			logger.info("Successfully processed events. " + JSON.stringify(records));
+			logger.info("Successfully processed events: " + JSON.stringify(records));
 			return cb(null, records);
 		})
 		.catch(err => {
 			var records = getEventProcessStatus();
-			logger.error("Error processing events. " + JSON.stringify(err));
+			logger.error("Error processing events: " + JSON.stringify(err));
 			return cb(null, records);
 		});
 
@@ -72,7 +72,6 @@ var getTokenRequest = function (configData) {
 };
 
 var getAuthResponse = function (result) {
-	logger.info("result.statusCode" + result.statusCode)
 	return new Promise((resolve, reject) => {
 		if (result.statusCode === 200 && result.body && result.body.data) {
 			return resolve(result.body.data.token);
@@ -80,7 +79,7 @@ var getAuthResponse = function (result) {
 			logger.error("getAuthResponse failed");
 			return reject(errorHandler.throwInternalServerError("Invalid token response from API"));
 		}
-	})
+	});
 }
 
 var processEvents = function (event, configData, authToken) {
@@ -121,7 +120,7 @@ var processEachEvent = function (record, configData, authToken) {
 				return resolve(result);
 			})
 			.catch(err => {
-				logger.error("processEachEvent failed for " + JSON.stringify(record));
+				logger.error("ProcessEachEvent failed for " + JSON.stringify(record));
 				handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
 				return reject(err);
 			});
@@ -165,19 +164,19 @@ var processItem = function (eventPayload, configData, authToken) {
 
 		if (eventPayload.EVENT_NAME.S === configData.EVENTS.INITIAL_COMMIT) {
 			processEventInitialCommit(environmentApiPayload, configData, authToken)
-				.then(result => { return resolve(result) })
+				.then(result => { return resolve(result); })
 				.catch(err => {
-					logger.error("processEventInitialCommit Failed" + err);
-					return reject(err)
+					logger.error("processEventInitialCommit failed: " + err);
+					return reject(err);
 				})
 
 		} else if (eventPayload.EVENT_NAME.S === configData.EVENTS.CREATE_BRANCH) {
 			environmentApiPayload.friendly_name = svcContext.branch;
 			processEventCreateBranch(environmentApiPayload, configData, authToken)
-				.then(result => { return resolve(result) })
+				.then(result => { return resolve(result); })
 				.catch(err => {
 					logger.error("processEventCreateBranch Failed" + err);
-					return reject(err)
+					return reject(err);
 				})
 
 		} else if (eventPayload.EVENT_NAME.S === configData.EVENTS.UPDATE_ENVIRONMENT) {
@@ -190,20 +189,20 @@ var processItem = function (eventPayload, configData, authToken) {
 					.then((logical_id) => {
 						environmentApiPayload.logical_id = logical_id;
 						processEventUpdateEnvironment(environmentApiPayload, configData, authToken)
-							.then(result => { return resolve(result) })
+							.then(result => { return resolve(result); })
 							.catch(err => {
-								logger.error("getEnvironmentLogicalId Failed" + err);
-								return reject(err)
+								logger.error("processEventUpdateEnvironment Failed" + err);
+								return reject(err);
 							})
 					});
 
 			} else {
 				environmentApiPayload.logical_id = svcContext.logical_id;
 				processEventUpdateEnvironment(environmentApiPayload, configData, authToken)
-					.then(result => { return resolve(result) })
+					.then(result => { return resolve(result); })
 					.catch(err => {
 						logger.error("processEventUpdateEnvironment Failed" + err);
-						return reject(err)
+						return reject(err);
 					})
 			}
 
@@ -222,20 +221,20 @@ var processItem = function (eventPayload, configData, authToken) {
 
 			// Update with DELETE status
 			processEventUpdateEnvironment(environmentApiPayload, configData, authToken)
-				.then(result => { return resolve(result) })
+				.then(result => { return resolve(result); })
 				.catch(err => {
 					logger.error("processEventUpdateEnvironment Failed" + err);
-					return reject(err)
+					return reject(err);
 				})
 
 		} else if (eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_BRANCH) {
 			environmentApiPayload.physical_id = svcContext.branch;
 
 			processEventDeleteBranch(environmentApiPayload, configData, authToken)
-				.then(result => { return resolve(result) })
+				.then(result => { return resolve(result); })
 				.catch(err => {
 					logger.error("processEventDeleteBranch Failed" + err);
-					return reject(err)
+					return reject(err);
 				})
 		}
 
@@ -260,7 +259,7 @@ var processEventInitialCommit = function (environmentPayload, configData, authTo
 			if (response.statusCode === 200 && body && body.data) {
 				return resolve(null, body);
 			} else {
-				logger.error("Error creating stg environment in catalog. response" + JSON.stringify(response));
+				logger.error("Error creating stg environment in catalog: " + JSON.stringify(response));
 				return reject({
 					"error": "Error creating stg environment for " + environmentPayload.domain + "_" + environmentPayload.service + " in  catalog",
 					"details": response.body.message
@@ -288,7 +287,7 @@ var processEventInitialCommit = function (environmentPayload, configData, authTo
 			if (response.statusCode === 200 && body && body.data) {
 				return resolve(null, body);
 			} else {
-				logger.error("Error creating prod environment in catalog. response" + JSON.stringify(response));
+				logger.error("Error creating prod environment in catalog: " + JSON.stringify(response));
 				return reject({
 					"error": "Error creating prod environment for " + environmentPayload.domain + "_" + environmentPayload.service + " in catalog",
 					"details": response.body.message
@@ -302,11 +301,11 @@ var processEventInitialCommit = function (environmentPayload, configData, authTo
 		if (environmentPayload.physical_id === configData.ENVIRONMENT_PRODUCTION_PHYSICAL_ID) {
 			Promise.all([processStgEnv, processProdEnv])
 				.then((result) => {
-					logger.info("result" + result);
+					logger.debug("result" + result);
 					return resolve({ message: "Stage and Prod environments are created successfully" });
 				})
 				.catch((error) => {
-					logger.error("Promise.all failed to process env creation" + JSON.stringify(error));
+					logger.error("Promise.all failed to process env creation: " + JSON.stringify(error));
 					return reject(error);
 				});
 		} else {
@@ -324,7 +323,7 @@ var processEventCreateBranch = function (environmentPayload, configData, authTok
 		environmentPayload.logical_id = nano_id + "-dev";
 		environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
 
-		logger.info("environmentPayload" + JSON.stringify(environmentPayload));
+		logger.info("environmentPayload: " + JSON.stringify(environmentPayload));
 		var svcPayload = {
 			uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
 			method: "POST",
@@ -359,18 +358,16 @@ var processEventDeleteBranch = function (environmentPayload, configData, authTok
 
 				// Update catalog status first. @TODO
 
-				var deleteServiceEnvPayload = {
-					"service_name": environmentPayload.service,
-					"domain": environmentPayload.domain,
-					"version": "LATEST",
-					"environment_id": environmentPayload.logical_id
-				};
-
 				var delSerPayload = {
 					uri: configData.BASE_API_URL + configData.DELETE_ENVIRONMENT_API_RESOURCE,
 					method: "POST",
 					headers: { Authorization: authToken },
-					json: deleteServiceEnvPayload,
+					json: {
+						"service_name": environmentPayload.service,
+						"domain": environmentPayload.domain,
+						"version": "LATEST",
+						"environment_id": environmentPayload.logical_id
+				    },
 					rejectUnauthorized: false
 				};
 
@@ -378,9 +375,9 @@ var processEventDeleteBranch = function (environmentPayload, configData, authTok
 					if (response.statusCode && response.statusCode === 200 && body && body.data ) {
 						return resolve(body);
 					} else {
-						logger.error("Error creating triggering the delete environment" + JSON.stringify(response));
+						logger.error("Error triggering the delete environment: " + JSON.stringify(response));
 						return reject({
-							"error": "Error creating triggering the delete environment",
+							"error": "Error triggering the delete environment",
 							"details": response.body.message
 						});
 					}
@@ -416,22 +413,18 @@ var processEventUpdateEnvironment = function (environmentPayload, configData, au
 			if (response.statusCode && response.statusCode === 200) {
 				return resolve(body);
 			} else {
-				logger.error("Error updating the environment" + JSON.stringify(response));
+				logger.error("Error updating the environment: " + JSON.stringify(response));
 				return reject({
 					"error": "Error updating the environment",
 					"details": response.body.message
 				});
 			}
-
 		});
 
 	});
-
 }
 
-
 var getEnvironmentLogicalId = function (environmentPayload, configData, authToken) {
-	//console.log("environmentPayload"+JSON.stringify(environmentPayload));
 	return new Promise((resolve, reject) => {
 		var svcPayload = {
 			uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "?domain=" + environmentPayload.domain + "&service=" + environmentPayload.service,
@@ -463,13 +456,9 @@ var getEnvironmentLogicalId = function (environmentPayload, configData, authToke
 					"details": response.body.message
 				});
 			}
-
 		});
-
 	});
-
 }
-
 
 var handleProcessedEvents = function (id, payload) {
 	processedEvents.push({
