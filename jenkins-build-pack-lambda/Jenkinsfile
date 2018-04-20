@@ -75,7 +75,7 @@ node()  {
 
 	}
 
-	environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments")
+	environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments",auth_token)
 	def gitCommitOwner = environmentDeploymentMetadata.getRepoCommitterInfo()
 	def gitCommitHash = environmentDeploymentMetadata.getRepoCommitHash()
 	def context_map = [created_by : config['created_by'], deployed_by: gitCommitOwner]
