@@ -22,7 +22,6 @@ const chaiAsPromised = require('chai-as-promised'); chai.use(chaiAsPromised);
 const request = require('request');
 const AWS = require('aws-sdk-mock');
 const awsContext = require('aws-lambda-mock-context');
-const async = require("async");
 const sinon = require('sinon')
 const sinonTest = require('sinon-test')(sinon, { useFakeTimers: false });
 require('sinon-as-promised');
