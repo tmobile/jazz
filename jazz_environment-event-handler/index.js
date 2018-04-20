@@ -335,7 +335,7 @@ var processEventCreateBranch = function (environmentPayload, configData, authTok
 
 		logger.info("svcPayload" + JSON.stringify(svcPayload));
 		request(svcPayload, function (error, response, body) {
-			if (response.statusCode && response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
+			if (response.statusCode && response.statusCode === 200 && body && body.data) {
 				return resolve(body);
 			} else {
 				logger.error("Error creating  " + environmentPayload.logical_id + " environment in catalog. response" + JSON.stringify(response));
@@ -375,7 +375,7 @@ var processEventDeleteBranch = function (environmentPayload, configData, authTok
 				};
 
 				request(delSerPayload, function (error, response, body) {
-					if (response.statusCode && response.statusCode === 200 && typeof body !== undefined && typeof body.data !== undefined) {
+					if (response.statusCode && response.statusCode === 200 && body && body.data ) {
 						return resolve(body);
 					} else {
 						logger.error("Error creating triggering the delete environment" + JSON.stringify(response));
