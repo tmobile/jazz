@@ -21,8 +21,8 @@ var crypto = require('crypto');
 var truncate = require('unicode-byte-truncate');
 const _ = require("lodash");
 
-const configObj = require("./components/config.js"); 
-const logger = require("./components/logger.js"); 
+const configObj = require("./components/config.js");
+const logger = require("./components/logger.js");
 const utils = require("./components/utils.js")(); //Import the utils module.
 const responseObj = require("./components/response.js");
 const globalConfig = require("./config/global_config.json"); //Import the Global Configuration module.
@@ -34,7 +34,7 @@ const globalConfig = require("./config/global_config.json"); //Import the Global
 **/
 
 module.exports.handler = (input, context, cb) => {
-    
+
     logger.init(input, context);
     var config = configObj(input);
 
@@ -42,7 +42,7 @@ module.exports.handler = (input, context, cb) => {
     var zippedInput = new Buffer(input.awslogs.data, 'base64');
 
     // decompress the input
-    zlib.gunzip(zippedInput, function(error, buffer) {
+    zlib.gunzip(zippedInput, function (error, buffer) {
         if (error) { context.fail(error); return; }
 
         // parse the input from JSON
@@ -59,10 +59,10 @@ module.exports.handler = (input, context, cb) => {
         }
 
         // post documents to the Amazon Elasticsearch Service
-        post(config, elasticsearchBulkData, function(error, success, statusCode, failedItems) {
-            logger.debug('Response: statusCode: ' +  statusCode);
+        post(config, elasticsearchBulkData, function (error, success, statusCode, failedItems) {
+            logger.debug('Response: statusCode: ' + statusCode);
 
-            if (error) { 
+            if (error) {
                 logger.error('Error: ' + JSON.stringify(error, null, 2));
 
                 if (failedItems && failedItems.length > 0) {
@@ -76,8 +76,8 @@ module.exports.handler = (input, context, cb) => {
             }
         });
     });
-	
-	cb(null, responseObj(JSON.stringify(input), input)); 
+
+    cb(null, responseObj(JSON.stringify(input), input));
 
 };
 
@@ -85,128 +85,128 @@ function transform(payload) {
     if (payload.messageType === 'CONTROL_MESSAGE') {
         return null;
     }
-	logger.info("Raw payload..:"+JSON.stringify(payload));
-	var bulkRequestBody = '';	
-	var data = {};
-	if(payload.logGroup.indexOf("API-Gateway-Execution-Logs") === 0) { // API logs goes here
-		var indexName = "apilogs";
+    logger.info("Raw payload..:" + JSON.stringify(payload));
+    var bulkRequestBody = '';
+    var data = {};
+    if (payload.logGroup.indexOf("API-Gateway-Execution-Logs") === 0) { // API logs goes here
+        var indexName = "apilogs";
 
-		data.timestamp = new Date();
-		//data.account = payload.owner; // as per review comments
-		data.platform_log_group = payload.logGroup;
-		data.platform_log_stream = payload.logStream;
-		data.environment = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.environment,2);
-		data.request_id = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.request_id);
-		data.method = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.method);
-		if(!data.method) {data.method = "GET";} // Cloudwatch do not have method info for get! 
-        
+        data.timestamp = new Date();
+        //data.account = payload.owner; // as per review comments
+        data.platform_log_group = payload.logGroup;
+        data.platform_log_stream = payload.logStream;
+        data.environment = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.environment, 2);
+        data.request_id = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.request_id);
+        data.method = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.method);
+        if (!data.method) { data.method = "GET"; } // Cloudwatch do not have method info for get! 
+
         var apiDomainAndService = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.domain_service);
-		var _apiDomain = apiDomainAndService.substring(0,apiDomainAndService.indexOf("/"));
-		if(_apiDomain) {
-			data.domain = _apiDomain;
-			data.servicename = apiDomainAndService.substring(_apiDomain.length+1);
-		} else {
-			data.domain = "";
-			data.servicename = apiDomainAndService;
-		}      
-        
-        data.path = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.path); 
-		data.application_logs_id = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.lambda_ref_id);
-		var method_req_headers = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.method_req_headers);
-		logger.debug("method_req_headers..:"+method_req_headers);
-		data.origin = utils.getSubInfo(method_req_headers,  globalConfig.PATTERNS.origin, 1);
-		data.host = utils.getSubInfo(method_req_headers,  globalConfig.PATTERNS.host, 1);
-		data.user_agent = utils.getSubInfo(method_req_headers,  globalConfig.PATTERNS.user_agent, 1);
-		data.x_forwarded_port = utils.getSubInfo(method_req_headers,  globalConfig.PATTERNS.x_forwarded_port, 1);
-		data.x_forwarded_for = utils.getSubInfo(method_req_headers,  globalConfig.PATTERNS.x_forwarded_for, 1);
-		data.x_amzn_trace_id = utils.getSubInfo(method_req_headers,  globalConfig.PATTERNS.x_amzn_trace_id, 1);
-		data.content_type = utils.getSubInfo(method_req_headers,  globalConfig.PATTERNS.content_type, 1);
-		data.cache_control = utils.getSubInfo(method_req_headers,  globalConfig.PATTERNS.cache_control, 1);
-		data.log_level = "INFO"; // Default to INFO for apilogs
-		data.status = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.status);
+        var _apiDomain = apiDomainAndService.substring(0, apiDomainAndService.indexOf("/"));
+        if (_apiDomain) {
+            data.domain = _apiDomain;
+            data.servicename = apiDomainAndService.substring(_apiDomain.length + 1);
+        } else {
+            data.domain = "";
+            data.servicename = apiDomainAndService;
+        }
 
-		var action = { "index": {} };
-		action.index._index = indexName;
-		action.index._type = data.environment;
-		action.index._id = data.request_id;
+        data.path = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.path);
+        data.application_logs_id = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.lambda_ref_id);
+        var method_req_headers = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.method_req_headers);
+        logger.debug("method_req_headers..:" + method_req_headers);
+        data.origin = utils.getSubInfo(method_req_headers, globalConfig.PATTERNS.origin, 1);
+        data.host = utils.getSubInfo(method_req_headers, globalConfig.PATTERNS.host, 1);
+        data.user_agent = utils.getSubInfo(method_req_headers, globalConfig.PATTERNS.user_agent, 1);
+        data.x_forwarded_port = utils.getSubInfo(method_req_headers, globalConfig.PATTERNS.x_forwarded_port, 1);
+        data.x_forwarded_for = utils.getSubInfo(method_req_headers, globalConfig.PATTERNS.x_forwarded_for, 1);
+        data.x_amzn_trace_id = utils.getSubInfo(method_req_headers, globalConfig.PATTERNS.x_amzn_trace_id, 1);
+        data.content_type = utils.getSubInfo(method_req_headers, globalConfig.PATTERNS.content_type, 1);
+        data.cache_control = utils.getSubInfo(method_req_headers, globalConfig.PATTERNS.cache_control, 1);
+        data.log_level = "INFO"; // Default to INFO for apilogs
+        data.status = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.status);
 
-		bulkRequestBody += [ 
-			JSON.stringify(action), 
-			JSON.stringify(data),
-		].join('\n') + '\n';
-			
-		logger.debug("bulkRequestBody-API-Gateway_exe..:"+bulkRequestBody);
-		return bulkRequestBody;
+        var action = { "index": {} };
+        action.index._index = indexName;
+        action.index._type = data.environment;
+        action.index._id = data.request_id;
 
-	} else if(payload.logGroup.indexOf("/aws/lambda/") === 0) { // Lambda logs goes here
-        
+        bulkRequestBody += [
+            JSON.stringify(action),
+            JSON.stringify(data),
+        ].join('\n') + '\n';
+
+        logger.debug("bulkRequestBody-API-Gateway_exe..:" + bulkRequestBody);
+        return bulkRequestBody;
+
+    } else if (payload.logGroup.indexOf("/aws/lambda/") === 0) { // Lambda logs goes here
+
         data = {};
-		data.request_id = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.Lambda_request_id);
-		if(data.request_id) {
-            data.environment = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_environment,2);
+        data.request_id = utils.getInfo(payload.logEvents, globalConfig.PATTERNS.Lambda_request_id);
+        if (data.request_id) {
+            data.environment = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_environment, 2);
             var domainAndservice;
-			if (data.environment === "dev") {
-				var dev_environment = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_environment_dev, 2);
-				domainAndservice = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_environment_dev, 1);
-				data.environment = dev_environment;
-			} else {
-				domainAndservice = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_domain_service, 1);
-			}
-			var _domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
-			if (_domain) {
-				data.domain = _domain;
-				data.servicename = domainAndservice.substring(_domain.length + 1);
-			} else {
-				data.domain = "";
-				data.servicename = domainAndservice;
-			}
-			if(data.servicename) {
-				payload.logEvents.forEach(function(logEvent) {
-					data.request_id = utils.getSubInfo(logEvent.message, globalConfig.PATTERNS.guid_regex, 0);
-					data.platform_log_group = payload.logGroup;
-					data.platform_log_stream = payload.logStream;
-					data.timestamp = new Date(1 * logEvent.timestamp).toISOString();
-					var message = logEvent.message;
-					var messageLength = Buffer.byteLength(message,'utf8');
-					if(messageLength > 32766){ //since 32766(32KB) is the default message size
-						var truncatedMessage = truncate(message, 32740); // message size + ...[TRUNCATED]
-						data.message = truncatedMessage + "  ...[TRUNCATED]";
-					}else {
-						data.message = message;
-					}
-					data.log_level = utils.getSubInfo(logEvent.message, globalConfig.PATTERNS.log_level, 0); 
-					if(_.isEmpty(data.log_level)) {
-						data.log_level =  globalConfig.DEFAULT_LOG_LEVEL;
-					}
-					if(!(data.message.startsWith("REPORT") || data.message.startsWith("START") || data.message.startsWith("END"))) {
-						var timestmp = utils.getSubInfo(data.message, globalConfig.PATTERNS.timestamp_pattern, 0);
-						data.message = data.message.replace(timestmp,  "");
-						var guid = utils.getSubInfo(data.message, globalConfig.PATTERNS.guid_regex, 0);
-						data.message = data.message.replace(guid, "");
-						data.message = data.message.replace(data.log_level, "");
-					}
-					data.message = data.message.trim();
+            if (data.environment === "dev") {
+                var dev_environment = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_environment_dev, 2);
+                domainAndservice = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_environment_dev, 1);
+                data.environment = dev_environment;
+            } else {
+                domainAndservice = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_domain_service, 1);
+            }
+            var _domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
+            if (_domain) {
+                data.domain = _domain;
+                data.servicename = domainAndservice.substring(_domain.length + 1);
+            } else {
+                data.domain = "";
+                data.servicename = domainAndservice;
+            }
+            if (data.servicename) {
+                payload.logEvents.forEach(function (logEvent) {
+                    data.request_id = utils.getSubInfo(logEvent.message, globalConfig.PATTERNS.guid_regex, 0);
+                    data.platform_log_group = payload.logGroup;
+                    data.platform_log_stream = payload.logStream;
+                    data.timestamp = new Date(1 * logEvent.timestamp).toISOString();
+                    var message = logEvent.message;
+                    var messageLength = Buffer.byteLength(message, 'utf8');
+                    if (messageLength > 32766) { //since 32766(32KB) is the default message size
+                        var truncatedMessage = truncate(message, 32740); // message size + ...[TRUNCATED]
+                        data.message = truncatedMessage + "  ...[TRUNCATED]";
+                    } else {
+                        data.message = message;
+                    }
+                    data.log_level = utils.getSubInfo(logEvent.message, globalConfig.PATTERNS.log_level, 0);
+                    if (_.isEmpty(data.log_level)) {
+                        data.log_level = globalConfig.DEFAULT_LOG_LEVEL;
+                    }
+                    if (!(data.message.startsWith("REPORT") || data.message.startsWith("START") || data.message.startsWith("END"))) {
+                        var timestmp = utils.getSubInfo(data.message, globalConfig.PATTERNS.timestamp_pattern, 0);
+                        data.message = data.message.replace(timestmp, "");
+                        var guid = utils.getSubInfo(data.message, globalConfig.PATTERNS.guid_regex, 0);
+                        data.message = data.message.replace(guid, "");
+                        data.message = data.message.replace(data.log_level, "");
+                    }
+                    data.message = data.message.trim();
 
                     var indexName = "applicationlogs";
-					var action = { "index": {} };
-					action.index._index = indexName;
-					action.index._type = data.environment;
-					action.index._id = logEvent.id;
+                    var action = { "index": {} };
+                    action.index._index = indexName;
+                    action.index._type = data.environment;
+                    action.index._id = logEvent.id;
 
-					bulkRequestBody += [
-						JSON.stringify(action),
-						JSON.stringify(data),
-					].join('\n') + '\n';
-				});
-			} else {
-				logger.error("invalid lambda logs event..: "+JSON.stringify(payload));
-			}
-			logger.debug("bulkRequestBody-/aws/lambda/..:"+bulkRequestBody);
-			return bulkRequestBody;	
-		}else 
-			return null;
-	}
-	return null;
+                    bulkRequestBody += [
+                        JSON.stringify(action),
+                        JSON.stringify(data),
+                    ].join('\n') + '\n';
+                });
+            } else {
+                logger.error("invalid lambda logs event..: " + JSON.stringify(payload));
+            }
+            logger.debug("bulkRequestBody-/aws/lambda/..:" + bulkRequestBody);
+            return bulkRequestBody;
+        } else
+            return null;
+    }
+    return null;
 }
 
 function buildSource(message, extractedFields) {
@@ -214,7 +214,7 @@ function buildSource(message, extractedFields) {
         var source = {};
 
         for (var key in extractedFields) {
-			logger.debug("key from buildSource..:"+JSON.stringify(key));
+            logger.debug("key from buildSource..:" + JSON.stringify(key));
             if (extractedFields.hasOwnProperty(key) && extractedFields[key]) {
                 var value = extractedFields[key];
                 if (utils.isNumeric(value)) {
@@ -240,19 +240,19 @@ function buildSource(message, extractedFields) {
 
 function post(config, body, callback) {
     var requestParams = buildRequest(config.ES_ENDPOINT, body);
-    var request = https.request(requestParams, function(response) {
+    var request = https.request(requestParams, function (response) {
         var responseBody = '';
-        response.on('data', function(chunk) {
+        response.on('data', function (chunk) {
             responseBody += chunk;
         });
-		logger.debug("response from post..:"+JSON.stringify(responseBody));		
-        response.on('end', function() {
+        logger.debug("response from post..:" + JSON.stringify(responseBody));
+        response.on('end', function () {
             var info = JSON.parse(responseBody);
             var failedItems;
             var success;
 
             if (response.statusCode >= 200 && response.statusCode < 299) {
-                failedItems = info.items.filter(function(x) {
+                failedItems = info.items.filter(function (x) {
                     return x.index.status >= 300;
                 });
                 success = {
@@ -268,7 +268,7 @@ function post(config, body, callback) {
             } : null;
             callback(error, success, response.statusCode, failedItems);
         });
-    }).on('error', function(e) {
+    }).on('error', function (e) {
         callback(e);
     });
     request.end(requestParams.body);
@@ -300,12 +300,12 @@ function buildRequest(endpoint, body) {
     };
 
     var canonicalHeaders = Object.keys(request.headers)
-        .sort(function(a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; })
-        .map(function(k) { return k.toLowerCase() + ':' + request.headers[k]; })
+        .sort(function (a, b) { return a.toLowerCase() < b.toLowerCase() ? -1 : 1; })
+        .map(function (k) { return k.toLowerCase() + ':' + request.headers[k]; })
         .join('\n');
 
     var signedHeaders = Object.keys(request.headers)
-        .map(function(k) { return k.toLowerCase(); })
+        .map(function (k) { return k.toLowerCase(); })
         .sort()
         .join(';');
 
@@ -317,22 +317,21 @@ function buildRequest(endpoint, body) {
         utils.hash(request.body, 'hex'),
     ].join('\n');
 
-    var credentialString = [ date, region, service, 'aws4_request' ].join('/');
+    var credentialString = [date, region, service, 'aws4_request'].join('/');
 
     var stringToSign = [
         'AWS4-HMAC-SHA256',
         datetime,
         credentialString,
         utils.hash(canonicalString, 'hex')
-    ] .join('\n');
+    ].join('\n');
 
     request.headers.Authorization = [
         'AWS4-HMAC-SHA256 Credential=' + process.env.AWS_ACCESS_KEY_ID + '/' + credentialString,
         'SignedHeaders=' + signedHeaders,
         'Signature=' + utils.hmac(kSigning, stringToSign, 'hex')
     ].join(', ');
-
-	logger.debug("request from build request " + JSON.stringify(request));
+    logger.debug("request from build request " + JSON.stringify(request));
     return request;
 }
 
