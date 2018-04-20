@@ -2,7 +2,6 @@
     Helper functions for Cloud Logs Streamer
   @module: utils.js
   @description: Helper functions for using Regex patterns, etc.
-  @author: SIDD
   @version: 1.0
 **/
 
