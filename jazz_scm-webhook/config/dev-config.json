@@ -1,0 +1,64 @@
+{
+  "events_url": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/events",
+  "event_status": {
+    "completed": "COMPLETED"
+  },
+  "event_handler": {
+    "bitbucket": "BITBUCKET"
+  },
+  "event_type": {
+    "onboarding": "SERVICE_ONBOARDING",
+    "deployment": "SERVICE_DEPLOYMENT",
+    "deletion": "SERVICE_DELETION"
+  },
+  "event_name": [
+    "CREATE_BRANCH",
+    "CREATE_TAG",
+    "COMMIT_TEMPLATE",
+    "COMMIT_CODE",
+    "DELETE_BRANCH",
+    "RAISE_PR",
+    "MERGE_PR",
+    "DECLINE_PR",
+    "UPDATE_PR",
+    "COMMENT_PR"
+  ],
+  "scm_mappings": {
+    "identifier":{
+      "bitbucket": "X-Bitbucket-Type",
+      "gitlabs": "X-Gitlab-Event"
+    },
+    "userName":{
+      "bitbucket": "actor.username",
+      "gitlabs": "user_username"
+    },
+    "eventKey":{
+      "bitbucket": "headers['X-Event-Key']",
+      "gitlabs": "event_name"
+    },
+    "service":{
+      "bitbucket": "repository.slug",
+      "gitlabs": "['repository']['name']"
+    },
+    "repoLink":{
+      "bitbucket": "repository.links.self[0].href",
+      "gitlabs": "repository.homepage"
+    },
+    "changes":{
+      "bitbucket": "pullrequest",
+      "gitlabs": "object_attributes"
+    },
+    "source_branch":{
+      "bitbucket": "pullrequest.fromRef.branch.name",
+      "gitlabs": "object_attributes.source_branch"
+    },
+    "target_branch":{
+      "bitbucket": "pullrequest.toRef.branch.name",
+      "gitlabs": "object_attributes.target_branch"
+    },
+    "prlink":{
+      "bitbucket": "pullrequest.link",
+      "gitlabs": "object_attributes.url"
+    }
+  }
+}

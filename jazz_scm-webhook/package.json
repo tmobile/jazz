@@ -1,0 +1,20 @@
+{
+  "name": "webhook-api",
+  "version": "0.0.1",
+  "description": "SCM Webhook API for Jazz",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "*",
+    "deasync": "*",
+    "moment":"*"
+  },
+  "devDependencies": {
+    "mocha": "^v3.0.0",
+    "chai": "^3.5.0"
+  }
+}
