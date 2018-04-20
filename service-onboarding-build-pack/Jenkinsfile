@@ -230,8 +230,8 @@ node  {
 					} else if (configLoader.SCM.TYPE == "bitbucket") {
 						scm_webhook_target_url = JenkinsLocationConfiguration.get().getUrl() + "/bitbucket-scmsource-hook/notify"
 					}
-					scmModule.setScmEventsWebhookUrl("${g_base_url}/jazz/scm-web-hook")
 					scmModule.addWebhook(repo_name, "notify-jenkins", scm_webhook_target_url)
+					scmModule.addWebhook(repo_name, "notify-events", "${g_base_url}/jazz/scm-webhook")
 					events.sendCompletedEvent('ADD_WEBHOOK', 'modify template completed', context_map)
 				}
 				catch (ex) {
