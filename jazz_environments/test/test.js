@@ -674,7 +674,7 @@ describe('jazz_environments', function () {
 
   it("should indicate error if is-service-available has empty response data for POST method using handler function",function(){
     event.method = "POST";
-    var result = '{"errorType":"BadRequest","message":"Error finding service: '+event.query.service+' in service catalog"}'
+    var result = '{"errorType":"BadRequest","message":"Error finding service: '+event.query.domain+"."+event.query.service+' in service catalog"}'
     var responseObj = {
       statusCode: 400,
       body: {

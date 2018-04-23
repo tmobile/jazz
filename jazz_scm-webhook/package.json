@@ -1,10 +1,12 @@
 {
-  "name": "webhook-api",
+  "name": "test_webhook-api",
   "version": "0.0.1",
-  "description": "SCM Webhook API for Jazz",
+  "description": "API to record SCM activity",
   "main": "index.js",
   "private": true,
-  "author": [],
+    "author": {
+        "name": "Jazz"
+    },
   "scripts": {
     "test": "mocha"
   },

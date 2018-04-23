@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 /**
 API to record SCM activity
-@author:
+@author: 
 @version: 1.0
  **/
 
@@ -35,102 +35,101 @@ module.exports.handler = (event, context, cb) => {
 	logger.init(event, context);
 	logger.info("Webhook-events:" + JSON.stringify(event));
 	
-	if( !event|| !event.body){
-		logger.error("Events is empty! So unable to find the SCM activity!");
+	if(!event || !event.body ){
+		logger.error("Unable to find the SCM activity!");
 		return cb(JSON.stringify(errorHandler.throwInputValidationError("Unable to find the SCM activity!")));
 	} 
-	var scmMap = config.scm_mappings;
+	var scmMap = config.SCM_MAPPINGS;
 	var scmSource, scmIdentifier = scmMap.identifier;
 
-	for (var key in scmIdentifier) {
-		if(scmIdentifier.hasOwnProperty(key)) {
-			if (event.headers && event.headers.hasOwnProperty(scmIdentifier[key])){
-				scmSource = key;
-				break;
-			}
-		} 
-	}
-	
-	logger.info("SCM Source:" + scmSource);
-	var eventBody = event.body;
-	userName = (eventBody.actor.username) ? eventBody.actor.username : '',
-	eventKey = event.headers['X-Event-Key'],
-	service = eventBody.repository.slug,
-	serviceName = (service !== undefined && service !== '') ? service.split("_")[1] : "",
-	domain = (service !== undefined && service !== '') ? service.split("_")[0] : "",
-	repositoryLink = eventBody.repository.links.self[0].href,
-	timestamp = moment().utc().format("YYYY-MM-DDTHH:mm:ss:SSS");
-	
-	if(eventKey){
-		var servContext = getServiceContext(eventKey, eventBody),		
-			bodyObj = {
-				'event_handler': config.event_handler.bitbucket,
-				'event_name': servContext.event_name, 
-				'service_name': serviceName,
-				'event_status': config.event_status.completed,
-				'event_type': servContext.event_type, 
-				'username': userName,
-				'event_timestamp': timestamp,
-				'service_context': {      
-					'repository': repositoryLink,
-					'domain' : domain,
-					'branch' : servContext.branch,
-					'pr_link' : servContext.prlink,
-					'target' : servContext.target,
-					'hash' : servContext.hash
-				}
-			};
-		var possibleEventName = config.event_name,
-			isvalidEventName = false;
-		for (var idx in possibleEventName ){
-			if ((servContext.event_name).toLowerCase() == possibleEventName[idx].toLowerCase()){
-				isvalidEventName = true;
-				break;
-			} 
-		}
+	getScmType(scmIdentifier, event)
+	.then((result) => getScmDetails(result, event, config))
+	.then((res) => updateEventsWithScmDetails(res, config))
+	.then(function(result){
+		logger.info("successfuly event is updated"+JSON.stringify(result));
+		return cb(result)
+	})
+	.catch(function(error){
+		logger.info("error while updating events:"+JSON.stringify(error));
+		return cb(JSON.stringify(errorHandler.throwInternalServerError("Eventkey is null or undefined! so unable to find event name.")));
+	});
+};
 
-		if(isvalidEventName){
-			//Invoking platform events api to record git activity.	
-			var options = {
-				url: config.events_url,
-				method: 'POST',
-				headers: { 
-					'cache-control': 'no-cache',
-					'content-type': 'application/json' 
-				},
-				body : bodyObj,
-				json: true,
-				rejectUnauthorized: false
-			};
-			request(options, function (error, response, body) {
-				if (error) {
-					logger.error('Error invoking service: ' + JSON.stringify(error));
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured,"+ JSON.stringify(error))));
-				} else {
-					if(response.statusCode === 200){
-						var output = {
-							message: 'successfully recorded git activity to jazz_events.',
-							event_id : body.data.event_id
-						};
-						cb(null, responseObj(output, body.input));
-					} else {
-						logger.error("StatusCode :"+ response.statusCode);
-						return cb(JSON.stringify(errorHandler.throwInternalServerError("Unable to send events, StatusCode:"+ response.statusCode)));
-					}
+function getScmType(scmIdentifier, event){
+	logger.info("scmIdentifier:"+JSON.stringify(scmIdentifier));
+	return new Promise((resolve, reject) => {
+		for (var key in scmIdentifier) {
+			if(scmIdentifier.hasOwnProperty(key)) {
+				if (event.headers && event.headers.hasOwnProperty(scmIdentifier[key])){
+					scmSource = key;
+					resolve(scmSource);
 				}
+			}
+		}
+	});
+}
+
+function getScmDetails(scmSource, event, config){
+	logger.info("Inside getScmDetails:"+ scmSource)
+	return new Promise((resolve, reject) => {
+		var userName, eventKey, service, repositoryLink, servContext,
+		
+		eventBody = event.body;
+
+		if(scmSource === 'bitbucket'){
+			userName = (eventBody.actor.username) ? eventBody.actor.username : '';
+			eventKey = event.headers['X-Event-Key'];
+			service = eventBody.repository.slug;
+			repositoryLink = eventBody.repository.links.self[0].href;
+			bitbucketScmContextDetails(eventKey, eventBody, config)
+			.then(function(res){
+				var resObj = {
+					servContext: res, 
+					service: service, 
+					userName: userName, 
+					repositoryLink: repositoryLink
+				}
+				resolve(resObj);
+			})
+			.catch(function(err){
+				logger.error(err);
+				reject(err);
+			});
+		} else if(scmSource === 'gitlab'){
+			eventKey = eventBody.object_kind;
+			service = eventBody.repository.name;
+			repositoryLink = eventBody.repository.homepage;
+			if(eventKey === 'push'|| eventKey === 'tag_push'){
+				userName = (eventBody.user_username) ? eventBody.user_username : '';
+			} else {
+				userName = (eventBody.user.username) ? eventBody.user.username : '';
+			}
+			gitlabScmContextDetails(eventKey, eventBody, config)
+			.then(function(res){
+				var resObj = {
+					servContext: res, 
+					service: service, 
+					userName: userName, 
+					repositoryLink: repositoryLink
+				}
+				resolve(resObj);
+			})
+			.catch(function(err){
+				logger.error(err);
+				reject(err);
 			});
 		} else {
-			logger.warn("Unable to send envents! Only specified event name can be allowed :" + possibleEventName.join(", "));
+			logger.error("Unsupported scmSource:"+ scmSource)
+			reject("Unsupported scmSource")
 		}
-		
-	} else {
-		return cb(JSON.stringify(errorHandler.throwInternalServerError("Eventkey is null or undefined! so unable to find event name.")));
-	}	
-	
-	function getServiceContext(value, body){
-		var result = {},
-			changes = null;
-		result.event_type = config.event_type.deployment;
+	});
+}
+
+function bitbucketScmContextDetails(value, body, config){
+	logger.info("Inside bitbucketScmContextDetails" + value)
+	return new Promise((resolve, reject) => {
+		var result = {}, changes = null;
+		result.event_type = config.EVENT_TYPE.deployment;
 		if(body.pullrequest){
 			changes = body.pullrequest;	
 			result.branch = changes.fromRef.branch.name;
@@ -147,44 +146,233 @@ module.exports.handler = (event, context, cb) => {
 					result.branch = changes.new.name;
 					if(type === 'tag'){
 						result.event_name = 'CREATE_TAG';
+						resolve(result);
 					} else if(type === 'branch' && changes.new.name === 'master'){
 						result.event_name = 'COMMIT_TEMPLATE';
-						result.event_type = config.event_type.onboarding;
+						resolve(result);
+						result.event_type = config.EVENT_TYPE.onboarding;
 					} else {
 						result.event_name = 'CREATE_BRANCH';
+						resolve(result);
 					}					
 				} else if(changes && !changes.created && changes.closed){
 					var objtype = changes.old.type;
 					result.branch = changes.old.name;
 					if(objtype === 'tag'){
 						result.event_name = 'DELETE_TAG';
+						resolve(result);
 					} else {
-						result.event_type = config.event_type.deletion;
+						result.event_type = config.EVENT_TYPE.deletion;
 						result.event_name = 'DELETE_BRANCH';
+						resolve(result);
 					} 		
-				} else if(changes && !changes.created && !changes.closed && changes.old){
+				} else if(changes && !changes.created && !changes.closed && changes.old ){
 					result.branch = changes.new.name;
 					result.hash = changes.new.target.hash;
 					result.event_name = 'COMMIT_CODE';
+					resolve(result);
+				} else {
+					reject("Invalid push event")
 				}
 				break;
 			case 'pullrequest:created':
 				result.event_name = 'RAISE_PR';
+				resolve(result);
 				break;
 			case 'pullrequest:fulfilled':
 				result.event_name = 'MERGE_PR';
+				resolve(result);
 				break;
 			case 'pullrequest:rejected':
 				result.event_name = 'DECLINE_PR';
+				resolve(result);
 				break;
 			case 'pullrequest:updated':
 				result.event_name = 'UPDATE_PR';
+				resolve(result);
 				break;
 			case 'pullrequest:comment':
 				result.event_name = 'COMMENT_PR';
+				resolve(result);
 				break;
+			default:
+				reject("Invalid event key")
+		}		
+	});
+}
+
+function gitlabScmContextDetailsDetails(eventKey, body, config){
+	logger.info("Inside gitlabScmContextDetails:"+eventKey)
+	return new Promise((resolve, reject) => {
+		var result = {}, changes = null;
+		result.event_type = config.EVENT_TYPE.deployment;
+		if(eventKey === 'merge_request'){
+			changes = body.object_attributes;	
+			result.branch = changes.source_branch;
+			result.prlink = changes.url;
+			result.target = changes.target_branch;
+
+			if(changes.action === "open"){
+				result.event_name = 'RAISE_PR';
+				resolve(result);
+			} else if(changes.action === "merge"){
+				result.event_name = 'MERGE_PR';
+				resolve(result);
+			} else if(changes.action === "update"){
+				result.event_name = 'UPDATE_PR';
+				resolve(result);
+			} else if(changes.action === "close"){
+				result.event_name = 'DECLINE_PR';
+				resolve(result);
+			}
+
+		} else if(eventKey === 'note'){
+			changes = body.object_attributes;
+			result.note = changes.note;
+			result.note_type = changes.noteable_type;
+			result.event_name = 'COMMENT_PR';
+			resolve(result);
+		} else if (eventKey === 'push'|| eventKey === 'tag_push'){
+			result.branch = body.ref;
+			
+			if( body.before && parseInt(body.before, 10) === 0) {
+				if(eventKey === 'tag_push'){
+					result.event_name = 'CREATE_TAG';
+					resolve(result);
+				} else if(body.commits && body.total_commits_count){
+					result.event_name = 'COMMIT_TEMPLATE';
+					result.event_type = config.EVENT_TYPE.onboarding;
+					resolve(result);
+				} else {
+					result.event_name = 'CREATE_BRANCH';
+					resolve(result);
+				}					
+			} else if(body.after && parseInt(body.after, 10) === 0){
+				if(eventKey === 'tag_push'){
+					result.event_name = 'DELETE_TAG';
+					resolve(result);
+				} else {
+					result.event_type = config.EVENT_TYPE.deletion;
+					result.event_name = 'DELETE_BRANCH';
+					resolve(result);
+				} 		
+			} else if(body.before && body.after && body.total_commits_count){
+				result.hash = body.after;
+				result.event_name = 'COMMIT_CODE';
+				resolve(result);
+			} else {
+				logger.error("Invalid event key")
+				reject("Invalid event key");
+			}
+		} else {
+			logger.error("Invalid event key")
+			reject("Invalid event key");
 		}
-		logger.info("Events:"+ JSON.stringify(result));
-		return result;
-	}
-};
+	})
+}
+
+function updateEventsWithScmDetails(servObj, config){
+	logger.info("Inside updateEventsWithScmDetails: "+ JSON.stringify(servObj));
+	return new Promise((resolve, reject) => {
+		var serviceName = (servObj.service) ? servObj.service.split("_")[1] : "",
+		domain = (servObj.service) ? servObj.service.split("_")[0] : "",
+		timestamp = moment().utc().format("YYYY-MM-DDTHH:mm:ss:SSS"),
+		servContext = servObj.servContext,
+		bodyObj = {
+			'event_handler': config.SCM_TYPE[scmSource],
+			'event_name': servContext.event_name, 
+			'service_name': serviceName,
+			'event_status': config.EVENT_STATUS.completed,
+			'event_type': servContext.event_type, 
+			'username': servObj.userName,
+			'event_timestamp': timestamp,
+			'service_context': {      
+				'repository': servObj.repositoryLink,
+				'domain' : domain,
+				'branch' : servContext.branch,
+				'pr_link' : servContext.prlink,
+				'target' : servContext.target,
+				'hash' : servContext.hash
+			}
+		};
+
+		var possibleEventName = config.EVENT_NAME,
+			isvalidEventName = false;
+		for (var idx in possibleEventName ){
+			if ((servContext.event_name).toLowerCase() === possibleEventName[idx].toLowerCase()){
+				isvalidEventName = true;
+				break;
+			} 
+		}
+
+		if(isvalidEventName){
+			//Invoking platform events api to record git activity.
+			getToken(config)
+			.then(function(authToken){
+				var options = {
+					url: config.SERVICE_API_URL + config.EVENTS_URL,
+					method: 'POST',
+					headers: { 
+						'cache-control': 'no-cache',
+						'content-type': 'application/json',
+						'Authorization': authToken
+					},
+					body : bodyObj,
+					json: true,
+					rejectUnauthorized: false
+				};
+				request(options, function (error, response, body) {
+					if (error) {
+						logger.error('Error invoking service: ' + JSON.stringify(error));
+						reject(error)
+					} else {
+						if(response.statusCode === 200){
+							var output = {
+								message: 'successfully recorded git activity to jazz_events.',
+								event_id : body.data.event_id
+							};
+							resolve(responseObj(output, body.input));
+						} else {
+							logger.error("StatusCode :"+ JSON.stringify(response));
+							reject(response.body.message)
+						}
+					}
+				});
+			})
+			.catch(function(err){
+				logger.error(err)
+				reject(err)
+			});
+		} else {
+			logger.warn("Unable to send envents! Only specified event name can be allowed :" + possibleEventName.join(", "));
+			reject("Unable to send envents! Only specified event name can be allowed :" + possibleEventName.join(", "))
+		}
+	})
+}
+
+function getToken(config){
+	logger.info("Inside getToken:")
+	return new Promise((resolve, reject) => {
+		var data = {
+			uri: config.SERVICE_API_URL +config.TOKEN_URL,
+			method: 'post',
+			json: {
+				"username": config.SERVICE_USER,
+				"password": config.TOKEN_CREDS
+			},
+			rejectUnauthorized: false
+		}
+		request(data, function(error, response, body){
+			if(error){
+				logger.error(error)
+				reject(error)
+			}else{
+				if (response.statusCode === 200 && response.body && response.body.data) {
+					resolve(response.body.data.token);
+				} else {
+					reject("User is not authorized to access this service:"+JSON.stringify(response.body.message));
+				}
+			}
+		});
+	})
+}

@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
-//
+// Copyright © 2017 T-Mobile USA, Inc.
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,31 +22,7 @@
     @version: 1.0
 **/
 
-
-/*
-USAGE
-
-    logger = require('./components/logger.js')
-
-    logger.init(event, context); // by default logging level is info
-
-    logger.warn('The following waring message will be logged');
-    logger.verbose('The following waring message will not be logged')
-
-
-    // Sample logging messages.
-    logger.error('Runtime errors or unexpected conditions.');
-    logger.warn('Runtime situations that are undesirable or unexpected, but not necessarily "wrong".');
-    logger.info('Interesting runtime events (Eg. connection established, data fetched etc).');
-    logger.verbose('Generally speaking, most lines logged by your application should be written as verbose.');
-    logger.debug('Detailed information on the flow through the system.);
-
-    // Alternate usage
-    logger.log('error', 'message');
-    logger.log('info', 'message');
-
-*/
-module.exports = function() {
+module.exports = function () {
     var logLevels = {
         error: 4,
         warn: 3,
@@ -61,31 +37,20 @@ module.exports = function() {
     };
 
     // set logLevel, RequestDetails
-    var init = function(event, context) {
+    var init = function (event, context) {
         setLevel();
     };
 
     // To add request specific details, which will be prepended in all the logs for ease of debugging in CloudWatch logs
-    var setRequestDetails = function(someContextSpecificId) {
+    var setRequestDetails = function (someContextSpecificId) {
         return;
-
-        // Timestamp and requestID are prepended in cloudwatch log by default; If any other details are required it can be done here.
-
-        /*
-        if (someContextSpecificId != undefined && someContextSpecificId != '') {
-            config.someContextSpecificId = someContextSpecificId;
-            config.requestDetails = 'someContextSpecificId : ' + someContextSpecificId + ' =>\t'
-        } else{
-            config.requestDetails = ''
-        };
-        */
     };
 
     // set current logLevel; Only logs which are above the curLogLevel will be logged;
-    var setLevel = function(level) {
+    var setLevel = function (level) {
         // LOG_LEVEL is 'info' by default
 
-        if (level !== undefined && logLevels[level] !== undefined) {
+        if (level && logLevels[level]) {
             // If LOG_LEVEL if explicitly specified , set it as the curLogLevel
             config.curLogLevel = level;
             return level;
@@ -96,7 +61,7 @@ module.exports = function() {
             } catch (e) {
                 error('error trying to access LOG_LEVEL');
             }
-            if (level !== undefined && logLevels[level] !== undefined) {
+            if (level && logLevels[level]) {
                 config.curLogLevel = level;
                 return level;
             }
@@ -104,7 +69,7 @@ module.exports = function() {
         return null;
     };
 
-    var log = function(level, message) {
+    var log = function (level, message) {
         /*
             @TODO: format message as per requirement.
             Will it be just a string / json. Should we except error object also?
@@ -131,19 +96,19 @@ module.exports = function() {
         return null;
     };
 
-    var error = function(message) {
+    var error = function (message) {
         log('error', message);
     };
-    var warn = function(message) {
+    var warn = function (message) {
         log('warn', message);
     };
-    var info = function(message) {
+    var info = function (message) {
         log('info', message);
     };
-    var verbose = function(message) {
+    var verbose = function (message) {
         log('verbose', message);
     };
-    var debug = function(message) {
+    var debug = function (message) {
         log('debug', message);
     };
 

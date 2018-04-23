@@ -1,64 +1,39 @@
 {
-  "events_url": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/events",
-  "event_status": {
+  "EVENTS_URL": "/dev/jazz/events",
+  "SERVICE_API_URL" : "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "TOKEN_URL" : "/dev/jazz/login",
+  "EVENT_STATUS": {
     "completed": "COMPLETED"
   },
-  "event_handler": {
-    "bitbucket": "BITBUCKET"
+  "SCM_TYPE": {
+    "bitbucket": "BITBUCKET",
+    "gitlab": "GITLAB"
   },
-  "event_type": {
+  "EVENT_TYPE": {
     "onboarding": "SERVICE_ONBOARDING",
     "deployment": "SERVICE_DEPLOYMENT",
     "deletion": "SERVICE_DELETION"
   },
-  "event_name": [
+  "EVENT_NAME": [
     "CREATE_BRANCH",
     "CREATE_TAG",
     "COMMIT_TEMPLATE",
     "COMMIT_CODE",
     "DELETE_BRANCH",
+    "DELETE_TAG",
     "RAISE_PR",
     "MERGE_PR",
     "DECLINE_PR",
     "UPDATE_PR",
-    "COMMENT_PR"
+    "COMMENT_PR",
+    "DELETE_TAG"
   ],
-  "scm_mappings": {
+  "SERVICE_USER" : "{jazz_admin}",
+  "TOKEN_CREDS" : "{jazz_admin_creds}",
+  "SCM_MAPPINGS": {
     "identifier":{
       "bitbucket": "X-Bitbucket-Type",
-      "gitlabs": "X-Gitlab-Event"
-    },
-    "userName":{
-      "bitbucket": "actor.username",
-      "gitlabs": "user_username"
-    },
-    "eventKey":{
-      "bitbucket": "headers['X-Event-Key']",
-      "gitlabs": "event_name"
-    },
-    "service":{
-      "bitbucket": "repository.slug",
-      "gitlabs": "['repository']['name']"
-    },
-    "repoLink":{
-      "bitbucket": "repository.links.self[0].href",
-      "gitlabs": "repository.homepage"
-    },
-    "changes":{
-      "bitbucket": "pullrequest",
-      "gitlabs": "object_attributes"
-    },
-    "source_branch":{
-      "bitbucket": "pullrequest.fromRef.branch.name",
-      "gitlabs": "object_attributes.source_branch"
-    },
-    "target_branch":{
-      "bitbucket": "pullrequest.toRef.branch.name",
-      "gitlabs": "object_attributes.target_branch"
-    },
-    "prlink":{
-      "bitbucket": "pullrequest.link",
-      "gitlabs": "object_attributes.url"
+      "gitlab": "X-Gitlab-Event"
     }
   }
 }

@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // =========================================================================
+
 /**
 	Nodejs Template Project
   @module: error-handler.js
@@ -23,7 +24,7 @@
 
 module.exports = () => {
     var errorObj = {
-        throwInputValidationError: function(errorMessage) { 
+        throwInputValidationError: function (errorMessage) { //Raise a  bad requests exception
             return {
                 errorType: "BadRequest",
                 message: errorMessage.toString()
@@ -35,19 +36,19 @@ module.exports = () => {
                 message: errorMessage.toString()
             };
         },
-        throwUnauthorizedError: function(errorMessage) { 
+        throwUnauthorizedError: function (errorMessage) { //Raise not found exceptions
             return {
                 errorType: "Unauthorized",
                 message: errorMessage.toString()
             };
         },
-        throwNotFoundError: function(errorMessage) { 
+        throwNotFoundError: function (errorMessage) { //Raise not found exceptions
             return {
                 errorType: "NotFound",
                 message: errorMessage.toString()
             };
         },
-        throwInternalServerError: function(errorMessage) { 
+        throwInternalServerError: function (errorMessage) { //Raise internal server exceptions
             return {
                 errorType: "InternalServerError",
                 message: errorMessage.toString()

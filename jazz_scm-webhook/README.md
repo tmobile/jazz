@@ -1,1 +1,1 @@
-This is a sample NodeJs template project
+API to record SCM activity
