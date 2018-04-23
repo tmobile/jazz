@@ -10,6 +10,7 @@
     "gitlab": "GITLAB"
   },
   "EVENT_TYPE": {
+
     "onboarding": "SERVICE_ONBOARDING",
     "deployment": "SERVICE_DEPLOYMENT",
     "deletion": "SERVICE_DELETION"

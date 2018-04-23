@@ -519,6 +519,7 @@
                         "COMMIT_TEMPLATE",
                         "COMMIT_CODE",
                         "DELETE_BRANCH",
+                        "DELETE_TAG",
                         "RAISE_PR",
                         "MERGE_PR",
                         "DECLINE_PR",

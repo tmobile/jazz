@@ -36,6 +36,7 @@ var getStageConfig = (event) => {
   } else {
     configObj = require('../config/' + stage + '-config.json');
   }
+
   return configObj;
 };
 

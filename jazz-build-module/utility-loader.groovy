@@ -2,6 +2,8 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import groovy.transform.Field
+import static java.util.UUID.randomUUID 
+
 echo "Utility module loaded successfully"
 
 
@@ -69,6 +71,16 @@ def getBucket(stage) {
   */
 def jazz_quiet_sh(cmd) {
     sh('#!/bin/sh -e\n' + cmd)
+}
+
+ /**
+ * Get Request Id 
+ * @return   
+ */
+def generateRequestId() {
+
+	UUID uuid = UUID.randomUUID()
+	return uuid.toString() 
 }
 
 /**

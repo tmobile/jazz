@@ -256,6 +256,16 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
+
+		if ((service_name.trim() == "jazz_scm-webhook")){
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["PROD"])}/g' ./config/prod-config.json"
+			
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"		
+		}
 	}
 	catch(e){
 		echo "error occured while loading service configuration: " + e.getMessage()
