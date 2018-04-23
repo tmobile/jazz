@@ -581,11 +581,10 @@ describe('jazz_environments', function () {
     var responseObj = {
       statusCode: 200,
       body: {
-        data: {
-          available: false
-        }
+        available: false
       }
     };
+    responseObj.body = "{\"data\" : {\"available\":false},\"input\" : {\"service\":\"mag!c\",\"domain\":\"k!ngd0m\"}}"
     reqStub = sinon.stub(request, "Request", (obj) => {
       return obj.callback(null, responseObj, responseObj.body)
     })
@@ -658,6 +657,7 @@ describe('jazz_environments', function () {
         }
       }
     };
+    responseObj.body = "{\"data\" : {\"available\":true},\"input\" : {\"service\":\"mag!c\",\"domain\":\"k!ngd0m\"}}"
     reqStub = sinon.stub(request, "Request", (obj) => {
       return obj.callback(null, responseObj, responseObj.body)
     });
@@ -674,13 +674,14 @@ describe('jazz_environments', function () {
 
   it("should indicate error if is-service-available has empty response data for POST method using handler function",function(){
     event.method = "POST";
-    var result = '{"errorType":"BadRequest","message":"Error finding service: '+event.query.service+' in service catalog"}'
+    var result = '{"errorType":"BadRequest","message":"Error finding service: '+event.query.domain+"."+event.query.service+' in service catalog"}'
     var responseObj = {
       statusCode: 400,
       body: {
         data: {}
       }
     };
+    responseObj.body = "{\"data\" : {},\"input\" : {\"service\":\"mag!c\",\"domain\":\"k!ngd0m\"}}"
     reqStub = sinon.stub(request, "Request", (obj) => {
       return obj.callback(null, responseObj, responseObj.body)
     });

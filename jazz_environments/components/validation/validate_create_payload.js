@@ -175,7 +175,9 @@ function validateServiceExists(environment_data) {
         };
         request(svcGetPayload, function (error, response, body) {
             if (response.statusCode === 200) {
-                var output = body;
+                logger.info("output.....:"+JSON.stringify(body))
+                var output = JSON.parse(body);
+                logger.info("output.....:"+JSON.stringify(output))
                 if (!output.data || !output.data || output.data.available == null) {
                     reject({
                         result: "inputError",
