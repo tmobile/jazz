@@ -44,7 +44,7 @@ module.exports.handler = (event, context, cb) => {
 
 	getScmType(scmIdentifier, event)
 	.then((result) => getScmDetails(result, event, config))
-	.then((res) => updateEvents(res, config))
+	.then((res) => updateEventsWithScmDetails(res, config))
 	.then(function(result){
 		logger.info("successfuly event is updated"+JSON.stringify(result));
 		return cb(result)
@@ -81,7 +81,7 @@ function getScmDetails(scmSource, event, config){
 			eventKey = event.headers['X-Event-Key'];
 			service = eventBody.repository.slug;
 			repositoryLink = eventBody.repository.links.self[0].href;
-			bitbucketScmContext(eventKey, eventBody, config)
+			bitbucketScmContextDetails(eventKey, eventBody, config)
 			.then(function(res){
 				var resObj = {
 					servContext: res, 
@@ -104,7 +104,7 @@ function getScmDetails(scmSource, event, config){
 			} else {
 				userName = (eventBody.user.username) ? eventBody.user.username : '';
 			}
-			gitlabScmContext(eventKey, eventBody, config)
+			gitlabScmContextDetails(eventKey, eventBody, config)
 			.then(function(res){
 				var resObj = {
 					servContext: res, 
@@ -125,8 +125,8 @@ function getScmDetails(scmSource, event, config){
 	});
 }
 
-function bitbucketScmContext(value, body, config){
-	logger.info("Inside bitbucketScmContext" + value)
+function bitbucketScmContextDetails(value, body, config){
+	logger.info("Inside bitbucketScmContextDetails" + value)
 	return new Promise((resolve, reject) => {
 		var result = {}, changes = null;
 		result.event_type = config.EVENT_TYPE.deployment;
@@ -201,8 +201,8 @@ function bitbucketScmContext(value, body, config){
 	});
 }
 
-function gitlabScmContext(eventKey, body, config){
-	logger.info("Inside gitlabScmContext:"+eventKey)
+function gitlabScmContextDetailsDetails(eventKey, body, config){
+	logger.info("Inside gitlabScmContextDetails:"+eventKey)
 	return new Promise((resolve, reject) => {
 		var result = {}, changes = null;
 		result.event_type = config.EVENT_TYPE.deployment;
@@ -271,8 +271,8 @@ function gitlabScmContext(eventKey, body, config){
 	})
 }
 
-function updateEvents(servObj, config){
-	logger.info("Inside updateEvents: "+ JSON.stringify(servObj));
+function updateEventsWithScmDetails(servObj, config){
+	logger.info("Inside updateEventsWithScmDetails: "+ JSON.stringify(servObj));
 	return new Promise((resolve, reject) => {
 		var serviceName = (servObj.service) ? servObj.service.split("_")[1] : "",
 		domain = (servObj.service) ? servObj.service.split("_")[0] : "",
