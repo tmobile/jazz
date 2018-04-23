@@ -71,7 +71,8 @@ node {
 			error "Service Id is not available."
 		}
 
-		environmentMetadataLoader.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments",auth_token)
+		environmentMetadataLoader.initialize(service_config['service'],  service_config['domain'], null, null, null,  g_base_url)
+		environmentMetadataLoader.setAuthToken(auth_token)
 	
 		if(!events) { error "Can't load events module"	} //Fail here
 		events.initialize(configLoader,service_config,"SERVICE_DELETION","","",g_base_url + "/jazz/events")
