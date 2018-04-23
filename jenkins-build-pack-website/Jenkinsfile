@@ -134,7 +134,7 @@ node()  {
 		def s3ProdBucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
 		def s3DevBucket  = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 
-		stage('Deployment to ${environment} Env'){
+		stage("Deployment to ${environment} Env"){
 				events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
 				events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment  status update event  for ${environment} deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment), environment)
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
