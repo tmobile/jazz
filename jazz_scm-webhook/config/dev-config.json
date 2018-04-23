@@ -5,12 +5,11 @@
   "EVENT_STATUS": {
     "completed": "COMPLETED"
   },
-  "EVENT_HANDLER": {
+  "SCM_TYPE": {
     "bitbucket": "BITBUCKET",
     "gitlab": "GITLAB"
   },
   "EVENT_TYPE": {
-
     "onboarding": "SERVICE_ONBOARDING",
     "deployment": "SERVICE_DEPLOYMENT",
     "deletion": "SERVICE_DELETION"
@@ -21,6 +20,7 @@
     "COMMIT_TEMPLATE",
     "COMMIT_CODE",
     "DELETE_BRANCH",
+    "DELETE_TAG",
     "RAISE_PR",
     "MERGE_PR",
     "DECLINE_PR",

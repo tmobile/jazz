@@ -44,6 +44,7 @@ module.exports.handler = (event, context, cb) => {
 
 	getScmType(scmIdentifier, event)
 	.then((result) => getScmDetails(result, event, config))
+	.then((res) => updateEvents(res, config))
 	.then(function(result){
 		logger.info("successfuly event is updated"+JSON.stringify(result));
 		return cb(result)
@@ -81,9 +82,14 @@ function getScmDetails(scmSource, event, config){
 			service = eventBody.repository.slug;
 			repositoryLink = eventBody.repository.links.self[0].href;
 			bitbucketScmContext(eventKey, eventBody, config)
-			.then((res) => updateEvents(res, service, userName,repositoryLink, config))
 			.then(function(res){
-				resolve(res);
+				var resObj = {
+					servContext: res, 
+					service: service, 
+					userName: userName, 
+					repositoryLink: repositoryLink
+				}
+				resolve(resObj);
 			})
 			.catch(function(err){
 				logger.error(err);
@@ -99,9 +105,14 @@ function getScmDetails(scmSource, event, config){
 				userName = (eventBody.user.username) ? eventBody.user.username : '';
 			}
 			gitlabScmContext(eventKey, eventBody, config)
-			.then((res) => updateEvents(res, service, userName,repositoryLink, config))
 			.then(function(res){
-				resolve(res);
+				var resObj = {
+					servContext: res, 
+					service: service, 
+					userName: userName, 
+					repositoryLink: repositoryLink
+				}
+				resolve(resObj);
 			})
 			.catch(function(err){
 				logger.error(err);
@@ -260,22 +271,23 @@ function gitlabScmContext(eventKey, body, config){
 	})
 }
 
-function updateEvents(servContext, service, userName, repositoryLink, config){
-	logger.info("Inside updateEvents: "+ JSON.stringify(servContext));
+function updateEvents(servObj, config){
+	logger.info("Inside updateEvents: "+ JSON.stringify(servObj));
 	return new Promise((resolve, reject) => {
-		var serviceName = (service) ? service.split("_")[1] : "",
-		domain = (service) ? service.split("_")[0] : "",
+		var serviceName = (servObj.service) ? servObj.service.split("_")[1] : "",
+		domain = (servObj.service) ? servObj.service.split("_")[0] : "",
 		timestamp = moment().utc().format("YYYY-MM-DDTHH:mm:ss:SSS"),
+		servContext = servObj.servContext,
 		bodyObj = {
-			'event_handler': config.EVENT_HANDLER[scmSource],
+			'event_handler': config.SCM_TYPE[scmSource],
 			'event_name': servContext.event_name, 
 			'service_name': serviceName,
 			'event_status': config.EVENT_STATUS.completed,
 			'event_type': servContext.event_type, 
-			'username': userName,
+			'username': servObj.userName,
 			'event_timestamp': timestamp,
 			'service_context': {      
-				'repository': repositoryLink,
+				'repository': servObj.repositoryLink,
 				'domain' : domain,
 				'branch' : servContext.branch,
 				'pr_link' : servContext.prlink,
