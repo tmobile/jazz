@@ -1,7 +1,6 @@
 {
   "EVENTS_URL": "/dev/jazz/events",
   "SERVICE_API_URL" : "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
-  "TOKEN_URL" : "/dev/jazz/login",
   "EVENT_STATUS": {
     "completed": "COMPLETED"
   },
@@ -25,11 +24,8 @@
     "MERGE_PR",
     "DECLINE_PR",
     "UPDATE_PR",
-    "COMMENT_PR",
-    "DELETE_TAG"
+    "COMMENT_PR"
   ],
-  "SERVICE_USER" : "{jazz_admin}",
-  "TOKEN_CREDS" : "{jazz_admin_creds}",
   "SCM_MAPPINGS": {
     "identifier":{
       "bitbucket": "X-Bitbucket-Type",

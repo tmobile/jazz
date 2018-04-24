@@ -27,7 +27,7 @@ const logger = require("./components/logger.js"); //Import the logging module.
 const request = require("request");
 const moment = require("moment");
 
-module.exports.handler = (event, context, cb) => {
+var handler = function(event, context, cb) {
 
 	//Initializations
 	var errorHandler = errorHandlerModule();
@@ -47,7 +47,7 @@ module.exports.handler = (event, context, cb) => {
 	.then((res) => updateEventsWithScmDetails(res, config))
 	.then(function(result){
 		logger.info("successfuly event is updated"+JSON.stringify(result));
-		return cb(result)
+		return cb(result);
 	})
 	.catch(function(error){
 		logger.info("error while updating events:"+JSON.stringify(error));
@@ -55,7 +55,7 @@ module.exports.handler = (event, context, cb) => {
 	});
 };
 
-function getScmType(scmIdentifier, event){
+var getScmType = function(scmIdentifier, event){
 	logger.info("scmIdentifier:"+JSON.stringify(scmIdentifier));
 	return new Promise((resolve, reject) => {
 		for (var key in scmIdentifier) {
@@ -69,7 +69,7 @@ function getScmType(scmIdentifier, event){
 	});
 }
 
-function getScmDetails(scmSource, event, config){
+var getScmDetails = function(scmSource, event, config){
 	logger.info("Inside getScmDetails:"+ scmSource)
 	return new Promise((resolve, reject) => {
 		var userName, eventKey, service, repositoryLink, servContext,
@@ -119,13 +119,13 @@ function getScmDetails(scmSource, event, config){
 				reject(err);
 			});
 		} else {
-			logger.error("Unsupported scmSource:"+ scmSource)
-			reject("Unsupported scmSource")
+			logger.error("Unsupported scmSource:"+ scmSource);
+			reject("Unsupported scmSource");
 		}
 	});
 }
 
-function bitbucketScmContextDetails(value, body, config){
+var bitbucketScmContextDetails = function(value, body, config){
 	logger.info("Inside bitbucketScmContextDetails" + value)
 	return new Promise((resolve, reject) => {
 		var result = {}, changes = null;
@@ -172,7 +172,7 @@ function bitbucketScmContextDetails(value, body, config){
 					result.event_name = 'COMMIT_CODE';
 					resolve(result);
 				} else {
-					reject("Invalid push event")
+					reject("Invalid push event");
 				}
 				break;
 			case 'pullrequest:created':
@@ -196,12 +196,12 @@ function bitbucketScmContextDetails(value, body, config){
 				resolve(result);
 				break;
 			default:
-				reject("Invalid event key")
+				reject("Invalid event key");
 		}		
 	});
 }
 
-function gitlabScmContextDetailsDetails(eventKey, body, config){
+var gitlabScmContextDetails = function(eventKey, body, config){
 	logger.info("Inside gitlabScmContextDetails:"+eventKey)
 	return new Promise((resolve, reject) => {
 		var result = {}, changes = null;
@@ -261,21 +261,22 @@ function gitlabScmContextDetailsDetails(eventKey, body, config){
 				result.event_name = 'COMMIT_CODE';
 				resolve(result);
 			} else {
-				logger.error("Invalid event key")
+				logger.error("Invalid event key");
 				reject("Invalid event key");
 			}
 		} else {
-			logger.error("Invalid event key")
+			logger.error("Invalid event key");
 			reject("Invalid event key");
 		}
 	})
 }
 
-function updateEventsWithScmDetails(servObj, config){
+var updateEventsWithScmDetails = function(servObj, config){
 	logger.info("Inside updateEventsWithScmDetails: "+ JSON.stringify(servObj));
 	return new Promise((resolve, reject) => {
-		var serviceName = (servObj.service) ? servObj.service.split("_")[1] : "",
-		domain = (servObj.service) ? servObj.service.split("_")[0] : "",
+		var service = servObj.service.split("_"),
+		serviceName = service[1],
+		namespace = service[0],
 		timestamp = moment().utc().format("YYYY-MM-DDTHH:mm:ss:SSS"),
 		servContext = servObj.servContext,
 		bodyObj = {
@@ -288,7 +289,7 @@ function updateEventsWithScmDetails(servObj, config){
 			'event_timestamp': timestamp,
 			'service_context': {      
 				'repository': servObj.repositoryLink,
-				'domain' : domain,
+				'domain' : namespace,
 				'branch' : servContext.branch,
 				'pr_link' : servContext.prlink,
 				'target' : servContext.target,
@@ -307,72 +308,46 @@ function updateEventsWithScmDetails(servObj, config){
 
 		if(isvalidEventName){
 			//Invoking platform events api to record git activity.
-			getToken(config)
-			.then(function(authToken){
-				var options = {
-					url: config.SERVICE_API_URL + config.EVENTS_URL,
-					method: 'POST',
-					headers: { 
-						'cache-control': 'no-cache',
-						'content-type': 'application/json',
-						'Authorization': authToken
-					},
-					body : bodyObj,
-					json: true,
-					rejectUnauthorized: false
-				};
-				request(options, function (error, response, body) {
-					if (error) {
-						logger.error('Error invoking service: ' + JSON.stringify(error));
-						reject(error)
+			var options = {
+				url: config.SERVICE_API_URL + config.EVENTS_URL,
+				method: 'POST',
+				headers: { 
+					'cache-control': 'no-cache',
+					'content-type': 'application/json'
+				},
+				body : bodyObj,
+				json: true,
+				rejectUnauthorized: false
+			};
+			request(options, function (error, response, body) {
+				if (error) {
+					logger.error('Error invoking service: ' + JSON.stringify(error));
+					reject(error);
+				} else {
+					if(response.statusCode === 200){
+						var output = {
+							message: 'successfully recorded git activity to jazz_events.',
+							event_id : body.data.event_id
+						};
+						resolve(responseObj(output, body.input));
 					} else {
-						if(response.statusCode === 200){
-							var output = {
-								message: 'successfully recorded git activity to jazz_events.',
-								event_id : body.data.event_id
-							};
-							resolve(responseObj(output, body.input));
-						} else {
-							logger.error("StatusCode :"+ JSON.stringify(response));
-							reject(response.body.message)
-						}
+						logger.error("StatusCode :"+ JSON.stringify(response));
+						reject(response.body.message);
 					}
-				});
-			})
-			.catch(function(err){
-				logger.error(err)
-				reject(err)
+				}
 			});
 		} else {
 			logger.warn("Unable to send envents! Only specified event name can be allowed :" + possibleEventName.join(", "));
-			reject("Unable to send envents! Only specified event name can be allowed :" + possibleEventName.join(", "))
+			reject("Unable to send envents! Only specified event name can be allowed :" + possibleEventName.join(", "));
 		}
 	})
 }
 
-function getToken(config){
-	logger.info("Inside getToken:")
-	return new Promise((resolve, reject) => {
-		var data = {
-			uri: config.SERVICE_API_URL +config.TOKEN_URL,
-			method: 'post',
-			json: {
-				"username": config.SERVICE_USER,
-				"password": config.TOKEN_CREDS
-			},
-			rejectUnauthorized: false
-		}
-		request(data, function(error, response, body){
-			if(error){
-				logger.error(error)
-				reject(error)
-			}else{
-				if (response.statusCode === 200 && response.body && response.body.data) {
-					resolve(response.body.data.token);
-				} else {
-					reject("User is not authorized to access this service:"+JSON.stringify(response.body.message));
-				}
-			}
-		});
-	})
+module.exports = {
+	getScmType: getScmType,
+	getScmDetails: getScmDetails,
+	bitbucketScmContextDetails: bitbucketScmContextDetails,
+	gitlabScmContextDetails: gitlabScmContextDetails,
+	updateEventsWithScmDetails: updateEventsWithScmDetails,
+    handler: handler
 }

@@ -373,15 +373,15 @@
             "properties": {
                 "actor": {
                     "type": "object",
-                    "description": "Bitbucket user details",
+                    "description": "SCM user details",
                     "properties": {
                         "username": {
                             "type": "string",
-                            "description": "User name of the bitbucket user"
+                            "description": "Username of SCM user"
                         },
                         "displayName": {
                             "type": "string",
-                            "description": "Display name of the bitbucket user"
+                            "description": "Display name of the SCM user"
                         }
                     }
                 },
