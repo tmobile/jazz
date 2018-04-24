@@ -26,7 +26,7 @@ const util = require('util');
 const crud = require("./components/crud")(); //Import the utils module.
 
 /**
-	Serverless create service
+    Serverless create service
     @author:
     @version: 1.0
 **/
@@ -82,12 +82,12 @@ module.exports.handler = (event, context, cb) => {
                         crud.update(serviceId, serviceDataObject, function (serviceUpdateError, results) {
                             if (serviceUpdateError) {
                                 var errorMessage = {
-                                    "message": "Error occurred while updating service with failed statuss",
+                                    "message": "Error occurred while updating service with failed status.",
                                     "error" : err
                                 };
                                 return cb(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
                             } else {
-                                logger.error("Updated Service catalog with failed status");
+                                logger.error("Updated service catalog with failed status.");
                                 return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
                             }
                         });
@@ -99,9 +99,7 @@ module.exports.handler = (event, context, cb) => {
     } catch (e) {
         logger.error(e);
         cb(JSON.stringify(errorHandler.throwInternalServerError(e)));
-
     }
-
 
     function startServiceOnboarding(event, config, service_id) {
         return new Promise((resolve, reject) => {
@@ -139,7 +137,7 @@ module.exports.handler = (event, context, cb) => {
                         } else {
                             logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
                             var message = {
-                                 'message': "Failed to kick off service creation job",
+                                 'message': "Failed to kick off service onboarding job.",
                                  'jenkins_api_failure' : true
                             };
                             reject(message);
@@ -147,10 +145,9 @@ module.exports.handler = (event, context, cb) => {
                     }
                 });
             } catch (e) {
-                logger.error('Error : ' + e.message);
+                logger.error('Error during startServiceOnboarding: ' + e.message);
                 reject(e);
             }
-
         });
     }
 
@@ -172,7 +169,7 @@ module.exports.handler = (event, context, cb) => {
                     return resolve(authToken);
                 } else {
                     return reject({
-                        "error": "Could not get authentication token for updating Service catalog.",
+                        "error": "Could not get authentication token for updating service catalog.",
                         "message": response.body.message
                     });
                 }
