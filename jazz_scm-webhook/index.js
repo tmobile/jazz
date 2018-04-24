@@ -33,11 +33,11 @@ var handler = function(event, context, cb) {
 	var errorHandler = errorHandlerModule();
 	var config = configObj(event);
 	logger.init(event, context);
-	logger.info("Webhook-events:" + JSON.stringify(event));
+	logger.info("Webhook-events: " + JSON.stringify(event));
 	
 	if(!event || !event.body ){
-		logger.error("Unable to find the SCM activity!");
-		return cb(JSON.stringify(errorHandler.throwInputValidationError("Unable to find the SCM activity!")));
+		logger.error("Unable to find SCM activity in event body!");
+		return cb(JSON.stringify(errorHandler.throwInputValidationError("Unable to find SCM activity in event body!")));
 	} 
 	var scmMap = config.SCM_MAPPINGS;
 	var scmSource, scmIdentifier = scmMap.identifier;
@@ -46,12 +46,12 @@ var handler = function(event, context, cb) {
 	.then((result) => getScmDetails(result, event, config))
 	.then((res) => updateEventsWithScmDetails(res, config))
 	.then(function(result){
-		logger.info("successfuly event is updated"+JSON.stringify(result));
+		logger.info("Successfully updated the event: "+JSON.stringify(result));
 		return cb(result);
 	})
 	.catch(function(error){
-		logger.info("error while updating events:"+JSON.stringify(error));
-		return cb(JSON.stringify(errorHandler.throwInternalServerError("Eventkey is null or undefined! so unable to find event name.")));
+		logger.info("Error while updating events: "+JSON.stringify(error));
+		return cb(JSON.stringify(errorHandler.throwInternalServerError("Unable to find event name as event key is null.")));
 	});
 };
 
@@ -70,7 +70,7 @@ var getScmType = function(scmIdentifier, event){
 }
 
 var getScmDetails = function(scmSource, event, config){
-	logger.info("Inside getScmDetails:"+ scmSource)
+	logger.debug("Inside getScmDetails: "+ scmSource)
 	return new Promise((resolve, reject) => {
 		var userName, eventKey, service, repositoryLink, servContext,
 		
@@ -119,14 +119,14 @@ var getScmDetails = function(scmSource, event, config){
 				reject(err);
 			});
 		} else {
-			logger.error("Unsupported scmSource:"+ scmSource);
-			reject("Unsupported scmSource");
+			logger.error("Unsupported scmSource: "+ scmSource);
+			reject("Unsupported scm source");
 		}
 	});
 }
 
 var bitbucketScmContextDetails = function(value, body, config){
-	logger.info("Inside bitbucketScmContextDetails" + value)
+	logger.debug("Inside bitbucketScmContextDetails: " + value)
 	return new Promise((resolve, reject) => {
 		var result = {}, changes = null;
 		result.event_type = config.EVENT_TYPE.deployment;
@@ -202,7 +202,7 @@ var bitbucketScmContextDetails = function(value, body, config){
 }
 
 var gitlabScmContextDetails = function(eventKey, body, config){
-	logger.info("Inside gitlabScmContextDetails:"+eventKey)
+	logger.info("Inside gitlabScmContextDetails: "+eventKey)
 	return new Promise((resolve, reject) => {
 		var result = {}, changes = null;
 		result.event_type = config.EVENT_TYPE.deployment;
@@ -327,7 +327,7 @@ var updateEventsWithScmDetails = function(servObj, config){
 				} else {
 					if(response.statusCode === 200){
 						var output = {
-							message: 'successfully recorded git activity to jazz_events.',
+							message: 'Successfully recorded git activity to jazz_events.',
 							event_id : body.data.event_id
 						};
 						resolve(responseObj(output, body.input));
@@ -338,8 +338,8 @@ var updateEventsWithScmDetails = function(servObj, config){
 				}
 			});
 		} else {
-			logger.warn("Unable to send envents! Only specified event name can be allowed :" + possibleEventName.join(", "));
-			reject("Unable to send envents! Only specified event name can be allowed :" + possibleEventName.join(", "));
+			logger.warn("Unable to send envents, only specified event name(s) are allowed: " + possibleEventName.join(", "));
+			reject("Unable to send envents, only specified event name(s) are allowed: " + possibleEventName.join(", "));
 		}
 	})
 }
