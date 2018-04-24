@@ -23,10 +23,21 @@
 **/
 
 var getStageConfig = (event) => {
-  var stage = event.stage,
-  stageMap = { 'dev': 'dev', 'stg': 'stg', 'prod': 'prod', stage:stage},
-  stageConfig = stageMap[stage] ? stageMap[stage] : stage,
-  configObj = require('../config/'+stageConfig+'-config.json');
+
+  var stage;
+  
+  if (event && event.awslogs && event.awslogs.data) {
+      // cw events default to dev
+      stage = 'dev';
+  }else {
+      stage = event.stage
+  } 
+  
+  var configObj;
+  
+  if (stage) {
+      configObj = require(`../config/${stage}-config.json`);
+  } 
 
   return configObj;
 };
