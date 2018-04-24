@@ -71,8 +71,7 @@ node {
 			error "Service Id is not available."
 		}
 
-		environmentMetadataLoader.initialize(service_config['service'],  service_config['domain'], null, null, null,  g_base_url)
-		environmentMetadataLoader.setAuthToken(auth_token)
+		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments",auth_token)
 	
 		if(!events) { error "Can't load events module"	} //Fail here
 		events.initialize(configLoader,service_config,"SERVICE_DELETION","","",g_base_url + "/jazz/events")
@@ -122,6 +121,7 @@ node {
 								events.setBranch(branch)
 								branch = 'NA'
 							}
+							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
 							echo 'undeploying service for environment: ' + _envId
 							
@@ -148,6 +148,7 @@ node {
 								events.setBranch(branch)
 								branch = 'NA'
 							}
+							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
 							echo 'undeploying function for environment: '+ _envId
 							unDeployService(_envId)
@@ -164,10 +165,13 @@ node {
 					for (_envId in environmentIds){
 						try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+							echo "Branch ::: $branch"
+							echo "ENVIRONMENT ::: $_envId"
 							if(branch && branch != 'NA'){
 								events.setBranch(branch)
 								branch = 'NA'
 							}
+							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
 							if (cloudfrontEnabled == "true") {
 								cleanupCloudFrontDistribution(service_name, domain, _envId)
@@ -523,13 +527,26 @@ def getResourcePath() {
  			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
  			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
  			sh "aws configure set preview.cloudfront true"
- 			def bucketName = utilModule.getBucket(stage)
- 			def bucketUrl = "${bucketName}/${service_config['domain']}-${service_config['service']}"
+
+			def bucketName
+			if(stage.endsWith("-dev")) {
+				bucketName = utilModule.getBucket('dev')
+			} else {
+				bucketName = utilModule.getBucket(stage)
+			}
+			echo "BucketName :: $bucketName" 
+ 			def bucketUrl = "${bucketName}/${service_config['domain']}-${service_config['service']}/${stage}"
+			echo "BucketURL :: $bucketUrl" 
  			def _exists = checkIfWebsiteExists(bucketUrl)
  			if(_exists) {
  				sh "aws s3 rm s3://${bucketUrl} --recursive"
  				cleanupS3BucketPolicy(stage, bucketName)
  			}
+			def serviceS3FolderUrl = "${bucketName}/${service_config['domain']}-${service_config['service']}"
+			if(!checkIfBucketFolderHasObjects(serviceS3FolderUrl)){
+					echo "Cleaning up service folder since service folder is empty:: $serviceS3FolderUrl"
+					sh "aws s3 rm s3://${serviceS3FolderUrl} --recursive"
+			}
  		} catch(ex) {
  			send_status_email ("FAILED")
 			events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
@@ -554,6 +571,17 @@ def checkIfWebsiteExists(bucketUrl) {
 	return status
 }
 
+def checkIfBucketFolderHasObjects(bucketFolderName){
+	def status = true;
+	try {
+		 sh ("aws s3 ls s3://${bucketFolderName}  --output json --query '[length(Contents[])]'")
+	}catch(ex) {
+		echo "Bucket $bucketFolderName is empty"
+		status = false
+	}
+	return status
+}
+
 /**
  * Delete the the bucket policies related to the service folder
  * @param service
@@ -572,7 +600,7 @@ def cleanupS3BucketPolicy(stage, bucket) {
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
-			def folderName = "${service_config['domain']}-${service_config['service']}" 
+			def folderName = "${service_config['domain']}-${service_config['service']}/${stage}" 
 			def bucketPolicy = sh (
 				script: "aws s3api get-bucket-policy --bucket ${bucket} --output json",
 				returnStdout: true
