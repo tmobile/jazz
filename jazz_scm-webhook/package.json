@@ -1,5 +1,5 @@
 {
-    "name": "jazz_webhook-api",
+    "name": "jazz_scm-webhook",
     "version": "0.0.1",
     "description": "API to record SCM activity",
     "main": "index.js",
