@@ -41,6 +41,7 @@ def setRepoEndpoints(){
 def createProject(repo_owner, repo_name){
     try {
         if (config_loader.SCM.TYPE == "gitlab") {
+
             //gitlabs username is restricted to alphanumeric and . _ - characters, 
             // so using email all email characters (except -, _) replaced with -
             def gitlab_username = repo_owner.replaceAll("[^a-zA-Z0-9_-]", "-")
@@ -159,6 +160,7 @@ def setRepoPermissions(repo_owner, repo_name, admin_group) {
 
     } else if (config_loader.SCM.TYPE == "bitbucket") {
         sh "curl -X PUT -G -k -v -u \"${config_loader.SCM.USERNAME}:${config_loader.SCM.PASSWORD}\" -d \"name=$admin_group\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/groups?permission=REPO_ADMIN&\""
+
 
         def encoded_creator = URLEncoder.encode(repo_owner, "utf-8")
 
