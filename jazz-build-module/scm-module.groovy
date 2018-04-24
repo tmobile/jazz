@@ -225,6 +225,14 @@ def getTemplateUrl(template_name) {
     }
 }
 
+def getCoreRepoUrl(repo_name) {
+    if(scm_config.SCM.TYPE == "gitlab"){
+        return "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/${repo_name}";
+    }else if(scm_config.SCM.TYPE == "bitbucket"){
+        return "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/projects/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/repos/${repo_name}/browse";
+    } 
+}
+
 def getCoreRepoCloneUrl(repo_name) {
     if (scm_config.SCM.TYPE == "gitlab") {
         return "${scm_protocol}${scm_config.REPOSITORY.BASE_URL}/${scm_config.REPOSITORY.REPO_BASE_PLATFORM}/${repo_name}.git"

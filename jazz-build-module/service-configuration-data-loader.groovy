@@ -53,6 +53,24 @@ def loadServiceConfigurationData() {
 		if ((service_name.trim() == "jazz_delete-serverless-service") ) {
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./index.js"
 		}
+
+		if ( (service_name.trim() == "jazz_environments") ) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+		
+			sh "sed -i -- 's/{jazz_admin}/${service_config.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${service_config.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${service_config.JAZZ.ADMIN}/g' ./config/prod-config.json"
+		}
 		
 		if ( (service_name.trim() == "jazz_events") ) {
 			sh "sed -i -- 's/{conf_stack_prefix}/${service_config.INSTANCE_PREFIX}/g' ./config/dev-config.json"
@@ -219,6 +237,16 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_scm-webhook")){
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(service_config.AWS.API["PROD"])}/g' ./config/prod-config.json"
+			
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"		
 		}
 	}
 	catch(e){
