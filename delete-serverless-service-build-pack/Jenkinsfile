@@ -710,7 +710,7 @@ def getDistributionId(stage) {
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-$stage-static-website-origin-${service_config['domain']}-${service_config['service']}].{Distribution:domainName, Id:Id}\"",
+				--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${stage}-static-website-origin-${service_config['domain']}-${service_config['service']}].{Distribution:domainName, Id:Id}\"",
 			returnStdout: true
 		)
 
