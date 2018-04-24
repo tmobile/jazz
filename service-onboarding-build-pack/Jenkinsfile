@@ -57,7 +57,7 @@ node  {
 			error "Service Id is not available."
 		}
 
-
+		scmModule.setServiceConfig(service_config)
 		if (!events) { error "Can't load events module"	} //Fail here
 		events.initialize(configLoader, service_config, "SERVICE_CREATION", "", "", g_base_url + "/jazz/events")
 

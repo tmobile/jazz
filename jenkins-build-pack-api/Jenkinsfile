@@ -84,10 +84,11 @@ node() {
 
 	dir(repo_name)
 	{
+		scmModule.setServiceConfig(config)
 		def envApi = "${g_base_url}/jazz/environments"
 		environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, envApi, auth_token)
-		gitCommitOwner = environmentDeploymentMetadata.getRepoCommitterInfo()
-		gitCommitHash = environmentDeploymentMetadata.getRepoCommitHash()
+		gitCommitOwner = scmModule.getRepoCommitterInfo()
+		gitCommitHash = scmModule.getRepoCommitHash()
 		context_map = [created_by : config['created_by'], deployed_by: gitCommitOwner]
 		environment_logical_id = '';
 
@@ -99,13 +100,13 @@ node() {
 			environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
 		}
 
-		if (!environment_logical_id) {
+		if (!environment_logical_id && config['domain'] != 'jazz') {
 			error "The environment has not been created yet and its missing the environment id"
 		}
 
 		if (!events) { error "Can't load events module"	} //Fail here 
 		def eventsApi = "${g_base_url}/jazz/events"   
-		events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, current_environment, eventsApi)
+		events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, environment_logical_id, eventsApi)
 
 		domain = config['domain']
 		def runtime = config['providerRuntime']
@@ -179,7 +180,7 @@ node() {
 		}
 		stage("Deployment to ${env_key} environment") {
 			events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
-			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", current_environment), environment_logical_id)
+			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
 
 			echo "starts Deployment to ${env_key} Env"
 			def endpointUrl = null
@@ -187,7 +188,7 @@ node() {
 
 				// resetting env endpoint url
 				environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
-				events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", current_environment), environment_logical_id)
+				events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
 					sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
@@ -247,15 +248,15 @@ node() {
 					}
                 }
 			} catch (ex) {
-				events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", current_environment), environment_logical_id)
-				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", current_environment), environment_logical_id)
+				events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id), environment_logical_id)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id), environment_logical_id)
 				events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), environment_logical_id)
 				error ex.getMessage()
 			}
 			environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
 			def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
-			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", current_environment), environment_logical_id)
-			events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", current_environment), environment_logical_id)
+			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
+			events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id), environment_logical_id)
 			events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
 		}//stage to prod ends here
 

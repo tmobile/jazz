@@ -16,14 +16,12 @@ echo "Environment and deployment metadata module loaded successfully"
 @Field def config_loader
 @Field def scm_module
 @Field def g_service_branch 
-@Field def g_git_commit_hash
-@Field def g_git_repo_url
 @Field def g_build_url
 @Field def g_build_id
 @Field def g_environment_logical_id
 @Field def g_environment_endpoint
 @Field def g_request_id
-@Field def g_evironment_api
+@Field def g_environment_api
 
 /**
  * Initialize the module
@@ -39,45 +37,10 @@ def initialize(serviceConfig, configLoader, scmMdule, branch, buildUrl, buildId,
 	setAuthToken(token)
 }
 
-
-def getRepoCommitHash() {
-	if (g_git_commit_hash == null) {
-		g_git_commit_hash = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
-	}
-	echo "SCM_Commit_Hash:$g_git_commit_hash"
-	return g_git_commit_hash
-
-}
-
-def getRepoName(){
-	def repo_name
-	if (g_service_config['domain'] && g_service_config['domain'].trim() != "") {
-		repo_name = g_service_config['domain'].trim() + "_" + g_service_config['service'].trim()
-	} else {
-		repo_name = g_service_config['service'].trim()
-	}
-	return repo_name
-}
-
-def getRepoURL() {
-	if (g_git_repo_url == null) {
-		def repo_name = getRepoName()
-		if (g_service_config['domain'] && g_service_config['domain'] == "jazz") {
-			repoUrl = scm_module.getCoreRepoUrl(repo_name)
-		} else {
-			repoUrl = scm_module.getRepoUrl(repo_name)
-		}
-		echo "GIT Repository URL: $repoUrl"
-		g_git_repo_url = repoUrl
-	}
-	echo "SCM_Commit_URL:$g_git_repo_url"
-	return g_git_repo_url
-}
-
 def getEnvironmentLogicalId() {
 	if (g_environment_logical_id == null && g_service_config['domain'] != "jazz") {
-		def API_ENVIRONMENT_QUERY_URL = "${g_evironment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}"
-		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_evironment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
+		def API_ENVIRONMENT_QUERY_URL = "${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}"
+		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
 		def environmentOutput
 		def environment_logical_id
 		if (getEnvironments != null) {
@@ -118,7 +81,7 @@ def createPromotedEnvironment(environment_logical_id, created_by) {
 			]
 			def payload = JsonOutput.toJson(params)
 			def res = sh(script: "curl -X POST \
-						${g_evironment_api} \
+						${g_environment_api} \
 						-H 'authorization: $g_login_token' \
 						-H 'Content-type: application/json' \
 						-d '$payload'", returnStdout: true)
@@ -149,8 +112,8 @@ def checkIfEnvironmentAvailable(environment_logical_id) {
 	def isAvailable = false
 	try {
 		if (environment_logical_id && g_service_config['domain'] != "jazz") {
-			def API_ENVIRONMENT_QUERY_URL = "${g_evironment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}"
-			def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_evironment_api}?service=$s{ervice_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
+			def API_ENVIRONMENT_QUERY_URL = "${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}"
+			def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=$s{ervice_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
 			def environmentOutput
 			if (getEnvironments) {
 				environmentOutput = parseJson(getEnvironments)
@@ -178,7 +141,7 @@ def getEnvironmentLogicalIds() {
 			def environment_data = sh(script: "curl GET  \
 			-H \"Content-Type: application/json\" \
 			-H \"Authorization: $g_login_token\" \
-			\"${g_evironment_api}?domain=${g_service_config['domain']}&service=${g_service_config['service']}\"", returnStdout: true)
+			\"${g_environment_api}?domain=${g_service_config['domain']}&service=${g_service_config['service']}\"", returnStdout: true)
 			if (environment_data) {
 				def environment_dataObj = parseJson(environment_data)
 				if (environment_dataObj && environment_dataObj.data && environment_dataObj.data.environment) {
@@ -208,7 +171,7 @@ def getEnvironmentBranchName(logical_id) {
 			def environment_data = sh(script: "curl GET  \
 			-H \"Content-Type: application/json\" \
 			-H \"Authorization: $g_login_token\" \
-			\"${g_evironment_api}?domain=${g_service_config['domain']}&service=${g_service_config['service']}\"", returnStdout: true)
+			\"${g_environment_api}?domain=${g_service_config['domain']}&service=${g_service_config['service']}\"", returnStdout: true)
 			if (environment_data) {
 				def environment_dataObj = parseJson(environment_data)
 				if (environment_dataObj && environment_dataObj.data && environment_dataObj.data.environment) {
@@ -264,8 +227,8 @@ def generateDeploymentMap(status, environment_logical_id) {
 		domain: g_service_config['domain'],
 		provider_build_url:  g_build_url,
 		provider_build_id: g_build_id,
-		scm_commit_hash:  getRepoCommitHash(),
-		scm_url:  "${getRepoURL()}.git",
+		scm_commit_hash:  scm_module.getRepoCommitHash(),
+		scm_url:  "${scm_module.getRepoURL()}.git",
 		scm_branch: g_service_branch,
 		request_id: g_request_id
 	]
@@ -281,46 +244,6 @@ def generateDeleteDeploymentMap() {
 	return serviceCtxMap;
 }
 
-def getRepoCommitterInfo() {
-	def committerId = null
-	if (getRepoCommitHash() != null) {
-		if (config_loader.SCM.TYPE == "gitlab") {
-			def repo_name = getRepoName()
-			def proj_id = scm_module.getGitLabsProjectId(repo_name)
-			def scm_commit_api = "http://${config_loader.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/repository/commits/${getRepoCommitHash()}"
-			scmCommitResponse = sh(script: "curl --header \"Private-Token: ${config_loader.SCM.PRIVATE_TOKEN}\"  \"${scm_commit_api}\"", returnStdout: true).trim()
-			if (scmCommitResponse != null) {
-				def commitDetails = parseJson(scmCommitResponse)
-				if (commitDetails != null) {
-					committerId = commitDetails.author_name
-				}
-			}
-		} else if (config_loader.SCM.TYPE == "bitbucket") {
-			def repoBase
-			if (g_service_config['domain'] == 'jazz') {
-				repoBase = scm_config.REPOSITORY.REPO_BASE_PLATFORM
-			} else {
-				repoBase = scm_config.REPOSITORY.REPO_BASE_SERVICES
-			}
-			def scm_commit_api = "http://${config_loader.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${repoBase}/repos/${getRepoName()}"
-			def repoUrl = "${scm_commit_api}/commits/${getRepoCommitHash()}"
-			echo "[Metadata] Repository URL: $repoUrl"
-			def scmCommitResponse 
-			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-				scmCommitResponse = sh(script: "curl -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\"  $repoUrl", returnStdout: true).trim()
-			}
-			if (scmCommitResponse != null) {
-				def commitDetails = parseJson(scmCommitResponse)
-				if (commitDetails != null && commitDetails.author != null && commitDetails.author.name != null) {
-					committerId = commitDetails.author.name
-				}
-			}
-		}
-
-		return committerId
-	}
-}
-
 /**
  * Core dump
  */
@@ -328,9 +251,6 @@ def showState() {
 	echo "service_domain...${g_service_config['domain']}"
 	echo "service_name...${g_service_config['service']}"
 	echo "service_type...${g_service_config['type']}"
-	echo "g_git_commit_hash...$g_git_commit_hash"
-	echo "g_git_repo_url...$g_git_repo_url"
-	echo "git username...$config_loader.SCM.USERNAME"
 	echo "g_build_url...$g_build_url"
 	echo "g_build_id...$g_build_id"
 	echo "g_environment_logical_id...$g_environment_logical_id"
@@ -442,7 +362,7 @@ def setRequestId(requestId) {
  * @return      
  */
 def setBaseUrl(base_url) {
-	g_evironment_api = base_url
+	g_environment_api = base_url
 }
 
 return this;
