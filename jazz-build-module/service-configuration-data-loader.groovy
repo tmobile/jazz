@@ -63,13 +63,6 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{jazz_admin}/${service_config.JAZZ.ADMIN}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{jazz_admin}/${service_config.JAZZ.ADMIN}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{jazz_admin}/${service_config.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-			sh "sed -i -- 's/{jazz_admin_creds}/${service_config.JAZZ.PASSWD}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{jazz_admin_creds}/${service_config.JAZZ.PASSWD}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{jazz_admin_creds}/${service_config.JAZZ.PASSWD}/g' ./config/prod-config.json"
 		}
 
 		if ( (service_name.trim() == "jazz_environments") ) {
