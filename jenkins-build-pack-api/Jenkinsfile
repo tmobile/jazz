@@ -217,27 +217,18 @@ node() {
 						echo "Deploying to API Gateway environment.."
 						sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+ " --profile cloud-api"
 						sh "aws apigateway create-deployment --rest-api-id ${api_id} --stage-name ${current_environment} --profile cloud-api"
-
 						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
 
 						endpointUrl = "https://${apiHostName}/${current_environment}/" + domain + "/" + config['service']
 
 						if (domain != "jazz") {
-							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints[current_environment] = endpointUrl
-							context_map['endpoints'] = endpoints
+							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);							
 						}
 
 						updateApiDocUrl(current_environment)
 						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
 						echo "completed deployment........."
+
 
 						def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
 						send_status_email(config, 'COMPLETED', svc_status)

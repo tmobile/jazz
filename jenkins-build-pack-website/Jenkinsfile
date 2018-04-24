@@ -180,17 +180,7 @@ node()  {
 							} else {
 								loadBucketPolicy(service, s3Bucket, false)
 								url = "https://s3.amazonaws.com/${s3Bucket}/${service}/${environment}/index.html"
-							}
-
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints[environment] = url
-							context_map['endpoints'] = endpoints
+							}							
 
 							def svc_status = "You can access your website using following link: ${url}"
 							echo svc_status
@@ -227,16 +217,8 @@ node()  {
 								url = "https://s3.amazonaws.com/${s3Bucket}/${service}/${environment}/index.html"
 							}
 
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints[environment] = url
-							context_map['endpoints'] = endpoints
 							def svc_status = "You can access your website using following link: ${url}"
+
 							echo svc_status
 							environmentDeploymentMetadata.setEnvironmentEndpoint(url)
 							send_status_email('COMPLETED', config, svc_status)
