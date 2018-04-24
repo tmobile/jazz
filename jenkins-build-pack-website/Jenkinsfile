@@ -317,7 +317,6 @@ def resetCredentials() {
 def generateDistributionConfig(envname, config) {
 	sh "sed -i -- 's/{service_name}/${config['domain']}-${config['service']}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{env}/${envname}/g' distribution_config_with_tags.json"
-
 	sh "sed -i -- 's/{conf_s3bucketname}/${getS3BucketName(envname)}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's:{conf_origin_id}:${configLoader.AWS.CLOUDFRONT_ORIGIN_ID}:g' distribution_config_with_tags.json"
@@ -472,15 +471,17 @@ def updateS3BucketPolicy(service, s3Bucket, isCloudfront, existingPolicyObj){
 }
 
 def getCloudFrontDetails(env, service) {
-
-	def distributionId = sh(script: "aws  cloudfront list-distributions --output text \
-									--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-$env-static-website-origin-$service']].{j: Id, k: DomainName}\"",
-		returnStdout: true
-	).trim()
-
-	echo "getCloudFrontDetails are $distributionId"
-
-	return distributionId.split('\t')
+	try {
+		def distributionId = sh(script: "aws  cloudfront list-distributions --output text \
+										--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${env}-static-website-origin-$service']].{j: Id, k: DomainName}\"",
+			returnStdout: true
+		).trim()
+		echo "getCloudFrontDetails are $distributionId"
+		return distributionId.split('\t')
+	}
+	catch (ex) {
+		echo "Failed to get DistributionConfig::::  " + ex.toString()
+	}
 }
 
 def updateEnableCompressConfig(env, service, distributionId) {
