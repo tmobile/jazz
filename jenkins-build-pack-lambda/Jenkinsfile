@@ -84,8 +84,8 @@ node()  {
 		scmModule.setServiceConfig(config)
 		def envApi = "${g_base_url}/jazz/environments"
 		environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, envApi, auth_token)
-		gitCommitOwner = scmModule.getRepoCommitterInfo()
 		gitCommitHash = scmModule.getRepoCommitHash()
++		gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 		context_map = [created_by : config['created_by'], deployed_by: gitCommitOwner]
 		environment_logical_id = '';
 
