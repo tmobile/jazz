@@ -15,7 +15,6 @@ def serviceonboarding_repo
 @Field def config_loader
 @Field def service_config
 @Field def scm_protocol	= "http://"
-@Field def g_git_commit_hash
 
 def initialize(configData){
     config_loader = configData
@@ -256,11 +255,7 @@ def parseJson(def json) {
 }
 
 def getRepoCommitHash() {
-	if(g_git_commit_hash == null) {
-		g_git_commit_hash = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
-	}
-	echo "SCM_Commit_Hash:$g_git_commit_hash"
-	return g_git_commit_hash
+	return sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
 }
 
 def getRepoName(){
@@ -284,13 +279,13 @@ def getRepoURL() {
 	return repoUrl
 }
 
-def getRepoCommitterInfo() {
+def getRepoCommitterInfo(commitHash) {
 	def committerId = null
-	if (getRepoCommitHash() != null) {
+	if (commitHash) {
 		if (config_loader.SCM.TYPE == "gitlab") {
 			def repo_name = getRepoName()
 			def proj_id = getGitLabsProjectId(repo_name)
-			def scm_commit_api = "http://${config_loader.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/repository/commits/${getRepoCommitHash()}"
+			def scm_commit_api = "http://${config_loader.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/repository/commits/${commitHash}"
 			scmCommitResponse = sh(script: "curl --header \"Private-Token: ${config_loader.SCM.PRIVATE_TOKEN}\"  \"${scm_commit_api}\"", returnStdout: true).trim()
 			if (scmCommitResponse != null) {
 				def commitDetails = parseJson(scmCommitResponse)
@@ -306,7 +301,7 @@ def getRepoCommitterInfo() {
 				repoBase = config_loader.REPOSITORY.REPO_BASE_SERVICES
 			}
 			def scm_commit_api = "http://${config_loader.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${repoBase}/repos/${getRepoName()}"
-			def repoUrl = "${scm_commit_api}/commits/${getRepoCommitHash()}"
+			def repoUrl = "${scm_commit_api}/commits/${commitHash}"
 			echo "[Metadata] Repository URL: $repoUrl"
 			def scmCommitResponse 
 			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
