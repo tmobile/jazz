@@ -227,9 +227,10 @@ var gitlabScmContextDetails = function(eventKey, body, config){
 			}
 
 		} else if(eventKey === 'note'){
-			changes = body.object_attributes;
-			result.note = changes.note;
-			result.note_type = changes.noteable_type;
+			changes = body.merge_request;
+			result.branch = changes.source_branch;
+			result.prlink = changes.url;
+			result.target = changes.target_branch;
 			result.event_name = 'COMMENT_PR';
 			resolve(result);
 		} else if (eventKey === 'push'|| eventKey === 'tag_push'){
