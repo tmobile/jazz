@@ -11,7 +11,6 @@ import {BodyOutputType} from 'angular2-toaster';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-	// directives: [ToasterContainerComponent],
   providers: [ToasterService, MessageService],
   styleUrls: ['./app.component.scss']
 })

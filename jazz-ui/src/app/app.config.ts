@@ -18,21 +18,7 @@ export class ConfigService {
 
   constructor(private http:Http) {}
 
-  // baseurl = environment.baseurl;
-  
-  // load(url:string) { 
-  //   return new Promise((resolve, reject) => {
-  //       this.http.get(url).map( res => res.json() ).catch((error: any):any => {
-  //         console.log('Configuration file could not be read');
-  //         resolve(true);
-  //         return Observable.throw(error.json().error || 'Server error');
-  //       }).subscribe( (envResponse) => {
-  //         this.config = envResponse;
-  //         resolve(true);
-  //       });
-  //     });
-  // }
-
+ 
   getConfiguration():Configuration {
 
     return this.config;
@@ -44,6 +30,5 @@ export class ConfigService {
 export function ConfigLoader(configService: ConfigService) {
 
   //Note: this factory need to return a function (that return a promise)
-  // return () => configService.load(environment.configFile); 
   return () => environment.baseurl;
 }

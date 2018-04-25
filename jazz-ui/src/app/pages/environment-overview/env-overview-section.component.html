@@ -30,7 +30,7 @@
 		</div>
 	</div>
 </div>
-<div class='service-details row bottom-10' *ngIf='environmnt.endpoint != undefined' >
+<div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined' >
 	<ul class=" col-md-12 col-sm-12">
 		<li class='det-wrp'>
 			<!-- *ngIf='service.endpoints.dev != undefined' -->
@@ -94,15 +94,15 @@
 					<div class="det-label">Endpoints</div>
 					<div class="det-value">
 						<div class='endp-cover'  (mouseleave)='popup("leave")' (mouseenter)='popup("enter")'>
-							<div>{{endpList[0].arn}}</div>
+							<div>{{endpList}}</div>
 							<div (click)='copy_link("input-copy")'>{{copyLink}}</div>
-							<input id='input-copy' class='input-copy' type='text' value='{{endpList[0].arn}}'>
+							<input id='input-copy' class='input-copy' type='text' value='{{endpList}}'>
 
 						</div>
 						<span class='view-all' (click)='openSidebar()'> View all</span>
 
 						<div id='popup-endp' class='popup-endp'>								
-							Account: <strong>{{endpList[0].name}}</strong>, Region: <strong>{{endpList[1].name}}</strong> 
+							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong> 
 						</div>
 						
                         
@@ -194,15 +194,15 @@
 					<div class="det-label">Endpoints</div>
 					<div class="det-value">
 						<div class='endp-cover'  (mouseleave)='popup("leave")' (mouseenter)='popup("enter")'>
-							<div>{{endpList[0].arn}}</div>
+							<div>{{endpList}}</div>
 							<div (click)='copy_link("input-copy2")'>{{copyLink}}</div>
-							<input id='input-copy2' class='input-copy' type='text' value='{{endpList[0].arn}}'>
+							<input id='input-copy2' class='input-copy' type='text' value='{{endpList}}'>
 
 						</div>
 						<span class='view-all' (click)='openSidebar()'> View all</span>
 
 						<div id='popup-endp' class='popup-endp'>								
-							Account: <strong>{{endpList[0].name}}</strong>, Region: <strong>{{endpList[1].name}}</strong> 
+							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong> 
 							
 						</div>
 						
@@ -285,7 +285,7 @@
 </div>
 
 <div class="separator-row"></div>
-<div class="disclaimer-static-data"><i>This data is for representational purpose only and may not be accurate</i></div>
+<div class="disclaimer-static-data"><i>This data is for representational purpose only and is not accurate</i></div>
 <div class="service-overview-wrp">
 	<div class="stage-wrp left-item" >
 		<div class="stage-title">Code Quality</div>

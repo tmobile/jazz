@@ -1,6 +1,7 @@
 import { Component,ViewContainerRef, OnInit, Input, Output, EventEmitter,ViewChild } from '@angular/core';
 import {DataCacheService } from '../../../core/services/index';
 import {IonRangeSliderModule} from "ng2-ion-range-slider"
+import {environment as env_internal} from './../../../../environments/environment.internal';
 
 @Component({
   selector: '[advanced_filters]',
@@ -48,11 +49,10 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     pathSelected:string = '';
 
     
-    accList=['tmodevops','tmonpe'];
-    regList=['us-west-2', 'us-east-1'];
-
-	accSelected:string = 'tmodevops';
-    regSelected:string = 'us-west-2';
+    accList=env_internal.urls.accounts;
+	regList=env_internal.urls.accounts;
+	  accSelected:string = this.accList[0];
+	regSelected:string=this.regList[0];
 
     envList:any=['prod','stg'];
     envSelected:string=this.envList[0];

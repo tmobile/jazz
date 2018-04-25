@@ -8,6 +8,7 @@ import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
 import { ToasterService } from 'angular2-toaster';
 declare var $:any;
 import {environment} from './../../../environments/environment.internal';
+import {environment as env_internal} from './../../../environments/environment.internal';
 
 
 
@@ -64,7 +65,9 @@ export class EnvDeploymentsSectionComponent implements OnInit {
   errorTime:any;
 	errorURL:any;
 	errorAPI:any;
-	errorRequest:any={};
+  errorRequest:any={};
+  rebuild_id:any;
+
 	errorResponse:any={};
 	errorUser:any;
 	errorChecked:boolean=true;
@@ -138,14 +141,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
 				type: 'dateRange'
 			}    
     },
-    // {
-    //   label: 'Id',
-    //   key: 'id',
-    //   sort: true ,
-    //   filter: {
-		// 		type: 'dateRange'
-		// 	}         
-    // },
+    
     {
       label: 'Time',
       key: 'time',
@@ -161,16 +157,17 @@ export class EnvDeploymentsSectionComponent implements OnInit {
       filter: {
 				type: 'dateRange'
 			}        
-    },
-    {
-      label:"",
-      key:"",
-      sort: false ,
-      filter: {
-				type: 'dateRange'
-			}    
-
     }
+    // ,
+    // {
+    //   label:"",
+    //   key:"",
+    //   sort: false ,
+    //   filter: {
+		// 		type: 'dateRange'
+		// 	}    
+
+    // }
     
   ];
 
@@ -218,22 +215,14 @@ export class EnvDeploymentsSectionComponent implements OnInit {
    
   }
 
-  // tableExpand()
-  // {
-  //   if(this.rot_icon2 == true) this.rot_icon2 = false;
-  //   else this.rot_icon2 = true;
-  //   $("#slid-table").slideToggle();
-  // }
-
+ 
 
 
   onRowClicked()
   {
-    // this.rowclick=true;
   }
 
   onFilter(column){
-		// this.logs = this.logsData
 
 		for (var i = 0; i < this.tableHeader2.length; i++) {
 			var col = this.tableHeader2[i]
@@ -309,6 +298,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
             this.status[i] = this.deployments[i].status;
             this.commitDetails[i] = this.deployments[i].scm_commit_hash;
             this.id[i] = this.deployments[i].deployment_id;
+            this.rebuild_id = this.id[0];
             this.buildNo[i] = this.deployments[i].provider_build_id;
             this.buildurl[i] = this.deployments[i].provider_build_url;
             this.deployment_id[i] = this.deployments[i].deployment_id;
@@ -434,7 +424,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
 			
 					var payload={
 						"title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
-						"project_id": "CAPI",
+						"project_id": env_internal.urls.internal_acronym,
 						"priority": "P4",
 						"description": this.json,
 						"created_by": this.authenticationservice.getUserId(),
@@ -474,14 +464,8 @@ export class EnvDeploymentsSectionComponent implements OnInit {
   paginatePage(currentlyActivePage){
     if(this.prevActivePage != currentlyActivePage){
       this.prevActivePage = currentlyActivePage;
-      // this.pageSelected = currentlyActivePage;
       this.deployments = [];
-      // this.backupdata = [];
-      //this.fetchServices();  /** call fetch services
-
-      // var queryParamKey = 'limit=';
-      // var queryParamValue = this.limitValue;
-      // this.addQueryParam(queryParamKey, queryParamValue, false );
+     
 
 
       var queryParamKey = 'offset=';
@@ -633,17 +617,15 @@ toast_pop(error,oops,errorMessage)
       }, 3000);
 }
 
-rebuild(event, id){
-  
+rebuild(){
   this.rowclick = false;
-  this.http.post('/jazz/deployments/'+id+'/re-build').subscribe(
+  this.http.post('/jazz/deployments/'+this.rebuild_id+'/re-build').subscribe(
     (response) => {
 
       let successMessage = this.toastmessage.successMessage(response, "retryDeploy");
 
       this.toast_pop('success',"",successMessage+this.service.name);
-      // let successMessage = this.toastmessage.successMessage(response, "retryDeploy");
-      // this.toast_pop('Deployment for service: ',this.service.name+' ',successMessage);
+      
     },
     (error) => {
       let errorMessage = this.toastmessage.errorMessage(error, "updateObj");
@@ -661,8 +643,8 @@ export enum status {
   "deployment_started" ,
   "deployment_failed",
   "pending_approval",
-  "inactive",
-  "deletion_started",
   "deletion_failed",
+  "inactive",
+  "deletion_started", 
   "archived"
 }

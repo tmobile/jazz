@@ -1,5 +1,4 @@
 @import './../../../main-styles';
-// @import './../../secondary-components/table-template/table-template.component.scss';
 .full-page{
     border-radius: 3px;
     background-color: #ffffff;
@@ -204,23 +203,17 @@
         left: 0;
         .show{
             &.feedbackResSuccess{   
-                // margin:4rem 0;
                 div{
-                    // padding-top: 2rem;
                 }
             }
             &.feedbackResErr{
-                // padding: 4rem 0;
             }
         }
     }
     .feedback-btn-wrap{
         font-size:13px;
         text-align: right;
-        // position: absolute;
-        // right: 0;
-        // padding: 2rem;
-        // bottom: 0;
+        
         a{
             margin:5px;
             cursor: pointer;

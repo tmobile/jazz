@@ -1,15 +1,19 @@
 <!-- Filter styling fixed according to design -->
  <div class="disclaimer-static-data hide">
-    <i>This data is for representational purpose only and may not be accurate</i>
+    <i>This data is for representational purpose only and is not accurate</i>
     <div>Meanwhile you can access logs <a (click)="navigateTo($event)">here</a></div>
 </div>
 <div class="row page-section section-top"> 
-    <div>
-        <template adv-filters></template>
+    
+    <div class='filter-row'>
+        <!-- <div>
+            <template adv-filters></template>
+        </div> -->
+        <!-- <advanced-filters #adv_filters (onFilterSelect)='onFilterSelect($event)' [logs]='fromlogs' [service]='service' [advanced_filter_input]='advanced_filter_input'></advanced-filters> -->
+        <filter-tags #filtertags (OnCancel)='cancelFilter($event)'></filter-tags>
+    
     </div>
-    <!-- <advanced-filters #adv_filters (onFilterSelect)='onFilterSelect($event)' [logs]='fromlogs' [service]='service' [advanced_filter_input]='advanced_filter_input'></advanced-filters> -->
-    <filter-tags #filtertags (OnCancel)='cancelFilter($event)'></filter-tags>
-
+    
     <div class="filter-wrp">
 
         <filters class="filters" [filtersList]="filtersList" [multiple]="false" [selectedList]="selected" (onSelected)="onFilterSelected($event)" [logs]='true'></filters>
@@ -20,6 +24,12 @@
  
             <span title='Collapse all' *ngIf='expandText == "Collapse all"' class="icon-Collapse-All expandbtn" (click)='collapseall()'></span>
             <span title='Expand all' *ngIf='expandText == "Expand all"' class="icon-Expand-All expandbtn" (click)='expandall()'></span>    
+            <div  class='template-wrp'>
+                <template adv-filters></template>
+            </div>
+            <div id='hidethis' [class.hide]='filter_loaded' *ngIf='!filter_loaded' class='template-wrp'>     
+                <span class="icon-icon-filter-unselected icon-icon-filter-unselected-font "  title="Filter" ></span>                    
+            </div>
         </div>
     </div>
     <div class="relative logs-tabl">

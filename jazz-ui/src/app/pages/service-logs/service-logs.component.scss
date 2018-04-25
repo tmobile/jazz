@@ -121,6 +121,8 @@ filter-tags{
 }
 .drp-wrp{
     display:flex;
+    justify-content: space-between;
+    width: 10rem;
 }
 
 .logs-tabl{
@@ -265,3 +267,16 @@ filter-tags{
 //         display: none;
 //     }
 // }
+.filter-row{
+    display: block;
+}
+.template-wrp{
+    order:3;
+}
+
+#hidethis{
+    padding-top:6px;
+}
+.icon-icon-filter-unselected-font{
+    font-size:1.5rem;
+}

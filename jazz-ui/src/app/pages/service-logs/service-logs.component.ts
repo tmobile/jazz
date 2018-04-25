@@ -10,7 +10,9 @@ import {DataCacheService } from '../../core/services/index';
 import {AdvancedFiltersComponent} from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
 import {AdvancedFilterService} from './../../advanced-filter.service';
 import {AdvFilters} from './../../adv-filter.directive';
-import {environment} from './../../../environments/environment.internal';
+import {environment} from './../../../environments/environment';
+import {environment as env_internal} from './../../../environments/environment.internal';
+
 
 
 
@@ -33,13 +35,16 @@ export class ServiceLogsComponent implements OnInit {
 		var comp = this;
 		setTimeout(function(){
 			comp.getFilter(advancedFilters);
-		},3000);
+			this.filter_loaded = true;
+			document.getElementById('hidethis').classList.add('hide')
+			console.log('filter load',this.filter_loaded)
+		},10);
+		
 		
 	}
-
+	filter_loaded:boolean = false;
 	@Input() service: any = {};
 	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
-	// @ViewChild('adv_filters') adv_filters: AdvancedFiltersComponent;
 	@ViewChild(AdvFilters) advFilters: AdvFilters;
 	componentFactoryResolver:ComponentFactoryResolver;
   
@@ -60,16 +65,16 @@ export class ServiceLogsComponent implements OnInit {
 			show:false,
 		},
 		environment:{
-			show:false,
+			show:true,
 		},
 		method:{
 			show:false,
 		},
 		account:{
-			show:true,
+			show:false,
 		},
 		region:{
-			show:true,
+			show:false,
 		}
 	}
 	fromlogs:boolean = true;
@@ -81,7 +86,6 @@ export class ServiceLogsComponent implements OnInit {
 	errMessage: any;
 	private toastmessage:any;
 	loadingState:string='default';
-	// logsSearch:any = {"environment" : "prod"};
 	 private subscription:any;
 	 filterloglevel:string = 'ERROR';
 	 environment:string = 'prod';
@@ -138,82 +142,7 @@ export class ServiceLogsComponent implements OnInit {
 	logs = [];
 	backupLogs=[];
 
-	logsData = [
-		{
-			time: '2017-05-30T09:36:12.210Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: '',
-			message: 'START RequestId: 6b0bfa2b-451b-11e7-8b01-d9deac4f71e0 Version: $LATEST'
-		},
-		{
-			time: '2017-05-30T09:36:12.845Z',
-			requestId: '9e472a9c-4525-11e7-ab3f-773ba7a550a0',
-			logLevel: 'INFO',
-			message: 'eventDetailslatest\n{\n    "body": {\n        "service_type": "api",\n        "service_name": "testService-capi32830d",\n        "approvers": [\n            "AAnand12"\n        ],\n        "username": "aanand12",\n        "password": "Welcome@1234567",\n        "domain": "domain",\n        "runtime": "java",\n        "require_internal_access": true,\n        "slack_channel": "general"\n    },\n    "method": "POST",\n    "principalId": "",\n    "stage": "dev",\n    "headers": {\n        "Accept": "application/json, text/plain, */*",\n        "Accept-Encoding": "gzip, deflate, br",\n        "Accept-Language": "en-US,en;q=0.8",\n        "CloudFront-Forwarded-Proto": "https",\n        "CloudFront-Is-Desktop-Viewer": "true",\n        "CloudFront-Is-Mobile-Viewer": "false",\n        "CloudFront-Is-SmartTV-Viewer": "false",\n        "CloudFront-Is-Tablet-Viewer": "false",\n        "CloudFront-Viewer-Country": "US",\n        "content-type": "application/json",\n              "origin": "http://localhost:4200",\n        "Referer": "http://localhost:4200/services",\n        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",\n        "Via": "2.0 16d2657cebef5191828b055567b4efeb.cloudfront.net (CloudFront)",\n        "X-Amz-Cf-Id": "PkYaef8MpkJXVfsISK1kqw03u2x5jNXHN5Mq62TJ2r_O6KAx5OG98Q==",\n        "X-Amzn-Trace-Id": "Root=1-592d3d0c-6e3ad9b21f31e5de6efcea4d",\n        "X-Forwarded-For": "206.29.176.51, 54.182.214.76",\n        "X-Forwarded-Port": "443",\n        "X-Forwarded-Proto": "https"\n    },\n    "query": {},\n    "path": {},\n    "identity": {\n        "cognitoIdentityPoolId": "",\n        "accountId": "",\n        "cognitoIdentityId": "",\n        "caller": "",\n        "apiKey": "",\n        "sourceIp": "206.29.176.51",\n        "accessKey": "",\n        "cognitoAuthenticationType": "",\n        "cognitoAuthenticationProvider": "",\n        "userArn": "",\n        "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36",\n        "user": ""\n    },\n    "stageVariables": {}\n}'
-		},
-		{
-			time: '2017-05-30T09:36:13.513Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'INFO',
-			message: 'Event was recorded: [object Object]'
-		},
-		{
-			time: '2017-05-30T09:36:13.534Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'DEBUG',
-			message: 'value null'
-		},
-		{
-			time: '2017-05-30T09:36:13.534Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'INFO',
-			message: 'IncomingMessage { _readableState: ReadableState { objectMode: false, highWaterMark: 16384, buffer: [], length: 0, pipes: null, pipesCount: 0, flowing: true, ended: true, endEmitted: true, reading: false, sync: true, needReadable: false, emittedReadable:'
-		},
-		{
-			time: '2017-05-30T09:36:13.813Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'VERBOSE',
-			message: 'body { data: { message: \'authentication successfull\' }, input: { username: \'aanand12\' } }'
-		},
-		{
-			time: '2017-05-30T09:36:13.813Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'DEBUG',
-			message: 'in function capi328'
-		},
-		{
-			time: '2017-05-30T09:36:13.815Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'DEBUG',
-			message: 'enter function loop capi328'
-		},
-		
-		{
-			time: '2017-05-30T09:36:14.703Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'INFO',
-			message: 'Event was recorded: [object Object]'
-		},
-		{
-			time: '2017-05-30T09:36:14.703Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'INFO',
-			message: 'Event was recorded: [object Object]'
-		},
-		{
-			time: '2017-05-30T09:36:16.703Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: 'INFO',
-			message: 'Event was recorded: [object Object]'
-		},
-		
-		{
-			time: '2017-05-30T09:36:16.866Z',
-			requestId: '6b0bfa2b-451b-11e7-8b01-d9deac4f71e0',
-			logLevel: '',
-			message: ''
-		}
-	]
+
 
 	filtersList = [ 'ERROR', 'WARN', 'INFO', 'DEBUG', 'VERBOSE'];
 	selected=[ 'ERROR'];
@@ -237,32 +166,31 @@ export class ServiceLogsComponent implements OnInit {
 	limitValue : number = 20;
 	offsetValue:number = 0;
 
-	// environmentList = ['dev', 'stg', 'prod'];
 	envList = ['prod','stg'];
 	
-	accList=['tmodevops','tmonpe'];
-  regList=['us-west-2', 'us-east-1'];
-	accSelected:string = 'tmodevops';
-  regSelected:string = 'us-west-2';
+	accList=env_internal.urls.accounts;
+	regList=env_internal.urls.accounts;
+	  accSelected:string = this.accList[0];
+	regSelected:string=this.regList[0];
   
     instance_yes;
 	getFilter(filterServ){
-		// let viewContainerRef = this.advanced_filters.viewContainerRef;
-		// viewContainerRef.clear();
-		// filterServ.setRootViewContainerRef(viewContainerRef);
-		this.service['islogs']=true;
+		
+		this.service['islogs']=false;
+		this.service['isServicelogs']=true;
+		this.service['ismetrics']=false;
 
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
-		// this.advfilters.clearView();
+		
 		let viewContainerRef = this.advFilters.viewContainerRef;
 		viewContainerRef.clear();
 		let componentRef = viewContainerRef.createComponent(componentFactory);
 		this.instance_yes=(<AdvancedFiltersComponent>componentRef.instance);
 		(<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
 		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
-			// alert("1");
+		
 			comp.onFilterSelect(event);
 		});
 
@@ -297,7 +225,6 @@ export class ServiceLogsComponent implements OnInit {
 	}
 
 	onFilterSelect(event){
-		// alert('key: '+event.key+'  value: '+event.value);
 		switch(event.key){
 		  case 'slider':{
 			this.getRange(event.value);
@@ -311,21 +238,10 @@ export class ServiceLogsComponent implements OnInit {
 			this.FilterTags.notifyLogs('filter-TimeRangeSlider',this.sliderFrom);
 			
 			var resetdate = this.getStartDate(event.value, this.sliderFrom);
-			// this.resetPeriodList(range);
 			this.selectedTimeRange = event.value;
 			this.payload.start_time = resetdate;
 			this.resetPayload();
-			// this.FilterTags.notify('filter-TimeRange',event.value);
-			// this.sendDefaults(event.value); 
-			// this.timerangeSelected=event.value;
-			// this.sliderFrom =1;
-			// this.FilterTags.notify('filter-TimeRangeSlider',this.sliderFrom);        
-			// var resetdate = this.getStartDate(event.value, this.sliderFrom);
-			// this.resetPeriodList(event.value);
-			// this.selectedTimeRange = event.value;
-			// this.payload.start_time = resetdate;
-			// this.callMetricsFunc();
-			// this.adv_filters.setSlider(this.sliderMax);
+			
 			break;
 		  }
 		  
@@ -339,6 +255,13 @@ export class ServiceLogsComponent implements OnInit {
 			this.regSelected=event.value;
 			break;
 				
+		  }
+		  case "environment":{
+			this.FilterTags.notifyLogs('filter-Environment',event.value);
+			this.environment = event.value;
+			this.payload.environment = event.value;
+			this.resetPayload();
+			break;
 		  }
 	
 	   
@@ -592,8 +515,7 @@ export class ServiceLogsComponent implements OnInit {
 			  this.totalPagesTable = 0;
 			}
 			this.backupLogs = this.logs;
-			// this.filter = new Filter(this.logs);
-			// this.logs = this.filter.filterFunction("type", this.filterloglevel, this.backupLogs);
+			
 			this.sort = new Sort(this.logs);
 			this.loadingState = 'default'
 		} else{
@@ -621,7 +543,7 @@ export class ServiceLogsComponent implements OnInit {
        
 		this.getTime();
 		this.errorURL = window.location.href;
-		this.errorAPI = environment.baseurl+"/jazz/logs";
+		this.errorAPI = env_internal.baseurl+"/jazz/logs";
 		this.errorRequest = this.payload;
 		this.errorUser = this.authenticationservice.getUserId();
 		try{
@@ -640,8 +562,6 @@ export class ServiceLogsComponent implements OnInit {
 		this.cache.set('time',this.errorTime)
 		this.cache.set('user',this.errorUser)
 
-	  // let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
-			// this.popToast('error', 'Oops!', errorMessage);
 	})
   };
 

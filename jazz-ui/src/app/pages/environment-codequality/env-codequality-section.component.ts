@@ -9,9 +9,9 @@ import { IonRangeSliderModule } from "ng2-ion-range-slider";
 import { setTimeout } from 'timers';
 import { DataService } from "../data-service/data.service";
 import {environment} from './../../../environments/environment.internal';
+import {environment as env_internal} from './../../../environments/environment.internal';
 
 
-// import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
 
 
 @Component({
@@ -46,9 +46,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
   sonar: any;
   selectedTimeRange: string = "Month";
   payload: any = {};
-  // selectedTimeRange:string="";
   graphArray: any = [];
-  // name:any=[];
   value: any = [];
   date: any = [];
   data: any = [];
@@ -69,7 +67,6 @@ export class EnvCodequalitySectionComponent implements OnInit {
   graphInput: Array<any>;
   filtersList = ['DAILY', 'WEEKLY', 'MONTHLY'];
   name: any = [];
-  // name = ['Unrsolved Issues','Major Issues','Fixed Issues','Bugs','Vulnarebilities','Code smells'];
   selected = ['MONTHLY'];
   errBody: any;
   parsedErrBody: any;
@@ -114,23 +111,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
     },
     responsive: false
   };
-  public lineChartColors: Array<any> = [
-    { //pink
-      backgroundColor: 'rgba(237,0,140,0)',
-      borderColor: 'rgba(237,0,140,1)',
-      pointBorderColor: 'transparent',
-    },
-    { //blue
-      backgroundColor: 'rgba(31,166,206,0)',
-      borderColor: 'rgba(31,166,206,1)',
-      pointBorderColor: 'transparent',
-    },
-    { //green
-      backgroundColor: 'rgba(92,174,1,0)',
-      borderColor: 'rgba(92,174,1,1)',
-      pointBorderColor: 'transparent',
-    }
-  ];
+  
 
   public lineChartLegend: boolean = true;
   public lineChartType: string = 'line';
@@ -225,7 +206,6 @@ export class EnvCodequalitySectionComponent implements OnInit {
             this.link[i] = this.cqList[i].link;
             this.sonar = this.link[0];
             for (var j = 0; j < this.graphArray[i].length; j++) {
-              // this.graphArray[i][j].date = this.graphArray[i][j].ts;
               this.graphArray[i][j].date = new Date(this.graphArray[i][j].ts);
             }
           }
@@ -278,8 +258,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
         this.errorUser = this.authenticationservice.getUserId();
         this.errorResponse = JSON.parse(error._body);
 
-        // let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
-        // this.popToast('error', 'Oops!', errorMessage);
+        
       })
   };
 
@@ -303,7 +282,6 @@ export class EnvCodequalitySectionComponent implements OnInit {
   isLoading: boolean = false;
   sjson: any = {};
   djson: any = {};
-  // isLoading:boolean=false;
   reportIssue() {
 
     this.json = {
@@ -366,7 +344,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
 
     var payload = {
       "title": "Jazz: Issue reported by " + this.authenticationservice.getUserId(),
-      "project_id": "CAPI",
+      "project_id": env_internal.urls.internal_acronym,
       "priority": "P4",
       "description": this.json,
       "created_by": this.authenticationservice.getUserId(),
@@ -444,7 +422,6 @@ export class EnvCodequalitySectionComponent implements OnInit {
     this.startDate = dateString;
 
     this.displayGraph();
-    // this.selectedMetrics(1,"gname","link")
     this.dataS.currentMessage.subscribe(message => this.message = message)
     this.newMessage();
   }

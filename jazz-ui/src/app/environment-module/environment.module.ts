@@ -12,16 +12,13 @@ import {ChartsModule} from 'ng2-charts';
 import {FormsModule} from '@angular/forms';
 import {DropdownModule} from 'ng2-dropdown';
 
-// import {ToasterModule} from 'angular2-toaster';
 import {DatePickerModule} from '../primary-components/daterange-picker/ng2-datepicker';
 import {MomentModule} from 'angular2-moment';
 import {IonRangeSliderModule} from 'ng2-ion-range-slider';
 import {SharedModule} from '../shared-module/shared.module';
-// import {ServiceModule} from '../service-module/service.module';
 import {RouterModule} from '@angular/router';
 import {routes} from './environment.route';
-// import {AdvancedFiltersComponentOSS} from '../secondary-components/advanced-filters/OSS/advanced-filters.component';
-// import {AdvancedFiltersComponent} from '../secondary-components/advanced-filters/advanced-filters.component';
+import {AdvancedFilterService} from '../advanced-filter.service';
 
 
 
@@ -34,13 +31,11 @@ import {routes} from './environment.route';
     DropdownModule,
     DatePickerModule,
     MomentModule,
-    // ToasterModule,
     PopoverModule,
     ChartsModule,
     IonRangeSliderModule,
     SharedModule,
  
-    // ServiceModule
   ],
   declarations: [
     EnvironmentDetailComponent,
@@ -49,9 +44,10 @@ import {routes} from './environment.route';
     EnvCodequalitySectionComponent,
     EnvLogsSectionComponent,
     EnvOverviewSectionComponent,
-  ]
+  ],
+  providers:[AdvancedFilterService],
+
     
-    // SharedModule
   
 })
 export class EnvironmentModule { }

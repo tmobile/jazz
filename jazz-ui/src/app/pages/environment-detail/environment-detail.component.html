@@ -45,7 +45,7 @@
     <div *ngIf='status_val > 4' class="alert alert-warning" role="alert">
             Looks like this environment is inactive, related assets might not be available during this time.
     </div>
-    <div class="tab-component">
+    <div class="tab-component" [class.oss]='isOSS'>
         <tabs [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
         
         

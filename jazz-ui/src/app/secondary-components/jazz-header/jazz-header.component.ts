@@ -9,6 +9,10 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { AuthenticationService, MessageService, RequestService } from '../../core/services/index';
 import { ToasterService} from 'angular2-toaster';
 import {environment} from './../../../environments/environment';
+import {environment as env_oss} from './../../../environments/environment.oss';
+import {environment as env_internal} from './../../../environments/environment.internal';
+
+
 
 @Component({
     selector: 'jazz-header',
@@ -81,8 +85,8 @@ isOSS:boolean=false;
             window.open(this.docs_int_jazz)
 
     }
-    docs_int_jazz:string;
-docs_oss_jazz:string='https://github.com/tmobile/jazz/wiki';
+    docs_int_jazz:string =  env_internal.urls.docs;
+docs_oss_jazz:string=env_oss.urls.docs_link;
   
 
     goToLanding(){
@@ -165,7 +169,7 @@ docs_oss_jazz:string='https://github.com/tmobile/jazz/wiki';
 
         var payload={
             "title" : "Jazz: Feedback/Issue reported by "+ this.authenticationService.getUserId(),
-            "project_id": "CAPI",
+            "project_id": env_internal.urls.internal_acronym,
             "priority": "P4",
             "description":this.model.userFeedback,
             "created_by": this.authenticationService.getUserId(),

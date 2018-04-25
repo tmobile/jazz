@@ -487,7 +487,7 @@
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">AWS Events</p>
-                        <p class="step-details">Select appropriate events that you want to subscribe to.</p>
+                        <p class="step-details">Select appropriate events that you want to subscribe to. Only tmodevops AWS account is supported at this point*</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
                         <div class="input-field-container event-schedule-radio row zero-margin">
@@ -559,7 +559,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-9">
-                                    <div class="text">Bucket ARN</div>
+                                    <div class="text">Bucket Name</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input id="S3BucketName" name="S3BucketName" type="text" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" class="inline-input aws-events-left-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Bucket Name" required autofocus>
                                   </div>

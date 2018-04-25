@@ -14,7 +14,6 @@ export class RouteGuard implements CanActivate {
     private router: Router,
   	private toasterService: ToasterService) {
     
-    	// this.toasterService = toasterService;
 
   }
 
@@ -22,11 +21,8 @@ export class RouteGuard implements CanActivate {
 		let allow = this.authService.isLoggedIn();
   	if (allow === false) {
 			let currentUrl = this.router.url;
-  		// if (currentUrl !== '/landing') {
   			alert("Please Login to continue");
-  		// }
       this.router.navigate(['']);
-      // this.toasterService.pop('error', 'Unauthorised', 'Please login to continue');
   	}
     return allow;
   }

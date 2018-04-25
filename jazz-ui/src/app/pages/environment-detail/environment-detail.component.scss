@@ -28,18 +28,22 @@
 .page-title-wrap {
     min-height: 5.65rem; // setting min-height coz, alignment breaks when jquery isnt loaded
 }
-
+.oss{
+    font-weight: normal;
+}
+   .oss{
     tabs{
-       /deep/ .tabs-wrap{
-           ul li{
-                &:last-child{
-                    pointer-events: none;
-                    opacity:0.6;
-                }
-            
-            }
-        }
-    }
+        /deep/ .tabs-wrap{
+            ul li{
+                 &:last-child{
+                     pointer-events: none;
+                     opacity:0.6;
+                 }
+             
+             }
+         }
+     }
+   } 
 
 
 .testApiBtn{

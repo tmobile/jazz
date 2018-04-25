@@ -49,7 +49,7 @@ import {FooterComponent} from '../secondary-components/footer/footer.component';
 import { OverviewSidebarComponent } from './../secondary-components/overview-sidebar/overview-sidebar.component';
 import {AdvancedFiltersComponentOSS} from '../secondary-components/advanced-filters/OSS/advanced-filters.component';
 import {AdvancedFiltersComponent} from '../secondary-components/advanced-filters/internal/advanced-filters.component';
-
+import { AdvFilters }            from '../adv-filter.directive';
 let specificComponents:any
 let specificModules: any;
 if(environment.envName == 'oss'){
@@ -111,11 +111,13 @@ for(let i in specificComponents){
     SideTileFixedComponent,
     FooterComponent,
     OverviewSidebarComponent,
-    ...declarationsArray,
     AdvancedFiltersComponentOSS,
-    AdvancedFiltersComponent
+    AdvancedFiltersComponent,
+    AdvFilters,
+    ...declarationsArray,
+   
+   
   ],
-  entryComponents : [AdvancedFiltersComponentOSS, AdvancedFiltersComponent],
   exports: [
     BtnJazzPrimaryComponent,
     BtnJazzSecondaryComponent,
@@ -146,9 +148,14 @@ for(let i in specificComponents){
     SideTileFixedComponent,
     FooterComponent,
     OverviewSidebarComponent,
+    AdvancedFiltersComponentOSS,
+    AdvancedFiltersComponent,
+    AdvFilters,
     ...declarationsArray
 
-  ]
+  ],
+  entryComponents : [AdvancedFiltersComponentOSS, AdvancedFiltersComponent],
+
 })
 export class SharedModule {
 }

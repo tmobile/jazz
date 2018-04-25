@@ -81,7 +81,6 @@ export class RequestService {
              .catch((error: any) => {
                 return this.handleError(error, router);
             })
-            // .catch((error:any) => Observable.throw(error.json().error || 'Server error'));
     }
 
     post(url: string, body: any): Observable<any> {
@@ -115,11 +114,9 @@ export class RequestService {
                     return responseBody;
                 }
             })
-            // .catch(this.handleError)
             .catch((error: any) => {
                 return this.handleError(error, router);
             })
-            // .catch((error:any) => Observable.throw(error.json().error || 'Server error'));;
     }
 
     put(url: string, body: any): Observable<any> {

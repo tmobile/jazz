@@ -44,7 +44,6 @@ for(let i in specificComponents){
  declarationsArray.push(specificComponents[i]);
 }
 
-
 @NgModule({
   imports: [
     RouterModule.forChild(routes),
@@ -56,7 +55,7 @@ for(let i in specificComponents){
   declarations: [
     
     ...declarationsArray,
-    AdvFilters,
+    // AdvFilters,
     
   ],
   

@@ -5,6 +5,7 @@ import { ToasterService} from 'angular2-toaster';
 import { DataService } from "../data-service/data.service";
 import { DataCacheService , AuthenticationService } from '../../core/services/index';
 import {environment} from './../../../environments/environment';
+import {environment as env_internal } from './../../../environments/environment.internal';
 
 @Component({
   selector: 'env-overview-section',
@@ -18,10 +19,11 @@ export class EnvOverviewSectionComponent implements OnInit {
   @Output() envLoad:EventEmitter<any> = new EventEmitter<any>();
   @Output() open_sidebar:EventEmitter<any> = new EventEmitter<any>();
 
-  accounts=['tmodevops','tmonpe'];
-  regions=['us-west-2', 'us-east-1'];
-  selectedRegions=['us-west-2'];
-  selectedAccounts=['tmodevops'];
+  accList=env_internal.urls.accounts;
+	regList=env_internal.urls.accounts;
+	  accSelected:string = this.accList[0];
+  regSelected:string=this.regList[0];
+ 
 
   @Output() frndload:EventEmitter<any> = new EventEmitter<any>();
   
@@ -81,25 +83,7 @@ export class EnvOverviewSectionComponent implements OnInit {
     runtime:'NA',
     tags: 'NA'
   };
-  endpList = [{
-    name:'tmo-dev-ops',
-    arn:'arn:aws:lambda:us-east-1:1:192837283062537',
-    type:'Account',
-  },
-  {
-    name:'us-east-2',
-    arn:'arn:test2',
-    type:'region',
-  },{
-    name:'tmo-dev-ops2',
-    arn:'arn:test3',
-    type:'Account',
-  },{
-    name:'tmo-dev-ops3',
-    arn:'arn:test4',
-    type:'region',
-  }
-];
+  endpList:any;
   constructor(
     private request:RequestService,
     private route: ActivatedRoute,
@@ -259,10 +243,7 @@ popup(state){
 
             this.envstatus = deployment_status[this.status_val].replace("_"," ");
 
-            // if(this.status_val <= 3) this.envstatus='Active';
-            // else if(this.status_val == 4 )this.envstatus='In Progress';
-            // else if(this.status_val > 4 )this.envstatus='Inactive';
-            
+ 
 
            
             
@@ -293,13 +274,11 @@ popup(state){
             "domain" : this.service.domain,         }
           this.getTime();
           this.errorURL = window.location.href;
-          this.errorAPI = environment.baseurl+"/jazz/environment/"+this.env;
+          this.errorAPI = env_internal.baseurl+"/jazz/environment/"+this.env;
           this.errorRequest = payload;
           this.errorUser = this.authenticationservice.getUserId();
           this.errorResponse = JSON.parse(error._body);
   
-        // let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
-              // this.popToast('error', 'Oops!', errorMessage);
       })
     }
     
@@ -388,7 +367,7 @@ popup(state){
 			
 					var payload={
 						"title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
-						"project_id": "CAPI",
+						"project_id":env_internal.urls.internal_acronym,
 						"priority": "P4",
 						"description": this.json,
 						"created_by": this.authenticationservice.getUserId(),
@@ -438,7 +417,11 @@ popup(state){
   }
 }
 isOSS:boolean=false;
+form_endplist(){
+  // this.endpList=env_internal.urls.endplist;
+}
   ngOnInit() {  
+    this.form_endplist();
     if(environment.envName=='oss')this.isOSS=true;
     if(this.service.domain != undefined)  
       this.callServiceEnv();
@@ -504,6 +487,8 @@ focusindex:number;
 
       selRegion:any;
       selApprover:any;
+      accounts = this.accList;
+      regions = this.regList
 selectAccount(account){
   this.selApprover = account;
     let thisclass: any = this;

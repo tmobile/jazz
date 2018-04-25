@@ -31,6 +31,10 @@ $graph-title-height: 2.6rem;
     background-color: #f9f9f9;
     border-radius: 3px;
 }
+.graph-container-min-height{
+    min-height: 310px;
+
+}
 .graph-title {
     padding-bottom: 2rem;
     font-size: 1.4rem;
@@ -123,7 +127,7 @@ $graph-title-height: 2.6rem;
 .filter-wrp {
     display: flex;
     align-items: center;
-    margin-bottom: 0.75rem;
+    // margin-bottom: 0.75rem;
     @media (min-width: $screen-lg) {
         .dropdown-1, .dropdown-2 {
             // width: 200px;
@@ -189,15 +193,15 @@ $graph-title-height: 2.6rem;
     }
 }
 
-.filter-icon {
-    margin: 0 0 0 1rem;
-    // margin-left: 25px;
-    .icon-icon-filter-unselected{
-        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
-        border-radius: 3px;
-    }
+// .filter-icon {
+//     margin: 0 0 0 0rem;
+//     // margin-left: 25px;
+//     .icon-icon-filter-unselected{
+//         box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+//         border-radius: 3px;
+//     }
     
-}
+// }
 search-box {
     display: inline-block;
     margin-left: auto;
@@ -614,4 +618,20 @@ search-box {
     
 }
 
+.filter-and-tags{
+    display: flex;
+    justify-content: space-between;
+}
+.template-wrap{
+    order:2;
+}
 
+.irs-single{
+    background:#ed008c !important;
+}
+.graph-container{
+    /deep/.empty-row{
+        padding: 7rem 1.25rem;
+
+    }
+}

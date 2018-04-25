@@ -1,14 +1,11 @@
 <div class="row page-section section-top relative">
-    <div>
-        <!-- <template adv-filters></template> -->
-    </div>
-    <!-- <advanced-filters #adv_filters (onFilterSelect)='onFilterSelect($event)'  [service]='service' [advanced_filter_input]='advanced_filter_input'></advanced-filters> -->
+    
+    
     <filter-tags #filtertags (OnCancel)='cancelFilter($event)'></filter-tags>
 
     <div class="filter-wrp">
         <filters class="filters" [filtersList]="filtersList" [multiple]="false" [selectedList]="selected" (onSelected)="onFilterSelected($event)" [logs]='true'></filters>
 
-        <!-- <filters class="filters" [filtersList]="filtersList" (onSelected)="onFilterSelected($event)" [multiple]='false' [selectedList]="selected"></filters> -->
         <div class="filter-icon hide">
             <span class="icon-icon-filter-unselected" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
         </span>
@@ -18,34 +15,18 @@
             <span title='Collapse all' *ngIf='expandText == "Collapse all"' class="icon-Collapse-All expandbtn" (click)='collapseall()'></span>
             <span title='Expand all' *ngIf='expandText == "Expand all"' class="icon-Expand-All expandbtn" (click)='expandall()'></span>
             
-                <!-- <div class="filter-icon relative hide">
-                    <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; onClickFilter()"></span>
-                    <div [class.show]='filterSelected' class="filter-wrap">
-                        <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>                    
-                        <div class="filter-inner-wrap">
-                            <div class='view-label'>View by:</div>
-                            <div class="eachFilter"> 
-                                <div><div class='hori-line'></div>TIME RANGE</div>
-                                <dropdown class="dropdown-3" title="Select enviroment" [dropdwnContent]="rangeList" [selected]="selectedTimeRange" (onSelected)="onRangeListSelected($event)"></dropdown>
-                                <div class='in-logs'>
-                                    <ion-range-slider #sliderElement id='sliderElement' min=1 [max]='sliderMax' [from]='sliderFrom' step=1  (onFinish)='getRange($event)' (onUpdate)="onClickFilter()"></ion-range-slider>
-                                </div>
+               
 
-                            </div>
-                            <div class="eachFilter" *ngIf='service.serviceType == "function"'>
-                                <div><div class='hori-line'></div>ACCOUNT</div>
-                                <dropdown class="dropdown-3" [dropdwnContent]="accList" title="Select enviroment" [selected]="accSelected" (onSelected)="onaccSelected($event)"></dropdown>            
-                            </div>
-                            <div class="eachFilter" *ngIf='service.serviceType == "function"'>
-                                <div><div class='hori-line'></div>REGION</div>
-                                <dropdown class="dropdown-3"  [dropdwnContent]="regList" title="Select enviroment" [selected]="regSelected" (onSelected)="onregSelected($event)"></dropdown>            
-                            </div>
-                            
-                        </div>
-                    </div>
-                </div> -->
 
-            <div class='pointer refresh icon-icon-refresh' title="Refresh" (click)='callLogsFunc()' height="19"></div>
+                <div class='template-wrp'>
+                    <template adv-filters></template>
+
+                </div>
+                <div id='hidethis' [class.hide]='filter_loaded' *ngIf='!filter_loaded' class='template-wrp'>     
+                    <span class="icon-icon-filter-unselected icon-icon-filter-unselected-font "  title="Filter" ></span>                    
+                </div>
+
+                <div class='pointer refresh icon-icon-refresh' title="Refresh" (click)='callLogsFunc()' height="19"></div>
         </div>
 
     </div>

@@ -1,6 +1,7 @@
 import { Component,ViewContainerRef, OnInit, Input, Output, EventEmitter,ViewChild } from '@angular/core';
 import {DataCacheService } from '../../../core/services/index';
 import {IonRangeSliderModule} from "ng2-ion-range-slider";
+import {environment as env_internal} from './../../../../environments/environment.internal';
 
 
 @Component({
@@ -49,11 +50,10 @@ export class AdvancedFiltersComponent implements OnInit {
     pathSelected:string = '';
 
     
-    accList=['tmodevops','tmonpe'];
-    regList=['us-west-2', 'us-east-1'];
-
-	accSelected:string = 'tmodevops';
-    regSelected:string = 'us-west-2';
+    accList=env_internal.urls.accounts;
+	regList=env_internal.urls.accounts;
+	  accSelected:string = this.accList[0];
+	regSelected:string=this.regList[0];
 
     envList:any=['prod','stg'];
     envSelected:string=this.envList[0];
@@ -173,10 +173,28 @@ export class AdvancedFiltersComponent implements OnInit {
     
     
   }
-
+    isAPI:boolean = false;
    hideleft:boolean=false;
+   changeCss:boolean = false;
     ngOnInit(){
-        if(this.service.islogs) this.hideleft=true;
+        var env_list=this.cache.get('envList')
+        if(env_list != undefined)
+            this.envList=env_list.friendly_name;
+
+     
+       
+        setTimeout(() => {
+            
+                    if(this.service.serviceType == 'api')this.isAPI=true;
+                    this.changeCss = this.service.ismetrics;
+                    if(this.changeCss){
+                        document.getElementById('icon-filter-unselected').setAttribute('style','box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15)');
+
+                    }
+    
+                    
+                },10)
+                
         this.advanced_filter_input = this.data.advanced_filter_input;
         this.service = this.data.service;
         this.pathList = ['/'+this.service.domain+'/'+this.service.name];
@@ -185,7 +203,6 @@ export class AdvancedFiltersComponent implements OnInit {
         
     }
     ngOnChanges(x:any){
-
        this.pathList = ['/'+this.service.domain+'/'+this.service.name];
         this.pathSelected = this.pathList[0];
 

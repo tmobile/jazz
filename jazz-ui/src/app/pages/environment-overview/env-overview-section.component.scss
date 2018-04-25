@@ -112,6 +112,7 @@
     overflow: hidden;
 }
 .stage-wrp {
+    border-radius: 3px;
     width:50%;
     position: relative;
     background: #fff;
@@ -590,12 +591,6 @@
 
     }
 }
-// .env-details{
-// /deep/.row{
-// margin:0 !important;
-// }
-// }
-
 .env-details{
     margin:0 ;
     padding:1.6rem;

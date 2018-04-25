@@ -288,6 +288,17 @@ cursor: pointer;
     
 }
 
+/deep/.rebuild{
+    float: right;
+    margin-right: 20px;
+    button{
+        padding: 7px 16px !important;
+        color: #ed008c !important;
+        border: 1px solid #ed008c !important;
+        background: transparent !important;
+    }
+}
+
 
 
 /deep/ .retry-btn 
@@ -328,16 +339,12 @@ font-weight: bold !important;
         }
         font-size: 11px !important;
         font-weight: bold;
-        .column{
-            &:last-child{
-                opacity:0;
-            }
-        }
+
     }
 
     /deep/.column {
         &:nth-child(1) {
-            width: 20px;
+            width: 5rem;
             text-align: center;
             // padding-left: 20px;
             white-space: nowrap;
@@ -355,7 +362,7 @@ font-weight: bold !important;
             a{
                 cursor:pointer;
             }
-            width: 20rem;
+            width: 22rem;
             display: none;
             white-space: nowrap;
             text-overflow: ellipsis;
@@ -365,7 +372,7 @@ font-weight: bold !important;
             }
         }
         &:nth-child(3) {
-            width: 13rem;
+            width: 10rem;
             display: none;
             white-space: nowrap;
             text-overflow: ellipsis;
@@ -375,23 +382,13 @@ font-weight: bold !important;
             }
         }
         &:nth-child(4) {
-            width: 8rem;
+            width: 2rem;
             display: none;
             @media (min-width: $screen-lg) {
                 display: block;
             }
         }
-        &:nth-child(5) {
-            width: 3rem;
-        }
-        &:last-child{
-            // display: flex !important;
-            // width:180px !important;
-            width:2rem;
-            justify-content: space-between !important; 
-            text-transform: capitalize;
-            
-        }
+       
     }
 }
 

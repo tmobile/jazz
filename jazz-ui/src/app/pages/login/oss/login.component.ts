@@ -23,7 +23,6 @@ export class LoginComponent implements OnInit {
     private toastmessage:any;
     popoverTitle:string="Username";
     regist:string="Forgot Password";
-    popoverSubTitle:string="Login with your CORP ID";
     tst:any;
     error_disp:boolean=false;
     err_brd:boolean=false;
@@ -152,7 +151,7 @@ export class LoginComponent implements OnInit {
         // if no validation errors try login
         if (this.error.username === undefined && this.error.password === undefined) {
             this.loading = true;
-            this.authenticationService.login(this.model.username.replace('CORP\\',''), this.model.password)
+            this.authenticationService.login(this.model.username, this.model.password)
                 .subscribe(result => {
                     if (result === true) {
                         // login successful

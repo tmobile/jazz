@@ -49,9 +49,6 @@ export class JenkinsStatusComponent implements OnInit {
       let currentUrl = this.router.url;
       this.goToLogin = true;
       this.closed = false;
-      // this.serviceID = "serviceID"
-      // this.cache.set('serviceID',this.serviceID);
-      // this.router.navigate(['']);
     
   	}else{
       this.router.navigateByUrl('services');
@@ -71,20 +68,16 @@ export class JenkinsStatusComponent implements OnInit {
     var urlParams = new URLSearchParams(url_search);
     let action = urlParams.get("action"); 
     let id = urlParams.get("id"); 
-  //  this.http.post('/jazz/deployments/a10acabd-a26e-4325-9e3c-ca38e23069e9/re-build',{}).subscribe(
     this.http.post("/jazz/deployments/"+id+"/re-build",{}).subscribe(
       (response) => {
-        // let successMessage = this.toastmessage.successMessage(response, "updateObj");
         let successMessage = (response.data.message).replace("."," ");
         this.toast_pop('success', "", successMessage+"successfully");
       },
       (error) => {
-        // let errorMessage = this.toastmessage.errorMessage(error, "updateObj");
         let errorMessage = JSON.parse(error._body).message;
 
         this.toast_pop('error', 'Oops!', errorMessage)
       })
-      // this.isLoading = true;
       setTimeout(() => {
         this.status = 'loading';
         this.ngOnInit();

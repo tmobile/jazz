@@ -8,6 +8,8 @@ import {AdvancedFiltersComponent} from './../../secondary-components/advanced-fi
 import {AdvancedFilterService} from './../../advanced-filter.service';
 import {AdvFilters} from './../../adv-filter.directive';
 import {environment} from './../../../environments/environment.internal';
+import {environment as env_internal} from './../../../environments/environment.internal';
+
 
 
 
@@ -30,7 +32,6 @@ export class EnvAssetsSectionComponent implements OnInit {
 	private http:any;
 	private subscription:any;
 	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
-	// @ViewChild('adv_filters') adv_filters: AdvancedFiltersComponent;
 
 	@ViewChild(AdvFilters) advFilters: AdvFilters;
 	componentFactoryResolver:ComponentFactoryResolver;
@@ -70,10 +71,10 @@ export class EnvAssetsSectionComponent implements OnInit {
 
 	assetsList: any = [];
 	
-	accList=['tmodevops','tmonpe'];
-  regList=['us-west-2', 'us-east-1'];
-	accSelected:string = 'tmodevops';
-  regSelected:string = 'us-west-2';
+	accList=env_internal.urls.accounts;
+		regList=env_internal.urls.accounts;
+			accSelected:string = this.accList[0];
+		regSelected:string=this.regList[0];
 	type: any = [];
 	
 	length: any;
@@ -133,24 +134,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 
 
 	 getFilter(filterServ){
-		// let viewContainerRef = this.advanced_filters.viewContainerRef;
-		// // viewContainerRef.clear();
-		// // filterServ.setRootViewContainerRef(viewContainerRef);
-		// let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
-		// let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
-		// // console.log(this.advFilters);
-		// var comp = this;
-		// // this.advfilters.clearView();
-		// let viewContainerRef = this.advFilters.viewContainerRef;
-		// // console.log(viewContainerRef);
-		// viewContainerRef.clear();
-		// let componentRef = viewContainerRef.createComponent(componentFactory);
-		// // this.instance_yes=(<AdvancedFiltersComponent>componentRef.instance);
-		// (<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
-		// (<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
-		// 	// alert("1");
-		// 	comp.onFilterSelect(event);
-		// });
+	
 	}
   
    onaccSelected(event){
@@ -164,7 +148,6 @@ export class EnvAssetsSectionComponent implements OnInit {
    }
 
    onFilterSelect(event){
-	// alert('key: '+event.key+'  value: '+event.value);
 	switch(event.key){
 	  
 	  
@@ -186,20 +169,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 }
 
    cancelFilter(event){
-		// // console.log('event',event);
-		// switch(event){			
-		// 	case 'account':{this.onaccSelected('Acc 1');		
-		// 	break;
-		// 	}
-		// 	case 'region':{this.onregSelected('reg 1');		
-		// 	break;
-		// 	}
-		// 	case 'all':{ 
-		// 	this.onaccSelected('Acc 1');   
-		// 	this.onregSelected('reg 1');
-		// 		break;
-		// 	}
-		// 	}
+		
 	}
 	callServiceEnvAssets() {
 		this.isLoading = true;
@@ -217,7 +187,6 @@ export class EnvAssetsSectionComponent implements OnInit {
 					payload["offset"] = this.offsetval;
 				}
 				this.subscription = this.http.post(this.relativeUrl, payload).subscribe(
-      	// this.subscription = this.http.get('/jazz/assets/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name).subscribe(
         (response) => {
 				
 					if((response.data == undefined) || (response.data.length == 0)){
@@ -310,13 +279,12 @@ export class EnvAssetsSectionComponent implements OnInit {
 					this.envResponseError = true;
           this.getTime();
 					this.errorURL = window.location.href;
-					this.errorAPI = environment.baseurl+"jazz/assets/search";
+					this.errorAPI = env_internal.baseurl+"jazz/assets/search";
 					this.errorRequest = payload;
 					this.errorUser = this.authenticationservice.getUserId();
 					this.errorResponse = JSON.parse(error._body);
 	
-				// let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
-							// this.popToast('error', 'Oops!', errorMessage);
+			
 			})
 		};	
 		getTime() {
@@ -401,7 +369,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 			
 					var payload={
 						"title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
-						"project_id": "CAPI",
+						"project_id": env_internal.urls.internal_acronym,
 						"priority": "P4",
 						"description": this.json,
 						"created_by": this.authenticationservice.getUserId(),
@@ -434,8 +402,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	 }
 	 
 	 ngOnInit() {
-		// this.callServiceEnvAssets() 
-		// let cachedData = this.cache.get(this.model.username);
+		
 	}
 	limitValue : number = 10;
   prevActivePage: number = 0;
@@ -443,7 +410,6 @@ export class EnvAssetsSectionComponent implements OnInit {
 	paginatePage(currentlyActivePage){
     if(this.prevActivePage != currentlyActivePage){
       this.prevActivePage = currentlyActivePage;
-      // this.pageSelected = currentlyActivePage;
       this.assetsList = [];
      
 

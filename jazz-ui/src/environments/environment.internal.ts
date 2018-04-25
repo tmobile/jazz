@@ -11,7 +11,15 @@ export const environment = {
         signUp:"{{sign_up}}",
         cloudapiURL:"{{cloud_api_url}}",
         editor_cloudapiURL: "{{editor_cloud_api_url}}",
-        reportEmail:"{{report_email}}"
+        reportEmail:"{{report_email}}",
+        accounts:["{{accounts}}"],
+        regions:["{{regions}}"],
+        internal_acronym:"{{internal_acronym}}",
+        serverless_slack:"{{serverless_slack}}",
+        username_prefix:"{{username_prefix}}",
+        slack_messages:'{{slack_messages}}',
     }
-}
+};
 
+
+  

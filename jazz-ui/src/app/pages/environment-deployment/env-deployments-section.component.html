@@ -34,7 +34,7 @@
     </div>
  </div>
  <!-- TODO: Remove disclaimer after techtraining -->
- <!-- <div class="disclaimer-static-data"><i>This data is for representational purpose only and may not be accurate</i></div> -->
+ <!-- <div class="disclaimer-static-data"><i>This data is for representational purpose only and is not accurate</i></div> -->
  <!-- <div class='row hide'>
     <div class='widget-cover-outer col-sm-12'>
         <div class='widget-header' (click)='widgetExpand();'>
@@ -102,9 +102,11 @@
           <!-- (click)='tableExpand();' -->
           PAST DEPLOYMENTS <div [class.rot]='!rot_icon2' [class.rot-rev]='rot_icon2' class='icon-icon-down'>
        </div>
+       <btn-jazz-primary class="rebuild" [disablePrimaryBtn]='status_val > 5' text='Build now' (click)="rebuild()"></btn-jazz-primary>
+
     </div>
     <div id='slid-table'>
-       <table-template *ngIf="envResponseTrue" class="table-container env-deployment-log"  [header]="tableHeader2"  (onSort)="onSort($event)" [showPaginationtable]="false"  (paginatePage)="paginatePage($event)" [totalPageNum]="totalPagesTable" >
+       <table-template *ngIf="envResponseTrue" class="table-container env-deployment-log"  [header]="tableHeader2"  (onSort)="onSort($event)" [showPaginationtable]="true"  (paginatePage)="paginatePage($event)" [totalPageNum]="totalPagesTable" >
        <div class="table-row" [class.hide]="serviceListEmpty" *ngFor="let row of deployedList; let i = index"  ><!-- (click)="onRowClicked() -->
        <div class="column primary-txt-color pointer" ><a (click)="openBuildUrl(buildurl[i])">{{buildNo[i]}}</a></div>
        <div class="column"><a (click)="idClicked(commitDetails[i])">{{commitDetails[i]}}</a></div>
@@ -114,7 +116,7 @@
           <div [class.red]='status[i] == "failed"' [class.green]='status[i] == "successful"'>{{status[i]}}
        </div>
     </div>
-    <div class="column retry">
+    <div class="column retry hide">
        <btn-jazz-primary [disablePrimaryBtn]='status[i] != "successful" && status[i] != "failed"' newclass='retry-btn' text='RETRY' (click)="rebuild($event,id[i])"></btn-jazz-primary>
     </div>
  </div>

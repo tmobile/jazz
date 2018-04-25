@@ -24,13 +24,10 @@ import {AdvancedFilterService} from './advanced-filter.service';
 import {IonRangeSliderModule} from 'ng2-ion-range-slider';
 import {LandingComponent} from './pages/landing/landing.component';
 import {TestApiComponent} from './pages/testapi/test-api.component';
-// import {FooterComponent} from './secondary-components/footer/footer.component';
 import {Error404Component} from './pages/error404/error404.component';
 import {SharedModule} from './shared-module/shared.module';
 import {routes} from './app.route';
-// import {FilterTagsServicesComponent} from './secondary-components/filter-tags-services/filter-tags-services.component';
-// import {EnvironmentModule} from './environment-module/environment.module';
-// import {ServiceModule} from './service-module/service.module';
+
 
 let environmentval = environment.envName;
 let loadedModule;
@@ -47,7 +44,6 @@ if(environmentval == "oss"){
     AppComponent,
     LandingComponent,
     Error404Component,
-    // FooterComponent,
     TestApiComponent,
    
     
@@ -61,7 +57,6 @@ if(environmentval == "oss"){
     ToasterModule,
     NgIdleKeepaliveModule.forRoot(),
     SharedModule,
-    // FilterTagsServicesComponent
   ],
   providers: [
     AuthenticationService,

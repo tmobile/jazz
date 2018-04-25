@@ -10,4 +10,4 @@ export {ServiceAccessControlComponent} from '../pages/service-access-control/ser
 export {ServiceDetailComponent} from '../pages/service-detail/service-detail.component';
 export { ServiceOverviewMultienvComponent } from '../secondary-components/service-overview-multienv/service-overview-multienv.component';
 export { ServiceOverviewNonMultienvComponent } from '../secondary-components/service-overview-non-multienv/service-overview-non-multienv.component';
-export * from '../pages/service-overview/service-overview.component';
+export { ServiceOverviewComponent } from '../pages/service-overview/service-overview.component';

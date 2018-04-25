@@ -13,6 +13,8 @@ import {Observable} from 'rxjs/Rx';
 import { Subscription } from 'rxjs/Subscription';
 import { ServiceDetailComponent } from '../service-detail/service-detail.component'
 import { environment } from './../../../environments/environment';
+import {environment as env_internal} from './../../../environments/environment.internal';
+
 
 declare var $:any;
 
@@ -61,8 +63,9 @@ export class ServiceOverviewComponent implements OnInit {
     runtime_empty:boolean = false;
     tags_empty:boolean;
     ErrEnv:boolean=false;
-    accounts=['tmodevops','tmonpe'];
-    regions=['us-west-2', 'us-east-1'];
+
+    accounts=env_internal.urls.accounts;
+    regions=env_internal.urls.regions;
     errMessage=''
     tags_temp:string='';
     desc_temp:string='';
@@ -147,25 +150,7 @@ export class ServiceOverviewComponent implements OnInit {
     activeEnv:string = 'dev';
     Environments=[];
     environ_arr=[];
-    endpList = [{
-        name:'tmo-dev-ops',
-        arn:'arn:aws:lambda:us-east-1:1:192837283062537',
-        type:'Account',
-      },
-      {
-        name:'us-east-2',
-        arn:'arn:test2',
-        type:'region',
-      },{
-        name:'tmo-dev-ops2',
-        arn:'arn:test3',
-        type:'Account',
-      },{
-        name:'tmo-dev-ops3',
-        arn:'arn:test4',
-        type:'region',
-      }
-    ];
+    endpList :any;  
     prodEnv:any;
     stgEnv:any;
     status :string= this.service.status;
@@ -239,18 +224,6 @@ export class ServiceOverviewComponent implements OnInit {
             stage:'dev'
         },
 
-        // {
-        //     title:'BRANCH4',
-        //     stage:'dev'
-        // },
-        // {
-        //     title:'BRANCH4',
-        //     stage:'dev'
-        // },
-        // {
-        //     title:'BRANCH4',
-        //     stage:'dev'
-        // }
     ];
     copy_link(id)
     {  
@@ -338,13 +311,7 @@ export class ServiceOverviewComponent implements OnInit {
             this.isLoadingService=true;            
             this.check_email_valid()
             this.validateChannelName();
-             // var payload = {               
-            //     "email": email_temporary || "",
-            //     "slack_channel": slack_temporary || "",
-            //     "tags": payloag_tags || "",
-            //     "description": this.desc_temp  || ""
-            // };
-            // this.update_payload.accounts=["tmodevops"];
+            
             this.http.put('/jazz/services/'+this.service.id, this.update_payload)
             .subscribe(
                 (Response)=>{
@@ -374,7 +341,6 @@ export class ServiceOverviewComponent implements OnInit {
                     this.edit_save='SAVE';
                     let errorMessage = this.toastmessage.errorMessage(Error,"updateService");
                     this.toast_pop('error', 'Oops!', errorMessage)
-                    // this.toast_pop('error','Oops!', "Data cannot be updated. Service Error.");
                 });
         }
     }
@@ -402,19 +368,7 @@ export class ServiceOverviewComponent implements OnInit {
             tst.classList.remove('toaster-anim');
           }, 3000);
     }
-    // testApi(type,stg){
-    //     switch(type){
-    //         case 'api':
-    //         this.baseUrl="http://jazz-training-api-doc.s3-website-us-east-1.amazonaws.com"
-    //         this.swaggerUrl = "http://editor.swagger.io/?url="+this.baseUrl+"/"+this.service.domain +"/"+ this.service.name +"/"+stg+"/swagger.json"
-    //         window.open(this.swaggerUrl);
-    //         // window.open('/test-api?service=' + this.service.name + '&domain='+ this.service.domain + '&env=' +stg);
-    //                     break;
-
-    //         case 'website' : window.open(this.service.endpoints[stg]);
-    //                         break;
-    //     }
-    // }
+    
     popup(state,id){
         if(state == 'enter'){
           var ele = document.getElementById(id);
@@ -453,7 +407,6 @@ export class ServiceOverviewComponent implements OnInit {
                 {
                     this.hide_email_error=true;
 
-                    // this.service.email=this.email_temp;
                     this.email_valid=true;
 
                 }
@@ -480,15 +433,10 @@ export class ServiceOverviewComponent implements OnInit {
             .subscribe(
                 (Response) => {
                     let isAvailable = Response.data.is_available;
-                    // this.response_json = Response;
-                    // var output_body = JSON.parse(this.response_json._body);
-                    
-                    // var is_slack_valid = output_body.data.is_available;
+                   
                     if(isAvailable)//if valid
                     {
-                        this.hide_slack_error=true;
-                        
-                        // this.service.slackChannel=this.slackChannel_temp;
+                        this.hide_slack_error=true;                       
 
                     }
                     else
@@ -531,7 +479,7 @@ export class ServiceOverviewComponent implements OnInit {
             //do nothing
         }
         else{
-            this.slackChannel_link='https://t-mo.slack.com/messages/' + this.service.slackChannel;
+            this.slackChannel_link=env_internal.urls.slack_messages + this.service.slackChannel;
             this.openLink(this.slackChannel_link);
         }
     }
@@ -675,7 +623,6 @@ export class ServiceOverviewComponent implements OnInit {
         if(this.environ_arr!=undefined)
             for(var i=0;i<this.environ_arr.length;i++){
                 this.environ_arr[i].status=this.environ_arr[i].status.replace("_"," ");
-                // this.environ_arr[i].status=this.environ_arr[i].status.split(" ").join("\ n")
                 if(this.environ_arr[i].logical_id == 'prd' || this.environ_arr[i].logical_id == 'prod'){
                     this.prodEnv=this.environ_arr[i];
                     continue;
@@ -715,7 +662,6 @@ export class ServiceOverviewComponent implements OnInit {
             this.noStg=true;
         }
       
-        // this.envList        
         this.cache.set('envList',this.list);
        
 
@@ -729,7 +675,6 @@ export class ServiceOverviewComponent implements OnInit {
             if(this.environ_arr[i].status != 'inactive'){
                 this.list_env[j] = this.environ_arr[i];
                 
-                // this.list_env[i]
                 j++;
 
             }
@@ -755,13 +700,7 @@ export class ServiceOverviewComponent implements OnInit {
         if(this.service==undefined){return}
         this.http.get('/jazz/environments?domain='+this.service.domain+'&service='+this.service.name).subscribe(
             response => {
-                // var spoon = response.data.environment;
-                // for(var i=0 ; i < spoon.length ; i++ ){
-                //    if(spoon[i].friendly_name != undefined){
-                //        this.friendly_name = spoon[i].friendly_name;
-                //    }
-                // }
-                // this.friendly_name = response
+               
                 this.isenvLoading=false;
                   this.environ_arr=response.data.environment;
                   if(this.environ_arr!=undefined)    
@@ -770,12 +709,7 @@ export class ServiceOverviewComponent implements OnInit {
                     }             
                   this.ErrEnv=false;
                   
-                //   var obj1={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"dev"}
-                //   var obj2={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"feature"}
-                //   var obj3={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"stg"}
-                //   this.environ_arr[1]=obj1;
-                //   this.environ_arr[2]=obj2;
-                //   this.environ_arr[3]=obj3;
+               
                   this.modifyEnvArr();
                   
               },
@@ -798,8 +732,6 @@ export class ServiceOverviewComponent implements OnInit {
                   this.errorUser = this.authenticationservice.getUserId();
                   this.errorResponse = JSON.parse(err._body);
     
-                // let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
-                // this.popToast('error', 'Oops!', errorMessage);
             })
         };
         getTime() {
@@ -822,7 +754,6 @@ export class ServiceOverviewComponent implements OnInit {
         isLoading:boolean=false;
         sjson:any={};
 		djson:any={};
-		// isLoading:boolean=false;
 		reportIssue(){
 			
 					this.json = {
@@ -885,7 +816,7 @@ export class ServiceOverviewComponent implements OnInit {
 			
 					var payload={
 						"title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
-						"project_id": "CAPI",
+						"project_id": env_internal.urls.internal_acronym,
 						"priority": "P4",
 						"description": this.json,
 						"created_by": this.authenticationservice.getUserId(),
@@ -917,13 +848,13 @@ export class ServiceOverviewComponent implements OnInit {
                 is_multi_env:boolean = false;
                 ngOnInit() {
                     if(environment.envName == 'oss')
-                        if(environment.multi_env == false)
+                        if(!environment.multi_env)
                             this.multiENV = false;
                     if(environment.multi_env) this.is_multi_env=true;
                     if(environment.envName == 'oss') this.internal_build = false;
 
-                    this.service.accounts="tmo-dev-ops, tmo-int";
-                    this.service.regions="us-west-2, us-east";
+                    this.service.accounts=env_internal.urls.accounts;
+                    this.service.regions=env_internal.urls.regions;
                     this.createloader = true;
                     if(this.service.status == "deletion completed" || this.service.status == "deletion started"){
                         this.showcanvas = true;
@@ -973,7 +904,7 @@ export class ServiceOverviewComponent implements OnInit {
                     this.stgEnv=arrEnv[i];
             }
         }
-        arrEnv[0].status.replace("_"," ");
+        // arrEnv[0].status.replace("_"," ");
     }
     envfoross(){
         var url_multi_env = 'https://api.myjson.com/bins/k6qvn';
@@ -990,53 +921,12 @@ export class ServiceOverviewComponent implements OnInit {
         this.http.get(chosen_url).subscribe(
             response => {
                 this.transform_env_oss(response);
-                // var spoon = response.data.environment;
-                // for(var i=0 ; i < spoon.length ; i++ ){
-                //    if(spoon[i].friendly_name != undefined){
-                //        this.friendly_name = spoon[i].friendly_name;
-                //    }
-                // }
-                // this.friendly_name = response
-                // this.isenvLoading=false;
-                //   this.environ_arr=response.data.environment;
-                //   if(this.environ_arr!=undefined)    
-                //     if(this.environ_arr.length==0 || response.data==''){
-                //             this.noEnv=true;   
-                //     }             
-                //   this.ErrEnv=false;
-                  
-                //   var obj1={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"dev"}
-                //   var obj2={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"feature"}
-                //   var obj3={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"stg"}
-                //   this.environ_arr[1]=obj1;
-                //   this.environ_arr[2]=obj2;
-                //   this.environ_arr[3]=obj3;
-                //   this.modifyEnvArr();
+               
                   
               },
               err => {
-                // this.isenvLoading=false;
-                
-                //   this.ErrEnv=true;
-                //   if(err.status == 404) this.err404=true;
-                //   this.errMessage="Something went wrong while fetching your data";
-                //   this.errMessage=this.toastmessage.errorMessage(err,"environment");
-                //   var payload = {
-                //       "domain" : +this.service.domain,
-                //       "service" : this.service.name
-                //   }
-                //   this.getTime();
-                //   this.errorURL = window.location.href;
-                //   this.errorRequest = payload;
-                //   this.errorUser = this.authenticationservice.getUserId();
-                //   this.errorResponse = JSON.parse(err._body);
-    
-                // let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
-                // this.popToast('error', 'Oops!', errorMessage);
+                    
             });
-        
-        // va
-        
         
     
     }
@@ -1076,7 +966,6 @@ export class ServiceOverviewComponent implements OnInit {
                 this.bitbucketRepo = "Git Repo";
 
                }
-            // this.bitbucketRepo = "View on Bitbucket";
             this.repositorylink = this.service.repository;
         } else if(this.service.repository === "[Archived]"){
             this.bitbucketRepo = "Archived";
@@ -1157,7 +1046,6 @@ serviceDeletionStatus(){
                 setTimeout(() => {
                     this.service_error = false;
                 }, 5000);
-                // this.intervalSubscription.unsubscribe();
             } else {
                 this.statusCompleted = false;
                 respStatus.events.forEach(element => {
@@ -1288,11 +1176,10 @@ keypressAccount(hash){
   if (hash.key == 'ArrowDown') {
     this.focusindex++;
     if (this.focusindex > 0) {
-      var pinkElements = document.getElementsByClassName("pinkfocus")[0];
-      if (pinkElements == undefined) {
-        this.focusindex = 0;
-      }
-      // var id=pinkElements.children[0].innerHTML;
+    //   var pinkElements = document.getElementsByClassName("pinkfocus")[0];
+    //   if (pinkElements == undefined) {
+    //     this.focusindex = 0;
+    //   }
     }
     if (this.focusindex > 2) {
       this.scrollList = { 'position': 'relative', 'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem' };
@@ -1315,11 +1202,11 @@ keypressAccount(hash){
   }
   else if (hash.key == 'Enter' && this.focusindex > -1) {
     event.preventDefault();
-    var pinkElement = document.getElementsByClassName("pinkfocus")[0].children;
+    // var pinkElement = document.getElementsByClassName("pinkfocus")[0].children;
 
-    var approverObj = pinkElement[0].attributes[2].value;
+    // var approverObj = pinkElement[0].attributes[2].value;
     
-    this.selectAccount(approverObj);
+    // this.selectAccount(approverObj);
 
     this.focusindex = -1;
 
@@ -1332,11 +1219,10 @@ keypressRegion(hash){
     if (hash.key == 'ArrowDown') {
         this.focusindex++;
         if (this.focusindex > 0) {
-          var pinkElements = document.getElementsByClassName("pinkfocus2")[0];
-          if (pinkElements == undefined) {
-            this.focusindex = 0;
-          }
-          // var id=pinkElements.children[0].innerHTML;
+        //   var pinkElements = document.getElementsByClassName("pinkfocus2")[0];
+        //   if (pinkElements == undefined) {
+        //     this.focusindex = 0;
+        //   }
         }
         if (this.focusindex > 2) {
           this.scrollList = { 'position': 'relative', 'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem' };
@@ -1359,11 +1245,11 @@ keypressRegion(hash){
       }
       else if (hash.key == 'Enter' && this.focusindex > -1) {
         event.preventDefault();
-        var pinkElement = document.getElementsByClassName("pinkfocus2")[0].children;
+        // var pinkElement = document.getElementsByClassName("pinkfocus2")[0].children;
     
-        var approverObj = pinkElement[0].attributes[2].value;
+        // var approverObj = pinkElement[0].attributes[2].value;
         
-        this.selectRegion(approverObj);
+        // this.selectRegion(approverObj);
     
         this.focusindex = -1;
     

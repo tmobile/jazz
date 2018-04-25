@@ -3,7 +3,8 @@ import {DataCacheService , AuthenticationService , RequestService } from '../../
 import { Router, ActivatedRoute } from '@angular/router';
 import { ViewChild } from '@angular/core/src/metadata/di';
 import {DropdownComponent} from './../../primary-components/dropdown/dropdown.component';
-import { environment } from 'environments/environment.oss';
+import { environment } from './../../../environments/environment.oss';
+import { environment as env_internal} from './../../../environments/environment.internal';
 // import { Sort } from './jazz-table-sort';
 
 @Component({
@@ -244,7 +245,7 @@ export class TableTemplateComponent implements OnInit {
    
        var payload={
          "title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
-         "project_id": "CAPI",
+         "project_id": env_internal.urls.internal_acronym,
          "priority": "P4",
          "description": this.json,
          "created_by": this.authenticationservice.getUserId(),

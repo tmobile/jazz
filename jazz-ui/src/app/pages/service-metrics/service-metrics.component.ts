@@ -10,11 +10,12 @@ import {FilterTagsComponent} from '../../secondary-components/filter-tags/filter
 import {AdvancedFiltersComponent} from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
 import {AdvancedFilterService} from './../../advanced-filter.service';
 import {AdvFilters} from './../../adv-filter.directive';
-import {environment} from './../../../environments/environment.internal';
+import {environment} from './../../../environments/environment';
+import {environment as env_internal} from './../../../environments/environment.internal';
 
 
 
-// import { LineGraphComponent }  from './../../secondary-components/line-graph/line-graph.component';
+
 
 @Component({ 
   selector: 'service-metrics',
@@ -24,17 +25,14 @@ import {environment} from './../../../environments/environment.internal';
 })
 export class ServiceMetricsComponent implements OnInit {
 
-  // @ViewChild(LineGraphComponent)
 
   @ViewChild('sliderElement') sliderElement: IonRangeSliderModule;
   @ViewChild('filtertags') FilterTags: FilterTagsComponent;
-  // @ViewChild('adv_filters') adv_filters: AdvancedFiltersComponent;
 	@ViewChild(AdvFilters) advFilters: AdvFilters;
   componentFactoryResolver:ComponentFactoryResolver;
 
   
 
-	// public lineGraph: LineGraphComponent;
   @Input() service: any = {};
   private subscription:any;
   public min:any;
@@ -73,8 +71,6 @@ export class ServiceMetricsComponent implements OnInit {
 }
 
   envList:any=['prod','stg'];
-
-
   filtersList: Array<string> = ['7 Days', '4 Weeks', '6 Months', '1 Year'];
   rangeList: Array<string> = ['Day', 'Week', 'Month', 'Year'];
   allPeriodList: Array<any> = [
@@ -102,11 +98,9 @@ export class ServiceMetricsComponent implements OnInit {
   periodListSeconds: Array<string> = ['900','3600','21600','86400','604800','2592000'];
 
   graphTypeList: Array<string> = ['Line'];
-  // environmentList: Array<string> = ['prod', 'stg', 'dev'];
   envSelected:string = this.envList[0];
-  // serviceTypeList : Array<string> = ['api', 'lambda', 'website'];
 
-  statisticList: Array<string> = ['Average', 'Sum', 'Maximum','Minimum'];//sampleCount is been removed
+  statisticList: Array<string> = ['Average', 'Sum', 'Maximum','Minimum'];
   statisticSelected:string= this.statisticList[0];
   viewBox = "0 0 300 150";
   today = new Date();
@@ -131,8 +125,6 @@ export class ServiceMetricsComponent implements OnInit {
   pathList:Array<string>=[];
   methodList:Array<string>  = ['POST','GET','DELETE','PUT'];
 
-  // typeList:Array<string>  = ["apigateway","lambda","s3"];
-  // typeSelected: string=this.typeList[0];
   pathSelected:string = '';
   methodSelected:string = this.methodList[0];
   metricsList:Array<any>=[{
@@ -146,7 +138,6 @@ export class ServiceMetricsComponent implements OnInit {
   
   
 
-  // temporary graph data
   graphs: Array<any>;
   graphsOld: Array<any>;
   graphInput:Array<any>;
@@ -180,14 +171,16 @@ export class ServiceMetricsComponent implements OnInit {
 		var comp = this;
 		setTimeout(function(){
 			comp.getFilter(advancedFilters);
-		},3000);
+		},10);
 		
   }
  
-	accList=['tmodevops','tmonpe'];
-  regList=['us-west-2', 'us-east-1'];
-	accSelected:string = 'tmodevops';
-  regSelected:string = 'us-west-2';
+	accList=env_internal.urls.accounts;
+	regList=env_internal.urls.accounts;
+    accSelected:string;
+    //  = this.accList[0];
+  regSelected:string ;
+  // = this.regList[0];
   instance_yes;
 
    onaccSelected(event){
@@ -255,7 +248,6 @@ export class ServiceMetricsComponent implements OnInit {
     }
   }
   onFilterSelect(event){
-    // alert('key: '+event.key+'  value: '+event.value);
     switch(event.key){
       case 'slider':{
         this.getRange(event.value);
@@ -278,7 +270,6 @@ export class ServiceMetricsComponent implements OnInit {
         this.selectedTimeRange = event.value;
         this.payload.start_time = resetdate;
         this.callMetricsFunc();
-        // this.adv_filters.setSlider(this.sliderMax);
         break;
       }
       case 'environment':{
@@ -298,10 +289,7 @@ export class ServiceMetricsComponent implements OnInit {
       }
       case 'statistics':{
         var statistics=event.value;
-        // this.payload.statistics = statistics;
         this.FilterTags.notify('filter-Statistic',statistics);
-        
-        // this.cache.set('filter-Statistic',statistics);
         this.statisticSelected = statistics;
         this.payload.statistics = statistics;
         this.callMetricsFunc();
@@ -342,11 +330,12 @@ export class ServiceMetricsComponent implements OnInit {
       this.service_api = false;
     }
 
-    this.resetPeriodList(this.selectedTimeRange); //  to set periodListValue such that total num of datapoints < 1440 .. http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricStatistics.html
+    this.resetPeriodList(this.selectedTimeRange); 
+    //  to set periodListValue such that total num of datapoints < 1440 .. http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_GetMetricStatistics.html
     this.payload = {
-        "service":this.service.name,// this.service.name,//hotfix for Tech Training - Aug 31
-        "domain": this.service.domain,//this.service.domain,//hotfix for Tech Training - Aug 31
-        "environment": this.envList[0],//hotfix for Tech Training - Aug 21this.environmentList[0],
+        "service":this.service.name,
+        "domain": this.service.domain,
+        "environment": this.envList[0],
         "end_time": (new Date().toISOString()).toString(),
         "start_time": this.getStartDate(this.selectedTimeRange, this.sliderFrom),
         "interval": this.periodListSeconds[this.periodList.indexOf(this.periodList[0])],
@@ -410,7 +399,6 @@ export class ServiceMetricsComponent implements OnInit {
     };
 
     serviceMetric.assets.forEach(function(eachAsset){
-      // temporary fix as /jazz/services backfilling is not done due to which we will not get proper value in of service.serviceType
       if( (_this.service.serviceType == "api" && eachAsset.type == "apigateway" )|| ((_this.service.serviceType == "function" || _this.service.serviceType == "lambda") && eachAsset.type == "lambda" ) || (_this.service.serviceType == "website" && eachAsset.type == "cloudfront" ) ){
         var eachAssetMetric = [];
         var stat = eachAsset.statistics;
@@ -421,7 +409,7 @@ export class ServiceMetricsComponent implements OnInit {
           asset_properties : asset_name,
           statistics : eachAsset.statistics,
           metrics : eachAssetMetric,
-          oldMetrics : [] // TODO oldG
+          oldMetrics : [] 
         });
         eachAsset.metrics.forEach(function(eachMetric){
           var eachMetricDatapoint = [];
@@ -430,21 +418,18 @@ export class ServiceMetricsComponent implements OnInit {
             metric_name : eachMetric.metric_name,
             xAxis: { label: 'TIME (UTC)', range: selectedTimeRange.toLowerCase() },
             yAxis: { label: datapointArray.length > 0 ? datapointArray[0].Unit : " "}, // commenting metrics y axis label
-            // yAxis: { label: datapointArray.length > 0 ? "" : "-"},
             data : eachMetricDatapoint,
-            // dataOld: [] // TODO oldGraphObj ? oldGraphObj.datapoints || eachMetricDatapoint : []
           });
           if(datapointArray && datapointArray.length > 0){
             datapointArray.forEach(function(eachDatapoint){
               var modifiedkey = eachDatapoint.Timestamp;
-              // modifiedkey = modifiedkey.replace(/[-]/g, '/');
 
               var eachDate=new Date(modifiedkey);
               var monthIndex=eachDate.getMonth();
               let graphDataDate="";
 
               let serviceRow = {
-                date: eachDate, // graphDataDate
+                date: eachDate, 
                 value: eachDatapoint[stat].toFixed(5),
                 unit: eachDatapoint["Unit"]
               };
@@ -453,20 +438,15 @@ export class ServiceMetricsComponent implements OnInit {
             }); // end of datapointArray
           }
           else{
-            // let serviceRow = {
-            //   date: "", // graphDataDate
-            //   value: "",
-            //   unit: ""
-            // };
-            // eachMetricDatapoint.push(serviceRow);
+           
             eachMetricDatapoint = [];
           }
-        }); // end of eachAsset.metrics
-      }       // ***** uncomment
+        }); 
+      }       
       else{
        
       }
-    }); // end of serviceMetric.assets
+    }); 
       if(_serviceMetricList.length > 0){
         this.isDataNotAvailable = false;
       }
@@ -487,18 +467,15 @@ export class ServiceMetricsComponent implements OnInit {
     this.isGraphLoading=true;
     this.isDataNotAvailable = false;
     this.isError = false;
-    //this.payload = {"service":"events","domain":"platform","environment":"prod","end_time":"2017-08-30T09:28:42.279Z","start_time":"2017-08-24T09:28:42.279Z","interval":"900","statistics":"Average"}
     	 if ( this.subscription ) {
       this.subscription.unsubscribe();
     }
 		this.subscription = this.http.post('/jazz/metrics', this.payload).subscribe(
-    // this.http.get('https://api.myjson.com/bins/x4j5f').subscribe(
       response => {
         
           //Bind to view
         let serviceMetrics = response.data;
         
-        // let serviceInput = response.input;
         if (serviceMetrics !== undefined && serviceMetrics !== "" && serviceMetrics.assets !== undefined && serviceMetrics.assets.length > 0 ) {
             this.serviceMetricsList = this.processServiceList(serviceMetrics);
             if(this.service.serviceType === 'api') {
@@ -506,9 +483,7 @@ export class ServiceMetricsComponent implements OnInit {
             }
             this.displayMetrics();
             if(serviceMetrics === "serviceMetrics !== undefined"){
-              // let errorMessage = this.toastmessage.successMessage(response,"serviceMetrics");
-              // this.popToast('error', 'Oops!', errorMessage)
-              this.isGraphLoading = false;
+              
               this.isDataNotAvailable = true;
             }
         } else if(serviceMetrics !== undefined && serviceMetrics === "" || serviceMetrics.assets.length == 0 ){
@@ -516,13 +491,24 @@ export class ServiceMetricsComponent implements OnInit {
           this.isDataNotAvailable = true;
           if(serviceMetrics === ""){
             let errorMessage = this.toastmessage.successMessage(response,"serviceMetrics");
-            // this.popToast('error', 'Oops!', errorMessage)
           }
         } else{
           this.isGraphLoading = false;
           this.isDataNotAvailable = true;
           this.isError = true;
         }
+        setTimeout(() => {
+          this.checkcarausal();
+          var gHeight ;
+          var g_height = document.getElementsByClassName('graph-container')[0];
+          if(g_height != undefined){
+            gHeight = g_height.clientHeight;
+            gHeight=gHeight+31;
+            g_height.setAttribute('style','min-height:'+gHeight+'px;')
+          }
+            
+        }, 10)
+       
       },
       err => {
         this.isError=true;
@@ -544,12 +530,11 @@ export class ServiceMetricsComponent implements OnInit {
         errorMessage=this.toastmessage.errorMessage(err,"serviceMetrics");
         this.getTime();
 			  this.errorURL = window.location.href;
-			  this.errorAPI = environment.baseurl+"/jazz/metrics";
+			  this.errorAPI = env_internal.baseurl+"/jazz/metrics";
 			  this.errorRequest = this.payload;
         this.errorUser = this.authenticationservice.getUserId();
         this.errorResponse = JSON.parse(err._body);
-			// let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
-            // this.popToast('error', 'Oops!', errorMessage);
+	
 		})
 	};
 
@@ -574,7 +559,6 @@ export class ServiceMetricsComponent implements OnInit {
 	isLoading:boolean=false;
 	sjson:any={};
   djson:any={};
-  // isLoading:boolean=false;
   reportIssue(){
     
         this.json = {
@@ -637,7 +621,7 @@ export class ServiceMetricsComponent implements OnInit {
     
         var payload={
           "title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
-          "project_id": "CAPI",
+          "project_id": env_internal.urls.internal_acronym,
           "priority": "P4",
           "description": this.json,
           "created_by": this.authenticationservice.getUserId(),
@@ -699,12 +683,28 @@ export class ServiceMetricsComponent implements OnInit {
   }
 
   displayMetrics(){
+    var conditon;
     var thisele=this, max = null, min = null;
     thisele.isGraphLoading = true;
     thisele.metricsList=[];
     this.graphInput=[];
     this.serviceMetricsList.forEach(function(each){
-      if( each.asset_properties.Method == thisele.methodSelected && each.asset_properties.Resource == thisele.pathSelected){
+      console.log('first each,',each)
+      each.asset_properties.Method = "a";
+      thisele.methodSelected = "a";
+      each.asset_properties.Resource = "b";
+      thisele.pathSelected = "b";
+      if(thisele.service.serviceType == "api"){
+        var first = (each.asset_properties.Method == thisele.methodSelected);
+        var second = (each.asset_properties.Resource == thisele.pathSelected);
+
+        conditon = first && second;
+
+      }
+      else{
+        conditon=true;
+      }
+      if(conditon){  
         each.metrics.forEach(eachSet => {
           var sum=0; var value =0;
           eachSet.data.forEach(element => {
@@ -754,9 +754,12 @@ export class ServiceMetricsComponent implements OnInit {
       setTimeout(function(){
         if(thisele.metricsList.length>0){
           var ele = document.getElementsByClassName('metrics-card');
-          var eachCardWidth =ele[0].clientHeight + 24;
-          for(var i = 0; i< ele.length; i++){
-            ele[i].setAttribute('style','min-height:'+ele[0].clientHeight+'px');
+          var eachCardWidth;
+          if(ele[0] != undefined){
+            eachCardWidth =ele[0].clientHeight + 24;
+            for(var i = 0; i< ele.length; i++){
+              ele[i].setAttribute('style','min-height:'+ele[0].clientHeight+'px');
+            }
           }
           var mainEle = document.getElementsByClassName('scroll-cards-wrap')[0].clientWidth;
           var limit = document.getElementsByClassName('metrics-cards-wrap')[0].clientWidth;
@@ -775,7 +778,27 @@ export class ServiceMetricsComponent implements OnInit {
     } else{
     }
   }
-  
+  onResize(event) {
+    this.checkcarausal();
+  }
+
+  checkcarausal() {
+    var main_ele = document.getElementsByClassName('scroll-cards-wrap')[0];
+    if(main_ele != undefined)
+      var mainEle = document.getElementsByClassName('scroll-cards-wrap')[0].clientWidth;
+
+    var _limit = document.getElementsByClassName('metrics-cards-wrap')[0];
+    if(_limit != undefined)
+      var limit = document.getElementsByClassName('metrics-cards-wrap')[0].clientWidth;
+
+    if (mainEle > limit) {
+      this.maxCards = true;
+    } else {
+      this.maxCards = false;
+      this.minCards = false;
+    }
+  }
+
   cancelFilter(event){
 		switch(event){
       case 'time-range':{this.instance_yes.onRangeListSelected('Day'); 
@@ -823,7 +846,6 @@ export class ServiceMetricsComponent implements OnInit {
 				break;
 		  	}
 		}
-		// this.getRangefunc(1);
 }
   onPathListicSelected(path){
     this.pathSelected=path;
@@ -839,7 +861,6 @@ export class ServiceMetricsComponent implements OnInit {
 
   onPeriodSelected(period){
     this.FilterTags.notify('filter-Period',period);
-    // this.cache.set('filter-Period',period);
     this.payload.interval = this.periodListSeconds[this.periodList.indexOf(period)];
     this.callMetricsFunc();
   }
@@ -865,7 +886,6 @@ export class ServiceMetricsComponent implements OnInit {
     this.FilterTags.notify('filter-TimeRange',range);
     this.sendDefaults(range);
     
-    // this.cache.set('filter-TimeRange',range);
     this.timerangeSelected=range;
     this.sliderFrom =1;
     this.FilterTags.notify('filter-TimeRangeSlider',this.sliderFrom);
@@ -877,7 +897,6 @@ export class ServiceMetricsComponent implements OnInit {
     this.callMetricsFunc();
   }
 
-  // onEnvSelected(environment){
     
   onEnvSelected(envt){
     this.FilterTags.notify('filter-Env',envt);
@@ -891,14 +910,10 @@ export class ServiceMetricsComponent implements OnInit {
     this.payload.environment = env;
     this.callMetricsFunc();
     this.envUpdate = true;
-    // this.methodSelected = this.methodList[0];
   }
 
   onStatisticSelected(statistics){
-    // this.payload.statistics = statistics;
-    this.FilterTags.notify('filter-Statistic',statistics);
-    
-    // this.cache.set('filter-Statistic',statistics);
+    this.FilterTags.notify('filter-Statistic',statistics);    
     this.statisticSelected = statistics;
     this.payload.statistics = statistics;
     this.callMetricsFunc();
@@ -926,7 +941,6 @@ export class ServiceMetricsComponent implements OnInit {
     if(this.payload != undefined && this.payload.interval != undefined){
       this.payload.interval = this.periodListSeconds[this.periodList.indexOf(this.periodList[0])];
     }
-    // this.adv_filters.resetPeriodList(this.periodList);
   }
   public goToAbout(hash){
     this.router.navigateByUrl('landing');
@@ -955,7 +969,6 @@ export class ServiceMetricsComponent implements OnInit {
   
   onClickFilter(){
     
-    //ng2-ion-range-slider
       
     var slider = document.getElementById('sliderElement');
     
@@ -970,18 +983,16 @@ export class ServiceMetricsComponent implements OnInit {
   }
 
   getFilter(filterServ){
-	
+    this.service['ismetrics']=true;
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
-		// this.advfilters.clearView();
 		let viewContainerRef = this.advFilters.viewContainerRef;
 		viewContainerRef.clear();
 		let componentRef = viewContainerRef.createComponent(componentFactory);
 		this.instance_yes=(<AdvancedFiltersComponent>componentRef.instance);
 		(<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
 		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
-			// alert("1");
 			comp.onFilterSelect(event);
 		});
 

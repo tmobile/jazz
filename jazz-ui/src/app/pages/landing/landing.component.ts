@@ -5,6 +5,9 @@ import { ToasterService} from 'angular2-toaster';
 import {DataCacheService } from '../../core/services/index';
 import {environment} from './../../../environments/environment';
 
+import {environment as env_internal} from './../../../environments/environment.internal';
+
+
 @Component({
     selector: 'landing',
     templateUrl: 'landing.component.html',
@@ -14,6 +17,8 @@ import {environment} from './../../../environments/environment';
 export class LandingComponent implements OnInit {
 
     buttonText: string = 'GET STARTED NOW';
+    serverless_slack:string = env_internal.urls.serverless_slack;
+    
     goToLogin: boolean = false;
     safeTransformX: number=0;
     min: boolean=true;
@@ -44,8 +49,8 @@ export class LandingComponent implements OnInit {
         this.goToLogin = false;
         this.closed = true;
     }
-    privacyPolicy:string;
-    jazz_int_docs:string;
+    privacyPolicy:string = env_internal.urls.privacyPolicy;
+    jazz_int_docs:string = env_internal.urls.docs;
     onNavigate(event){
         if(event.target.innerText === "Privacy"){
             window.open(this.privacyPolicy);   

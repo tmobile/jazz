@@ -3,19 +3,17 @@ import { RequestService, DataCacheService, MessageService, AuthenticationService
 import { ToasterService} from 'angular2-toaster';
 import { Router, ActivatedRoute } from '@angular/router';
 import { EnvOverviewSectionComponent} from './../environment-overview/env-overview-section.component';
-// import { ViewChild } from '@angular/core/src/metadata/di';
 import { SharedService } from "../../SharedService.service";
 import { Http, Headers, Response } from '@angular/http';
 import { Output, EventEmitter } from '@angular/core';
 import { AfterViewInit, ViewChild } from '@angular/core';
 import { DataService } from "../data-service/data.service";
 import {environment} from './../../../environments/environment';
+import {environment as env_internal} from './../../../environments/environment.internal';
 
 
-// import {}
 import { EnvDeploymentsSectionComponent} from './../environment-deployment/env-deployments-section.component';
 
-// import { ViewChild } from '@angular/core/src/metadata/di';
 
 @Component({
   selector: 'environment-detail',
@@ -66,11 +64,9 @@ breadcrumbs = [];
     private data: DataService
   ) {}
 
-  // Disabled other tabs
   
   onSelectedDr(selected){
     this.selectedTab = selected;
-      //  alert('selected'+selected);
 }
 
   onTabSelected (i) {
@@ -79,7 +75,6 @@ breadcrumbs = [];
   };
 EnvLoad(event){
   this.environment_obj=event.environment[0];
-  // this.envStatus=this.environment_obj.status.replace("_"," ")
   this.status_val = parseInt(status[this.environment_obj.status]); 
     if((this.status_val < 2) || (this.status_val == 4) )
     {
@@ -92,7 +87,6 @@ EnvLoad(event){
 env(event){
     this.endpoint_env=event;
     if(this.endpoint_env != undefined ){
-        // this.disablingWebsiteButton=false;
     }
 }
 
@@ -105,7 +99,6 @@ frndload(event){
     'link' : 'services/' + this.service['id']
 },
 {
-  // 'name' : this.envSelected,
   'name' : this.friendly_name,
   'link' : ''
 }]
@@ -122,7 +115,6 @@ frndload(event){
               status: service.status,
               domain: service.domain,
               repository:service.repository
-            //   endpoints: service.endpoints
           }
       }
   };
@@ -133,15 +125,12 @@ frndload(event){
     if (service !== undefined && service !== "") {
       this.service = this.processService(service);
       if( this.friendly_name != undefined ){
-        // this.envSelected = this.friendly_name; 
       }
-      // Update breadcrumbs
       this.breadcrumbs = [{
           'name' : this.service['name'],
           'link' : 'services/' + this.service['id']
       },
       {
-        // 'name' : this.envSelected,
         'name' : this.friendly_name,
         'link' : ''
       }]
@@ -149,7 +138,6 @@ frndload(event){
     } else{
       this.isLoadingService = false;
       let errorMessage = this.messageservice.successMessage(service,"serviceDetail");
-     // this.tst.classList.add('toast-anim');
      this.toast_pop('error', 'Error', errorMessage)
     }
   }
@@ -177,9 +165,8 @@ frndload(event){
           }
           this.subscription = this.http.get('/jazz/services/'+id).subscribe(
             response => {
-              this.service.accounts="tmo-dev-ops, tmo-int";
-                    this.service.regions="us-west-2, us-east";
-                  // let service = response.data.data;
+              this.service.accounts=env_internal.urls.accounts;
+                    this.service.regions=env_internal.urls.regions;
                   this.service=response.data.data;
                   if(environment.envName=='oss')this.service=response.data;
 
@@ -209,9 +196,7 @@ frndload(event){
         switch(type){
             case 'api':          
             window.open('/test-api?service=' + this.service.name + '&domain='+ this.service.domain + '&env=' +this.envSelected);
-            // this.baseUrl="http://jazz-training-api-doc.s3-website-us-east-1.amazonaws.com"
-            // this.swaggerUrl="http://editor.swagger.io/?url="+this.baseUrl+"/"+this.service.domain +"/"+ this.service.name +"/"+this.envSelected+"/swagger.json"
-            // window.open(this.swaggerUrl);
+            
             break;
 
             case 'website' :
@@ -250,9 +235,10 @@ frndload(event){
 }
 close:boolean=false;
 closed:boolean = false;
+isOSS:boolean=false;
   ngOnInit()
   {
-    
+    if(environment.envName=="oss")this.isOSS = true;
       this.sub = this.route.params.subscribe(params => {
         let id = params['id'];
         this.serviceId=id;
@@ -267,7 +253,6 @@ closed:boolean = false;
           'link' : 'services/' + this.service['id']
         },
         {
-          // 'name' : this.envSelected,
           'name' : this.friendly_name,
           'link' : ''
         }

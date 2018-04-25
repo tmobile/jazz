@@ -9,7 +9,6 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { SharedService } from "../../SharedService.service";
 import { AfterViewInit, ViewChild } from '@angular/core';
 
-// import { RequestService, DataCacheService } from "../../core/services";
 import { ToasterService} from 'angular2-toaster';
 import { BarGraphComponent} from '../../secondary-components/bar-graph/bar-graph.component';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
@@ -81,22 +80,7 @@ export class ServiceDetailComponent implements OnInit {
 
     breadcrumbs = []
 
-    serviceData = {
-        service :{
-                id: '1',
-                name : 'Service One',
-                serviceType : 'API',
-                runtime : 'Python',
-                status : 'Active',
-                description : 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-                approvers : 'Jane Smith',
-                domain : 'tmo.com',
-                email : 'api@tmo.com',
-                slackChannel : 'Cloud Notifications',
-                repository : 'View on BitBucket',
-                tags : 'Pacman, MyService'
-        }
-    };
+   
 
     opnSidebar(event){
         this.closeSidebar(true);

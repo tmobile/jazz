@@ -236,7 +236,7 @@
 			<div class="section-content actions">
 				<span *ngIf='!isOSS' class = "center">
 					<btn-jazz-secondary newclass="buttonPadding buttonAbout" (click)='sendmail()' text="E-MAIL US"></btn-jazz-secondary>
-					<btn-jazz-secondary text="SLACK" clickLink="https://t-mo.slack.com/messages/serverless/" newclass="slackIcon buttonPadding buttonAbout"></btn-jazz-secondary>
+					<btn-jazz-secondary text="SLACK" clickLink="{{serverless_slack}}" newclass="slackIcon buttonPadding buttonAbout"></btn-jazz-secondary>
 				</span>
 				<span *ngIf='isOSS' class = "center">
 					<btn-jazz-secondary newclass="buttonPadding buttonAbout" text="E-MAIL US"></btn-jazz-secondary>

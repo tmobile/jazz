@@ -10,6 +10,7 @@ import { ToasterService} from 'angular2-toaster';
 import { AuthenticationService, MessageService } from '../../../core/services/index';
 import {DataCacheService } from '../../../core/services/index';
 import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms';
+import { environment as env_internal} from './../../../../environments/environment.internal';
 
 
 @Component({
@@ -65,7 +66,7 @@ export class LoginComponent implements OnInit {
     }
     ngOnInit() {
         // to reset login status
-        this.model.username = "CORP\\";
+        this.model.username = env_internal.urls.username_prefix;
 
 
         //to add animation class 
@@ -103,7 +104,7 @@ export class LoginComponent implements OnInit {
         this.error = {}
 
         // validate username
-        if (!this.model.username || this.model.username === 'CORP\\') {
+        if (!this.model.username || this.model.username === env_internal.urls.username_prefix) {
             this.error_username_disp=true;
             this.err_username_brd=true;
             this.error.username = 'Username cannot be empty';
@@ -122,7 +123,7 @@ export class LoginComponent implements OnInit {
             var username = this.model.username;
             var pre = username.substring(0,5).toLowerCase();
             
-            if (pre == "corp\\"){
+            if (pre == env_internal.urls.username_prefix.toLowerCase()){
                 username = username.substring(5,username.length);
             }       
             this.authenticationService.login(username, this.model.password)

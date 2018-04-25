@@ -17,6 +17,7 @@ import { RequestService, DataCacheService, MessageService, AuthenticationService
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component"
+import {environment as env_internal} from './../../../../environments/environment.internal';
 
 @Component({
   selector: 'create-service',
@@ -122,8 +123,14 @@ export class CreateServiceComponent implements OnInit {
   service: any = "";
   domain: any = "";
   reqId: any = "";
-  accounts=['tmodevops','tmonpe'];
-  regions=['us-west-2', 'us-east-1'];
+
+  accList=env_internal.urls.accounts;
+	regList=env_internal.urls.accounts;
+	  accSelected:string = this.accList[0];
+	regSelected:string=this.regList[0];
+
+  accounts=this.regList
+  regions=this.accList;
   selectedRegion=[];
   regionInput:string;
   selectedAccount=[];
@@ -232,7 +239,7 @@ export class CreateServiceComponent implements OnInit {
   // function to get approvers list
   public getData() {
 
-    this.http.get('/jazz/ad/users')
+    this.http.get('/platform/ad/users')
       .subscribe((res: Response) => {
         this.approversListRes = res;
         this.approversList = this.approversListRes.data.values.slice(0, this.approversListRes.data.values.length);
@@ -500,6 +507,8 @@ export class CreateServiceComponent implements OnInit {
           this.resMessage = output.data.message;
         }
         this.selectedApprovers = [];
+        this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+        this.rateExpression.error = undefined;
         // this.toasterService.pop('success', 'Success!!', output.data.create_service.data);
         //this.toasterService.pop('success', resMessage);
       },
@@ -1104,8 +1113,8 @@ blurRegion(){
   }
   selectAccountsRegions(){    
 
-    this.selectAccount('tmodevops');
-    this.selectRegion('us-west-2');
+    this.selectAccount(this.accList[0]);
+    this.selectRegion(this.regList[0]);
   }
 
   ngOnInit() {

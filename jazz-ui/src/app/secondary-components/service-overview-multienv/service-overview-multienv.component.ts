@@ -8,6 +8,8 @@ import { Subscription } from 'rxjs/Subscription';
 // import { ServiceDetailComponent } from '../../service-detail/internal/service-detail.component'
 // import  $  from 'jquery';
 import { environment } from './../../../environments/environment';
+import {environment as env_internal} from './../../../environments/environment.internal';
+
 
 declare var $:any;
 @Component({
@@ -57,8 +59,15 @@ export class ServiceOverviewMultienvComponent implements OnInit {
     runtime_empty:boolean = false;
     tags_empty:boolean;
     ErrEnv:boolean=false;
-    accounts=['tmodevops','tmonpe'];
-    regions=['us-west-2', 'us-east-1'];
+
+
+    accList=env_internal.urls.accounts;
+	regList=env_internal.urls.accounts;
+	  accSelected:string = this.accList[0];
+    regSelected:string=this.regList[0];
+    
+    accounts=this.accList;
+    regions=this.regList;
     errMessage=''
     tags_temp:string='';
     desc_temp:string='';
@@ -389,7 +398,7 @@ export class ServiceOverviewMultienvComponent implements OnInit {
                   }
                   this.getTime();
                   this.errorURL = window.location.href;
-                  this.errorAPI = environment.baseurl+"/jazz/environments";
+                  this.errorAPI = env_internal.baseurl+"/jazz/environments";
                   this.errorRequest = payload;
                   this.errorUser = this.authenticationservice.getUserId();
                   this.errorResponse = JSON.parse(err._body);

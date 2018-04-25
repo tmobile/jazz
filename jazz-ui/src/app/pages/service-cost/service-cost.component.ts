@@ -10,7 +10,10 @@ import {IonRangeSliderModule} from "ng2-ion-range-slider"
 import {AdvancedFiltersComponent} from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
 import {AdvancedFilterService} from './../../advanced-filter.service';
 import {AdvFilters} from './../../adv-filter.directive';
-import {environment} from './../../../environments/environment.internal';
+import {environment} from './../../../environments/environment';
+
+import {environment as env_internal} from './../../../environments/environment.internal';
+
 
 @Component({
 	selector: 'service-cost',
@@ -183,33 +186,30 @@ export class ServiceCostComponent implements OnInit {
 		
 	}
 
-	accList=['tmodevops','tmonpe'];
-  regList=['us-west-2', 'us-east-1'];
-	accSelected:string = 'tmodevops';
-	regSelected:string = 'us-west-2';
+	accList=env_internal.urls.accounts;
+	regList=env_internal.urls.accounts;
+		accSelected:string;
+		//  = this.accList[0];
+	regSelected:string;
+	//  = this.regList[0];
 	 
 	instance_yes;
 	getFilter(filterServ){
-		// let viewContainerRef = this.advanced_filters.viewContainerRef;
-		// viewContainerRef.clear();
-		// filterServ.setRootViewContainerRef(viewContainerRef);
+	
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
-		// this.advfilters.clearView();
 		let viewContainerRef = this.advFilters.viewContainerRef;
 		viewContainerRef.clear();
 		let componentRef = viewContainerRef.createComponent(componentFactory);
 		this.instance_yes=(<AdvancedFiltersComponent>componentRef.instance);
 		(<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
 		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
-			// alert("1");
 			comp.onFilterSelect(event);
 		});
 
 	}
 	onFilterSelect(event){
-    // alert('key: '+event.key+'  value: '+event.value);
     switch(event.key){
       case 'slider':{
 				event.value.from_percent = 0;
@@ -218,7 +218,6 @@ export class ServiceCostComponent implements OnInit {
       }
       case 'period':{
 				this.FilterTags.notify('filter-Period',event.value);
-				// this.cache.set('filter-Period',period);
 						break;
       }
       case 'range':{
@@ -226,7 +225,6 @@ export class ServiceCostComponent implements OnInit {
         this.FilterTags.notify('filter-TimeRange',event.value);
 		this.sendDefaults(event.value);
 		
-		// this.cache.set('filter-TimeRange',range);
 		this.timerangeSelected=event.value;
 		this.sliderFrom =1;
 		this.FilterTags.notify('filter-TimeRangeSlider',this.sliderFrom);		
@@ -247,24 +245,19 @@ export class ServiceCostComponent implements OnInit {
         break;
       }
       case 'statistics':{
-			 // this.payload.statistics = statistics;
 			 var statistics = event.value;
 				this.FilterTags.notify('filter-Statistic',statistics);
 		
-				// this.cache.set('filter-Statistic',statistics);
 				this.statisticSelected = statistics;
         break;
 
       }
       case 'method':{
-				// alert('eneterd -> cost -> method')
 				if(event.value == undefined){
 					this.FilterTags.notify('filter-Method',event);
 				}
 				var method=event.value;
-				// alert('notifying tags')
 				this.FilterTags.notify('filter-Method',method);
-	// alert('notified tags');
 				this.methodSelected=method;
 				break;
       }
@@ -345,9 +338,7 @@ export class ServiceCostComponent implements OnInit {
 		}
 		return resetdate;
 	  }
-	// onEnvSelected(env){
-		// this.isDataNotAvailable=false;
-		// this.isGraphLoading=true;
+	
 		
 	onEnvSelected(envt){
 		this.FilterTags.notify('filter-Env',envt);
@@ -418,7 +409,6 @@ export class ServiceCostComponent implements OnInit {
 	
 	  onPeriodSelected(period){
 		this.FilterTags.notify('filter-Period',period);
-		// this.cache.set('filter-Period',period);
 	  }
 	
 	  sendDefaults(range){
@@ -442,7 +432,6 @@ export class ServiceCostComponent implements OnInit {
 		this.FilterTags.notify('filter-TimeRange',range);
 		this.sendDefaults(range);
 		
-		// this.cache.set('filter-TimeRange',range);
 		this.timerangeSelected=range;
 		this.sliderFrom = 1;
 
@@ -455,10 +444,8 @@ export class ServiceCostComponent implements OnInit {
 	  
 	
 	  onStatisticSelected(statistics){
-		// this.payload.statistics = statistics;
 		this.FilterTags.notify('filter-Statistic',statistics);
 		
-		// this.cache.set('filter-Statistic',statistics);
 		this.statisticSelected = statistics;
 	  }
 	
@@ -503,8 +490,6 @@ export class ServiceCostComponent implements OnInit {
 
 		
     
-    //ng2-ion-range-slider
-      // alert('sda')
     var slider = document.getElementById('sliderElement');
     
     slider.getElementsByClassName('irs-line-mid')[0].setAttribute('style','border-radius:10px;')
@@ -610,7 +595,6 @@ export class ServiceCostComponent implements OnInit {
         },
         err => {
 			this.noTotalCost = true;
-			// this.isDataNotAvailable=true;
 			this.isGraphLoading=false;
 			// Log errors if any
 			this.loadingState = 'error';
@@ -627,13 +611,10 @@ export class ServiceCostComponent implements OnInit {
 			  }
 			  this.getTime();
 			  this.errorURL = window.location.href;
-			  this.errorAPI = environment.baseurl+"/jazz/service-cost";
+			  this.errorAPI = env_internal.baseurl+"/jazz/service-cost";
 			  this.errorRequest = payload;
 			  this.errorUser = this.authenticationservice.getUserId();
 			  this.errorResponse = JSON.parse(err._body);
-
-			// let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
-            // this.popToast('error', 'Oops!', errorMessage);
 		})
 	};
 	refreshCostData(event){
@@ -663,7 +644,6 @@ export class ServiceCostComponent implements OnInit {
 	isLoading:boolean=false;
 	reportIssue(){
 
-		// this.json = this.model.userFeedback ;
 
 		this.json = {
 			"user_reported_issue" : this.model.userFeedback,
@@ -691,7 +671,7 @@ export class ServiceCostComponent implements OnInit {
         this.isLoading = false;
         this.buttonText='SUBMIT';
 		}
-		reportEmail:string;
+		reportEmail:string = env_internal.urls.reportEmail;
     mailTo(){
         location.href='mailto:'+this.reportEmail+'?subject=Jazz : Issue reported by'+" "+ this.authenticationservice.getUserId() +'&body='+this.sjson;
 	}
@@ -725,7 +705,7 @@ export class ServiceCostComponent implements OnInit {
 
         var payload={
             "title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
-            "project_id": "CAPI",
+            "project_id": env_internal.urls.internal_acronym,
             "priority": "P4",
 			"description": this.json,
             "created_by": this.authenticationservice.getUserId(),
@@ -759,8 +739,7 @@ export class ServiceCostComponent implements OnInit {
 		this.filter = new Filter(this.costTableData.body);
 		this.sort = new Sort(this.costTableData.body);
 		// Draw graph for for day interval on init
-		// this.dayCost();
-		// this.yearlyCost();
+		
 		this.fetchGraphData("Day");
 	}
 	collectInputData(input){
@@ -787,8 +766,7 @@ export class ServiceCostComponent implements OnInit {
 
     fetchGraphData(range){
 		//Based on filter selected geerate start date and interval params for payload
-		// this.isDataNotAvailable=false;
-		// this.isGraphLoading=true;
+	
 		var graphDataInterval =[];
 		var todayDate = new Date();
 		var graphDataList = ["Daily", "Weekly", "Monthly",  "Yearly"];

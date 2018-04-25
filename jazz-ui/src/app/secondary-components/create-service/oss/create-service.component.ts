@@ -13,8 +13,9 @@ import { ToasterService} from 'angular2-toaster';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from "../../../core/services";
 import 'rxjs/Rx';
 import {Observable} from 'rxjs/Rx';
-import {ServicesListComponent} from "../../../pages/services-list/services-list.component"
-
+import {ServicesListComponent} from "../../../pages/services-list/services-list.component";
+import {environment as env_oss} from './../../../../environments/environment.oss';
+ 
 @Component({
   selector: 'create-service',
   templateUrl: './create-service.component.html',
@@ -27,7 +28,7 @@ export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
 
-
+docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
   typeOfPlatform:string = "aws";
   disablePlatform = true;

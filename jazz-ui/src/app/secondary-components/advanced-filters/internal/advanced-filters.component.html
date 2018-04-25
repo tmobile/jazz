@@ -1,13 +1,13 @@
 <div class="filter-wrp" [class.hide]='assets'> 
     <div class="filter-section-right">
         <div class="filter-icon relative">
-            <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; onClickFilter()"></span>
+            <span class="icon-icon-filter-unselected" id='icon-filter-unselected' title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; onClickFilter()"></span>
             <div [class.show]='filterSelected' class="filter-wrap">
-                <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; onClickFilter()"></span>                    
+                <span class="icon-icon-filter-unselected"  title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; onClickFilter()"></span>                    
                 <div class='filter-inner'>
                     <div class="filter-inner-wrap first-child" [class.hide]='service.islogs'>
                         <div class='view-label'>Filter by:</div>
-                        <div class="eachFilter" *ngIf='advanced_filter_input.path.show'>
+                        <div class="eachFilter" *ngIf='advanced_filter_input.path.show && isAPI'>
                             <div><div class='hori-line'></div>PATH</div>
                             <dropdown class="dropdown-2 path" title="Select path"  [dropdwnContent]="pathList" [selected]="pathSelected" (onSelected)="onPathListicSelected($event)"></dropdown>
                         </div>
@@ -15,7 +15,7 @@
                             <div><div class='hori-line'></div>ENVIRONMENT</div>
                             <dropdown class="dropdown-1"  [dropdwnContent]="envList" title="Select enviroment" [selected]="envSelected" (onSelected)="onEnvSelected($event)"></dropdown>            
                         </div>
-                        <div class="eachFilter no-border-no-padding" *ngIf='advanced_filter_input.method.show'>
+                        <div class="eachFilter no-border-no-padding" *ngIf='advanced_filter_input.method.show && isAPI'>
                             <div><div class='hori-line'></div>METHOD</div>
                             <dropdown class="dropdown-3 method" title="Select method" [dropdwnContent]="methodList" [selected]="methodSelected" (onSelected)="onMethodListSelected($event)"></dropdown>
                         </div>
