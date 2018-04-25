@@ -506,8 +506,7 @@ def createSubscriptionFilters(stackName, region, roleId) {
 			returnStdout: true
 		).trim()
 		echo "${filter_json}"
-		def describeJson = new groovy.json.JsonSlurper()
-		def resultJson = describeJson.parseText(filter_json)
+		def resultJson = parseJson(filter_json)
         filtername = resultJson.subscriptionFilters[0].filterName
 		echo "removing existing filter... $filtername"
 		if (filtername != "" && !filtername.equals(lambda)) {
