@@ -213,7 +213,7 @@ def generateEnvironmentMap(status, environment_logical_id) {
 	return serviceCtxMap;
 }
 
-def generateDeploymentMap(status, environment_logical_id) {
+def generateDeploymentMap(status, environment_logical_id,gitCommitHash) {
 	def env_logical_id
 	if (environment_logical_id == null) {
 		env_logical_id = getEnvironmentLogicalId()
@@ -227,7 +227,7 @@ def generateDeploymentMap(status, environment_logical_id) {
 		domain: g_service_config['domain'],
 		provider_build_url:  g_build_url,
 		provider_build_id: g_build_id,
-		scm_commit_hash:  scm_module.getRepoCommitHash(),
+		scm_commit_hash:  gitCommitHash,
 		scm_url:  "${scm_module.getRepoURL()}.git",
 		scm_branch: g_service_branch,
 		request_id: g_request_id

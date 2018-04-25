@@ -85,7 +85,7 @@ node()  {
 		def envApi = "${g_base_url}/jazz/environments"
 		environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, envApi, auth_token)
 		gitCommitHash = scmModule.getRepoCommitHash()
-+		gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
+		gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 		context_map = [created_by : config['created_by'], deployed_by: gitCommitOwner]
 		environment_logical_id = '';
 
@@ -125,7 +125,7 @@ node()  {
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled) {
 		isEventSchdld = true
 	}
-	events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id), environment_logical_id)
+	events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 	def requestId = utilModule.generateRequestId()
 	if (requestId != null) {
 		events.setRequestId(requestId)
@@ -226,14 +226,14 @@ node()  {
 				} catch (ex) {
 					send_status_email(config, 'FAILED', '')
 					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id), environment_logical_id)
-					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id), environment_logical_id)
-					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), environment_logical_id)
+					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 					error ex.getMessage()
 				}
 				environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
 				def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
 				events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
-				events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id), environment_logical_id)
+				events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
 				events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
 
 			}//end of withCredentials
@@ -506,16 +506,18 @@ def createSubscriptionFilters(stackName, region, roleId) {
 			returnStdout: true
 		).trim()
 		echo "${filter_json}"
-		def describeJson = new groovy.json.JsonSlurper()
-		def resultJson = describeJson.parseText(filter_json)
+		def resultJson = parseJson(filter_json)
         filtername = resultJson.subscriptionFilters[0].filterName
 		echo "removing existing filter... $filtername"
 		if (filtername != "" && !filtername.equals(lambda)) {
 			sh "aws logs delete-subscription-filter --output json --log-group-name \""+ lambda + "\" --filter-name \"" + filtername + "\" --region " + region
 		}
 	} catch (Exception ex) { }// ignore error if not created yet
-
-	sh "aws logs put-subscription-filter --output json --log-group-name \""+ lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
+	try{
+		sh "aws logs put-subscription-filter --output json --log-group-name \""+ lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
+	}catch (Exception ex){
+		echo "error occured: " + ex.getMessage()
+	}
 }
 
 def writeServerlessFile(config, current_environment){
