@@ -149,6 +149,8 @@ node {
 								branch = 'NA'
 							}
 							events.setEnvironment(_envId)
+							echo "Branch ::: $branch"
+							echo "Environment ::: $_envId"
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
 							echo 'undeploying function for environment: '+ _envId
 							unDeployService(_envId)
@@ -211,16 +213,16 @@ def unDeployService(stage) {
 			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			if(getStage(environment).equals('dev')){
-				//Resetting the S3 bucket name to 'dev' if it has logicalId
-				setDeploymentBucketName('\${opt:stage}', getStage(environment))
-				sh "serverless remove --stage "+ environment +" --verbose"
-				//Resetting the S3 bucket name back to default 
-				setDeploymentBucketName(getStage(environment), '\${opt:stage}')
+
+			def env_key
+			if(stage.endsWith("-dev")) { 
+				env_key = "DEV"
 			} else {
-				sh "serverless remove --stage "+ environment +" --verbose"
+				env_key = "PROD"
 			}
-			//sh "serverless remove --stage ${stage} --verbose --bucket " + getServiceBucket(stage)
+			def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
+			sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
+
 			echo "Service undeployed"
 		}catch(ex) {
 			events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
