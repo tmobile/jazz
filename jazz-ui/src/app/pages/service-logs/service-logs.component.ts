@@ -37,7 +37,6 @@ export class ServiceLogsComponent implements OnInit {
 			comp.getFilter(advancedFilters);
 			this.filter_loaded = true;
 			document.getElementById('hidethis').classList.add('hide')
-			console.log('filter load',this.filter_loaded)
 		},10);
 		
 		

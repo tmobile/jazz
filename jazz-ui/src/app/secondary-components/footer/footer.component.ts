@@ -36,7 +36,6 @@ docs_oss_jazz:string= env_oss.urls.docs_link;
       this.docs_url= this.docs_oss_jazz;
     }
     else this.docs_url= this.docs_int_jazz;
-    console.log('docs',this.docs_url)
 
   }
 

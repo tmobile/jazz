@@ -288,7 +288,6 @@ export class ServiceOverviewMultienvComponent implements OnInit {
                 }
                 else
                 {    this.Environments[j]=this.environ_arr[i];   
-                    // console.log('--->><<---',this.environ_arr[i]);
                     this.envList[k]=this.environ_arr[i].logical_id; 
                     if(this.environ_arr[i].friendly_name != undefined){
                         this.friendlist[k++]=this.environ_arr[i].friendly_name;   
@@ -358,15 +357,7 @@ export class ServiceOverviewMultienvComponent implements OnInit {
         if(this.service==undefined){return}
         this.http.get('/jazz/environments?domain='+this.service.domain+'&service='+this.service.name).subscribe(
             response => {
-                // console.log("response == ", response);
-                // var spoon = response.data.environment;
-                // console.log("spoon == ", spoon[1])
-                // for(var i=0 ; i < spoon.length ; i++ ){
-                //    if(spoon[i].friendly_name != undefined){
-                //        this.friendly_name = spoon[i].friendly_name;
-                //    }
-                // }
-                // this.friendly_name = response
+                
                 this.isenvLoading=false;
                   this.environ_arr=response.data.environment;
                   if(this.environ_arr!=undefined)    
@@ -374,13 +365,7 @@ export class ServiceOverviewMultienvComponent implements OnInit {
                             this.noEnv=true;   
                     }             
                   this.ErrEnv=false;
-                  
-                //   var obj1={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"dev"}
-                //   var obj2={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"feature"}
-                //   var obj3={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"stg"}
-                //   this.environ_arr[1]=obj1;
-                //   this.environ_arr[2]=obj2;
-                //   this.environ_arr[3]=obj3;
+              
                   this.modifyEnvArr();
                   
               },
@@ -483,7 +468,6 @@ export class ServiceOverviewMultienvComponent implements OnInit {
             }
         }
         arrEnv[0].status.replace("_"," ");
-        console.log('arrenv ',arrEnv)
     }
     envfoross(){
     //   alert('s')
@@ -502,57 +486,17 @@ export class ServiceOverviewMultienvComponent implements OnInit {
 
         this.http.get(chosen_url).subscribe(
             response => {
-                console.log("oss response == ", response);
                 this.transform_env_oss(response);
-                // var spoon = response.data.environment;
-                // console.log("spoon == ", spoon[1])
-                // for(var i=0 ; i < spoon.length ; i++ ){
-                //    if(spoon[i].friendly_name != undefined){
-                //        this.friendly_name = spoon[i].friendly_name;
-                //    }
-                // }
-                // this.friendly_name = response
-                // this.isenvLoading=false;
-                //   this.environ_arr=response.data.environment;
-                //   if(this.environ_arr!=undefined)    
-                //     if(this.environ_arr.length==0 || response.data==''){
-                //             this.noEnv=true;   
-                //     }             
-                //   this.ErrEnv=false;
-                  
-                //   var obj1={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"dev"}
-                //   var obj2={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"feature"}
-                //   var obj3={"service":"test-create","domain":"jazz-testing","last_updated":"2017-10-16T08:02:13:210","status":"active","created_by":"aanand12","physical_id":"master","created":"2017-10-16T08:02:13:210","id":"f7635ea9-26ad-0661-4e52-14fd48421e22","logical_id":"stg"}
-                //   this.environ_arr[1]=obj1;
-                //   this.environ_arr[2]=obj2;
-                //   this.environ_arr[3]=obj3;
-                //   this.modifyEnvArr();
+                
                   
               },
               err => {
                 // this.isenvLoading=false;
                 
-                  console.log('oss error',err);
-                //   this.ErrEnv=true;
-                //   if(err.status == 404) this.err404=true;
-                //   this.errMessage="Something went wrong while fetching your data";
-                //   this.errMessage=this.toastmessage.errorMessage(err,"environment");
-                //   var payload = {
-                //       "domain" : +this.service.domain,
-                //       "service" : this.service.name
-                //   }
-                //   this.getTime();
-                //   this.errorURL = window.location.href;
-                //   this.errorRequest = payload;
-                //   this.errorUser = this.authenticationservice.getUserId();
-                //   this.errorResponse = JSON.parse(err._body);
-    
-                // let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
-                // this.popToast('error', 'Oops!', errorMessage);
+                
             });
         
         // va
-        console.log('env file,',environment)
         
         
     
@@ -565,12 +509,7 @@ export class ServiceOverviewMultienvComponent implements OnInit {
         if(environment.multi_env) this.is_multi_env=true;
         if(environment.envName == 'oss') this.internal_build = false;
         var obj;
-        // this.getJSON().subscribe(data => obj=data, error => console.log(error));
-        // console.log('got config,,,,,',obj)
-        // let test = require(environment.configFile);
-        // console.log('test = ',test)
-
-
+      
         this.prodEnv={};
         this.stgEnv={};
         if((this.service.domain!=undefined) && (this.internal_build == true)){

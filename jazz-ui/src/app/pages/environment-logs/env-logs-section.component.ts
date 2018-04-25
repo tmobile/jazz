@@ -157,7 +157,6 @@ export class EnvLogsSectionComponent implements OnInit {
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
-		console.log('this.advFIlters',this.advFilters)
 
 		let viewContainerRef = this.advFilters.viewContainerRef;
 		viewContainerRef.clear();

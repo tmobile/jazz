@@ -124,6 +124,5 @@ editor_cloudapiURL:string;
     this.isServiceAvail = 'http://'+this.envSelected+this.cloudapiURL+'/' + this.domainName + '_' + this.serviceName +ENV +'/swagger.json'    
     this.swaggerUrl = this.editor_cloudapiURL+this.isServiceAvail;
     this.isSwaggerAvailable();
-    // console.log(this.swaggerUrl);
   }
 }

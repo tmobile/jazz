@@ -689,7 +689,6 @@ export class ServiceMetricsComponent implements OnInit {
     thisele.metricsList=[];
     this.graphInput=[];
     this.serviceMetricsList.forEach(function(each){
-      console.log('first each,',each)
       each.asset_properties.Method = "a";
       thisele.methodSelected = "a";
       each.asset_properties.Resource = "b";

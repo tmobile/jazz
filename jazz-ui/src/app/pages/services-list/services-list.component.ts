@@ -244,7 +244,6 @@ export class ServicesListComponent implements OnInit {
   };
   onRowClicked (rowData){
       if (rowData != undefined) {
-        // console.log("rowdata", rowData);
         this.cache.set(rowData.id, rowData.data);
           if (rowData.link != undefined) {
               this.router.navigateByUrl(rowData.link);
@@ -263,7 +262,6 @@ export class ServicesListComponent implements OnInit {
         string = string + param.key + "=" + param.value + "&"
       }
     });
-    // console.log("formStringFrmObj ", string);
     return string;
   }
   replaceIfKeyExists(array, newkey, newvalue){
@@ -272,7 +270,6 @@ export class ServicesListComponent implements OnInit {
         param.value = newvalue;
       }
     });
-    // console.log("replaceIfKeyExists old ", array);
     return array;
   }
   formKeyValuePairFrmUrl(){
@@ -293,12 +290,10 @@ export class ServicesListComponent implements OnInit {
         }
       }
     });
-    // console.log("formKeyValuePairFrmUrl ", array);
     return array;
   }
   addQueryParam(queryParamKey, queryParamValue, makeCall){
-    // console.log("queryParamKey ", queryParamKey);
-    // console.log("queryParamValue ", queryParamValue);
+   
 
     if( this.relativeUrl.indexOf('?') == -1 ){
         this.relativeUrl += '?';
@@ -318,7 +313,6 @@ export class ServicesListComponent implements OnInit {
       }
 
       if(makeCall){
-        // console.log("relativeUrl"+this.relativeUrl);
         this.serviceCall();
       }
   }
@@ -326,14 +320,12 @@ export class ServicesListComponent implements OnInit {
 
   onFilter(event) {
 
-    // event=eventOBJ;
-    // console.log('event is to be made like this', event)
+    
     
     this.serviceList = this.backupdata;
     
     for (var i = 0; i < this.tableHeader2.length; i++) {
-    // console.log('i=',i);
-    // console.log('tableheader',this.tableHeader2[i]);
+   
     var col = this.tableHeader2[i];
     if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined) {
     var colFilterVal = col.filter['_value'].toLowerCase().replace(' ', '_');
@@ -358,9 +350,7 @@ export class ServicesListComponent implements OnInit {
     
     
     } else if (col.filter['type'] == 'dropdown' || (event.filter['type'] === 'input' && (event.keyCode === 13))) {
-    
-    // console.log("event ",event);
-    // console.log("col ",col);
+
     
     var queryParamKey = 'offset=';
     var offsetValue = 0;
@@ -378,8 +368,7 @@ export class ServicesListComponent implements OnInit {
     queryParamKey = "timestamp=";
     }
     queryParamValue = colFilterVal;
-    // console.log("queryParamKey onFilter******",queryParamKey);
-    // console.log("queryParamValue onFilter*******",queryParamValue);
+   
     this.addQueryParam(queryParamKey, queryParamValue, true);
     }
     
@@ -400,9 +389,7 @@ label:'Name'
 };
 // var ip=document.getElementById('inputfilter').setAttribute('ng-reflect-model','');
 this.tableTemplate.resetInput('name',a);
-// ip.ng-reglect-model
-// console.log('inputfilter@(#(#*',ip);
-// ip.text='';
+
 this.onFilterCancel(a); 
 break;
 }
@@ -477,8 +464,7 @@ break;
 onFilterCancel(event) {
 
   for (var i = 0; i < this.tableHeader2.length; i++) {
-  // console.log('i=',i);
-  // console.log('tableheader',this.tableHeader2[i]);
+  
   var col = this.tableHeader2[i];
   if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined) {
   var colFilterVal = event.filterValue.toLowerCase().replace(' ', '_');
@@ -504,8 +490,6 @@ onFilterCancel(event) {
   
   } else if (col.filter['type'] == 'dropdown' || (event.filterType == 'input' && (event.keyCode === 13))) {
   
-  // console.log("event ",event);
-  // console.log("col ",col);
   
   var queryParamKey = 'offset=';
   var offsetValue = 0;
@@ -535,17 +519,7 @@ onFilterCancel(event) {
 
   onFilterSelected(selectedList){
     this.selectedListData = selectedList;
-    // this.serviceList = this.filter.filterListFunction('type' , this.selectedListData , this.backupdata);
-    //   this.serviceList  = this.filter.searchFunction("any" , this.searchbar , this.serviceList);
-
-    // this.relativeUrl = '/jazz/services?filter_by='+this.selectedListData;
-
-    // if( this.relativeUrl.indexOf('?') > -1 ){
-    //   this.relativeUrl += '?';
-    // }
-
-    // this.relativeUrl += 'filter='+ this.selectedListData + '&';
-    // this.serviceCall();
+   
     var queryParamKey = 'offset=';
     var offsetValue = 0;
     $(".pagination.justify-content-center li:nth-child(2)")[0].click();
@@ -557,7 +531,6 @@ onFilterCancel(event) {
     if(queryParamValue == "all"){
       queryParamValue = "";
     }
-    // console.log("this.selectedListData onFilterSelected********", this.selectedListData)
     this.addQueryParam(queryParamKey, queryParamValue,  true);
   }
   statusFilter(item){
@@ -582,7 +555,6 @@ onFilterCancel(event) {
     else if(queryParamValue == "lastModified"){
       queryParamValue = "timestamp";
     }
-    // console.log("sortData*******");
     this.addQueryParam(queryParamKey, queryParamValue,  false);
     queryParamKey = 'sort_direction=';
     queryParamValue = sort_dir;
@@ -594,21 +566,13 @@ onFilterCancel(event) {
       // this.pageSelected = currentlyActivePage;
       this.serviceList = [];
       this.backupdata = [];
-      //this.fetchServices();  /** call fetch services
-
-      // var queryParamKey = 'limit=';
-      // var queryParamValue = this.limitValue;
-      // this.addQueryParam(queryParamKey, queryParamValue, false );
+      
 
 
       var queryParamKey = 'offset=';
-      // console.log("this.limitValue",this.limitValue);
-      // console.log("currentlyActivePage",currentlyActivePage);
-      // console.log("this.limitValue * currentlyActivePage ",this.limitValue * currentlyActivePage);
-
+      
       var offsetValue = (this.limitValue * (currentlyActivePage-1));
 
-      // console.log("offsetValue paginatePage ******",offsetValue);
 
       var queryParamValue = offsetValue;
       this.addQueryParam(queryParamKey, queryParamValue, true );
@@ -619,7 +583,6 @@ onFilterCancel(event) {
       */
     }
     else{
-      // console.log("page not changed");
     }
   }
   onServiceSearch(searchbar){
@@ -738,5 +701,3 @@ onFilterCancel(event) {
 
 }
 
-// $( document ).ready(function() {
-// });

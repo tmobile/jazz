@@ -906,7 +906,6 @@ blurRegion(){
 
       this.git_clone = gitClone.checked;
 
-      console.log("git_clone = ", this.git_clone);
       if (this.git_clone) {
         var gitPrivate = <HTMLInputElement>document.getElementById("checkbox-gitprivate");
 

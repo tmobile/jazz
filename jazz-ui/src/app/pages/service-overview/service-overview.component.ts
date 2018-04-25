@@ -1176,10 +1176,10 @@ keypressAccount(hash){
   if (hash.key == 'ArrowDown') {
     this.focusindex++;
     if (this.focusindex > 0) {
-    //   var pinkElements = document.getElementsByClassName("pinkfocus")[0];
-    //   if (pinkElements == undefined) {
-    //     this.focusindex = 0;
-    //   }
+      var pinkElements = document.getElementsByClassName("pinkfocus")[0];
+      if (pinkElements == undefined) {
+        this.focusindex = 0;
+      }
     }
     if (this.focusindex > 2) {
       this.scrollList = { 'position': 'relative', 'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem' };
@@ -1202,11 +1202,11 @@ keypressAccount(hash){
   }
   else if (hash.key == 'Enter' && this.focusindex > -1) {
     event.preventDefault();
-    // var pinkElement = document.getElementsByClassName("pinkfocus")[0].children;
+    var pinkElement = document.getElementsByClassName("pinkfocus")[0].children;
 
-    // var approverObj = pinkElement[0].attributes[2].value;
+    var approverObj = pinkElement[0].attributes[2].value;
     
-    // this.selectAccount(approverObj);
+    this.selectAccount(approverObj);
 
     this.focusindex = -1;
 
@@ -1219,10 +1219,10 @@ keypressRegion(hash){
     if (hash.key == 'ArrowDown') {
         this.focusindex++;
         if (this.focusindex > 0) {
-        //   var pinkElements = document.getElementsByClassName("pinkfocus2")[0];
-        //   if (pinkElements == undefined) {
-        //     this.focusindex = 0;
-        //   }
+          var pinkElements = document.getElementsByClassName("pinkfocus2")[0];
+          if (pinkElements == undefined) {
+            this.focusindex = 0;
+          }
         }
         if (this.focusindex > 2) {
           this.scrollList = { 'position': 'relative', 'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem' };
@@ -1245,11 +1245,11 @@ keypressRegion(hash){
       }
       else if (hash.key == 'Enter' && this.focusindex > -1) {
         event.preventDefault();
-        // var pinkElement = document.getElementsByClassName("pinkfocus2")[0].children;
+        var pinkElement = document.getElementsByClassName("pinkfocus2")[0].children;
     
-        // var approverObj = pinkElement[0].attributes[2].value;
+        var approverObj = pinkElement[0].attributes[2].value;
         
-        // this.selectRegion(approverObj);
+        this.selectRegion(approverObj);
     
         this.focusindex = -1;
     
