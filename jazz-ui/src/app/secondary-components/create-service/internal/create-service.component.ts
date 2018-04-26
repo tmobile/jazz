@@ -1120,7 +1120,6 @@ blurRegion(){
   }
 
   ngOnInit() {
-    console.log('debug log -> accounts',this.accounts)
     this.selectAccountsRegions();
     // this.gitRepo = "https://";
     this.getData();

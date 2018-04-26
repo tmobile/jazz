@@ -26,7 +26,6 @@ export class AuthenticationService {
         this.token = currentUser && currentUser.token;
 
         this.baseurl = localStorage.getItem('overridehost')? localStorage.getItem('overridehost') :  environment.baseurl;
-        // console.log('baseurl in auth',this.baseurl)
     }
     getToken(){
         let currentUser;
