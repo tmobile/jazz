@@ -99,7 +99,7 @@ function getEvents(event, config, dynamodb){
 			"Limit": "500"
 		};
 		if (event.query&& event.query && Object.keys(event.query).length) {
-			Object.keys(event.query).forEach(function (key) {
+			Object.keys(event.query).forEach((key) => {
 				if (key === "last_evaluated_key") {
 					scanparams.ExclusiveStartKey = event.query[key];
 				} else if (key === "username") {
@@ -123,7 +123,7 @@ function getEvents(event, config, dynamodb){
 			}
 			scanparams.FilterExpression = filter.substring(0, filter.length - 5);
 			scanparams.ExpressionAttributeValues = attributeValues;
-			dynamodb.scan(scanparams, function (err, items) {
+			dynamodb.scan(scanparams, (err, items) => {
 				if (err) {
 					logger.error("error in dynamodb scan");
 					logger.error(err);
@@ -144,9 +144,9 @@ function mapGetEventData(result, event){
 	return new Promise((resolve, reject) => {
 		var events = [];
 		if (result && result.Items) {
-			result.Items.forEach(function (item) {
+			result.Items.forEach((item) => {
 				var event = {};
-				Object.keys(item).forEach(function (key) {
+				Object.keys(item).forEach((key) => {
 					if (key === "SERVICE_CONTEXT" ){
 						event.service_context = item.SERVICE_CONTEXT.S;
 					}else if (key === "EVENT_HANDLER"){
@@ -265,10 +265,10 @@ function validateEventInput(config, eventBody, dynamodb){
 		.then(() => validateEventHandler(config, eventBody, dynamodb))
 		.then(() => validateEventStatus(config, eventBody, dynamodb))
 		.then(() => validateTimestamp(eventBody))
-		.then(function(){
+		.then(() => {
 			resolve()
 		})
-		.catch(function(error){
+		.catch((error) => {
 			reject(error)
 		})
 	})
@@ -277,7 +277,7 @@ function validateEventInput(config, eventBody, dynamodb){
 function getDynamodbItem(dynamodb, params, eventData){
 	logger.info("Inside getDynamodbItem:"+JSON.stringify(params));
 	return new Promise((resolve, reject) => {
-		dynamodb.getItem(params, function (err, data) {
+		dynamodb.getItem(params, (err, data) => {
 			if (err) {
 				logger.error("error reading event data from database " + err.message);
 				reject({
@@ -311,10 +311,10 @@ function validateEventType(config, eventBody, dynamodb){
 			TableName: config.event_type_table
 		};
 		getDynamodbItem(dynamodb, event_type_params, eventBody.event_type)
-		.then(function(result){
+		.then((result) => {
 			resolve(result);
 		})
-		.catch(function(error){
+		.catch((error) => {
 			reject(error);
 		})
 	});
@@ -332,10 +332,10 @@ function validateEventName(config, eventBody, dynamodb){
 			TableName: config.event_name_table
 		};
 		getDynamodbItem(dynamodb, event_name_params, eventBody.event_name)
-		.then(function(result){
+		.then((result) => {
 			resolve(result);
 		})
-		.catch(function(error){
+		.catch((error) => {
 			reject(error);
 		})
 	});
@@ -353,10 +353,10 @@ function validateEventHandler(config, eventBody, dynamodb){
 			TableName: config.event_handler_table
 		};
 		getDynamodbItem(dynamodb, event_handler_params, eventBody.event_handler)
-		.then(function(result){
+		.then((result) => {
 			resolve(result);
 		})
-		.catch(function(error){
+		.catch((error) => {
 			reject(error);
 		})
 	});
@@ -374,10 +374,10 @@ function validateEventStatus(config, eventBody, dynamodb){
 			TableName: config.event_status_table
 		};
 		getDynamodbItem(dynamodb, event_status_params, eventBody.event_status)
-		.then(function(result){
+		.then((result) => {
 			resolve(result);
 		})
-		.catch(function(error){
+		.catch((error) => {
 			reject(error);
 		})
 	});
@@ -420,7 +420,7 @@ function storeEventData(config, eventBody, kinesis){
 			}
 		};
 		
-		Object.keys(eventBody).forEach(function (key) {
+		Object.keys(eventBody).forEach((key) => {
 			if(eventBody[key]){
 				if (key === "service_context") {
 					event_params.Item.SERVICE_CONTEXT = {
@@ -459,7 +459,7 @@ function storeEventData(config, eventBody, kinesis){
 			PartitionKey: eventBody.event_name,
 			StreamName: config.event_hub
 		};
-		kinesis.putRecord(stream_params, function(err, data) {
+		kinesis.putRecord(stream_params, (err, data) => {
 			if (err) {
 				logger.error('kinesis error'+ JSON.stringify(err));
 				reject({
