@@ -31,7 +31,7 @@ export class CreateServiceComponent implements OnInit {
 
   @Output() onClose: EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  docs_int_jazz:string;
+  docs_int_jazz:string = env_internal.urls.docs;
   typeOfService: string = "api";
   typeOfPlatform: string = "aws";
   disablePlatform = true;
@@ -125,12 +125,15 @@ export class CreateServiceComponent implements OnInit {
   reqId: any = "";
 
   accList=env_internal.urls.accounts;
-	regList=env_internal.urls.accounts;
+	regList=env_internal.urls.regions;
 	  accSelected:string = this.accList[0];
 	regSelected:string=this.regList[0];
 
-  accounts=this.regList
-  regions=this.accList;
+  accounts=this.accList
+  regions=this.regList;
+
+  supported_account:string = this.accList[0];
+  
   selectedRegion=[];
   regionInput:string;
   selectedAccount=[];
@@ -1117,6 +1120,7 @@ blurRegion(){
   }
 
   ngOnInit() {
+    console.log('debug log -> accounts',this.accounts)
     this.selectAccountsRegions();
     // this.gitRepo = "https://";
     this.getData();

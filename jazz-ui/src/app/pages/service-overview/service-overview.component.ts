@@ -906,30 +906,6 @@ export class ServiceOverviewComponent implements OnInit {
         }
         // arrEnv[0].status.replace("_"," ");
     }
-    envfoross(){
-        var url_multi_env = 'https://api.myjson.com/bins/k6qvn';
-        var url_dev_prod = 'https://api.myjson.com/bins/vhzdf';
-        var chosen_url;
-        if(environment.multi_env){
-            chosen_url = url_multi_env;
-        }
-        else{
-            chosen_url = url_dev_prod;
-        }
-
-
-        this.http.get(chosen_url).subscribe(
-            response => {
-                this.transform_env_oss(response);
-               
-                  
-              },
-              err => {
-                    
-            });
-        
-    
-    }
 
    
 
@@ -947,9 +923,7 @@ export class ServiceOverviewComponent implements OnInit {
             this.getenvData();
             
         }
-        if(!this.internal_build){
-            this.envfoross();
-        }
+       
         
         
      

@@ -72,7 +72,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	assetsList: any = [];
 	
 	accList=env_internal.urls.accounts;
-		regList=env_internal.urls.accounts;
+		regList=env_internal.urls.regions;
 			accSelected:string = this.accList[0];
 		regSelected:string=this.regList[0];
 	type: any = [];

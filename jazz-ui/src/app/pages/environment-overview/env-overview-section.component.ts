@@ -20,7 +20,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   @Output() open_sidebar:EventEmitter<any> = new EventEmitter<any>();
 
   accList=env_internal.urls.accounts;
-	regList=env_internal.urls.accounts;
+	regList=env_internal.urls.regions;
 	  accSelected:string = this.accList[0];
   regSelected:string=this.regList[0];
  

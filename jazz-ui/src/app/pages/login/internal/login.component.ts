@@ -14,7 +14,6 @@ import { environment as env_internal} from './../../../../environments/environme
 
 
 @Component({
-    // moduleId: module.id,
     selector: 'login',
     templateUrl: './login.component.html',
     providers: [MessageService],
@@ -30,7 +29,6 @@ export class LoginComponent implements OnInit {
     error_password_disp:boolean=false;
     err_username_brd:boolean=false;
     err_password_brd:boolean=false;
-    // popoverContent:string="Lorem ipsum dolor sit amet,consectetur adipiscing elit";
     popoverContent:string="";
     toast : any;
     id: string;

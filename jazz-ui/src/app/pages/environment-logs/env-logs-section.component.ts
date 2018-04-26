@@ -145,7 +145,7 @@ export class EnvLogsSectionComponent implements OnInit {
 
 
 	accList=env_internal.urls.accounts;
-	regList=env_internal.urls.accounts;
+	regList=env_internal.urls.regions;
 	  accSelected:string = this.accList[0];
 	regSelected:string=this.regList[0];
 	instance_yes;
