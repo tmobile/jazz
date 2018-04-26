@@ -29,6 +29,7 @@ const AWS = require('aws-sdk');
 const async = require('async');
 const Uuid = require("uuid/v4");
 const moment = require('moment');
+const dateFormat = 'YYYY-MM-DDTHH:mm:ss:SSS';
 
 module.exports.handler = (event, context, cb) => {
 	//Initializations
@@ -37,17 +38,18 @@ module.exports.handler = (event, context, cb) => {
 	logger.init(event, context);
 	const dynamodb = new AWS.DynamoDB();
 	const kinesis = new AWS.Kinesis();
+	
 
 	try {
 		//GET Handler
 		if (event && event.method && event.method === 'GET') {
 			getEvents(event, config, dynamodb)
 			.then((result) => mapGetEventData(result, event))
-			.then(function(result){
+			.then((result) => {
 				logger.info(result)
 				return cb(null, result);
 			})
-			.catch(function(error){
+			.catch((error) => {
 				logger.error(error)
 				if(error.result === "inputError"){
 					return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
@@ -61,20 +63,20 @@ module.exports.handler = (event, context, cb) => {
 		if (event && event.method && event.method === 'POST') {
 
 			generalInputValidation(event)
-			.then(() => validateEventInput(config, event, dynamodb))
-			.then(() => storeEventData(config, event, kinesis))
-			.then(function(result){
+			.then(() => validateEventInput(config, event.body, dynamodb))
+			.then(() => storeEventData(config, event.body, kinesis))
+			.then((result) => {
 				logger.info("POST result:"+JSON.stringify(result));
 				return cb(null, result);
 			})
-			.catch(function(error){
+			.catch((error) => {
 				logger.error(JSON.stringify(error));
 				if (error.code && error.code === 400){	
 					return cb(JSON.stringify(errorHandler.throwInputValidationError("Bad request. message: " + error.message)));
 				} else {
 					return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + error.message)));
 				} 
-			});
+			})
 		}
 
 	} catch (e) {
@@ -196,55 +198,56 @@ function mapGetEventData(result, event){
 function generalInputValidation(event){
 	logger.info("Inside generalInputValidation:")
 	return new Promise((resolve, reject) => {
-		if (!event.body) {
+		var eventBody = event.body;
+		if (!eventBody) {
 			reject({
 				result: "inputError",
 				message: "Service inputs not defined!"
 			});
 		}
-		if (!event.body.service_context) {
+		if (!eventBody.service_context) {
 			reject({
 				result: "inputError",
 				message: "service_context not provided!"
 			});
 		}
-		if (!event.body.event_handler) {
+		if (!eventBody.event_handler) {
 			reject({
 				result: "inputError",
 				message: "event_handler not provided!"
 			});
 		}
-		if (!event.body.event_name) {
+		if (!eventBody.event_name) {
 			reject({
 				result: "inputError",
 				message: "event_name not provided!"
 			});
 		}
-		if (!event.body.service_name) {
+		if (!eventBody.service_name) {
 			reject({
 				result: "inputError",
 				message: "service_name not provided!"
 			});
 		}
-		if (!event.body.event_status) {
+		if (!eventBody.event_status) {
 			reject({
 				result: "inputError",
 				message: "event_status not provided!"
 			});
 		}
-		if (!event.body.event_type) {
+		if (!eventBody.event_type) {
 			reject({
 				result: "inputError",
 				message: "event_type not provided!"
 			});
 		}
-		if (!event.body.username) {
+		if (!eventBody.username) {
 			reject({
 				result: "inputError",
 				message: "username not provided!"
 			});
 		}
-		if (!event.body.event_timestamp) {
+		if (!eventBody.event_timestamp) {
 			reject({
 				result: "inputError",
 				message: "event_timestamp not provided!"
@@ -254,14 +257,14 @@ function generalInputValidation(event){
 	});
 }
 
-function validateEventInput(config, event, dynamodb){
+function validateEventInput(config, eventBody, dynamodb){
 	logger.info("Inside validateEventInput:")
 	return new Promise((resolve, reject) => {
-		validateEventType(config, event, dynamodb)
-		.then(() => validateEventName(config, event, dynamodb))
-		.then(() => validateEventHandler(config, event, dynamodb))
-		.then(() => validateEventStatus(config, event, dynamodb))
-		.then(() => validateTimestamp(event))
+		validateEventType(config, eventBody, dynamodb)
+		.then(() => validateEventName(config, eventBody, dynamodb))
+		.then(() => validateEventHandler(config, eventBody, dynamodb))
+		.then(() => validateEventStatus(config, eventBody, dynamodb))
+		.then(() => validateTimestamp(eventBody))
 		.then(function(){
 			resolve()
 		})
@@ -296,18 +299,18 @@ function getDynamodbItem(dynamodb, params, eventData){
 	})
 }
 
-function validateEventType(config, event, dynamodb){
+function validateEventType(config, eventBody, dynamodb){
 	logger.info("Inside validateEventType:")
 	return new Promise((resolve, reject) => {
 		var event_type_params = {
 			Key: {
 				"EVENT_TYPE": {
-					S: event.body.event_type
+					S: eventBody.event_type
 				}
 			},
 			TableName: config.event_type_table
 		};
-		getDynamodbItem(dynamodb, event_type_params, event.body.event_type)
+		getDynamodbItem(dynamodb, event_type_params, eventBody.event_type)
 		.then(function(result){
 			resolve(result);
 		})
@@ -317,18 +320,18 @@ function validateEventType(config, event, dynamodb){
 	});
 }
 
-function validateEventName(config, event, dynamodb){
+function validateEventName(config, eventBody, dynamodb){
 	logger.info("Inside validateEventName:");
 	return new Promise((resolve, reject) => {
 		var event_name_params = {
 			Key: {
 				"EVENT_NAME": {
-					S: event.body.event_name
+					S: eventBody.event_name
 				}
 			},
 			TableName: config.event_name_table
 		};
-		getDynamodbItem(dynamodb, event_name_params, event.body.event_name)
+		getDynamodbItem(dynamodb, event_name_params, eventBody.event_name)
 		.then(function(result){
 			resolve(result);
 		})
@@ -338,18 +341,18 @@ function validateEventName(config, event, dynamodb){
 	});
 }
 
-function validateEventHandler(config, event, dynamodb){
+function validateEventHandler(config, eventBody, dynamodb){
 	logger.info("Inside validateEventHandler:");
 	return new Promise((resolve, reject) => {
 		var event_handler_params = {
 			Key: {
 				"EVENT_HANDLER": {
-					S: event.body.event_handler
+					S: eventBody.event_handler
 				}
 			},
 			TableName: config.event_handler_table
 		};
-		getDynamodbItem(dynamodb, event_handler_params, event.body.event_handler)
+		getDynamodbItem(dynamodb, event_handler_params, eventBody.event_handler)
 		.then(function(result){
 			resolve(result);
 		})
@@ -359,18 +362,18 @@ function validateEventHandler(config, event, dynamodb){
 	});
 }
 
-function validateEventStatus(config, event, dynamodb){
+function validateEventStatus(config, eventBody, dynamodb){
 	logger.info("Inside validateEventStatus:");
 	return new Promise((resolve, reject) => {
 		var event_status_params = {
 			Key: {
 				"EVENT_STATUS": {
-					S: event.body.event_status
+					S: eventBody.event_status
 				}
 			},
 			TableName: config.event_status_table
 		};
-		getDynamodbItem(dynamodb, event_status_params, event.body.event_status)
+		getDynamodbItem(dynamodb, event_status_params, eventBody.event_status)
 		.then(function(result){
 			resolve(result);
 		})
@@ -380,32 +383,32 @@ function validateEventStatus(config, event, dynamodb){
 	});
 }
 
-function validateTimestamp(event){
+function validateTimestamp(eventBody){
 	logger.info("Inside validateTimestamp:");
 	return new Promise((resolve, reject) => {
 		try {
-			if (moment(event.body.event_timestamp, "YYYY-MM-DDTHH:mm:ss:SSS", true).isValid()) {
-				resolve(event.body.event_timestamp);
+			if (moment(eventBody.event_timestamp, dateFormat, true).isValid()) {
+				resolve(eventBody.event_timestamp);
 			} else {
 				reject({
 					"code": 400,
-					"message": "Invalid EVENT TIMESTAMP: " + event.body.event_timestamp + ", The format should be YYYY-MM-DDTHH:mm:ss:SSS"
+					"message": "Invalid EVENT TIMESTAMP: " + eventBody.event_timestamp + ", The format should be "+ dateFormat
 				});
 			}
 		} catch (err) {
 			reject({
 				"code": 500,
-				"message": "Error parsing EVENT TIMESTAMP: " + event.body.event_timestamp + ", The format should be YYYY-MM-DDTHH:mm:ss:SSS"
+				"message": "Error parsing EVENT TIMESTAMP: " + eventBody.event_timestamp + ", The format should be "+ dateFormat
 			});
 		}
 	});
 }
 
-function storeEventData(config, event, kinesis){
+function storeEventData(config, eventBody, kinesis){
 	logger.info("Inside storeEventData:");
 	return new Promise((resolve, reject) => {
 		var event_id = Uuid();
-		var timestamp = moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS');
+		var timestamp = moment().utc().format(dateFormat);
 		var event_params = {
 			Item: {
 				"EVENT_ID": {
@@ -416,57 +419,44 @@ function storeEventData(config, event, kinesis){
 				}
 			}
 		};
-
-		Object.keys(event.body).forEach(function (key) {
-			if (key === "service_context") {
-				event_params.Item.SERVICE_CONTEXT = {
-					S: JSON.stringify(event.body.service_context)
-				};
-			} else if (key === "event_handler") {
-				event_params.Item.EVENT_HANDLER = {
-					S: event.body.event_handler
-				};
-			} else if (key === "event_name") {
-				event_params.Item.EVENT_NAME = {
-					S: event.body.event_name
-				};
-			} else if (key === "service_name") {
-				event_params.Item.SERVICE_NAME = {
-					S: event.body.service_name
-				};
-			} else if (key === "event_status") {
-				event_params.Item.EVENT_STATUS = {
-					S: event.body.event_status
-				};
-			} else if (key === "event_type") {
-				event_params.Item.EVENT_TYPE = {
-					S: event.body.event_type
-				};
-			} else if (key === "username") {
-				event_params.Item.USERNAME = {
-					S: event.body.username
-				};
-			} else if (key === "event_timestamp") {
-				event_params.Item.EVENT_TIMESTAMP = {
-					S: event.body.event_timestamp
-				};
-			} else {
-				if (!event.body[key]) {
-					event_params.Item[key.toUpperCase()] = {
-						NULL: true
+		
+		Object.keys(eventBody).forEach(function (key) {
+			if(eventBody[key]){
+				if (key === "service_context") {
+					event_params.Item.SERVICE_CONTEXT = {
+						S: JSON.stringify(eventBody.service_context)
 					};
 				} else {
-					event_params.Item[key.toUpperCase()] = {
-						S: event.body[key]
-					};
+					var map = {
+						'event_name': 'EVENT_NAME',
+						'event_handler': 'EVENT_HANDLER',
+						'service_name': 'SERVICE_NAME',
+						'event_status': 'EVENT_STATUS',
+						'event_type': 'EVENT_TYPE',
+						'username': 'USERNAME',
+						'event_timestamp': 'EVENT_TIMESTAMP'
+					}
+					if(event_params.Item[map[key]]){
+						event_params.Item[map[key]] = {
+							S: eventBody[key]
+						}
+					} else {
+						event_params.Item[key.toUpperCase()] = {
+							S: eventBody[key]
+						};
+					}
+					
 				}
-
+			} else {
+				event_params.Item[key.toUpperCase()] = {
+					NULL: true
+				};
 			}
 		});
 
 		var stream_params = {
 			Data: JSON.stringify(event_params),
-			PartitionKey: event.body.event_name,
+			PartitionKey: eventBody.event_name,
 			StreamName: config.event_hub
 		};
 		kinesis.putRecord(stream_params, function(err, data) {
@@ -481,7 +471,7 @@ function storeEventData(config, event, kinesis){
 					"event_id": event_id
 				};
 				logger.info("event_id is: "+event_id);
-				resolve(responseObj(output, event.body));
+				resolve(responseObj(output, eventBody));
 			}
 		});
 	});
