@@ -30,8 +30,7 @@ const crud = require("./components/crud")(); //Import the utils module.
     @author:
     @version: 1.0
 **/
-
-module.exports.handler = (event, context, cb) => {
+var handler = (event, context, cb) => {
 
     var errorHandler = errorHandlerModule();
     var config = configObj(event);
@@ -75,24 +74,24 @@ module.exports.handler = (event, context, cb) => {
             })
             .catch(function (err) {
                 logger.error('Error while creating a service : ' + JSON.stringify(err));
-                if(err.jenkins_api_failure) {
-                        serviceDataObject.body = {
-                            "STATUS" : "creation_failed"
-                        };
-                        crud.update(serviceId, serviceDataObject, function (serviceUpdateError, results) {
-                            if (serviceUpdateError) {
-                                var errorMessage = {
-                                    "message": "Error occurred while updating service with failed status.",
-                                    "error" : err
-                                };
-                                return cb(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
-                            } else {
-                                logger.error("Updated service catalog with failed status.");
-                                return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
-                            }
-                        });
+                if (err.jenkins_api_failure) {
+                    serviceDataObject.body = {
+                        "STATUS": "creation_failed"
+                    };
+                    crud.update(serviceId, serviceDataObject, function (serviceUpdateError, results) {
+                        if (serviceUpdateError) {
+                            var errorMessage = {
+                                "message": "Error occurred while updating service with failed status.",
+                                "error": err
+                            };
+                            return cb(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
+                        } else {
+                            logger.error("Updated service catalog with failed status.");
+                            return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                        }
+                    });
                 } else {
-                     return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
                 }
             });
 
@@ -100,181 +99,189 @@ module.exports.handler = (event, context, cb) => {
         logger.error(e);
         cb(JSON.stringify(errorHandler.throwInternalServerError(e)));
     }
+}
 
-    function startServiceOnboarding(event, config, service_id) {
-        return new Promise((resolve, reject) => {
-            try {
-                var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
-                var userlist = "";
-                var approvers = event.body.approvers;
-                var domain = (event.body.domain || "").toLowerCase();
-                var service_name = event.body.service_name.toLowerCase();
 
-                userlist = approvers.reduce(function (stringSoFar, approver) {
-                    return stringSoFar + util.format("name=%s&", approver);
-                }, "");
+var startServiceOnboarding = function (event, config, service_id) {
+    return new Promise((resolve, reject) => {
+        try {
+            var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
+            var userlist = "";
+            var approvers = event.body.approvers;
+            var domain = (event.body.domain || "").toLowerCase();
+            var service_name = event.body.service_name.toLowerCase();
 
-                var input = {
-                    token: config.BUILD_TOKEN,
-                    admin_group: userlist,
-                    service_id: service_id
-                };
-                request({
-                    url: config.JOB_BUILD_URL,
-                    method: 'POST',
-                    headers: {
-                        "Authorization": base_auth_token
-                    },
-                    qs: input
-                }, function (err, response, body) {
-                    if (err) {
-                        logger.error('Error while starting Jenkins job: ' + err);
-                        err.jenkins_api_failure = true;
-                        reject(err);
-                    } else {
-                        if (response.statusCode <= 299) { // handle all 2xx response codes as success
-                            resolve("Successfully created your service.");
-                        } else {
-                            logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
-                            var message = {
-                                 'message': "Failed to kick off service onboarding job.",
-                                 'jenkins_api_failure' : true
-                            };
-                            reject(message);
-                        }
-                    }
-                });
-            } catch (e) {
-                logger.error('Error during startServiceOnboarding: ' + e.message);
-                reject(e);
-            }
-        });
-    }
+            userlist = approvers.reduce(function (stringSoFar, approver) {
+                return stringSoFar + util.format("name=%s&", approver);
+            }, "");
 
-    function getToken(configData) {
-        return new Promise((resolve, reject) => {
-            var svcPayload = {
-                uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
-                method: 'post',
-                json: {
-                    "username": configData.SERVICE_USER,
-                    "password": configData.TOKEN_CREDS
+            var input = {
+                token: config.BUILD_TOKEN,
+                admin_group: userlist,
+                service_id: service_id
+            };
+            request({
+                url: config.JOB_BUILD_URL,
+                method: 'POST',
+                headers: {
+                    "Authorization": base_auth_token
                 },
-                rejectUnauthorized: false
-            };
-
-            request(svcPayload, function (error, response, body) {
-                if (response.statusCode === 200 && body && body.data) {
-                    var authToken = body.data.token;
-                    return resolve(authToken);
-                } else {
-                    return reject({
-                        "error": "Could not get authentication token for updating service catalog.",
-                        "message": response.body.message
-                    });
-                }
-            });
-        });
-    }
-
-    function createService(service_data) {
-        return new Promise((resolve, reject) => {
-            crud.create(service_data, function (err, results) {
+                qs: input
+            }, function (err, response, body) {
                 if (err) {
-                    reject({
-                        "message": err.error
-                    });
+                    logger.error('Error while starting Jenkins job: ' + err);
+                    err.jenkins_api_failure = true;
+                    reject(err);
                 } else {
-                    logger.info("created a new service in service catalog.");
-                    serviceId = results.data.service_id;
-                    resolve(results.data.service_id);
-                }
-            });
-        });
-    }
-
-    function getServiceData(event, authToken, configData) {
-        return new Promise((resolve, reject) => {
-            var inputs = {
-                "TOKEN": authToken,
-                "SERVICE_API_URL": configData.SERVICE_API_URL,
-                "SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-                "SERVICE_NAME": event.body.service_name.toLowerCase(),
-                "DOMAIN": event.body.domain.toLowerCase(),
-                "DESCRIPTION": event.body.description,
-                "TYPE": event.body.service_type,
-                "RUNTIME": event.body.runtime,
-                "REGION": event.body.region,
-                "USERNAME": user_id,
-                "STATUS": "creation_started"
-            };
-
-            var serviceMetadataObj = {};
-            if (event.body.tags) {
-                inputs.TAGS = event.body.tags;
-            }
-
-            if (event.body.email) {
-                inputs.EMAIL = event.body.email;
-            }
-
-            if (event.body.slack_channel) {
-                inputs.SLACKCHANNEL = event.body.slack_channel;
-            }
-            if ((event.body.service_type === "api" || event.body.service_type === "function") && (event.body.require_internal_access !== null)) {
-                serviceMetadataObj.require_internal_access = event.body.require_internal_access;
-            }
-            if (event.body.service_type === "website") {
-                var create_cloudfront_url = "true";
-                serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
-                inputs.RUNTIME = 'n/a';
-            }
-            // Add rate expression to the propertiesObject;
-            if (event.body.service_type === "function") {
-                if (event.body.rateExpression !== undefined) {
-                    var cronExpValidator = CronParser.validateCronExpression(event.body.rateExpression);
-                    if (cronExpValidator.result === 'valid') {
-                        var rate_expression = event.body.rateExpression;
-                        var enable_eventschedule;
-                        if (event.body.enableEventSchedule === false) {
-                            enable_eventschedule = event.body.enableEventSchedule;
-                        } else {
-                            enable_eventschedule = true;
-                        }
-
-                        if (rate_expression && rate_expression.trim() !== "") {
-                            serviceMetadataObj["eventScheduleRate"] = "cron(" + rate_expression + ")";
-                        }
-                        if (enable_eventschedule && enable_eventschedule !== "") {
-                            serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
-                        }
-                        if (event.body.event_source_ec2 && event.body.event_action_ec2) {
-                            serviceMetadataObj["event_action_ec2"] = event.body.event_source_ec2;
-                            serviceMetadataObj["event_action_ec2"] = event.body.event_action_ec2;
-                        }
-                        if (event.body.event_source_s3 && event.body.event_action_s3) {
-                            serviceMetadataObj["event_source_s3"] = event.body.event_source_s3;
-                            serviceMetadataObj["event_action_s3"] = event.body.event_action_s3;
-                        }
-                        if (event.body.event_source_dynamodb && event.body.event_action_dynamodb) {
-                            serviceMetadataObj["event_source_dynamodb"] = event.body.event_source_dynamodb;
-                            serviceMetadataObj["event_action_dynamodb"] = event.body.event_action_dynamodb;
-                        }
-                        if (event.body.event_source_stream && event.body.event_action_stream) {
-                            serviceMetadataObj["event_source_stream"] = event.body.event_source_stream;
-                            serviceMetadataObj["event_action_stream"] = event.body.event_action_stream;
-                        }
-
+                    if (response.statusCode <= 299) { // handle all 2xx response codes as success
+                        resolve("Successfully created your service.");
                     } else {
-                        logger.error('cronExpValidator : ', cronExpValidator);
-                        reject(cronExpValidator);
+                        logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
+                        var message = {
+                            'message': "Failed to kick off service onboarding job.",
+                            'jenkins_api_failure': true
+                        };
+                        reject(message);
                     }
                 }
-            }
+            });
+        } catch (e) {
+            logger.error('Error during startServiceOnboarding: ' + e.message);
+            reject(e);
+        }
+    });
+}
 
-            inputs.METADATA = serviceMetadataObj;
-            serviceDataObject = inputs;
-            resolve(inputs);
+var getToken = function (configData) {
+    return new Promise((resolve, reject) => {
+        var svcPayload = {
+            uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
+            method: 'post',
+            json: {
+                "username": configData.SERVICE_USER,
+                "password": configData.TOKEN_CREDS
+            },
+            rejectUnauthorized: false
+        };
+
+        request(svcPayload, function (error, response, body) {
+            if (response.statusCode === 200 && body && body.data) {
+                var authToken = body.data.token;
+                return resolve(authToken);
+            } else {
+                return reject({
+                    "error": "Could not get authentication token for updating service catalog.",
+                    "message": response.body.message
+                });
+            }
         });
-    }
-};
+    });
+}
+
+var createService = function (service_data) {
+    return new Promise((resolve, reject) => {
+        crud.create(service_data, function (err, results) {
+            if (err) {
+                reject({
+                    "message": err.error
+                });
+            } else {
+                logger.info("created a new service in service catalog.");
+                serviceId = results.data.service_id;
+                resolve(results.data.service_id);
+            }
+        });
+    });
+}
+
+var getServiceData = function (event, authToken, configData) {
+    return new Promise((resolve, reject) => {
+        var inputs = {
+            "TOKEN": authToken,
+            "SERVICE_API_URL": configData.SERVICE_API_URL,
+            "SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
+            "SERVICE_NAME": event.body.service_name.toLowerCase(),
+            "DOMAIN": event.body.domain.toLowerCase(),
+            "DESCRIPTION": event.body.description,
+            "TYPE": event.body.service_type,
+            "RUNTIME": event.body.runtime,
+            "REGION": event.body.region,
+            "USERNAME": user_id,
+            "STATUS": "creation_started"
+        };
+
+        var serviceMetadataObj = {};
+        if (event.body.tags) {
+            inputs.TAGS = event.body.tags;
+        }
+
+        if (event.body.email) {
+            inputs.EMAIL = event.body.email;
+        }
+
+        if (event.body.slack_channel) {
+            inputs.SLACKCHANNEL = event.body.slack_channel;
+        }
+        if ((event.body.service_type === "api" || event.body.service_type === "function") && (event.body.require_internal_access !== null)) {
+            serviceMetadataObj.require_internal_access = event.body.require_internal_access;
+        }
+        if (event.body.service_type === "website") {
+            var create_cloudfront_url = "true";
+            serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
+            inputs.RUNTIME = 'n/a';
+        }
+        // Add rate expression to the propertiesObject;
+        if (event.body.service_type === "function") {
+            if (event.body.rateExpression !== undefined) {
+                var cronExpValidator = CronParser.validateCronExpression(event.body.rateExpression);
+                if (cronExpValidator.result === 'valid') {
+                    var rate_expression = event.body.rateExpression;
+                    var enable_eventschedule;
+                    if (event.body.enableEventSchedule === false) {
+                        enable_eventschedule = event.body.enableEventSchedule;
+                    } else {
+                        enable_eventschedule = true;
+                    }
+
+                    if (rate_expression && rate_expression.trim() !== "") {
+                        serviceMetadataObj["eventScheduleRate"] = "cron(" + rate_expression + ")";
+                    }
+                    if (enable_eventschedule && enable_eventschedule !== "") {
+                        serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
+                    }
+                    if (event.body.event_source_ec2 && event.body.event_action_ec2) {
+                        serviceMetadataObj["event_action_ec2"] = event.body.event_source_ec2;
+                        serviceMetadataObj["event_action_ec2"] = event.body.event_action_ec2;
+                    }
+                    if (event.body.event_source_s3 && event.body.event_action_s3) {
+                        serviceMetadataObj["event_source_s3"] = event.body.event_source_s3;
+                        serviceMetadataObj["event_action_s3"] = event.body.event_action_s3;
+                    }
+                    if (event.body.event_source_dynamodb && event.body.event_action_dynamodb) {
+                        serviceMetadataObj["event_source_dynamodb"] = event.body.event_source_dynamodb;
+                        serviceMetadataObj["event_action_dynamodb"] = event.body.event_action_dynamodb;
+                    }
+                    if (event.body.event_source_stream && event.body.event_action_stream) {
+                        serviceMetadataObj["event_source_stream"] = event.body.event_source_stream;
+                        serviceMetadataObj["event_action_stream"] = event.body.event_action_stream;
+                    }
+
+                } else {
+                    logger.error('cronExpValidator : ', cronExpValidator);
+                    reject(cronExpValidator);
+                }
+            }
+        }
+
+        inputs.METADATA = serviceMetadataObj;
+        serviceDataObject = inputs;
+        resolve(inputs);
+    });
+}
+module.exports = {
+    handler: handler,
+    startServiceOnboarding:startServiceOnboarding,
+    getToken: getToken,
+    createService : createService,
+    getServiceData : getServiceData
+}
