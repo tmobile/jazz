@@ -72,7 +72,25 @@ node {
 		}
 
 		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments",auth_token)
-	
+		def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
+		echo "Environment List: $environmentList"
+
+		if(environmentIds.size() > 0){
+			//validate each id in environment catalog
+			for (_eId in environmentIds) {
+				if(!environmentList.contains(_eId)){
+					events.sendFailureEvent('INITIALIZE_DELETE_WORKFLOW', "unable to find the environment id $_eId from environment catalog")
+					error "Unable to find the environment id $_eId from environment catalog"
+				}
+			}
+		} else if(environmentList.size() > 0 ){
+			for(_env in environmentList){
+				environmentIds.push(_env)
+			}		
+		} else if(environmentList.size() == 0){
+			echo "$repo_name doesn't contains any active environment logical id in environment catalog!"
+		}
+
 		if(!events) { error "Can't load events module"	} //Fail here
 		events.initialize(configLoader,service_config,"SERVICE_DELETION","","",g_base_url + "/jazz/events")
 
@@ -114,8 +132,6 @@ node {
 					def path = getResourcePath()
 					for (_envId in environmentIds){
 						try{
-							def endpoint_type = ServiceMetadata.getEndpointType()
-							echo "Endpoint Type: $endpoint_type"
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if(branch && branch != 'NA'){
 								events.setBranch(branch)
@@ -175,8 +191,9 @@ node {
 							}
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
+							cloudfrontEnabled = "true"  //TOBE Commented when CloudFront enabling disabling feature is introduced.
 							if (cloudfrontEnabled == "true") {
-								cleanupCloudFrontDistribution(service_name, domain, _envId)
+								cleanupCloudFrontDistribution(_envId)
 							}
 							unDeployWebsite( _envId)
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" completed", null, _envId)
@@ -361,6 +378,17 @@ def cleanUpApiGatewayResources(stage, path) {
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			
 			def resource_id = null
+			def resource_search_key
+			def current_environment
+
+			if(stage.endsWith("-dev")) {
+				resource_search_key = "/" + stage
+				current_environment = 'dev'
+			} else {
+				resource_search_key = path
+				current_environment = 'prod'
+			}
+			echo "Resource search key for ApiGateway : $resource_search_key"
 			try {
 				def outputStr = sh (
 					script: "aws apigateway get-resources --rest-api-id ${getApiId(stage)} --region ${configLoader.AWS.REGION} --output json" ,
@@ -369,7 +397,7 @@ def cleanUpApiGatewayResources(stage, path) {
 
 				def list = parseJson(outputStr)
 				for (items in list["items"]) {
-					if(items["path"] == path) {
+					if(items["path"] == resource_search_key) {
 						resource_id = items["id"]
 					}
 				}
@@ -384,7 +412,7 @@ def cleanUpApiGatewayResources(stage, path) {
 					returnStdout: true
 				).trim()
 				def deployment_status_json = sh (
-					script: "aws apigateway create-deployment --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --stage-name ${stage} --description 'API deployment after resource clean up' --output json" ,
+					script: "aws apigateway create-deployment --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --stage-name ${current_environment} --description 'API deployment after resource clean up' --output json" ,
 					returnStdout: true
 				).trim()
 			} else {
@@ -429,7 +457,7 @@ def getServiceBucket(stage) {
  */
 def getApiId(stage) {
     echo "stage: $stage"
-  	if(stage == 'dev') {
+  	if(stage.endsWith('-dev')) {
 		return utilModule.getAPIIdForCore(configLoader.AWS.API["DEV"])
 	}else if (stage == 'stg') {
 		return utilModule.getAPIIdForCore(configLoader.AWS.API["STG"])
@@ -712,7 +740,7 @@ def getDistributionId(stage) {
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${stage}-static-website-origin-${service_config['domain']}-${service_config['service']}].{Distribution:domainName, Id:Id}\"",
+				--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${stage}-static-website-origin-${service_config['domain']}-${service_config['service']}'].{Distribution:domainName, Id:Id}\"",
 			returnStdout: true
 		)
 
