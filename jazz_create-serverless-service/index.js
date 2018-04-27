@@ -23,6 +23,7 @@ const CronParser = require("./components/cron-parser.js");
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const util = require('util');
+const validateARN = require("./components/validate-arn.js");
 const crud = require("./components/crud")(); //Import the utils module.
 
 /**
@@ -75,24 +76,24 @@ module.exports.handler = (event, context, cb) => {
             })
             .catch(function (err) {
                 logger.error('Error while creating a service : ' + JSON.stringify(err));
-                if(err.jenkins_api_failure) {
-                        serviceDataObject.body = {
-                            "STATUS" : "creation_failed"
-                        };
-                        crud.update(serviceId, serviceDataObject, function (serviceUpdateError, results) {
-                            if (serviceUpdateError) {
-                                var errorMessage = {
-                                    "message": "Error occurred while updating service with failed status.",
-                                    "error" : err
-                                };
-                                return cb(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
-                            } else {
-                                logger.error("Updated service catalog with failed status.");
-                                return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
-                            }
-                        });
+                if (err.jenkins_api_failure) {
+                    serviceDataObject.body = {
+                        "STATUS": "creation_failed"
+                    };
+                    crud.update(serviceId, serviceDataObject, function (serviceUpdateError, results) {
+                        if (serviceUpdateError) {
+                            var errorMessage = {
+                                "message": "Error occurred while updating service with failed status.",
+                                "error": err
+                            };
+                            return cb(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
+                        } else {
+                            logger.error("Updated service catalog with failed status.");
+                            return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                        }
+                    });
                 } else {
-                     return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                    return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
                 }
             });
 
@@ -137,8 +138,8 @@ module.exports.handler = (event, context, cb) => {
                         } else {
                             logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
                             var message = {
-                                 'message': "Failed to kick off service onboarding job.",
-                                 'jenkins_api_failure' : true
+                                'message': "Failed to kick off service onboarding job.",
+                                'jenkins_api_failure': true
                             };
                             reject(message);
                         }
@@ -214,7 +215,7 @@ module.exports.handler = (event, context, cb) => {
             if (event.body.tags) {
                 inputs.TAGS = event.body.tags;
             }
-           
+
             if (event.body.email) {
                 inputs.EMAIL = event.body.email;
             }
@@ -222,9 +223,30 @@ module.exports.handler = (event, context, cb) => {
             if (event.body.slack_channel) {
                 inputs.SLACKCHANNEL = event.body.slack_channel;
             }
-            if ((event.body.service_type === "api" || event.body.service_type === "function") && (event.body.require_internal_access !== null)) {
+
+            if ((event.body.service_type === "api" || event.body.service_type === "function") && (event.body.require_internal_access)) {
                 serviceMetadataObj.require_internal_access = event.body.require_internal_access;
             }
+
+            // Pass the flag to enable authentication on API
+            if (event.body.service_type === "api") {
+                serviceMetadataObj.enable_api_security = event.body.enable_api_security || false;
+                if (event.body.authorizer_arn) {
+                    // Validate ARN format - arn:aws:lambda:region:account-id:function:function-name
+                    if (!validateARN(event.body.authorizer_arn)) {
+                        return cb(JSON.stringify(errorHandler.throwInputValidationError("authorizer arn is invalid, expected format=arn:aws:lambda:region:account-id:function:function-name")));
+                    } else {
+                        serviceMetadataObj.authorizer_arn = event.body.authorizer_arn;
+                    }
+                }
+            }
+
+            // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
+            if (event.body.service_type === "api" && is_public_endpoint) {
+                serviceMetadataObj.require_internal_access = false;
+                serviceMetadataObj.enable_api_security = false;
+            }
+
             if (event.body.service_type === "website") {
                 var create_cloudfront_url = "true";
                 serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
