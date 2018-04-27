@@ -55,9 +55,6 @@ def loadServiceMetadata(service_id){
 			metadata['catalog_metadata'] = catalog_metadata
 			if(service_data.Item.SERVICE_SLACK_CHANNEL)
 				metadata['slack_channel'] = service_data.Item.SERVICE_SLACK_CHANNEL.S			
-			if(service_data.Item.SERVICE_ENDPOINTS)			
-				metadata['endpoints'] = service_data.Item.SERVICE_ENDPOINTS.M
-			
 			
 			return metadata
 		}

@@ -104,7 +104,7 @@ node() {
 			error "The environment has not been created yet and its missing the environment id"
 		}
 
-		if (!events) { error "Can't load events module"	} //Fail here 
+		if (!events) { error "Can't load events module"	} //Fail here
 		def eventsApi = "${g_base_url}/jazz/events"
 		events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, environment_logical_id, eventsApi)
 
@@ -122,10 +122,10 @@ node() {
 
 
 
-		loadServerlessConfig(runtime)
+		loadServerlessConfig(config)
 
 		if (domain && domain == "jazz") {
-			stage('Update Service Template'){				
+			stage('Update Service Template'){
 				echo "Inside Update service template"
 				try {
 					updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)
@@ -146,7 +146,7 @@ node() {
 			error "Request Id Generation failed"
 		}
 
-		stage('Pre-Build Validation') {	
+		stage('Pre-Build Validation') {
 			try {
 				events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
 				send_status_email(config, 'STARTED', "")
@@ -208,14 +208,14 @@ node() {
 
 					if (fileExists('swagger/swagger.json')) {
 						echo "Generating swagger file for environment: ${env_key}"
-	                
+
 						def api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
 						echo "API ID: $api_id"
 
 						def apiHostName = "${api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com"
 						echo "API Host Name: $apiHostName"
 						generateSwaggerEnv(environment_logical_id, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName, config)
-						if (env_key.equals("DEV")) {
+						if (env_key.equals("DEV") && config['domain'] != 'jazz') {
 							updateStageForDev(environment_logical_id)
 						}
 
@@ -224,10 +224,9 @@ node() {
 						echo "Deploying to API Gateway environment.."
 						sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+ " --profile cloud-api"
 						sh "aws apigateway create-deployment --rest-api-id ${api_id} --stage-name ${current_environment} --profile cloud-api"
-
 						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
 						if (current_environment == 'prod') {
-							endpointUrl = "https://${apiHostName}/${environment_logical_id}/${config['domain']}/${config['service']}"
+							endpointUrl = "https://${apiHostName}/${current_environment}/${config['domain']}/${config['service']}"
 						} else {
 							endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
 						}
@@ -235,22 +234,14 @@ node() {
 
 						if (domain != "jazz") {
 							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints[environment_logical_id] = endpointUrl
-							context_map['endpoints'] = endpoints
 						}
 
 						updateApiDocUrl(environment_logical_id)
 						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
 						echo "completed deployment........."
 
-						def svc_status  = "Your service endpoint for ${environment_logical_id} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
+						def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
+
 						send_status_email(config, 'COMPLETED', svc_status)
 					}
 
@@ -373,7 +364,7 @@ def writeServerlessFile(config, environment_logical_id){
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
-	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml" 	
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
@@ -381,7 +372,7 @@ def writeServerlessFile(config, environment_logical_id){
 	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
-	
+
 	if (config['artifact']) {
 		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
 	}
@@ -481,7 +472,12 @@ def validateDeploymentConfigurations(def prop) {
 
 }
 
-def loadServerlessConfig(runtime) {
+def addVpcDetails() {
+    echo "addVpcdetails to serverless.yml file"
+    sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
+}
+
+def loadServerlessConfig(config) {
     dir('_config') {
 		def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
 
@@ -493,13 +489,17 @@ def loadServerlessConfig(runtime) {
 			]])
     }
 
-    if (runtime.indexOf("nodejs") > -1) {
+    if (config['providerRuntime'].indexOf("nodejs") > -1) {
         sh "cp _config/serverless-nodejs.yml ./serverless.yml"
-    } else if (runtime.indexOf("java") > -1) {
+    } else if (config['providerRuntime'].indexOf("java") > -1) {
         sh "cp _config/serverless-java.yml ./serverless.yml"
-    } else if (runtime.indexOf("python") > -1) {
+    } else if (config['providerRuntime'].indexOf("python") > -1) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
+
+		if (config['service'] == 'cloud-logs-streamer' && config['domain'] == 'jazz') {
+			addVpcDetails()
+		}
 
 	echoServerlessFile()
 }
@@ -558,6 +558,7 @@ def createSubscriptionFilters(stackName, region, roleId) {
 			sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --region ${region}"
 		}
 	} catch (Exception ex) { }// ignore error if not created yet
+
 	try {
 		sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region}"
 	} catch (Exception ex) {
@@ -702,14 +703,14 @@ def loadBuildModules(buildModuleUrl){
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
 		echo "config loader loaded successfully."
-		
+
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
 		echo "SCM module loaded successfully."
 
 		serviceConfigdata = load "service-configuration-data-loader.groovy"
 		echo "Service configuration module loaded successfully."
-		
+
 		events = load "events-module.groovy"
 		echo "Event module loaded successfully."
 
@@ -721,7 +722,7 @@ def loadBuildModules(buildModuleUrl){
 		echo "Util module loaded successfully."
 
 		environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
-		echo "Environment deployment data loader module loaded successfully."		
+		echo "Environment deployment data loader module loaded successfully."
 
 	}
 }
