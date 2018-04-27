@@ -80,7 +80,6 @@ node {
 			for (_eId in environmentIds) {
 				if(!environmentList.contains(_eId)){
 					events.sendFailureEvent('INITIALIZE_DELETE_WORKFLOW', "unable to find the environment id $_eId from environment catalog")
-					error "Unable to find the environment id $_eId from environment catalog"
 				}
 			}
 		} else if(environmentList.size() > 0 ){
@@ -88,7 +87,7 @@ node {
 				environmentIds.push(_env)
 			}		
 		} else if(environmentList.size() == 0){
-			echo "$repo_name doesn't contains any active environment logical id in environment catalog!"
+			echo "$repo_name doesn't contain any active environment logical id in environment catalog!"
 		}
 
 		if(!events) { error "Can't load events module"	} //Fail here
@@ -189,7 +188,7 @@ node {
 							}
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
-							cloudfrontEnabled = "true"  //TOBE Commented when CloudFront enabling disabling feature is introduced.
+							cloudfrontEnabled = "true"  //TODO: Remove when non-cloudFront websites feature is introduced.
 							if (cloudfrontEnabled == "true") {
 								cleanupCloudFrontDistribution(_envId)
 							}
@@ -796,7 +795,7 @@ def generateDistributionConfigForDisable(distributionConfig) {
 		eTag = distributionConfigObj.ETag
 		distributionConfigObj.DistributionConfig.Enabled = false
 		def updatedCfg = JsonOutput.toJson(distributionConfigObj.DistributionConfig)
-		echo "Updated Configuration for disabling CloudFront... $updatedCfg"
+		echo "Updated configuration for disabling CloudFront... $updatedCfg"
 		try {
 			sh "echo \'$updatedCfg\' > disable-cf-distribution-config.json"
 		}catch(ex) {}
