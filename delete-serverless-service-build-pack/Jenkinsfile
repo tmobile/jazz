@@ -735,10 +735,12 @@ def getDistributionId(stage) {
 	def distributionID
 	def outputStr
 	try {
+		def cloudFrontId = "${configLoader.INSTANCE_PREFIX}-${stage}-static-website-origin-${service_config['domain']}-${service_config['service']}"
+		echo "CloudFront ID: $cloudFrontId"
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${stage}-static-website-origin-${service_config['domain']}-${service_config['service']}'].{Distribution:domainName, Id:Id}\"",
+				--query \"DistributionList.Items[?Origins.Items[?Id=='${cloudFrontId}']].{Distribution:domainName, Id:Id}\"",
 			returnStdout: true
 		)
 
@@ -765,7 +767,7 @@ def getDistributionConfig(distributionID) {
 	def distributionConfig
 	try {
 		distributionConfig = sh (
-			script: "aws cloudfront get-distribution-service_config \
+			script: "aws cloudfront get-distribution-config \
 						--output json --id "+distributionID,
 			returnStdout: true
 		)
@@ -789,14 +791,14 @@ def generateDistributionConfigForDisable(distributionConfig) {
 	def eTag
 	try {
 		if(distributionConfig) {
-			distributionConfigObj = new JsonSlurper().parseText(distributionConfig)
+			distributionConfigObj = parseJsonMap(distributionConfig)
 		}
 		eTag = distributionConfigObj.ETag
 		distributionConfigObj.DistributionConfig.Enabled = false
 		def updatedCfg = JsonOutput.toJson(distributionConfigObj.DistributionConfig)
-		echo "updatedCfg... $updatedCfg"
+		echo "Updated Configuration for disabling CloudFront... $updatedCfg"
 		try {
-			sh "echo \'$updatedCfg\' > disable-cf-distribution-service_config.json"
+			sh "echo \'$updatedCfg\' > disable-cf-distribution-config.json"
 		}catch(ex) {}
 		return eTag
 	} catch(ex) {
@@ -821,7 +823,7 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 			script: "aws cloudfront update-distribution \
 						--output json \
 						--id $distributionID \
-						--distribution-service_config file://"+configFile+" \
+						--distribution-config file://"+configFile+" \
 						--if-match $_Etag",
 			returnStdout: true
 		)
@@ -1012,4 +1014,13 @@ def setDeploymentBucketName(stage, environment){
 def jsonParse(jsonString) {
     def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
     return nonLazyMap
+}
+
+@NonCPS
+def parseJsonMap(jsonString) {
+		def jsonSlurper = new groovy.json.JsonSlurperClassic()
+		def jsonObj = jsonSlurper.parseText(jsonString)
+		def lazyMap = [:]
+		lazyMap.putAll(jsonObj)
+		return lazyMap
 }
