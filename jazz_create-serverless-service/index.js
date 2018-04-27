@@ -206,6 +206,7 @@ module.exports.handler = (event, context, cb) => {
                 "RUNTIME": event.body.runtime,
                 "REGION": event.body.region,
                 "USERNAME": user_id,
+                "IS_PUBLIC_ENDPOINT": event.body.is_public_endpoint || false,
                 "STATUS": "creation_started"
             };
 
@@ -213,7 +214,7 @@ module.exports.handler = (event, context, cb) => {
             if (event.body.tags) {
                 inputs.TAGS = event.body.tags;
             }
-
+           
             if (event.body.email) {
                 inputs.EMAIL = event.body.email;
             }
