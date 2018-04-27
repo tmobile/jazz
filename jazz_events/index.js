@@ -392,9 +392,18 @@ function validateTimestamp(eventBody) {
 function storeEventData(config, eventBody, kinesis) {
 	logger.info("Inside storeEventData:");
 	return new Promise((resolve, reject) => {
-		var event_id = Uuid();
-		var timestamp = moment().utc().format(dateFormat);
-		var event_params = {
+		var event_id = Uuid(),
+		timestamp = moment().utc().format(dateFormat),
+		map = {
+			'event_name': 'EVENT_NAME',
+			'event_handler': 'EVENT_HANDLER',
+			'service_name': 'SERVICE_NAME',
+			'event_status': 'EVENT_STATUS',
+			'event_type': 'EVENT_TYPE',
+			'username': 'USERNAME',
+			'event_timestamp': 'EVENT_TIMESTAMP'
+		},
+		event_params = {
 			Item: {
 				"EVENT_ID": {
 					S: event_id
@@ -412,15 +421,6 @@ function storeEventData(config, eventBody, kinesis) {
 						S: JSON.stringify(eventBody.service_context)
 					};
 				} else {
-					var map = {
-						'event_name': 'EVENT_NAME',
-						'event_handler': 'EVENT_HANDLER',
-						'service_name': 'SERVICE_NAME',
-						'event_status': 'EVENT_STATUS',
-						'event_type': 'EVENT_TYPE',
-						'username': 'USERNAME',
-						'event_timestamp': 'EVENT_TIMESTAMP'
-					}
 					if (event_params.Item[map[key]]) {
 						event_params.Item[map[key]] = {
 							S: eventBody[key]
