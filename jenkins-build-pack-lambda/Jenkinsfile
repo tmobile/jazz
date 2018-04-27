@@ -513,9 +513,9 @@ def createSubscriptionFilters(stackName, region, roleId) {
 			sh "aws logs delete-subscription-filter --output json --log-group-name \""+ lambda + "\" --filter-name \"" + filtername + "\" --region " + region
 		}
 	} catch (Exception ex) { }// ignore error if not created yet
-	try{
+	try {
 		sh "aws logs put-subscription-filter --output json --log-group-name \""+ lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
-	}catch (Exception ex){
+	} catch (Exception ex) {
 		echo "error occured: " + ex.getMessage()
 	}
 }
