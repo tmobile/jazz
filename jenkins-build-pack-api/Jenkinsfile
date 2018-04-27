@@ -26,8 +26,6 @@ import groovy.transform.Field
 @Field def current_environment = ''
 @Field def g_base_url_for_swagger = ''
 
-@Field def aws_api_import = '/var/lib/aws-apigateway-importer/aws-api-import.sh'
-
 node() {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
