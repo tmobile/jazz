@@ -165,8 +165,6 @@ node {
 								branch = 'NA'
 							}
 							events.setEnvironment(_envId)
-							echo "Branch ::: $branch"
-							echo "Environment ::: $_envId"
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
 							echo 'undeploying function for environment: '+ _envId
 							unDeployService(_envId)
