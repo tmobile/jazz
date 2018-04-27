@@ -1,154 +1,155 @@
 @import './../../../main-styles';
 @import '../services/services.component.scss';
 .page-title-wrap {
-    overflow: hidden;
-    padding: 26px 0 0 0;
-    .header1 {
-        float: left;
-    }
-    btn-jazz-secondary {
-        float: right;
-    }
+  overflow: hidden;
+  padding: 26px 0 0 0;
+  .header1 {
+    float: left;
+  }
+  btn-jazz-secondary {
+    float: right;
+  }
 }
-
-
 
 /deep/ .page-title-wrap button.btnT-radial-in {
-    margin: 0px;
-    border-radius: 30px;
-    padding: 7px 16px;
-    background: transparent;
-    letter-spacing: .3px;
-    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
-    font-size: 12px;
-    vertical-align: middle;
-    font-weight: 700;
-    border: 1px solid;
+  margin: 0px;
+  border-radius: 30px;
+  padding: 7px 16px;
+  background: transparent;
+  letter-spacing: .3px;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+  font-size: 12px;
+  vertical-align: middle;
+  font-weight: 700;
+  border: 1px solid;
 }
+
 .page-title-wrap {
-    min-height: 5.65rem; // setting min-height coz, alignment breaks when jquery isnt loaded
+  min-height: 5.65rem; // setting min-height coz, alignment breaks when jquery isnt loaded
 }
-.oss{
-    font-weight: normal;
+
+.oss {
+  font-weight: normal;
 }
-   .oss{
-    tabs{
-        /deep/ .tabs-wrap{
-            ul li{
-                 &:last-child{
-                     pointer-events: none;
-                     opacity:0.6;
-                 }
-             
-             }
-         }
-     }
-   } 
 
-
-.testApiBtn{
-    /deep/ .btnT-radial-in{
-        outline: none;
-        /* background-color: #c62770; */
-        color: #c62770;
-        border-color: #c62770;
-        box-shadow: none;
-        &:hover, &:active, &:focus{
-            color: #fff;
+.oss {
+  tabs {
+    /deep/ .tabs-wrap {
+      ul li {
+        &:last-child {
+          pointer-events: none;
+          opacity: 0.6;
         }
+      }
     }
+  }
 }
 
-/deep/ footer
-{
-    section{
-        // width:107% !important;
+.testApiBtn {
+  /deep/ .btnT-radial-in {
+    outline: none;
+    /* background-color: #c62770; */
+    color: #c62770;
+    border-color: #c62770;
+    box-shadow: none;
+    &:hover,
+    &:active,
+    &:focus {
+      color: #fff;
     }
+  }
 }
 
-.status-container{
-    margin: 1rem 0;
+/deep/ footer {
+  section {
+    // width:107% !important;
+  }
 }
 
-.status-hdr{
-    font-size: 12px;
-    text-align: left;
-    color: #5cae01;
-}
-.status-state-oval{
-    display: inline-block;
-    margin: -1px 4px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: #5cae01;
+.status-container {
+  margin: 1rem 0;
 }
 
-.inactive{
-    color: rgb(208, 1, 27);
-}
-.inactive-bg{
-    background: rgb(208, 1, 27);;
-}
-.servie-details-container{
-    display: inline-block;
-}
-.in-disclaimer{
-    display: none;
-    margin-bottom:-15px;
-    margin-top:0;
+.status-hdr {
+  font-size: 12px;
+  text-align: left;
+  color: #5cae01;
 }
 
+.status-state-oval {
+  display: inline-block;
+  margin: -1px 4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #5cae01;
+}
 
+.inactive {
+  color: rgb(208, 1, 27);
+}
 
+.inactive-bg {
+  background: rgb(208, 1, 27);
+  ;
+}
+
+.servie-details-container {
+  display: inline-block;
+}
+
+.in-disclaimer {
+  display: none;
+  margin-bottom: -15px;
+  margin-top: 0;
+}
 
 .tooltiptext {
-    display: none;
-    width: 120px;
-    background-color: black;
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px 0;
-    position: absolute;
-    z-index: 1;
-    bottom: 150%;
-    left: 50%;
-    margin-left: -60px;
+  display: none;
+  width: 120px;
+  background-color: black;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 150%;
+  left: 50%;
+  margin-left: -60px;
 }
 
 .tooltiptext::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    margin-left: -5px;
-    border-width: 5px;
-    border-style: solid;
-    border-color: black transparent transparent transparent;
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: black transparent transparent transparent;
 }
 
-
-.inactive-icon{
-    position: absolute;
-    top: -11px;
-    right: -11px;
+.inactive-icon {
+  position: absolute;
+  top: -11px;
+  right: -11px;
+  font-size: 1rem;
+  &:before {
     font-size: 1rem;
-    &:before{
-        font-size: 1rem;
-    }
+  }
 }
 
 .jazz-header[_ngcontent-bey-7] {
-    background: #2b343e;
-    height: 56px;
-    display: -webkit-box;
-    display: -ms-flexbox;
-    display: flex;
-    -webkit-box-align: center;
-    -ms-flex-align: center;
-    align-items: center;
-    padding: 0 2.4rem;
-    color: #fff;
-    font-size: 11px;
+  background: #2b343e;
+  height: 56px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  padding: 0 2.4rem;
+  color: #fff;
+  font-size: 11px;
 }

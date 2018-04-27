@@ -3,15 +3,15 @@ import { DayData, WeekData, MonthData, Month6Data, YearData } from './data';
 import { AfterViewInit } from '@angular/core';
 import { ToasterService} from 'angular2-toaster';
 import { RequestService, MessageService , AuthenticationService } from '../../core/services/index';
-import {DataCacheService } from '../../core/services/index';
+import { DataCacheService } from '../../core/services/index';
 import { Router, ActivatedRoute } from '@angular/router';
-import {IonRangeSliderModule} from "ng2-ion-range-slider"
-import {FilterTagsComponent} from '../../secondary-components/filter-tags/filter-tags.component';
-import {AdvancedFiltersComponent} from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
-import {AdvancedFilterService} from './../../advanced-filter.service';
-import {AdvFilters} from './../../adv-filter.directive';
-import {environment} from './../../../environments/environment';
-import {environment as env_internal} from './../../../environments/environment.internal';
+import { IonRangeSliderModule } from "ng2-ion-range-slider"
+import { FilterTagsComponent } from '../../secondary-components/filter-tags/filter-tags.component';
+import { AdvancedFiltersComponent } from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
+import { AdvancedFilterService } from './../../advanced-filter.service';
+import { AdvFilters } from './../../adv-filter.directive';
+import { environment } from './../../../environments/environment';
+import { environment as env_internal } from './../../../environments/environment.internal';
 
 
 

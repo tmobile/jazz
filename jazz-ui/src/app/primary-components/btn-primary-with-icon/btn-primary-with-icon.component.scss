@@ -1,36 +1,36 @@
 @import './../../../main-styles';
 button.btn-primary {
-    display:flex;
-    border-radius: 30px;
-    padding: 10px 16px;
-    height:2.7rem;
-    padding: 7px 16px;
-    letter-spacing: .3px;
-    background-color: #ed008c;
-    border: 1px solid #ed008c;
-    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
-    border: none;
-    font-size: 13px;
-    font-weight: 700;
-    img {
-        width: 10px;
-        height: 10px;
-        vertical-align: middle;
-        display: inline-block;
-        margin-right: 5px;
-    }
+  display: flex;
+  border-radius: 30px;
+  padding: 10px 16px;
+  height: 2.7rem;
+  padding: 7px 16px;
+  letter-spacing: .3px;
+  background-color: #ed008c;
+  border: 1px solid #ed008c;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  img {
+    width: 10px;
+    height: 10px;
+    vertical-align: middle;
+    display: inline-block;
+    margin-right: 5px;
+  }
 }
 
-.icon-icon-add{
-    margin:2px 5px 2px 0;
+.icon-icon-add {
+  margin: 2px 5px 2px 0;
 }
 
-.btn-text{
-    margin:1px 0;
+.btn-text {
+  margin: 1px 0;
 }
 
 button.btn-primary:hover,
 button.btn-primary:focus {
-    outline: none !important;
-    background-color: #ed008c;
+  outline: none !important;
+  background-color: #ed008c;
 }

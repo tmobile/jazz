@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { JazzHeaderComponent } from '../jazz-header/jazz-header.component'
-import {DataCacheService } from '../../core/services/index';
-import {environment} from './../../../environments/environment';
-import {environment as env_oss} from './../../../environments/environment.oss';
+import { DataCacheService } from '../../core/services/index';
+import { environment } from './../../../environments/environment';
+import { environment as env_oss } from './../../../environments/environment.oss';
 
 import {environment as env_internal} from './../../../environments/environment.internal';
 

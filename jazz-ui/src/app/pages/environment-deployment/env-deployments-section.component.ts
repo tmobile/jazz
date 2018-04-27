@@ -7,8 +7,8 @@ import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
 import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
 import { ToasterService } from 'angular2-toaster';
 declare var $:any;
-import {environment} from './../../../environments/environment.internal';
-import {environment as env_internal} from './../../../environments/environment.internal';
+import { environment } from './../../../environments/environment.internal';
+import { environment as env_internal } from './../../../environments/environment.internal';
 
 
 
@@ -53,7 +53,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
   deployment_id:any=[];
   length:any;
   status_val:number;
-  relativeUrl:string='/jazz/deployments'
+  relativeUrl:string='/jazz/deployments';
   status: any =[];
   buildNo:any =[];
   backupLogs:any=[];

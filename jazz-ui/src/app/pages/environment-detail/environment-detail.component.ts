@@ -8,8 +8,8 @@ import { Http, Headers, Response } from '@angular/http';
 import { Output, EventEmitter } from '@angular/core';
 import { AfterViewInit, ViewChild } from '@angular/core';
 import { DataService } from "../data-service/data.service";
-import {environment} from './../../../environments/environment';
-import {environment as env_internal} from './../../../environments/environment.internal';
+import { environment } from './../../../environments/environment';
+import { environment as env_internal } from './../../../environments/environment.internal';
 
 
 import { EnvDeploymentsSectionComponent} from './../environment-deployment/env-deployments-section.component';
@@ -67,42 +67,44 @@ breadcrumbs = [];
   
   onSelectedDr(selected){
     this.selectedTab = selected;
-}
+  }
 
   onTabSelected (i) {
     
     this.selectedTab = i;
   };
-EnvLoad(event){
-  this.environment_obj=event.environment[0];
-  this.status_val = parseInt(status[this.environment_obj.status]); 
+
+  EnvLoad(event){
+    this.environment_obj=event.environment[0];
+    this.status_val = parseInt(status[this.environment_obj.status]); 
     if((this.status_val < 2) || (this.status_val == 4) )
     {
       this.disablingApiButton=false;
     }
- 
+  
     this.status_inactive=true;
   }
 
-env(event){
-    this.endpoint_env=event;
-    if(this.endpoint_env != undefined ){
-    }
-}
-
-frndload(event){
-  if(event != undefined){
-    this.friendly_name = event;
+  env(event){
+      this.endpoint_env=event;
+      if(this.endpoint_env != undefined ){
+      }
   }
-  this.breadcrumbs = [{
-    'name' : this.service['name'],
-    'link' : 'services/' + this.service['id']
-},
-{
-  'name' : this.friendly_name,
-  'link' : ''
-}]
-}
+
+  frndload(event){
+    if(event != undefined){
+      this.friendly_name = event;
+    }
+    this.breadcrumbs = [{
+      'name' : this.service['name'],
+      'link' : 'services/' + this.service['id']
+    },
+    {
+      'name' : this.friendly_name,
+      'link' : ''
+    }];
+  }
+
   processService(service){
       if (service === undefined) {
           return {};
@@ -118,7 +120,6 @@ frndload(event){
           }
       }
   };
-
 
   onDataFetched(service) {
 

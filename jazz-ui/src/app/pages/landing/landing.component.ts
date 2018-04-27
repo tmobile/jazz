@@ -1,11 +1,11 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import {AuthenticationService} from '../../core/services/index';
-import { ToasterService} from 'angular2-toaster';
-import {DataCacheService } from '../../core/services/index';
-import {environment} from './../../../environments/environment';
+import { AuthenticationService } from '../../core/services/index';
+import { ToasterService } from 'angular2-toaster';
+import { DataCacheService } from '../../core/services/index';
+import { environment } from './../../../environments/environment';
 
-import {environment as env_internal} from './../../../environments/environment.internal';
+import { environment as env_internal } from './../../../environments/environment.internal';
 
 
 @Component({

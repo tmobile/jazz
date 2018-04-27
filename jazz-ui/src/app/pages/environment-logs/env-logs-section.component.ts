@@ -6,14 +6,14 @@ import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
 
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToasterService } from 'angular2-toaster';
-import {AdvancedFiltersComponent} from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
+import { AdvancedFiltersComponent } from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
 
 
 import { RequestService, MessageService, DataCacheService, AuthenticationService } from '../../core/services/index';
-import {AdvancedFilterService} from './../../advanced-filter.service';
-import {AdvFilters} from './../../adv-filter.directive';
-import {environment} from './../../../environments/environment';
-import {environment as env_internal} from './../../../environments/environment.internal';
+import { AdvancedFilterService } from './../../advanced-filter.service';
+import { AdvFilters } from './../../adv-filter.directive';
+import { environment } from './../../../environments/environment';
+import { environment as env_internal } from './../../../environments/environment.internal';
 
 @Component({
 	selector: 'env-logs-section',

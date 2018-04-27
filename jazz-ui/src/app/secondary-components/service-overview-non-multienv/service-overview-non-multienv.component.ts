@@ -3,7 +3,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RequestService, MessageService } from '../../core/services/index';
 import { ToasterService} from 'angular2-toaster';
-import {DOCUMENT} from "@angular/platform-browser";
+import { DOCUMENT } from "@angular/platform-browser";
 import { ConfigService } from '../../app.config';
 
  

@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core';
 import { RequestService , MessageService , AuthenticationService } from "../../core/services";
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpModule } from '@angular/http';
-import {DataCacheService } from '../../core/services/index';
+import { DataCacheService } from '../../core/services/index';
 import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
 import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
 import { ToasterService } from 'angular2-toaster';

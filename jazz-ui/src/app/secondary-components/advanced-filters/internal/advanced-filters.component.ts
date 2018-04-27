@@ -1,7 +1,7 @@
 import { Component,ViewContainerRef, OnInit, Input, Output, EventEmitter,ViewChild } from '@angular/core';
-import {DataCacheService } from '../../../core/services/index';
-import {IonRangeSliderModule} from "ng2-ion-range-slider";
-import {environment as env_internal} from './../../../../environments/environment.internal';
+import { DataCacheService } from '../../../core/services/index';
+import { IonRangeSliderModule } from "ng2-ion-range-slider";
+import { environment as env_internal } from './../../../../environments/environment.internal';
 
 
 @Component({

@@ -4,8 +4,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ToasterService} from 'angular2-toaster';
 import { DataService } from "../data-service/data.service";
 import { DataCacheService , AuthenticationService } from '../../core/services/index';
-import {environment} from './../../../environments/environment';
-import {environment as env_internal } from './../../../environments/environment.internal';
+import { environment } from './../../../environments/environment';
+import { environment as env_internal } from './../../../environments/environment.internal';
 
 @Component({
   selector: 'env-overview-section',

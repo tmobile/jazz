@@ -7,7 +7,7 @@ import * as d3Array from "d3-array";
 import * as d3Format from "d3-time-format";
 import * as d3Time from "d3-time";
 import * as d3Axis from "d3-axis";
-import {DataCacheService } from '../../core/services/index';
+import { DataCacheService } from '../../core/services/index';
 
 @Component({
   selector: 'line-graph',

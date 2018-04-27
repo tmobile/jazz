@@ -5,7 +5,7 @@
 */
 
 import { Component, OnInit, Input, Output, EventEmitter  } from '@angular/core';
-import {environment} from './../../../environments/environment';
+import { environment } from './../../../environments/environment';
  
 @Component({
   selector: 'tabs',

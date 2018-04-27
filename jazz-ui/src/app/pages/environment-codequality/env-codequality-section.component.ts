@@ -8,8 +8,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { IonRangeSliderModule } from "ng2-ion-range-slider";
 import { setTimeout } from 'timers';
 import { DataService } from "../data-service/data.service";
-import {environment} from './../../../environments/environment.internal';
-import {environment as env_internal} from './../../../environments/environment.internal';
+import { environment } from './../../../environments/environment.internal';
+import { environment as env_internal } from './../../../environments/environment.internal';
 
 
 

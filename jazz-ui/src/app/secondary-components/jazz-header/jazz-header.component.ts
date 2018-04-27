@@ -8,9 +8,9 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthenticationService, MessageService, RequestService } from '../../core/services/index';
 import { ToasterService} from 'angular2-toaster';
-import {environment} from './../../../environments/environment';
-import {environment as env_oss} from './../../../environments/environment.oss';
-import {environment as env_internal} from './../../../environments/environment.internal';
+import { environment } from './../../../environments/environment';
+import { environment as env_oss } from './../../../environments/environment.oss';
+import { environment as env_internal } from './../../../environments/environment.internal';
 
 
 

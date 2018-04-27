@@ -4,19 +4,19 @@
   * @author
 */
 
-import { Component, OnInit, EventEmitter, Output, ViewChild} from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, ViewChild } from '@angular/core';
 import { ToasterService} from 'angular2-toaster';
 import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
 import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
 import { SharedService } from "../../SharedService.service";
-import { RequestService, DataCacheService, MessageService ,AuthenticationService} from "../../core/services";
+import { RequestService, DataCacheService, MessageService ,AuthenticationService } from "../../core/services";
 import { Router, ActivatedRoute } from '@angular/router';
 import 'rxjs/Rx';
-import {Observable} from 'rxjs/Rx';
+import { Observable } from 'rxjs/Rx';
 import { Subscription } from 'rxjs/Subscription';
 import { FilterTagsServicesComponent } from '../../secondary-components/filter-tags-services/filter-tags-services.component';
-import { TableTemplateComponent} from '../../secondary-components/table-template/table-template.component';
-import {SearchBoxComponent} from './../../primary-components/search-box/search-box.component';
+import { TableTemplateComponent } from '../../secondary-components/table-template/table-template.component';
+import { SearchBoxComponent } from './../../primary-components/search-box/search-box.component';
 
 declare var $:any;
 

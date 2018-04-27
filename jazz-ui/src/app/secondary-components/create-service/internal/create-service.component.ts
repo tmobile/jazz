@@ -17,7 +17,7 @@ import { RequestService, DataCacheService, MessageService, AuthenticationService
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component"
-import {environment as env_internal} from './../../../../environments/environment.internal';
+import { environment as env_internal } from './../../../../environments/environment.internal';
 
 @Component({
   selector: 'create-service',

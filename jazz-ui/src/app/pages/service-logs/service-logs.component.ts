@@ -1,17 +1,17 @@
 import { Component, OnInit, ComponentFactoryResolver, ReflectiveInjector, ElementRef ,EventEmitter, Output, Inject, Input,ViewChild} from '@angular/core';
 import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
 import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
-import { ToasterService} from 'angular2-toaster';
+import { ToasterService } from 'angular2-toaster';
 import { RequestService, MessageService } from '../../core/services/index';
-import {FilterTagsComponent} from '../../secondary-components/filter-tags/filter-tags.component';
+import { FilterTagsComponent } from '../../secondary-components/filter-tags/filter-tags.component';
 import { AfterViewInit } from '@angular/core';
 import { AuthenticationService } from '../../core/services/index';
-import {DataCacheService } from '../../core/services/index';
-import {AdvancedFiltersComponent} from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
-import {AdvancedFilterService} from './../../advanced-filter.service';
-import {AdvFilters} from './../../adv-filter.directive';
-import {environment} from './../../../environments/environment';
-import {environment as env_internal} from './../../../environments/environment.internal';
+import { DataCacheService } from '../../core/services/index';
+import { AdvancedFiltersComponent } from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
+import { AdvancedFilterService } from './../../advanced-filter.service';
+import { AdvFilters } from './../../adv-filter.directive';
+import { environment } from './../../../environments/environment';
+import { environment as env_internal } from './../../../environments/environment.internal';
 
 
 

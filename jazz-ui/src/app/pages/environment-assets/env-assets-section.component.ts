@@ -2,13 +2,13 @@ import { Component, OnInit, ComponentFactoryResolver, ReflectiveInjector, Elemen
 import { RequestService } from "../../core/services";
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpModule } from '@angular/http';
-import {DataCacheService , AuthenticationService } from '../../core/services/index';
-import {FilterTagsComponent} from '../../secondary-components/filter-tags/filter-tags.component';
-import {AdvancedFiltersComponent} from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
-import {AdvancedFilterService} from './../../advanced-filter.service';
-import {AdvFilters} from './../../adv-filter.directive';
-import {environment} from './../../../environments/environment.internal';
-import {environment as env_internal} from './../../../environments/environment.internal';
+import { DataCacheService , AuthenticationService } from '../../core/services/index';
+import { FilterTagsComponent } from '../../secondary-components/filter-tags/filter-tags.component';
+import { AdvancedFiltersComponent } from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
+import { AdvancedFilterService } from './../../advanced-filter.service';
+import { AdvFilters } from './../../adv-filter.directive';
+import { environment } from './../../../environments/environment.internal';
+import { environment as env_internal } from './../../../environments/environment.internal';
 
 
 

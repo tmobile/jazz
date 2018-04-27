@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import {DataCacheService } from '../../core/services/index';
+import { DataCacheService } from '../../core/services/index';
 
 
 @Component({

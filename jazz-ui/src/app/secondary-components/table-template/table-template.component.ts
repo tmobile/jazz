@@ -1,10 +1,10 @@
 import { Component, OnInit, Input, ElementRef, Renderer, Output, EventEmitter } from '@angular/core';
-import {DataCacheService , AuthenticationService , RequestService } from '../../core/services/index';
+import { DataCacheService , AuthenticationService , RequestService } from '../../core/services/index';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ViewChild } from '@angular/core/src/metadata/di';
-import {DropdownComponent} from './../../primary-components/dropdown/dropdown.component';
+import { DropdownComponent } from './../../primary-components/dropdown/dropdown.component';
 import { environment } from './../../../environments/environment.oss';
-import { environment as env_internal} from './../../../environments/environment.internal';
+import { environment as env_internal } from './../../../environments/environment.internal';
 // import { Sort } from './jazz-table-sort';
 
 @Component({

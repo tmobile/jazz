@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RequestService, DataCacheService, MessageService } from '../../core/services';
 import { Router, ActivatedRoute, Params } from '@angular/router';
 import 'rxjs/Rx';
-import {Observable} from 'rxjs/Rx';
+import { Observable } from 'rxjs/Rx';
 import { Subscription } from 'rxjs/Subscription';
 import { ToasterService} from 'angular2-toaster';
 
