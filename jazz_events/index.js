@@ -61,22 +61,21 @@ module.exports.handler = (event, context, cb) => {
 		if (event && event.method && event.method === 'POST') {
 
 			generalInputValidation(event)
-				.then(() => validateEventInput(config, event.body, dynamodb))
-				.then(() => storeEventData(config, event.body, kinesis))
-				.then((result) => {
-					logger.info("POST result:" + JSON.stringify(result));
-					return cb(null, result);
-				})
-				.catch((error) => {
-					logger.error(JSON.stringify(error));
-					if (error.code && error.code === 400) {
-						return cb(JSON.stringify(errorHandler.throwInputValidationError("Bad request. message: " + error.message)));
-					} else {
-						return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + error.message)));
-					}
-				})
+			.then(() => validateEventInput(config, event.body, dynamodb))
+			.then(() => storeEventData(config, event.body, kinesis))
+			.then((result) => {
+				logger.info("POST result:" + JSON.stringify(result));
+				return cb(null, result);
+			})
+			.catch((error) => {
+				logger.error(JSON.stringify(error));
+				if (error.code && error.code === 400) {
+					return cb(JSON.stringify(errorHandler.throwInputValidationError("Bad request. message: " + error.message)));
+				} else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + error.message)));
+				}
+			})
 		}
-
 	} catch (e) {
 		logger.error(e);
 		return cb(JSON.stringify(errorHandler.throwInternalServerError(e)));
@@ -110,9 +109,6 @@ function getEvents(event, config, dynamodb) {
 					attributeValues[":SERVICE_NAME"] = {
 						'S': event.query[key]
 					};
-				} else {
-					//do nothing because we only support username, service_name, and last_evaluated_key for now
-
 				}
 			});
 
@@ -140,22 +136,22 @@ function getEvents(event, config, dynamodb) {
 function mapGetEventData(result, event) {
 	logger.info("Inside mapGetEventData:" + JSON.stringify(result));
 	return new Promise((resolve, reject) => {
-		var events = [];
+		var events = [],
+		map = {
+			'SERVICE_CONTEXT': 'service_context',
+			'EVENT_HANDLER': 'event_handler',
+			'EVENT_NAME': 'event_name',
+			'SERVICE_NAME': 'service_name',
+			'EVENT_TYPE': 'event_type',
+			'EVENT_STATUS': 'event_status',
+			'USERNAME': 'username',
+			'EVENT_TIMESTAMP': 'event_timestamp'
+		};
 		if (result && result.Items) {
 			result.Items.map((itemList) => {
 				var event = {};
 				Object.keys(itemList).map((key) => {
 					if (!itemList[key].NULL) {
-						var map = {
-							'SERVICE_CONTEXT': 'service_context',
-							'EVENT_HANDLER': 'event_handler',
-							'EVENT_NAME': 'event_name',
-							'SERVICE_NAME': 'service_name',
-							'EVENT_TYPE': 'event_type',
-							'EVENT_STATUS': 'event_status',
-							'USERNAME': 'username',
-							'EVENT_TIMESTAMP': 'event_timestamp'
-						};
 						if (itemList[key]) {
 							event[map[key]] = itemList[key].S;
 						} else {
