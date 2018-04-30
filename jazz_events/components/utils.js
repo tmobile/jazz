@@ -27,25 +27,24 @@ const logger = require("./logger.js");
 // Helper functions
 
 var initDynamodb = function () {
-    // AWS.config.update({
-    //     region: global.config.ddb_region
-    // });
+    AWS.config.update({
+        region: global.config.ddb_region
+    });
     var dynamodb = new AWS.DynamoDB();
 
     return dynamodb;
 };
 
 var initKinesis = function () {
-    // AWS.config.update({
-    //     region: global.config.ddb_region
-    // });
+    AWS.config.update({
+        region: global.config.ddb_region
+    });
     var kinesis = new AWS.Kinesis();
 
     return kinesis;
 };
 
 module.exports = () => {
-    logger.info("Inside utils");
     return {
         initDynamodb: initDynamodb,
         initKinesis: initKinesis

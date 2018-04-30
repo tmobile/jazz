@@ -4,5 +4,6 @@
   "event_type_table": "{conf_stack_prefix}_Event_Type_Prod",
   "event_name_table": "{conf_stack_prefix}_Event_Name_Prod",
   "event_status_table": "{conf_stack_prefix}_Event_Status_Prod",
-  "event_hub":"{conf_stack_prefix}-events-hub-prod"
+  "event_hub":"{conf_stack_prefix}-events-hub-prod",
+  "ddb_region":"{conf-region}"
 }

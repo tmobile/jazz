@@ -21,18 +21,19 @@ Nodejs Template Project
  **/
 
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
-const validateUtils = require("./components/validation")();//Import the validation module.
+const validateUtils = require("./components/validation")(); //Import the validation module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const utils = require("./components/utils.js")();//Import the utils module.
-const crud = require("./components/crud")();//Import the crud module.
+const utils = require("./components/utils.js")(); //Import the utils module.
+const crud = require("./components/crud")(); //Import the crud module.
 
 var handler = (event, context, cb) => {
 	//Initializations
 	var errorHandler = errorHandlerModule();
 	var config = configObj(event);
 	logger.init(event, context);
+	global.config = config;
 
 	try {
 		//GET Handler
@@ -43,11 +44,12 @@ var handler = (event, context, cb) => {
 					return cb(null, result);
 				})
 				.catch((error) => {
-					logger.error(error)
+					logger.error(error);
 					if (error.result === "inputError") {
 						return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
 					} else {
-						return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + err.message)))
+						logger.info(error);
+						return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + error.message)));
 					}
 				});
 		}
@@ -56,20 +58,19 @@ var handler = (event, context, cb) => {
 		if (event && event.method && event.method === 'POST') {
 
 			generalInputValidation(event)
-			.then(() => validateEventInput(config, event.body))
-			.then(() => storeEventData(config, event.body))
-			.then((result) => {
-				logger.info("POST result:" + JSON.stringify(result));
-				return cb(null, result);
-			})
-			.catch((error) => {
-				logger.error(JSON.stringify(error));
-				if (error.code && error.code === 400) {
-					return cb(JSON.stringify(errorHandler.throwInputValidationError("Bad request. message: " + error.message)));
-				} else {
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + error.message)));
-				}
-			})
+				.then(() => validateEventInput(config, event.body))
+				.then(() => storeEventData(config, event.body))
+				.then((result) => {
+					return cb(null, result);
+				})
+				.catch((error) => {
+					logger.error(JSON.stringify(error));
+					if (error.code && error.code === 400) {
+						return cb(JSON.stringify(errorHandler.throwInputValidationError("Bad request. message: " + error.message)));
+					} else {
+						return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + error.message)));
+					}
+				})
 		}
 	} catch (e) {
 		logger.error(e);
@@ -83,9 +84,9 @@ var getEvents = (event, config) => {
 	logger.info("Inside getEvents:")
 	return new Promise((resolve, reject) => {
 		crud.getList(config.events_table, event.query, (error, data) => {
-			if(error){
+			if (error) {
 				reject(error);
-			} else{
+			} else {
 				resolve(data);
 			}
 		});
@@ -96,16 +97,16 @@ var mapGetEventData = (result, event) => {
 	logger.info("Inside mapGetEventData:" + JSON.stringify(result));
 	return new Promise((resolve, reject) => {
 		var events = [],
-		map = {
-			'SERVICE_CONTEXT': 'service_context',
-			'EVENT_HANDLER': 'event_handler',
-			'EVENT_NAME': 'event_name',
-			'SERVICE_NAME': 'service_name',
-			'EVENT_TYPE': 'event_type',
-			'EVENT_STATUS': 'event_status',
-			'USERNAME': 'username',
-			'EVENT_TIMESTAMP': 'event_timestamp'
-		};
+			map = {
+				'SERVICE_CONTEXT': 'service_context',
+				'EVENT_HANDLER': 'event_handler',
+				'EVENT_NAME': 'event_name',
+				'SERVICE_NAME': 'service_name',
+				'EVENT_TYPE': 'event_type',
+				'EVENT_STATUS': 'event_status',
+				'USERNAME': 'username',
+				'EVENT_TIMESTAMP': 'event_timestamp'
+			};
 		if (result && result.Items) {
 			result.Items.map((itemList) => {
 				var event = {};
@@ -208,9 +209,9 @@ var validateEventInput = (config, eventBody) => {
 	logger.info("Inside validateEventInput:")
 	return new Promise((resolve, reject) => {
 		validateUtils.validateEventData(config, eventBody, (error, data) => {
-			if(error){
+			if (error) {
 				reject(error);
-			} else{
+			} else {
 				resolve(data);
 			}
 		});
@@ -221,7 +222,7 @@ var storeEventData = (config, eventBody) => {
 	logger.info("Inside storeEventData:");
 	return new Promise((resolve, reject) => {
 		crud.create(config.event_hub, eventBody, (error, data) => {
-			if(error){
+			if (error) {
 				reject(error);
 			} else {
 				resolve(responseObj(data, eventBody));

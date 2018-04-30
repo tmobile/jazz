@@ -43,8 +43,6 @@ function getDynamodbItem(params, eventData) {
 	logger.info("Inside getDynamodbItem:" + eventData);
 	return new Promise((resolve, reject) => {
 		crud.get(params, eventData, (error, data) => {
-			logger.info("crud.get Error:"+JSON.stringify(error));
-			logger.info("crud.get data:"+JSON.stringify(data))
 			if(error){
 				reject(error);
 			} else{

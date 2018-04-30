@@ -30,8 +30,6 @@ module.exports = (params, eventData, onComplete) => {
     var dynamodb = utils.initDynamodb();
 
     dynamodb.getItem(params, (err, data) => {
-        logger.info("getItem error:"+JSON.stringify(err));
-        logger.info("getItem data:"+JSON.stringify(data));
         if (err) {
             logger.error("error reading event data from database " + err.message);
             onComplete({
