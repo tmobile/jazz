@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // =========================================================================
+'use strict';
 
 const chai = require('chai');
 const assert = require('chai').assert;
@@ -68,7 +69,7 @@ describe('jazz environment handler tests: ', () => {
 
 		let verified = rp(getTokenRequest)
 			.then(res => {
-				let status = res.statusCode
+				let status = res.statusCode;
 				expect(status, "Error code is not 401/Unauthorized").to.eql(401);
 				sinon.assert.calledOnce(requestPromiseStub);
 			});
