@@ -1435,6 +1435,10 @@
                     "type": "string",
                     "description": "Service metadata imformation"
                 },
+                "is_public_endpoint":{
+                    "type": "Boolean",
+                    "description": "public endpoint imformation"
+                },
                 "tags": {
                     "type": "array",
                     "items": {
@@ -1513,6 +1517,10 @@
 				"metadata":{
                     "type": "string",
                     "description": "Service metadata imformation"
+                },
+                "is_public_endpoint":{
+                    "type": "Boolean",
+                    "description": "public endpoint imformation"
                 },
                 "tags": {
                     "type": "array",
