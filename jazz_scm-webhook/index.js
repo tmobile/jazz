@@ -234,7 +234,8 @@ var gitlabScmContextDetails = function(eventKey, body, config){
 			result.event_name = 'COMMENT_PR';
 			resolve(result);
 		} else if (eventKey === 'push'|| eventKey === 'tag_push'){
-			result.branch = body.ref;
+			var ref = body.ref.split('/');
+			result.branch = ref[2];
 			
 			if( body.before && parseInt(body.before, 10) === 0) {
 				if(eventKey === 'tag_push'){
