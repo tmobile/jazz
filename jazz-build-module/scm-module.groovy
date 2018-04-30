@@ -169,7 +169,7 @@ def setRepoPermissions(repo_owner, repo_name, admin_group) {
 def addWebhook(repo_name, webhookName, scm_webhook_target_url) {
     if (config_loader.SCM.TYPE == "gitlab") {
         def proj_id = getGitLabsProjectId(repo_name)
-        def scm_webhook_api = "${scm_protocol}${config_loader.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/hooks?enable_ssl_verification=false&push_events=true&tag_push_events=true&note_events=true&merge_requests_events=true&url="
+        def scm_webhook_api = "${scm_protocol}${config_loader.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/hooks?enable_ssl_verification=false&push_events=true&url="
         sh "curl --header \"Private-Token: ${config_loader.SCM.PRIVATE_TOKEN}\" -X POST \"${scm_webhook_api}$scm_webhook_target_url\""
     } else if (config_loader.SCM.TYPE == "bitbucket") {
         def scm_webhook_api = "${scm_protocol}${config_loader.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${config_loader.REPOSITORY.REPO_BASE_SERVICES}/repos/"
