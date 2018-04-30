@@ -86,8 +86,8 @@
       </div>          
   </div>
 
-  <div *ngIf='noStg && !isenvLoading && !is_multi_env' class='empty-row stage-wrp active'>No Data <br> Available</div>
-  <div *ngIf='!noStg && !is_multi_env' class="stage-wrp active"  (click)="stageClicked(stgEnv.logical_id)">        
+  <div *ngIf='noStg && !isenvLoading' class='empty-row stage-wrp active'>No Data <br> Available</div>
+  <div *ngIf='!noStg' class="stage-wrp active"  (click)="stageClicked(stgEnv.logical_id)">        
       <div class="stage-title stageDisp">{{stgEnv.logical_id}} 
           <span class='icon-icon-rightArrow right-arow'></span>        
       </div>

@@ -58,7 +58,7 @@
 
 <div class="service-details row env-details relative">
 	<div *ngIf='envResponseTrue'>
-		<div  *ngIf='!isOSS' class='edit-service-overview-btn'>
+		<div   class='edit-service-overview-btn'>
 			<!-- <btn-jazz-secondary class='btn-edit-overview' *ngIf='showCancel'  text='CANCEL' (click)='onCancelClick()' ></btn-jazz-secondary> -->
 			<a  *ngIf='showCancel'  (click)='onCancelClick()'>CANCEL</a>
 			<btn-jazz-secondary [disablebtn]='(status_val > 4) || (status_val == 3) || branchname == "master"' class='btn-edit-overview'  *ngIf="editBtn" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
@@ -66,7 +66,7 @@
 			<!-- [style.borders]="edit_save=='SAVE'? 'none':'1px solid'"  -->
 		</div>
 		<!-- <br> -->
-		<div class='overview-view' *ngIf="editBtn && !isOSS">
+		<div class='overview-view' *ngIf="editBtn">
 			<ul class="section-left col-md-6 col-sm-12">
 				<li>
 					<div class="det-label">Deployment status</div>
@@ -130,22 +130,8 @@
 				</li>
 			</ul>
 		</div>
-		<div class='overview-view' *ngIf="isOSS">
-				<ul class="section-left col-md-6 col-sm-12">
-					<li>
-						<div class="det-label">Description</div>
-						<div class="det-value desc" >Sample Description</div>
-					</li>
-					
-				</ul>
-				<ul class="section-right col-md-6 col-sm-12">
-					<li>
-						<div class="det-label">Endpoint</div>
-						<div class="det-value"></div>
-					</li>
-				</ul>
-		</div>
-		<div class='overiew-edit' *ngIf="!editBtn  && !isOSS">
+		
+		<div class='overiew-edit' *ngIf="!editBtn">
 			<ul class="section-left col-md-6 col-sm-12">
 				<li>
 					<div class="det-label">Deployment status</div>

@@ -11,7 +11,7 @@ import { environment as env_internal } from './../../../../environments/environm
 export class AdvancedFiltersComponentOSS implements OnInit {
    
 
-    constructor(public viewContainerRef: ViewContainerRef) { }
+    constructor(public viewContainerRef: ViewContainerRef, private cache: DataCacheService) { }
     data:any;
     @Input() advanced_filter_input:any = {};
     @Input() logs:boolean = false;
@@ -175,6 +175,10 @@ export class AdvancedFiltersComponentOSS implements OnInit {
 
    
     ngOnInit(){
+        var env_list=this.cache.get('envList')
+        if(env_list != undefined)
+            this.envList=env_list.friendly_name;
+
         this.advanced_filter_input = this.data.advanced_filter_input;
         this.service = this.data.service;
     }

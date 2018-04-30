@@ -426,18 +426,15 @@ export class ServiceOverviewMultienvComponent implements OnInit {
         ngOnInit() {
             if(environment.multi_env) this.is_multi_env=true;
             if(environment.envName == 'oss') this.internal_build = false;
-            var obj;
-        
+            var obj;       
 
             this.prodEnv={};
             this.stgEnv={};
-            if((this.service.domain!=undefined) && (this.internal_build == true)){
+            if((this.service.domain!=undefined)){
                 this.getenvData();
                 
             }
-            if(!this.internal_build){
-                this.envfoross();
-            }
+            
     }
 
     testingStatus(){
@@ -469,41 +466,7 @@ export class ServiceOverviewMultienvComponent implements OnInit {
         }
         arrEnv[0].status.replace("_"," ");
     }
-    envfoross(){
-    //   alert('s')
-        var url_multi_env = 'https://api.myjson.com/bins/k6qvn';
-        // url_multi_env = 'https://api.myjson.com/bins/ebv23';
-
-        var url_dev_prod = 'https://api.myjson.com/bins/vhzdf';
-        var chosen_url;
-        if(environment.multi_env){
-            chosen_url = url_multi_env;
-        }
-        else{
-            chosen_url = url_dev_prod;
-        }
-
-
-        this.http.get(chosen_url).subscribe(
-            response => {
-                this.transform_env_oss(response);
-                
-                  
-              },
-              err => {
-                // this.isenvLoading=false;
-                
-                
-            });
-        
-        // va
-        
-        
     
-    }
-
-  
-
     internal_build:boolean = true;
     ngOnChanges(x:any){
         if(environment.multi_env) this.is_multi_env=true;
@@ -512,26 +475,15 @@ export class ServiceOverviewMultienvComponent implements OnInit {
       
         this.prodEnv={};
         this.stgEnv={};
-        if((this.service.domain!=undefined) && (this.internal_build == true)){
+        if((this.service.domain!=undefined)){
             this.getenvData();
             
         }
-        if(!this.internal_build){
-            this.envfoross();
-        }
-        
-     
-
-
-       
-        
-        
+         
     }
     ngOnDestroy() {
         
     }
-
-
 
     public goToAbout(hash){
         this.router.navigateByUrl('landing');

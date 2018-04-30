@@ -212,12 +212,8 @@ popup(state){
 
 }
    callServiceEnv() {
-    if(environment.envName == 'oss'){
-    this.isLoading = false;
-    this.envResponseTrue = true;
-
-    }
-    if(environment.envName != 'oss'){
+    
+    
     if ( this.subscription ) {
       this.subscription.unsubscribe();
     }
@@ -243,16 +239,11 @@ popup(state){
 
             this.envstatus = deployment_status[this.status_val].replace("_"," ");
 
- 
-
-           
-            
             var envResponse = response.data.environment[0];
             this.friendlyName = envResponse.friendly_name
             this.branchname = envResponse.physical_id;
             this.lastCommitted = envResponse.last_updated;
             this.frndload.emit(this.friendlyName);
-
 
             this.formatLastCommit();               
             
@@ -277,11 +268,8 @@ popup(state){
           this.errorAPI = env_internal.baseurl+"/jazz/environment/"+this.env;
           this.errorRequest = payload;
           this.errorUser = this.authenticationservice.getUserId();
-          this.errorResponse = JSON.parse(error._body);
-  
+          this.errorResponse = JSON.parse(error._body);  
       })
-    }
-    
     };
   
     getTime() {

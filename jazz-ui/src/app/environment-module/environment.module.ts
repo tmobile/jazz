@@ -41,3 +41,8 @@ import { AdvancedFilterService } from '../advanced-filter.service';
   ],
   providers: [AdvancedFilterService],
 })
+
+export class EnvironmentModule {
+  constructor(){
+  }
+}
