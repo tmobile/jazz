@@ -21,28 +21,23 @@ Nodejs Template Project
  **/
 
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
+const validateUtils = require("./components/validation")();//Import the validation module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
+const utils = require("./components/utils.js")();//Import the utils module.
+const crud = require("./components/crud")();//Import the crud module.
 
-const AWS = require('aws-sdk');
-const async = require('async');
-const Uuid = require("uuid/v4");
-const moment = require('moment');
-const dateFormat = 'YYYY-MM-DDTHH:mm:ss:SSS';
-
-module.exports.handler = (event, context, cb) => {
+var handler = (event, context, cb) => {
 	//Initializations
 	var errorHandler = errorHandlerModule();
 	var config = configObj(event);
 	logger.init(event, context);
-	const dynamodb = new AWS.DynamoDB();
-	const kinesis = new AWS.Kinesis();
 
 	try {
 		//GET Handler
 		if (event && event.method && event.method === 'GET') {
-			getEvents(event, config, dynamodb)
+			getEvents(event, config)
 				.then((result) => mapGetEventData(result, event))
 				.then((result) => {
 					return cb(null, result);
@@ -61,8 +56,8 @@ module.exports.handler = (event, context, cb) => {
 		if (event && event.method && event.method === 'POST') {
 
 			generalInputValidation(event)
-			.then(() => validateEventInput(config, event.body, dynamodb))
-			.then(() => storeEventData(config, event.body, kinesis))
+			.then(() => validateEventInput(config, event.body))
+			.then(() => storeEventData(config, event.body))
 			.then((result) => {
 				logger.info("POST result:" + JSON.stringify(result));
 				return cb(null, result);
@@ -84,56 +79,20 @@ module.exports.handler = (event, context, cb) => {
 
 };
 
-function getEvents(event, config, dynamodb) {
+var getEvents = (event, config) => {
 	logger.info("Inside getEvents:")
 	return new Promise((resolve, reject) => {
-		var filter = "";
-		var attributeValues = {};
-
-		var scanparams = {
-			"TableName": config.events_table,
-			"ReturnConsumedCapacity": "TOTAL",
-			"Limit": "500"
-		};
-		if (event.query && event.query && Object.keys(event.query).length) {
-			Object.keys(event.query).map((key) => {
-				if (key === "last_evaluated_key") {
-					scanparams.ExclusiveStartKey = event.query[key];
-				} else if (key === "username") {
-					filter = filter + "USERNAME = :USERNAME AND ";
-					attributeValues[":USERNAME"] = {
-						'S': event.query[key]
-					};
-				} else if (key === "service_name") {
-					filter = filter + "SERVICE_NAME = :SERVICE_NAME AND ";
-					attributeValues[":SERVICE_NAME"] = {
-						'S': event.query[key]
-					};
-				}
-			});
-
-			if (!filter) {
-				reject(null);
+		crud.getList(config.events_table, event.query, (error, data) => {
+			if(error){
+				reject(error);
+			} else{
+				resolve(data);
 			}
-			scanparams.FilterExpression = filter.substring(0, filter.length - 5);
-			scanparams.ExpressionAttributeValues = attributeValues;
-			dynamodb.scan(scanparams, (err, items) => {
-				if (err) {
-					logger.error("error in dynamodb scan");
-					logger.error(err);
-					reject(err);
-
-				} else {
-					resolve(items);
-				}
-			});
-		} else {
-			reject(null);
-		}
+		});
 	});
 }
 
-function mapGetEventData(result, event) {
+var mapGetEventData = (result, event) => {
 	logger.info("Inside mapGetEventData:" + JSON.stringify(result));
 	return new Promise((resolve, reject) => {
 		var events = [],
@@ -183,7 +142,7 @@ function mapGetEventData(result, event) {
 	});
 }
 
-function generalInputValidation(event) {
+var generalInputValidation = (event) => {
 	logger.info("Inside generalInputValidation:")
 	return new Promise((resolve, reject) => {
 		var eventBody = event.body;
@@ -245,219 +204,36 @@ function generalInputValidation(event) {
 	});
 }
 
-function validateEventInput(config, eventBody, dynamodb) {
+var validateEventInput = (config, eventBody) => {
 	logger.info("Inside validateEventInput:")
 	return new Promise((resolve, reject) => {
-		var funList = [validateEventType(config, eventBody, dynamodb), validateEventName(config, eventBody, dynamodb), validateEventHandler(config, eventBody, dynamodb), validateEventStatus(config, eventBody, dynamodb), validateTimestamp(eventBody)];
-		Promise.all(funList)
-			.then(() => {
-				resolve()
-			})
-			.catch((error) => {
-				reject(error)
-			})
-	});
-}
-
-function getDynamodbItem(dynamodb, params, eventData) {
-	logger.info("Inside getDynamodbItem:" + JSON.stringify(params));
-	return new Promise((resolve, reject) => {
-		dynamodb.getItem(params, (err, data) => {
-			if (err) {
-				logger.error("error reading event data from database " + err.message);
-				reject({
-					"code": 500,
-					"message": "error reading event data from database " + err.message
-				});
-			} else {
-				if (!data || !data.Item) {
-					logger.error("Invalid event data. " + eventData);
-					reject({
-						"code": 400,
-						"message": "Invalid event data. " + eventData
-					});
-				} else {
-					resolve(data.Item);
-				}
+		validateUtils.validateEventData(config, eventBody, (error, data) => {
+			if(error){
+				reject(error);
+			} else{
+				resolve(data);
 			}
 		});
-	})
-}
-
-function validateEventType(config, eventBody, dynamodb) {
-	logger.info("Inside validateEventType:")
-	return new Promise((resolve, reject) => {
-		var event_type_params = {
-			Key: {
-				"EVENT_TYPE": {
-					S: eventBody.event_type
-				}
-			},
-			TableName: config.event_type_table
-		};
-		getDynamodbItem(dynamodb, event_type_params, eventBody.event_type)
-			.then((result) => {
-				resolve(result);
-			})
-			.catch((error) => {
-				reject(error);
-			});
 	});
 }
 
-function validateEventName(config, eventBody, dynamodb) {
-	logger.info("Inside validateEventName:");
-	return new Promise((resolve, reject) => {
-		var event_name_params = {
-			Key: {
-				"EVENT_NAME": {
-					S: eventBody.event_name
-				}
-			},
-			TableName: config.event_name_table
-		};
-		getDynamodbItem(dynamodb, event_name_params, eventBody.event_name)
-			.then((result) => {
-				resolve(result);
-			})
-			.catch((error) => {
-				reject(error);
-			})
-	});
-}
-
-function validateEventHandler(config, eventBody, dynamodb) {
-	logger.info("Inside validateEventHandler:");
-	return new Promise((resolve, reject) => {
-		var event_handler_params = {
-			Key: {
-				"EVENT_HANDLER": {
-					S: eventBody.event_handler
-				}
-			},
-			TableName: config.event_handler_table
-		};
-		getDynamodbItem(dynamodb, event_handler_params, eventBody.event_handler)
-			.then((result) => {
-				resolve(result);
-			})
-			.catch((error) => {
-				reject(error);
-			})
-	});
-}
-
-function validateEventStatus(config, eventBody, dynamodb) {
-	logger.info("Inside validateEventStatus:");
-	return new Promise((resolve, reject) => {
-		var event_status_params = {
-			Key: {
-				"EVENT_STATUS": {
-					S: eventBody.event_status
-				}
-			},
-			TableName: config.event_status_table
-		};
-		getDynamodbItem(dynamodb, event_status_params, eventBody.event_status)
-			.then((result) => {
-				resolve(result);
-			})
-			.catch((error) => {
-				reject(error);
-			})
-	});
-}
-
-function validateTimestamp(eventBody) {
-	logger.info("Inside validateTimestamp:");
-	return new Promise((resolve, reject) => {
-		try {
-			if (moment(eventBody.event_timestamp, dateFormat, true).isValid()) {
-				resolve(eventBody.event_timestamp);
-			} else {
-				reject({
-					"code": 400,
-					"message": "Invalid EVENT TIMESTAMP: " + eventBody.event_timestamp + ", The format should be " + dateFormat
-				});
-			}
-		} catch (err) {
-			reject({
-				"code": 500,
-				"message": "Error parsing EVENT TIMESTAMP: " + eventBody.event_timestamp + ", The format should be " + dateFormat
-			});
-		}
-	});
-}
-
-function storeEventData(config, eventBody, kinesis) {
+var storeEventData = (config, eventBody) => {
 	logger.info("Inside storeEventData:");
 	return new Promise((resolve, reject) => {
-		var event_id = Uuid(),
-		timestamp = moment().utc().format(dateFormat),
-		map = {
-			'event_name': 'EVENT_NAME',
-			'event_handler': 'EVENT_HANDLER',
-			'service_name': 'SERVICE_NAME',
-			'event_status': 'EVENT_STATUS',
-			'event_type': 'EVENT_TYPE',
-			'username': 'USERNAME',
-			'event_timestamp': 'EVENT_TIMESTAMP'
-		},
-		event_params = {
-			Item: {
-				"EVENT_ID": {
-					S: event_id
-				},
-				"TIMESTAMP": {
-					S: timestamp
-				}
-			}
-		};
-
-		Object.keys(eventBody).map((key) => {
-			if (eventBody[key]) {
-				if (key === "service_context") {
-					event_params.Item.SERVICE_CONTEXT = {
-						S: JSON.stringify(eventBody.service_context)
-					};
-				} else {
-					if (event_params.Item[map[key]]) {
-						event_params.Item[map[key]] = {
-							S: eventBody[key]
-						}
-					} else {
-						event_params.Item[key.toUpperCase()] = {
-							S: eventBody[key]
-						};
-					}
-
-				}
+		crud.create(config.event_hub, eventBody, (error, data) => {
+			if(error){
+				reject(error);
 			} else {
-				event_params.Item[key.toUpperCase()] = {
-					NULL: true
-				};
-			}
-		});
-
-		var stream_params = {
-			Data: JSON.stringify(event_params),
-			PartitionKey: eventBody.event_name,
-			StreamName: config.event_hub
-		};
-		kinesis.putRecord(stream_params, (err, data) => {
-			if (err) {
-				logger.error('kinesis error' + JSON.stringify(err));
-				reject({
-					"code": 500,
-					"message": "Error storing event. " + err.message
-				});
-			} else {
-				var output = {
-					"event_id": event_id
-				};
-				logger.info("event_id is: " + event_id);
-				resolve(responseObj(output, eventBody));
+				resolve(responseObj(data, eventBody));
 			}
 		});
 	});
+}
+module.exports = {
+	handler: handler,
+	getEvents: getEvents,
+	mapGetEventData: mapGetEventData,
+	generalInputValidation: generalInputValidation,
+	validateEventInput: validateEventInput,
+	storeEventData: storeEventData
 }
