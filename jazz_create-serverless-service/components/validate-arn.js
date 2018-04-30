@@ -6,21 +6,21 @@
 **/
 
 var validateARN = (arn) => {
+  if (arn) {
+    var arnvalues = arn.split(":");
+    var isarnvalid = true;
+    //validate if arn is a valid Lambda
+    if (arn.indexOf("arn:aws:lambda") !== 0 || arnvalues[5] !== "function" || arnvalues.length > 7)
+      isarnvalid = false;
 
-  var arnvalues = arn.split(":");
-  var isarnvalid = true;
-  //validate if arn is a valid Lambda
-  if(arn.indexOf("arn:aws:lambda") !== 0)
-    isarnvalid = false;
-  if(arnvalues[5] !== "function")
-    isarnvalid = false;
-  if(arnvalues.length > 7)
-    isarnvalid = false;
-  return isarnvalid;
+    return isarnvalid;
+  } else {
+    return false;
+  }
 
 };
 
 module.exports = (arn) => {
-    var isarnvalid = validateARN(arn);
-    return isarnvalid;
+  var isarnvalid = validateARN(arn);
+  return isarnvalid;
 };

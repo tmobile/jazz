@@ -40,21 +40,22 @@ module.exports.handler = (event, context, cb) => {
 
     var serviceId;
     var serviceDataObject;
+    var service_creation_data = event.body;
 
     try {
         var isValidName = function (name) {
             return /^[A-Za-z0-9\-]+$/.test(name);
         };
 
-        if (!event.body) {
+        if (!service_creation_data) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("Service inputs are not defined")));
-        } else if (!event.body.service_type) {
+        } else if (!service_creation_data.service_type) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_type' is not defined")));
-        } else if (!event.body.service_name || !isValidName(event.body.service_name)) {
+        } else if (!service_creation_data.service_name || !isValidName(service_creation_data.service_name)) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_name' is not defined or has invalid characters")));
-        } else if (event.body.service_type !== "website" && (!event.body.runtime)) {
+        } else if (service_creation_data.service_type !== "website" && (!service_creation_data.runtime)) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'runtime' is not defined")));
-        } else if (event.body.domain && !isValidName(event.body.domain)) {
+        } else if (service_creation_data.domain && !isValidName(service_creation_data.domain)) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("Namespace is not appropriate")));
         }
 
@@ -68,11 +69,11 @@ module.exports.handler = (event, context, cb) => {
 
 
         getToken(config)
-            .then((authToken) => getServiceData(event, authToken, config))
+            .then((authToken) => getServiceData(service_creation_data, authToken, config))
             .then((inputs) => createService(inputs))
-            .then((service_id) => startServiceOnboarding(event, config, service_id))
+            .then((service_id) => startServiceOnboarding(service_creation_data, config, service_id))
             .then((result) => {
-                cb(null, responseObj(result, event.body));
+                cb(null, responseObj(result, service_creation_data));
             })
             .catch(function (err) {
                 logger.error('Error while creating a service : ' + JSON.stringify(err));
@@ -80,7 +81,7 @@ module.exports.handler = (event, context, cb) => {
                     serviceDataObject.body = {
                         "STATUS": "creation_failed"
                     };
-                    crud.update(serviceId, serviceDataObject, function (serviceUpdateError, results) {
+                    crud.update(serviceId, serviceDataObject, (serviceUpdateError, results) => {
                         if (serviceUpdateError) {
                             var errorMessage = {
                                 "message": "Error occurred while updating service with failed status.",
@@ -102,16 +103,16 @@ module.exports.handler = (event, context, cb) => {
         cb(JSON.stringify(errorHandler.throwInternalServerError(e)));
     }
 
-    function startServiceOnboarding(event, config, service_id) {
+    function startServiceOnboarding(service_creation_data, config, service_id) {
         return new Promise((resolve, reject) => {
             try {
                 var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
                 var userlist = "";
-                var approvers = event.body.approvers;
-                var domain = (event.body.domain || "").toLowerCase();
-                var service_name = event.body.service_name.toLowerCase();
+                var approvers = service_creation_data.approvers;
+                var domain = (service_creation_data.domain || "").toLowerCase();
+                var service_name = service_creation_data.service_name.toLowerCase();
 
-                userlist = approvers.reduce(function (stringSoFar, approver) {
+                userlist = approvers.reduce((stringSoFar, approver) => {
                     return stringSoFar + util.format("name=%s&", approver);
                 }, "");
 
@@ -164,7 +165,7 @@ module.exports.handler = (event, context, cb) => {
                 rejectUnauthorized: false
             };
 
-            request(svcPayload, function (error, response, body) {
+            request(svcPayload, (error, response, body) => {
                 if (response.statusCode === 200 && body && body.data) {
                     var authToken = body.data.token;
                     return resolve(authToken);
@@ -180,7 +181,7 @@ module.exports.handler = (event, context, cb) => {
 
     function createService(service_data) {
         return new Promise((resolve, reject) => {
-            crud.create(service_data, function (err, results) {
+            crud.create(service_data, (err, results) => {
                 if (err) {
                     reject({
                         "message": err.error
@@ -194,73 +195,73 @@ module.exports.handler = (event, context, cb) => {
         });
     }
 
-    function getServiceData(event, authToken, configData) {
+    function getServiceData(service_creation_data, authToken, configData) {
         return new Promise((resolve, reject) => {
             var inputs = {
                 "TOKEN": authToken,
                 "SERVICE_API_URL": configData.SERVICE_API_URL,
                 "SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-                "SERVICE_NAME": event.body.service_name.toLowerCase(),
-                "DOMAIN": event.body.domain.toLowerCase(),
-                "DESCRIPTION": event.body.description,
-                "TYPE": event.body.service_type,
-                "RUNTIME": event.body.runtime,
-                "REGION": event.body.region,
+                "SERVICE_NAME": service_creation_data.service_name.toLowerCase(),
+                "DOMAIN": service_creation_data.domain.toLowerCase(),
+                "DESCRIPTION": service_creation_data.description,
+                "TYPE": service_creation_data.service_type,
+                "RUNTIME": service_creation_data.runtime,
+                "REGION": service_creation_data.region,
                 "USERNAME": user_id,
-                "IS_PUBLIC_ENDPOINT": event.body.is_public_endpoint || false,
+                "IS_PUBLIC_ENDPOINT": service_creation_data.is_public_endpoint || false,
                 "STATUS": "creation_started"
             };
 
             var serviceMetadataObj = {};
-            if (event.body.tags) {
-                inputs.TAGS = event.body.tags;
+            if (service_creation_data.tags) {
+                inputs.TAGS = service_creation_data.tags;
             }
 
-            if (event.body.email) {
-                inputs.EMAIL = event.body.email;
+            if (service_creation_data.email) {
+                inputs.EMAIL = service_creation_data.email;
             }
 
-            if (event.body.slack_channel) {
-                inputs.SLACKCHANNEL = event.body.slack_channel;
+            if (service_creation_data.slack_channel) {
+                inputs.SLACKCHANNEL = service_creation_data.slack_channel;
             }
 
-            if ((event.body.service_type === "api" || event.body.service_type === "function") && (event.body.require_internal_access)) {
-                serviceMetadataObj.require_internal_access = event.body.require_internal_access;
+            if ((service_creation_data.service_type === "api" || service_creation_data.service_type === "function") && (service_creation_data.require_internal_access)) {
+                serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
             }
 
             // Pass the flag to enable authentication on API
-            if (event.body.service_type === "api") {
-                serviceMetadataObj.enable_api_security = event.body.enable_api_security || false;
-                if (event.body.authorizer_arn) {
+            if (service_creation_data.service_type === "api") {
+                serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;
+                if (service_creation_data.authorizer_arn) {
                     // Validate ARN format - arn:aws:lambda:region:account-id:function:function-name
-                    if (!validateARN(event.body.authorizer_arn)) {
+                    if (!validateARN(service_creation_data.authorizer_arn)) {
                         return cb(JSON.stringify(errorHandler.throwInputValidationError("authorizer arn is invalid, expected format=arn:aws:lambda:region:account-id:function:function-name")));
                     } else {
-                        serviceMetadataObj.authorizer_arn = event.body.authorizer_arn;
+                        serviceMetadataObj.authorizer_arn = service_creation_data.authorizer_arn;
                     }
                 }
             }
 
             // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
-            if (event.body.service_type === "api" && is_public_endpoint) {
+            if (service_creation_data.service_type === "api" && is_public_endpoint) {
                 serviceMetadataObj.require_internal_access = false;
                 serviceMetadataObj.enable_api_security = false;
             }
 
-            if (event.body.service_type === "website") {
+            if (service_creation_data.service_type === "website") {
                 var create_cloudfront_url = "true";
                 serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
                 inputs.RUNTIME = 'n/a';
             }
             // Add rate expression to the propertiesObject;
-            if (event.body.service_type === "function") {
-                if (event.body.rateExpression !== undefined) {
-                    var cronExpValidator = CronParser.validateCronExpression(event.body.rateExpression);
+            if (service_creation_data.service_type === "function") {
+                if (service_creation_data.rateExpression !== undefined) {
+                    var cronExpValidator = CronParser.validateCronExpression(service_creation_data.rateExpression);
                     if (cronExpValidator.result === 'valid') {
-                        var rate_expression = event.body.rateExpression;
+                        var rate_expression = service_creation_data.rateExpression;
                         var enable_eventschedule;
-                        if (event.body.enableEventSchedule === false) {
-                            enable_eventschedule = event.body.enableEventSchedule;
+                        if (service_creation_data.enableEventSchedule === false) {
+                            enable_eventschedule = service_creation_data.enableEventSchedule;
                         } else {
                             enable_eventschedule = true;
                         }
@@ -271,21 +272,21 @@ module.exports.handler = (event, context, cb) => {
                         if (enable_eventschedule && enable_eventschedule !== "") {
                             serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
                         }
-                        if (event.body.event_source_ec2 && event.body.event_action_ec2) {
-                            serviceMetadataObj["event_action_ec2"] = event.body.event_source_ec2;
-                            serviceMetadataObj["event_action_ec2"] = event.body.event_action_ec2;
+                        if (service_creation_data.event_source_ec2 && service_creation_data.event_action_ec2) {
+                            serviceMetadataObj["event_action_ec2"] = service_creation_data.event_source_ec2;
+                            serviceMetadataObj["event_action_ec2"] = service_creation_data.event_action_ec2;
                         }
-                        if (event.body.event_source_s3 && event.body.event_action_s3) {
-                            serviceMetadataObj["event_source_s3"] = event.body.event_source_s3;
-                            serviceMetadataObj["event_action_s3"] = event.body.event_action_s3;
+                        if (service_creation_data.event_source_s3 && service_creation_data.event_action_s3) {
+                            serviceMetadataObj["event_source_s3"] = service_creation_data.event_source_s3;
+                            serviceMetadataObj["event_action_s3"] = service_creation_data.event_action_s3;
                         }
-                        if (event.body.event_source_dynamodb && event.body.event_action_dynamodb) {
-                            serviceMetadataObj["event_source_dynamodb"] = event.body.event_source_dynamodb;
-                            serviceMetadataObj["event_action_dynamodb"] = event.body.event_action_dynamodb;
+                        if (service_creation_data.event_source_dynamodb && service_creation_data.event_action_dynamodb) {
+                            serviceMetadataObj["event_source_dynamodb"] = service_creation_data.event_source_dynamodb;
+                            serviceMetadataObj["event_action_dynamodb"] = service_creation_data.event_action_dynamodb;
                         }
-                        if (event.body.event_source_stream && event.body.event_action_stream) {
-                            serviceMetadataObj["event_source_stream"] = event.body.event_source_stream;
-                            serviceMetadataObj["event_action_stream"] = event.body.event_action_stream;
+                        if (service_creation_data.event_source_stream && service_creation_data.event_action_stream) {
+                            serviceMetadataObj["event_source_stream"] = service_creation_data.event_source_stream;
+                            serviceMetadataObj["event_action_stream"] = service_creation_data.event_action_stream;
                         }
 
                     } else {
