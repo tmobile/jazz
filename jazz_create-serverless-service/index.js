@@ -67,7 +67,6 @@ module.exports.handler = (event, context, cb) => {
 
         logger.info("Request event: " + JSON.stringify(event));
 
-
         getToken(config)
             .then((authToken) => getServiceData(service_creation_data, authToken, config))
             .then((inputs) => createService(inputs))
@@ -76,7 +75,7 @@ module.exports.handler = (event, context, cb) => {
                 cb(null, responseObj(result, service_creation_data));
             })
             .catch(function (err) {
-                logger.error('Error while creating a service : ' + JSON.stringify(err));
+                logger.error('Error while creating service : ' + JSON.stringify(err));
                 if (err.jenkins_api_failure) {
                     serviceDataObject.body = {
                         "STATUS": "creation_failed"
@@ -109,9 +108,7 @@ module.exports.handler = (event, context, cb) => {
                 var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
                 var userlist = "";
                 var approvers = service_creation_data.approvers;
-                var domain = (service_creation_data.domain || "").toLowerCase();
-                var service_name = service_creation_data.service_name.toLowerCase();
-
+                
                 userlist = approvers.reduce((stringSoFar, approver) => {
                     return stringSoFar + util.format("name=%s&", approver);
                 }, "");
@@ -130,7 +127,7 @@ module.exports.handler = (event, context, cb) => {
                     qs: input
                 }, function (err, response, body) {
                     if (err) {
-                        logger.error('Error while starting Jenkins job: ' + err);
+                        logger.error('Error while starting service onboarding: ' + err);
                         err.jenkins_api_failure = true;
                         reject(err);
                     } else {
@@ -243,7 +240,7 @@ module.exports.handler = (event, context, cb) => {
             }
 
             // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
-            if (service_creation_data.service_type === "api" && is_public_endpoint) {
+            if (service_creation_data.service_type === "api" && service_creation_data.is_public_endpoint) {
                 serviceMetadataObj.require_internal_access = false;
                 serviceMetadataObj.enable_api_security = false;
             }
