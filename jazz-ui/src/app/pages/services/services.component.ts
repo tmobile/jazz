@@ -4,7 +4,7 @@
   * @author
 */
 
-import { Component, OnInit, Output, EventEmitter} from '@angular/core';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 
 @Component({
   selector: 'services',
@@ -12,7 +12,12 @@ import { Component, OnInit, Output, EventEmitter} from '@angular/core';
   styleUrls: ['./services.component.scss']
 })
 export class ServicesComponent implements OnInit {
+
+
+ /*  @Output() createServiceSlider:EventEmitter<boolean> = new EventEmitter<boolean>();*/
+
   constructor() { }
+  
   selectedTab = 0;
   mobSecState:number = 1;
   showAddService: boolean = false;
@@ -29,8 +34,8 @@ export class ServicesComponent implements OnInit {
 
   mobTabData:any = ['Dashboard','Services','Activity'];
 
-  tableHeader = [{"name" : "Name","field" : "name"},{"name" : "Type","field" : "type"},{"name" : "Domain","field" : "domain"},{"name" : "Last modified","field" : "lastModified"},{"name" : "Health","field" : "health"},{"name" : "Status","field" : "status"}];
-  //'Name','Type','Domain','Last modified','health','status'
+  tableHeader = [{"name" : "Name","field" : "name"},{"name" : "Type","field" : "type"},{"name" : "Namespace","field" : "domain"},{"name" : "Last modified","field" : "lastModified"},{"name" : "Health","field" : "health"},{"name" : "Status","field" : "status"}];
+  //'Name','Type','Namespace','Last modified','health','status'
   statusData = ['Status (All)','Status (Active)','Status (Pending)','Status (Stopped)'];
   tabData = ['All','Api','Function','Website'];
   recentActivities = [

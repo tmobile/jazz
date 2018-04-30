@@ -15,9 +15,13 @@ export class JazzMobHeaderComponent implements OnInit {
 	@Input() icon: string ;	
   @Input() hideBack: boolean;
 	@Output() addClick:EventEmitter<boolean> = new EventEmitter<boolean>();
-  @Output() backClick:EventEmitter<boolean> = new EventEmitter<boolean>();
-  
-  ngOnInit() {}
+	@Output() backClick:EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  // constructor() { }
+
+  ngOnInit() {
+    
+  }
 
   createServiceEmit(){
   	this.addClick.emit();

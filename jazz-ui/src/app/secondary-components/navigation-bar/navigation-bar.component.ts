@@ -16,6 +16,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 export class NavigationBarComponent implements OnInit {
 
   @Input() links;
+  @Input() data;
 
   constructor(
     private route: ActivatedRoute,

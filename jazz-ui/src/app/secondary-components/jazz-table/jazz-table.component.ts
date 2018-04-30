@@ -43,9 +43,12 @@ export class JazzTableComponent implements OnInit {
         }
     }
     ngOnInit() {
+        // this.backupData = this.serviceList;
         this.sort = new Sort(this.serviceList);  
         this.filter = new Filter(this.serviceList);
     }
+
+    // hemanth //
     selectedtab:string = '';
     serviceName:string;
     DomainName:string;
@@ -87,3 +90,15 @@ export class JazzTableComponent implements OnInit {
 
     };
 }
+// $( document ).ready(function() {
+//    var ele = $("tr.filter-row");
+//    if(ele.not('.open')){
+//     setTimeout(function() { 
+//         ele.addClass("hide-content");
+//     }, 500);
+//    }
+//    else{
+//     ele.removeClass("hide-content");
+//    }
+    
+// });

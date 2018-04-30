@@ -1,3 +1,4 @@
+// enhancement for logs filters done 
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
@@ -10,14 +11,35 @@ export class FiltersComponent implements OnInit {
 	filters: Array<{id:number, label:string, selected: boolean}> = [];
   @Input() multiple: boolean = true;
   @Input() filtersList: Array<string>;
+  @Input() logs:boolean;
   @Input() selectedList: Array<string> = [];
   @Output() onSelected:EventEmitter<Array<string>> = new EventEmitter<Array<string>>();
 
   constructor() { }
 
   onClick(index){
-    let selectedList = [];
+       let selectedList = [];
+
+    if(this.logs){
+      for(var item of this.filters){
+        item.selected=false;
+      }
+      var i = index;
+      while(i>=0){
+        this.filters[i].selected=true;
+        i--;
+      }
+      selectedList.push(this.filters[index].label);
+      this.selectedList=selectedList;
+
+      this.onSelected.emit(this.selectedList);
+
+      return;
+
+    }
+    
     for (var item of this.filters){
+      
     	if (item.id == index) {
         if (this.multiple == false) {
     		  item.selected = true;
@@ -34,6 +56,7 @@ export class FiltersComponent implements OnInit {
     	}
     }
     this.selectedList = selectedList;
+  
     this.onSelected.emit(this.selectedList);
   }
 

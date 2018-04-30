@@ -1,5 +1,5 @@
 <div class="landing-hdr-wrp" >
-	<jazz-header type="landing" (loginClick) = "onLoginClicked($event)" [closed]="closed"></jazz-header>
+	<jazz-header type="landing" (loginClick) = "onLoginClicked($event)" [override]="override" [closed]="closed"></jazz-header>
 </div>
 <main class="landing-main-wrp" [style.overflow-y]="goToLogin ? 'hidden':'auto'">
 	<div id="landing" class="header-section">
@@ -18,8 +18,19 @@
 				<btn-jazz-primary newclass="buttonPadding" text="{{buttonText}}" (click)="getStartedNow()"></btn-jazz-primary>
 			</div>
 			<div class = "parallax-0"></div>
-			<div class = "parallax-2"></div>
+			<!--<div class = "parallax-1"></div>-->
+			<div class = "parallax-2">
+				<!-- <div class = "parallax-text bg1">Donec facilisis tortor ut augue lacinia, at viverra. Donec facilisis tortor</div>
+				<div class = "parallax-text bg2">ut augue lacinia, at viverra. Donec facilisis tortor</div>
+				<div class = "parallax-text bg3">Donec facilisis tortor ut augue lacinia, at viverra. </div> -->
+			</div>
+
 			<div class = "parallax-3"></div>
+			<!--<div class = "parallax-4"></div>-->
+
+			<!--<div class = "parallax-6"></div>-->
+			<!--<div class = "parallax-7"></div>-->
+
 		</section>
 	</div>
 	<section id="features"  class="section features-section features relative transform-parallax">
@@ -31,8 +42,11 @@
 		</div>
 		<ul class="section-content">
 			<li>
-				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Asset 49@6x.png"/>
+				<div class="pre-image-container clearfix">
+					<img class="pre-image" src="/assets/landing/Serverless.svg"/>
+					<!-- <div class="icon-icon-serverless">
+						<span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span><span class="path34"></span><span class="path35"></span><span class="path36"></span><span class="path37"></span><span class="path38"></span><span class="path39"></span><span class="path40"></span>
+					</div> -->
 				</div>
 				<div class="post-image-container">
 					<h5>Go Serverless in Production!</h5>
@@ -41,7 +55,8 @@
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Asset 53@6x.png"/>
+					<img class="pre-image" src="/assets/landing/Focus-Code.svg"/>
+					<!-- <span class="icon-icon-focusoncode"></span> -->
 				</div>
 				<div class="post-image-container">
 					<h5>Focus on Code</h5>
@@ -50,7 +65,10 @@
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Asset 56@6x.png"/>
+					<img class="pre-image" src="/assets/landing/Vendor.svg"/>
+					<!-- <div class="icon-icon-vendor">
+						<span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span><span class="path34"></span><span class="path35"></span><span class="path36"></span>
+					</div> -->
 				</div>
 				<div class="post-image-container">
 					<h5>Avoid Vendor Lock-In</h5>
@@ -59,7 +77,10 @@
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Asset 58@6x.png"/>
+					<img class="pre-image" src="/assets/landing/Ci-CD.svg"/>
+					<!-- <div class="icon-icon-cicd">
+						<span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span>
+					</div> -->
 				</div>
 				<div class="post-image-container">
 					<h5>CI/CD Solved!</h5>
@@ -68,7 +89,10 @@
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Asset 50@6x.png"/>
+					<img class="pre-image" src="/assets/landing/Code-Secure.svg"/>
+					<!-- <div class="icon-icon-secure">
+						<span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span>
+					</div> -->
 				</div>
 				<div class="post-image-container">
 					<h5>Quality Code that's Secure</h5>
@@ -77,7 +101,10 @@
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Asset 61@6x.png"/>
+					<img class="pre-image" src="/assets/landing/Monitoring.svg"/>
+					<!-- <div class="icon-icon-monitoring">
+						<span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span>
+					</div> -->
 				</div>
 				<div class="post-image-container">
 					<h5>Built-in Logging and Monitoring</h5>
@@ -86,7 +113,10 @@
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Asset 60@6x.png"/>
+					<img class="pre-image" src="/assets/landing/Controlled-Access.svg"/>
+					<!-- <div class="icon-icon-access">
+						<span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span>
+					</div> -->
 				</div>
 				<div class="post-image-container">
 					<h5>Controlled Access</h5>
@@ -95,7 +125,10 @@
 			</li>
 			<li>
 				<div class="pre-image-container">
-					<img class="pre-image" src="/assets/landing/Asset 57@6x.png"/>
+					<img class="pre-image" src="/assets/landing/Bankrupt.svg"/>
+					<!-- <div class="icon-icon-bankrupt">
+						<span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span>
+					</div> -->
 				</div>
 				<div class="post-image-container">
 					<h5>Don't Go Bankrupt!</h5>
@@ -201,7 +234,11 @@
 				</span>
 			</div>
 			<div class="section-content actions">
-				<span class = "center">
+				<span *ngIf='!isOSS' class = "center">
+					<btn-jazz-secondary newclass="buttonPadding buttonAbout" (click)='sendmail()' text="E-MAIL US"></btn-jazz-secondary>
+					<btn-jazz-secondary text="SLACK" clickLink="{{serverless_slack}}" newclass="slackIcon buttonPadding buttonAbout"></btn-jazz-secondary>
+				</span>
+				<span *ngIf='isOSS' class = "center">
 					<btn-jazz-secondary newclass="buttonPadding buttonAbout" text="E-MAIL US"></btn-jazz-secondary>
 					<btn-jazz-secondary text="SLACK" newclass="slackIcon buttonPadding buttonAbout"></btn-jazz-secondary>
 					<btn-jazz-secondary newclass="buttonPadding buttonAbout" text="MORE"></btn-jazz-secondary>
@@ -211,6 +248,20 @@
 		</section>
 	</div>
 	<section  class="section features-section top-parallax-margin-half">
+
+		<div class="section-content section-content-small footer hide">
+			<span class = "center">
+				Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam sit amet porttitor mauris, fringilla feugiat ex. Cras facilisis ultricies porttitor. Curabitur nec nunc vehicula, interdum metus eget, maximus nulla. Sed tempor massa id justo consequat dapibus.
+			</span>
+		</div>
+		<div *ngIf='!isOSS' class="section-content ">
+				<ul  class="footer">
+					<li><div class ="home-footer icon-tmobile-logo"></div></li>
+					<li><a class="center pointer" (click)='onNavigate($event)'>Privacy</a></li>
+					<li><a class="center hide">Blog</a></li>
+					<li><a class="center pointer" (click)='onNavigate($event)'>Docs</a></li>
+				</ul>
+		</div>
 		<div class="section-content-text bottom-parallax-padding copyright">
 			<span class=" center">Copyright 2017. All rights reserved.</span>
 		</div>

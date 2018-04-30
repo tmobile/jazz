@@ -1,0 +1,39 @@
+.row {
+  margin-top: 0.5rem;
+}
+
+.eachTag {
+  display: inline-block;
+  font-size: 11px;
+  text-transform: uppercase;
+  padding: 0.2rem 1rem;
+  border: 1px solid #aaa;
+  cursor: pointer; // text-transform:capitalize;
+  border-radius: 1.5rem;
+  margin-right: 1rem;
+  &:first-child {
+    margin-left: 2.8rem;
+  }
+  &:hover {
+    border: 1px solid #ed008c;
+  }
+  /deep/.icon-icon-close {
+    position: relative !important;
+    top: 2px !important;
+    font-size: 1rem;
+    color: #ed008c;
+    margin-left: 1rem;
+    &:hover {
+      opacity: 0.8;
+    }
+  }
+}
+
+a {
+  color: #ed008c;
+  cursor: pointer;
+}
+
+.clr-all {
+  font-size: 12px;
+}

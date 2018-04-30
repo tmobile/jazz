@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="291px" height="167px" viewBox="0 0 291 167" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 47.1 (45422) - http://www.bohemiancoding.com/sketch -->
+    <title>Vendor</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Final-Screens" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="Vendor" transform="translate(0.000000, 1.477165)">
+            <path d="M243.89,45.35 C241.066738,45.453922 238.516438,47.0650396 237.21,49.57 L195.73,49.57 C188.550298,49.57 182.73,43.7497017 182.73,36.57 C182.73,29.3902983 188.550298,23.57 195.73,23.57 L201.73,23.57 C201.73,22.17 202.43,20.76 202.79,19.36 C203.14,19 203.14,18.3 203.49,17.95 C206.416842,12.5263854 212.087055,9.1496123 218.25,9.16 C223.88,9.16 228.41,11.05 231.57,15.27 C233.372272,14.4790761 235.25731,13.892098 237.19,13.52 C233.33,6.84 226.69,3.52 218.25,3.52 C208.953766,3.61952635 200.631607,9.30574318 197.16,17.93 L195.76,17.93 C185.370475,18.0399187 177.03118,26.5402729 177.12,36.93 C177.093194,41.8808882 179.048759,46.6366134 182.550556,50.1365319 C186.052353,53.6364504 190.809127,55.5894631 195.76,55.56 L237.59,55.56 C238.990167,58.6862318 242.406102,60.3854153 245.744047,59.6160565 C249.081993,58.8466978 251.40952,55.8237114 251.3,52.4 C251.27,48.16 248.1,45.35 243.89,45.35 Z M267.09,30.94 C262.780854,22.2280193 253.958417,16.6604248 244.24,16.52 C232.13509,16.5542165 221.707265,25.0591509 219.24,36.91 C213.453661,37.5420803 208.211678,40.6123327 204.83,45.35 L235.41,45.35 C237.488363,42.6085509 240.761024,41.0373758 244.2,41.13 C247.232351,41.1694315 250.124018,42.4154552 252.235302,44.5924229 C254.346585,46.7693906 255.50346,49.6978642 255.45,52.73 C255.572065,57.5484967 252.613642,61.9102911 248.091638,63.5789106 C243.569634,65.24753 238.487075,63.8528577 235.45,60.11 L201.35,60.11 C202.76,70 211.19,77.69 221,77.69 L266.7,77.69 C272.818803,77.6825756 278.679693,75.2246007 282.973335,70.8651919 C287.266977,66.505783 289.635582,60.6082091 289.55,54.49 C289.666707,41.8414945 279.69068,31.3999193 267.05,30.94 L267.09,30.94 Z" id="Shape" stroke="#F01F86" stroke-width="2"></path>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="4.95 38.07 19.49 41.83 19.49 62.46 4.95 56.36"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="9.56 34.76 21.04 38.07 32.02 34.76 20.79 31.04"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="23.57 41.68 23.57 62.46 35.56 57.21 35.56 37.79"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="41.78 38.07 56.32 41.83 56.32 62.46 41.78 56.36"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="46.39 34.76 57.87 38.07 68.85 34.76 57.62 31.04"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="60.41 41.68 60.41 62.46 72.39 57.21 72.39 37.79"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="22.81 70.34 37.35 74.09 37.35 94.72 22.81 88.63"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="27.41 67.02 38.9 70.34 49.87 67.02 38.65 63.31"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="41.43 73.94 41.43 94.72 53.42 89.48 53.42 70.06"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="61.94 7.03 76.48 10.78 76.48 31.42 61.94 25.32"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="66.55 3.71 78.03 7.03 89 3.71 77.77 0"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="80.56 10.64 80.56 31.42 92.55 26.17 92.55 6.75"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="99.43 7.03 113.96 10.78 113.96 31.42 99.43 25.32"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="104.03 3.71 115.51 7.03 126.49 3.71 115.26 0"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="2" points="118.05 10.64 118.05 31.42 130.04 26.17 130.04 6.75"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="1.88" points="158.54 80.9 110.55 80.9 86.56 122.45 110.55 164.01 158.54 164.01 182.53 122.45"></polygon>
+            <polygon id="Shape" stroke="#F01F86" stroke-width="1.88" points="149.1 96.7 119.98 96.7 105.42 121.92 119.98 147.13 149.1 147.13 163.66 121.92"></polygon>
+            <circle id="Oval" stroke="#F01F86" stroke-width="1.88" cx="134.1" cy="122.44" r="12.84"></circle>
+            <path d="M96.14,105.86 L105.43,121.92" id="Shape" stroke="#F01F86" stroke-width="1.88"></path>
+            <path d="M149.1,147.13 L139.13,164.01" id="Shape" stroke="#F01F86" stroke-width="1.88"></path>
+            <path d="M149.1,96.7 L167.66,96.7" id="Shape" stroke="#F01F86" stroke-width="1.88"></path>
+            <circle id="Oval" stroke="#F01F86" stroke-width="1.88" cx="115.06" cy="88.66" r="2.73"></circle>
+            <circle id="Oval" stroke="#F01F86" stroke-width="1.88" cx="153.62" cy="88.66" r="2.73"></circle>
+            <circle id="Oval" stroke="#F01F86" stroke-width="1.88" cx="115.06" cy="155.77" r="2.73"></circle>
+            <circle id="Oval" stroke="#F01F86" stroke-width="1.88" cx="153.62" cy="155.77" r="2.73"></circle>
+            <circle id="Oval" stroke="#F01F86" stroke-width="1.88" cx="173.09" cy="122.24" r="2.73"></circle>
+            <circle id="Oval" stroke="#F01F86" stroke-width="1.88" cx="96.16" cy="122.24" r="2.73"></circle>
+            <path d="M175,95.71 L248.52,95.71" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+            <path d="M255.23,95.71 L266.86,95.71" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+            <path d="M183.52,111.36 L236.39,111.36" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+            <path d="M83.09,111.36 L71.47,111.36" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+            <path d="M88.24,136.71 L43.7,136.71" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+            <path d="M30.92,136.71 L38.39,136.71" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+            <path d="M88.1,50.13 L133.24,50.13" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+            <path d="M121.26,42.22 L147.94,42.22" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+            <path d="M47.43,14.5 L0.94,14.5" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+            <path d="M54.28,8.2 L37.35,8.2" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+            <path d="M30.08,8.2 L23.57,8.2" id="Shape" stroke="#555555" stroke-width="1.88"></path>
+        </g>
+    </g>
+</svg>

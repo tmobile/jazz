@@ -18,10 +18,15 @@ export class BtnJazzPrimaryComponent implements OnInit {
 
     // Inputs supplied from the parent (custom attribute values)
     @Input() text: string = 'DEFAULT TEXT';
+    // @Input() public action: Function;
       @Input() newclass : string = '';
       @Input() disablePrimaryBtn:boolean;
       action(){
+        
       }
+
+
+
     constructor(
         private route: ActivatedRoute,
         private router: Router
