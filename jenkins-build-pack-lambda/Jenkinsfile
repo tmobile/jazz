@@ -36,6 +36,10 @@ node()  {
 
 	def branch = params.scm_branch
 	def repo_name = params.service_name
+	def gitCommitOwner
+	def gitCommitHash
+	def context_map
+	def environment_logical_id
 
 	if (domain && domain != "") {
 		repo_name = params.domain + "_" + params.service_name
@@ -75,26 +79,31 @@ node()  {
 
 	}
 
-	environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments",auth_token)
-	def gitCommitOwner = environmentDeploymentMetadata.getRepoCommitterInfo()
-	def gitCommitHash = environmentDeploymentMetadata.getRepoCommitHash()
-	def context_map = [created_by : config['created_by'], deployed_by: gitCommitOwner]
-	def environment_logical_id = '';
+	dir(repo_name)
+	{
+		scmModule.setServiceConfig(config)
+		def envApi = "${g_base_url}/jazz/environments"
+		environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, envApi, auth_token)
+		gitCommitHash = scmModule.getRepoCommitHash()
+		gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
+		context_map = [created_by : config['created_by'], deployed_by: gitCommitOwner]
+		environment_logical_id = '';
 
-	if (branch == 'master') {
-		current_environment = 'prod'
-		environment_logical_id = 'prod';
-	} else {
-		current_environment = 'dev'
-		environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
+		if (branch == 'master') {
+			current_environment = 'prod'
+			environment_logical_id = 'prod';
+		} else {
+			current_environment = 'dev'
+			environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
+		}
+
+		if (!environment_logical_id && config['domain'] != 'jazz') {
+			error "The environment has not been created yet and its missing the environment id"
+		}
 	}
-
-	if (!environment_logical_id) {
-		error "The environment has not been created yet and its missing the environment id"
-	}
-
 	if (!events) { error "Can't load events module"	} //Fail here
-	events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, current_environment, g_base_url + "/jazz/events")
+	def eventsApi = "${g_base_url}/jazz/events"
+	events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, environment_logical_id, eventsApi)
 
 
 	def runtime = config['providerRuntime']
@@ -111,12 +120,12 @@ node()  {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
-	stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
+	stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled) {
 		isEventSchdld = true
 	}
-	events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id), environment_logical_id)
+	events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 	def requestId = utilModule.generateRequestId()
 	if (requestId != null) {
 		events.setRequestId(requestId)
@@ -173,12 +182,12 @@ node()  {
 		}
 		stage("Deployment to ${env_key} environment") {	
 			events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
-			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", current_environment), environment_logical_id)
+			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
 			echo "starts Deployment to ${env_key} Env"
 			def lambdaARN = null
 			environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
 
-			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", current_environment), environment_logical_id)
+			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 				try {
 					// initialize aws credentials
@@ -197,10 +206,10 @@ node()  {
 					setLambdaExecutionRole(configLoader.AWS.ROLEID);
 
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
-					sh "serverless deploy --stage ${current_environment} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 						
 					lambdaARN = getLambdaARN(stackName)
-					events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", lambdaARN, "lambda", config['created_by']), environment_logical_id);
+					events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", lambdaARN, config["type"], config['created_by']), environment_logical_id);
 					echo "lambdaARN: ${lambdaARN}"
 					// reset Credentials
 					resetCredentials()
@@ -216,15 +225,15 @@ node()  {
 					send_status_email(config, 'COMPLETED', svc_response)
 				} catch (ex) {
 					send_status_email(config, 'FAILED', '')
-					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", current_environment), environment_logical_id)
-					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", current_environment), environment_logical_id)
-					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), environment_logical_id)
+					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id), environment_logical_id)
+					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 					error ex.getMessage()
 				}
-				environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
+				environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
 				def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
-				events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", current_environment), environment_logical_id)
-				events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", current_environment), environment_logical_id)
+				events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
+				events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
 				events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
 
 			}//end of withCredentials
@@ -454,29 +463,31 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 }
 
 def echoServiceInfo(String env) {
-	echo "Deployment info:"
-	sh "serverless --stage $env info -v > deploy-info.txt"
+	try {
+		echo "Deployment info:"
+		sh "serverless --stage $env info -v > deploy-info.txt"
 
-	def arn = "unknown"
-	def svc_response = "unknown"
-	def result = readFile('deploy-info.txt').trim()
-	def resultList = result.tokenize("\n")
+		def arn = "unknown"
+		def svc_response = "unknown"
+		def result = readFile('deploy-info.txt').trim()
+		def resultList = result.tokenize("\n")
 
-	for (item in resultList) {
-		if (item.startsWith("HandlerLambdaFunctionQualifiedArn")) {
-			arn = item.trim().substring(35)
-			version = arn.tokenize(':').last()
-			arn = arn.substring(0, arn.length() - version.length() - 1)
+		for (item in resultList) {
+			if (item.startsWith("HandlerLambdaFunctionQualifiedArn")) {
+				arn = item.trim().substring(35)
+				version = arn.tokenize(':').last()
+				arn = arn.substring(0, arn.length() - version.length() - 1)
 
-			svc_response = "Your service endpoint: " + arn
+				svc_response = "Your service endpoint: " + arn
+			}
 		}
+
+		echo "==============================================================================================="
+		echo svc_response
+		echo "==============================================================================================="
+	} catch (Exception ex) {
+		echo " Error while getting service info : " + ex.getMessage()
 	}
-
-	echo "==============================================================================================="
-	echo svc_response
-	echo "==============================================================================================="
-	return svc_response
-
 }
 
 /**
@@ -495,16 +506,18 @@ def createSubscriptionFilters(stackName, region, roleId) {
 			returnStdout: true
 		).trim()
 		echo "${filter_json}"
-		def describeJson = new groovy.json.JsonSlurper()
-		def resultJson = describeJson.parseText(filter_json)
+		def resultJson = parseJson(filter_json)
         filtername = resultJson.subscriptionFilters[0].filterName
 		echo "removing existing filter... $filtername"
 		if (filtername != "" && !filtername.equals(lambda)) {
 			sh "aws logs delete-subscription-filter --output json --log-group-name \""+ lambda + "\" --filter-name \"" + filtername + "\" --region " + region
 		}
 	} catch (Exception ex) { }// ignore error if not created yet
-
-	sh "aws logs put-subscription-filter --output json --log-group-name \""+ lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
+	try {
+		sh "aws logs put-subscription-filter --output json --log-group-name \""+ lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
+	} catch (Exception ex) {
+		echo "error occured: " + ex.getMessage()
+	}
 }
 
 def writeServerlessFile(config, current_environment){
@@ -687,7 +700,7 @@ def getLambdaARN (String stackName) {
 		def outputs = parsedObject.Stacks[0].Outputs;
 
 		for (output in outputs) {
-			if (output.OutputKey == "HandlerLambdaFunctionArn") {
+			if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
 				ARN = output.OutputValue
 			}
 		}
@@ -697,7 +710,18 @@ def getLambdaARN (String stackName) {
 
 	return ARN;
 }
+@NonCPS
+def generateAssetMap(provider, providerId, type, created_by) {
 
+	def serviceCtxMap = [
+		provider: provider,
+		provider_id: providerId,
+		type: type,
+		created_by: created_by
+	]
+
+	return serviceCtxMap;
+}
 
 @NonCPS
 def parseJson(jsonString) {
@@ -744,9 +768,10 @@ def loadBuildModules(buildModuleUrl){
 		echo "Service metadata loader module loaded successfully."
     
 		utilModule = load "utility-loader.groovy"
+		echo "Util module loaded successfully."
 
-		environmentDeploymentMetadata = load "environment-deployment-metadata-loader"		
-		environmentDeploymentMetadata.setUtil(utilModule)
+		environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
+		echo "Environment deployment data loader module loaded successfully."		
 
 	}
 }

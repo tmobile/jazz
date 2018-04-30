@@ -85,19 +85,19 @@
             "type": "Array"
         },
         {
+            "key": "is_public_endpoint",
+            "required": false,
+            "editable": true,
+            "isEmptyAllowed": false,
+            "type": "Boolean"
+        },
+        {
             "key": "metadata",
             "required": false,
             "editable": true,
             "isEmptyAllowed": false,
             "type": "Object"
-        },
-        {
-            "key": "endpoints",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": false,
-            "type": "Object"
-        }
+        }       
     ],
     "SERVICE_STATUS": [
         "creation_started",

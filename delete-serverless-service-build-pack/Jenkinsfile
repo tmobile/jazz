@@ -18,6 +18,7 @@ import groovy.transform.Field
 @Field def events
 @Field def utilModule
 @Field def serviceMetadataLoader
+@Field def environmentMetadataLoader
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -42,6 +43,8 @@ node {
 	def cloudfrontEnabled
 	def flowType	
 	def service_id = params.db_service_id
+	def environmentIds = []
+	def is_service_deletion = true;
 	
 	
 	if(params.version){
@@ -50,6 +53,12 @@ node {
 
 	if(params.tracking_id){
 		tracking_id = params.tracking_id.trim()
+	}
+
+	if(params.environment_id){
+		environment_id = params.environment_id 
+		environmentIds.push(environment_id.trim())
+		is_service_deletion = false
 	}	
 
 	auth_token = setCredentials()
@@ -61,7 +70,26 @@ node {
 		}else{
 			error "Service Id is not available."
 		}
-	
+
+		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments",auth_token)
+		def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
+		echo "Environment List: $environmentList"
+
+		if(environmentIds.size() > 0){
+			//validate each id in environment catalog
+			for (_eId in environmentIds) {
+				if(!environmentList.contains(_eId)){
+					events.sendFailureEvent('INITIALIZE_DELETE_WORKFLOW', "unable to find the environment id $_eId from environment catalog")
+				}
+			}
+		} else if(environmentList.size() > 0 ){
+			for(_env in environmentList){
+				environmentIds.push(_env)
+			}		
+		} else if(environmentList.size() == 0){
+			echo "$repo_name doesn't contain any active environment logical id in environment catalog!"
+		}
+
 		if(!events) { error "Can't load events module"	} //Fail here
 		events.initialize(configLoader,service_config,"SERVICE_DELETION","","",g_base_url + "/jazz/events")
 
@@ -101,49 +129,89 @@ node {
 				stage('Undeploy Service') {
 					updateServiceNameConfig()
 					def path = getResourcePath()
-					cleanUpApiGatewayResources("dev", path)
-					cleanUpApiDocs("dev")
-					unDeployService('dev')
-
-					cleanUpApiGatewayResources("stg", path)
-					cleanUpApiDocs("stg")
-					unDeployService('stg')
-
-					cleanUpApiGatewayResources("prod", path)
-					cleanUpApiDocs("prod")
-					unDeployService('prod')
+					for (_envId in environmentIds){
+						try{
+							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+							if(branch && branch != 'NA'){
+								events.setBranch(branch)
+								branch = 'NA'
+							}
+							events.setEnvironment(_envId)
+							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
+							echo 'undeploying service for environment: ' + _envId
+							
+							cleanUpApiGatewayResources(_envId, path)
+							cleanUpApiDocs(_envId)
+							unDeployService(_envId)
+							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" completed", null, _envId)
+						} catch (ex){
+							echo "Environment Deletion failed for envId: $_envId . Error Details:" + ex
+							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" failed! "+ ex.getMessage(), null, _envId)
+						}
+					}
 				}
 				break
 
 			case "LAMBDA":
 				stage('Undeploy Service') {
 					updateServiceNameConfig()
-					unDeployService('dev')
-					unDeployService('stg')
-					unDeployService('prod')
+
+					for (_envId in environmentIds){
+						try{
+							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+							if(branch && branch != 'NA'){
+								events.setBranch(branch)
+								branch = 'NA'
+							}
+							events.setEnvironment(_envId)
+							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
+							echo 'undeploying function for environment: '+ _envId
+							unDeployService(_envId)
+							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" completed", null, _envId)
+						} catch (ex){
+							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" failed! "+ ex.getMessage(), null, _envId)
+						}
+				}	
 				}
 				break
 
 			case "WEBSITE":
-				stage('Undeploy Service') {
-					cleanupCloudFrontDistribution("dev")
-					unDeployWebsite("dev")
-					
-					cleanupCloudFrontDistribution("stg")
-					unDeployWebsite("stg")
-
-					cleanupCloudFrontDistribution("prod")
-					unDeployWebsite("prod")
+				stage('Undeploy Website') {
+					for (_envId in environmentIds){
+						try {
+							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+							echo "Branch ::: $branch"
+							echo "ENVIRONMENT ::: $_envId"
+							if(branch && branch != 'NA'){
+								events.setBranch(branch)
+								branch = 'NA'
+							}
+							events.setEnvironment(_envId)
+							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" started", null, _envId)
+							cloudfrontEnabled = "true"  //TODO: Remove when non-cloudFront websites feature is introduced.
+							if (cloudfrontEnabled == "true") {
+								cleanupCloudFrontDistribution(_envId)
+							}
+							unDeployWebsite( _envId)
+							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" completed", null, _envId)
+						} catch (ex){
+							echo "error occured when Deleting  Environment: " + ex
+							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for "+ _envId +" failed! "+ ex.getMessage(), null, _envId)
+						}
+					}
 
 				}
 				break
 		}
 	}
 
-	stage('Cleanup SCM') {
-		cleanup(repo_name)
-		events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
+	if(is_service_deletion){
+		stage('Cleanup SCM') {
+			cleanup(repo_name)
+			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
+		}
 	}
+	
 }
 
 /**
@@ -159,7 +227,16 @@ def unDeployService(stage) {
 			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			sh "serverless remove --stage ${stage} --verbose --bucket " + getServiceBucket(stage)
+
+			def env_key
+			if(stage.endsWith("-dev")) { 
+				env_key = "DEV"
+			} else {
+				env_key = "PROD"
+			}
+			def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
+			sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
+
 			echo "Service undeployed"
 		}catch(ex) {
 			events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
@@ -298,6 +375,17 @@ def cleanUpApiGatewayResources(stage, path) {
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			
 			def resource_id = null
+			def resource_search_key
+			def current_environment
+
+			if(stage.endsWith("-dev")) {
+				resource_search_key = "/" + stage
+				current_environment = 'dev'
+			} else {
+				resource_search_key = path
+				current_environment = 'prod'
+			}
+			echo "Resource search key for ApiGateway : $resource_search_key"
 			try {
 				def outputStr = sh (
 					script: "aws apigateway get-resources --rest-api-id ${getApiId(stage)} --region ${configLoader.AWS.REGION} --output json" ,
@@ -306,7 +394,7 @@ def cleanUpApiGatewayResources(stage, path) {
 
 				def list = parseJson(outputStr)
 				for (items in list["items"]) {
-					if(items["path"] == path) {
+					if(items["path"] == resource_search_key) {
 						resource_id = items["id"]
 					}
 				}
@@ -321,7 +409,7 @@ def cleanUpApiGatewayResources(stage, path) {
 					returnStdout: true
 				).trim()
 				def deployment_status_json = sh (
-					script: "aws apigateway create-deployment --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --stage-name ${stage} --description 'API deployment after resource clean up' --output json" ,
+					script: "aws apigateway create-deployment --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --stage-name ${current_environment} --description 'API deployment after resource clean up' --output json" ,
 					returnStdout: true
 				).trim()
 			} else {
@@ -366,7 +454,7 @@ def getServiceBucket(stage) {
  */
 def getApiId(stage) {
     echo "stage: $stage"
-  	if(stage == 'dev') {
+  	if(stage.endsWith('-dev')) {
 		return utilModule.getAPIIdForCore(configLoader.AWS.API["DEV"])
 	}else if (stage == 'stg') {
 		return utilModule.getAPIIdForCore(configLoader.AWS.API["STG"])
@@ -466,13 +554,26 @@ def getResourcePath() {
  			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
  			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
  			sh "aws configure set preview.cloudfront true"
- 			def bucketName = utilModule.getBucket(stage)
- 			def bucketUrl = "${bucketName}/${service_config['domain']}-${service_config['service']}"
+
+			def bucketName
+			if(stage.endsWith("-dev")) {
+				bucketName = utilModule.getBucket('dev')
+			} else {
+				bucketName = utilModule.getBucket(stage)
+			}
+			echo "BucketName :: $bucketName" 
+ 			def bucketUrl = "${bucketName}/${service_config['domain']}-${service_config['service']}/${stage}"
+			echo "BucketURL :: $bucketUrl" 
  			def _exists = checkIfWebsiteExists(bucketUrl)
  			if(_exists) {
  				sh "aws s3 rm s3://${bucketUrl} --recursive"
  				cleanupS3BucketPolicy(stage, bucketName)
  			}
+			def serviceS3FolderUrl = "${bucketName}/${service_config['domain']}-${service_config['service']}"
+			if(!checkIfBucketFolderHasObjects(serviceS3FolderUrl)){
+					echo "Cleaning up service folder since service folder is empty:: $serviceS3FolderUrl"
+					sh "aws s3 rm s3://${serviceS3FolderUrl} --recursive"
+			}
  		} catch(ex) {
  			send_status_email ("FAILED")
 			events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
@@ -497,6 +598,17 @@ def checkIfWebsiteExists(bucketUrl) {
 	return status
 }
 
+def checkIfBucketFolderHasObjects(bucketFolderName){
+	def status = true;
+	try {
+		 sh ("aws s3 ls s3://${bucketFolderName}  --output json --query '[length(Contents[])]'")
+	}catch(ex) {
+		echo "Bucket $bucketFolderName is empty"
+		status = false
+	}
+	return status
+}
+
 /**
  * Delete the the bucket policies related to the service folder
  * @param service
@@ -515,7 +627,7 @@ def cleanupS3BucketPolicy(stage, bucket) {
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
-			def folderName = "${service_config['domain']}-${service_config['service']}" 
+			def folderName = "${service_config['domain']}-${service_config['service']}/${stage}" 
 			def bucketPolicy = sh (
 				script: "aws s3api get-bucket-policy --bucket ${bucket} --output json",
 				returnStdout: true
@@ -622,10 +734,12 @@ def getDistributionId(stage) {
 	def distributionID
 	def outputStr
 	try {
+		def cloudFrontId = "${configLoader.INSTANCE_PREFIX}-${stage}-static-website-origin-${service_config['domain']}-${service_config['service']}"
+		echo "CloudFront ID: $cloudFrontId"
 		outputStr = sh (
 			script: "aws cloudfront list-distributions \
 				--output json \
-				--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-$stage-static-website-origin-${service_config['domain']}-${service_config['service']}].{Distribution:domainName, Id:Id}\"",
+				--query \"DistributionList.Items[?Origins.Items[?Id=='${cloudFrontId}']].{Distribution:domainName, Id:Id}\"",
 			returnStdout: true
 		)
 
@@ -652,7 +766,7 @@ def getDistributionConfig(distributionID) {
 	def distributionConfig
 	try {
 		distributionConfig = sh (
-			script: "aws cloudfront get-distribution-service_config \
+			script: "aws cloudfront get-distribution-config \
 						--output json --id "+distributionID,
 			returnStdout: true
 		)
@@ -676,14 +790,14 @@ def generateDistributionConfigForDisable(distributionConfig) {
 	def eTag
 	try {
 		if(distributionConfig) {
-			distributionConfigObj = new JsonSlurper().parseText(distributionConfig)
+			distributionConfigObj = parseJsonMap(distributionConfig)
 		}
 		eTag = distributionConfigObj.ETag
 		distributionConfigObj.DistributionConfig.Enabled = false
 		def updatedCfg = JsonOutput.toJson(distributionConfigObj.DistributionConfig)
-		echo "updatedCfg... $updatedCfg"
+		echo "Updated configuration for disabling CloudFront... $updatedCfg"
 		try {
-			sh "echo \'$updatedCfg\' > disable-cf-distribution-service_config.json"
+			sh "echo \'$updatedCfg\' > disable-cf-distribution-config.json"
 		}catch(ex) {}
 		return eTag
 	} catch(ex) {
@@ -708,7 +822,7 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 			script: "aws cloudfront update-distribution \
 						--output json \
 						--id $distributionID \
-						--distribution-service_config file://"+configFile+" \
+						--distribution-config file://"+configFile+" \
 						--if-match $_Etag",
 			returnStdout: true
 		)
@@ -867,7 +981,10 @@ def loadBuildModules(buildModuleUrl){
 
 		utilModule = load "utility-loader.groovy"
 		utilModule.initialize(configLoader)
-		echo "Service metadata loader module loaded successfully."	
+		echo "Util module loaded successfully."	
+
+		environmentMetadataLoader = load "environment-deployment-metadata-loader.groovy"
+		echo "Environment metadata loader module loaded successfully."
 
 	}
 }
@@ -881,8 +998,28 @@ def getBuildModuleUrl() {
     } 
 }
 
+def getStage(environment){
+	if(environment.equals('dev') || environment.endsWith('-dev')){
+		environment = 'dev'
+	}
+	return environment
+}
+
+def setDeploymentBucketName(stage, environment){
+	sh "sed -i -- 's/oaf-apis-deployment-bucket-" + stage + "/oaf-apis-deployment-bucket-" + environment + "/g' serverless.yml"
+}
+
 @NonCPS
 def jsonParse(jsonString) {
     def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
     return nonLazyMap
+}
+
+@NonCPS
+def parseJsonMap(jsonString) {
+		def jsonSlurper = new groovy.json.JsonSlurperClassic()
+		def jsonObj = jsonSlurper.parseText(jsonString)
+		def lazyMap = [:]
+		lazyMap.putAll(jsonObj)
+		return lazyMap
 }

@@ -19,12 +19,12 @@ import groovy.transform.Field
 @Field def utilModule
 @Field def environmentDeploymentMetadata
 
-
 @Field def auth_token = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def g_base_url = ''
-@Field def current_environment = ''
+@Field def environment_logical_id = ''
 @Field def g_base_url_for_swagger = ''
+@Field def current_environment
 
 node() {
 	def jazzBuildModuleURL = getBuildModuleUrl()
@@ -38,6 +38,10 @@ node() {
 
    	def branch = params.scm_branch
 	def repo_name = params.service_name
+	def gitCommitOwner
+	def gitCommitHash
+	def context_map
+
 
 	if (domain && domain != "") {
 		repo_name = params.domain + "_" + params.service_name
@@ -76,46 +80,50 @@ node() {
 		}
 	}
 
-	environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments",auth_token)
-	def gitCommitOwner = environmentDeploymentMetadata.getRepoCommitterInfo()
-	def gitCommitHash = environmentDeploymentMetadata.getRepoCommitHash()
-	def context_map = [created_by : config['created_by'], deployed_by: gitCommitOwner]
-	def environment_logical_id = '';
-
-	if (branch == 'master') {
-		current_environment = 'prod'
-		environment_logical_id = 'prod';
-	} else {
-		current_environment = 'dev'
-		environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
-	}
-
-	if (!environment_logical_id) {
-		error "The environment has not been created yet and its missing the environment id"
-	}
-
-	if (!events) { error "Can't load events module"	} //Fail here    
-	events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, current_environment, g_base_url + "/jazz/events")
-
-	domain = config['domain']
-    def runtime = config['providerRuntime']
-    def service = config['service']
-
-	def stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
-
-	def internalAccess = config['require_internal_access']
-	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
-
-	// @TODO: the below statement will be replaced with regular expression in very near future;
-	def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
-
-
 	dir(repo_name)
 	{
-		loadServerlessConfig(runtime)
+		scmModule.setServiceConfig(config)
+		def envApi = "${g_base_url}/jazz/environments"
+		environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, envApi, auth_token)
+		gitCommitHash = scmModule.getRepoCommitHash()
+		gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
+		context_map = [created_by : config['created_by'], deployed_by: gitCommitOwner]
+
+
+		if (branch == 'master') {
+			environment_logical_id = 'prod'
+			current_environment = 'prod'
+		} else {
+			environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
+			current_environment = 'dev'
+		}
+
+		if (!environment_logical_id && config['domain'] != 'jazz') {
+			error "The environment has not been created yet and its missing the environment id"
+		}
+
+		if (!events) { error "Can't load events module"	} //Fail here
+		def eventsApi = "${g_base_url}/jazz/events"
+		events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, environment_logical_id, eventsApi)
+
+		domain = config['domain']
+		def runtime = config['providerRuntime']
+		def service = config['service']
+
+		def stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+
+		def internalAccess = config['require_internal_access']
+		def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
+
+		// @TODO: the below statement will be replaced with regular expression in very near future;
+		def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
+
+
+
+		loadServerlessConfig(config)
 
 		if (domain && domain == "jazz") {
-			stage('Update Service Template'){				
+			stage('Update Service Template'){
 				echo "Inside Update service template"
 				try {
 					updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)
@@ -127,7 +135,7 @@ node() {
 		}
 
 
-		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", null), environment_logical_id)
+		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 		def requestId = utilModule.generateRequestId()
 		if (requestId != null) {
 			events.setRequestId(requestId)
@@ -136,7 +144,7 @@ node() {
 			error "Request Id Generation failed"
 		}
 
-		stage('Pre-Build Validation') {	
+		stage('Pre-Build Validation') {
 			try {
 				events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
 				send_status_email(config, 'STARTED', "")
@@ -170,14 +178,15 @@ node() {
 		}
 		stage("Deployment to ${env_key} environment") {
 			events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
-			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", current_environment), environment_logical_id)
+			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
 
 			echo "starts Deployment to ${env_key} Env"
+			def endpointUrl = null
 			try {
-				def endpointUrl = null
+
 				// resetting env endpoint url
 				environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
-				events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", current_environment), environment_logical_id)
+				events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
 					sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
@@ -187,68 +196,78 @@ node() {
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain for ${env_key}"
 
-					writeServerlessFile(config, current_environment)
+					writeServerlessFile(config, environment_logical_id)
 
 					setLambdaExecutionRole(configLoader.AWS.ROLEID);
 
 					echo "serverless deploy......."
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
-					sh "serverless deploy --stage ${current_environment} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
 					if (fileExists('swagger/swagger.json')) {
 						echo "Generating swagger file for environment: ${env_key}"
-	                
+
 						def api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
+						echo "API ID: $api_id"
 
 						def apiHostName = "${api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com"
-						generateSwaggerEnv(current_environment, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName, config)
+						echo "API Host Name: $apiHostName"
+						generateSwaggerEnv(environment_logical_id, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName, config)
+						if (env_key.equals("DEV") && config['domain'] != 'jazz') {
+							updateStageForDev(environment_logical_id)
+						}
+
+						sh "cat swagger/swagger.json "
 
 						echo "Deploying to API Gateway environment.."
 						sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+ " --profile cloud-api"
 						sh "aws apigateway create-deployment --rest-api-id ${api_id} --stage-name ${current_environment} --profile cloud-api"
-
 						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+						if (current_environment == 'prod') {
+							endpointUrl = "https://${apiHostName}/${current_environment}/${config['domain']}/${config['service']}"
+						} else {
+							endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
+						}
 
-						endpointUrl = "https://${apiHostName}/${current_environment}/" + domain + "/" + config['service']
 
 						if (domain != "jazz") {
 							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
-							def endpoints = [:]
-							if (config.endpoints) {
-								for (item in config.endpoints) {
-									endpoints[item.key] = item.value.S
-								}
-							}
-
-							endpoints[current_environment] = endpointUrl
-							context_map['endpoints'] = endpoints
 						}
 
-						updateApiDocUrl(current_environment)
-						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${current_environment} --recursive "
+						updateApiDocUrl(environment_logical_id)
+						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
 						echo "completed deployment........."
 
-						def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${current_environment}/swagger.json"
+						def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
+
 						send_status_email(config, 'COMPLETED', svc_status)
 					}
 
 					if (domain && domain == "jazz") {
 						serviceConfigdata.setLogStreamPermission(config)
 					}
-				}catch(ex) {
-					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", current_environment), environment_logical_id)
-					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", current_environment), environment_logical_id)
-					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), environment_logical_id)
-					error ex.getMessage()
-				}
-				environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
-				def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
-				events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", current_environment), environment_logical_id)
-				events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", current_environment), environment_logical_id)
-				events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
-			}//stage to prod ends here
-		}
+                }
+			} catch (ex) {
+				events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id), environment_logical_id)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+				events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+				error ex.getMessage()
+			}
+			environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
+			def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
+			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
+			events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
+			events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
+		}//stage to prod ends here
+
 	}//dir ends here
+}
+
+/**
+	Update context stage to use the dev properties file.
+*/
+def updateStageForDev(environment) {
+	sh "sed -i -- 's#basePath\": \"/#basePath\": \"/$environment/#g' swagger/swagger.json"
 }
 
 def echoServerlessFile() {
@@ -326,7 +345,7 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
     sh "sed -i -- 's/{api_host_name}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
     sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
-	sh "sed -i -- 's/{envmnt}/${env}/g' swagger/swagger.json" // {environment}
+	sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
 
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;
@@ -337,13 +356,13 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
 	sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 }
 
-def writeServerlessFile(config, current_environment){
+def writeServerlessFile(config, environment_logical_id){
 	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
-	sh "sed -i -- 's/{env-stage}/${current_environment}/g' serverless.yml"
+	sh "sed -i -- 's/{env-stage}/${environment_logical_id}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
-	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml" 	
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
@@ -351,7 +370,7 @@ def writeServerlessFile(config, current_environment){
 	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
-	
+
 	if (config['artifact']) {
 		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
 	}
@@ -451,7 +470,12 @@ def validateDeploymentConfigurations(def prop) {
 
 }
 
-def loadServerlessConfig(runtime) {
+def addVpcDetails() {
+    echo "addVpcdetails to serverless.yml file"
+    sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
+}
+
+def loadServerlessConfig(config) {
     dir('_config') {
 		def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
 
@@ -463,13 +487,17 @@ def loadServerlessConfig(runtime) {
 			]])
     }
 
-    if (runtime.indexOf("nodejs") > -1) {
+    if (config['providerRuntime'].indexOf("nodejs") > -1) {
         sh "cp _config/serverless-nodejs.yml ./serverless.yml"
-    } else if (runtime.indexOf("java") > -1) {
+    } else if (config['providerRuntime'].indexOf("java") > -1) {
         sh "cp _config/serverless-java.yml ./serverless.yml"
-    } else if (runtime.indexOf("python") > -1) {
+    } else if (config['providerRuntime'].indexOf("python") > -1) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
+
+		if (config['service'] == 'cloud-logs-streamer' && config['domain'] == 'jazz') {
+			addVpcDetails()
+		}
 
 	echoServerlessFile()
 }
@@ -521,8 +549,7 @@ def createSubscriptionFilters(stackName, region, roleId) {
 			returnStdout: true
 		).trim()
 		echo "${filter_json}"
-		def describeJson = new groovy.json.JsonSlurper()
-		def resultJson = describeJson.parseText(filter_json)
+		def resultJson = parseJson(filter_json)
         filtername = resultJson.subscriptionFilters[0].filterName
 		echo "removing existing filter... $filtername"
 		if (filtername != "" && !filtername.equals(lambda)) {
@@ -530,7 +557,11 @@ def createSubscriptionFilters(stackName, region, roleId) {
 		}
 	} catch (Exception ex) { }// ignore error if not created yet
 
-	sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region}"
+	try {
+		sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region}"
+	} catch (Exception ex) {
+		echo "error occured: " + ex.getMessage()
+	}
 }
 
 
@@ -629,10 +660,10 @@ def send_status_email (config, build_status, email_content) {
 	}
 }
 
-def updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)	{
+def updatePlatformServiceTemplate(config, roleARN, roleId, environment_logical_id, repo_name)	{
 	echo "loadServerlessConfig......."
 	def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name, utilModule)
+	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, environment_logical_id, repo_name, utilModule)
 	serviceConfigdata.loadServiceConfigurationData()
 }
 
@@ -670,14 +701,14 @@ def loadBuildModules(buildModuleUrl){
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
 		echo "config loader loaded successfully."
-		
+
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
 		echo "SCM module loaded successfully."
 
 		serviceConfigdata = load "service-configuration-data-loader.groovy"
 		echo "Service configuration module loaded successfully."
-		
+
 		events = load "events-module.groovy"
 		echo "Event module loaded successfully."
 
@@ -686,9 +717,11 @@ def loadBuildModules(buildModuleUrl){
 		echo "Service metadata loader module loaded successfully."
 
 		utilModule = load "utility-loader.groovy"
+		echo "Util module loaded successfully."
 
-		environmentDeploymentMetadata = load "environment-deployment-metadata-loader"		
-		environmentDeploymentMetadata.setUtil(utilModule)
+		environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
+		echo "Environment deployment data loader module loaded successfully."
 
 	}
 }
+

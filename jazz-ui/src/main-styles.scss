@@ -3,7 +3,8 @@
 @import 'styles/_bootstrap';
 @import 'styles/_page';
 @import 'styles/_toaster';
-
+// @import 'styles/_fonts';
+// override default ul,li styles
 ul {
     padding: 0;
     margin: 0;
@@ -96,7 +97,11 @@ li {
 }
 
 .custom-cb input[type=checkbox] {
+    // visibility: hidden;
     opacity: 0;
+    // &:focus{
+    //     outline-color: #aaaaaa !important;//border color need to be changed
+    // }
 }
 
 .custom-cb input[type=checkbox]:checked + label {
@@ -170,7 +175,11 @@ li {
 /*radio button related styles starts*/
 
 input[type="radio"] {
+    // display: none;
     opacity: 0;
+    // &:focus{
+    //     outline-color: #aaaaaa;//border color need to be changed
+    // }
 }
 
 input[type="radio"] + label {
@@ -288,6 +297,10 @@ select {
     -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
     -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
+    // -webkit-transition: border linear .2s, box-shadow linear .2s;
+    // -moz-transition: border linear .2s, box-shadow linear .2s;
+    // -o-transition: border linear .2s, box-shadow linear .2s;
+    // transition: border linear .2s, box-shadow linear .2s;
     border-radius: 3px;
 }
 
@@ -335,6 +348,10 @@ input[type=number] {
     @media (min-width: 854px) {
         display: none;
     }
+}
+
+.show{
+    display:block;
 }
 
 .relative {
@@ -416,7 +433,10 @@ input[type=number] {
     line-height: 4rem;
 }
 .filter-icon {
-    margin: 0 1rem;
+    margin: 0 0.5rem;
+    @media (max-width: $screen-sm) {
+        margin:0rem;
+    }
     display: inline-block;
     .icon-icon-filter-unselected {
         cursor: pointer;
@@ -448,7 +468,13 @@ input[type=number] {
         left: 3rem;
     }
 }
+.magen{
+    color:#ed008c;
+}
 
+.pointer{
+    cursor:pointer;
+}
 .view-hdr-wrp {
     position: fixed;
     top: 0;
@@ -461,13 +487,11 @@ input[type=number] {
     position: relative;
     margin-top: -15px;
     margin-bottom: 10px;
-    color: #ed008c;
+    color: #999;
     text-align: center;
     a{
         cursor: pointer;
-        
     }
-    color : #ed008c;
 }
 * {
     @media(max-width: 853px) {
@@ -499,3 +523,26 @@ section:focus
 .primary-txt-color{
     color: #ed008c;
 }
+
+search-box{
+    @media (max-width: $screen-sm) {
+        max-width: calc(100% - 60px);
+    }
+}
+.icon-icon-server-error, .icon-icon-nodata, .icon-icon-server-success{
+    font-size: 7rem;
+    padding-bottom:1rem;
+}
+.success-text-color{
+    color: #5cae01; 
+}
+
+.icon-icon-refresh:hover,
+.icon-icon-filter-unselected:hover,
+.icon-icon-search-unselected:hover,
+.icon-icon-close:hover, 
+.expandbtn:hover,
+.Expandbtn:hover{
+    opacity:0.75;
+}
+

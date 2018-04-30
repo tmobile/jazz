@@ -14,7 +14,7 @@ echo "Events module loaded successfully"
 @Field def g_environment = ""
 @Field def g_event_handler = ""
 @Field def g_event_type = ""
-@Field def g_url
+@Field def g_events_api
 @Field def service_metadata
 @Field def config_loader
 
@@ -51,7 +51,9 @@ echo "Events module loaded successfully"
 	'UPDATE_ASSET':'UPDATE_ASSET',
 	'CALL_DELETE_WORKFLOW': 'CALL_DELETE_WORKFLOW',
 	'CREATE_DEPLOYMENT': 'CREATE_DEPLOYMENT',
-	'UPDATE_DEPLOYMENT': 'UPDATE_DEPLOYMENT'
+	'UPDATE_DEPLOYMENT': 'UPDATE_DEPLOYMENT',
+	'UPDATE_ENVIRONMENT': 'UPDATE_ENVIRONMENT',
+	'DELETE_ENVIRONMENT': 'DELETE_ENVIRONMENT'
 ]
 
 /**
@@ -233,7 +235,7 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 		if (service_metadata['domain'] != "jazz") {
 			def shcmd = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
-					$g_url \
+					$g_events_api \
 				-d \'${payload}\'", returnStdout:true).trim()
 
 			echo "------  Event send.........."
@@ -319,7 +321,7 @@ def setEventType(eventType) {
  * @return      
  */
 def setUrl(url) {
-	g_url = url
+	g_events_api = url
 
 }
 

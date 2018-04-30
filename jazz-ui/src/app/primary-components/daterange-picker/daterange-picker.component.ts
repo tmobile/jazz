@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { DatePickerOptions, DateModel } from 'ng2-datepicker';
+import { DatePickerOptions, DateModel } from './ng2-datepicker';
 import * as $ from 'jquery';
 import * as moment from 'moment';
 
@@ -98,8 +98,8 @@ export class DaterangePickerComponent implements OnInit {
 	}
 	onApply(){
 
-		this.date3 = new Date($(".datepicker-input")[0].innerHTML);
-		this.date4 = new Date($(".datepicker-input")[1].innerHTML);
+		this.date3 = new Date($(".datepicker-input")[0].innerText);
+		this.date4 = new Date($(".datepicker-input")[1].innerText);
 
 
 		this.setTime(this.date3, this.time1);
@@ -134,6 +134,7 @@ export class DaterangePickerComponent implements OnInit {
 
 				
 		if(this.date1 != undefined && this.oldDate1 != undefined){
+			// var oldDate1Formatted = new Date(olddateComb1);
 			var date1Formatted = new Date(dateComb1);
 			if ( dateComb1 !== olddateComb1 ) {
 				this.oldDate1 = this.date1;
@@ -143,26 +144,39 @@ export class DaterangePickerComponent implements OnInit {
 			  		maxDate: todayDate,
 			  		format: 'DD-MM-YYYY',
 			  	});
+			  	console.log("options2 chk ",this.options2);
 			}
 		}
 
 		if(this.date2 != undefined && this.oldDate2 != undefined){
+			// var oldDate2Formatted = new Date(olddateComb2);
 			var date2Formatted = new Date(dateComb2);
 
 			if (olddateComb2 !== dateComb2) {
+				console.log("dateComb2 chk ",dateComb2);
+				console.log("olddateComb2 chk ",olddateComb2);
 				this.oldDate2 = this.date2;
 				this.options1 = new DatePickerOptions({
 					autoApply : true,
 			  		format: 'DD-MM-YYYY',
 			  		maxDate: date2Formatted
 			  	});
+			  	console.log("options1 chk ",this.options1);
 			}
 		}
 		
 
 }
 
-  constructor() {
+  constructor() { 
+  	// this.options1 = new DatePickerOptions({
+  	// 	autoApply : true,
+  	// 	// maxDate: this.date1
+  	// });
+  	// this.options2 = new DatePickerOptions({
+  	// 	autoApply : true,
+  	// 	// maxDate: this.date2
+  	// });
   }
     public setMoment1(moment1: any): any {
 		this.momentValue1 = moment1;
@@ -179,6 +193,7 @@ export class DaterangePickerComponent implements OnInit {
 		var mm = (today.getMonth()+1); //January is 0!
 
 		var yyyy = today.getFullYear().toString();
+		// console.log(dd<10);
 		if(dd<10){
 		    var newdd = '0'+ dd.toString();
 		} 
@@ -199,6 +214,7 @@ export class DaterangePickerComponent implements OnInit {
 
   	var todayDateSring = this.getTodayDate().fullDate;
   	var todayDate = new Date();
+  	// console.log("todayDateSring ",todayDateSring);
 
   	
 	let momentObj = moment(todayDateSring, "MM-DD-YYYY");
@@ -222,10 +238,28 @@ export class DaterangePickerComponent implements OnInit {
 
 	this.date1 = this.dateModel;
 	this.date2 = this.dateModel;
+	// console.log("date1 ",this.date1)
+
 	this.oldDate1 = this.dateModel;
 	this.oldDate2 = this.dateModel;
 
-  	if (this.range) {}
+	/********/
+  	if (this.range) {
+  		// try{
+  		// 	this.momentValue1 = new Date(this.range['from']);
+  		// } catch(e){
+  		// 	this.momentValue1 = new Date();
+  		// 	this.momentValue1.setDate(this.momentValue1.getDate() - 1);
+				// this.time1 = {hour:this.momentValue1.getHours(), minute:this.momentValue1.getMinutes(), second:this.momentValue1.getSeconds()};
+  		// }
+  		// try{
+  		// 	this.momentValue2 = new Date(this.range['to']);
+  		// } catch(e){
+  		// 	this.momentValue2 = new Date();
+				// this.time2 = {hour:this.momentValue2.getHours(), minute:this.momentValue2.getMinutes(), second:this.momentValue2.getSeconds()};
+
+  		// }
+	  }
   }
 
 }

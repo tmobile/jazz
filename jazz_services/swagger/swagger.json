@@ -1372,10 +1372,6 @@
                         "type": "string"
                     },
                     "description": "Tags for the service"
-                },
-                "endpoints": {
-					"type": "string",
-					"description": "Endpoint where the service is accessible"
                 }
             }
         },
@@ -1438,6 +1434,10 @@
 				"metadata":{
                     "type": "string",
                     "description": "Service metadata imformation"
+                },
+                "is_public_endpoint":{
+                    "type": "Boolean",
+                    "description": "public endpoint imformation"
                 },
                 "tags": {
                     "type": "array",
@@ -1517,6 +1517,10 @@
 				"metadata":{
                     "type": "string",
                     "description": "Service metadata imformation"
+                },
+                "is_public_endpoint":{
+                    "type": "Boolean",
+                    "description": "public endpoint imformation"
                 },
                 "tags": {
                     "type": "array",

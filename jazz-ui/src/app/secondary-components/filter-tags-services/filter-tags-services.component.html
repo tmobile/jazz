@@ -1,0 +1,25 @@
+<div class='row' >
+    <!-- *ngFor='let item of filterTags' -->
+<div class='eachTag'  *ngIf='filterTagsServices[0].value != filter_Name_default' >
+    {{filterTagsServices[0].key}}: <b>{{filterTagsServices[0].value}}</b>
+    <span class='icon-icon-close' title='Remove Filter' (click)='clearall("name")'></span>
+</div>
+<div class='eachTag' *ngIf='filterTagsServices[1].value != filter_Domain_default' >
+    {{filterTagsServices[1].key}}: <b>{{filterTagsServices[1].value}}</b>
+    <span class='icon-icon-close' title='Remove Filter' (click)='clearall("domain")'></span>
+</div>
+<div class='eachTag' *ngIf='filterTagsServices[2].value != filter_Status_default' >
+    {{filterTagsServices[2].key}}: <b>{{filterTagsServices[2].value}}</b>
+    <span class='icon-icon-close' title='Remove Filter' (click)='clearall("status")'></span>
+</div>
+<div class='eachTag' *ngIf='filterTagsServices[3].value != filter_Search_default' >
+    {{filterTagsServices[3].key}}: <b>{{filterTagsServices[3].value}}</b>
+    <span class='icon-icon-close' title='Remove Filter' (click)='clearall("search")'></span>
+</div>
+
+
+<span class="clr-all"><a (click)='clearall("all")' *ngIf='(filterTagsServices[0].value != filter_Name_default) ||
+                                          (filterTagsServices[1].value != filter_Domain_default) ||
+                                          (filterTagsServices[2].value != filter_Status_default)      
+    '>CLEAR ALL</a></span>
+</div>  

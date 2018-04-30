@@ -1,0 +1,35 @@
+{
+    "EVENTS_URL": "/stg/jazz/events",
+    "SERVICE_API_URL": "https://test-apikey.execute-api.east-region.amazonaws.com",
+    "EVENT_STATUS": {
+      "completed": "COMPLETED"
+    },
+    "SCM_TYPE": {
+      "bitbucket": "BITBUCKET",
+      "gitlab": "GITLAB"
+    },
+    "EVENT_TYPE": {
+      "onboarding": "SERVICE_ONBOARDING",
+      "deployment": "SERVICE_DEPLOYMENT",
+      "deletion": "SERVICE_DELETION"
+    },
+    "EVENT_NAME": [
+      "CREATE_BRANCH",
+      "CREATE_TAG",
+      "COMMIT_TEMPLATE",
+      "COMMIT_CODE",
+      "DELETE_BRANCH",
+      "DELETE_TAG",
+      "RAISE_PR",
+      "MERGE_PR",
+      "DECLINE_PR",
+      "UPDATE_PR",
+      "COMMENT_PR"
+    ],
+    "SCM_MAPPINGS": {
+      "identifier": {
+        "bitbucket": "X-Bitbucket-Type",
+        "gitlab": "X-Gitlab-Event"
+      }
+    }
+  }

@@ -8,9 +8,9 @@ import { Injectable } from '@angular/core';
 import { Http, Headers, Response, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
-import { environment } from '../../../environments/environment';
 import { ConfigService } from '../../app.config';
 import { Router } from '@angular/router';
+import { environment } from '../../../environments/environment';
 
 
 @Injectable()
@@ -24,7 +24,8 @@ export class AuthenticationService {
         let currentUser;
         currentUser = JSON.parse(localStorage.getItem('currentUser'));
         this.token = currentUser && currentUser.token;
-        this.baseurl = configService.getConfiguration().baseurl;
+
+        this.baseurl = localStorage.getItem('overridehost')? localStorage.getItem('overridehost') :  environment.baseurl;
     }
     getToken(){
         let currentUser;
@@ -94,8 +95,10 @@ export class AuthenticationService {
     
     getUserId(){
         let currentUser;
-        currentUser = JSON.parse(localStorage.getItem('currentUser'));
-        this.userid = currentUser.username;
+        if(this.isLoggedIn()){
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            this.userid = currentUser.username;
+        }
         return this.userid;
     }
 }

@@ -1,9 +1,21 @@
-import { Component, OnInit, ElementRef, Inject, Input, Pipe, PipeTransform } from '@angular/core';
+import { Component, OnInit, ComponentFactoryResolver, ReflectiveInjector, ElementRef ,EventEmitter, Output, Inject, Input,ViewChild} from '@angular/core';
 import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
 import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
-import { ToasterService} from 'angular2-toaster';
+import { ToasterService } from 'angular2-toaster';
 import { RequestService, MessageService } from '../../core/services/index';
-declare var $:any;
+import { FilterTagsComponent } from '../../secondary-components/filter-tags/filter-tags.component';
+import { AfterViewInit } from '@angular/core';
+import { AuthenticationService } from '../../core/services/index';
+import { DataCacheService } from '../../core/services/index';
+import { AdvancedFiltersComponent } from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
+import { AdvancedFilterService } from './../../advanced-filter.service';
+import { AdvFilters } from './../../adv-filter.directive';
+import { environment } from './../../../environments/environment';
+import { environment as env_internal } from './../../../environments/environment.internal';
+
+
+
+
 
 @Component({
   selector: 'service-logs',
@@ -11,7 +23,60 @@ declare var $:any;
   styleUrls: ['./service-logs.component.scss']
 })
 export class ServiceLogsComponent implements OnInit {
+
+	
+	constructor(@Inject(ElementRef) elementRef: ElementRef, @Inject(ComponentFactoryResolver) componentFactoryResolver,private advancedFilters: AdvancedFilterService ,private cache: DataCacheService, private authenticationservice: AuthenticationService , private request: RequestService,private toasterService: ToasterService,private messageservice: MessageService) {
+		var el:HTMLElement = elementRef.nativeElement;
+		this.root = el;
+		this.toasterService = toasterService;
+		this.http = request;
+		this.toastmessage= messageservice;
+		this.componentFactoryResolver = componentFactoryResolver;
+		var comp = this;
+		setTimeout(function(){
+			comp.getFilter(advancedFilters);
+			this.filter_loaded = true;
+			document.getElementById('hidethis').classList.add('hide')
+		},10);
+		
+		
+	}
+	filter_loaded:boolean = false;
 	@Input() service: any = {};
+	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
+	@ViewChild(AdvFilters) advFilters: AdvFilters;
+	componentFactoryResolver:ComponentFactoryResolver;
+  
+	advanced_filter_input:any = {
+		time_range:{
+			show:true,
+		},
+		slider:{
+			show:true,
+		},
+		period:{
+			show:false,
+		},
+		statistics:{
+			show:false,
+		},
+		path:{
+			show:false,
+		},
+		environment:{
+			show:true,
+		},
+		method:{
+			show:false,
+		},
+		account:{
+			show:false,
+		},
+		region:{
+			show:false,
+		}
+	}
+	fromlogs:boolean = true;
 	payload:any={};
 	private http:any;
 	root: any;
@@ -20,13 +85,25 @@ export class ServiceLogsComponent implements OnInit {
 	errMessage: any;
 	private toastmessage:any;
 	loadingState:string='default';
-	logsSearch:any = {"environment" : "prod"};
 	 private subscription:any;
-	 filterloglevel:string = 'INFO';
+	 filterloglevel:string = 'ERROR';
 	 environment:string = 'prod';
 	 pageSelected:number =1;
 	 expandText:string='Expand all';
 	 ReqId=[];
+	 errorTime:any;
+	 errorURL:any;
+	 errorAPI:any;
+	 errorRequest:any={};
+	 errorResponse:any={};
+	 errorUser:any;
+	 errorChecked:boolean=true;
+	 errorInclude:any="";
+	 json:any={};
+	 model:any={
+		userFeedback : ''
+  };
+
 
 	tableHeader = [
 		{
@@ -56,7 +133,7 @@ export class ServiceLogsComponent implements OnInit {
 			sort: true,
 			filter: {
 				type: 'dropdown',
-				data: ['WARN', 'ERROR', 'INFO', 'VERBOSE', 'DEBUG']
+				data: ['ERROR', 'WARN',  'INFO', 'DEBUG','VERBOSE']
 			}
 		}
 	]
@@ -64,10 +141,10 @@ export class ServiceLogsComponent implements OnInit {
 	logs = [];
 	backupLogs=[];
 
-	logsData = []
 
-	filtersList = ['WARN', 'ERROR', 'INFO', 'VERBOSE', 'DEBUG'];
-	selected=['INFO']
+
+	filtersList = [ 'ERROR', 'WARN', 'INFO', 'DEBUG', 'VERBOSE'];
+	selected=[ 'ERROR'];
 
 	slider:any;
 	sliderFrom = 1;
@@ -88,18 +165,108 @@ export class ServiceLogsComponent implements OnInit {
 	limitValue : number = 20;
 	offsetValue:number = 0;
 
-	environmentList = ['dev', 'prod'];
+	envList = ['prod','stg'];
+	
+	accList=env_internal.urls.accounts;
+	regList=env_internal.urls.regions;
+	  accSelected:string = this.accList[0];
+	regSelected:string=this.regList[0];
+  
+    instance_yes;
+	getFilter(filterServ){
+		
+		this.service['islogs']=false;
+		this.service['isServicelogs']=true;
+		this.service['ismetrics']=false;
 
-	onEnvSelected(env){
-		this.logsSearch.environment = env;
+		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
+		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
+		var comp = this;
+		
+		let viewContainerRef = this.advFilters.viewContainerRef;
+		viewContainerRef.clear();
+		let componentRef = viewContainerRef.createComponent(componentFactory);
+		this.instance_yes=(<AdvancedFiltersComponent>componentRef.instance);
+		(<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
+		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
+		
+			comp.onFilterSelect(event);
+		});
+
+	}
+
+   onaccSelected(event){
+    this.FilterTags.notify('filter-Account',event);
+    this.accSelected=event;
+
+   }
+	onregSelected(event){
+    this.FilterTags.notify('filter-Region',event);
+    this.regSelected=event;
+   }
+ 
+	// onEnvSelected(env){
+
+	onEnvSelected(envt){
+		this.FilterTags.notify('filter-Env',envt);
+
+		// this.logsSearch.environment = env;
 		if(env === 'prod'){
 			env='prod'
 		}
-		this.environment = env;
-		this.payload.environment=this.environment;
+		var env_list=this.cache.get('envList');
+		var fName = env_list.friendly_name;
+		var index = fName.indexOf(envt);
+		var env = env_list.env[index];
+		this.environment = envt;
+		this.payload.environment=env;
 		this.resetPayload();
 	}
 
+	onFilterSelect(event){
+		switch(event.key){
+		  case 'slider':{
+			this.getRange(event.value);
+			break;
+		  }
+		  
+		  case 'range':{
+			this.sendDefaults(event.value);
+			this.FilterTags.notifyLogs('filter-TimeRange',event.value);		
+			this.sliderFrom =1;
+			this.FilterTags.notifyLogs('filter-TimeRangeSlider',this.sliderFrom);
+			
+			var resetdate = this.getStartDate(event.value, this.sliderFrom);
+			this.selectedTimeRange = event.value;
+			this.payload.start_time = resetdate;
+			this.resetPayload();
+			
+			break;
+		  }
+		  
+		  case 'account':{
+			  this.FilterTags.notify('filter-Account',event.value);
+			this.accSelected=event.value;
+			break;
+		  }
+		  case 'region':{ 
+			this.FilterTags.notify('filter-Region',event.value);
+			this.regSelected=event.value;
+			break;
+				
+		  }
+		  case "environment":{
+			this.FilterTags.notifyLogs('filter-Environment',event.value);
+			this.environment = event.value;
+			this.payload.environment = event.value;
+			this.resetPayload();
+			break;
+		  }
+	
+	   
+		}
+		
+	  }
 	onClickFilter(){
 		
 		//ng2-ion-range-slider
@@ -116,6 +283,8 @@ export class ServiceLogsComponent implements OnInit {
 		slider.getElementsByClassName('irs-min')[0].setAttribute('style','background: none');
 	}
 	getRange(e){
+		this.FilterTags.notifyLogs('filter-TimeRangeSlider',e.from);
+		
 		this.sliderFrom =e.from;
 		this.sliderPercentFrom=e.from_percent;
 		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
@@ -129,8 +298,89 @@ export class ServiceLogsComponent implements OnInit {
 		this.callLogsFunc();
 	}
 
+	getRangefunc(e){
+		this.FilterTags.notifyLogs('filter-TimeRangeSlider',e);
+		
+		this.sliderFrom =e;
+		this.sliderPercentFrom=e;	
+		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
+		this.payload.start_time = resetdate;
+		this.resetPayload();
+	}
+
+	cancelFilter(event){
+		switch(event){
+		  case 'time-range':{this.instance_yes.onRangeListSelected('Day'); 
+			break;
+		  }
+		  case 'time-range-slider':{
+			this.instance_yes.resetslider(1);
+		  
+			break;
+		  }
+		  case 'period':{ this.instance_yes.onPeriodSelected('15 Minutes');
+			break;
+		  }
+		  case 'statistic':{      this.instance_yes.onStatisticSelected('Average');
+		  
+			break;
+		  }
+		  case 'account':{      this.instance_yes.onaccSelected('Acc 1');
+		  
+			break;
+		  }
+		  case 'region':{      this.instance_yes.onregSelected('reg 1');
+		  
+			break;
+		  }
+		  case 'env':{      this.instance_yes.onEnvSelected('prod');
+		  
+			break;
+		  }
+		  case 'method':{      
+				
+				this.instance_yes.onMethodListSelected('POST');
+		  
+			break;
+		  }
+		  case 'all':{ this.instance_yes.onRangeListSelected('Day');    
+				this.instance_yes.onPeriodSelected('15 Minutes');
+				this.instance_yes.onStatisticSelected('Average');
+				this.instance_yes.onaccSelected('Acc 1');
+				this.instance_yes.onregSelected('reg 1');
+				this.instance_yes.onEnvSelected('prod');
+				this.instance_yes.onMethodListSelected('POST');
+				break;
+		  	}
+		}
+	   
+		this.getRangefunc(1);
+}
+
+	sendDefaults(range){
+		switch(range){
+			case 'Day':{     this.FilterTags.notify('filter-Period','15 Minutes')
+				break;
+			}
+			case 'Week':{   this.FilterTags.notify('filter-Period','1 Hour')
+				break;
+			}
+			case 'Month':{ 
+			   this.FilterTags.notify('filter-Period','6 Hours')
+				break;
+			}
+			case 'Year':{   this.FilterTags.notify('filter-Period','7 Days')
+				break;
+			}
+		}
+	}
+
 	onRangeListSelected(range){
+		this.sendDefaults(range);
+		this.FilterTags.notifyLogs('filter-TimeRange',range);		
 		this.sliderFrom =1;
+		this.FilterTags.notifyLogs('filter-TimeRangeSlider',this.sliderFrom);
+		
 		var resetdate = this.getStartDate(range, this.sliderFrom);
 		// this.resetPeriodList(range);
 		this.selectedTimeRange = range;
@@ -162,7 +412,6 @@ export class ServiceLogsComponent implements OnInit {
 	}
 
 	onRowClicked(row, index) {
-		// console.log('row,index',row,index)
 		for (var i = 0; i < this.logs.length; i++) {
 			var rowData = this.logs[i]
 
@@ -193,7 +442,6 @@ export class ServiceLogsComponent implements OnInit {
 	  currentMonth++;
 	  var currentYear = new Date ((todayDate).toISOString()).getFullYear();
 	  var diffMonth = currentMonth - sliderFrom;
-	  console.log(todayDate,todayDate.getMonth());
 	  if(diffMonth>0){
 		var resetYear = currentYear;
 		var resetMonth = diffMonth;
@@ -247,31 +495,18 @@ export class ServiceLogsComponent implements OnInit {
     this.logs = this.sort.sortByColumn(col , reverse , function(x:any){return x;}, this.logs);
 	};
 	callLogsFunc(){
-		this.loadingState = 'loading';
-		// console.log('',this.service);
-		// this.payload= {
-		// 	 "service" :  this.service.name ,//"logs", //
-		// 	"domain" :   this.service.domain ,//"jazz", //
-		// 	"environment" :  this.environment, //"dev"
-		// 	"category" :   this.service.serviceType ,//"api",//
-		// 	"size" : this.limitValue,
-		// 	"offset" : this.offsetValue,
-		// 	"type":this.filterloglevel ||"INFO",
-		// 	"end_time": (new Date().toISOString()).toString()
-		// }
-		// console.log("logs payload:", this.payload);
+		this.loadingState = 'loading';		
 		 if ( this.subscription ) {
 			this.subscription.unsubscribe();
 		}
 		this.subscription = this.http.post('/jazz/logs', this.payload).subscribe(
       response => {
-		  console.log("response:", response)
-	   this.logs  = response.data.data.logs;
 		
-		if(this.logs.length !=0){
+	   this.logs  = response.data.logs || response.data.data.logs ;
+	   if(this.logs != undefined)
+		if( this.logs.length !=0){
 			var pageCount = response.data.count;
 			this.totalPagesTable = 0;
-			// console.log("total count:"+pageCount);
 			if(pageCount){
 			  this.totalPagesTable = Math.ceil(pageCount/this.limitValue);
 			}
@@ -279,8 +514,7 @@ export class ServiceLogsComponent implements OnInit {
 			  this.totalPagesTable = 0;
 			}
 			this.backupLogs = this.logs;
-			this.filter = new Filter(this.logs);
-			this.logs = this.filter.filterFunction("type", this.filterloglevel, this.backupLogs);
+			
 			this.sort = new Sort(this.logs);
 			this.loadingState = 'default'
 		} else{
@@ -304,24 +538,37 @@ export class ServiceLogsComponent implements OnInit {
 			  console.log('JSON Parse Error', e);
 		  }
 
-        // console.log("err",err);
 
-        // this.isDataNotAvailable = true;
-        // this.isGraphLoading = false;
-        // this.isError = true;
+       
+		this.getTime();
+		this.errorURL = window.location.href;
+		this.errorAPI = env_internal.baseurl+"/jazz/logs";
+		this.errorRequest = this.payload;
+		this.errorUser = this.authenticationservice.getUserId();
+		try{
+			this.errorResponse = JSON.parse(err._body);
 
-        // // Log errors if any
-        // let errorMessage;
-        // // console.log("err ",err);
-        // // console.log("err.status ",err.status);
-        // // console.log("err._body ",err._body);
-        // errorMessage=this.toastmessage.errorMessage(err,"serviceMetrics");
-        // // this.popToast('error', 'Oops!', errorMessage);
-    })
+		}
+		catch(e){
+			console.log('error while parsing json',e);
+		}
 
+		this.cache.set('feedback',this.model.userFeedback)
+		this.cache.set('api',this.errorAPI)
+		this.cache.set('request',this.errorRequest)
+		this.cache.set('resoponse',this.errorResponse)
+		this.cache.set('url',this.errorURL)
+		this.cache.set('time',this.errorTime)
+		this.cache.set('user',this.errorUser)
 
+	})
+  };
+
+  getTime() {
+	var now = new Date();
+	this.errorTime = ((now.getMonth() + 1) + '/' + (now.getDate()) + '/' + now.getFullYear() + " " + now.getHours() + ':'
+	+ ((now.getMinutes() < 10) ? ("0" + now.getMinutes()) : (now.getMinutes())) + ':' + ((now.getSeconds() < 10) ? ("0" + now.getSeconds()) : (now.getSeconds())));
 	}
-
 	refreshData(event){
 		this.loadingState = 'default';
 		this.resetPayload();
@@ -344,12 +591,12 @@ export class ServiceLogsComponent implements OnInit {
       */
     }
     else{
-    //   console.log("page not changed");
-  }
+    }
 
   }
   
-	onFilterSelected(filters){
+ 	onFilterSelected(filters){
+	
 		this.loadingState = 'loading';
 		var filter ;
 		if (filters[0]) {
@@ -359,15 +606,9 @@ export class ServiceLogsComponent implements OnInit {
 		this.payload.type=this.filterloglevel;		
 		this.resetPayload();
 		
-		// this.logs = this.filter.filterFunction("type", this.filterloglevel, this.backupLogs);
-		// console.log("this.logs.length:"+this.logs.length);
-		// if(this.logs.length === 0){
-		// 	this.loadingState = 'empty';
-		// } else{
-		// 	this.loadingState = 'default';
-		// }
+		
 
-		 }
+	}
 	
 
 	trim_Message(){
@@ -380,22 +621,22 @@ export class ServiceLogsComponent implements OnInit {
 			this.logs[i].message=this.logs[i].message.replace(this.logs[i].request_id,'')
 
 			
-		 }
+		}
 
 	}
 
+	fetchEnvlist(){
+		var env_list=this.cache.get('envList');
+		if(env_list != undefined){
+		  this.envList=env_list.friendly_name;
+		}
 	
-
-  constructor(@Inject(ElementRef) elementRef: ElementRef, private request: RequestService,private toasterService: ToasterService,private messageservice: MessageService) {
-    var el:HTMLElement = elementRef.nativeElement;
-    this.root = el;
-    this.toasterService = toasterService;
-    this.http = request;
-    this.toastmessage= messageservice;
-  }
-
-  ngOnInit() {
-		//this.logs = this.logsData;
+	  }
+	  ngOnChanges(x:any){
+		  this.fetchEnvlist();
+	  }
+	ngOnInit() {
+		
 		var todayDate = new Date();
 		this.payload= {
 			"service" :  this.service.name ,//"logs", //
@@ -404,12 +645,12 @@ export class ServiceLogsComponent implements OnInit {
 		   "category" :   this.service.serviceType ,//"api",//
 		   "size" : this.limitValue,
 		   "offset" : this.offsetValue,
-		   "type":this.filterloglevel ||"INFO",
+		   "type":this.filterloglevel ||"ERROR",
 		   "end_time": (new Date().toISOString()).toString(),
 		   "start_time":new Date(todayDate.setDate(todayDate.getDate()-this.sliderFrom)).toISOString()
 	   }				
-	this.callLogsFunc();
-  }
+		this.callLogsFunc();
+	}
 
 	
 	
