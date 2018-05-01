@@ -18,7 +18,7 @@ const assert = require('chai').assert;
 const index = require('../index');
 const awsContext = require("aws-lambda-mock-context");
 const sinon = require("sinon");
-const Guid = require('guid');
+const uuid = require('uuid/v4');
 const request = require('request');
 const logger = require("../components/logger.js");
 
@@ -140,14 +140,16 @@ describe('delete-serverless-service', function() {
     });
 
     /*
-    * Given valid input paramters, handler() should create a tracking_id as a Guid
+    * Given valid input paramters, handler() should create a tracking_id as a uuid.v4
     * @param {object, object, function} default event, context, and callback as described in beforeEach
     */
-    it("should create a new GUID value if given valid inputs", function(){
-      //wrapping the GUID's create method
-      stub = sinon.stub(Guid, "create", spy);
+    it("should create a new GUID value if given valid inputs", () => {
+      //wrapping the uuid's v4 method
+      stub = sinon.stub(uuid, 'v4', spy);
+
       //attempt to trigger the above with index.handler() call
       var callFunction = index.handler(event,context,callback);
+
       stub.restore();
       assert.isTrue(spy.called);
     });
