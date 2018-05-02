@@ -14,7 +14,6 @@ export class RouteGuard implements CanActivate {
     private router: Router,
   	private toasterService: ToasterService) {
     
-    	// this.toasterService = toasterService;
 
   }
 

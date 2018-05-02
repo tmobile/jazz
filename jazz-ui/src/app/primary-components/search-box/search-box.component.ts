@@ -11,17 +11,43 @@ export class SearchBoxComponent implements OnInit {
   @Output() onChange:EventEmitter<any> = new EventEmitter<any>();
   searchActive: boolean;
   searchbar: string;
+  searchval:any;
+  keyCodeVal: any;
 
   constructor() { }
-  
-  onServiceSearch(searchString,searchVal){
-    var keyCodeVal;
+  clearSearchbox(value){
+    this.searchbar=value;
+  }
+  onServiceSearchkey(searchString,searchVal){
     if(searchString.keyCode){
-      keyCodeVal = searchString.keyCode;
+      this.keyCodeVal = searchString.keyCode;
       searchString = searchVal
     }
-    this.onChange.emit({"searchString":searchString,"keyCode":keyCodeVal});
+
+    if(this.keyCodeVal == "13"){
+      this.searchval = searchVal;
+      searchString = this.searchval;
+    if(searchVal == ""){
+      this.keyCodeVal = 13;
+    }
+     this.onChange.emit({"searchString":searchString,"keyCode":this.keyCodeVal})
+    }
   };
+  
+  onServiceSearchngModel(searchString,searchVal){
+      this.searchval = searchVal;
+      searchString = this.searchval;
+    if(searchVal == ""){
+      this.keyCodeVal = 13;
+    }
+     this.onChange.emit({"searchString":searchString,"keyCode":this.keyCodeVal})
+  };
+
+ 
+
+  ngOnChanges(x:any){
+
+}
 
   ngOnInit() {
   }

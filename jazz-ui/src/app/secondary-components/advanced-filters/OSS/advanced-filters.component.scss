@@ -1,0 +1,16 @@
+@import './../../../../main-styles';
+@import './../../../pages/service-metrics/service-metrics.component.scss';
+.no-border-no-padding {
+  border: none !important;
+  padding-bottom: 0 !important;
+}
+
+.newone {
+  width: 20px;
+  top: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+  background: none;
+  background-color: #fff;
+}
