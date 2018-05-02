@@ -236,7 +236,7 @@ node() {
 							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
 						}
 
-						updateApiDocUrl(environment_logical_id)
+						updateApiDocUrl(current_environment)
 						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
 						echo "completed deployment........."
 
@@ -497,9 +497,9 @@ def loadServerlessConfig(config) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
 
-		if (config['service'] == 'cloud-logs-streamer' && config['domain'] == 'jazz') {
-			addVpcDetails()
-		}
+	if (config['service'] == 'cloud-logs-streamer' && config['domain'] == 'jazz') {
+		addVpcDetails()
+	}
 
 	echoServerlessFile()
 }
@@ -531,8 +531,8 @@ def validateSwaggerFile(service, domain, apiHostName){
 	Update the Api doc host url to include env in the path
 **/
 def updateApiDocUrl(String env) {
-    sh "sed -i -- 's#basePath\": \"/#basePath\": \"/$env/#g' swagger/swagger.json"
-    sh "sed -i -- 's#basePath\": \"/$env/\"#basePath\": \"/$env\"#g' swagger/swagger.json"
+	sh "sed -i -- 's#basePath\": \"/#basePath\": \"/$env/#g' swagger/swagger.json"
+	sh "sed -i -- 's#basePath\": \"/$env/\"#basePath\": \"/$env\"#g' swagger/swagger.json"
 }
 
 /**
