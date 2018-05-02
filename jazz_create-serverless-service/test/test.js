@@ -214,42 +214,10 @@ describe('create-serverless-service', function () {
         checkCase("principalId", null, undefined, errMessage, errType);
       assert.isTrue(bothCases);
     });
-
-    /*
-     * Given an event with an invalid rateExpression, handler() indicates the expression is invalid
-     * @param {object} event, contains a body.rateExpression that is empty, null, or invalid
-     * @params {object, function} default aws context and callback function as assigned above respectively
-     * @returns index.handler() should return a descriptive InternalServer error notification
-     */
-    // it("should inform the user the rateExpression is invalid if given a faulty rateExpression", () => {
-    //   let cronValues = [null, "", "P!nk!e_P!e"];
-    //   let errMessage1 = "Empty Cron expression.";
-    //   let errMessage2 = "Invalid Cron expression. ";
-    //   let errType = "InternalServerError";
-    //   let allCases = checkCase("body", "rateExpression", cronValues[0], errMessage1, errType) &&
-    //     checkCase("body", "rateExpression", cronValues[1], errMessage1, errType) &&
-    //     checkCase("body", "rateExpression", cronValues[2], errMessage2, errType);
-    //   assert.isTrue(allCases);
-    // });
-
     /*
      * Given successful parameters and setup, handler() should send a POST http request
      * @params {object, object, function} default event, aws context, callback
      * @returns index.handler() should attempt an http POST if given valid paramters
-     */
-    // it("should send an http POST given valid input parameters", function () {
-    //   //wrapping the Request() method that gets internally called by node request.js for any http method
-    //   stub = sinon.stub(request, "Request", spy);
-    //   //trigger the spy wrapping the request by calling handler() with valid params
-    //   let callFunction = index.handler(event, context, callback);
-    //   stub.restore();
-    //   assert.isTrue(spy.called);
-    // });
-
-    /*
-     * Given a failed http Post attempt, handler() indicates there was an error with the Jenkins job
-     * @params {object, object, function} default event, aws context, callback
-     * @returns index.handler() should return a descriptive error message concerning a failed Jenkins Job
      */
     it("should give success message if service onboarding in Jenkins setup attempt is succesfull", () => {
       let responseObject_getToken = {

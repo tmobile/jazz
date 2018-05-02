@@ -100,7 +100,7 @@ var handler = (event, context, cb) => {
 }
 
 
-var startServiceOnboarding = function (event, config, service_id) {
+var startServiceOnboarding = (event, config, service_id)=> {
     return new Promise((resolve, reject) => {
         try {
             var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
@@ -150,7 +150,7 @@ var startServiceOnboarding = function (event, config, service_id) {
     });
 }
 
-var getToken = function (configData) {
+var getToken = (configData)=> {
     return new Promise((resolve, reject) => {
         var svcPayload = {
             uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
@@ -176,7 +176,7 @@ var getToken = function (configData) {
     });
 }
 
-var createService = function (service_data) {
+var createService =  (service_data)=> {
     return new Promise((resolve, reject) => {
         crud.create(service_data, function (err, results) {
             if (err) {
@@ -192,7 +192,7 @@ var createService = function (service_data) {
     });
 }
 
-var getServiceData = function (event, authToken, configData) {
+var getServiceData = (event, authToken, configData)=> {
     return new Promise((resolve, reject) => {
         var inputs = {
             "TOKEN": authToken,
