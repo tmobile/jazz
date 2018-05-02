@@ -24,7 +24,7 @@ const logger = require("../components/logger.js");
 const CronParser = require("../components/cron-parser.js");
 const configObj = require("../components/config.js");
 
-var event, context, callback, spy, stub, checkCase,authStub;
+let event, context, callback, spy, stub, checkCase, authStub;
 
 //setup a spy to wrap around async logic/logic that need extraneous sources
 spy = sinon.spy();
@@ -38,7 +38,7 @@ checkCase = (eventProp, eventProp2, propValue, errMessage, errType) => {
     event[eventProp] = propValue;
   }
   //check if handler returns error notification with expected error type and message
-  var bool = index.handler(event, context, callback).includes(errMessage) &&
+  let bool = index.handler(event, context, callback).includes(errMessage) &&
     index.handler(event, context, callback).includes(errType);
   return bool;
 };
@@ -46,15 +46,15 @@ checkCase = (eventProp, eventProp2, propValue, errMessage, errType) => {
 describe('create-serverless-service', function () {
 
   describe("cron-parser.js", function () {
-    var validCronExp;
+    let validCronExp;
 
     beforeEach(function () {
       validCronExp = "1 * * * ? *";
     });
 
     it("should return null if given an empty or missing expression", function () {
-      var bool = true;
-      var invalidValues = [null, undefined, ""];
+      let bool = true;
+      let invalidValues = [null, undefined, ""];
       //if cronParser states any of the above values are defined, have this test fail
       for (i in invalidValues) {
         if (CronParser.isDefined(invalidValues[i]) != null) {
@@ -65,7 +65,7 @@ describe('create-serverless-service', function () {
     });
 
     it("should return 'valid' if given a valid expression", function () {
-      var bool = false;
+      let bool = false;
       if (CronParser.validateCronExpression(validCronExp).result == 'valid') {
         bool = true;
       }
@@ -76,6 +76,7 @@ describe('create-serverless-service', function () {
   describe("index.handler", function () {
 
     //set up for default valid values to pass into handler()
+    let reqStub;
     beforeEach(function () {
       event = {
         "stage": "test",
@@ -96,19 +97,26 @@ describe('create-serverless-service', function () {
           //"enableEventSchedule" : false
         }
       };
-   //   authStub = sinon.stub(index, 'getToken').returns(Promise.resolve("mock-auth-token"));
+      //   authStub = sinon.stub(index, 'getToken').returns(Promise.resolve("mock-auth-token"));
       context = awsContext();
       callback = (err, responseObj) => {
         if (err) {
           return err;
         } else {
+
           return JSON.stringify(responseObj);
         }
       };
     });
-    afterEach(()=>{
-     
-    });
+    afterEach(() => {
+      if (reqStub) {
+        reqStub.restore()
+      }
+      if (stub) {
+        stub.restore();
+      }
+    })
+
 
     /*
      * Given an event object with no event.body, handler() should indicate service inputs are missing
@@ -117,9 +125,9 @@ describe('create-serverless-service', function () {
      * @returns index.handler() should return an InternalServerError notification
      */
     it("should inform user of error if given an event with no body property", function () {
-      var errMessage = "Service inputs are not defined";
-      var errType = "BadRequest";
-      var bothCases = checkCase("body", null, null, errMessage, errType) &&
+      let errMessage = "Service inputs are not defined";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", null, null, errMessage, errType) &&
         checkCase("body", null, undefined, errMessage, errType);
       assert.isTrue(bothCases);
     });
@@ -131,9 +139,9 @@ describe('create-serverless-service', function () {
      * @returns index.handler() should return an InternalServerError notification
      */
     it("should inform user of error if given an event with no body.service_type", function () {
-      var errMessage = "'service_type' is not defined";
-      var errType = "BadRequest";
-      var bothCases = checkCase("body", "service_type", null, errMessage, errType) &&
+      let errMessage = "'service_type' is not defined";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "service_type", null, errMessage, errType) &&
         checkCase("body", "service_type", null, errMessage, errType);
       assert.isTrue(bothCases);
     });
@@ -146,13 +154,13 @@ describe('create-serverless-service', function () {
      */
     it("should inform user of error if given an event with an invalid body.service_name", function () {
       //no characters
-      var invalidName1 = "";
+      let invalidName1 = "";
       //contains a non-alphanumeric character
-      var invalidName2 = "Rar!ty";
-      var nameValues = [null, undefined, invalidName1, invalidName2];
-      var errMessage = "'service_name' is not defined or has invalid characters";
-      var errType = "BadRequest";
-      var allCases = true;
+      let invalidName2 = "Rar!ty";
+      let nameValues = [null, undefined, invalidName1, invalidName2];
+      let errMessage = "'service_name' is not defined or has invalid characters";
+      let errType = "BadRequest";
+      let allCases = true;
       //if checkCase() returns false for any of the nameValues assigned above, have allCases be false
       for (i in nameValues) {
         if (!checkCase("body", "service_name", nameValues[i], errMessage, errType)) {
@@ -169,10 +177,10 @@ describe('create-serverless-service', function () {
      * @returns index.handler() should return an InternalServerError notification
      */
     it("should inform of error if given no event.body.runtime for a service other than website", () => {
-      var runtime = "";
-      var errType = "BadRequest";
-      var errMessage = "'runtime' is not defined";
-      var allCases = checkCase("body", "runtime", runtime, errMessage, errType) &&
+      let runtime = "";
+      let errType = "BadRequest";
+      let errMessage = "'runtime' is not defined";
+      let allCases = checkCase("body", "runtime", runtime, errMessage, errType) &&
         checkCase("body", "runtime", null, errMessage, errType) &&
         checkCase("body", "runtime", undefined, errMessage, errType);
       assert.isTrue(allCases);
@@ -186,10 +194,10 @@ describe('create-serverless-service', function () {
      */
     it("should inform user of error if invalid domain value", function () {
       //invalid if containing a non-alphanumeric character
-      var invalidName2 = "f!utterShy";
-      var errMessage = "Namespace is not appropriate";
-      var errType = "BadRequest";
-      var invalidCase = checkCase("body", "domain", invalidName2, errMessage, errType);
+      let invalidName2 = "f!utterShy";
+      let errMessage = "Namespace is not appropriate";
+      let errType = "BadRequest";
+      let invalidCase = checkCase("body", "domain", invalidName2, errMessage, errType);
       assert.isTrue(invalidCase);
     });
 
@@ -200,9 +208,9 @@ describe('create-serverless-service', function () {
      * @returns index.handler() should return an UnAuthorized error notification
      */
     it("should state the user isn't authorized if no principalId is given", function () {
-      var errMessage = "User is not authorized to access this service";
-      var errType = "Forbidden";
-      var bothCases = checkCase("principalId", null, null, errMessage, errType) &&
+      let errMessage = "User is not authorized to access this service";
+      let errType = "Forbidden";
+      let bothCases = checkCase("principalId", null, null, errMessage, errType) &&
         checkCase("principalId", null, undefined, errMessage, errType);
       assert.isTrue(bothCases);
     });
@@ -213,57 +221,162 @@ describe('create-serverless-service', function () {
      * @params {object, function} default aws context and callback function as assigned above respectively
      * @returns index.handler() should return a descriptive InternalServer error notification
      */
-    it("should inform the user the rateExpression is invalid if given a faulty rateExpression", () => {
-      var cronValues = [null, "", "P!nk!e_P!e"];
-      var errMessage1 = "Empty Cron expression.";
-      var errMessage2 = "Invalid Cron expression. ";
-      var errType = "InternalServerError";
-      stub = sinon.stub(request, "Request", (obj)=>{
-        console.log("Stub got called ")
-        return new Promise((resolve, reject) => {
-          resolve("asjdka");
-        })
-      });
-      var allCases = checkCase("body", "rateExpression", cronValues[0], errMessage1, errType) &&
-        checkCase("body", "rateExpression", cronValues[1], errMessage1, errType) &&
-        checkCase("body", "rateExpression", cronValues[2], errMessage2, errType);
-      assert.isTrue(allCases);
-      stub.restore();
-    });
+    // it("should inform the user the rateExpression is invalid if given a faulty rateExpression", () => {
+    //   let cronValues = [null, "", "P!nk!e_P!e"];
+    //   let errMessage1 = "Empty Cron expression.";
+    //   let errMessage2 = "Invalid Cron expression. ";
+    //   let errType = "InternalServerError";
+    //   let allCases = checkCase("body", "rateExpression", cronValues[0], errMessage1, errType) &&
+    //     checkCase("body", "rateExpression", cronValues[1], errMessage1, errType) &&
+    //     checkCase("body", "rateExpression", cronValues[2], errMessage2, errType);
+    //   assert.isTrue(allCases);
+    // });
 
     /*
      * Given successful parameters and setup, handler() should send a POST http request
      * @params {object, object, function} default event, aws context, callback
      * @returns index.handler() should attempt an http POST if given valid paramters
      */
-    it("should send an http POST given valid input parameters", function () {
-      //wrapping the Request() method that gets internally called by node request.js for any http method
-      stub = sinon.stub(request, "Request", spy);
-      //trigger the spy wrapping the request by calling handler() with valid params
-      var callFunction = index.handler(event, context, callback);
-      stub.restore();
-      assert.isTrue(spy.called);
-    });
+    // it("should send an http POST given valid input parameters", function () {
+    //   //wrapping the Request() method that gets internally called by node request.js for any http method
+    //   stub = sinon.stub(request, "Request", spy);
+    //   //trigger the spy wrapping the request by calling handler() with valid params
+    //   let callFunction = index.handler(event, context, callback);
+    //   stub.restore();
+    //   assert.isTrue(spy.called);
+    // });
 
     /*
      * Given a failed http Post attempt, handler() indicates there was an error with the Jenkins job
      * @params {object, object, function} default event, aws context, callback
      * @returns index.handler() should return a descriptive error message concerning a failed Jenkins Job
      */
-    it("should indicate an error occured with Jenkins setup if the POST attempt fails", () => {
-      //wrapping the logger messages to console to check for error message
-      stub = sinon.stub(logger, "error", spy);
+    it("should give success message if service onboarding in Jenkins setup attempt is succesfull", () => {
+      let responseObject_getToken = {
+        statusCode: 200,
+        body: {
+          data: {
+            "token": "ghd93-3240-2343"
+          }
+        }
+      };
+      let responseObject_createService = {
+        statusCode: 200,
+        body: {
+          data: {
+            "service_id": "ghd93-3240-2343"
+          }
+        }
+      };
+      let responseObject_serviceOnboarding = {
+        statusCode: 200,
+        body: {
+          message: "Service Creation Success"
+        }
+      };
+      event.stage = "dev";
+      let config = configObj(event);
+      // wrapping requests 
+      reqStub = sinon.stub(request, "Request", (obj) => {
+        // Matching response Object to the corresponding Request call
+        if (obj.uri === (config.SERVICE_API_URL + config.TOKEN_URL)) {
+          return obj.callback(null, responseObject_getToken, responseObject_getToken.body);
+        } else if (obj.uri === "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services") {
+
+          return obj.callback(null, responseObject_createService, responseObject_createService.body);
+
+        } else if (obj.url === '{conf-jenkins-host}/job/create-service/buildWithParameters') {
+
+          return obj.callback(null, responseObject_serviceOnboarding, responseObject_serviceOnboarding.body);
+        }
+        //return obj.callback(null, responseObject, responseObject.body);
+      });
+
       //trigger the spy wrapping the logger by calling handler() with valid params
-      var callFunction = index.handler(event, context, callback);
-      stub.restore();
-      //spy has already been called for previous case, so the arguments passed to the logger.error()
-      //are contained in an array at spy.args[1]
-      var bool = spy.args[1][0].includes("Error while starting Jenkins job: ");
-      assert.isTrue(bool);
+      let callFunction = index.handler(event, context, (err, res) => {
+        reqStub.restore()
+        if (err) {
+          log(err)
+        } else {
+
+          expect(res.data).to.be.equal("Successfully created your service.");
+        }
+      })
     });
   })
+  describe("getToken", () => {
+    let config, event;
+    beforeEach(() => {
+      event = {
+        "stage": "test",
+        "headers": {
+          "Authorization": "fr1end$hip_1s_mAg1c"
+        },
+        "principalId": "@pp1eJack",
+        "body": {
+          "service_name": "test-service",
+          "service_type": "function",
+          "domain": "test-domain",
+          "runtime": "nodejs",
+          "approvers": ['tw1light_$pArkle'],
+          "rateExpression": "1 * * * ? *",
+          "slack_channel": "mlp_fim",
+          "require_internal_access": false,
+          "create_cloudfront_url": false //, //?
+          //"enableEventSchedule" : false
+        }
+      };
+      config = configObj(event);
+    })
+    it("Should Return authToken when called with valid paramenters", () => {
+      let bool = false;
+      let responseObject = {
+        statusCode: 200,
+        body: {
+          data: {
+            "token": "ghd93-3240-2343"
+          }
+        }
+      };
+      let reqStub = sinon.stub(request, "Request", (obj) => {
+        return obj.callback(null, responseObject, responseObject.body);
+      });
+      index.getToken(config).then((res) => {
+        if (res && res === "ghd93-3240-2343") {
+          bool = true;
+        }
+        assert.isTrue(bool);
+      })
+      reqStub.restore();
+    })
+    it("Should Return error message  when called with invalid paramenters", () => {
+      let bool = false;
+      let errMessage = "Could not get authentication token for updating service catalog.";
+      let responseObject = {
+        statusCode: 401,
+        body: {
+          message: "invalid pramenters",
+          data: null
+        }
+      };
+      let reqStub = sinon.stub(request, "Request", (obj) => {
+        //Returning Failure Response
+        return obj.callback(null, responseObject, responseObject.body);
+      });
 
-  describe("getServiceData", function () {
+      index.getToken(config).then(() => {
+        assert.fail()
+      }).catch((err) => {
+        if (err.error && err.error === errMessage) {
+          bool = true
+        }
+        assert.isTrue(bool);
+      })
+      reqStub.restore();
+    })
+
+  })
+  describe("getServiceData", () => {
     beforeEach(function () {
       event = {
         "stage": "test",
@@ -293,30 +406,213 @@ describe('create-serverless-service', function () {
         }
       };
     });
-    it("should should return error when passed an invalid rateExpression",()=> {
-      var cronValues = [null, "", "P!nk!e_P!e"];
-      var authToken = "temp-auth-token";
-      var config = configObj(event);
-      var bool =  false;
+    it("should should return error when passed an invalid rateExpression", () => {
+      let cronValues = [null, "", "P!nk!e_P!e"];
+      let authToken = "temp-auth-token";
+      let config = configObj(event);
+      let bool = false;
       for (let cron in cronValues) {
         event.body.rateExpression = cron
-        index.getServiceData(event, authToken, config).then().catch((errorMsg)=>{
-        
-          if(errorMsg.result ==="invalid"){
+        index.getServiceData(event, authToken, config).then().catch((errorMsg) => {
+
+          if (errorMsg.result === "invalid") {
             bool = true;
           }
           assert.isTrue(bool);
         })
       }
-      
-    });
-   it("should return input object with field values for valid input parameters for service type function",()=>{
-    var authToken = "temp-auth-token";
-    var config = configObj(event);
-    index.getServiceData(event, authToken, config).then((input)=>{
-      // input validation and edge cases
-    }).catch()
-   });
-  })
 
+    });
+    it("should return input object with METADATA values for valid input parameters for service type function", () => {
+      let authToken = "temp-auth-token";
+      let bool = false;
+      event.body["enableEventSchedule"] = true;
+      event.body.event_source_ec2 = "temp-url";
+      event.body.event_action_ec2 = "temp-url";
+      event.body.event_source_ec2 = "sample-test-data"
+      let config = configObj(event);
+      index.getServiceData(event, authToken, config).then((input) => {
+        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
+          if (input.METADATA.event_action_ec2 && input.METADATA.event_action_ec2 != null) {
+            bool = true;
+          }
+        }
+        assert.isTrue(bool);
+      }).catch()
+    });
+  })
+  describe("createService", () => {
+    let input;
+    beforeEach(() => {
+      input = {
+        TOKEN: 'temp-auth-token',
+        SERVICE_API_URL: undefined,
+        SERVICE_API_RESOURCE: undefined,
+        SERVICE_NAME: 'test-service',
+        DOMAIN: 'test-domain',
+        DESCRIPTION: undefined,
+        TYPE: 'function',
+        RUNTIME: 'nodejs',
+        REGION: "east,UST",
+        USERNAME: '@pp1eJack',
+        STATUS: 'creation_started',
+        SLACKCHANNEL: 'mlp_fim',
+        METADATA: {
+          require_internal_access: false,
+          eventScheduleRate: 'cron(1 * * * ? *)',
+          eventScheduleEnable: true
+        }
+      }
+    })
+    it("should send an http POST given valid input parameters ", () => {
+      stub = sinon.stub(request, "Request", spy);
+      //trigger the spy wrapping the request by calling handler() with valid params
+      let callFunction = index.createService(input);
+      stub.restore();
+      assert.isTrue(spy.called);
+    })
+    it("should Return service id of Created Service in case of successfull service creation", () => {
+      let bool = false;
+      let responseObject = {
+        statusCode: 200,
+        body: {
+          data: {
+            "service_id": "ghd93-3240-2343"
+          }
+        }
+      };
+      let reqStub = sinon.stub(request, "Request", (obj) => {
+        return obj.callback(null, responseObject, responseObject.body);
+      });
+      let createserviceReturn = index.createService(input);
+      createserviceReturn.then((res) => {
+        if (res && res === "ghd93-3240-2343") {
+          bool = true;
+        }
+        assert.isTrue(bool);
+      }).catch(() => {
+        assert.isTrue(false);
+      })
+      reqStub.restore();
+    })
+    it("Should Return error when service creation failed", () => {
+      let bool = false;
+      let responseObject = {
+        statusCode: 401,
+        body: {
+          message: "401 UNAUTHORIZED"
+        }
+      };
+      let reqStub = sinon.stub(request, "Request", (obj) => {
+        return obj.callback(null, responseObject, responseObject.body);
+      });
+      let createserviceReturn = index.createService(input);
+      let errMessage = "Error creating service " + input.DOMAIN + "." + input.SERVICE_NAME + " in service catalog"
+      createserviceReturn.catch((err) => {
+
+        if (err.message && err.message === errMessage) {
+          bool = true;
+        }
+        assert.isTrue(bool);
+      })
+      reqStub.restore();
+    });
+
+  })
+  describe("startServiceOnboarding", () => {
+    let config, service_id, event;
+    beforeEach(() => {
+      event = {
+        "stage": "test",
+        "headers": {
+          "Authorization": "fr1end$hip_1s_mAg1c"
+        },
+        "principalId": "@pp1eJack",
+        "body": {
+          "service_name": "test-service",
+          "service_type": "function",
+          "domain": "test-domain",
+          "runtime": "nodejs",
+          "approvers": ['tw1light_$pArkle'],
+          "rateExpression": "1 * * * ? *",
+          "slack_channel": "mlp_fim",
+          "require_internal_access": false,
+          "create_cloudfront_url": false //, //?
+          //"enableEventSchedule" : false
+        }
+      };
+      config = configObj(event);
+      service_id = "ghd93-3240-2343";
+    })
+    it("should return error message if request to start jenkins job failed ", () => {
+      let bool = false;
+      let responseObject = {
+        statusCode: 401,
+        body: {
+          message: "401 UNAUTHORIZED Jenkins Job Not triggered"
+        }
+      };
+      let reqStub = sinon.stub(request, "Request", (obj) => {
+        let errObject = {
+          message: responseObject.body.message,
+          jenkins_api_failure: true
+        }
+        return obj.callback(errObject, responseObject, responseObject.body);
+      });
+      index.startServiceOnboarding(event, config, service_id).then(() => {
+        assert.fail();
+      }).catch((err) => {
+        if (err.jenkins_api_failure && err.message != null) {
+          bool = true;
+        }
+        assert.isTrue(bool);
+      })
+      reqStub.restore();
+    })
+    it("should return error message when jenkins job has failed", () => {
+      let bool = false;
+      let errMessage = "Failed to kick off service onboarding job."
+      let responseObject = {
+        statusCode: 401,
+        body: {
+          message: "401 UNAUTHORIZED Jenkins Job Failed"
+        }
+      };
+      let reqStub = sinon.stub(request, "Request", (obj) => {
+        return obj.callback(null, responseObject, responseObject.body);
+      });
+      index.startServiceOnboarding(event, config, service_id).then(() => {
+        assert.fail();
+      }).catch((err) => {
+        if (err.jenkins_api_failure && err.message && err.message === errMessage) {
+          bool = true;
+        }
+        assert.isTrue(bool);
+      })
+      reqStub.restore();
+    })
+    it("should return success message when jenkins job has executed succesfully", () => {
+      let bool = false;
+      let Message = "Successfully created your service.";
+      let responseObject = {
+        statusCode: 200,
+        body: {
+          message: "Service Creation Success"
+        }
+      };
+      let reqStub = sinon.stub(request, "Request", (obj) => {
+        return obj.callback(null, responseObject, responseObject.body);
+      });
+      index.startServiceOnboarding(event, config, service_id).then((res) => {
+
+        if (res && res === Message) {
+          bool = true;
+        }
+        assert.isTrue(bool);
+      }).catch((err) => {
+        assert.fail();
+      })
+    })
+
+  })
 })

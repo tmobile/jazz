@@ -34,13 +34,9 @@ var user_id =  undefined;
 var serviceId;
 var serviceDataObject;
 var handler = (event, context, cb) => {
-
     var errorHandler = errorHandlerModule();
     var config = configObj(event);
     logger.init(event, context);
-
-    
-
     try {
         var isValidName = function (name) {
             return /^[A-Za-z0-9\-]+$/.test(name);
@@ -155,7 +151,6 @@ var startServiceOnboarding = function (event, config, service_id) {
 }
 
 var getToken = function (configData) {
-    console.log("gettoken");
     return new Promise((resolve, reject) => {
         var svcPayload = {
             uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
@@ -168,7 +163,6 @@ var getToken = function (configData) {
         };
 
         request(svcPayload, function (error, response, body) {
-            console.log("inside request")
             if (response.statusCode === 200 && body && body.data) {
                 var authToken = body.data.token;
                 return resolve(authToken);
@@ -183,7 +177,6 @@ var getToken = function (configData) {
 }
 
 var createService = function (service_data) {
-    console.log("create service");
     return new Promise((resolve, reject) => {
         crud.create(service_data, function (err, results) {
             if (err) {
@@ -200,7 +193,6 @@ var createService = function (service_data) {
 }
 
 var getServiceData = function (event, authToken, configData) {
-    console.log("getserviceDat")
     return new Promise((resolve, reject) => {
         var inputs = {
             "TOKEN": authToken,

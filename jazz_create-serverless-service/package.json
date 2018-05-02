@@ -6,7 +6,8 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "nyc --reporter=html --reporter=text mocha"
+    "test": "mocha",
+    "tst": "nyc --reporter=html --reporter=text mocha"
   },
   "dependencies": {
     "deasync": "*",
