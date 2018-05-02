@@ -48,7 +48,6 @@ var handler = (event, context, cb) => {
 					if (error.result === "inputError") {
 						return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
 					} else {
-						logger.info(error);
 						return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + error.message)));
 					}
 				});
@@ -61,6 +60,7 @@ var handler = (event, context, cb) => {
 				.then(() => validateEventInput(config, event.body))
 				.then(() => storeEventData(config, event.body))
 				.then((result) => {
+					logger.info(result);
 					return cb(null, result);
 				})
 				.catch((error) => {
@@ -81,7 +81,7 @@ var handler = (event, context, cb) => {
 };
 
 var getEvents = (event, config) => {
-	logger.info("Inside getEvents:")
+	logger.debug("Inside getEvents:")
 	return new Promise((resolve, reject) => {
 		crud.getList(config.events_table, event.query, (error, data) => {
 			if (error) {
@@ -94,7 +94,7 @@ var getEvents = (event, config) => {
 }
 
 var mapGetEventData = (result, event) => {
-	logger.info("Inside mapGetEventData:" + JSON.stringify(result));
+	logger.debug("Inside mapGetEventData:");
 	return new Promise((resolve, reject) => {
 		var events = [],
 			map = {
@@ -144,7 +144,7 @@ var mapGetEventData = (result, event) => {
 }
 
 var generalInputValidation = (event) => {
-	logger.info("Inside generalInputValidation:")
+	logger.debug("Inside generalInputValidation:")
 	return new Promise((resolve, reject) => {
 		var eventBody = event.body;
 		if (!eventBody) {
@@ -206,7 +206,7 @@ var generalInputValidation = (event) => {
 }
 
 var validateEventInput = (config, eventBody) => {
-	logger.info("Inside validateEventInput:")
+	logger.debug("Inside validateEventInput:")
 	return new Promise((resolve, reject) => {
 		validateUtils.validateEventData(config, eventBody, (error, data) => {
 			if (error) {
@@ -219,7 +219,7 @@ var validateEventInput = (config, eventBody) => {
 }
 
 var storeEventData = (config, eventBody) => {
-	logger.info("Inside storeEventData:");
+	logger.debug("Inside storeEventData:");
 	return new Promise((resolve, reject) => {
 		crud.create(config.event_hub, eventBody, (error, data) => {
 			if (error) {

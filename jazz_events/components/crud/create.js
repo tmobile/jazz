@@ -27,9 +27,9 @@ const moment = require('moment');
 const logger = require("../logger.js"); //Import the logging module.
 
 module.exports = (eventHub, eventBody, onComplete) => {
-	logger.info("Inside crud.create:");
+	// Generate event Id
 	var event_id = Uuid(),
-	kinesis = utils.initKinesis(),
+	kinesis = utils.initKinesis(),// Initialize kinesis
 	timestamp = moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS'),
 	map = {
 		'event_name': 'EVENT_NAME',

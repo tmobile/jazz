@@ -25,8 +25,7 @@ const utils = require("../utils.js")(); //Import the utils module.
 const logger = require("../logger.js"); //Import the logging module.
 
 module.exports = (params, eventData, onComplete) => {
-    logger.info("Inside crud.get:"+JSON.stringify(params));
-
+    // Initialize DynamoDB
     var dynamodb = utils.initDynamodb();
 
     dynamodb.getItem(params, (err, data) => {

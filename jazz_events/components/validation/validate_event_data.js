@@ -35,12 +35,13 @@ module.exports = (config, eventBody, onComplete) => {
         onComplete(null, null);
     })
     .catch((error) => {
+		logger.error("#Validate event specific data error:"+JSON.stringify(error));
         onComplete(error, null)
     });
 }
 
 function getDynamodbItem(params, eventData) {
-	logger.info("Inside getDynamodbItem:" + eventData);
+	logger.debug("Inside getDynamodbItem:" + eventData);
 	return new Promise((resolve, reject) => {
 		crud.get(params, eventData, (error, data) => {
 			if(error){
@@ -53,7 +54,7 @@ function getDynamodbItem(params, eventData) {
 }
 
 function validateEventType (config, eventBody) {
-	logger.info("Inside validateEventType:")
+	logger.debug("Inside validateEventType:")
 	return new Promise((resolve, reject) => {
 		var event_type_params = {
 			Key: {
@@ -74,7 +75,7 @@ function validateEventType (config, eventBody) {
 }
 
 function validateEventName (config, eventBody) {
-	logger.info("Inside validateEventName:");
+	logger.debug("Inside validateEventName:");
 	return new Promise((resolve, reject) => {
 		var event_name_params = {
 			Key: {
@@ -95,7 +96,7 @@ function validateEventName (config, eventBody) {
 }
 
 function validateEventHandler (config, eventBody) {
-	logger.info("Inside validateEventHandler:");
+	logger.debug("Inside validateEventHandler:");
 	return new Promise((resolve, reject) => {
 		var event_handler_params = {
 			Key: {
@@ -116,7 +117,7 @@ function validateEventHandler (config, eventBody) {
 }
 
 function validateEventStatus (config, eventBody) {
-	logger.info("Inside validateEventStatus:");
+	logger.debug("Inside validateEventStatus:");
 	return new Promise((resolve, reject) => {
 		var event_status_params = {
 			Key: {
@@ -137,7 +138,7 @@ function validateEventStatus (config, eventBody) {
 }
 
 function validateTimestamp (eventBody) {
-	logger.info("Inside validateTimestamp:");
+	logger.debug("Inside validateTimestamp:");
 	return new Promise((resolve, reject) => {
 		try {
 			if (moment(eventBody.event_timestamp, dateFormat, true).isValid()) {
@@ -148,7 +149,7 @@ function validateTimestamp (eventBody) {
 					"message": "Invalid EVENT TIMESTAMP: " + eventBody.event_timestamp + ", The format should be " + dateFormat
 				});
 			}
-		} catch (err) {
+		} catch (error) {
 			reject({
 				"code": 500,
 				"message": "Error parsing EVENT TIMESTAMP: " + eventBody.event_timestamp + ", The format should be " + dateFormat
