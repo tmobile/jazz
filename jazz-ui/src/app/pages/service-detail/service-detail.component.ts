@@ -260,8 +260,8 @@ export class ServiceDetailComponent implements OnInit {
         this.disblebtn =true;
         var payload = {
                 "service_name": this.service.name,
-                "domain": this.service.domain
-                // "version": "LATEST"
+                "domain": this.service.domain,
+                "id" : this.service.id
             };
        this.deleteServiceStatus.emit(this.deleteServiceVal);
        this.subscription = this.http.post('/jazz/delete-serverless-service' , payload)
