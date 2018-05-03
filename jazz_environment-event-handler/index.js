@@ -121,7 +121,7 @@ var processEachEvent = function (record, configData, authToken) {
 			})
 			.catch(err => {
 				logger.error("ProcessEachEvent failed for " + JSON.stringify(record));
-				handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
+				handleFailedEvents(sequenceNumber, err.details, payload, err.error);
 				return reject(err);
 			});
 	});
