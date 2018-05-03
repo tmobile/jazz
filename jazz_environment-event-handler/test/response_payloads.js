@@ -8,7 +8,13 @@ module.exports = () => {
         "envCreationResponseError": envCreationResponseError,
         "createBranchSuccess": createBranchSuccess,
         "getEnvironmentLogicalId": getEnvironmentLogicalId,
-        "environmentPayload": environmentPayload
+        "environmentPayload": environmentPayload,
+        "processEventInitialCommitSuccess": processEventInitialCommitSuccess,
+        "processEventInitialCommitError": processEventInitialCommitError,
+        "processEventUpdateEnvironmentError": processEventUpdateEnvironmentError,
+        "createBranchError": createBranchError,
+        "eventPayload": eventPayload,
+        "deleteBranchSuccess": deleteBranchSuccess
     };
 };
 
@@ -75,7 +81,6 @@ var apiResponse = {
     }
 };
 
-
 var envCreationResponseSuccess = {
     statusCode: 200,
     body: {
@@ -112,11 +117,18 @@ var createBranchSuccess = {
             "service": "test-env-oss-3",
             "created_by": "jazz-admin@abc.com",
             "domain": "jazztesting",
-            "physical_id": "bugfix/test_02",
-            "friendly_name": "bugfix/test_02",
+            "physical_id": "master",
+            "friendly_name": "master",
             "logical_id": "h0ikekwdt7-dev",
             "status": "inactive"
         }
+    }
+};
+
+var createBranchError = {
+    statusCode: 400,
+    body: {
+        "message": "error"
     }
 };
 
@@ -124,7 +136,28 @@ var deleteBranchSuccess = {
     statusCode: 200,
     body: {
         "data": {
-            "result": "success"
+            "result": "success",
+            "environment": [{
+                "physical_id": "master"
+            }]
+        },
+        "input": {
+            "service": "test-env-oss-3",
+            "domain": "jazztesting",
+            "version": "LATEST",
+            "environment_id": "h0ikekwdt7-dev"
+        }
+    }
+};
+
+var deleteBranchError = {
+    statusCode: 400,
+    body: {
+        "data": {
+            "result": "error",
+            "environment": [{
+                "physical_id": "master"
+            }]
         },
         "input": {
             "service": "test-env-oss-3",
@@ -146,9 +179,9 @@ var getEnvironmentLogicalId = {
             "domain": "jazztesting",
             "last_updated": "2018-04-18T22:05:50:198",
             "status": "deployment_started",
-            "friendly_name": "bugfix/test_02",
+            "friendly_name": "master",
             "created_by": "jazz-admin@abc.com",
-            "physical_id": "bugfix/test_02",
+            "physical_id": "master",
             "endpoint": "http://testsite.com/stg/index.html",
             "created": "2018-04-18T14:12:11:076",
             "id": "581486f5-1381-cc8f-04cf-e33939d0f5e3",
@@ -167,7 +200,47 @@ var getEnvironmentLogicalId = {
     "service": "test-env-oss-3",
     "created_by": "Tester",
     "domain": "jazztesting",
-    "physical_id": "bugfix/test_02",
+    "physical_id": "master",
     "status": "deployment_started",
     "endpoint": "http://testsite.com/stg/index.html"
+};
+
+var eventPayload = {
+    "kinesis":{
+        "kinesisSchemaVersion":"1.0",
+        "partitionKey":"CALL_DELETE_WORKFLOW",
+        "sequenceNumber":"49582744145785831874147508989126673490865670161183014914",
+        "data":"eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJiZjEyY2M3Yi03ZWNkLTQyM2UtYTkwMi0yZjU2ZjhjZWQxYjMifSwiVElNRVNUQU1QIjp7IlMiOiIyMDE4LTA0LTE2VDE2OjM1OjQ5OjUzOSJ9LCJFVkVOVF9IQU5ETEVSIjp7IlMiOiJCSVRCVUNLRVQifSwiRVZFTlRfTkFNRSI6eyJTIjoiQ09NTUlUX1RFTVBMQVRFIn0sIlNFUlZJQ0VfTkFNRSI6eyJTIjoidGVzdC1lbnYtb3NzLTMifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJDT01QTEVURUQifSwiRVZFTlRfVFlQRSI6eyJTIjoiU0VSVklDRV9PTkJPQVJESU5HIn0sIlVTRVJOQU1FIjp7IlMiOiJjMWJjYzRiYmU1YjhhMTU5In0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxOC0wNC0xNlQxNjozNTo0OToxODYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJyZXBvc2l0b3J5XCI6XCJodHRwczovL3Rlc3RyZXBvLmNvbS9wcm9qZWN0cy9DQVMvcmVwb3MvamF6enRlc3RpbmdfdGVzdC1kZWJ1Zy1kZWVwdS9icm93c2VcIixcImRvbWFpblwiOlwiamF6enRlc3RpbmdcIixcImJyYW5jaFwiOlwibWFzdGVyXCJ9In19fQ==",
+        "approximateArrivalTimestamp":1521632408.682
+    },
+    "eventSource":"aws:kinesis",
+    "eventVersion":"1.0",
+    "eventID":"shardId-000000000000:49582744145785831874147508989126673490865670161183014914",
+    "eventName":"aws:kinesis:record",
+    "invokeIdentityArn":"",
+    "awsRegion":"us-east-1",
+    "eventSourceARN":""
+}
+
+var processEventInitialCommitSuccess = {
+    statusCode: 200,
+    body: {
+        "data": {
+            "result": "success"
+        }
+    }
+};
+
+var processEventInitialCommitError = {
+    statusCode: 400,
+    body: {
+        "message": "error"
+    }
+};
+
+var processEventUpdateEnvironmentError = {
+    statusCode: 400,
+    body: {
+        "message": "Error"
+    }
 };

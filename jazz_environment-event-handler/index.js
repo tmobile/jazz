@@ -229,7 +229,6 @@ var processItem = function (eventPayload, configData, authToken) {
 
 		} else if (eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_BRANCH) {
 			environmentApiPayload.physical_id = svcContext.branch;
-
 			processEventDeleteBranch(environmentApiPayload, configData, authToken)
 				.then(result => { return resolve(result); })
 				.catch(err => {
@@ -242,64 +241,37 @@ var processItem = function (eventPayload, configData, authToken) {
 }
 
 var processEventInitialCommit = function (environmentPayload, configData, authToken) {
-	var processStgEnv = new Promise((resolve, reject) => {
-		environmentPayload.logical_id = "stg";
-		environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
+	function processEnv(env) {
+		return new Promise((resolve, reject) => {
+			environmentPayload.logical_id = env;
+			environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
 
-		var svcPayloadStg = {
-			uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
-			method: "POST",
-			headers: { Authorization: authToken },
-			json: environmentPayload,
-			rejectUnauthorized: false
-		};
+			var svcPayload = {
+				uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
+				method: "POST",
+				headers: { Authorization: authToken },
+				json: environmentPayload,
+				rejectUnauthorized: false
+			};
 
-		logger.info("svcPayloadStg" + JSON.stringify(svcPayloadStg));
-		request(svcPayloadStg, function (error, response, body) {
-			if (response.statusCode === 200 && body && body.data) {
-				return resolve(null, body);
-			} else {
-				logger.error("Error creating stg environment in catalog: " + JSON.stringify(response));
-				return reject({
-					"error": "Error creating stg environment for " + environmentPayload.domain + "_" + environmentPayload.service + " in  catalog",
-					"details": response.body.message
-				});
-			}
+			logger.info("svcPayloadProd" + JSON.stringify(svcPayloadProd));
+			request(svcPayloadProd, function (error, response, body) {
+				if (response.statusCode === 200 && body && body.data) {
+					return resolve(null, body);
+				} else {
+					logger.error(`Error creating ${env} environment in catalog: ${JSON.stringify(response)}`);
+					return reject({
+						"error": `Error creating ${env} environment for ${environmentPayload.domain} "_" ${environmentPayload.service} in catalog`,
+						"details": response.body.message
+					});
+				}
+			});
 		});
-
-	});
-
-
-	var processProdEnv = new Promise((resolve, reject) => {
-		environmentPayload.logical_id = "prod";
-		environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
-
-		var svcPayloadProd = {
-			uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
-			method: "POST",
-			headers: { Authorization: authToken },
-			json: environmentPayload,
-			rejectUnauthorized: false
-		};
-
-		logger.info("svcPayloadProd" + JSON.stringify(svcPayloadProd));
-		request(svcPayloadProd, function (error, response, body) {
-			if (response.statusCode === 200 && body && body.data) {
-				return resolve(null, body);
-			} else {
-				logger.error("Error creating prod environment in catalog: " + JSON.stringify(response));
-				return reject({
-					"error": "Error creating prod environment for " + environmentPayload.domain + "_" + environmentPayload.service + " in catalog",
-					"details": response.body.message
-				});
-			}
-		});
-
-	});
+	}
 
 	return new Promise((resolve, reject) => {
 		if (environmentPayload.physical_id === configData.ENVIRONMENT_PRODUCTION_PHYSICAL_ID) {
-			Promise.all([processStgEnv, processProdEnv])
+			Promise.all([processEnv('stg'), processEnv('prod')])
 				.then((result) => {
 					logger.debug("result" + result);
 					return resolve({ message: "Stage and Prod environments are created successfully" });
@@ -309,8 +281,8 @@ var processEventInitialCommit = function (environmentPayload, configData, authTo
 					return reject(error);
 				});
 		} else {
-			logger.error("INITIAL_COMMIT event should be triggered by a master commit. physical_id is " + environmentApiPayload.physical_id);
-			return reject("INITIAL_COMMIT event should be triggered by a master commit. physical_id is " + environmentApiPayload.physical_id);
+			logger.error("INITIAL_COMMIT event should be triggered by a master commit. physical_id is " + environmentPayload.physical_id);
+			return reject("INITIAL_COMMIT event should be triggered by a master commit. physical_id is " + environmentPayload.physical_id);
 		}
 	});
 
@@ -383,6 +355,10 @@ var processEventDeleteBranch = function (environmentPayload, configData, authTok
 					}
 
 				});
+			})
+			.catch(err => {
+				logger.error("Error with getEnvironmentLogicalId -" + JSON.stringify(err));
+				return reject(err);
 			});
 
 	});
@@ -425,6 +401,7 @@ var processEventUpdateEnvironment = function (environmentPayload, configData, au
 }
 
 var getEnvironmentLogicalId = function (environmentPayload, configData, authToken) {
+	
 	return new Promise((resolve, reject) => {
 		var svcPayload = {
 			uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "?domain=" + environmentPayload.domain + "&service=" + environmentPayload.service,
@@ -434,9 +411,9 @@ var getEnvironmentLogicalId = function (environmentPayload, configData, authToke
 		};
 
 		request(svcPayload, function (error, response, body) {
-			if (response.statusCode === 200 && body && body.data) {
+			if (response.statusCode === 200 && body) {
 				var env_logical_id = null;
-				var dataJson = JSON.parse(body);
+				var dataJson = typeof body === 'string' ? JSON.parse(body) : body;
 				if (dataJson.data && dataJson.data.environment) {
 					var envList = dataJson.data.environment;
 					for (var count = 0; count < envList.length; count++) {
