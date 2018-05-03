@@ -10,6 +10,8 @@ import { AfterViewInit, ViewChild } from '@angular/core';
 import { DataService } from "../data-service/data.service";
 import { environment } from './../../../environments/environment';
 import { environment as env_internal } from './../../../environments/environment.internal';
+import { environment as env_oss } from './../../../environments/environment.oss';
+
 
 
 import { EnvDeploymentsSectionComponent} from './../environment-deployment/env-deployments-section.component';
@@ -27,6 +29,7 @@ export class EnvironmentDetailComponent implements OnInit {
 
 
 breadcrumbs = [];
+api_doc_name:string='';
   selectedTab = 0; 
   service: any= {};
   friendly_name: any;
@@ -195,8 +198,15 @@ breadcrumbs = [];
 
     testApi(type){
         switch(type){
-            case 'api':          
-            window.open('/test-api?service=' + this.service.name + '&domain='+ this.service.domain + '&env=' +this.envSelected);
+            case 'api': 
+            if(environment.envName == "oss"){
+              var SwaggerUrl="http://editor.swagger.io/?url="+this.api_doc_name+"/"+this.service.domain +"/"+ this.service.name +"/"+this.envSelected+"/swagger.json"
+              window.open(SwaggerUrl);
+            } 
+            else{
+              window.open('/test-api?service=' + this.service.name + '&domain='+ this.service.domain + '&env=' +this.envSelected);
+
+            }        
             
             break;
 
@@ -239,6 +249,7 @@ closed:boolean = false;
 isOSS:boolean=false;
   ngOnInit()
   {
+    this.api_doc_name=env_oss.api_doc_name;
     if(environment.envName=="oss")this.isOSS = true;
       this.sub = this.route.params.subscribe(params => {
         let id = params['id'];
