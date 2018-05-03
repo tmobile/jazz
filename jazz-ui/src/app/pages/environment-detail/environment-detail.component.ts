@@ -212,7 +212,6 @@ api_doc_name:string='';
 
             case 'website' :
             if(this.endpoint_env!=(undefined||'')){
-              alert('ss  +  ->'+this.endpoint_env)
               window.open(this.endpoint_env);    
             }
             break;
