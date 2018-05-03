@@ -26,7 +26,7 @@ var payloads = formats('apis');
 
 /**
 	Delete Serverless Service
-	@author: DSundar3/Somanchi
+	@author: 
 	@version: 1.0
  **/
 
