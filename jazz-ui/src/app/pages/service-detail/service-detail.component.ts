@@ -260,7 +260,8 @@ export class ServiceDetailComponent implements OnInit {
         this.disblebtn =true;
         var payload = {
                 "service_name": this.service.name,
-                "domain": this.service.domain
+                "domain": this.service.domain,
+                "id": this.service.id
                 // "version": "LATEST"
             };
        this.deleteServiceStatus.emit(this.deleteServiceVal);
