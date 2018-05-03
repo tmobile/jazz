@@ -339,13 +339,10 @@ describe('jazz_events', function () {
             return callback(null, dbResult)
         });
         index.handler(event, context, (err, res) => {
-            if (err) {
-                return err;
-            } else {
-                res.should.have.deep.property('data.events');
-                AWS.restore("DynamoDB")
-                return res;
-            }
+            res.should.have.deep.property('data.events');
+            AWS.restore("DynamoDB")
+            return res;
+        
         });
     });
 
@@ -357,13 +354,9 @@ describe('jazz_events', function () {
             return callback(err, null)
         });
         index.handler(event, context, (err, res) => {
-            if (err) {
-                err.should.be.equal(result);
-                AWS.restore("DynamoDB");
-                return err;
-            } else {
-                return res;
-            }
+            err.should.be.equal(result);
+            AWS.restore("DynamoDB");
+            return err;
         });
     });
 
@@ -376,13 +369,9 @@ describe('jazz_events', function () {
             return callback(null, dbResult)
         });
         index.handler(event, context, (err, res) => {
-            if (err) {
-                err.should.be.equal(result);
-                AWS.restore("DynamoDB")
-                return err;
-            } else {
-                return res;
-            }
+            err.should.be.equal(result);
+            AWS.restore("DynamoDB")
+            return err;
         });
     });
 
@@ -401,14 +390,10 @@ describe('jazz_events', function () {
             return cb(null, kinesisObj);
         })
         index.handler(event, context, (err, res) => {
-            if (err) {
-                return err;
-            } else {
-                res.should.have.deep.property('data.event_id');
-                AWS.restore("DynamoDB");
-                AWS.restore("Kinesis");
-                return res;
-            }
+            res.should.have.deep.property('data.event_id');
+            AWS.restore("DynamoDB");
+            AWS.restore("Kinesis");
+            return res;
         })
     });
 
@@ -425,14 +410,11 @@ describe('jazz_events', function () {
             return cb(err, null);
         })
         index.handler(event, context, (err, res) => {
-            if (err) {
-                err.should.be.equal(result);
-                AWS.restore("DynamoDB");
-                AWS.restore("Kinesis");
-                return err;
-            } else {
-                return res;
-            }
+            err.should.be.equal(result);
+            AWS.restore("DynamoDB");
+            AWS.restore("Kinesis");
+            return err;
+        
         })
     });
 
@@ -445,13 +427,9 @@ describe('jazz_events', function () {
             return callback(null, dataObj);
         });
         index.handler(event, context, (err, res) => {
-            if (err) {
-                err.should.be.equal(result);
-                AWS.restore("DynamoDB");
-                return err;
-            } else {
-                return res;
-            }
+            err.should.be.equal(result);
+            AWS.restore("DynamoDB");
+            return err;
         })
     });
 });
