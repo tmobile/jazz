@@ -201,20 +201,6 @@ describe('platform_logs', function() {
   });
 
   /*
-  * Given an event.body.environment not listed as valid through config, handler() indicates environment isn't valid
-  * @param{object} event -> event.body.environment not listed as valid in config file
-  * @params{object, function} aws context, and callback function as described in beforeEach
-  * @returns{string} error message indicating a bad request was made
-  */
-  it("should inform of bad request if event.body.environment doesn't match valid config values", () => {
-    errorMessage = "Only following values are allowed for environment - ";
-    errorType = "BadRequest";
-    var invalidArray = ["wa1tz", "tang0", "f0xtr0t"];
-    var allChecks = multipleValidation("body", "environment", invalidArray, errorMessage, errorType);
-    assert.isTrue(allChecks);
-  });
-
-  /*
   * Given an event.body.category not listed as valid through config, handler() indicates category isn't valid
   * @param{object} event -> event.body.category not listed as valid in config file
   * @params{object, function} aws context, and callback function as described in beforeEach
