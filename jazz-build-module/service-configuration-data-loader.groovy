@@ -296,9 +296,9 @@ def setServiceName(serviceName){
 def setUtilModule(util){
 	utilModule = util
 }
-def setKinesisStream(config){
+def setKinesisStream(config, environment_logical_id ){
 	if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") || (config['service'] == "environment-event-handler")) {
-		def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
+		def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}_${config['service']}-${environment_logical_id}"
 		def event_source_list = sh(
 			script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"",
 			returnStdout: true
@@ -311,7 +311,7 @@ def setKinesisStream(config){
 }
 def setLogStreamPermission(config){
 	if (config['service'] == "cloud-logs-streamer") {
-		def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
+		def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}_${config['service']}-${current_environment}"
 		echo "set permission for cloud-logs-streamer"
 		try {
 			def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()

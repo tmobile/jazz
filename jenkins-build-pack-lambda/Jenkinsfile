@@ -219,7 +219,7 @@ node()  {
 
 
 					if (domain && domain == "jazz") {
-						serviceConfigdata.setKinesisStream(config)
+						serviceConfigdata.setKinesisStream(config, environment_logical_id)
 					}
 					def svc_response = echoServiceInfo(current_environment)
 					send_status_email(config, 'COMPLETED', svc_response)
