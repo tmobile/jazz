@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-    Helper functions for Environment
+    Helper functions for Events
     @module: utils.js
     @author:
     @version: 1.0
@@ -23,8 +23,6 @@
 
 var AWS = require("aws-sdk");
 const logger = require("./logger.js");
-
-// Helper functions
 
 var initDynamodb = function () {
     AWS.config.update({
