@@ -59,10 +59,6 @@ module.exports.handler = (event, context, cb) => {
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter category.")));
 			}
 
-			if (!_.includes(config.VALID_ENVIRONMENTS, event.body.environment.toLowerCase())){
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for environment - " + config.VALID_ENVIRONMENTS.join(", "))));
-			}
-
 			if (!event.body.type || !_.includes(config.VALID_LOGTYPES, event.body.type.toLowerCase())){
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + config.VALID_LOGTYPES.join(", "))));
 			}
