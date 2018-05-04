@@ -309,9 +309,9 @@ def setKinesisStream(config, environment_logical_id ){
 		}
 	}
 }
-def setLogStreamPermission(config){
+def setLogStreamPermission(config, environment_logical_id ){
 	if (config['service'] == "cloud-logs-streamer") {
-		def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}_${config['service']}-${current_environment}"
+		def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}_${config['service']}-${environment_logical_id}"
 		echo "set permission for cloud-logs-streamer"
 		try {
 			def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()

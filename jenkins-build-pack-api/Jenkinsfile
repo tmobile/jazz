@@ -196,7 +196,9 @@ node() {
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain for ${env_key}"
 
-					writeServerlessFile(config, environment_logical_id)
+					def lambdaFunctionName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}_${config['service']}" + "-" + environment_logical_id
+					echo "Lambda Function Name: $lambdaFunctionName"
+					writeServerlessFile(config, environment_logical_id, lambdaFunctionName)
 
 					setLambdaExecutionRole(configLoader.AWS.ROLEID);
 
@@ -231,7 +233,7 @@ node() {
 
 
 						if (domain != "jazz") {
-							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
+							createSubscriptionFilters(stackName, lambdaFunctionName, configLoader.AWS.REGION, roleId);
 						}
 
 						updateApiDocUrl(current_environment)
@@ -244,7 +246,7 @@ node() {
 					}
 
 					if (domain && domain == "jazz") {
-						serviceConfigdata.setLogStreamPermission(config)
+						serviceConfigdata.setLogStreamPermission(config, environment_logical_id)
 					}
                 }
 			} catch (ex) {
@@ -339,7 +341,7 @@ def buildLambda(runtime) {
 	Generate the swagger file specific to each environment
 */
 def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
-    sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
+    sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}_${config['service']}-${env}/g' swagger/swagger.json"
     sh "sed -i -- 's/{api_deployment_node_title}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
     sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
     sh "sed -i -- 's/{api_host_name}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
@@ -356,8 +358,9 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
 	sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 }
 
-def writeServerlessFile(config, environment_logical_id){
+def writeServerlessFile(config, environment_logical_id, lambdaFunctionName){
 	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
+	sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: " + "${lambdaFunctionName}" + "/g' serverless.yml"
 	sh "sed -i -- 's/{env-stage}/${environment_logical_id}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
@@ -536,9 +539,9 @@ def updateApiDocUrl(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, region, roleId) {
-	def lambda = "/aws/lambda/${stackName}"
-	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
+def createSubscriptionFilters(stackName, lambdaFunctionName,  region, roleId) {
+	def lambda = "/aws/lambda/${lambdaFunctionName}"
+	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz_cloud-logs-streamer-prod"
 	try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
 	} catch (Exception ex) { }// ignore if already existing

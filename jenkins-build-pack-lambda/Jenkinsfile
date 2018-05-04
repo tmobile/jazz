@@ -199,8 +199,9 @@ node()  {
 
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain"
-
-					writeServerlessFile(config, current_environment, environment_logical_id)
+					def lambdaFunctionName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}_${config['service']}" + "-" + environment_logical_id
+					echo "Lambda Function Name: $lambdaFunctionName"
+					writeServerlessFile(config, current_environment, environment_logical_id, lambdaFunctionName)
 
 					echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
 					setLambdaExecutionRole(configLoader.AWS.ROLEID);
@@ -214,7 +215,7 @@ node()  {
 					// reset Credentials
 					resetCredentials()
 					if (domain != "jazz") {
-						createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
+						createSubscriptionFilters(stackName, lambdaFunctionName, configLoader.AWS.REGION, roleId);
 					}
 
 
@@ -493,9 +494,9 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, region, roleId) {
-	def lambda = "/aws/lambda/${stackName}"
-	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
+def createSubscriptionFilters(stackName, lambdaFunctionName,  region, roleId) {
+	def lambda = "/aws/lambda/${lambdaFunctionName}"
+	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz_cloud-logs-streamer-prod"
 	try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
 	} catch (Exception ex) { }// ignore if already existing
@@ -520,10 +521,10 @@ def createSubscriptionFilters(stackName, region, roleId) {
 	}
 }
 
-def writeServerlessFile(config, current_environment, environment_logical_id){
+def writeServerlessFile(config, current_environment, environment_logical_id, lambdaFunctionName){
 	sh "pwd"
 	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
-	sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: " + "${configLoader.INSTANCE_PREFIX}-${config['domain']}_${config['service']}" + "-" + environment_logical_id + "/g' serverless.yml"
+	sh "sed -i -- 's/name: \${self:service}-\${self:custom.myStage}/name: ${lambdaFunctionName}" + "/g' serverless.yml"
 	sh "sed -i -- 's/{env-stage}/${current_environment}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
