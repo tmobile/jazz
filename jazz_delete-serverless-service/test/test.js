@@ -18,7 +18,7 @@ const assert = require('chai').assert;
 const index = require('../index');
 const awsContext = require("aws-lambda-mock-context");
 const sinon = require("sinon");
-const uuid = require('uuid/v4');
+const uuid = require('uuid');
 const request = require('request');
 const logger = require("../components/logger.js");
 
