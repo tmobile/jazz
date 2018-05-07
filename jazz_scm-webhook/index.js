@@ -235,7 +235,9 @@ var gitlabScmContextDetails = function(eventKey, body, config){
 			resolve(result);
 		} else if (eventKey === 'push'|| eventKey === 'tag_push'){
 			var ref = body.ref.split('/');
-			result.branch = ref[2];
+			var origins = ref.splice(0,2);
+			origins.push(ref.join('/'));
+			result.branch = origins[2];
 			
 			if( body.before && parseInt(body.before, 10) === 0) {
 				if(eventKey === 'tag_push'){
