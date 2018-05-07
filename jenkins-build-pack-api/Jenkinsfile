@@ -495,9 +495,10 @@ def loadServerlessConfig(config) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
 
-	if (config['service'] == 'cloud-logs-streamer' && config['domain'] == 'jazz') {
+	if ((config['service'] == 'cloud-logs-streamer' || config['service'] == 'logs') && config['domain'] == 'jazz') {
 		addVpcDetails()
 	}
+
 
 	echoServerlessFile()
 }
