@@ -1,0 +1,52 @@
+#!groovy
+import groovy.json.JsonOutput
+import groovy.transform.Field
+
+// To be replaced as @Field def repo_credential_id = "value" except for config_loader
+@Field def repo_credential_id = "jenkins1cred"
+@Field def repo_base = "54.86.125.198"
+@Field def repo_core = "slf"
+@Field def scm_type = "gitlab"
+
+@Field def config_loader
+
+/*
+* Load environment variables from build module
+*/
+def loadConfigModule(build_module_url){
+  dir('config-loader') {
+    checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: build_module_url]]])
+    def result_json_string = readFile("jazz-installer-vars.json")
+    config_module = load "config-loader.groovy"
+    config_loader = config_module.initialize(result_json_string)
+  }
+}
+
+/*
+* Start the Pipeline stages
+*/
+node {
+  stage('Loading Config-Loader') {
+    loadConfigModule(getBuildModuleUrl())
+  }
+
+  stage('Triggering the Jenkins build') {
+    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+    echo "Build triggered via branch::${env.BRANCH_NAME}"
+
+    def build_job = config_loader.API.API_BUILD_URI
+    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
+
+    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=deployments&domain=jazz&scm_branch=${env.BRANCH_NAME}\""
+    }
+  }
+}
+
+def getBuildModuleUrl() {
+    if (scm_type && scm_type != "bitbucket") {
+      // right now only bitbucket has this additional tag scm in its git clone path
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+    }else {
+      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    } 
+} 
