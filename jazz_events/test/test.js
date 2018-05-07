@@ -185,7 +185,7 @@ describe('jazz_events', function () {
 
     it("should indicate Bad request if no data available in dynamodb for GET request", () => {
         var dbResult = {};
-        var message = "Bad request. message: The query parameters supported are username, service_name, and last_evaluated_index"
+        var message = "The query parameters supported are username, service_name and last_evaluated_index."
         var mapGetEventData = index.mapGetEventData(dbResult, event);
         expect(mapGetEventData.then((res) => {
             return res;
@@ -245,7 +245,7 @@ describe('jazz_events', function () {
 
     it("should indicate error while updating kinesis stream", () => {
         config = configObj(event);
-        var message = "Error storing event."
+        var message = "Error storing event"
         AWS.mock("Kinesis", "putRecord", (params, cb) => {
             return cb(err, null);
         })
@@ -287,7 +287,7 @@ describe('jazz_events', function () {
     it("should indicate error while validating event specific data if event timestamp is invalid", () => {
         config = configObj(event);
         event.body.event_timestamp = "xyz";
-        var message = "Invalid EVENT TIMESTAMP: xyz, The format should be YYYY-MM-DDTHH:mm:ss:SSS"
+        var message = "Invalid EVENT TIMESTAMP: xyz, expected format is YYYY-MM-DDTHH:mm:ss:SSS"
         var dataObj = {
             Item: event.body
         };
@@ -349,7 +349,7 @@ describe('jazz_events', function () {
     it("should indicate error if DynamoDB.scan fails", () => {
         event.method = "GET";
         var eventBody = event.body;
-        var result = '{"errorType":"InternalServerError","message":"An internal error occured. message: ' + err.message + '"}'
+        var result = '{"errorType":"InternalServerError","message":"An internal error occured: '+err.message+'"}'
         AWS.mock("DynamoDB", "scan", (params, callback) => {
             return callback(err, null)
         });
@@ -364,7 +364,7 @@ describe('jazz_events', function () {
         event.method = "GET";
         var eventBody = event.body;
         var dbResult = {}
-        var result = '{"errorType":"BadRequest","message":"Bad request. message: The query parameters supported are username, service_name, and last_evaluated_index"}'
+        var result = '{"errorType":"BadRequest","message":"The query parameters supported are username, service_name and last_evaluated_index."}'
         AWS.mock("DynamoDB", "scan", (params, callback) => {
             return callback(null, dbResult)
         });
@@ -402,7 +402,7 @@ describe('jazz_events', function () {
         var dataObj = {
             Item: event.body
         };
-        var result = '{"errorType":"InternalServerError","message":"An internal error occured. message: Error storing event. ' + err.message + '"}'
+        var result = '{"errorType":"InternalServerError","message":"An internal error occured: Error storing event: '+err.message+'"}'
         AWS.mock("DynamoDB", "getItem", (params, callback) => {
             return callback(null, dataObj);
         });
@@ -422,7 +422,7 @@ describe('jazz_events', function () {
     it("should indicate error if DynamoDB.getItem fails in POST method", () => {
         event.method = "POST";
         var dataObj = {};
-        var result = '{"errorType":"BadRequest","message":"Bad request. message: Invalid event data. ' + event.body.event_type + '"}'
+        var result = '{"errorType":"BadRequest","message":"Bad request. message: Invalid event data: test"}'
         AWS.mock("DynamoDB", "getItem", (params, callback) => {
             return callback(null, dataObj);
         });
