@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-	CRUD functions for Environment catalog
+    CRUD functions for Events catalog
     @module: index.js
     @description: create, get all, get by params.
 	@author: 

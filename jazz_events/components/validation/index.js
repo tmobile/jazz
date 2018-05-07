@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-	CRUD functions for Environment catalog
+    Validation functions for Events catalog
     @module: index.js
     @description: validate event_type, event_name, event_handler, event_status and event_timestamp.
 	@author: 

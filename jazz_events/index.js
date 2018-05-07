@@ -15,21 +15,20 @@
 // =========================================================================
 
 /**
-Nodejs Template Project
+Service to handle events 
 @author:
 @version: 1.0
  **/
 
-const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
-const validateUtils = require("./components/validation")(); //Import the validation module.
-const responseObj = require("./components/response.js"); //Import the response module.
-const configObj = require("./components/config.js"); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
-const utils = require("./components/utils.js")(); //Import the utils module.
-const crud = require("./components/crud")(); //Import the crud module.
+const errorHandlerModule = require("./components/error-handler.js");
+const validateUtils = require("./components/validation")(); 
+const responseObj = require("./components/response.js"); 
+const configObj = require("./components/config.js"); 
+const logger = require("./components/logger.js"); 
+const utils = require("./components/utils.js")(); 
+const crud = require("./components/crud")(); 
 
 var handler = (event, context, cb) => {
-	//Initializations
 	var errorHandler = errorHandlerModule();
 	var config = configObj(event);
 	logger.init(event, context);
@@ -48,7 +47,7 @@ var handler = (event, context, cb) => {
 					if (error.result === "inputError") {
 						return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
 					} else {
-						return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + error.message)));
+						return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured: " + error.message)));
 					}
 				});
 		}
@@ -68,7 +67,7 @@ var handler = (event, context, cb) => {
 					if (error.code && error.code === 400) {
 						return cb(JSON.stringify(errorHandler.throwInputValidationError("Bad request. message: " + error.message)));
 					} else {
-						return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured. message: " + error.message)));
+						return cb(JSON.stringify(errorHandler.throwInternalServerError("An internal error occured: " + error.message)));
 					}
 				})
 		}
@@ -136,7 +135,7 @@ var mapGetEventData = (result, event) => {
 		} else {
 			var output = {
 				result: "inputError",
-				message: "Bad request. message: The query parameters supported are username, service_name, and last_evaluated_index"
+				message: "The query parameters supported are username, service_name and last_evaluated_index."
 			};
 			reject(output);
 		}
@@ -206,7 +205,7 @@ var generalInputValidation = (event) => {
 }
 
 var validateEventInput = (config, eventBody) => {
-	logger.debug("Inside validateEventInput:")
+	logger.debug("Inside validateEventInput")
 	return new Promise((resolve, reject) => {
 		validateUtils.validateEventData(config, eventBody, (error, data) => {
 			if (error) {
@@ -219,7 +218,7 @@ var validateEventInput = (config, eventBody) => {
 }
 
 var storeEventData = (config, eventBody) => {
-	logger.debug("Inside storeEventData:");
+	logger.debug("Inside storeEventData");
 	return new Promise((resolve, reject) => {
 		crud.create(config.event_hub, eventBody, (error, data) => {
 			if (error) {

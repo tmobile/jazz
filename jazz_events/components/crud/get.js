@@ -15,14 +15,14 @@
 // =========================================================================
 
 /**
-	Get Environment-Catalog by ENVIRONMET_ID from dynamodb table
+    Module to get events from events table
     @module: get.js
-    @description: CRUD functions for respective Events catalog
+    @description: Module to get events from catalog
 	@author: 
 	@version: 1.0
 **/
-const utils = require("../utils.js")(); //Import the utils module.
-const logger = require("../logger.js"); //Import the logging module.
+const utils = require("../utils.js")(); 
+const logger = require("../logger.js"); 
 
 module.exports = (params, eventData, onComplete) => {
     // Initialize DynamoDB
@@ -30,17 +30,17 @@ module.exports = (params, eventData, onComplete) => {
 
     dynamodb.getItem(params, (err, data) => {
         if (err) {
-            logger.error("error reading event data from database " + err.message);
+            logger.error("error reading event data from database: " + err.message);
             onComplete({
                 "code": 500,
-                "message": "error reading event data from database " + err.message
+                "message": "error reading event data from database: " + err.message
             }, null);
         } else {
             if (!data || !data.Item) {
-                logger.error("Invalid event data. " + eventData);
+                logger.error("Invalid event data: " + eventData);
                 onComplete({
                     "code": 400,
-                    "message": "Invalid event data. " + eventData
+                    "message": "Invalid event data: " + eventData
                 }, null);
             } else {
                 onComplete(null, data.Item);
