@@ -15,15 +15,15 @@
 // =========================================================================
 
 /**
-    Get List of Environment-Catalogs
+    Module to get list of events from events table
     @module: getList.js
-    @description: CRUD functions for Events catalog
+    @description: Module to get list of events from catalog
     @author:
     @version: 1.0
  **/
 
-const utils = require("../utils.js")(); //Import the utils module.
-const logger = require("../logger.js"); //Import the logging module.
+const utils = require("../utils.js")();
+const logger = require("../logger.js"); 
 
 module.exports = (tableName, query, onComplete) => {
     // Initialize DynamoDB
@@ -61,8 +61,7 @@ module.exports = (tableName, query, onComplete) => {
         scanparams.ExpressionAttributeValues = attributeValues;
         dynamodb.scan(scanparams, (err, items) => {
             if (err) {
-                logger.error("error in dynamodb scan");
-                logger.error(err);
+                logger.error("Error during dynamodb scan: " + JSON.stringify(err));
                 onComplete(err, null);
 
             } else {

@@ -15,9 +15,9 @@
 // =========================================================================
 
 /**
-	Get Environment-Catalog by ENVIRONMET_ID from dynamodb table
-    @module: get.js
-    @description: CRUD functions to update Events catalog
+    Module to add events to events table
+    @module: create.js
+    @description: Module to create events in catalog
 	@author: 
 	@version: 1.0
 **/
@@ -83,10 +83,10 @@ module.exports = (eventHub, eventBody, onComplete) => {
 	};
 	kinesis.putRecord(stream_params, (err, data) => {
 		if (err) {
-			logger.error('kinesis error' + JSON.stringify(err));
+			logger.error('Error storing event in kinesis: ' + JSON.stringify(err));
 			onComplete({
 				"code": 500,
-				"message": "Error storing event. " + err.message
+				"message": "Error storing event: " + err.message
 			}, null);
 		} else {
 			var output = {

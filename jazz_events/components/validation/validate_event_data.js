@@ -15,17 +15,18 @@
 // =========================================================================
 
 /**
-	CRUD functions for Environment catalog
+    Validation functions for event data
     @module: index.js
-    @description: validate event_type, event_name, event_handler, event_status and event_timestamp.
+    @description: validate event data using validateEventType, validateEventName, validateEventHandler .
 	@author: 
 	@version: 1.0
 **/
-
-const logger = require("../logger.js"); //Import the logging module.
-const dateFormat = 'YYYY-MM-DDTHH:mm:ss:SSS';
 const moment = require('moment');
-const crud = require("../../components/crud")();//Import the crud module.
+
+const logger = require("../logger.js"); 
+const crud = require("../../components/crud")();
+
+const dateFormat = 'YYYY-MM-DDTHH:mm:ss:SSS';
 
 module.exports = (config, eventBody, onComplete) => {
     logger.info("Inside validate_event_data");
@@ -35,13 +36,13 @@ module.exports = (config, eventBody, onComplete) => {
         onComplete(null, null);
     })
     .catch((error) => {
-		logger.error("#Validate event specific data error:"+JSON.stringify(error));
+		logger.error("#Validate event specific data error: " + JSON.stringify(error));
         onComplete(error, null)
     });
 }
 
 function getDynamodbItem(params, eventData) {
-	logger.debug("Inside getDynamodbItem:" + eventData);
+	logger.debug("Inside getDynamodbItem: " + eventData);
 	return new Promise((resolve, reject) => {
 		crud.get(params, eventData, (error, data) => {
 			if(error){
@@ -54,7 +55,7 @@ function getDynamodbItem(params, eventData) {
 }
 
 function validateEventType (config, eventBody) {
-	logger.debug("Inside validateEventType:")
+	logger.debug("Inside validateEventType")
 	return new Promise((resolve, reject) => {
 		var event_type_params = {
 			Key: {
@@ -75,7 +76,7 @@ function validateEventType (config, eventBody) {
 }
 
 function validateEventName (config, eventBody) {
-	logger.debug("Inside validateEventName:");
+	logger.debug("Inside validateEventName");
 	return new Promise((resolve, reject) => {
 		var event_name_params = {
 			Key: {
@@ -96,7 +97,7 @@ function validateEventName (config, eventBody) {
 }
 
 function validateEventHandler (config, eventBody) {
-	logger.debug("Inside validateEventHandler:");
+	logger.debug("Inside validateEventHandler");
 	return new Promise((resolve, reject) => {
 		var event_handler_params = {
 			Key: {
@@ -117,7 +118,7 @@ function validateEventHandler (config, eventBody) {
 }
 
 function validateEventStatus (config, eventBody) {
-	logger.debug("Inside validateEventStatus:");
+	logger.debug("Inside validateEventStatus");
 	return new Promise((resolve, reject) => {
 		var event_status_params = {
 			Key: {
@@ -138,7 +139,7 @@ function validateEventStatus (config, eventBody) {
 }
 
 function validateTimestamp (eventBody) {
-	logger.debug("Inside validateTimestamp:");
+	logger.debug("Inside validateTimestamp");
 	return new Promise((resolve, reject) => {
 		try {
 			if (moment(eventBody.event_timestamp, dateFormat, true).isValid()) {
@@ -146,13 +147,13 @@ function validateTimestamp (eventBody) {
 			} else {
 				reject({
 					"code": 400,
-					"message": "Invalid EVENT TIMESTAMP: " + eventBody.event_timestamp + ", The format should be " + dateFormat
+					"message": "Invalid EVENT TIMESTAMP: " + eventBody.event_timestamp + ", expected format is " + dateFormat
 				});
 			}
 		} catch (error) {
 			reject({
 				"code": 500,
-				"message": "Error parsing EVENT TIMESTAMP: " + eventBody.event_timestamp + ", The format should be " + dateFormat
+				"message": "Error parsing EVENT TIMESTAMP: " + eventBody.event_timestamp + ", expected format is " + dateFormat
 			});
 		}
 	});
