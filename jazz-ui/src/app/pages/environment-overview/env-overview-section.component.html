@@ -1,0 +1,371 @@
+<!-- TODO: Remove disclaimer after techtraining -->
+<!-- *ngIf='service.endpoints != undefined && (service.serviceType=="website" || service.serviceType=="api")' -->
+<div class='feedback-overlay' *ngIf="openModal">
+	<div class='feedback-wrap relative'>
+		<div class='feedback-hdr relative'>Report an issue</div>
+		<div class="separator-row"></div>
+		<div class="loading-row" [class.show]="isLoading">
+			<div class="loading-circle"></div>
+		</div>
+		<div class='feedback-text-wrap' [class.invisible]="isLoading || feedbackRes">
+			<p>Found a problem with the site? Please use the form below to describe the issue and we will fix it soon.</p>
+			<textarea rows="5" cols="50" type="text" name='userFeedback' id="userFeedback" placeholder="Report your issue here" [(ngModel)]="model.userFeedback"  #userFeedback='ngModel'></textarea>
+		</div>
+		<div class="feedback-text-wrap feedbackRes" [class.show]="feedbackRes">
+			<div class="hide feedbackResSuccess" [class.show]="feedbackResSuccess">
+				<div>{{feedbackMsg}}</div>
+			</div>
+			<div class="hide feedbackResErr" [class.show]="feedbackResErr"> Oops! {{feedbackMsg}}
+				<span> or <a (click)="mailTo()"> contact us</a> via email.</span>
+			</div>
+		</div>
+		<div class='feedback-btn-wrap'>
+			<div class="slack-checkbox custom-cb includeError" [class.invisible]="isLoading || feedbackRes">
+				<input type="checkbox" (click)="errorIncluded()"  id="checkbox-slack" [checked]="errorInclude">
+				<label for="checkbox-slack"></label>
+				<div class="cb-status-dets">Include error details</div>
+			</div>
+			<a (click)='openModal = !openModal;isLoading=false'  [class.invisible]="isLoading || feedbackRes">CANCEL</a>
+			<btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading" [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'" (click)='submitFeedback(buttonText)'></btn-jazz-primary>
+		</div>
+	</div>
+</div>
+<div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined' >
+	<ul class=" col-md-12 col-sm-12">
+		<li class='det-wrp'>
+			<!-- *ngIf='service.endpoints.dev != undefined' -->
+			<div class=' det-label align-slf'>
+                 <span class='caps'>Endpoint </span>
+            </div>
+			<div class='det-value endpoint-url align-slf'>
+				<div class="popupcopy" (mouseover)="myFunction()" (click)='copyClipboard("copyapilinkdev")'>
+                    <span >
+                        {{environmnt.endpoint}}
+                        <span class='relative'>
+                            <img src="./../../../assets/images/icons/icon-link.png"/>
+                            <div class="tooltip-content" >
+                                <span id="copyPopup">{{copylinkmsg}}</span>
+                            </div>
+                        </span>
+                    </span>
+                </div>
+				<textarea id="copyapilinkdev">{{environmnt.endpoint}}</textarea>
+			</div>
+        </li>
+    </ul>
+</div>
+
+
+<div class="service-details row env-details relative">
+	<div *ngIf='envResponseTrue'>
+		<div   class='edit-service-overview-btn'>
+			<!-- <btn-jazz-secondary class='btn-edit-overview' *ngIf='showCancel'  text='CANCEL' (click)='onCancelClick()' ></btn-jazz-secondary> -->
+			<a  *ngIf='showCancel'  (click)='onCancelClick()'>CANCEL</a>
+			<btn-jazz-secondary [disablebtn]='(status_val > 4) || (status_val == 3) || branchname == "master"' class='btn-edit-overview'  *ngIf="editBtn" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
+			<btn-jazz-secondary  class='btn-edit-overview' *ngIf='saveBtn' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onSaveClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
+			<!-- [style.borders]="edit_save=='SAVE'? 'none':'1px solid'"  -->
+		</div>
+		<!-- <br> -->
+		<div class='overview-view' *ngIf="editBtn">
+			<ul class="section-left col-md-6 col-sm-12">
+				<li>
+					<div class="det-label">Deployment status</div>
+					<div class="det-value " >{{envstatus}}</div>
+				</li>
+				<li class='hide'>
+					<div class="det-label">Description</div>
+					<div class="det-value desc" >{{services.description || 'Give me the details for your services'}}</div>
+				</li>
+				<li>
+					<div class="det-label">Last Updated</div>
+					<div class="det-value" *ngIf="dayscommit" >{{commitDiff}} days ago</div>
+					<div class="det-value" *ngIf="hourscommit" >{{commitDiff}} hours ago</div>
+					<div class="det-value" *ngIf="mincommit" >{{commitDiff}} minutes ago</div>
+					<div class="det-value" *ngIf="seccommit" >{{commitDiff}}</div>
+				</li>
+				<li class='hide' *ngIf='service.serviceType == "function"'>
+					<div class="det-label">Accounts</div>
+					<div class="det-value">
+						
+                        {{selectedAccounts}}
+					</div>
+				</li>
+				<li class='hide' *ngIf='service.serviceType == "function"'>
+					<div class="det-label">Endpoints</div>
+					<div class="det-value">
+						<div class='endp-cover'  (mouseleave)='popup("leave")' (mouseenter)='popup("enter")'>
+							<div>{{endpList}}</div>
+							<div (click)='copy_link("input-copy")'>{{copyLink}}</div>
+							<input id='input-copy' class='input-copy' type='text' value='{{endpList}}'>
+
+						</div>
+						<span class='view-all' (click)='openSidebar()'> View all</span>
+
+						<div id='popup-endp' class='popup-endp'>								
+							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong> 
+						</div>
+						
+                        
+					</div>
+				</li>
+			</ul>
+			<ul class="section-right col-md-6 col-sm-12">
+				<li>
+					<div class="det-label">Branch Name</div>
+					<div class="det-value">{{branchname}}</div>
+				</li>
+				<li>
+					<div class="det-label">Friendly Name</div>
+					<div class="det-value">{{friendlyName || "NA"}}</div>
+				</li>
+				<li class='hide'>
+					<div class="det-label">Tags</div>
+					<div class="det-value" >{{services.tags || 'Services are cooler with tags'}}</div>
+				</li>
+				<li class='hide' *ngIf='service.serviceType == "function"'>
+					<div class="det-label">Regions</div>
+					<div class="det-value">
+                            {{selectedRegions}}
+					</div>
+				</li>
+			</ul>
+		</div>
+		
+		<div class='overiew-edit' *ngIf="!editBtn">
+			<ul class="section-left col-md-6 col-sm-12">
+				<li>
+					<div class="det-label">Deployment status</div>
+					<div class="det-value " >{{envstatus}}</div>
+				</li>
+				<li>
+					<div class="det-label">Description</div>
+					<div class="det-value desc" >{{services.description || 'Give me the details for your services'}}</div>
+				</li>
+				<li>
+					<div class="det-label">Last Updated</div>
+					<div class="det-value" *ngIf="dayscommit" >{{commitDiff}} days ago</div>
+					<div class="det-value" *ngIf="hourscommit" >{{commitDiff}} hours ago</div>
+					<div class="det-value" *ngIf="mincommit" >{{commitDiff}} minutes ago</div>
+					<div class="det-value" *ngIf="seccommit" >{{commitDiff}}</div>
+				</li>
+				<li class='hide' *ngIf='service.serviceType == "function"'>
+					<div class="det-label">Accounts</div>
+					<div class="det-value">
+						<div class="det-value-div">
+                            <section class="">
+                                <div class="input-field-container">
+                                    <div class="selected-approvers">
+                                        <ul (click)='focusInputAccount($event)'>
+                                            <li *ngFor="let selected of selectedAccount;let i=index"   >
+                                                {{selected}}
+                                                <span (click)="removeAccount(i, selected)" class="icon-icon-close"></span>
+                                            </li>
+                                            <input (keydown)="keypressAccount($event)"  autocomplete="off" id="AccountInput" name="AccountInput" type="text" class="textForm" [(ngModel)]="AccountInput" (ngModelChange)="onAccountChange($event)">
+    
+                                        </ul>
+                                    </div>
+                                    <div [hidden]="!showAccountList" class="approvers-list-wrap">
+                                        <div class="approvers-list typeShow open">
+                                            <div class="approvers-dets" *ngFor="let account of accounts | myfilter:AccountInput;let k = index;" (focus)=" k==focusindex " [ngClass]="{pinkfocus : k==focusindex }" [ngStyle]="scrollList" >
+                                                <div  (click)="selectAccount(account);$event.stopPropagation();" index="{k}" [attr.account]='account'>{{account}}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+					</div>
+				</li>
+				<li class='hide' *ngIf='service.serviceType == "function"'>
+					<div class="det-label">Endpoints</div>
+					<div class="det-value">
+						<div class='endp-cover'  (mouseleave)='popup("leave")' (mouseenter)='popup("enter")'>
+							<div>{{endpList}}</div>
+							<div (click)='copy_link("input-copy2")'>{{copyLink}}</div>
+							<input id='input-copy2' class='input-copy' type='text' value='{{endpList}}'>
+
+						</div>
+						<span class='view-all' (click)='openSidebar()'> View all</span>
+
+						<div id='popup-endp' class='popup-endp'>								
+							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong> 
+							
+						</div>
+						
+						
+					</div>
+				</li>
+			</ul>
+			<ul class="section-right col-md-6 col-sm-12">
+				<li>
+					<div class="det-label">Branch Name</div>
+					<div class="det-value">{{branchname}}</div>
+				</li>
+				<li>
+					<div class="det-label">Friendly Name</div>
+					<input (ngModelChange)="friendlyChanged = true" maxlength="20" type='text'[(ngModel)]="tempFriendlyName" class="det-value-input" >
+				</li>
+				<li>
+					<div class="det-label">Tags</div>
+					<div class="det-value" >{{services.tags || 'Services are cooler with tags'}}</div>
+				</li>
+				<li class='hide' *ngIf='service.serviceType == "function"'>
+					<div class="det-label">Regions</div>
+					<div class="det-value">
+						<div class="det-value-div det-value-div-right">
+                            <section class="">
+                                <div class="input-field-container">
+                                    <div class="selected-approvers">
+                                        <ul (click)='focusInputRegion($event)'>
+                                            <li *ngFor="let selected of selectedRegion;let i=index"   >
+                                                {{selected}}
+                                                <span (click)="removeRegion(i, selected)" class="icon-icon-close"></span>
+                                            </li>
+                                            <input (keydown)="keypressRegion($event)"  autocomplete="off" id="regionInput" name="regionInput" type="text" class="textForm" [(ngModel)]="regionInput" (ngModelChange)="onRegionChange($event)">
+    
+                                        </ul>
+                                    </div>
+                                    <div [hidden]="!showRegionList" class="approvers-list-wrap">
+                                        <div class="approvers-list typeShow open">
+                                            <div class="approvers-dets" *ngFor="let region of regions | myfilter:regionInput;let k = index;" (focus)=" k==focusindex " [ngClass]="{pinkfocus2 : k==focusindex }" [ngStyle]="scrollList" >
+                                                <div  (click)="selectRegion(region);$event.stopPropagation();" index="{k}" [attr.region]='region'>{{region}}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+					</div>
+				</li>
+			</ul>
+		</div>
+		<!-- <div class='overview-for-endpoints'>
+			<div class="det-Label">Endpoints</div>
+            <div class="det-Value">
+                <div>Account , {{accounts[0]}} :  <img class='copy-arn' src="./../../../assets/images/icons/icon-link.png"/></div>
+                <div>Region , {{regions[0]}} :   <img class='copy-arn' src="./../../../assets/images/icons/icon-link.png"/></div>
+                <div>Account , {{accounts[1]}} :   </div>
+
+				 
+            </div>
+		</div> -->
+	</div>
+	<div *ngIf="envResponseError">
+		<div class="empty-row with-refresh">
+			<div class="icon-icon-server-error">
+				<span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span>
+			</div>
+			<div class='oops'>Oops!</div>
+			<div>Something went wrong while fetching your data<br><a (click)="refreshCostData($event)">REFRESH</a> to give it another try.</div>
+			<br>
+			<div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
+		</div>
+	</div>
+	<div class="empty-row" *ngIf="envResponseEmpty">
+		<div class="icon-icon-nodata"></div>
+		<div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
+	</div>
+	<div class="loading-row" [class.show]="isLoading">
+		<div class="loading-circle"></div>
+	</div>
+</div>
+
+<div class="separator-row hide"></div>
+<div class="disclaimer-static-data hide"><i>This data is for representational purpose only and is not accurate</i></div>
+<div class="service-overview-wrp hide">
+	<div class="stage-wrp left-item" >
+		<div class="stage-title">Code Quality</div>
+		<div class="stage-overview">
+			<ul class="service-overview">
+				<li class="overview-item">
+					<div class="overview-value">
+						<div class='gradeA' title='Grade A'>-</div>
+					</div>
+					<div class="overview-label">Reliability</div>
+				</li>
+				<li class="overview-item" >
+					<div class="overview-value">
+						<div class='gradeC' title='Grade C'>-</div>
+					</div>
+					<div class="overview-label">Security</div>
+				</li>
+				<li class="overview-item">
+					<div class="overview-value">
+						<div class='gradeC' title='Grade C'>-</div>
+					</div>
+					<div class="overview-label">Maintainibility</div>
+				</li>
+			</ul>
+			<ul class="service-overview">
+				<li class="overview-item">
+					<div class="overview-value">
+						NA
+					</div>
+					<div class="overview-label ">Coverage</div>
+				</li>
+				<li class="overview-item">
+					<div class="overview-value">
+						NA
+					</div>
+					<div class="overview-label">
+						Duplications
+					</div>
+				</li>
+				<li class="overview-item">
+					<div class="overview-value javascript">
+						NA<span></span>
+					</div>
+					<div class="overview-label">
+						<span>JavaScript</span>
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<div class="stage-wrp right-item" >
+		<div class="stage-title">Deployments</div>
+		<div class="stage-overview">
+			<ul class="service-overview">
+				<li class="overview-item">
+					<div class="overview-value">
+						NA
+					</div>
+					<div class="overview-label"># of Deployments<br>(Last 24 hours)</div>
+					<!-- <div class="overview-label"></div> -->
+				</li>
+				<li class="overview-item" >
+					<div class="overview-value">
+						NA
+					</div>
+					<div class="overview-label">Last Successful Deployment</div>
+				</li>
+				<li class="overview-item">
+					<div class="overview-value">
+						NA
+					</div>
+					<div class="overview-label">Last Failed Deployment</div>
+				</li>
+			</ul>
+			<ul class="service-overview">
+				<li class="overview-item">
+					<div class="overview-value"></div>
+					<div class="overview-label"></div>
+				</li>
+				<li class="overview-item bottom-right">
+					<div class="overview-value">
+						<!-- <img src='assets\images\icons\icon-good@2x.png' height='30px' title='Success' > -->
+						NA
+					</div>
+					<div class="overview-label">
+						Last Deployment Status
+					</div>
+				</li>
+				<li class="overview-item">
+					<div class="overview-value"></div>
+					<div class="overview-label">
+					</div>
+				</li>
+			</ul>
+		</div>
+	</div>
+</div>

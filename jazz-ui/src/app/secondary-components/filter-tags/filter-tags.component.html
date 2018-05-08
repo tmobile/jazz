@@ -1,0 +1,47 @@
+<div class='row' >
+        <!-- *ngFor='let item of filterTags' -->
+    <div class='eachTag'  *ngIf='filterTags[0].value != filter_TimeRange_default' >
+        {{filterTags[0].key}}: <b>{{filterTags[0].value}}</b>
+        <span class='icon-icon-close' title='Remove Filter' (click)='clearall("time-range")'></span>
+    </div>
+    <div class='eachTag' *ngIf='filterTags[1].value != filter_TimeRangeSlider_default' >
+        {{filterTags[1].key}}: <b>{{filterTags[1].value}}
+            <span>
+                {{filterTags[0].value}}<span *ngIf='filterTags[1].value > 1'>s</span>
+            </span>
+        </b>
+        <span class='icon-icon-close' title='Remove Filter' (click)='clearall("time-range-slider")'></span>
+    </div>
+    <div class='eachTag' *ngIf='filterTags[2].value != filter_Period_default' >
+        {{filterTags[2].key}}: <b>{{filterTags[2].value}}</b>
+        <span class='icon-icon-close' title='Remove Filter' (click)='clearall("period")'></span>
+    </div>
+    <div class='eachTag' *ngIf='filterTags[3].value != filter_Statistic_default' >
+        {{filterTags[3].key}}: <b>{{filterTags[3].value}}</b>
+        <span class='icon-icon-close' title='Remove Filter' (click)='clearall("statistic")'></span>
+    </div>
+    <div class='eachTag' *ngIf='filterTags[4].value != filter_Account_default' >
+        {{filterTags[4].key}}: <b>{{filterTags[4].value}}</b>
+        <span class='icon-icon-close' title='Remove Filter' (click)='clearall("account")'></span>
+    </div>
+    <div class='eachTag' *ngIf='filterTags[5].value != filter_Region_default' >
+        {{filterTags[5].key}}: <b>{{filterTags[5].value}}</b>
+        <span class='icon-icon-close' title='Remove Filter' (click)='clearall("region")'></span>
+    </div>
+    <div class='eachTag' *ngIf='filterTags[6].value != filter_Env_default' >
+        {{filterTags[6].key}}: <b>{{filterTags[6].value}}</b>
+        <span class='icon-icon-close' title='Remove Filter' (click)='clearall("env")'></span>
+    </div>
+    <div class='eachTag' *ngIf='filterTags[7].value != filter_Method_default' >
+        {{filterTags[7].key}}: <b>{{filterTags[7].value}}</b>
+        <span class='icon-icon-close' title='Remove Filter' (click)='clearall("method")'></span>
+    </div>
+    <span class='clr-all'><a (click)='clearall("all")' *ngIf='(filterTags[0].value != filter_TimeRange_default) ||
+                                              (filterTags[1].value != filter_TimeRangeSlider_default) ||
+                                              (filterTags[2].value != filter_Period_default) ||
+                                              (filterTags[3].value != filter_Statistic_default) || (filterTags[4].value != filter_Account_default)
+                                              || (filterTags[5].value != filter_Region_default)
+                                              || (filterTags[6].value != filter_Env_default)
+                                              || (filterTags[7].value != filter_Method_default)         
+        '>CLEAR ALL</a></span>
+</div>

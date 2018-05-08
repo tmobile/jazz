@@ -1,3 +1,4 @@
+
 import { Component } from '@angular/core';
 import {ToasterContainerComponent, ToasterService, ToasterConfig} from 'angular2-toaster';
 import {Idle, DEFAULT_INTERRUPTSOURCES} from '@ng-idle/core';
@@ -10,7 +11,6 @@ import {BodyOutputType} from 'angular2-toaster';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
-	// directives: [ToasterContainerComponent],
   providers: [ToasterService, MessageService],
   styleUrls: ['./app.component.scss']
 })
@@ -67,9 +67,8 @@ export class AppComponent {
 	  new ToasterConfig({
 	      showCloseButton: true, 
 	      tapToDismiss: false, 
-				timeout: 7000,
-				limit:1,
-			
+				timeout: 4000,
+				limit:1
 				
 	  });
 }

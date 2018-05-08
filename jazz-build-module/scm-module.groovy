@@ -53,8 +53,7 @@ def createProject(repo_owner, repo_name){
                 returnStdout: true
             ).trim()
 
-            def jsonSlurper = new groovy.json.JsonSlurperClassic()
-            def repo_details = jsonSlurper.parseText(gitlab_repo_output)
+            def repo_details = parseJson(gitlab_repo_output)
 
             if (repo_details == null || repo_details.equals("") || repo_details.id == null || repo_details.id.equals("")) {
                 error "project creation in gitlabs failed"
@@ -170,7 +169,7 @@ def setRepoPermissions(repo_owner, repo_name, admin_group) {
 def addWebhook(repo_name, webhookName, scm_webhook_target_url) {
     if (config_loader.SCM.TYPE == "gitlab") {
         def proj_id = getGitLabsProjectId(repo_name)
-        def scm_webhook_api = "${scm_protocol}${config_loader.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/hooks?enable_ssl_verification=false&push_events=true&url="
+        def scm_webhook_api = "${scm_protocol}${config_loader.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/hooks?enable_ssl_verification=false&push_events=true&tag_push_events=true&note_events=true&merge_requests_events=true&url="
         sh "curl --header \"Private-Token: ${config_loader.SCM.PRIVATE_TOKEN}\" -X POST \"${scm_webhook_api}$scm_webhook_target_url\""
     } else if (config_loader.SCM.TYPE == "bitbucket") {
         def scm_webhook_api = "${scm_protocol}${config_loader.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${config_loader.REPOSITORY.REPO_BASE_SERVICES}/repos/"
@@ -250,22 +249,25 @@ def setServiceConfig(serviceConfig){
 }
 
 @NonCPS
-def parseJson(def json) {
-	new groovy.json.JsonSlurperClassic().parseText(json)
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
 }
 
 def getRepoCommitHash() {
-	return sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+    return sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
 }
 
 def getRepoName(){
-	def repo_name
-	if (service_config['domain'] && service_config['domain'].trim() != "") {
-		repo_name = service_config['domain'].trim() + "_" + service_config['service'].trim()
-	} else {
-		repo_name = service_config['service'].trim()
-	}
-	return repo_name
+    def repo_name
+    if (service_config['domain'] && service_config['domain'].trim() != "") {
+        repo_name = service_config['domain'].trim() + "_" + service_config['service'].trim()
+    } else {
+        repo_name = service_config['service'].trim()
+    }
+    return repo_name
 }
 
 def getRepoURL() {
@@ -274,49 +276,49 @@ def getRepoURL() {
         repoUrl = getCoreRepoUrl(repo_name)
     } else {
         repoUrl = getRepoUrl(repo_name)
-    }	
-	echo "SCM_Commit_URL:$repoUrl"
-	return repoUrl
+    }
+    echo "SCM_Commit_URL:$repoUrl"
+    return repoUrl
 }
 
 def getRepoCommitterInfo(commitHash) {
-	def committerId = null
-	if (commitHash) {
-		if (config_loader.SCM.TYPE == "gitlab") {
-			def repo_name = getRepoName()
-			def proj_id = getGitLabsProjectId(repo_name)
-			def scm_commit_api = "http://${config_loader.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/repository/commits/${commitHash}"
-			scmCommitResponse = sh(script: "curl --header \"Private-Token: ${config_loader.SCM.PRIVATE_TOKEN}\"  \"${scm_commit_api}\"", returnStdout: true).trim()
-			if (scmCommitResponse != null) {
-				def commitDetails = parseJson(scmCommitResponse)
-				if (commitDetails != null) {
-					committerId = commitDetails.author_name
-				}
-			}
-		} else if (config_loader.SCM.TYPE == "bitbucket") {
-			def repoBase
-			if (service_config['domain'] == 'jazz') {
-				repoBase = config_loader.REPOSITORY.REPO_BASE_PLATFORM
-			} else {
-				repoBase = config_loader.REPOSITORY.REPO_BASE_SERVICES
-			}
-			def scm_commit_api = "http://${config_loader.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${repoBase}/repos/${getRepoName()}"
-			def repoUrl = "${scm_commit_api}/commits/${commitHash}"
-			echo "[Metadata] Repository URL: $repoUrl"
-			def scmCommitResponse 
-			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-				scmCommitResponse = sh(script: "curl -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\"  $repoUrl", returnStdout: true).trim()
-			}
-			if (scmCommitResponse != null) {
-				def commitDetails = parseJson(scmCommitResponse)
-				if (commitDetails != null && commitDetails.author != null && commitDetails.author.name != null) {
-					committerId = commitDetails.author.name
-				}
-			}
-		}
+    def committerId = null
+    if (commitHash) {
+        if (config_loader.SCM.TYPE == "gitlab") {
+            def repo_name = getRepoName()
+            def proj_id = getGitLabsProjectId(repo_name)
+            def scm_commit_api = "http://${config_loader.REPOSITORY.BASE_URL}/api/v4/projects/${proj_id}/repository/commits/${commitHash}"
+            scmCommitResponse = sh(script: "curl --header \"Private-Token: ${config_loader.SCM.PRIVATE_TOKEN}\"  \"${scm_commit_api}\"", returnStdout: true).trim()
+            if (scmCommitResponse != null) {
+                def commitDetails = parseJson(scmCommitResponse)
+                if (commitDetails != null) {
+                    committerId = commitDetails.author_name
+                }
+            }
+        } else if (config_loader.SCM.TYPE == "bitbucket") {
+            def repoBase
+            if (service_config['domain'] == 'jazz') {
+                repoBase = config_loader.REPOSITORY.REPO_BASE_PLATFORM
+            } else {
+                repoBase = config_loader.REPOSITORY.REPO_BASE_SERVICES
+            }
+            def scm_commit_api = "http://${config_loader.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${repoBase}/repos/${getRepoName()}"
+            def repoUrl = "${scm_commit_api}/commits/${commitHash}"
+            echo "[Metadata] Repository URL: $repoUrl"
+            def scmCommitResponse 
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+                scmCommitResponse = sh(script: "curl -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\"  $repoUrl", returnStdout: true).trim()
+            }
+            if (scmCommitResponse != null) {
+                def commitDetails = parseJson(scmCommitResponse)
+                if (commitDetails != null && commitDetails.author != null && commitDetails.author.name != null) {
+                    committerId = commitDetails.author.name
+                }
+            }
+        }
 
-		return committerId
-	}
+        return committerId
+    }
 }
 
 return this

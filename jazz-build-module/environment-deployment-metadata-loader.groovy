@@ -60,6 +60,9 @@ def getEnvironmentLogicalId() {
 		}
 		g_environment_logical_id = environment_logical_id
 	}
+	if (g_service_config['domain'] == "jazz") {
+		g_environment_logical_id = 'dev'
+	}
 	echo "Environment_Logical_Id: $g_environment_logical_id"
 	return g_environment_logical_id
 }
@@ -213,7 +216,7 @@ def generateEnvironmentMap(status, environment_logical_id) {
 	return serviceCtxMap;
 }
 
-def generateDeploymentMap(status, environment_logical_id,gitCommitHash) {
+def generateDeploymentMap(status, environment_logical_id, gitCommitHash) {
 	def env_logical_id
 	if (environment_logical_id == null) {
 		env_logical_id = getEnvironmentLogicalId()

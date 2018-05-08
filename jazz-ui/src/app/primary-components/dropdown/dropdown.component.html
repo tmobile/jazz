@@ -1,9 +1,9 @@
 <div class="dropdown" dropdown [dropdownToggle]="false" (onOpen)="onDropdownOpen()" (onClose)="onDropdownClose()">
-    <button type="button" class="btn dropdown-btn dropdown-toggle" dropdown-open>
-        <span>{{selected}}</span>
+    <button type="button" [class.drop-btn]='IsEnvList' class="btn dropdown-btn dropdown-toggle" dropdown-open>
+        <span class="padding-right">{{selected}}</span>
         <span class="caret"></span>
     </button>
-    <ul class="dropdown-menu" aria-labelledby="dLabel">
+    <ul class="dropdown-menu" [class.drop-menu]='IsEnvList' aria-labelledby="dLabel">
         <li *ngFor="let option of dropdwnContent" (click)="onDropdownClick(option)" value="{{option}}"><a>{{option}}</a></li>
     </ul>
 </div>

@@ -1,57 +1,97 @@
 :host {
-    display: block;
-    height: 100%;
-    width: 100%;
+  display: block;
+  height: 100%;
+  width: 100%;
 }
 
 /deep/ {
-    .line-graph-svg {
-        font-size: 1.2rem;
-        .tick {
-            font-size: 1.1em;
-            font-weight: 500;
-            fill: #333;
-        }
+  .line-graph-svg {
+    font-size: 1.2rem;
+    .tick {
+      font-size: 0.8rem;
+      font-weight: 500;
+      fill: #999;
+      line {
+        stroke: #666;
+      }
+      text {
+        fill: #999;
+        font-weight: 700; // font-size: 7.5px;
+      }
     }
-    .line {
-        fill: none;
-        stroke: #ed0085;
-        stroke-width: 3px;
-        stroke-linecap: round;
+  }
+  .line {
+    fill: none;
+    stroke: #ed008c;
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+  }
+  .line-plot-hover {
+    stroke-width: 30px;
+    stroke: transparent;
+  }
+  .axis.axis--x {
+    path {
+      stroke: #666;
     }
-    .line-plot-hover {
-        stroke-width: 30px;
-        stroke: transparent;
+  }
+  .axis.axis--y {
+    path {
+      stroke: none;
     }
-    .axis.axis--y {
-        path {
-            stroke: none;
-        }
-        .tick line {
-            stroke: #aaa;
-        }
-        .tick:nth-child(2) {
-            opacity: 0;
-        }
+    .tick {
+      line {
+        stroke: #efefef;
+      }
+    } // .tick {
+    //     opacity: 0.5;
+    // }
+    .tick:nth-child(2) {
+      opacity: 0;
     }
-    .hover-y {
-        font-size: 1.1em;
-        fill: #ed0085;
-        font-weight: bold;
-    }
-    .hover-x {
-        fill: #000;
-        font-size: 0.9em;
-        font-weight: bold;
-    }
+  }
+  .hover-y {
+    font-size: 10px;
+    fill: #ed008c;
+    font-weight: bold;
+    text-align: center;
+  }
+  .hover-x {
+    fill: #333;
+    font-size: 8px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .dot {
+    fill: #fff;
+    stroke: #ed0085;
+    r: 3;
+    stroke-width: 1.5px;
+  }
+  .axis-title {
+    font-size: 10px;
+    font-weight: bold;
+    fill: #666;
+  }
 }
 
 svg {
-    opacity: 0.6;
-    font-size: 1.2rem;
-    overflow: visible;
+  // opacity: 0.6;
+  font-size: 1rem;
+  overflow: visible;
+  box-shadow: 0px -0px 10000px transparent;
 }
 
 h1 {
-    opacity: 0.4;
+  opacity: 0.4;
 }
+
+/deep/.tool-tip {
+  position: relative;
+  top: 100px;
+  z-index: 10000 !important;
+}
+
+// text{
+//     fill: #333!important;
+// }
