@@ -79,7 +79,7 @@ module.exports.handler = (event, context, cb) => {
 				querys = [];
 
 			//Appending service name with Domain, Env and Jazz_type
-			service = domain + "-" + service + "-" + env;
+			service = domain + "-" + service
 			if(config.ENV_PREFIX){
 				service = config.ENV_PREFIX + "-" + service
 			}
@@ -107,7 +107,7 @@ module.exports.handler = (event, context, cb) => {
 
 			var req = utils.requestLoad;
 			req.url = config.BASE_URL + "/_plugin/kibana/elasticsearch/_msearch";
-			req.body = setRequestBody(servCategory, querys, startTime, endTime, size, page);
+			req.body = setRequestBody(servCategory, env, querys, startTime, endTime, size, page);
 
 			request(req, function(err, res, body) {
 				if (err) {
@@ -160,9 +160,10 @@ module.exports.handler = (event, context, cb) => {
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("Exception occured while processing the request : "+ JSON.stringify(e))));
 	}
 
-	function setRequestBody(category, querys, startTime, endTime, size, page){
+	function setRequestBody(category, type, querys, startTime, endTime, size, page){
 		var index = {
 			"index": category,
+			"type": type,
 			"ignore_unavailable": true
 			};
 
@@ -170,10 +171,6 @@ module.exports.handler = (event, context, cb) => {
 			"size": size,
 			"from" : page,
 			"sort":[{
-				"request_id":{
-					"order":"desc"
-				}
-			},{
 				"timestamp":{
 					"order":"desc"
 				}
