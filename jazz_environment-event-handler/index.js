@@ -357,7 +357,7 @@ var processEventDeleteBranch = function (environmentPayload, configData, authTok
 				});
 			})
 			.catch(err => {
-				logger.error("Error with getEnvironmentLogicalId -" + JSON.stringify(err));
+				logger.error("Error inside processEventDeleteBranch -" + JSON.stringify(err));
 				return reject(err);
 			});
 
