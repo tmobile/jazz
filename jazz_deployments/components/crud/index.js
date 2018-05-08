@@ -30,7 +30,7 @@ var _update = require("./update.js");
 module.exports = () => {
     return {
         get: _get,
-		getList: _getList,
+        getList: _getList,
         create: _create,
         delete: _delete,
         update: _update

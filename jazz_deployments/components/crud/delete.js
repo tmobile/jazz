@@ -25,8 +25,8 @@
 const utils = require("../utils.js")(); //Import the utils module.
 
 module.exports = (tableName, deploymentId, onComplete) => {
-	
-	// initialize docCLient
+
+    // initialize docCLient
     var docClient = utils.initDocClient();
 
     var params = {
@@ -36,11 +36,13 @@ module.exports = (tableName, deploymentId, onComplete) => {
         }
     };
 
-    docClient.delete(params, function(err, data) {
+    docClient.delete(params, function (err, data) {
         if (err) {
             onComplete(err);
         } else {
-			onComplete(null, { deploymentId: deploymentId});
+            onComplete(null, {
+                deploymentId: deploymentId
+            });
         }
     });
 };

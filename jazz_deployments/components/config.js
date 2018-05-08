@@ -24,20 +24,18 @@
 
 var getStageConfig = (event) => {
 
-  var stage;
-  
+  var stage, configObj;
+
   if (event && event.awslogs && event.awslogs.data) {
-      // cw events default to dev
-      stage = 'dev';
-  }else {
-      stage = event.stage
-  } 
-  
-  var configObj;
-  
+    // cw events default to dev
+    stage = 'dev';
+  } else {
+    stage = event.stage
+  }
+
   if (stage) {
-      configObj = require(`../config/${stage}-config.json`);
-  } 
+    configObj = require(`../config/${stage}-config.json`);
+  }
 
   return configObj;
 };

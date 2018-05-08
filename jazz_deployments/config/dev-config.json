@@ -14,20 +14,22 @@
     "request_id"
   ],
   "REQUIRED_PARAMS": ["service", "domain", "environment"],
-  "OPTIONAL_PARAMS":["status" , "offset" , "limit"],
-  "ARCHIVED_DEPLOYMENT_STATUS" : "archived",
-  "DEPLOYMENTS_SORTING_KEY" : "provider_build_id",
-  "DEPLOYMENTS_SORTING_ORDER" : "desc",
-  "PAGINATION_DEFAULTS": {"offset": 0, "limit": 10, "max_limit": 100 },
-  "DEPLOYMENT_STATUS": [
-    "successful",
-    "started",
-    "failed",
-    "archived",
-    "aborted",
-    "in_progress"
-  ],
-  "SVC_USER":"jobexec",
-  "SVC_PASWD":"jenkinsadmin",
-  "ddb_region":"{conf-region}"
-}
+  "OPTIONAL_PARAMS": ["status", "offset", "limit"],
+  "ARCHIVED_DEPLOYMENT_STATUS": "archived",
+  "DEPLOYMENTS_SORTING_KEY": "provider_build_id",
+  "DEPLOYMENTS_SORTING_ORDER": "desc",
+  "PAGINATION_DEFAULTS": {
+    "offset": 0,
+    "limit": 10,
+    "max_limit": 100
+  },
+  "DEPLOYMENT_STATUS": ["successful", "started", "failed", "archived", "aborted", "in_progress"],
+  "SVC_USER": "jobexec",
+  "SVC_PASWD": "jenkinsadmin",
+  "ddb_region": "{conf-region}",
+  "JOB_BUILD_URL": "{conf-jenkins-host}/job/",
+  "SERVICE_API_URL" : "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "SERVICE_API_RESOURCE" : "/dev/jazz/services",
+  "TOKEN_URL" : "/dev/jazz/login",
+  "SERVICE_USER" : "{jazz_admin}",
+  "TOKEN_CREDS" : "{jazz_admin_creds}"}

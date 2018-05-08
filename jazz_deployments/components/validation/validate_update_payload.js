@@ -49,7 +49,7 @@ module.exports = (config, deployment_data, deploymentTableName, deploymentId, on
 }
 
 function validateIsEmptyInputData(deployment_data) {
-    logger.info("Inside validateIsEmptyInputData: ");
+    logger.debug("Inside validateIsEmptyInputData: ");
     return new Promise((resolve, reject) => {
         //check for empty body
         validateUtils.validateIsEmptyInputData(deployment_data, function onValidate(error, data) {
@@ -65,7 +65,7 @@ function validateIsEmptyInputData(deployment_data) {
 
 function validateStatusFieldValue(deployment_data, status_field_list) {
     //check for valid status
-    logger.info("Inside validateStatusFieldValue: "+ deployment_data.status);
+    logger.debug("Inside validateStatusFieldValue: "+ deployment_data.status);
     return new Promise((resolve, reject) => {
         if(deployment_data.status){
             validateUtils.validateStatusFieldValue(deployment_data, status_field_list, function onValidate(error, data) {
@@ -84,7 +84,7 @@ function validateStatusFieldValue(deployment_data, status_field_list) {
 
 function validateRemoveEmptyValues(deployment_data) {
     // check for empty values before updating environments table
-    logger.info("Inside validateRemoveEmptyValues: ");
+    logger.debug("Inside validateRemoveEmptyValues: ");
     return new Promise((resolve, reject) => {
         validateUtils.validateRemoveEmptyValues(deployment_data, function onValidate(error, data) {
             if (error) {
@@ -98,7 +98,7 @@ function validateRemoveEmptyValues(deployment_data) {
 };
 
 function validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields){
-    logger.info("Inside validateNotEditableFieldsInUpdate: ");
+    logger.debug("Inside validateNotEditableFieldsInUpdate: ");
     return new Promise((resolve, reject) => {
         validateUtils.validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields, function onValidate(error, data) {
             if (error) {
@@ -112,19 +112,17 @@ function validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields)
 }
 
 function validateDeploymentExist(deploymentTableName, deploymentId, deployment_data){
-    logger.info("Inside validateDeploymentExist:"+deploymentId);
+    logger.debug("Inside validateDeploymentExist:"+deploymentId);
     return new Promise((resolve, reject) => {
         crud.get(deploymentTableName, deploymentId, (error, data) => {
 			if(error){
 				logger.error("getDeploymentDetailsById error:"+JSON.stringify(error));
 				reject(error);
 			} else {
-                logger.info("getDeploymentDetailsById data:"+JSON.stringify(data));
                 if (data.length === 0 || (Object.keys(data).length === 0 && data.constructor === Object)) {
 					logger.error('Cannot find deployment details with id : ' + deploymentId);
 					reject({result:"notFound",message:'Cannot find deployment details with id :' + deploymentId});
 				} else{
-					logger.info("getDeploymentDetailsById data:"+JSON.stringify(data));
                     resolve({message:"Deployment with provided Id exist", input:deployment_data});
 				}
 			}

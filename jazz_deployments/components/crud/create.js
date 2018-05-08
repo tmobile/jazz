@@ -25,13 +25,12 @@
 const utils = require("../utils.js")(); //Import the utils module.
 const moment = require("moment");
 const Uuid = require("uuid/v4");
-
 module.exports = (deploymentData, tableName, onComplete) => {
 	
 	// initialize dynamodb
     var docClient = utils.initDocClient(),
         timestamp = moment().utc().format("YYYY-MM-DDTHH:mm:ss:SSS"),
-        deployment_id = Uuid();;
+    deploymentId = Uuid();
 		
     var params = {
         Item: {
@@ -40,14 +39,13 @@ module.exports = (deploymentData, tableName, onComplete) => {
         },
         ReturnConsumedCapacity: "TOTAL",
         TableName: tableName
-    };	
-
+    };
+    
     // Add all properties in input object to the params object
-    Object.keys(deploymentData).forEach(function(key) {
+    Object.keys(deploymentData).map(function(key) {
         var param_key = utils.getDeploymentDatabaseKeyName(key);
         var param_value = deploymentData[key];
-
-        if (param_value === null || param_value === undefined) {
+        if (!param_value) {
             params.Item[param_key] = null;
         } else {
             params.Item[param_key] = param_value;

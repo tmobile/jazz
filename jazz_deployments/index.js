@@ -25,9 +25,8 @@ const responseObj = require("./components/response.js"); //Import the response m
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
 const utils = require("./components/utils.js")(); //Import the utils module.
-const validateUtils = require("./components/validation")();//Import validation module
+const validateUtils = require("./components/validation")(); //Import validation module
 const crud = require("./components/crud")(); //Import the crud module.
-const async = require('async');
 const request = require('request');
 const util = require('util');
 
@@ -36,11 +35,11 @@ module.exports.handler = (event, context, cb) => {
 	//Initializations
 	var errorHandler = errorHandlerModule(),
 		config = configObj(event);
-		global.config = config;
+	global.config = config;
 	logger.init(event, context);
 
 	//validate inputs
-	if(!event || !event.method) {
+	if (!event || !event.method) {
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("Service inputs not defined!")));
 	}
 	logger.info(event);
@@ -51,218 +50,153 @@ module.exports.handler = (event, context, cb) => {
 		query = event.query,
 		path = event.path,
 		body = event.body;
-	logger.info("Path from event:"+ Object.keys(event.query).length);
-	logger.info("Path variable:"+JSON.stringify(query));
 
 	if (method === "POST" && !Object.keys(event.path).length) {
 		var deployment_details = body;
-		logger.info("creating new deployment details");
+		// creating new deployment details
 		validateDeploymentDetails(config, deployment_details)
-		.then(() => addNewDeploymentDetails(deployment_details, deploymentTableName))
-		.then((res) => {
-			logger.info("Create deployment result:"+JSON.stringify(res));
-			return cb(null, responseObj(res, deployment_details));
-		})
-		.catch((error) => {
-			logger.error("Error while creating new deployment:"+JSON.stringify(error));
-			if(error.result == "inputError"){
-				return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-			} else{
-				return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
-			}
-		});
+			.then(() => addNewDeploymentDetails(deployment_details, deploymentTableName))
+			.then((res) => {
+				logger.info("Create deployment result:" + JSON.stringify(res));
+				return cb(null, responseObj(res, deployment_details));
+			})
+			.catch((error) => {
+				logger.error("Error while creating new deployment:" + JSON.stringify(error));
+				if (error.result == "inputError") {
+					return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+				} else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
+				}
+			});
 	}
 
 	if (method === "POST" && Object.keys(event.path).length) {
 
 		deploymentId = path.id;
 		logger.info("GET Deployment details using deployment Id :" + deploymentId);
-		if(!deploymentId){
+		if (!deploymentId) {
 			return cb(JSON.stringify(errorHandler.throwInternalServerError("Missing input parameter deployment id")));
 		}
 
 		// write reuest to get authtoken using login api and config provided user details and provide "baseAuthToken" value to rebuild request
-		var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
-
-		async.auto({
-			// Get deployment details by id
-			getDeploymentDetailsById: function(onComplete) {
-				logger.info("getDeploymentDetailsById crud.get")
-				crud.get(deploymentTableName, deploymentId, onComplete);
-			},
-			retryDeployment : ['getDeploymentDetailsById', function (result, onComplete){
-				logger.info("Inside retryDeployment")
-				if(!utils.isEmpty(result.getDeploymentDetailsById)){
-					var deployment_data = result.getDeploymentDetailsById,
-						build_url = deployment_data.provider_build_url,
-						service_name = deployment_data.domain_name + '_' + deployment_data.service_name;
-					logger.info("deployment_data: "+ JSON.stringify(deployment_data));
-					logger.info("build_url: "+ build_url);
-					if(build_url){
-						var url_tokens = build_url.split('/');
-						// trim the build number at the end of the url: /job/branch/1 -> /job/branch
-						while (url_tokens.pop()===""){}
-						var rebuild_url = url_tokens.join('/') + '/build?delay=0sec';
-						logger.info("rebuild_url: "+ rebuild_url);
-						var options = {
-							url: rebuild_url,
-							method: 'POST',
-							rejectUnauthorized: false,
-							headers: {
-								'Accept': 'application/json',
-								'Authorization' : base_auth_token
-							}
-						};
-						request(options, function(error, res, body) {
-							logger.info("rebuild error:"+JSON.stringify(error));
-							logger.info("rebuild res:"+JSON.stringify(res));
-							if (error) {
-								logger.error("Unable to rebuild deployment :" + error);
-								onComplete({ result: "Internal Error", message: JSON.stringify(error)});
-							} else {
-								// Success response
-								if(res.statusCode == 200 || res.statusCode == 201 ){
-									logger.info("successfully deployment started.");
-									onComplete(null, {result : 'success', message: "deployment started."});
-								} else if(res.statusCode == 404 ){
-									logger.info("Service not available.");
-									var msg = 'Unable to re-build '+ service_name + ' because requested service is unavailable.';
-									onComplete({ result: "error", message: msg});
-								} else {
-									//validating response errors
-									var error_message = 'Unknown error occurred';
-									var bodyToJSON = JSON.stringify(res.body);
-									if(typeof bodyToJSON.errors !== 'undefined'){
-										error_message = bodyToJSON.errors[0].message;
-									}
-									onComplete({ result: "error", message: error_message });
-								}
-							}
-						});
-					} else {
-						onComplete({ result: "Internal Error", message: "unable to find deployment details"});
-					}
-				} else {
-					onComplete({ result: "deployment_not_found", message: "unable to find deployment details"});
-				}
-			}]
-		},
-		function(error, data) {
-			if (error) {
-				if((error.result === "deployment_not_found") || (error.result === "deployment_already_deleted_error")){
-					logger.error("Error occurred. " + JSON.stringify(error, null, 2));
+		getDeploymentDetailsById(deploymentTableName, deploymentId)
+			.then((res) => reBuildDeployment(res, config))
+			.then((res) => {
+				logger.info("Re-build result:" + JSON.stringify(res));
+				return cb(null, responseObj(res, path));
+			})
+			.catch((error) => {
+				logger.error("Re-build error:" + JSON.stringify(error));
+				if (error.result.toLowerCase() === "notfound" || error.result === "deployment_already_deleted_error") {
 					return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
-				}else{
-					logger.error("Error occurred. " + JSON.stringify(error, null, 2));
-					return cb(JSON.stringify(errorHandler.throwInternalServerError(error.message)));
+				} else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError('unhandled error occurred')));
 				}
-			}
-			logger.info("Result: " + JSON.stringify(data));
-			var deployment_obj = data.retryDeployment;
-			logger.verbose("Get Success. " + JSON.stringify(deployment_obj, null, 2));
-			return cb(null, responseObj(deployment_obj, path));
-		});
+			});
 	}
 
-	if( method === 'GET' && query !== undefined && utils.isEmpty(path)){
+	if (method === 'GET' && query && utils.isEmpty(path)) {
 		queryParams = {
-			'service' : query.service,
-			'domain' : query.domain,
-			'environment' : query.environment,
-			'status' : query.status,
-			'offset' : query.offset,
-			'limit' : query.limit
+			'service': query.service,
+			'domain': query.domain,
+			'environment': query.environment,
+			'status': query.status,
+			'offset': query.offset,
+			'limit': query.limit
 		};
 
-
-		logger.info("GET Deployment details using query params :" + JSON.stringify(queryParams));
+		// GET Deployment details using query params
 		validateQueryParams(config, queryParams)
-		.then(() => getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
-		.then((res) => {
-			logger.info("Get list of deployments:"+JSON.stringify(res));
-			return cb(null, responseObj(res, query));
-		})
-		.catch((error) => {
-			logger.error("Error while fetching deployments:"+JSON.stringify(error));
-			if (error.result === "inputError") {
-				return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-
-			} else{
-				return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
-			}
-		});
+			.then(() => getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
+			.then((res) => {
+				logger.info("Get list of deployments:" + JSON.stringify(res));
+				return cb(null, responseObj(res, query));
+			})
+			.catch((error) => {
+				logger.error("Error while fetching deployments:" + JSON.stringify(error));
+				if (error.result === "inputError") {
+					return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+				} else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
+				}
+			});
 	}
 
-	if( method === 'GET' && path !== undefined && utils.isEmpty(query)){
+	if (method === 'GET' && path && utils.isEmpty(query)) {
 		deploymentId = path.id;
-		if(!deploymentId){
+		if (!deploymentId) {
 			return cb(JSON.stringify(errorHandler.throwInternalServerError("Missing input parameter deployment id")));
 		}
-		logger.info("GET Deployment details using deployment Id :" + deploymentId);
+		// GET Deployment details using deployment Id
 		getDeploymentDetailsById(deploymentTableName, deploymentId)
-		.then((res) => {
-			logger.info("Get Success. " + JSON.stringify(res));
-			return cb(null, responseObj(res, path));
-		})
-		.catch((error) => {
-			if((error.result === "notFound") || (error.result === "deployment_already_deleted_error")){
-				logger.error("Error occurred. " + JSON.stringify(error, null, 2));
-				return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
-			}else{
-				logger.error("Error occurred. " + JSON.stringify(error, null, 2));
-				return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
-			}
-		});
+			.then((res) => {
+				logger.info("Get Success. " + JSON.stringify(res));
+				return cb(null, responseObj(res, path));
+			})
+			.catch((error) => {
+				logger.error("Error occurred. " + JSON.stringify(error));
+				if ((error.result === "notFound") || (error.result === "deployment_already_deleted_error")) {
+					return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
+				} else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
+				}
+			});
 	}
 
-	if( method === "PUT" && path !== undefined ){
+	if (method === "PUT" && path) {
 		var update_deployment_data = {},
 			unchangeable_fields = config.REQUIRED_PARAMS, // list of fields that cannot be updated
 			invalid_environment_fields = [];
 		deploymentId = path.id;
 
-		if(!deploymentId){
+		if (!deploymentId) {
 			return cb(JSON.stringify(errorHandler.throwInternalServerError("Missing input parameter deployment id")));
 		}
 
+		// Update deployments details by id
 		validateUpdateInput(config, body, deploymentTableName, deploymentId)
-		.then((data) => updateDeploymentDetails(deploymentTableName, data, deploymentId))
-		.then((res) => {
-			logger.info("Updated data:"+ JSON.stringify(res));
-			return cb(null, responseObj({ message: "Successfully Updated deployment details with id: " + deploymentId }, body));
-		})
-		.catch((error) => {
-			if (error.result === "inputError") {
-				return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-			} else if(error.result === "notFound"){
-				return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
-			}else {
-				return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
-			}			
-		});
+			.then((data) => updateDeploymentDetails(deploymentTableName, data, deploymentId))
+			.then((res) => {
+				logger.info("Updated data:" + JSON.stringify(res));
+				return cb(null, responseObj({
+					message: "Successfully Updated deployment details with id: " + deploymentId
+				}, body));
+			})
+			.catch((error) => {
+				logger.error("Error occurred."+JSON.stringify(error));
+				if (error.result === "inputError") {
+					return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+				} else if (error.result === "notFound") {
+					return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
+				} else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
+				}
+			});
 	}
 
-	if (method === "DELETE" && path !== undefined ){
+	if (method === "DELETE" && path) {
 		deploymentId = path.id;
-		if(!deploymentId){
+		if (!deploymentId) {
 			return cb(JSON.stringify(errorHandler.throwInternalServerError("Missing input parameter deployment id")));
 		}
-		logger.info("Deleting deployment details for id : "+ deploymentId);
+		// Deleting deployment details for id
 		getDeploymentDetailsById(deploymentTableName, deploymentId)
-		.then((res) => deleteServiceByID(res, deploymentTableName, deploymentId))
-		.then((res) => {
-			logger.info("DeleteItem succeeded");
-			var msg = "Successfully Deleted deployment details of id :"+ deploymentId;
-			return cb(null, responseObj({ message: msg }, path));
-		})
-		.catch((error) => {
-			logger.error("Error in DeleteItem: " + JSON.stringify(error));
-			if(error.result === "deployment_already_deleted_error" || error.result === "notFound"){
-				return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
-			} else{
-				return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred ")));
-			}
-		});
+			.then((res) => deleteServiceByID(res, deploymentTableName, deploymentId))
+			.then((res) => {
+				logger.info("DeleteItem succeeded");
+				var msg = "Successfully Deleted deployment details of id :" + deploymentId;
+				return cb(null, responseObj({
+					message: msg
+				}, path));
+			})
+			.catch((error) => {
+				logger.error("Error in DeleteItem: " + JSON.stringify(error));
+				if (error.result === "deployment_already_deleted_error" || error.result === "notFound") {
+					return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
+				} else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred ")));
+				}
+			});
 	}
 
 };
@@ -271,11 +205,10 @@ function validateDeploymentDetails(config, deployment_details) {
 	logger.info("validateDeploymentDetails for creating new deployment");
 	return new Promise((resolve, reject) => {
 		validateUtils.validateCreatePayload(config, deployment_details, (error, data) => {
-			if(error){
-				logger.error("validateDeploymentDetails error:"+JSON.stringify(error));
+			if (error) {
+				logger.error("validateDeploymentDetails error:" + JSON.stringify(error));
 				reject(error);
 			} else {
-				logger.info("validateDeploymentDetails data:"+JSON.stringify(data));
 				resolve(data);
 			}
 		});
@@ -286,11 +219,10 @@ function addNewDeploymentDetails(deployment_details, deploymentTableName) {
 	logger.info("addNewDeploymentDetails");
 	return new Promise((resolve, reject) => {
 		crud.create(deployment_details, deploymentTableName, (error, data) => {
-			if(error){
-				logger.error("addNewDeploymentDetails error:"+JSON.stringify(error));
+			if (error) {
+				logger.error("addNewDeploymentDetails error:" + JSON.stringify(error));
 				reject(error);
 			} else {
-				logger.info("addNewDeploymentDetails data:"+JSON.stringify(data));
 				resolve(data);
 			}
 		});
@@ -301,11 +233,10 @@ function validateQueryParams(config, params) {
 	logger.info("validateQueryParams for deployments");
 	return new Promise((resolve, reject) => {
 		validateUtils.validateDeployment(config, params, (error, data) => {
-			if(error){
-				logger.error("validateQueryParams error:"+JSON.stringify(error));
+			if (error) {
+				logger.error("validateQueryParams error:" + JSON.stringify(error));
 				reject(error);
 			} else {
-				logger.info("validateQueryParams data:"+JSON.stringify(data));
 				resolve(data);
 			}
 		});
@@ -316,11 +247,10 @@ function getDeploymentDetailsByQueryParam(deploymentTableName, queryParams) {
 	logger.info("getDeploymentDetailsByQueryParam" + JSON.stringify(queryParams));
 	return new Promise((resolve, reject) => {
 		crud.getList(deploymentTableName, queryParams, (error, data) => {
-			if(error){
-				logger.error("getDeploymentDetailsByQueryParam error:"+JSON.stringify(error));
+			if (error) {
+				logger.error("getDeploymentDetailsByQueryParam error:" + JSON.stringify(error));
 				reject(error);
 			} else {
-				logger.info("getDeploymentDetailsByQueryParam data:"+JSON.stringify(data));
 				resolve(data);
 			}
 		});
@@ -331,15 +261,17 @@ function getDeploymentDetailsById(deploymentTableName, deploymentId) {
 	logger.info("getDeploymentDetailsById" + JSON.stringify(deploymentId));
 	return new Promise((resolve, reject) => {
 		crud.get(deploymentTableName, deploymentId, (error, data) => {
-			if(error){
-				logger.error("getDeploymentDetailsById error:"+JSON.stringify(error));
+			if (error) {
+				logger.error("getDeploymentDetailsById error:" + JSON.stringify(error));
 				reject(error);
 			} else {
-				if (data.length === 0 || (Object.keys(data).length === 0 && data.constructor === Object)) {
+				if (data && !(Object.keys(data).length && data.constructor === Object)) {
 					logger.error('Cannot find deployment details with id : ' + deploymentId);
-					reject({result:"notFound",message:'Cannot find deployment details with id :' + deploymentId});
-				} else{
-					logger.info("getDeploymentDetailsById data:"+JSON.stringify(data));
+					reject({
+						result: "notFound",
+						message: 'Cannot find deployment details with id :' + deploymentId
+					});
+				} else {
 					resolve(data);
 				}
 			}
@@ -351,11 +283,10 @@ function validateUpdateInput(config, update_data, deploymentTableName, deploymen
 	logger.info("validateUpdateInput");
 	return new Promise((resolve, reject) => {
 		validateUtils.validateUpdatePayload(config, update_data, deploymentTableName, deploymentId, (error, data) => {
-			if(error){
-				logger.error("validateUpdateInput error:"+JSON.stringify(error));
+			if (error) {
+				logger.error("validateUpdateInput error:" + JSON.stringify(error));
 				reject(error);
 			} else {
-				logger.info("validateUpdateInput data:"+JSON.stringify(data));
 				resolve(data);
 			}
 		})
@@ -366,32 +297,156 @@ function updateDeploymentDetails(deploymentTableName, update_deployment_data, de
 	logger.info("updateDeploymentDetails");
 	return new Promise((resolve, reject) => {
 		crud.update(update_deployment_data, deploymentTableName, deploymentId, (error, data) => {
-			if(error){
-				logger.error("updateDeploymentDetails error:"+JSON.stringify(error));
+			if (error) {
+				logger.error("updateDeploymentDetails error:" + JSON.stringify(error));
 				reject(error);
 			} else {
-				logger.info("updateDeploymentDetails data:"+JSON.stringify(data));
 				resolve(data);
 			}
 		});
 	})
 }
 
-function deleteServiceByID(getDeploymentDetails, deploymentTableName, deploymentId){
-	logger.info("deleteServiceByID"+JSON.stringify(getDeploymentDetails));
+function deleteServiceByID(getDeploymentDetails, deploymentTableName, deploymentId) {
+	logger.info("deleteServiceByID" + JSON.stringify(getDeploymentDetails));
 	return new Promise((resolve, reject) => {
-		if(!utils.isEmpty(getDeploymentDetails)){
+		if (!utils.isEmpty(getDeploymentDetails)) {
 			crud.delete(deploymentTableName, deploymentId, (error, data) => {
-				if(error){
-					logger.error("deleteServiceByID error:"+JSON.stringify(error));
+				if (error) {
+					logger.error("deleteServiceByID error:" + JSON.stringify(error));
 					reject(error);
 				} else {
-					logger.info("deleteServiceByID data:"+JSON.stringify(data));
 					resolve(data);
 				}
 			});
 		} else {
-			reject({result:"notFound",message:"Deployment with provided Id is not available"})
+			reject({
+				result: "notFound",
+				message: "Deployment with provided Id is not available"
+			})
 		}
 	})
+}
+
+function reBuildDeployment(refDeployment, config) {
+	logger.info("Inside reBuildDeployment"+JSON.stringify(refDeployment));
+	return new Promise((resolve, reject) => {
+		getToken(config)
+			.then((authToken) => getServiceDetails(config, refDeployment.service_id, authToken))
+			.then((res) => buildNowRequest(res, config, refDeployment))
+			.then((res) => {
+				resolve(res);
+			})
+			.catch((error) => {
+				reject(error);
+			})
+
+	});
+}
+
+function getToken(configData) {
+	return new Promise((resolve, reject) => {
+		var svcPayload = {
+			uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
+			method: 'post',
+			json: {
+				"username": configData.SERVICE_USER,
+				"password": configData.TOKEN_CREDS
+			},
+			rejectUnauthorized: false
+		};
+		request(svcPayload, (error, response, body) => {
+			if (response.statusCode === 200 && body && body.data) {
+				var authToken = body.data.token;
+				resolve(authToken);
+			} else {
+				reject({
+					"error": "Could not get authentication token for updating service catalog.",
+					"message": response.body.message
+				});
+			}
+		});
+	});
+}
+
+function getServiceDetails(configData, serviceId, authToken) {
+	logger.info("getServiceDetails:"+serviceId)
+	return new Promise((resolve, reject) => {
+		var params = {
+			uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "/" + serviceId,
+			method: 'get',
+			headers: {
+				'Authorization': authToken
+			},
+			rejectUnauthorized: false
+		};
+		request(params, (error, response, body) => {			
+			if (error) {
+				reject(error);
+			} else {
+				resolve(response.body);
+			}
+		});
+	});
+}
+
+function buildNowRequest(serviceDetails, config, refDeployment) {
+	logger.info("buildNowRequest:")
+	return new Promise((resolve, reject) => {
+		var service=JSON.parse(serviceDetails),
+		data=service.data,
+		service_name = data.service,
+		domain = data.domain,
+		scm_branch = refDeployment.scm_branch,
+		build_url = config.JOB_BUILD_URL,
+		buildQuery = "/buildWithParameters?service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch,
+		base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64"),
+		rebuild_url = "";
+
+		if (data.type.toLowerCase() === 'api') {
+			rebuild_url = build_url + "build_pack_api" + buildQuery;
+		} else if (data.type.toLowerCase() === 'lambda') {
+			rebuild_url = build_url + "build_pack_lambda" + buildQuery;
+		} else if (data.type.toLowerCase() === 'website') {
+			rebuild_url = build_url + "build_pack_website" + buildQuery;
+		}
+
+		if (build_url) {
+			var options = {
+				url: rebuild_url,
+				method: 'POST',
+				rejectUnauthorized: false,
+				headers: {
+					'Accept': 'application/json',
+					'Authorization': base_auth_token
+				}
+			};
+			request(options, function (error, res, body) {
+				if (error) {
+					logger.error("Unable to rebuild deployment :" + error);
+					reject(error);
+				} else {
+					// Success response
+					if (res.statusCode === 200 || res.statusCode === 201) {
+						logger.info("successfully deployment started.");
+						resolve({
+							result: 'success',
+							message: "deployment started."
+						});
+					} else if (res.statusCode === 404) {
+						logger.info("Service not available.");
+						var msg = 'Unable to re-build ' + service_name + ' as requested service is unavailable.';
+						reject({
+							result: "notFound",
+							message: msg
+						});
+					} else {
+						reject("unknown error occurred");
+					}
+				}
+			});
+		} else {
+			reject("unable to find deployment details");
+		}
+	});
 }

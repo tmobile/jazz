@@ -25,13 +25,11 @@
 var _validateCreatePayload = require("./validate_create_payload");
 var _validateUpdatePayload = require("./validate_update_payload");
 var _validateDeployment = require("./validate_list_payload");
-var _validateRebuildPayload = require("./validate_rebuild_payload");
 
 module.exports = () => {
     return {
         validateCreatePayload: _validateCreatePayload,
         validateUpdatePayload: _validateUpdatePayload,
         validateDeployment: _validateDeployment,
-        validateRebuildPayload: _validateRebuildPayload
     };
 };

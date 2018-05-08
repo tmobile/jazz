@@ -12,8 +12,6 @@
     },
     "dependencies": {
         "request": "*",
-        "deasync": "*",
-        "async": "*",
         "uuid": "*",
         "json-query": "*",
         "moment": "*",
