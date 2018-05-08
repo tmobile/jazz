@@ -21,7 +21,7 @@ const responseObj = require("./components/response.js");
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const formats = require('./jenkins-json.js');
-const Guid = require('guid');
+const uuid = require('uuid');
 var payloads = formats('apis');
 
 /**
@@ -74,7 +74,7 @@ module.exports.handler = (event, context, cb) => {
 		params.version = version;
 		params.db_service_id = event.body.id;
 
-		var tracking_id = Guid.create().value;
+		var tracking_id = uuid.v4();
 		params.tracking_id = tracking_id;
 
 		req.qs = params;
