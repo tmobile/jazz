@@ -100,10 +100,10 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         
     }
     onEnvSelected(envt){
-        
+
+        this.envSelected = envt;
         var index = this.envList.indexOf(envt);
         envt = this.environment_object.env[index];
-        this.envSelected = envt;
         this.selectFilter["key"]='environment';
         this.selectFilter["value"]=envt;
         this.onFilterSelect.emit(this.selectFilter);
