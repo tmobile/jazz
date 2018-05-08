@@ -7,7 +7,7 @@
         "S": "2018-03-13T01:18:35:556"
       },
       "SERVICE_CONTEXT": {
-        "S": "{\"service_type\":\"api\",\"branch\":\"bugfix/test_02\",\"runtime\":\"nodejs4.3\",\"domain\":\"jazztesting\",\"iam_role\":\"arn_platform_services_role\",\"environment\":\"test-env_logical_id-dev\",\"region\":\"us-east-1\",\"service_id\":\"d100ea55-2805-d09e-e2e6-9c38ae7c0c42\"}"
+        "S": "{\"service_type\":\"api\",\"branch\":\"master\",\"runtime\":\"nodejs4.3\",\"domain\":\"jazztesting\",\"iam_role\":\"arn_platform_services_role\",\"environment\":\"test-env_logical_id-dev\",\"region\":\"us-east-1\",\"service_id\":\"d100ea55-2805-d09e-e2e6-9c38ae7c0c42\"}"
       },
       "USERNAME": {
         "S": "jazz-admin@abc.com"
