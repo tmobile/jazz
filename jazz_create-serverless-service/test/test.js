@@ -271,6 +271,64 @@ describe('create-serverless-service', function () {
         }
       })
     });
+    it("should Return the Error message if jenkinks job failed ", () => {
+      let bool = false;
+      let responseObject_getToken = {
+        statusCode: 200,
+        body: {
+          data: {
+            "token": "ghd93-3240-2343"
+          }
+        }
+      };
+      let responseObject_createService = {
+        statusCode: 200,
+        body: {
+          data: {
+            "service_id": "ghd93-3240-2343"
+          }
+        }
+      };
+      let responseObject_serviceOnboarding = {
+        statusCode: 401,
+        body: {
+          message: "Service onboarding jenkings build Failed"
+        }
+      };
+      let responseObject_update = {
+        statusCode: 200,
+        body: {
+          data: "Service catalog updated"
+        }
+      };
+      event.stage = "dev";
+      let config = configObj(event);
+      // wrapping requests 
+      reqStub = sinon.stub(request, "Request", (obj) => {
+        // Matching response Object to the corresponding Request call
+        if (obj.uri === (config.SERVICE_API_URL + config.TOKEN_URL)) {
+          return obj.callback(null, responseObject_getToken, responseObject_getToken.body);
+        } else if (obj.uri === "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services") {
+          return obj.callback(null, responseObject_createService, responseObject_createService.body);
+        } else if (obj.url === '{conf-jenkins-host}/job/create-service/buildWithParameters') {
+          let errObject = {
+            message: responseObject_serviceOnboarding.body.message,
+            jenkins_api_failure: true
+          }
+          return obj.callback(errObject, responseObject_serviceOnboarding, responseObject_serviceOnboarding.body);
+        } else if (obj.uri = 'https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services/ghd93-3240-2343') {
+          obj.callback(null, responseObject_update, responseObject_update.body);
+        }
+        //return obj.callback(null, responseObject, responseObject.body);
+      });
+      let callFunction = index.handler(event, context, (err, res) => {
+        err = JSON.parse(err);
+        if (err.message == "Service onboarding jenkings build Failed") {
+          bool = true;
+        }
+        assert.isTrue(bool);
+      })
+    })
   })
   describe("getToken", () => {
     let config, event;
