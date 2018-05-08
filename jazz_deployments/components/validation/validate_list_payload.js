@@ -64,7 +64,7 @@ function validateIsEmptyInputData(deployment_data) {
 };
 
 function validateAllRequiredFields(deployment_data, required_fields) {
-    logger.debug("Inside validateAllRequiredFields: "+ required_fields);
+    logger.debug("Inside validateAllRequiredFields: " + required_fields);
     return new Promise((resolve, reject) => {
         //check for required fields 
         validateUtils.validateAllRequiredFields(deployment_data, required_fields, function onValidate(error, data) {
@@ -80,9 +80,9 @@ function validateAllRequiredFields(deployment_data, required_fields) {
 
 function validateStatusFieldValue(deployment_data, status_field_list) {
     //check for valid status
-    logger.debug("Inside validateStatusFieldValue: "+ deployment_data.status);
+    logger.debug("Inside validateStatusFieldValue: " + deployment_data.status);
     return new Promise((resolve, reject) => {
-        if(deployment_data.status){
+        if (deployment_data.status) {
             validateUtils.validateStatusFieldValue(deployment_data, status_field_list, function onValidate(error, data) {
                 if (error) {
                     logger.error("Error in validateStatusFieldValue" + JSON.stringify(error));

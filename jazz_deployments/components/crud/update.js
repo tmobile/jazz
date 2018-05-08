@@ -27,14 +27,14 @@ module.exports = (deploymentData, tableName, deploymentId, onComplete) => {
 
     // initialize docCLient
     var docClient = utils.initDocClient(),
-    params = {
-        TableName: tableName,
-        Key: {
-            'DEPLOYMENT_ID': deploymentId
-        }
-    }, 
-    update_exp = "",
-    attributeValues = {};
+        params = {
+            TableName: tableName,
+            Key: {
+                'DEPLOYMENT_ID': deploymentId
+            }
+        },
+        update_exp = "",
+        attributeValues = {};
 
     // Add all properties in input object to the params object
     Object.keys(deploymentData).map(function (key) {

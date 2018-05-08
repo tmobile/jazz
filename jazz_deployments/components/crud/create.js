@@ -26,23 +26,23 @@ const utils = require("../utils.js")(); //Import the utils module.
 const moment = require("moment");
 const Uuid = require("uuid/v4");
 module.exports = (deploymentData, tableName, onComplete) => {
-	
-	// initialize dynamodb
+
+    // initialize dynamodb
     var docClient = utils.initDocClient(),
         timestamp = moment().utc().format("YYYY-MM-DDTHH:mm:ss:SSS"),
-    deploymentId = Uuid();
-		
+        deploymentId = Uuid();
+
     var params = {
         Item: {
             DEPLOYMENT_ID: deploymentId,
-			CREATED_TIME: timestamp
+            CREATED_TIME: timestamp
         },
         ReturnConsumedCapacity: "TOTAL",
         TableName: tableName
     };
-    
+
     // Add all properties in input object to the params object
-    Object.keys(deploymentData).map(function(key) {
+    Object.keys(deploymentData).map(function (key) {
         var param_key = utils.getDeploymentDatabaseKeyName(key);
         var param_value = deploymentData[key];
         if (!param_value) {
@@ -51,15 +51,15 @@ module.exports = (deploymentData, tableName, onComplete) => {
             params.Item[param_key] = param_value;
         }
     });
-	
-	// Add new item to database
-    docClient.put(params, function(err, data) {
+
+    // Add new item to database
+    docClient.put(params, function (err, data) {
         if (err) {
             // database error
             onComplete({
-                    result: "databaseError",
-                    message: "Error adding Item to dynamodb " + err.message
-                }, null );
+                result: "databaseError",
+                message: "Error adding Item to dynamodb " + err.message
+            }, null);
         } else {
             // Success!!
             onComplete(null, {

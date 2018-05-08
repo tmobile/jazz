@@ -28,14 +28,14 @@ const logger = require("../logger.js"); //Import the logging module.
 module.exports = (tableName, query, onComplete) => {
     // initialize dynamodb
     var dynamodb = utils.initDynamodb(),
-    filter = "",
-    attributeValues = {},
-    insertAndString = " AND ",
-    scanparams = {
-        TableName: tableName,
-        ReturnConsumedCapacity: "TOTAL",
-        Limit: "500"
-    };
+        filter = "",
+        attributeValues = {},
+        insertAndString = " AND ",
+        scanparams = {
+            TableName: tableName,
+            ReturnConsumedCapacity: "TOTAL",
+            Limit: "500"
+        };
 
     if (query) {
         var keys_list = global.config.REQUIRED_PARAMS.slice(0, global.config.REQUIRED_PARAMS.length);
@@ -68,7 +68,7 @@ module.exports = (tableName, query, onComplete) => {
     }
 
     filter = filter.substring(0, filter.length - insertAndString.length); // remove the " AND " at the end
-    
+
     if (filter) {
         scanparams.FilterExpression = filter;
         scanparams.ExpressionAttributeValues = attributeValues;

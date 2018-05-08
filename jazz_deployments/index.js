@@ -163,7 +163,7 @@ module.exports.handler = (event, context, cb) => {
 				}, body));
 			})
 			.catch((error) => {
-				logger.error("Error occurred."+JSON.stringify(error));
+				logger.error("Error occurred." + JSON.stringify(error));
 				if (error.result === "inputError") {
 					return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
 				} else if (error.result === "notFound") {
@@ -329,7 +329,7 @@ function deleteServiceByID(getDeploymentDetails, deploymentTableName, deployment
 }
 
 function reBuildDeployment(refDeployment, config) {
-	logger.info("Inside reBuildDeployment"+JSON.stringify(refDeployment));
+	logger.info("Inside reBuildDeployment" + JSON.stringify(refDeployment));
 	return new Promise((resolve, reject) => {
 		getToken(config)
 			.then((authToken) => getServiceDetails(config, refDeployment.service_id, authToken))
@@ -370,7 +370,7 @@ function getToken(configData) {
 }
 
 function getServiceDetails(configData, serviceId, authToken) {
-	logger.info("getServiceDetails:"+serviceId)
+	logger.info("getServiceDetails:" + serviceId)
 	return new Promise((resolve, reject) => {
 		var params = {
 			uri: configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "/" + serviceId,
@@ -380,7 +380,7 @@ function getServiceDetails(configData, serviceId, authToken) {
 			},
 			rejectUnauthorized: false
 		};
-		request(params, (error, response, body) => {			
+		request(params, (error, response, body) => {
 			if (error) {
 				reject(error);
 			} else {
@@ -393,15 +393,15 @@ function getServiceDetails(configData, serviceId, authToken) {
 function buildNowRequest(serviceDetails, config, refDeployment) {
 	logger.info("buildNowRequest:")
 	return new Promise((resolve, reject) => {
-		var service=JSON.parse(serviceDetails),
-		data=service.data,
-		service_name = data.service,
-		domain = data.domain,
-		scm_branch = refDeployment.scm_branch,
-		build_url = config.JOB_BUILD_URL,
-		buildQuery = "/buildWithParameters?service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch,
-		base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64"),
-		rebuild_url = "";
+		var service = JSON.parse(serviceDetails),
+			data = service.data,
+			service_name = data.service,
+			domain = data.domain,
+			scm_branch = refDeployment.scm_branch,
+			build_url = config.JOB_BUILD_URL,
+			buildQuery = "/buildWithParameters?service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch,
+			base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64"),
+			rebuild_url = "";
 
 		if (data.type.toLowerCase() === 'api') {
 			rebuild_url = build_url + "build_pack_api" + buildQuery;

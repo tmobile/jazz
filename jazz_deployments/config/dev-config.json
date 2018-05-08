@@ -28,8 +28,9 @@
   "SVC_PASWD": "jenkinsadmin",
   "ddb_region": "{conf-region}",
   "JOB_BUILD_URL": "{conf-jenkins-host}/job/",
-  "SERVICE_API_URL" : "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
-  "SERVICE_API_RESOURCE" : "/dev/jazz/services",
-  "TOKEN_URL" : "/dev/jazz/login",
-  "SERVICE_USER" : "{jazz_admin}",
-  "TOKEN_CREDS" : "{jazz_admin_creds}"}
+  "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "SERVICE_API_RESOURCE": "/dev/jazz/services",
+  "TOKEN_URL": "/dev/jazz/login",
+  "SERVICE_USER": "{jazz_admin}",
+  "TOKEN_CREDS": "{jazz_admin_creds}"
+}

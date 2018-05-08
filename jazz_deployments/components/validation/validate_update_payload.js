@@ -34,18 +34,18 @@ module.exports = (config, deployment_data, deploymentTableName, deploymentId, on
     var status_field_list = config.DEPLOYMENT_STATUS;
 
     validateIsEmptyInputData(deployment_data)
-    .then(() => validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields))
-    .then(() => validateStatusFieldValue(deployment_data, status_field_list))
-    .then(() => validateRemoveEmptyValues(deployment_data))
-    .then(() => validateDeploymentExist(deploymentTableName, deploymentId, deployment_data))
-    .then((result) => {
-        logger.info("# Validate update Payload Data:" + JSON.stringify(result));
-        onComplete(null, result.input);
-    })
-    .catch((error) => {
-        logger.error("# Validate update Payload Error:" + JSON.stringify(error));
-        onComplete(error, null);
-    });
+        .then(() => validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields))
+        .then(() => validateStatusFieldValue(deployment_data, status_field_list))
+        .then(() => validateRemoveEmptyValues(deployment_data))
+        .then(() => validateDeploymentExist(deploymentTableName, deploymentId, deployment_data))
+        .then((result) => {
+            logger.info("# Validate update Payload Data:" + JSON.stringify(result));
+            onComplete(null, result.input);
+        })
+        .catch((error) => {
+            logger.error("# Validate update Payload Error:" + JSON.stringify(error));
+            onComplete(error, null);
+        });
 }
 
 function validateIsEmptyInputData(deployment_data) {
@@ -65,9 +65,9 @@ function validateIsEmptyInputData(deployment_data) {
 
 function validateStatusFieldValue(deployment_data, status_field_list) {
     //check for valid status
-    logger.debug("Inside validateStatusFieldValue: "+ deployment_data.status);
+    logger.debug("Inside validateStatusFieldValue: " + deployment_data.status);
     return new Promise((resolve, reject) => {
-        if(deployment_data.status){
+        if (deployment_data.status) {
             validateUtils.validateStatusFieldValue(deployment_data, status_field_list, function onValidate(error, data) {
                 if (error) {
                     logger.error("Error in validateStatusFieldValue" + JSON.stringify(error));
@@ -97,7 +97,7 @@ function validateRemoveEmptyValues(deployment_data) {
     });
 };
 
-function validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields){
+function validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields) {
     logger.debug("Inside validateNotEditableFieldsInUpdate: ");
     return new Promise((resolve, reject) => {
         validateUtils.validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields, function onValidate(error, data) {
@@ -111,21 +111,27 @@ function validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields)
     });
 }
 
-function validateDeploymentExist(deploymentTableName, deploymentId, deployment_data){
-    logger.debug("Inside validateDeploymentExist:"+deploymentId);
+function validateDeploymentExist(deploymentTableName, deploymentId, deployment_data) {
+    logger.debug("Inside validateDeploymentExist:" + deploymentId);
     return new Promise((resolve, reject) => {
         crud.get(deploymentTableName, deploymentId, (error, data) => {
-			if(error){
-				logger.error("getDeploymentDetailsById error:"+JSON.stringify(error));
-				reject(error);
-			} else {
-                if (data.length === 0 || (Object.keys(data).length === 0 && data.constructor === Object)) {
-					logger.error('Cannot find deployment details with id : ' + deploymentId);
-					reject({result:"notFound",message:'Cannot find deployment details with id :' + deploymentId});
-				} else{
-                    resolve({message:"Deployment with provided Id exist", input:deployment_data});
-				}
-			}
-		});
+            if (error) {
+                logger.error("getDeploymentDetailsById error:" + JSON.stringify(error));
+                reject(error);
+            } else {
+                if (data && !(Object.keys(data).length && data.constructor === Object)) {
+                    logger.error('Cannot find deployment details with id : ' + deploymentId);
+                    reject({
+                        result: "notFound",
+                        message: 'Cannot find deployment details with id :' + deploymentId
+                    });
+                } else {
+                    resolve({
+                        message: "Deployment with provided Id exist",
+                        input: deployment_data
+                    });
+                }
+            }
+        });
     })
 }
