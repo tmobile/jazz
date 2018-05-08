@@ -254,8 +254,8 @@ var processEventInitialCommit = function (environmentPayload, configData, authTo
 				rejectUnauthorized: false
 			};
 
-			logger.info("svcPayloadProd" + JSON.stringify(svcPayloadProd));
-			request(svcPayloadProd, function (error, response, body) {
+			logger.info("svcPayload" + JSON.stringify(svcPayload));
+			request(svcPayload, function (error, response, body) {
 				if (response.statusCode === 200 && body && body.data) {
 					return resolve(null, body);
 				} else {
