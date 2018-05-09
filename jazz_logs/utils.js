@@ -15,6 +15,7 @@
 // =========================================================================
 
 'use strict';
+const _ = require("lodash");
 
 /* http request payload */
 var request_payload = {
@@ -49,6 +50,32 @@ var set_query = function (type, value){
 	return query;
 };
 
+var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value){
+	var query =  {
+		"query_string": { 
+			"query": type + ":" + value
+		} 
+	};
+	var requestedLogType =  _.filter(LOG_LEVEL_CONFIG, function(configObject) {
+		return configObject.Type === value;
+	});
+	var requestedLogLevels;
+	if(requestedLogType[0]) {
+	     requestedLogLevels =  _.filter(LOG_LEVEL_CONFIG, function(configObject) {
+		if(configObject.Level <= parseInt(requestedLogType[0].Level)) {
+		 return configObject.Type ;
+		}
+	  });
+
+	  _.forEach(requestedLogLevels, function(value, level) {
+			if(parseInt(level) > 0) {
+				query.query_string.query = query.query_string.query + " OR " + value.Type;
+			}
+    	});
+	} 
+	return query;
+};
+
 var response_model = {
 	"count" : "",
 	"logs" : []
@@ -59,6 +86,7 @@ module.exports = (formats) => {
 	  "requestLoad" : request_payload,
 	  "setStartDate" : set_startdate,
 	  "setQuery" : set_query,
+	  "setLogLevelQuery" : set_log_level_query,
 	  "toTimestamp" : to_timestamp,
 	  "responseModel" : response_model
 	};

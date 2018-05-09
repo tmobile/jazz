@@ -88,14 +88,27 @@ module.exports.handler = (event, context, cb) => {
 
 			querys.push(utils.setQuery("servicename", service));
 			querys.push(utils.setQuery("environment", env));
-			querys.push(utils.setQuery("log_level", logType));
 
 			//Query to filter Control messages
 			querys.push(utils.setQuery("!message", "START*"));
 			querys.push(utils.setQuery("!message", "END*"));
 			querys.push(utils.setQuery("!message", "REPORT*"));
 
-			logger.info("QueryObj: "+ JSON.stringify(querys));
+			if (logType) {
+				var log_type_config = [];
+				_.forEach(config.LOG_LEVELS, function(value, key) {
+					log_type_config.push(value.Type);
+				});
+				
+				if(_.includes(log_type_config, logType.toLowerCase())) {
+					querys.push(utils.setLogLevelQuery(config.LOG_LEVELS, "log_level", logType.toLowerCase()));
+				} else {
+					logger.info("Only following values are allowed for logger type - " + log_type_config.join(", "));
+					return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + log_type_config.join(", "))));
+				}
+			}
+
+			logger.info("QueryObj: " + JSON.stringify(querys));
 
 			var servCategory = [];
 
