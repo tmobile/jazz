@@ -7,7 +7,7 @@ import { Filter } from '../../secondary-components/jazz-table/jazz-filter';
 import { Sort } from '../../secondary-components/jazz-table/jazz-table-sort';
 import { ToasterService } from 'angular2-toaster';
 declare var $:any;
-import { environment } from './../../../environments/environment.internal';
+import { environment } from './../../../environments/environment';
 import { environment as env_internal } from './../../../environments/environment.internal';
 
 
@@ -458,7 +458,9 @@ export class EnvDeploymentsSectionComponent implements OnInit {
       }
 
   ngOnInit() {
-    
+    if(environment.envName == 'oss'){
+      this.relativeUrl='/oss/deployments';
+    }
   }
 
   paginatePage(currentlyActivePage){
@@ -572,6 +574,9 @@ export class EnvDeploymentsSectionComponent implements OnInit {
  }
 
   ngOnChanges(x:any) {
+    if(environment.envName == 'oss'){
+      this.relativeUrl='/oss/deployments';
+    }
     this.envObj = this.cache.get('currentEnv');
     this.status_val = parseInt(status[this.envObj.status]); 
 
@@ -619,13 +624,12 @@ toast_pop(error,oops,errorMessage)
 
 rebuild(){
   this.rowclick = false;
-  this.http.post('/jazz/deployments/'+this.rebuild_id+'/re-build').subscribe(
+  var rebuild_url = '/jazz/deployments/';
+  if(environment.envName == "oss") rebuild_url = "/oss/deployments/";
+  this.http.post(rebuild_url+this.rebuild_id+'/re-build').subscribe(
     (response) => {
-
       let successMessage = this.toastmessage.successMessage(response, "retryDeploy");
-
-      this.toast_pop('success',"",successMessage+this.service.name);
-      
+      this.toast_pop('success',"",successMessage+this.service.name);      
     },
     (error) => {
       let errorMessage = this.toastmessage.errorMessage(error, "updateObj");
