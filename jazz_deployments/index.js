@@ -39,166 +39,210 @@ module.exports.handler = (event, context, cb) => {
 	logger.init(event, context);
 
 	//validate inputs
-	if (!event || !event.method) {
-		return cb(JSON.stringify(errorHandler.throwInternalServerError("Service inputs not defined!")));
-	}
 	logger.info(event);
-	var deploymentTableName = config.DEPLOYMENT_TABLE,
-		queryParams = null,
-		deploymentId = null,
-		method = event.method,
-		query = event.query,
-		path = event.path,
-		body = event.body;
+	genericInputValidation(event)
+		.then(() => {
+			var deploymentTableName = config.DEPLOYMENT_TABLE,
+				queryParams = null,
+				deploymentId = null,
+				method = event.method,
+				query = event.query,
+				path = event.path,
+				body = event.body;
 
-	if (method === "POST" && !Object.keys(event.path).length) {
-		var deployment_details = body;
-		// creating new deployment details
-		validateDeploymentDetails(config, deployment_details)
-			.then(() => addNewDeploymentDetails(deployment_details, deploymentTableName))
-			.then((res) => {
-				logger.info("Create deployment result:" + JSON.stringify(res));
-				return cb(null, responseObj(res, deployment_details));
+			if (method === "POST" && !Object.keys(event.path).length) {
+				var deployment_details = body;
+				// creating new deployment details
+				validateDeploymentDetails(config, deployment_details)
+					.then(() => addNewDeploymentDetails(deployment_details, deploymentTableName))
+					.then((res) => {
+						logger.info("Create deployment result:" + JSON.stringify(res));
+						return cb(null, responseObj(res, deployment_details));
+					})
+					.catch((error) => {
+						logger.error("Error while creating new deployment:" + JSON.stringify(error));
+						if (error.result == "inputError") {
+							return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+						} else {
+							return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
+						}
+					});
+			}
+
+			if (method === "POST" && Object.keys(event.path).length) {
+
+				deploymentId = path.id;
+				logger.info("GET Deployment details using deployment Id :" + deploymentId);
+				// write reuest to get authtoken using login api and config provided user details and provide "baseAuthToken" value to rebuild request
+				getDeploymentDetailsById(deploymentTableName, deploymentId)
+					.then((res) => reBuildDeployment(res, config))
+					.then((res) => {
+						logger.info("Re-build result:" + JSON.stringify(res));
+						return cb(null, responseObj(res, path));
+					})
+					.catch((error) => {
+						logger.error("Re-build error:" + JSON.stringify(error));
+						if (error.result === "notFound" || error.result === "deployment_already_deleted_error") {
+							return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
+						} else {
+							return cb(JSON.stringify(errorHandler.throwInternalServerError('unhandled error occurred')));
+						}
+					});
+			}
+
+			if (method === 'GET' && query && utils.isEmpty(path)) {
+				queryParams = {
+					'service': query.service,
+					'domain': query.domain,
+					'environment': query.environment,
+					'status': query.status,
+					'offset': query.offset,
+					'limit': query.limit
+				};
+
+				// GET Deployment details using query params
+				validateQueryParams(config, queryParams)
+					.then(() => getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
+					.then((res) => {
+						logger.info("Get list of deployments:" + JSON.stringify(res));
+						return cb(null, responseObj(res, query));
+					})
+					.catch((error) => {
+						logger.error("Error while fetching deployments:" + JSON.stringify(error));
+						if (error.result === "inputError") {
+							return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+						} else {
+							return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
+						}
+					});
+			}
+
+			if (method === 'GET' && path && utils.isEmpty(query)) {
+				deploymentId = path.id;
+				// GET Deployment details using deployment Id
+				getDeploymentDetailsById(deploymentTableName, deploymentId)
+					.then((res) => {
+						logger.info("Get Success. " + JSON.stringify(res));
+						return cb(null, responseObj(res, path));
+					})
+					.catch((error) => {
+						logger.error("Error occurred. " + JSON.stringify(error));
+						if ((error.result === "notFound") || (error.result === "deployment_already_deleted_error")) {
+							return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
+						} else {
+							return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
+						}
+					});
+			}
+
+			if (method === "PUT" && path) {
+				var update_deployment_data = {},
+					unchangeable_fields = config.REQUIRED_PARAMS, // list of fields that cannot be updated
+					invalid_environment_fields = [];
+				deploymentId = path.id;
+
+				// Update deployments details by id
+				validateUpdateInput(config, body, deploymentTableName, deploymentId)
+					.then((data) => updateDeploymentDetails(deploymentTableName, data, deploymentId))
+					.then((res) => {
+						logger.info("Updated data:" + JSON.stringify(res));
+						return cb(null, responseObj({
+							message: "Successfully Updated deployment details with id: " + deploymentId
+						}, body));
+					})
+					.catch((error) => {
+						logger.error("Error occurred." + JSON.stringify(error));
+						if (error.result === "inputError") {
+							return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+						} else if (error.result === "notFound") {
+							return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
+						} else {
+							return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
+						}
+					});
+			}
+
+			if (method === "DELETE" && path) {
+				deploymentId = path.id;
+				// Deleting deployment details for id
+				getDeploymentDetailsById(deploymentTableName, deploymentId)
+					.then((res) => deleteServiceByID(res, deploymentTableName, deploymentId))
+					.then((res) => {
+						logger.info("DeleteItem succeeded");
+						var msg = "Successfully Deleted deployment details of id :" + deploymentId;
+						return cb(null, responseObj({
+							message: msg
+						}, path));
+					})
+					.catch((error) => {
+						logger.error("Error in DeleteItem: " + JSON.stringify(error));
+						if (error.result === "deployment_already_deleted_error" || error.result === "notFound") {
+							return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
+						} else {
+							return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred ")));
+						}
+					});
+			}
+		})
+		.catch((error) => {
+			if (error.result === "inputError") {
+				return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+			} else if (error.result === "unauthorized") {
+				return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
+			} else {
+				return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected error occurred.")))
+			}
+		});
+};
+
+function genericInputValidation(event) {
+	logger.info("Inside genericInputValidation");
+	return new Promise((resolve, reject) => {
+		// event.method cannot be empty, throw error
+		if (!event || !event.method) {
+			reject({
+				result: "inputError",
+				message: "method cannot be empty"
 			})
-			.catch((error) => {
-				logger.error("Error while creating new deployment:" + JSON.stringify(error));
-				if (error.result == "inputError") {
-					return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-				} else {
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
-				}
-			});
-	}
-
-	if (method === "POST" && Object.keys(event.path).length) {
-
-		deploymentId = path.id;
-		logger.info("GET Deployment details using deployment Id :" + deploymentId);
-		if (!deploymentId) {
-			return cb(JSON.stringify(errorHandler.throwInternalServerError("Missing input parameter deployment id")));
 		}
 
-		// write reuest to get authtoken using login api and config provided user details and provide "baseAuthToken" value to rebuild request
-		getDeploymentDetailsById(deploymentTableName, deploymentId)
-			.then((res) => reBuildDeployment(res, config))
-			.then((res) => {
-				logger.info("Re-build result:" + JSON.stringify(res));
-				return cb(null, responseObj(res, path));
-			})
-			.catch((error) => {
-				logger.error("Re-build error:" + JSON.stringify(error));
-				if (error.result.toLowerCase() === "notfound" || error.result === "deployment_already_deleted_error") {
-					return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
-				} else {
-					return cb(JSON.stringify(errorHandler.throwInternalServerError('unhandled error occurred')));
-				}
+		if (event.method === "GET" && Object.keys(event.query).length === 0 && Object.keys(event.path).length === 0) {
+			reject({
+				result: "inputError",
+				message: "GET API can be called only with following query params: domain, service and environment OR GET API can be called only with deployment_id as path param."
 			});
-	}
-
-	if (method === 'GET' && query && utils.isEmpty(path)) {
-		queryParams = {
-			'service': query.service,
-			'domain': query.domain,
-			'environment': query.environment,
-			'status': query.status,
-			'offset': query.offset,
-			'limit': query.limit
-		};
-
-		// GET Deployment details using query params
-		validateQueryParams(config, queryParams)
-			.then(() => getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
-			.then((res) => {
-				logger.info("Get list of deployments:" + JSON.stringify(res));
-				return cb(null, responseObj(res, query));
-			})
-			.catch((error) => {
-				logger.error("Error while fetching deployments:" + JSON.stringify(error));
-				if (error.result === "inputError") {
-					return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-				} else {
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
-				}
-			});
-	}
-
-	if (method === 'GET' && path && utils.isEmpty(query)) {
-		deploymentId = path.id;
-		if (!deploymentId) {
-			return cb(JSON.stringify(errorHandler.throwInternalServerError("Missing input parameter deployment id")));
-		}
-		// GET Deployment details using deployment Id
-		getDeploymentDetailsById(deploymentTableName, deploymentId)
-			.then((res) => {
-				logger.info("Get Success. " + JSON.stringify(res));
-				return cb(null, responseObj(res, path));
-			})
-			.catch((error) => {
-				logger.error("Error occurred. " + JSON.stringify(error));
-				if ((error.result === "notFound") || (error.result === "deployment_already_deleted_error")) {
-					return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
-				} else {
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
-				}
-			});
-	}
-
-	if (method === "PUT" && path) {
-		var update_deployment_data = {},
-			unchangeable_fields = config.REQUIRED_PARAMS, // list of fields that cannot be updated
-			invalid_environment_fields = [];
-		deploymentId = path.id;
-
-		if (!deploymentId) {
-			return cb(JSON.stringify(errorHandler.throwInternalServerError("Missing input parameter deployment id")));
 		}
 
-		// Update deployments details by id
-		validateUpdateInput(config, body, deploymentTableName, deploymentId)
-			.then((data) => updateDeploymentDetails(deploymentTableName, data, deploymentId))
-			.then((res) => {
-				logger.info("Updated data:" + JSON.stringify(res));
-				return cb(null, responseObj({
-					message: "Successfully Updated deployment details with id: " + deploymentId
-				}, body));
-			})
-			.catch((error) => {
-				logger.error("Error occurred." + JSON.stringify(error));
-				if (error.result === "inputError") {
-					return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-				} else if (error.result === "notFound") {
-					return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
-				} else {
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred")));
-				}
+		if ((event.method === "GET" || event.method === "PUT" || event.method === "DELETE") && (Object.keys(event.path).length > 0 && !event.path.id)) {
+			reject({
+				result: "inputError",
+				message: "Missing input parameter deployment id"
 			});
-	}
-
-	if (method === "DELETE" && path) {
-		deploymentId = path.id;
-		if (!deploymentId) {
-			return cb(JSON.stringify(errorHandler.throwInternalServerError("Missing input parameter deployment id")));
 		}
-		// Deleting deployment details for id
-		getDeploymentDetailsById(deploymentTableName, deploymentId)
-			.then((res) => deleteServiceByID(res, deploymentTableName, deploymentId))
-			.then((res) => {
-				logger.info("DeleteItem succeeded");
-				var msg = "Successfully Deleted deployment details of id :" + deploymentId;
-				return cb(null, responseObj({
-					message: msg
-				}, path));
-			})
-			.catch((error) => {
-				logger.error("Error in DeleteItem: " + JSON.stringify(error));
-				if (error.result === "deployment_already_deleted_error" || error.result === "notFound") {
-					return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
-				} else {
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("unexpected error occurred ")));
-				}
-			});
-	}
 
+		if (event.method === "PUT" && !event.body) {
+			reject({
+				result: "inputError",
+				message: "Deployment data is required for updating an deployment"
+			});
+		}
+
+		if (event.method === "POST" && !event.body && Object.keys(event.path).length === 0) {
+			reject({
+				result: "inputError",
+				message: "Deployment details are required for creating a deployment"
+			});
+		}
+
+		if (event.method === "POST" && Object.keys(event.path).length > 0 && !event.path.id) {
+			reject({
+				result: "inputError",
+				message: "Re-build API can be called with deployment_id as path param"
+			});
+		}
+
+		resolve();
+	});
 };
 
 function validateDeploymentDetails(config, deployment_details) {
@@ -356,7 +400,7 @@ function getToken(configData) {
 			rejectUnauthorized: false
 		};
 		request(svcPayload, (error, response, body) => {
-			if (response.statusCode === 200 && body && body.data) {
+			if (response && response.statusCode === 200 && body && body.data) {
 				var authToken = body.data.token;
 				resolve(authToken);
 			} else {
@@ -384,7 +428,15 @@ function getServiceDetails(configData, serviceId, authToken) {
 			if (error) {
 				reject(error);
 			} else {
-				resolve(response.body);
+				var data = JSON.parse(response.body)
+				if (data.errorType && data.errorType === "NotFound") {
+					reject({
+						result: "notFound",
+						message: data.message
+					});
+				} else {
+					resolve(data);
+				}
 			}
 		});
 	});
@@ -393,8 +445,7 @@ function getServiceDetails(configData, serviceId, authToken) {
 function buildNowRequest(serviceDetails, config, refDeployment) {
 	logger.info("buildNowRequest:")
 	return new Promise((resolve, reject) => {
-		var service = JSON.parse(serviceDetails),
-			data = service.data,
+		var data = serviceDetails.data,
 			service_name = data.service,
 			domain = data.domain,
 			scm_branch = refDeployment.scm_branch,
@@ -402,14 +453,13 @@ function buildNowRequest(serviceDetails, config, refDeployment) {
 			buildQuery = "/buildWithParameters?service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch,
 			base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64"),
 			rebuild_url = "";
-
-		if (data.type.toLowerCase() === 'api') {
-			rebuild_url = build_url + "build_pack_api" + buildQuery;
-		} else if (data.type.toLowerCase() === 'lambda') {
-			rebuild_url = build_url + "build_pack_lambda" + buildQuery;
-		} else if (data.type.toLowerCase() === 'website') {
-			rebuild_url = build_url + "build_pack_website" + buildQuery;
+		var buildPackMap = {
+			"api": "build_pack_api",
+			"lambda": "build_pack_lambda",
+			"website": "build_pack_website"
 		}
+		rebuild_url = build_url + buildPackMap[data.type.toLowerCase()] + buildQuery;
+
 
 		if (build_url) {
 			var options = {

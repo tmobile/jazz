@@ -72,7 +72,7 @@ var validateUnAllowedFieldsInInput = function (deployment_data, fields_list, onC
 
 var validateAllRequiredFieldsValue = function (deployment_data, required_fields, onComplete) {
     var invalid_required_fields = [];
-    _.forEach(required_fields, function (value, key) {
+    _.map(required_fields, function (value, key) {
         if (_.isEmpty(deployment_data[value])) {
             invalid_required_fields.push(value);
         }
@@ -106,7 +106,7 @@ var validateRemoveEmptyValues = function (deployment_data, onComplete) {
 
 var validateNotEditableFieldsInUpdate = function (deployment_data, fields_list, onComplete) {
     var invalid_fields = _.intersection(_.keys(deployment_data), _.values(fields_list));
-    _.forEach(invalid_fields, function (value, key) {
+    _.map(invalid_fields, function (value, key) {
         delete deployment_data[value];
     });
 

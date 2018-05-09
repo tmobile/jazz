@@ -119,7 +119,7 @@ function validateDeploymentExist(deploymentTableName, deploymentId, deployment_d
                 logger.error("getDeploymentDetailsById error:" + JSON.stringify(error));
                 reject(error);
             } else {
-                if (data && !(Object.keys(data).length && data.constructor === Object)) {
+                if (data && (Object.keys(data).length === 0 && data.constructor === Object)) {
                     logger.error('Cannot find deployment details with id : ' + deploymentId);
                     reject({
                         result: "notFound",

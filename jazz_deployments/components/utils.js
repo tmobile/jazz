@@ -152,18 +152,6 @@ var getDeploymentDatabaseKeyName = function (key) {
     }
 };
 
-var trimArchived = function (items) {
-
-    var item = [];
-
-    for (var i = 0; i < items.length; i++) {
-        if ((items[i].status !== "archived") && (items[i].status !== "deletion_completed")) {
-            item.push(items[i]);
-        }
-    }
-    return item;
-}
-
 var sortUtil = function (data, sort_key, sort_direction) {
     if (sort_key && sort_key === "provider_build_id") {
         data = data.sort(function (a, b) {
@@ -216,7 +204,7 @@ var filterUtil = function (data, filter_value) {
 
 var paginateUtil = function (data, limit, offset) {
     var newArr = [];
-    if (offset > data.length || offset == data.length || limit === 0) {
+    if (offset > data.length || offset == data.length || !limit) {
         data = [];
     } else if (data.length > limit + offset || data.length === limit + offset) {
         data = data.slice(offset, offset + limit);
@@ -237,7 +225,6 @@ module.exports = () => {
         ConvertKeysToLowerCase: ConvertKeysToLowerCase,
         sortUtil: sortUtil,
         filterUtil: filterUtil,
-        paginateUtil: paginateUtil,
-        trimArchived: trimArchived
+        paginateUtil: paginateUtil
     };
 };
