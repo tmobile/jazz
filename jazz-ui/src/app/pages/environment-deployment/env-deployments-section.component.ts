@@ -457,10 +457,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
           window.open(url, '_blank');
       }
 
-  ngOnInit() {
-    if(environment.envName == 'oss'){
-      this.relativeUrl='/oss/deployments';
-    }
+  ngOnInit() {    
   }
 
   paginatePage(currentlyActivePage){
@@ -573,10 +570,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
 		this.paginatePage(this.currentlyActive);
  }
 
-  ngOnChanges(x:any) {
-    if(environment.envName == 'oss'){
-      this.relativeUrl='/oss/deployments';
-    }
+  ngOnChanges(x:any) {   
     this.envObj = this.cache.get('currentEnv');
     this.status_val = parseInt(status[this.envObj.status]); 
 
@@ -625,7 +619,6 @@ toast_pop(error,oops,errorMessage)
 rebuild(){
   this.rowclick = false;
   var rebuild_url = '/jazz/deployments/';
-  if(environment.envName == "oss") rebuild_url = "/oss/deployments/";
   this.http.post(rebuild_url+this.rebuild_id+'/re-build').subscribe(
     (response) => {
       let successMessage = this.toastmessage.successMessage(response, "retryDeploy");
