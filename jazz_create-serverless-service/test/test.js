@@ -24,7 +24,7 @@ const logger = require("../components/logger.js");
 const CronParser = require("../components/cron-parser.js");
 const configObj = require("../components/config.js");
 
-let event, context, callback, spy, stub, checkCase, authStub;
+let event, context, callback, spy, stub, checkCase, authStub,service_creation_data;
 
 //setup a spy to wrap around async logic/logic that need extraneous sources
 spy = sinon.spy();
@@ -423,6 +423,7 @@ describe('create-serverless-service', function () {
           //"enableEventSchedule" : false
         }
       };
+      service_creation_data = event.body;
       context = awsContext();
       callback = (err, responseObj) => {
         if (err) {
@@ -438,8 +439,8 @@ describe('create-serverless-service', function () {
       let config = configObj(event);
       let bool = false;
       for (let cron in cronValues) {
-        event.body.rateExpression = cron
-        index.getServiceData(event, authToken, config).then().catch((errorMsg) => {
+        service_creation_data.rateExpression = cron
+        index.getServiceData(service_creation_data, authToken, config).then().catch((errorMsg) => {
 
           if (errorMsg.result === "invalid") {
             bool = true;
@@ -449,15 +450,15 @@ describe('create-serverless-service', function () {
       }
 
     });
-    it("should return input object with METADATA values for valid input parameters for service type function", () => {
+    it("should return input object with METADATA values for valid input parameters for service type function (event_source e2c)", () => {
       let authToken = "temp-auth-token";
       let bool = false;
-      event.body["enableEventSchedule"] = true;
-      event.body.event_source_ec2 = "temp-url";
-      event.body.event_action_ec2 = "temp-url";
-      event.body.event_source_ec2 = "sample-test-data"
+      service_creation_data["enableEventSchedule"] = true;
+      service_creation_data.event_source_ec2 = "temp-url";
+      service_creation_data.event_action_ec2 = "temp-url";
+      service_creation_data.event_source_ec2 = "sample-test-data"
       let config = configObj(event);
-      index.getServiceData(event, authToken, config).then((input) => {
+      index.getServiceData(service_creation_data, authToken, config).then((input) => {
         if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
           if (input.METADATA.event_action_ec2 && input.METADATA.event_action_ec2 != null) {
             bool = true;
@@ -466,6 +467,58 @@ describe('create-serverless-service', function () {
         assert.isTrue(bool);
       }).catch()
     });
+    it("should return input object with METADATA values for valid input parameters for service type function (event_source s3)", () => {
+      let authToken = "temp-auth-token";
+      let bool = false;
+      service_creation_data["enableEventSchedule"] = true;
+      //service_creation_data.event_source_ec2 = "temp-url";
+      service_creation_data.event_action_s3 = "temp-url";
+      service_creation_data.event_source_s3 = "sample-test-data"
+      let config = configObj(event);
+      index.getServiceData(service_creation_data, authToken, config).then((input) => {
+        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
+          if (input.METADATA.event_action_s3 && input.METADATA.event_action_s3 != null) {
+            bool = true;
+          }
+        }
+        assert.isTrue(bool);
+      }).catch()
+    });
+    it("should return input object with METADATA values for valid input parameters for service type function (event source dynamoDB)", () => {
+      let authToken = "temp-auth-token";
+      let bool = false;
+      service_creation_data["enableEventSchedule"] = true;
+      service_creation_data.event_source_dynamodb = "temp-url";
+      service_creation_data.event_action_dynamodb = "temp-url";
+      service_creation_data.event_source_dynamodb = "sample-test-data"
+      let config = configObj(event);
+      index.getServiceData(service_creation_data, authToken, config).then((input) => {
+        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
+          if (input.METADATA.event_action_dynamodb && input.METADATA.event_action_dynamodb != null) {
+            bool = true;
+          }
+        }
+        assert.isTrue(bool);
+      }).catch()
+    });
+    it("should return input object with METADATA values for valid input parameters for service type function (event source stream", () => {
+      let authToken = "temp-auth-token";
+      let bool = false;
+      service_creation_data["enableEventSchedule"] = true;
+      service_creation_data.event_source_stream = "temp-url";
+      service_creation_data.event_action_stream = "temp-url";
+      service_creation_data.event_source_stream = "sample-test-data"
+      let config = configObj(event);
+      index.getServiceData(service_creation_data, authToken, config).then((input) => {
+        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
+          if (input.METADATA.event_action_stream && input.METADATA.event_action_stream != null) {
+            bool = true;
+          }
+        }
+        assert.isTrue(bool);
+      }).catch()
+    })
+
   })
   describe("createService", () => {
     let input;
@@ -567,6 +620,7 @@ describe('create-serverless-service', function () {
           //"enableEventSchedule" : false
         }
       };
+      service_creation_data =  event.body;
       config = configObj(event);
       service_id = "ghd93-3240-2343";
     })
@@ -585,7 +639,7 @@ describe('create-serverless-service', function () {
         }
         return obj.callback(errObject, responseObject, responseObject.body);
       });
-      index.startServiceOnboarding(event, config, service_id).then(() => {
+      index.startServiceOnboarding(service_creation_data, config, service_id).then(() => {
         assert.fail();
       }).catch((err) => {
         if (err.jenkins_api_failure && err.message != null) {
@@ -607,7 +661,7 @@ describe('create-serverless-service', function () {
       let reqStub = sinon.stub(request, "Request", (obj) => {
         return obj.callback(null, responseObject, responseObject.body);
       });
-      index.startServiceOnboarding(event, config, service_id).then(() => {
+      index.startServiceOnboarding(service_creation_data, config, service_id).then(() => {
         assert.fail();
       }).catch((err) => {
         if (err.jenkins_api_failure && err.message && err.message === errMessage) {
@@ -629,7 +683,7 @@ describe('create-serverless-service', function () {
       let reqStub = sinon.stub(request, "Request", (obj) => {
         return obj.callback(null, responseObject, responseObject.body);
       });
-      index.startServiceOnboarding(event, config, service_id).then((res) => {
+      index.startServiceOnboarding(service_creation_data, config, service_id).then((res) => {
 
         if (res && res === Message) {
           bool = true;
