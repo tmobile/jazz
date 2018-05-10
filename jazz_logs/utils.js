@@ -56,22 +56,14 @@ var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value){
 			"query": type + ":" + value
 		} 
 	};
-	var requestedLogType =  _.filter(LOG_LEVEL_CONFIG, function(configObject) {
-		return configObject.Type === value;
-	});
-	var requestedLogLevels;
+	var requestedLogType =  LOG_LEVEL_CONFIG.filter(configObject => configObject.Type === value);
 	if(requestedLogType[0]) {
-	     requestedLogLevels =  _.filter(LOG_LEVEL_CONFIG, function(configObject) {
-		if(configObject.Level <= parseInt(requestedLogType[0].Level)) {
-		 return configObject.Type ;
-		}
-	  });
-
-	  _.forEach(requestedLogLevels, function(value, level) {
-			if(parseInt(level) > 0) {
-				query.query_string.query = query.query_string.query + " OR " + value.Type;
+		for (var count = 0; count <  LOG_LEVEL_CONFIG.length; count++) {
+			var configObject = LOG_LEVEL_CONFIG[count];
+			if (configObject.Level <= parseInt(requestedLogType[0].Level)) {
+				query.query_string.query = query.query_string.query + " OR " + configObject.Type;
 			}
-    	});
+		}
 	} 
 	return query;
 };

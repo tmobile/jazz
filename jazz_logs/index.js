@@ -96,9 +96,9 @@ module.exports.handler = (event, context, cb) => {
 
 			if (logType) {
 				var log_type_config = [];
-				_.forEach(config.LOG_LEVELS, function(value, key) {
-					log_type_config.push(value.Type);
-				});
+				for(var count =0; count < config.LOG_LEVELS.length; count++ ) {
+					log_type_config.push(config.LOG_LEVELS[count].Type);
+				}
 				
 				if(_.includes(log_type_config, logType.toLowerCase())) {
 					querys.push(utils.setLogLevelQuery(config.LOG_LEVELS, "log_level", logType.toLowerCase()));
