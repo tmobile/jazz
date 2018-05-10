@@ -52,7 +52,7 @@ function validateIsEmptyInputData(deployment_data) {
     logger.debug("Inside validateIsEmptyInputData: ");
     return new Promise((resolve, reject) => {
         //check for empty body
-        validateUtils.validateIsEmptyInputData(deployment_data, function onValidate(error, data) {
+        validateUtils.validateIsEmptyInputData(deployment_data, (error, data) => {
             if (error) {
                 logger.error("Error in validateIsEmptyInputData: " + JSON.stringify(error));
                 reject(error);
@@ -67,7 +67,7 @@ function validateAllRequiredFields(deployment_data, required_fields) {
     logger.debug("Inside validateAllRequiredFields: " + required_fields);
     return new Promise((resolve, reject) => {
         //check for required fields 
-        validateUtils.validateAllRequiredFields(deployment_data, required_fields, function onValidate(error, data) {
+        validateUtils.validateAllRequiredFields(deployment_data, required_fields, (error, data) => {
             if (error) {
                 logger.error("Error in validateAllRequiredFields: " + JSON.stringify(error));
                 reject(error);
@@ -83,7 +83,7 @@ function validateStatusFieldValue(deployment_data, status_field_list) {
     logger.debug("Inside validateStatusFieldValue: " + deployment_data.status);
     return new Promise((resolve, reject) => {
         if (deployment_data.status) {
-            validateUtils.validateStatusFieldValue(deployment_data, status_field_list, function onValidate(error, data) {
+            validateUtils.validateStatusFieldValue(deployment_data, status_field_list, (error, data) => {
                 if (error) {
                     logger.error("Error in validateStatusFieldValue" + JSON.stringify(error));
                     reject(error);
@@ -101,7 +101,7 @@ function validateUnAllowedFieldsInInput(deployment_data, service_field_list) {
     //check for unchangable fields
     logger.debug("Inside validateUnAllowedFieldsInInput: ");
     return new Promise((resolve, reject) => {
-        validateUtils.validateUnAllowedFieldsInInput(deployment_data, service_field_list, function onValidate(error, data) {
+        validateUtils.validateUnAllowedFieldsInInput(deployment_data, service_field_list, (error, data) => {
             if (error) {
                 logger.error("Error in validateUnAllowedFieldsInInput: " + JSON.stringify(error));
                 reject(error);
@@ -116,7 +116,7 @@ function validateAllRequiredFieldsValue(deployment_data, required_fields) {
     //check for required fields
     logger.debug("Inside validateAllRequiredFieldsValue: ");
     return new Promise((resolve, reject) => {
-        validateUtils.validateAllRequiredFieldsValue(deployment_data, required_fields, function onValidate(error, data) {
+        validateUtils.validateAllRequiredFieldsValue(deployment_data, required_fields, (error, data) => {
             if (error) {
                 logger.error("Error in validateAllRequiredFieldsValue: " + JSON.stringify(error));
                 reject(error);
@@ -131,7 +131,7 @@ function validateRemoveEmptyValues(deployment_data) {
     // check for empty values before updating environments table
     logger.debug("Inside validateRemoveEmptyValues: ");
     return new Promise((resolve, reject) => {
-        validateUtils.validateRemoveEmptyValues(deployment_data, function onValidate(error, data) {
+        validateUtils.validateRemoveEmptyValues(deployment_data, (error, data) => {
             if (error) {
                 logger.error("Error in validateRemoveEmptyValues: " + JSON.stringify(error));
                 reject(error);

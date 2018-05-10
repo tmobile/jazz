@@ -22,7 +22,7 @@
     @version: 1.0
 **/
 
-module.exports = function () {
+module.exports = () => {
     var logLevels = {
         error: 4,
         warn: 3,
@@ -37,17 +37,17 @@ module.exports = function () {
     };
 
     // set logLevel, RequestDetails
-    var init = function (event, context) {
+    var init = (event, context) => {
         setLevel();
     };
 
     // To add request specific details, which will be prepended in all the logs for ease of debugging in CloudWatch logs
-    var setRequestDetails = function (someContextSpecificId) {
+    var setRequestDetails = (someContextSpecificId) => {
         return;
     };
 
     // set current logLevel; Only logs which are above the curLogLevel will be logged;
-    var setLevel = function (level) {
+    var setLevel = (level) => {
         // LOG_LEVEL is 'info' by default
 
         if (level && logLevels[level]) {
@@ -69,7 +69,7 @@ module.exports = function () {
         return null;
     };
 
-    var log = function (level, message) {
+    var log = (level, message) => {
         /*
             @TODO: format message as per requirement.
             Will it be just a string / json. Should we except error object also?
@@ -96,19 +96,19 @@ module.exports = function () {
         return null;
     };
 
-    var error = function (message) {
+    var error = (message) => {
         log('error', message);
     };
-    var warn = function (message) {
+    var warn = (message) => {
         log('warn', message);
     };
-    var info = function (message) {
+    var info = (message) => {
         log('info', message);
     };
-    var verbose = function (message) {
+    var verbose = (message) => {
         log('verbose', message);
     };
-    var debug = function (message) {
+    var debug = (message) => {
         log('debug', message);
     };
 

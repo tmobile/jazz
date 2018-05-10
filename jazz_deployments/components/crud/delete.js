@@ -36,7 +36,7 @@ module.exports = (tableName, deploymentId, onComplete) => {
         }
     };
 
-    docClient.delete(params, function (err, data) {
+    docClient.delete(params, (err, data) => {
         if (err) {
             onComplete(err);
         } else {

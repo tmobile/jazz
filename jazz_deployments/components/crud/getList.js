@@ -38,7 +38,7 @@ module.exports = (tableName, query, onComplete) => {
         };
 
     if (query) {
-        var keys_list = global.config.REQUIRED_PARAMS.slice(0, global.config.REQUIRED_PARAMS.length);
+        var keys_list = global.config.REQUIRED_PARAMS;
         //appending the optional_keys list along with required_fields
         if (query.status) {
             keys_list.push("status");
@@ -47,7 +47,7 @@ module.exports = (tableName, query, onComplete) => {
             keys_list.push("status");
         }
         // Generate filter string
-        keys_list.map(function (key) {
+        keys_list.map((key) => {
             var key_name = utils.getDeploymentDatabaseKeyName(key);
             if (key_name === "DEPLOYMENT_STATUS" && query.status === global.config.ARCHIVED_DEPLOYMENT_STATUS) {
                 if (query[key]) {
@@ -74,8 +74,6 @@ module.exports = (tableName, query, onComplete) => {
         scanparams.ExpressionAttributeValues = attributeValues;
     }
 
-    var items_formatted = [];
-
     if (query.limit) {
         query.limit = ((query.limit > global.config.PAGINATION_DEFAULTS.max_limit) ? global.config.PAGINATION_DEFAULTS.max_limit : query.limit);
     } else {
@@ -84,17 +82,15 @@ module.exports = (tableName, query, onComplete) => {
 
     query.offset = query.offset || global.config.PAGINATION_DEFAULTS.offset;
 
-    var scanExecute = function (onComplete) {
-        dynamodb.scan(scanparams, function (err, items) {
+    var scanExecute = (onComplete) => {
+        dynamodb.scan(scanparams, (err, data) => {
             var count;
             if (err) {
                 onComplete(err);
             } else {
-                items.Items.map(function (item) {
-                    items_formatted.push(utils.formatData(item, true));
-                });
-                if (items.LastEvaluatedKey) {
-                    scanparams.ExclusiveStartKey = items.LastEvaluatedKey;
+                var items_formatted = (data.Items.map(item => utils.formatData(item, true)));
+                if (data.LastEvaluatedKey) {
+                    scanparams.ExclusiveStartKey = data.LastEvaluatedKey;
                     scanExecute(onComplete);
                 } else {
                     if (items_formatted.length > 0) {

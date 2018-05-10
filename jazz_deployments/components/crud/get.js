@@ -23,7 +23,6 @@
 **/
 
 const utils = require("../utils.js")(); //Import the utils module.
-const _ = require("lodash");
 
 module.exports = (tableName, deploymentId, onComplete) => {
 
@@ -37,14 +36,14 @@ module.exports = (tableName, deploymentId, onComplete) => {
 			}
 		};
 
-	docClient.query(params, function (err, data) {
+	docClient.query(params, (err, data) => {
 
 		if (err) {
 			onComplete(err);
 		} else if (data.Items.length) {
 			for (var field in data.Items) {
 				var DEPLOYMENT_STATUS = data.Items[field].DEPLOYMENT_STATUS;
-				if (_.includes(global.config.ARCHIVED_DEPLOYMENT_STATUS, DEPLOYMENT_STATUS)) {
+				if (global.config.ARCHIVED_DEPLOYMENT_STATUS.includes(DEPLOYMENT_STATUS)) {
 					onComplete({
 						result: "deployment_already_deleted_error",
 						message: "Cannot get details for archived/missing deployments."

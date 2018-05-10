@@ -24,8 +24,8 @@
 
 const _ = require("lodash");
 
-var validateIsEmptyInputData = function (deployment_data, onComplete) {
-    if (_.isEmpty(deployment_data)) {
+var validateIsEmptyInputData = (deployment_data, onComplete) => {
+    if (Object.keys(deployment_data).length === 0) {
         onComplete({
             result: "inputError",
             message: "Input payload cannot be empty"
@@ -38,7 +38,7 @@ var validateIsEmptyInputData = function (deployment_data, onComplete) {
     }
 };
 
-var validateAllRequiredFields = function (deployment_data, required_fields, onComplete) {
+var validateAllRequiredFields = (deployment_data, required_fields, onComplete) => {
     var missing_required_fields = _.difference(_.values(required_fields), _.keys(deployment_data));
     if (missing_required_fields.length > 0) {
         var message = "Following field(s) are required - " + missing_required_fields.join(", ");
@@ -54,7 +54,7 @@ var validateAllRequiredFields = function (deployment_data, required_fields, onCo
     }
 };
 
-var validateUnAllowedFieldsInInput = function (deployment_data, fields_list, onComplete) {
+var validateUnAllowedFieldsInInput = (deployment_data, fields_list, onComplete) => {
     var invalid_fields = _.difference(_.keys(deployment_data), _.values(fields_list));
     if (invalid_fields.length > 0) {
         var message = "Following fields are invalid :  " + invalid_fields.join(", ") + ". ";
@@ -70,10 +70,10 @@ var validateUnAllowedFieldsInInput = function (deployment_data, fields_list, onC
     }
 };
 
-var validateAllRequiredFieldsValue = function (deployment_data, required_fields, onComplete) {
+var validateAllRequiredFieldsValue = (deployment_data, required_fields, onComplete) => {
     var invalid_required_fields = [];
-    _.map(required_fields, function (value, key) {
-        if (_.isEmpty(deployment_data[value])) {
+    required_fields.map((value) => {
+        if (!deployment_data[value]) {
             invalid_required_fields.push(value);
         }
     });
@@ -92,7 +92,7 @@ var validateAllRequiredFieldsValue = function (deployment_data, required_fields,
     }
 };
 
-var validateRemoveEmptyValues = function (deployment_data, onComplete) {
+var validateRemoveEmptyValues = (deployment_data, onComplete) => {
     for (var field in deployment_data) {
         if (!deployment_data[field]) {
             delete deployment_data[field];
@@ -104,9 +104,9 @@ var validateRemoveEmptyValues = function (deployment_data, onComplete) {
     });
 };
 
-var validateNotEditableFieldsInUpdate = function (deployment_data, fields_list, onComplete) {
+var validateNotEditableFieldsInUpdate = (deployment_data, fields_list, onComplete) => {
     var invalid_fields = _.intersection(_.keys(deployment_data), _.values(fields_list));
-    _.map(invalid_fields, function (value, key) {
+    invalid_fields.map((value) => {
         delete deployment_data[value];
     });
 
@@ -116,14 +116,17 @@ var validateNotEditableFieldsInUpdate = function (deployment_data, fields_list, 
     });
 };
 
-var validateStatusFieldValue = function (deployment_data, status_values, onComplete) {
+var validateStatusFieldValue = (deployment_data, status_values, onComplete) => {
     var statusFieldKey = "status",
         has_invalid_status_values = false;
     //check if input contains fields other than allowed fields
-    if (_.includes(_.keys(deployment_data), statusFieldKey)) {
+    console.log("here is status validation:");
+    console.log(deployment_data.hasOwnProperty(statusFieldKey));
+    if (deployment_data.hasOwnProperty(statusFieldKey)) {
+        console.log("Inside here:");
         //checking "status" field contains the allowed values
         var statusValue = deployment_data[statusFieldKey];
-        has_invalid_status_values = !_.includes(status_values, statusValue);
+        if(!status_values.includes(statusValue)) has_invalid_status_values = true;
     }
     if (has_invalid_status_values) {
         // return inputError

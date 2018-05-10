@@ -25,7 +25,7 @@
 var AWS = require("aws-sdk");
 
 // initialize document CLient for dynamodb
-var initDocClient = function () {
+var initDocClient = () => {
     AWS.config.update({
         region: global.config.ddb_region
     });
@@ -34,7 +34,7 @@ var initDocClient = function () {
     return docClient;
 };
 
-var initDynamodb = function () {
+var initDynamodb = () => {
     AWS.config.update({
         region: global.config.ddb_region
     });
@@ -43,7 +43,7 @@ var initDynamodb = function () {
     return dynamodb;
 };
 
-var isEmpty = function (obj) {
+var isEmpty = (obj) => {
     for (var prop in obj) {
         if (obj.hasOwnProperty(prop)) return false;
     }
@@ -51,14 +51,14 @@ var isEmpty = function (obj) {
 };
 
 // convert object returned from the database, as per schema
-var formatData = function (data, format) {
+var formatData = (data, format) => {
     if (!data) {
         return {};
     }
 
     var deployment_obj = {};
 
-    var parseValue = function (value) {
+    var parseValue = (value) => {
         var type = Object.keys(value)[0];
         var parsed_value = value[type];
         if (type === "NULL") {
@@ -85,7 +85,7 @@ var formatData = function (data, format) {
         }
     };
 
-    Object.keys(data).map(function (key) {
+    Object.keys(data).map((key) => {
         var key_name = getSchemaKeyName(key);
         var value = data[key];
         if (value) {
@@ -100,61 +100,58 @@ var formatData = function (data, format) {
     return deployment_obj;
 };
 
-var getSchemaKeyName = function (key) {
+var getSchemaKeyName = (key) => {
     // Convert database key name back, as per schema
 
     if (!key) {
         return null;
     }
-
-    if (key === "SERVICE_NAME") {
-        return "service";
-    } else if (key === "DEPLOYMENT_STATUS") {
-        return "status";
-    } else if (key === "DOMAIN_NAME") {
-        return "domain";
-    } else {
-        return key.toLowerCase();
+    var mapKeyName = {
+        "SERVICE_NAME" : "service",
+        "DEPLOYMENT_STATUS" : "status",
+        "DOMAIN_NAME" : "domain"
     }
+    var keyName = mapKeyName[key] ? mapKeyName[key] : key.toLowerCase();
+    return keyName
 };
 
-var ConvertKeysToLowerCase = function (obj) {
+var ConvertKeysToLowerCase = (obj) => {
     var output = {};
     for (i in obj) {
+        var data = i.toLowerCase();
         if (Object.prototype.toString.apply(obj[i]) === '[object Object]') {
-            output[i.toLowerCase()] = ConvertKeysToLowerCase(obj[i]);
+            output[data] = ConvertKeysToLowerCase(obj[i]);
         } else if (Object.prototype.toString.apply(obj[i]) === '[object Array]') {
-            output[i.toLowerCase()] = [];
-            output[i.toLowerCase()].push(ConvertKeysToLowerCase(obj[i][0]));
+            output[data] = [];
+            output[data].push(ConvertKeysToLowerCase(obj[i][0]));
         } else {
-            output[i.toLowerCase()] = obj[i];
+            output[data] = obj[i];
         }
     }
     return output;
 };
 
 // function to convert key name in schema to database column name
-var getDeploymentDatabaseKeyName = function (key) {
+var getDeploymentDatabaseKeyName = (key) => {
     // Some of the keys in schema may be reserved keywords, so it may need some manipulation
-
+    
     if (!key) {
         return null;
-    } else if (key === 'service') {
-        return 'SERVICE_NAME';
-    } else if (key === 'status') {
-        return 'DEPLOYMENT_STATUS';
-    } else if (key === 'domain') {
-        return 'DOMAIN_NAME';
-    } else if (key === 'environment') {
-        return 'ENVIRONMENT_LOGICAL_ID';
     } else {
-        return key.toUpperCase();
+        var mapKeyName = {
+            "service" : "SERVICE_NAME",
+            "status" : "DEPLOYMENT_STATUS",
+            "domain" : "DOMAIN_NAME",
+            "environment" : "ENVIRONMENT_LOGICAL_ID"
+        }
+        var returnval = mapKeyName[key] ? mapKeyName[key] : key.toUpperCase();
+        return returnval;
     }
 };
 
-var sortUtil = function (data, sort_key, sort_direction) {
+var sortUtil = (data, sort_key, sort_direction) => {
     if (sort_key && sort_key === "provider_build_id") {
-        data = data.sort(function (a, b) {
+        data = data.sort((a, b) => {
             var x = parseInt(a[sort_key]);
             var y = parseInt(b[sort_key]);
             if (sort_direction === "asc") return x < y ? -1 : x > y ? 1 : 0;
@@ -163,7 +160,7 @@ var sortUtil = function (data, sort_key, sort_direction) {
             }
         });
     } else if ((sort_key && sort_key === "created_time")) {
-        data = data.sort(function (a, b) {
+        data = data.sort((a, b) => {
             var val1 = a.timestamp.replace("T", " ");
             var val2 = b.timestamp.replace("T", " ");
             var x = new Date(val1).getTime();
@@ -172,7 +169,7 @@ var sortUtil = function (data, sort_key, sort_direction) {
             else return x < y ? 1 : x > y ? -1 : 0;
         });
     } else {
-        data = data.sort(function (a, b) {
+        data = data.sort((a, b) => {
             var x = a[sort_key];
             var y = b[sort_key];
             if (sort_direction === "asc") return x < y ? -1 : x > y ? 1 : 0;
@@ -184,12 +181,12 @@ var sortUtil = function (data, sort_key, sort_direction) {
     return data;
 };
 
-var filterUtil = function (data, filter_value) {
+var filterUtil = (data, filter_value) => {
     var newArr = [];
-    data.map(function (ele) {
+    data.map((ele) => {
         for (var key in ele) {
             var value = "";
-            if (typeof ele[key] == "string") value = ele[key].toLowerCase();
+            if (typeof ele[key] === "string") value = ele[key].toLowerCase();
             else if (ele[key] && ele[key].length > 0) value = ele[key];
 
             if (value.indexOf(filter_value.toLowerCase()) !== -1) {
@@ -202,9 +199,9 @@ var filterUtil = function (data, filter_value) {
     return newArr;
 };
 
-var paginateUtil = function (data, limit, offset) {
+var paginateUtil = (data, limit, offset) =>{
     var newArr = [];
-    if (offset > data.length || offset == data.length || !limit) {
+    if (offset > data.length || offset === data.length || !limit) {
         data = [];
     } else if (data.length > limit + offset || data.length === limit + offset) {
         data = data.slice(offset, offset + limit);

@@ -42,7 +42,7 @@ module.exports = (deploymentData, tableName, onComplete) => {
     };
 
     // Add all properties in input object to the params object
-    Object.keys(deploymentData).map(function (key) {
+    Object.keys(deploymentData).map((key) => {
         var param_key = utils.getDeploymentDatabaseKeyName(key);
         var param_value = deploymentData[key];
         if (!param_value) {
@@ -53,7 +53,7 @@ module.exports = (deploymentData, tableName, onComplete) => {
     });
 
     // Add new item to database
-    docClient.put(params, function (err, data) {
+    docClient.put(params, (err, data) => {
         if (err) {
             // database error
             onComplete({

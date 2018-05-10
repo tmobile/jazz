@@ -220,14 +220,14 @@ function genericInputValidation(event) {
 			});
 		}
 
-		if (event.method === "PUT" && !event.body) {
+		if (event.method === "PUT" && Object.keys(event.body).length === 0) {
 			reject({
 				result: "inputError",
-				message: "Deployment data is required for updating an deployment"
+				message: "Deployment data is required for updating a deployment"
 			});
 		}
 
-		if (event.method === "POST" && !event.body && Object.keys(event.path).length === 0) {
+		if (event.method === "POST" && Object.keys(event.body).length === 0 && Object.keys(event.path).length === 0) {
 			reject({
 				result: "inputError",
 				message: "Deployment details are required for creating a deployment"
@@ -471,7 +471,7 @@ function buildNowRequest(serviceDetails, config, refDeployment) {
 					'Authorization': base_auth_token
 				}
 			};
-			request(options, function (error, res, body) {
+			request(options, (error, res, body) => {
 				if (error) {
 					logger.error("Unable to rebuild deployment :" + error);
 					reject(error);

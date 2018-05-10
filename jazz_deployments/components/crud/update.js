@@ -37,7 +37,7 @@ module.exports = (deploymentData, tableName, deploymentId, onComplete) => {
         attributeValues = {};
 
     // Add all properties in input object to the params object
-    Object.keys(deploymentData).map(function (key) {
+    Object.keys(deploymentData).map((key) => {
         var param_key = utils.getDeploymentDatabaseKeyName(key);
         var param_value = deploymentData[key];
 
@@ -51,7 +51,7 @@ module.exports = (deploymentData, tableName, deploymentId, onComplete) => {
         params.UpdateExpression = "set " + update_exp.substring(0, update_exp.length - 2);
         params.ExpressionAttributeValues = attributeValues;
         params.ReturnValues = "ALL_NEW";
-        docClient.update(params, function (err, data) {
+        docClient.update(params, (err, data) => {
             if (err) {
                 // database error
                 onComplete({
