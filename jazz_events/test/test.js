@@ -14,19 +14,32 @@
 // limitations under the License.
 // =========================================================================
 
+const chai = require('chai');
 const assert = require('chai').assert;
+const expect = require('chai').expect;
+const should = require('chai').should();
+const chaiAsPromised = require('chai-as-promised');
+chai.use(chaiAsPromised);
+const awsContext = require('aws-lambda-mock-context');
+const AWS = require("aws-sdk-mock");
+const request = require('request');
+const sinon = require('sinon');
+
 const index = require('../index');
+const logger = require("../components/logger.js");
+const errorHandler = require("../components/error-handler.js")();
+const configObj = require("../components/config.js");
+const responseObj = require("../components/response.js"); //Import the response module.
 
-describe('Sample', function() {
-    it('tests handler', function(done) {
 
-    	index.handler({method:'GET'},{},function() {})
+describe('jazz_events', function () {
 
-    var dynamoCheck = function(dynamoMethod, sinonSpy){
+    var config, spy, event, callback, callbackObj, context, err, dynamodb;
+    var dynamoCheck = function (dynamoMethod, sinonSpy) {
         var serviceName;
         //assign the correct aws service depending on the method to be used
-        if(dynamoMethod == "scan" || dynamoMethod == "getItem"){
-          serviceName = "DynamoDB";
+        if (dynamoMethod == "scan" || dynamoMethod == "getItem") {
+            serviceName = "DynamoDB";
         }
         //mocking DocumentClient from DynamoDB and wrapping with predefined spy
         AWS.mock(serviceName, dynamoMethod, sinonSpy);
@@ -37,478 +50,386 @@ describe('Sample', function() {
         return bool;
     };
 
-    beforeEach(function(){
+    beforeEach(function () {
         spy = sinon.spy();
         event = {
-            "method" : "",
-            "stage" : "test",
-            "query" : {
-                "service_name" : "jazz-service",
-                "username" : "xyz",
+            "method": "",
+            "stage": "test",
+            "query": {
+                "service_name": "jazz-service",
+                "username": "xyz",
                 "last_evaluated_key": undefined
             },
             "body": {
-                "service_context" : {},
-                "event_handler" : "JENKINS",
-                "event_name" : "CREATE_SERVICE",
-                "service_name" : "jazz-service",
-                "event_status" : "COMPLETED",
-                "event_type" : "test",
-                "username" : "xyz",
-                "event_timestamp" : "2018-01-23T10:28:10:136",
-                "unimportant":"",
-                "NULL":null
+                "service_context": {},
+                "event_handler": "JENKINS",
+                "event_name": "CREATE_SERVICE",
+                "service_name": "jazz-service",
+                "event_status": "COMPLETED",
+                "event_type": "test",
+                "username": "xyz",
+                "event_timestamp": "2018-01-23T10:28:10:136"
             }
         };
         callback = (err, responseObj) => {
-            if(err){
-              return err;
-            }
-            else{
-              return JSON.stringify(responseObj);
+            if (err) {
+                return err;
+            } else {
+                return JSON.stringify(responseObj);
             }
         };
         context = awsContext();
         err = {
-            "errorType" : "svtfoe",
-            "message" : "starco"
+            "errorType": "svtfoe",
+            "message": "starco"
         };
-        
+
         //creating an object with the callback function in order to wrap and test callback parameters
         callbackObj = {
-            "callback" : callback
+            "callback": callback
         };
+        config = configObj(event);
+
     });
 
-    it("should attempt to get item data from dynamoDB by query params if 'GET' method and query params are defined", ()=>{
+    it("should attempt to get item data from dynamoDB by query params if 'GET' method and query params are defined", () => {
         event.method = "GET";
-        var attemptBool = dynamoCheck("scan",spy);
+        var attemptBool = dynamoCheck("scan", spy);
         assert.isTrue(attemptBool);
     });
 
-    it("should indicate an InternalServerError occured if DynamoDB.scan fails during GET", ()=>{
-        event.method = "GET";
-        errType = "InternalServerError";
-        errMessage = "error occured";
-        //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-        AWS.mock("DynamoDB", "scan", (params, cb) => {
-          return cb(err);
+    it("should get items for provided query from dynamoDB in getEvents function", () => {
+        config = configObj(event);
+        AWS.mock("DynamoDB", "scan", (params, callback) => {
+            return callback(null, event.body)
         });
-        //wrapping the and callback function to check for response messages
-        stub = sinon.stub(callbackObj,"callback",spy);
-        //trigger the mocked logic by calling handler()
-        var callFunction = index.handler(event, context, callbackObj.callback);
-        var cbResponse = stub.args[0][0];
-        var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+        var getEvents = index.getEvents(event, config);
+        expect(getEvents.then((res) => {
+            return res;
+        })).to.eventually.deep.equal(event.body);
         AWS.restore("DynamoDB");
-        stub.restore();
-        assert.isTrue(cbCheck);
     });
 
-    it("should include username and service_name info in dynamodb filter if given specific event props", ()=>{
-        event.method = "GET";
-        var username = "xyz";
-        var service_name = "jazz-service";
-        event.query.username = username;
-        event.query.service_name = service_name;
-        var scanParamBefore = ":USERNAME";
-        var scanParamAfter = ":SERVICE_NAME";
-        var dataType = "S";
-        var filterUserName = "USERNAME =";
-        var filterServiceName = "SERVICE_NAME =";
-        //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-        AWS.mock("DynamoDB", "scan", spy);
-        //trigger spy by calling index.handler()
-        var callFunction = index.handler(event, context, callbackObj.callback);
-        //assigning the item filter values passed to DynamoDB.scan as values to check against
-        var filterExp = spy.args[0][0].FilterExpression;
-        var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
-        var allCases = filterExp.includes(filterUserName) && filterExp.includes(filterServiceName) &&
-                        expAttrVals[scanParamBefore][dataType] == username &&
-                        expAttrVals[scanParamAfter][dataType] == service_name;
-        AWS.restore("DynamoDB");
-        assert.isTrue(allCases);
-    });
-
-    it("should indicate Bad request if no query params", ()=>{
-        event.method = "GET";
-        logMessage = "error"
-        var invalidArray = ["",null, undefined];
-        errType = "BadRequest"
-        var errMessage = "Bad request.";
-        AWS.mock("DynamoDB", "scan", (params, cb)=>{
-            return cb(null, dataObj);
-        });
-        stub = sinon.stub(callbackObj, "callback", spy);
-        for(i in invalidArray){
-            event.query = invalidArray[i];
-            var callFunction = index.handler(event, context, callbackObj.callback);
-            var cbResponse = stub.args[0][0];
-            var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
-        }
-        AWS.restore("DynamoDB");
-        stub.restore();
-        assert.isTrue(cbCheck);
-    });
-
-    it("should indicate Bad request if invalid query params are provided", ()=>{
-        event.method = "GET";
+    it("should indicate error if invalid query data is provided", () => {
         event.query = {
-            "invalid" : "test"
+            invalid: "invalid"
         };
-        var dataObj = {
-            "Items": [{
-                SERVICE_CONTEXT :{ S: {}},
-                EVENT_HANDLER : {S:"JENKINS"},
-                EVENT_NAME : {S:"CREATE_SERVICE"},
-                SERVICE_NAME: {S:'jazztest'},
-                EVENT_STATUS : {S:"COMPLETED"},
-                EVENT_TYPE : {S:"test"},
-                USERNAME: {S:'xyz'},
-                EVENT_TIMESTAMP : {S:"2018-01-23T10:28:10:136"}
+        AWS.mock("DynamoDB", "scan", (params, callback) => {
+            return callback(null, event.body)
+        })
+        var getEvents = index.getEvents(event, config);
+        expect(getEvents.then((res) => {
+            return res;
+        })).to.become(null);
+        AWS.restore("DynamoDB");
+    });
+
+    it("should indicate error if query data is undefined", () => {
+        event.query = {};
+        var getEvents = index.getEvents(event, config);
+        expect(getEvents.then((res) => {
+            return res;
+        })).to.become(null);
+    });
+
+    it("should indicate error if DynamoDB.scan fails during GET request", () => {
+        config = configObj(event);
+        AWS.mock("DynamoDB", "scan", (params, callback) => {
+            return callback(err, null)
+        });
+        var getEvents = index.getEvents(event, config);
+        expect(getEvents.then((res) => {
+            return res;
+        })).to.be.rejectedWith(err);
+        AWS.restore("DynamoDB");
+    });
+
+    it("should map event data from dynamodb for GET request", () => {
+        var eventBody = event.body;
+        var dbResult = {
+            Items: [{
+                'SERVICE_CONTEXT': {
+                    S: eventBody.service_context
+                },
+                'EVENT_NAME': {
+                    S: eventBody.event_name
+                },
+                'SERVICE_NAME': {
+                    S: eventBody.service_name
+                },
+                'EVENT_TYPE': {
+                    S: eventBody.event_type
+                },
+                'EVENT_STATUS': {
+                    S: eventBody.event_status
+                },
+                'USERNAME': {
+                    S: eventBody.username
+                },
+                'EVENT_TIMESTAMP': {
+                    S: eventBody.event_timestamp
+                },
+                'EVENT_HANDLER': {
+                    S: eventBody.event_handler
+                }
             }]
         }
-        errType = "BadRequest"
-        var errMessage = "Bad request.";
-        AWS.mock("DynamoDB", "scan", (params, cb)=>{
-            return cb(null, dataObj);
-        });
-        stub = sinon.stub(callbackObj, "callback", spy);
-        var callFunction = index.handler(event, context, callbackObj.callback);
-        var cbResponse = stub.args[0][0];
-        var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
-        AWS.restore("DynamoDB");
-        stub.restore();
-        assert.isTrue(cbCheck);
-    });
-
-    it("should indicate success if method GET and query params are defined", ()=>{
-        event.method = "GET";
-        var dataObj = {
-            "Items": [{
-                SERVICE_CONTEXT :{ S: {}},
-                EVENT_HANDLER : {S:"JENKINS"},
-                EVENT_NAME : {S:"CREATE_SERVICE"},
-                SERVICE_NAME: {S:'jazztest'},
-                EVENT_STATUS : {S:"COMPLETED"},
-                EVENT_TYPE : {S:"test"},
-                USERNAME: {S:'xyz'},
-                EVENT_TIMESTAMP : {S:"2018-01-23T10:28:10:136"},
-                UNIMPORTANT:{NULL:''}
-            }]
+        var result = {
+            events: [event.body]
         }
-        //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-        AWS.mock("DynamoDB", "scan", (params, cb)=>{
-            return cb(null, dataObj);
-        });
-        stub = sinon.stub(callbackObj, "callback", spy);
-        //trigger spy by calling index.handler()
-        var callFunction = index.handler(event, context, callbackObj.callback);
-        //assigning the item filter values passed to DynamoDB.scan as values to check against
-        var cbResponse = stub.args[0][1];
-        var cbCheck = cbResponse.input === event.query;
-        AWS.restore("DynamoDB");
-        stub.restore();
-        assert.isTrue(cbCheck);
+        var mapGetEventData = index.mapGetEventData(dbResult, event);
+        expect(mapGetEventData.then((res) => {
+            return res;
+        })).to.eventually.deep.equal(responseObj(result, event.query));
     });
 
-    //POST handler starts from here//
-
-    it("should indicate that body is missing when an event with no event.body", ()=>{
-        event.method = "POST";
-        event.body = undefined;
-        errType = "InternalServerError";
-        errMessage = "inputs not defined";
-        var bool = true;
-        var returnMessage = index.handler(event, context, callback);
-        if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
-            bool = false;
-        };
-        assert.isTrue(bool);
+    it("should indicate Bad request if no data available in dynamodb for GET request", () => {
+        var dbResult = {};
+        var message = "The query parameters supported are username, service_name and last_evaluated_index."
+        var mapGetEventData = index.mapGetEventData(dbResult, event);
+        expect(mapGetEventData.then((res) => {
+            return res;
+        })).to.be.rejectedWith(message);
     });
 
-    it("should indicate that input service_context is missing when an event with no event.body.service_context", ()=>{
-        event.method = "POST";
-        errType = "BadRequest";
-        errMessage = "not provided";
-        var returnMessage;
-        var invalidArray = ["", undefined];
-        var bool = true;
-        for(i in invalidArray){
-            event.body.service_context = invalidArray[i];
-            returnMessage = index.handler(event, context, callback);
-            if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
-                bool = false
-            };
-        };
-       assert.isTrue(bool);
+    it("should validate events input for POST request", () => {
+        event.query = {}
+        var generalInputValidation = index.generalInputValidation(event);
+        expect(generalInputValidation.then((res) => {
+            return res;
+        })).to.become(undefined)
     });
 
-    it("should indicate that input event_handler is missing when an event with no event.body.event_handler", ()=>{
-        event.method = "POST";
-        errType = "BadRequest";
-        errMessage = "not provided";
-        var returnMessage;
-        var invalidArray = ["", undefined];
-        var bool = true;
-        for(i in invalidArray){
-            event.body.event_handler = invalidArray[i];
-            returnMessage = index.handler(event, context, callback);
-            if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
-                bool = false
-            };
-        };
-       assert.isTrue(bool);
+    it("indicate error if event input is undefined for POST method", () => {
+        event.body = ""
+        var message = "Service inputs not defined!"
+        var generalInputValidation = index.generalInputValidation(event);
+        expect(generalInputValidation.then((res) => {
+            return res;
+        })).to.be.rejectedWith(message)
     });
 
-    it("should indicate that input event_name is missing when an event with no event.body.event_name", ()=>{
-        event.method = "POST";
-        errType = "BadRequest";
-        errMessage = "not provided";
-        var returnMessage;
-        var invalidArray = ["", undefined];
-        var bool = true;
-        for(i in invalidArray){
-            event.body.event_name = invalidArray[i];
-            returnMessage = index.handler(event, context, callback);
-            if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
-                bool = false
-            };
-        };
-       assert.isTrue(bool);
+    it("indicate error if service_context of event is undefined for POST method", () => {
+        event.body.service_context = ""
+        var message = "service_context not provided!"
+        var generalInputValidation = index.generalInputValidation(event);
+        expect(generalInputValidation.then((res) => {
+            return res;
+        })).to.be.rejectedWith(message)
     });
 
-    it("should indicate that input service_name is missing when an event with no event.body.service_name", ()=>{
-        event.method = "POST";
-        errType = "BadRequest";
-        errMessage = "not provided";
-        var returnMessage;
-        var invalidArray = ["", undefined];
-        var bool = true;
-        for(i in invalidArray){
-            event.body.service_name = invalidArray[i];
-            returnMessage = index.handler(event, context, callback);
-            if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
-                bool = false
-            };
-        };
-       assert.isTrue(bool);
+    it("indicate error if event_handler of event is undefined for POST method", () => {
+        event.body.event_handler = ""
+        var message = "event_handler not provided!"
+        var generalInputValidation = index.generalInputValidation(event);
+        expect(generalInputValidation.then((res) => {
+            return res;
+        })).to.be.rejectedWith(message)
     });
 
-    it("should indicate that input event_status is missing when an event with no event.body.event_status", ()=>{
-        event.method = "POST";
-        errType = "BadRequest";
-        errMessage = "not provided";
-        var returnMessage;
-        var invalidArray = ["", undefined];
-        var bool = true;
-        for(i in invalidArray){
-            event.body.event_status = invalidArray[i];
-            returnMessage = index.handler(event, context, callback);
-            if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
-                bool = false
-            };
-        };
-       assert.isTrue(bool);
-    });
-
-    it("should indicate that input event_type is missing when an event with no event.body.event_type", ()=>{
-        event.method = "POST";
-        errType = "BadRequest";
-        errMessage = "not provided";
-        var returnMessage;
-        var invalidArray = ["", undefined];
-        var bool = true;
-        for(i in invalidArray){
-            event.body.event_type = invalidArray[i];
-            returnMessage = index.handler(event, context, callback);
-            if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
-                bool = false
-            };
-        };
-       assert.isTrue(bool);
-    });
-
-    it("should indicate that input username is missing when an event with no event.body.username", ()=>{
-        event.method = "POST";
-        errType = "BadRequest";
-        errMessage = "not provided";
-        var returnMessage;
-        var invalidArray = ["", undefined];
-        var bool = true;
-        for(i in invalidArray){
-            event.body.username = invalidArray[i];
-            returnMessage = index.handler(event, context, callback);
-            if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
-                bool = false
-            };
-        };
-       assert.isTrue(bool);
-    });
-
-    it("should indicate that input event_timestamp is missing when an event with no event.body.event_timestamp", ()=>{
-        event.method = "POST";
-        errType = "BadRequest";
-        errMessage = "not provided";
-        var returnMessage;
-        var invalidArray = ["", undefined];
-        var bool = true;
-        for(i in invalidArray){
-            event.body.event_timestamp = invalidArray[i];
-            returnMessage = index.handler(event, context, callback);
-            if(!returnMessage.includes(errType) || !returnMessage.includes(errMessage)){
-                bool = false
-            };
-        };
-       assert.isTrue(bool);
-    });
-
-    it("should indicate an InputValidationError occured if event.body.event_timestamp with invalid format", ()=>{
-        event.method = "POST";
-        errType = "BadRequest";
-        errMessage = "error";
-        event.body.event_timestamp = "2018-01-23T10:28:10:136z";
-        //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-        AWS.mock("DynamoDB", "getItem", spy);
-        //wrapping the logger and callback function to check for response messages
-        stub = sinon.stub(callbackObj,"callback",spy);
-        //trigger the mocked logic by calling handler()
-        var callFunction = index.handler(event, context, callbackObj.callback);
-        var cbResponse = stub.args[0][0];
-        var cbCheck = cbResponse.includes(errMessage) && cbResponse.includes(errType);
-        AWS.restore("DynamoDB");
-        stub.restore();
-        assert.isTrue(cbCheck);
-    });
-
-    it("should indicate an InternalServerError occured if DynamoDB.getItem fails during POST", ()=>{
-        event.method = "POST";
-        errType = "InternalServerError";
-        errMessage = "An internal error occured";
-        //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-        AWS.mock("DynamoDB", "getItem", (params, cb) => {
-          return cb(err);
-        });
-        //wrapping the logger and callback function to check for response messages
-        stub = sinon.stub(callbackObj,"callback",spy);
-        //trigger the mocked logic by calling handler()
-        var callFunction = index.handler(event, context, callbackObj.callback);
-        var cbResponse = stub.args[0][0];
-        var cbCheck = cbResponse.includes(errMessage);
-        AWS.restore("DynamoDB");
-        stub.restore();
-        assert.isTrue(cbCheck);
-    });
-
-    it("should attempt to get item from DynamoDB by body prameters if POST method and body parameters are defined", function(){
-        event.method = "POST";
-        var attemptBool = dynamoCheck('getItem', spy);
-        assert.isTrue(attemptBool);
-    });
-
-    it("should attempt to initiate kinesis putRecord if method POST and body parameters are defined",()=>{
-        event.method = "POST";
-        // mock kinesis putRecord with event.body parameters defined
-        AWS.mock('DynamoDB', 'getItem',spy);
-        AWS.mock("Kinesis","putRecord",spy);
-        var callFunction = index.handler(event, context, callback);
-        var bool = spy.called;
-        AWS.restore('Kinesis');
-        AWS.restore('DynamoDB');
-        assert.isTrue(bool);
-    });
-
-    it("should indicate internalserver error  if document.getitems fail for method POST", ()=>{
-        event.method = "POST";
-        errType = 'InternalServerError';
-        errMessage = 'internal error occured';
-        logMessage = 'error';
-        AWS.mock('DynamoDB', 'getItem', (params, cb)=>{
-            return cb(err);
-        });
-        stub = sinon.stub(callbackObj, 'callback', spy);
-        logStub = sinon.stub(logger, 'error', spy);
-        var callFunction = index.handler(event, context, callbackObj.callback);
-        var logResponse = logStub.args[0][0];
-        var cbResponse = stub.args[0][0];
-        var logCheck = logResponse.includes(logMessage);
-        var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
-        AWS.restore('DynamoDB');
-        logStub.restore();
-        assert.isTrue(cbCheck && logCheck);
-    });
-
-    it("should indicate badrequest error  if document.getitems return with empty obj for method POST", ()=>{
-        event.method = "POST";
-        errType = 'BadRequest';
-        errMessage = 'Bad request.';
-        logMessage = 'Invalid ';
-        AWS.mock('DynamoDB', 'getItem', (params, cb)=>{
-            return cb(null, {});
-        });
-        stub = sinon.stub(callbackObj, 'callback', spy);
-        logStub = sinon.stub(logger, 'error', spy);
-        var callFunction = index.handler(event, context, callbackObj.callback);
-        var logResponse = logStub.args[0][0];
-        var cbResponse = stub.args[0][0];
-        var logCheck = logResponse.includes(logMessage);
-        var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
-        AWS.restore('DynamoDB');
-        logStub.restore();
-        assert.isTrue(cbCheck && logCheck);
-    });
-
-
-    it("should indicate success if method POST and body params are defined", ()=>{
-        event.method = "POST";
-        var dataObj = {
-            "Item" : event.body
-        };
+    it("should indicate success while updating kinesis stream", () => {
+        config = configObj(event);
         var kinesisObj = {
             "event_id": "id"
         }
-        AWS.mock('DynamoDB', 'getItem',(params, cb)=>{
-            return cb(null, dataObj);
-        });
-        AWS.mock('Kinesis', 'putRecord', (params, cb)=>{
+        AWS.mock("Kinesis", "putRecord", (params, cb) => {
             return cb(null, kinesisObj);
         });
-        stub = sinon.stub(callbackObj, "callback", spy);
-        var callFunction = index.handler(event, context, callbackObj.callback);
-        var cbResponse = stub.args[0][1];
-        var cbCheck = cbResponse.input === event.body;
+        var storeEventData = index.storeEventData(config, event.body);
+        expect(storeEventData.then((res) => {
+            expect(res).to.include.keys('data');
+            return res;
+        }));
         AWS.restore('Kinesis');
-        AWS.restore('DynamoDB');
-        stub.restore();
-        assert.isTrue(cbCheck)
     });
 
-    it("should indicate error while kinesis.putRecord fail for defined method POST and body params", ()=>{
-        event.method = "POST";
-        logMessage = 'kinesis error';
-        errMessage = "Error storing event."
+    it("should indicate error while updating kinesis stream", () => {
+        config = configObj(event);
+        var message = "Error storing event"
+        AWS.mock("Kinesis", "putRecord", (params, cb) => {
+            return cb(err, null);
+        })
+        var storeEventData = index.storeEventData(config, event.body);
+        expect(storeEventData.then((res) => {
+            return res;
+        })).to.be.rejectedWith(message);
+        AWS.restore('Kinesis');
+    });
+
+    it("should validate event specific data", () => {
+        config = configObj(event);
         var dataObj = {
-            "Item" : event.body
+            Item: event.body
         };
-       
-        AWS.mock('DynamoDB', 'getItem',(params, cb)=>{
-            return cb(null, dataObj);
+        AWS.mock("DynamoDB", "getItem", (params, callback) => {
+            return callback(null, dataObj);
         });
-        AWS.mock('Kinesis', 'putRecord', (params, cb)=>{
-            return cb(err);
-        });
-        stub = sinon.stub(callbackObj, 'callback', spy);
-        logStub = sinon.stub(logger, 'error', spy);
-        var callFunction = index.handler(event, context, callbackObj.callback);
-        var logResponse = logStub.args[0][0];
-        var cbResponse = stub.args[0][0];
-        var logCheck = logResponse.includes(logMessage);
-        var cbCheck = cbResponse.includes(errMessage);
-        AWS.restore('Kinesis');
-        AWS.restore('DynamoDB');
-        stub.restore();
-        logStub.restore();
-        assert.isTrue(logCheck && cbCheck)
+        var validateEventInput = index.validateEventInput(config, event.body);
+        expect(validateEventInput.then((res) => {
+            return res;
+        })).to.become(null);
+        AWS.restore("DynamoDB");
     });
 
+    it("should indicate error while validating event specific data if DynamoDB.getItem fails", () => {
+        config = configObj(event);
+        var message = "error reading event data from database"
+        AWS.mock("DynamoDB", "getItem", (params, callback) => {
+            return callback(err, null);
+        });
+        var validateEventInput = index.validateEventInput(config, event.body);
+        expect(validateEventInput.then((res) => {
+            return res;
+        })).to.be.rejectedWith(message);
+        AWS.restore("DynamoDB");
+    });
+
+    it("should indicate error while validating event specific data if event timestamp is invalid", () => {
+        config = configObj(event);
+        event.body.event_timestamp = "xyz";
+        var message = "Invalid EVENT TIMESTAMP: xyz, expected format is YYYY-MM-DDTHH:mm:ss:SSS"
+        var dataObj = {
+            Item: event.body
+        };
+        AWS.mock("DynamoDB", "getItem", (params, callback) => {
+            return callback(null, dataObj);
+        });
+        var validateEventInput = index.validateEventInput(config, event.body);
+        expect(validateEventInput.then((res) => {
+            return res;
+        })).to.be.rejectedWith(message);
+        AWS.restore("DynamoDB");
+    });
+
+    it("should indicate success to get list of events for provided query params with GET method", () => {
+        event.method = "GET";
+        var eventBody = event.body;
+        var dbResult = {
+            Items: [{
+                'SERVICE_CONTEXT': {
+                    S: eventBody.service_context
+                },
+                'EVENT_HANDLER': {
+                    S: eventBody.event_handler
+                },
+                'EVENT_NAME': {
+                    S: eventBody.event_name
+                },
+                'SERVICE_NAME': {
+                    S: eventBody.service_name
+                },
+                'EVENT_STATUS': {
+                    S: eventBody.event_status
+                },
+                'EVENT_TYPE': {
+                    S: eventBody.event_type
+                },
+                'USERNAME': {
+                    S: eventBody.username
+                },
+                'EVENT_TIMESTAMP': {
+                    S: eventBody.event_timestamp
+                }
+            }]
+        }
+        var result = {
+            events: [event.body]
+        }
+        AWS.mock("DynamoDB", "scan", (params, callback) => {
+            return callback(null, dbResult)
+        });
+        index.handler(event, context, (err, res) => {
+            res.should.have.deep.property('data.events');
+            AWS.restore("DynamoDB")
+            return res;
+        
+        });
+    });
+
+    it("should indicate error if DynamoDB.scan fails", () => {
+        event.method = "GET";
+        var eventBody = event.body;
+        var result = '{"errorType":"InternalServerError","message":"An internal error occured: '+err.message+'"}'
+        AWS.mock("DynamoDB", "scan", (params, callback) => {
+            return callback(err, null)
+        });
+        index.handler(event, context, (err, res) => {
+            err.should.be.equal(result);
+            AWS.restore("DynamoDB");
+            return err;
+        });
+    });
+
+    it("should indicate error if DynamoDB.scan return with empty list of events for provided query params with GET method", () => {
+        event.method = "GET";
+        var eventBody = event.body;
+        var dbResult = {}
+        var result = '{"errorType":"BadRequest","message":"The query parameters supported are username, service_name and last_evaluated_index."}'
+        AWS.mock("DynamoDB", "scan", (params, callback) => {
+            return callback(null, dbResult)
+        });
+        index.handler(event, context, (err, res) => {
+            err.should.be.equal(result);
+            AWS.restore("DynamoDB")
+            return err;
+        });
+    });
+
+    it("should indicate success for updating event data to kinesis stream in POST method", () => {
+        event.method = "POST";
+        var dataObj = {
+            Item: event.body
+        };
+        var kinesisObj = {
+            "event_id": "id"
+        };
+        AWS.mock("DynamoDB", "getItem", (params, callback) => {
+            return callback(null, dataObj);
+        });
+        AWS.mock("Kinesis", "putRecord", (params, cb) => {
+            return cb(null, kinesisObj);
+        })
+        index.handler(event, context, (err, res) => {
+            res.should.have.deep.property('data.event_id');
+            AWS.restore("DynamoDB");
+            AWS.restore("Kinesis");
+            return res;
+        })
+    });
+
+    it("should indicate error while updating event data to kinesis stream in POST method", () => {
+        event.method = "POST";
+        var dataObj = {
+            Item: event.body
+        };
+        var result = '{"errorType":"InternalServerError","message":"An internal error occured: Error storing event: '+err.message+'"}'
+        AWS.mock("DynamoDB", "getItem", (params, callback) => {
+            return callback(null, dataObj);
+        });
+        AWS.mock("Kinesis", "putRecord", (params, cb) => {
+            return cb(err, null);
+        })
+        index.handler(event, context, (err, res) => {
+            err.should.be.equal(result);
+            AWS.restore("DynamoDB");
+            AWS.restore("Kinesis");
+            return err;
+        
+        })
+    });
+
+
+    it("should indicate error if DynamoDB.getItem fails in POST method", () => {
+        event.method = "POST";
+        var dataObj = {};
+        var result = '{"errorType":"BadRequest","message":"Bad request. message: Invalid event data: test"}'
+        AWS.mock("DynamoDB", "getItem", (params, callback) => {
+            return callback(null, dataObj);
+        });
+        index.handler(event, context, (err, res) => {
+            err.should.be.equal(result);
+            AWS.restore("DynamoDB");
+            return err;
+        })
+    });
 });

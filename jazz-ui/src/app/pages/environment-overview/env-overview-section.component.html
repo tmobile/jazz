@@ -72,7 +72,7 @@
 					<div class="det-label">Deployment status</div>
 					<div class="det-value " >{{envstatus}}</div>
 				</li>
-				<li>
+				<li class='hide'>
 					<div class="det-label">Description</div>
 					<div class="det-value desc" >{{services.description || 'Give me the details for your services'}}</div>
 				</li>
@@ -118,7 +118,7 @@
 					<div class="det-label">Friendly Name</div>
 					<div class="det-value">{{friendlyName || "NA"}}</div>
 				</li>
-				<li>
+				<li class='hide'>
 					<div class="det-label">Tags</div>
 					<div class="det-value" >{{services.tags || 'Services are cooler with tags'}}</div>
 				</li>
@@ -270,9 +270,9 @@
 	</div>
 </div>
 
-<div class="separator-row"></div>
-<div class="disclaimer-static-data"><i>This data is for representational purpose only and is not accurate</i></div>
-<div class="service-overview-wrp">
+<div class="separator-row hide"></div>
+<div class="disclaimer-static-data hide"><i>This data is for representational purpose only and is not accurate</i></div>
+<div class="service-overview-wrp hide">
 	<div class="stage-wrp left-item" >
 		<div class="stage-title">Code Quality</div>
 		<div class="stage-overview">

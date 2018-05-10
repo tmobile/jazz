@@ -21,12 +21,12 @@ const responseObj = require("./components/response.js");
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const formats = require('./jenkins-json.js');
-const Guid = require('guid');
+const uuid = require('uuid');
 var payloads = formats('apis');
 
 /**
 	Delete Serverless Service
-	@author: DSundar3/Somanchi
+	@author: 
 	@version: 1.0
  **/
 
@@ -38,21 +38,21 @@ module.exports.handler = (event, context, cb) => {
 
 	if(!config.DELETE_SERVICE_JOB_URL) {
 		logger.error("Service configuration missing JOB URL" + JSON.stringify(event));
-		return cb(JSON.stringify(errorHandler.throwInternalServerError("Service configuration missing JOB URL")));
+		return cb(JSON.stringify(errorHandler.throwInternalServerError("Service isn't configured properly, please reach out to Admins for help!")));
 	}
 
 	if (!event.body) {
-		logger.error("Service inputs not defined");
-		return cb(JSON.stringify(errorHandler.throwInputValidationError("Service inputs not defined")));
+		logger.error("Event body is empty");
+		return cb(JSON.stringify(errorHandler.throwInputValidationError("Missing parameters")));
 	} else if(!event.body.service_name) {
-		logger.error("Service Name is missing in the input");
-		return cb(JSON.stringify(errorHandler.throwInputValidationError("Service Name is missing in the input")));
+		logger.error("Service name is missing in the input");
+		return cb(JSON.stringify(errorHandler.throwInputValidationError("Service name is missing in the input")));
 	} else if(!event.body.domain) {
 		logger.error("Domain key is missing in the input");
-		return cb(JSON.stringify(errorHandler.throwInputValidationError("Domain key is missing in the input")));
+		return cb(JSON.stringify(errorHandler.throwInputValidationError("Domain is missing in the input")));
 	}else if(!event.body.id) {
-		logger.error("DB ID is missing in the input");
-		return cb(JSON.stringify(errorHandler.throwInputValidationError("DB ID is missing in the input")));
+		logger.error("Service id is missing in the input");
+		return cb(JSON.stringify(errorHandler.throwInputValidationError("Service id is missing in the input")));
 	}
 
 	var version = "LATEST";
@@ -74,7 +74,7 @@ module.exports.handler = (event, context, cb) => {
 		params.version = version;
 		params.db_service_id = event.body.id;
 
-		var tracking_id = Guid.create().value;
+		var tracking_id = uuid.v4();
 		params.tracking_id = tracking_id;
 
 		req.qs = params;

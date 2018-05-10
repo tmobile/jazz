@@ -211,6 +211,7 @@ node()  {
 
 								loadBucketPolicy(service, s3Bucket, true)
 								url = sh(script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
+								url = 'http://' + url.replaceAll("[\n\r]", "")
 
 							} else {
 								loadBucketPolicy(service, s3Bucket, false)

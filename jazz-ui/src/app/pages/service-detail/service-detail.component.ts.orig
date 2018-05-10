@@ -261,7 +261,12 @@ export class ServiceDetailComponent implements OnInit {
         var payload = {
                 "service_name": this.service.name,
                 "domain": this.service.domain,
+<<<<<<< HEAD
+                "id": this.service.id
+                // "version": "LATEST"
+=======
                 "id" : this.service.id
+>>>>>>> upstream/v1.4.6
             };
        this.deleteServiceStatus.emit(this.deleteServiceVal);
        this.subscription = this.http.post('/jazz/delete-serverless-service' , payload)

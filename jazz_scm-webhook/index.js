@@ -235,13 +235,16 @@ var gitlabScmContextDetails = function(eventKey, body, config){
 			resolve(result);
 		} else if (eventKey === 'push'|| eventKey === 'tag_push'){
 			var ref = body.ref.split('/');
-			result.branch = ref[2];
+			var origins = ref.splice(0,2);
+			origins.push(ref.join('/'));
+			var branch = origins[2];
+			result.branch = branch;
 			
 			if( body.before && parseInt(body.before, 10) === 0) {
 				if(eventKey === 'tag_push'){
 					result.event_name = 'CREATE_TAG';
 					resolve(result);
-				} else if(body.commits && body.total_commits_count){
+				} else if(body.commits && body.total_commits_count && branch.toLowerCase() === 'master'){
 					result.event_name = 'COMMIT_TEMPLATE';
 					result.event_type = config.EVENT_TYPE.onboarding;
 					resolve(result);

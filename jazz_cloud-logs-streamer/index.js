@@ -152,14 +152,8 @@ function transform(payload) {
             } else {
                 domainAndservice = utils.getSubInfo(payload.logGroup, globalConfig.PATTERNS.Lambda_domain_service, 1);
             }
-            var _domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
-            if (_domain) {
-                data.domain = _domain;
-                data.servicename = domainAndservice.substring(_domain.length + 1);
-            } else {
-                data.domain = "";
-                data.servicename = domainAndservice;
-            }
+
+            data.servicename = domainAndservice;
             if (data.servicename) {
                 payload.logEvents.forEach(function (logEvent) {
                     data.request_id = utils.getSubInfo(logEvent.message, globalConfig.PATTERNS.guid_regex, 0);

@@ -1,5 +1,5 @@
 {
-    "name": "platform_events",
+    "name": "jazz_events",
     "version": "0.0.1",
     "description": "platform events service",
     "main": "index.js",

@@ -223,7 +223,7 @@ node() {
 						sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+ " --profile cloud-api"
 						sh "aws apigateway create-deployment --rest-api-id ${api_id} --stage-name ${current_environment} --profile cloud-api"
 						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
-						if (current_environment == 'prod') {
+						if (current_environment == 'prod' || config['domain'] == 'jazz') {
 							endpointUrl = "https://${apiHostName}/${current_environment}/${config['domain']}/${config['service']}"
 						} else {
 							endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
@@ -234,7 +234,7 @@ node() {
 							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
 						}
 
-						updateApiDocUrl(environment_logical_id)
+						updateApiDocUrl(current_environment)
 						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
 						echo "completed deployment........."
 
@@ -495,9 +495,10 @@ def loadServerlessConfig(config) {
         sh "cp _config/serverless-python.yml ./serverless.yml"
     }
 
-		if (config['service'] == 'cloud-logs-streamer' && config['domain'] == 'jazz') {
-			addVpcDetails()
-		}
+	if ((config['service'] == 'cloud-logs-streamer' || config['service'] == 'logs') && config['domain'] == 'jazz') {
+		//addVpcDetails()
+	}
+
 
 	echoServerlessFile()
 }
@@ -529,8 +530,8 @@ def validateSwaggerFile(service, domain, apiHostName){
 	Update the Api doc host url to include env in the path
 **/
 def updateApiDocUrl(String env) {
-    sh "sed -i -- 's#basePath\": \"/#basePath\": \"/$env/#g' swagger/swagger.json"
-    sh "sed -i -- 's#basePath\": \"/$env/\"#basePath\": \"/$env\"#g' swagger/swagger.json"
+	sh "sed -i -- 's#basePath\": \"/#basePath\": \"/$env/#g' swagger/swagger.json"
+	sh "sed -i -- 's#basePath\": \"/$env/\"#basePath\": \"/$env\"#g' swagger/swagger.json"
 }
 
 /**
