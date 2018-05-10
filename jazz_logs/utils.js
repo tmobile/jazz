@@ -15,7 +15,7 @@
 // =========================================================================
 
 'use strict';
-const _ = require("lodash");
+
 
 /* http request payload */
 var request_payload = {
