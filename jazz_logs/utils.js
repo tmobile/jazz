@@ -58,12 +58,11 @@ var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value){
 	};
 	var requestedLogType =  LOG_LEVEL_CONFIG.filter(configObject => configObject.Type === value);
 	if(requestedLogType[0]) {
-		for (var count = 0; count <  LOG_LEVEL_CONFIG.length; count++) {
-			var configObject = LOG_LEVEL_CONFIG[count];
+		LOG_LEVEL_CONFIG.map(function(configObject) {
 			if (configObject.Level <= parseInt(requestedLogType[0].Level)) {
 				query.query_string.query = query.query_string.query + " OR " + configObject.Type;
 			}
-		}
+		});
 	} 
 	return query;
 };
