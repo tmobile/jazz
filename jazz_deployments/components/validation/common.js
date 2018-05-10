@@ -126,7 +126,7 @@ var validateStatusFieldValue = (deployment_data, status_values, onComplete) => {
         console.log("Inside here:");
         //checking "status" field contains the allowed values
         var statusValue = deployment_data[statusFieldKey];
-        if(!status_values.includes(statusValue)) has_invalid_status_values = true;
+        has_invalid_status_values = !_.includes(status_values, statusValue);
     }
     if (has_invalid_status_values) {
         // return inputError
