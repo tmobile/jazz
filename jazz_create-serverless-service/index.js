@@ -31,7 +31,7 @@ const crud = require("./components/crud")(); //Import the utils module.
     @author:
     @version: 1.0
 **/
-var user_id =  undefined;
+var user_id;
 var serviceId;
 var serviceDataObject;
 var handler = (event, context, cb) => {
@@ -39,11 +39,7 @@ var handler = (event, context, cb) => {
     var errorHandler = errorHandlerModule();
     var config = configObj(event);
     logger.init(event, context);
-
-    serviceId;
-    serviceDataObject;
     var service_creation_data = event.body;
-
     try {
         var isValidName = function (name) {
             return /^[A-Za-z0-9\-]+$/.test(name);
@@ -255,7 +251,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
         }
         // Add rate expression to the propertiesObject;
         if (service_creation_data.service_type === "function") {
-            if (service_creation_data.rateExpression !== undefined) {
+            if (service_creation_data.rateExpression ) {
                 var cronExpValidator = CronParser.validateCronExpression(service_creation_data.rateExpression);
                 if (cronExpValidator.result === 'valid') {
                     var rate_expression = service_creation_data.rateExpression;

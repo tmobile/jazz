@@ -264,9 +264,9 @@ describe('create-serverless-service', function () {
       let callFunction = index.handler(event, context, (err, res) => {
         reqStub.restore()
         if (err) {
-          log(err)
+          logger.info(err)
+          assert.fail()
         } else {
-
           expect(res.data).to.be.equal("Successfully created your service.");
         }
       })
