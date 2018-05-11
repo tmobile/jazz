@@ -22,9 +22,11 @@
     @version: 1.0
 **/
 
-const utils = require("../utils.js")(); //Import the utils module.
 const moment = require("moment");
 const Uuid = require("uuid/v4");
+
+const utils = require("../utils.js")(); 
+
 module.exports = (deploymentData, tableName, onComplete) => {
 
     // initialize dynamodb
