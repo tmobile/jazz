@@ -25,6 +25,7 @@ import groovy.transform.Field
 @Field def context_map = [:]
 @Field def s3Bucket
 @Field def asset_info
+@Field def asset_name
 @Field def service_config
 
 node()  {
@@ -32,7 +33,6 @@ node()  {
 	loadBuildModules(jazzBuildModuleURL)
 
 	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
-
 	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 
 	echo "Build Pack website params: " + params
@@ -46,19 +46,14 @@ node()  {
 		repo_name = params.domain + "_" + params.service_name
 	}
 
-
-	def asset_name
 	auth_token = setCredentials()
     def current_environment
 	stage('Checkout code base') {
-
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
-
 		dir(repo_name) {
 			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getRepoCloneUrl(repo_name)]]])
 		}
-
 		// @TODO: dir can be removed, needs to be refactored
 		def configObj = dir(repo_name) {
 			return LoadConfiguration()
@@ -123,25 +118,6 @@ node()  {
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)
 		}
 
-		if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
-			if (service_config['s3_bucket_name']) {
-				s3Bucket = service_config['s3_bucket_name']
-			} else {
-				s3Bucket = "${configLoader.INSTANCE_PREFIX}-${utilModule.generateBucketNameForService(service_config['domain'], service_config['service'])}"
-				def serviceMetadataJson = ["s3_bucket_name" : s3Bucket]
-                for (item in service_config.catalog_metadata) {
-					serviceMetadataJson[item.key] = item.value
-				}
-				context_map['metadata'] = serviceMetadataJson
-			}
-			asset_info = "${s3Bucket}/${environment}"
-			asset_name = "${s3Bucket}/${environment}"
-
-		} else {
-			asset_info = "${s3Bucket}/${service}/${environment}"
-			asset_name = "${s3Bucket}/${service}"
-		}
-
 		stage("Deployment to ${current_environment} Env"){
 			events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
 			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment  status update event  for ${environment} deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment), environment)
@@ -153,6 +129,7 @@ node()  {
 				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 				sh "aws configure set preview.cloudfront true"
 
+                generateAssetInfo()
 				def assetInfo = "S3 Folder - /${asset_info}"
 
 				echo "Checking if the website already exists.."
@@ -160,96 +137,391 @@ node()  {
 				if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
 					def isBucketExists = checkIfBucketExists(s3Bucket)
 					if (!isBucketExists) {
+						echo "creating a new website with name $s3Bucket"
 						sh "aws s3 mb s3://$s3Bucket --region ${configLoader.AWS.REGION}"
 					}
 				}
-
 				def isBucketwithEnvExists = checkIfBucketExists(asset_info)
-
+				def asset_event
+				def asset_event_message
 				if (isBucketwithEnvExists) {
-					events.sendStartedEvent("UPDATE_ASSET", 'update assets starts', context_map)
-					try {
-						echo "website with name $s3Bucket already exists, syncing new files"
-						sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-						sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
-							
-
-						def url = 'n/a'
-						if (create_cloudfront_url == true) {
-							loadBucketPolicy(asset_name, s3Bucket, true)
-							def cfDetails = getCloudFrontDetails(environment, service)
-							if (cfDetails) {
-								echo "id is ${cfDetails[0]}, domain: ${cfDetails[1]}"
-							}
-							updateEnableCompressConfig(cfDetails[0])
-							invalidateCloudFrontCache(cfDetails[0], service)
-							if (cfDetails[1]) {
-								url = "http://" + cfDetails[1].replaceAll("[\n\r]", "")
-							}
-						} else {
-							loadBucketPolicy(asset_name, s3Bucket, false)
-							url = "https://s3.amazonaws.com/${asset_info}/index.html"
-						}
-
-						def svc_status = "You can access your website using following link: ${url}"
-						echo svc_status
-						environmentDeploymentMetadata.setEnvironmentEndpoint(url)
-						send_status_email('COMPLETED', svc_status)
-						events.sendCompletedEvent('UPDATE_ASSET', 'update assets completed', context_map)
-						events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment), environment)
-						events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
-					} catch (ex) {
-						send_status_email('FAILED', '')
-						events.sendFailureEvent('UPDATE_ASSET', ex.getMessage(), context_map)
-						events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment), environment)
-						events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
-						error "Deployment Failed. "+ ex.getMessage()
-					}
+					asset_event = 'UPDATE_ASSET'
+					asset_event_message = 'update'
 				} else {
-					echo "creating a new website with name $service"
-					events.sendStartedEvent("CREATE_ASSET", 'create assets starts', context_map)
-					try {
-						sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-						sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
-
-						def url = 'n/a'
-						if (create_cloudfront_url == true) {
-							loadDistributionConfig()
-							generateDistributionConfig(environment)
-							sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json file://distribution_config_with_tags.json"
-
-							loadBucketPolicy(asset_name, s3Bucket, true)
-							url = sh(script: "aws  cloudfront list-distributions --output text --query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].DomainName\"", returnStdout: true)
-							url = 'http://' + url.replaceAll("[\n\r]", "")
-
-						} else {
-							loadBucketPolicy(asset_name, s3Bucket, false)
-							url = "https://s3.amazonaws.com/${asset_info}/index.html"
-						}
-
-						def svc_status = "You can access your website using following link: ${url}"
-
-						echo svc_status
-						environmentDeploymentMetadata.setEnvironmentEndpoint(url)
-						send_status_email('COMPLETED', svc_status)
-						events.sendCompletedEvent('CREATE_ASSET', 'create assets completed', context_map)
-						events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment), environment)
-						events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
-					} catch (ex) {
-						send_status_email('FAILED', '')
-						events.sendFailureEvent('CREATE_ASSET', ex.getMessage(), context_map)
-						events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment), environment)
-						events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
-						error "Deployment Failed. "+ ex.getMessage()
-					}
+					asset_event = 'CREATE_ASSET'
+					asset_event_message = 'create'
 				}
-				// reset Credentials
-				resetCredentials()
+				events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", context_map)
+				try {
+					sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+					sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+
+					def url
+					if (create_cloudfront_url == true) {
+						updateOrCreateCF()
+						def cloudFrontDistribution = getCloudFrontDetails()
+						url = 'https://' + cloudFrontDistribution['Distribution']
+
+						invalidateCloudFrontCache()
+						generateBucketPolicy(true)
+						echo "CLOUDFRONT UPDATED"
+						echo "You can access the website at $url"					
+					} else {
+						def distributionID = getDistributionId()
+						if (distributionID != null && distributionID != "") {
+							cleanupCloudFrontDistribution()
+						}
+						generateBucketPolicy(false)
+						sh "aws s3 website s3://$s3Bucket --index-document index.html --error-document error.html"
+						url = "http://${s3Bucket}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/${environment}/index.html"
+						echo "You can access the website at $url"
+					}
+					def svc_status = "You can access your website using following link: ${url}"
+					echo svc_status
+					environmentDeploymentMetadata.setEnvironmentEndpoint(url)
+					send_status_email('COMPLETED', svc_status)
+					events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", context_map)
+					events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment), environment)
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
+				} catch (ex) {
+					send_status_email('FAILED', '')
+					events.sendFailureEvent(asset_event, ex.getMessage(), context_map)
+					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment), environment)
+					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
+					error "Deployment Failed. "+ ex.getMessage()
+				}
+
 			}
+			// reset Credentials
+			resetCredentials()
 		}
 	}
 }
 
+
+def generateAssetInfo(){
+	if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+		if (service_config['s3_bucket_name']) {
+			s3Bucket = service_config['s3_bucket_name']
+		} else {
+			s3Bucket = "${configLoader.INSTANCE_PREFIX}-${utilModule.generateBucketNameForService(service_config['domain'], service_config['service'])}"
+			def serviceMetadataJson = ["s3_bucket_name" : s3Bucket]
+			for (item in service_config.catalog_metadata) {
+				serviceMetadataJson[item.key] = item.value
+			}
+			context_map['metadata'] = serviceMetadataJson
+		}
+		asset_info = "${s3Bucket}/${environment}"
+		asset_name = "${s3Bucket}-${environment}"
+	} else {
+		asset_info = "${s3Bucket}/${service_config['domain']}-${service_config['service']}/${environment}"
+		asset_name = "${s3Bucket}-${service_config['domain']}-${service_config['service']}-${environment}"
+	}
+}
+
+/**
+ * Update the CloudFront Dist for enabling compression & smooth streaming
+ * TODO
+ */
+def updateOrCreateCF() {	
+	echo "Fetching distribution list"	
+	def distributionId = getDistributionId()
+	echo "distributionId...$distributionId"
+	def service = "${service_config['domain']}-${service_config['service']}"
+	if (distributionId == null || distributionId == "") {
+		echo "No Distribution present with the name $service. So creating new distribution."
+		loadDistributionConfig()
+		echo "Generating distribution configuration."
+		generateDistributionConfig()
+		sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json  file://distribution_config_with_tags.json"		
+	} else {
+		echo "distribution exists..."		
+		updateEnableCompressConfig(distributionId)
+	}
+}
+
+def updateEnableCompressConfig(distributionId) {
+
+	try {
+
+		def cf_config = getDistributionConfig(distributionId)
+		echo "cf_config is $cf_config"		
+		def cfConfig = jsonParse(cf_config)
+		if (cfConfig == null) { error "Could not fetch distribution configuration"}
+
+		def _eTag = cfConfig.ETag
+
+		echo "_eTag is $_eTag"
+		def updateConfig = cfConfig.DistributionConfig
+		if (updateConfig == null) { error "Invalid distribution configuration returned"}
+
+		echo "updateConfig $updateConfig"
+
+		if (!updateConfig.DefaultCacheBehavior.SmoothStreaming || !updateConfig.DefaultCacheBehavior.Compress) {
+			updateConfig.DefaultCacheBehavior.SmoothStreaming = true
+			updateConfig.DefaultCacheBehavior.Compress = true
+
+			def updateConfigJson = JsonOutput.toJson(updateConfig)
+			try {
+				sh "echo '$updateConfigJson' > cf_config.json"
+				sh "cat cf_config.json"
+			} catch (ex) {
+				echo "Ignoring the lazy error0 "+ ex.getMessage()
+			}
+
+			sh "aws cloudfront update-distribution \
+					--distribution-config file://cf_config.json \
+					--id $distributionId \
+					--if-match $_eTag \
+					--output json"
+		}
+	} catch (ex) {
+		if ((ex.getMessage().indexOf("groovy.json.JsonSlurper") > -1) ||
+			(ex.getMessage().indexOf("groovy.json.internal.LazyMap") > -1)) {
+			echo "Ignoring the lazy error1 "+ ex.getMessage()
+		} else {
+			send_status_email('FAILED', '')
+			events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
+			error "Could not update the distribution. "+ ex.getMessage()
+		}
+	}
+}
+/**
+ * Get dist Id if exists
+ *
+ */
+def getDistributionId() {
+	def distributionID
+	try {
+		def outputStr = listDistribution()
+		if (outputStr) {
+			echo "### OutputStr for getting Distribution Id: $outputStr"
+			def outputObj = new JsonSlurper().parseText(outputStr)
+			if (outputObj && outputObj[0].Id) {
+				distributionID = outputObj[0].Id
+			}
+		}
+		return distributionID
+	} catch (ex) {
+		return distributionID
+	}
+}
+
+def listDistribution(){
+	def outputStr = null
+	def service = "${service_config['domain']}-${service_config['service']}"
+	try {
+		outputStr = sh(
+			script: "aws cloudfront list-distributions \
+				--output json \
+				--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\"",
+			returnStdout: true
+		)
+		return outputStr
+	} catch (ex) {
+		return outputStr
+	}
+}
+
+/**
+ * Get CloudFront Details
+ */
+def getCloudFrontDetails() {
+	def cfInfo
+	try {
+		def cloudFrontDistributionDetails = listDistribution()
+		echo "cloudFrontDistributionDetails... $cloudFrontDistributionDetails"
+		if (cloudFrontDistributionDetails) {
+			def outputObj = jsonParse(cloudFrontDistributionDetails)
+			cfInfo = outputObj[0]
+		}
+	} catch (ex) {
+		send_status_email('FAILED', '')
+		events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
+		echo "error " + ex.getMessage()
+	}
+	return cfInfo;
+}
+/**
+ * Create an S3 policy for direct S3 access through URLs or only through cloud front
+ * @param isCloudfront if true - cloudfront policy is generated or S3 folder policy is generated
+ *
+ */
+def generateBucketPolicy(isCloudfront) {
+	def policySpec = '{"Version":"2012-10-17","Id":"Policy For ","Statement":[]}'
+	def policyObj 
+	
+	try {
+		def policyJson = sh(returnStdout: true, script: "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text")
+		policyObj = jsonParse(policyJson)
+	} catch (ex) {
+		echo "Bucket policy doesn't exists yet."
+		policyObj = jsonParse(policySpec)
+		policyObj.Id += "$s3Bucket"
+	}
+	if (policyObj) {
+		updateBucketPolicy(isCloudfront, policyObj)
+	}
+}
+
+def updateBucketPolicy(isCloudfront, existingPolicyObj){
+	try {
+		def policyObj = existingPolicyObj
+		def stmtS3 = '{"Sid":"","Effect":"Allow","Principal":{"AWS":"*"},"Action":"s3:GetObject","Resource":"arn:aws:s3:::","Condition":{"IpAddress":{"aws:SourceIp":[]}}}'
+		def stmtCf = '{"Sid":"","Effect":"Allow","Principal":{"AWS":""},"Action":"s3:GetObject","Resource":"arn:aws:s3:::"}'
+		def stmtCfList = '{"Sid":"","Effect":"Allow","Principal":{"AWS":""},"Action":"s3:ListBucket","Resource":"arn:aws:s3:::"}'
+		def existingStmts = policyObj.Statement
+		def cleanupIndex = -1
+		def CFOAI = sh(
+			script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
+			--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\"",
+			returnStdout: true
+		).trim()
+
+		for (aStmt in existingStmts) {
+			cleanupIndex++
+			if ((aStmt['Sid'] == "list-$asset_name") ||
+				(aStmt['Resource'] == "arn:aws:s3:::$asset_info/*")) {
+				policyObj.Statement[cleanupIndex] = null
+			}
+		}
+		policyObj.Statement.removeAll([null])
+		def newStmtObj
+		if (isCloudfront) {
+			def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
+			newStmtObj = jsonParse(stmtCf)
+			newStmtObj.Sid = "list-$asset_name"
+			newStmtObj.Principal = principal
+			newStmtObj.Resource += "$asset_info/*"
+			policyObj.Statement << newStmtObj
+
+			//Add list policy
+			def listPolicyObject = jsonParse(stmtCfList)
+			listPolicyObject.Sid = "list-$asset_name"
+			listPolicyObject.Principal = principal
+			listPolicyObject.Resource += "$s3Bucket"
+			policyObj.Statement << listPolicyObject
+		} else {
+			def principal = "*"
+			newStmtObj = jsonParse(stmtS3)
+			newStmtObj.Sid = "list-$asset_name"
+			newStmtObj.Principal = principal
+			newStmtObj.Resource += "$asset_info/*"
+			newStmtObj.Condition.IpAddress["aws:SourceIp"] = getAllowedIPs()
+			policyObj.Statement << newStmtObj
+		}
+
+		def newPolicyJson = JsonOutput.prettyPrint(JsonOutput.toJson(policyObj))
+		echo "newPolicyJson... $newPolicyJson"
+		def putPolicyResponse = sh(returnStdout: true, script: "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${newPolicyJson}\'")
+
+	} catch (ex) {
+		echo "Bucket policy update failed. "+ ex.getMessage()
+		error "Bucket policy update failed. "+ ex.getMessage()
+	}
+
+}
+
+/**
+ * Clean up (can disable only) the active distribution
+ *
+ */
+def cleanupCloudFrontDistribution() {
+	try {
+		def distributionId
+		def _Etag
+		echo "cleaning cloud front distribution..."
+		distributionId = getDistributionId()
+		def distributionConfig = getDistributionConfig(distributionId)
+		_Etag = generateDistributionConfigForDisable(distributionConfig)
+		_Etag = disableCloudFrontDistribution(distributionId, _Etag, "disable-cf-distribution-config.json")
+	} catch (ex) {
+		if ((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
+			echo "Could not find a CloudFront distribution Id for service: ${service_config['domain']}-${service_config['service']} and environment $environment"
+		} else {
+			error "cleanupCloudFrontDistribution Failed. "+ ex.getMessage()
+		}
+	}
+}
+
+/**
+ * Disable Distribution configuration
+ * @param distributionID
+ * @param _Etag
+ * @param configFile
+ * @return
+ */
+def disableCloudFrontDistribution(distributionID, _Etag, configFile) {
+	def disableOutput
+	def eTag
+	try {
+		disableOutput = sh(
+			script: "aws cloudfront update-distribution \
+						--output json \
+						--id $distributionID \
+						--distribution-config file://"+ configFile + " \
+						--if-match $_Etag",
+			returnStdout: true
+		)
+		echo "disableOutput... $disableOutput"
+		if (disableOutput) {
+			def disableConfigObj = jsonParse(disableOutput)
+			eTag = disableConfigObj.ETag
+		}
+		echo "disable eTag...$eTag"
+		return eTag
+	} catch (ex) {
+		error "disableCloudFrontDistribution. "+ ex.getMessage()
+	}
+}
+
+/**
+ * Get and save the CloudFront distribution Config corresponding to the service
+ * @param distributionID
+ * @return
+ */
+def getDistributionConfig(distributionId) {
+	def distributionConfig
+	try {
+		distributionConfig = sh(
+			script: "aws cloudfront get-distribution-config \
+						--output json --id "+ distributionId,
+			returnStdout: true
+		)
+		return distributionConfig
+	} catch (ex) {
+		error "getDistributionConfig Failed."+ ex.getMessage()
+	}
+
+}
+
+/**
+ * Generate Disable Distribution configuration
+ * @param service
+ * @param stage
+ * @return
+ */
+def generateDistributionConfigForDisable(distributionConfig) {
+	def distributionConfigObj
+	def eTag
+	try {
+		if (distributionConfig) {
+			distributionConfigObj = parseJson(distributionConfig)
+		}
+		eTag = distributionConfigObj.ETag
+		distributionConfigObj.DistributionConfig.Enabled = false
+		def updatedCfg = JsonOutput.toJson(distributionConfigObj.DistributionConfig)
+		echo "updatedCfg... $updatedCfg"
+		try {
+			sh "echo \'$updatedCfg\' > disable-cf-distribution-config.json"
+		} catch (ex) { }
+
+		return eTag
+	} catch (ex) {
+		error "generateDistributionConfigForDisable Failed."+ ex.getMessage()
+	}
+
+}
 def LoadConfiguration() {
 	def prop = [:]
 	def result = readFile('deployment-env.yml').trim()
@@ -294,9 +566,9 @@ def resetCredentials() {
 /**
 	Generate the distribution service_config file
 */
-def generateDistributionConfig(envname) {
+def generateDistributionConfig() {
 	sh "sed -i -- 's/{service_name}/${service_config['domain']}-${service_config['service']}/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's/{env}/${envname}/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{env}/${environment}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_s3bucketname}/${s3Bucket}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's:{conf_origin_id}:${configLoader.AWS.CLOUDFRONT_ORIGIN_ID}:g' distribution_config_with_tags.json"
@@ -307,19 +579,15 @@ def generateDistributionConfig(envname) {
 	echo(distribution_config_with_tags)
 }
 
-
-
 /**
 	Validate basic configurations in the deployment yaml file and error if any keys are
 	missing.
 */
 def validateDeploymentConfigurations() {
-
 	if (service_config.containsKey("service")) {
 		if (service_config['service'] == "") {
 			error "Wrong configuration. Value for Key 'service' is missing in the configuration"
 		}
-
 	} else {
 		error "Wrong configuration. Key 'service' is missing in the configuration"
 	}
@@ -331,187 +599,28 @@ def validateDeploymentConfigurations() {
 */
 def validateTemplate() {
 	if (fileExists('app/index.html')) {
-
 		echo "index.html is present"
-	}
-	else {
+	} else {
 		error "index.html is not available."
 	}
 
 	if (fileExists('deployment-env.yml')) {
-
 		echo "deployment-env.yml is present"
-	}
-	else {
+	} else {
 		error "deployment-env.yml is not available."
 	}
-
 }
 
 def loadDistributionConfig() {
-
 	checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url:  scmModule.getCoreRepoCloneUrl("website-distribution-pack")]]])
-
 }
 
-def loadBucketPolicy(String asset_name, String s3Bucket, Boolean create_cloudfront_url){
-	def policySpec = '{"Version":"2012-10-17","Id":"Policy For ","Statement":[]}'
-	def policyObj 
-	
+def invalidateCloudFrontCache() {
 	try {
-		def policyJson = sh(returnStdout: true, script: "aws s3api get-bucket-policy --bucket $s3Bucket --query Policy --output text")
-		echo "policyJson: $policyJson"
-		policyObj = jsonParse(policyJson)
-		echo "loadBucketPolicy readFile: $policyObj"
-	} catch (ex) {
-		echo "Bucket policy doesn't exists yet."
-		policyObj = jsonParse(policySpec)
-		policyObj.Id += "$s3Bucket"
-	}
-	if (policyObj) {
-		updateS3BucketPolicy(asset_name, s3Bucket, create_cloudfront_url, policyObj)
-	}
-}
-
-def loadIPList() {
-
-	dir('_jenkins_buildpack') {
-
-		checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getCoreRepoCloneUrl("jenkins-build-pack-website")]]])
-	}
-}
-/*
-*	add restrictions so that Cloudfront endpoint can access S3
-*/
-def updateS3BucketPolicy(asset_name, s3Bucket, isCloudfront, existingPolicyObj){
-	echo "updateS3BucketPolicy"
-	try {
-		def policy_filedata
-		def new_policy
-		def stmtS3 = '{"Sid":"","Effect":"Allow","Principal":{"AWS":"*"},"Action":"s3:GetObject","Resource":"arn:aws:s3:::","Condition":{"IpAddress":{"aws:SourceIp":[]}}}'
-		def stmtCf = '{"Sid":"","Effect":"Allow","Principal":{"AWS":""},"Action":"s3:GetObject","Resource":"arn:aws:s3:::"}'
-		def stmtCfList = '{"Sid":"ListBucket","Effect":"Allow","Principal":"*","Action":"s3:ListBucket","Resource":"arn:aws:s3:::"}'
-		def cleanupIndex = -1
-
-		def bucketPolicy = existingPolicyObj
-		def statements = bucketPolicy.Statement
-
-		def CFOAI = sh(
-			script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
-			--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\"",
-			returnStdout: true
-		).trim()
-
-		for (st in statements) {
-			cleanupIndex++
-			if (st['Sid'] == "${service_config['domain']}-${service_config['service']}") {
-				echo "cleanupIndex...$cleanupIndex"
-				bucketPolicy.Statement[cleanupIndex] = null
-			} else if (st['Sid'] == "ListBucket") {
-				bucketPolicy.Statement[cleanupIndex] = null
-			}
-		}
-		bucketPolicy.Statement.removeAll([null])
-
-		//add restrictions so that Cloudfront endpoint can access S3
-		if (isCloudfront) {
-			echo "isCloudfront: $isCloudfront"
-			def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
-			new_policy = jsonParse(stmtCf)
-			new_policy.put('Sid', "${service_config['domain']}-${service_config['service']}")
-			new_policy.put('Principal', principal)
-			new_policy.put('Resource', "arn:aws:s3:::$asset_name/*")
-			bucketPolicy.Statement << new_policy
-
-			//add new list policy statement 
-			def listPolicyObject = jsonParse(stmtCfList)
-			listPolicyObject.put('Principal', principal)
-			listPolicyObject.put('Resource', "arn:aws:s3:::$s3Bucket")
-			bucketPolicy.Statement << listPolicyObject
-		} else {
-			echo "isCloudfront: $isCloudfront"
-			def principal = "*"
-			new_policy = jsonParse(stmtS3)
-			new_policy.put('Sid', "${service_config['domain']}-${service_config['service']}")
-			new_policy.put('Principal', principal)
-			new_policy.put('Resource', "arn:aws:s3:::$asset_name/*")
-			bucketPolicy.Statement << new_policy
-		}
-
-		echo "updated PolicyStatement : $statements"
-
-		policy_filedata = JsonOutput.prettyPrint(JsonOutput.toJson(bucketPolicy))
-
-		def putPolicyResponse = sh(returnStdout: true, script: "aws s3api put-bucket-policy --output json --bucket $s3Bucket --policy \'${policy_filedata}\'")
-
-	} catch (ex) {
-		echo "Bucket policy update failed. "+ ex.getMessage()
-		error "Bucket policy update failed. "+ ex.getMessage()
-	}
-}
-
-def getCloudFrontDetails(env, service) {
-	try {
-		def distributionId = sh(script: "aws  cloudfront list-distributions --output text \
-										--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${env}-static-website-origin-$service']].{j: Id, k: DomainName}\"",
-			returnStdout: true
-		).trim()
-		echo "getCloudFrontDetails are $distributionId"
-		return distributionId.split('\t')
-	}
-	catch (ex) {
-		echo "Failed to get DistributionConfig::::  " + ex.toString()
-	}
-}
-
-def updateEnableCompressConfig(distributionId) {
-
-	try {
-		def cf_config = sh(script: "aws cloudfront get-distribution-config --id $distributionId --output json",
-			returnStdout: true
-		).trim()
-
-		echo "cf_config is $cf_config"
-		def configParser = new groovy.json.JsonSlurper()
-		def cfConfig = configParser.parseText(cf_config)
-		if (cfConfig == null) { error "Could not fetch distribution configuration"}
-
-		def _eTag = cfConfig.ETag
-
-		echo "_eTag is $_eTag"
-		def updateConfig = cfConfig.DistributionConfig
-		if (updateConfig == null) { error "Invalid distribution configuration returned"}
-
-		echo "updateConfig $updateConfig"
-
-		if (!updateConfig.DefaultCacheBehavior.SmoothStreaming || !updateConfig.DefaultCacheBehavior.Compress) {
-			updateConfig.DefaultCacheBehavior.SmoothStreaming = true
-			updateConfig.DefaultCacheBehavior.Compress = true
-
-			def updateConfigJson = JsonOutput.toJson(updateConfig)
-			try {
-				sh "echo '$updateConfigJson' > cf_config.json"
-				sh "cat cf_config.json"
-			} catch (ex) {
-				echo "Ignoring the lazy error0 "+ ex.getMessage()
-			}
-
-			sh "aws cloudfront update-distribution \
-					--distribution-config file://cf_config.json \
-					--id $distributionId \
-					--if-match $_eTag \
-					--output json"
-		}
-	} catch (ex) {
-		error "Failed while updateEnableCompressConfig " + ex.toString()
-	}
-}
-
-def invalidateCloudFrontCache(distributionId, service) {
-	try {
+		def distributionId = getDistributionId()
+		def service = "${service_config['domain']}-${service_config['service']}"
 		if (distributionId) {
-
-			def callerReference = service + "_" + env.BUILD_ID
+			def callerReference = "${service}_${env.BUILD_ID}"
 			def config = "{\"Paths\":{\"Quantity\":1,\"Items\":[\"/*\"]},\"CallerReference\":\"$callerReference\"}"
 
 			def invalidateStatus = sh(
@@ -681,7 +790,6 @@ def parseJson(jsonString) {
     m.putAll(lazyMap)
     return m
 }
-
 
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
