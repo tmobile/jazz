@@ -43,21 +43,17 @@ module.exports.handler = (event, context, cb) => {
 	genericInputValidation(event)
 		.then(() => {
 			var deploymentTableName = config.DEPLOYMENT_TABLE,
-				queryParams = null,
-				deploymentId = null,
 				method = event.method,
 				query = event.query,
 				path = event.path,
 				body = event.body;
 
 			if (method === "POST" && !Object.keys(path).length) {
-				var deployment_details = body;
-				// creating new deployment details
-				validateDeploymentDetails(config, deployment_details)
-					.then(() => addNewDeploymentDetails(deployment_details, deploymentTableName))
+				logger.info("creating new deployment details");
+				processDeploymentCreation(config, body, deploymentTableName)
 					.then((res) => {
 						logger.info("Create deployment result:" + JSON.stringify(res));
-						return cb(null, responseObj(res, deployment_details));
+						return cb(null, responseObj(res, body));
 					})
 					.catch((error) => {
 						logger.error("Error while creating new deployment:" + JSON.stringify(error));
@@ -70,12 +66,8 @@ module.exports.handler = (event, context, cb) => {
 			}
 
 			if (method === "POST" && Object.keys(path).length) {
-
-				deploymentId = path.id;
-				logger.info("GET Deployment details using deployment Id :" + deploymentId);
-				// write reuest to get authtoken using login api and config provided user details and provide "baseAuthToken" value to rebuild request
-				getDeploymentDetailsById(deploymentTableName, deploymentId)
-					.then((res) => reBuildDeployment(res, config))
+				logger.info("GET Deployment details using deployment Id :" + path.id);
+				processDeploymentRebuild(config, path.id, deploymentTableName)
 					.then((res) => {
 						logger.info("Re-build result:" + JSON.stringify(res));
 						return cb(null, responseObj(res, path));
@@ -91,18 +83,8 @@ module.exports.handler = (event, context, cb) => {
 			}
 
 			if (method === 'GET' && query && utils.isEmpty(path)) {
-				queryParams = {
-					'service': query.service,
-					'domain': query.domain,
-					'environment': query.environment,
-					'status': query.status,
-					'offset': query.offset,
-					'limit': query.limit
-				};
-
-				// GET Deployment details using query params
-				validateQueryParams(config, queryParams)
-					.then(() => getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
+				logger.info("GET Deployment details using query params :" + JSON.stringify(query));
+				processDeploymentsList(config, query, deploymentTableName)
 					.then((res) => {
 						logger.info("Get list of deployments:" + JSON.stringify(res));
 						return cb(null, responseObj(res, query));
@@ -118,9 +100,8 @@ module.exports.handler = (event, context, cb) => {
 			}
 
 			if (method === 'GET' && path && utils.isEmpty(query)) {
-				deploymentId = path.id;
-				// GET Deployment details using deployment Id
-				getDeploymentDetailsById(deploymentTableName, deploymentId)
+				logger.info("GET Deployment details using deployment Id :" + path.id);
+				getDeploymentDetailsById(deploymentTableName, path.id)
 					.then((res) => {
 						logger.info("Get Success. " + JSON.stringify(res));
 						return cb(null, responseObj(res, path));
@@ -136,18 +117,11 @@ module.exports.handler = (event, context, cb) => {
 			}
 
 			if (method === "PUT" && path) {
-				var update_deployment_data = {},
-					unchangeable_fields = config.REQUIRED_PARAMS, // list of fields that cannot be updated
-					invalid_environment_fields = [];
-				deploymentId = path.id;
-
-				// Update deployments details by id
-				validateUpdateInput(config, body, deploymentTableName, deploymentId)
-					.then((data) => updateDeploymentDetails(deploymentTableName, data, deploymentId))
+				processDeploymentsUpdate(config, body, deploymentTableName, path.id)
 					.then((res) => {
 						logger.info("Updated data:" + JSON.stringify(res));
 						return cb(null, responseObj({
-							message: "Successfully Updated deployment details with id: " + deploymentId
+							message: "Successfully Updated deployment details with id: " + path.id
 						}, body));
 					})
 					.catch((error) => {
@@ -163,13 +137,11 @@ module.exports.handler = (event, context, cb) => {
 			}
 
 			if (method === "DELETE" && path) {
-				deploymentId = path.id;
-				// Deleting deployment details for id
-				getDeploymentDetailsById(deploymentTableName, deploymentId)
-					.then((res) => deleteServiceByID(res, deploymentTableName, deploymentId))
+				logger.info("Deleting deployment details for id : " + path.id);
+				processDeploymentsDeletion(deploymentTableName, path.id)
 					.then((res) => {
 						logger.info("DeleteItem succeeded");
-						var msg = "Successfully Deleted deployment details of id :" + deploymentId;
+						var msg = "Successfully Deleted deployment details of id :" + path.id;
 						return cb(null, responseObj({
 							message: msg
 						}, path));
@@ -244,6 +216,79 @@ function genericInputValidation(event) {
 		resolve();
 	});
 };
+
+function processDeploymentCreation(config, deployment_details, deploymentTableName) {
+	return new Promise((resolve, reject) => {
+		validateDeploymentDetails(config, deployment_details)
+			.then(() => addNewDeploymentDetails(deployment_details, deploymentTableName))
+			.then((res) => {
+				resolve(res);
+			})
+			.catch((error) => {
+				reject(error)
+			});
+	});
+}
+
+function processDeploymentRebuild(config, deploymentId, deploymentTableName) {
+	return new Promise((resolve, reject) => {
+		getDeploymentDetailsById(deploymentTableName, deploymentId)
+			.then((res) => reBuildDeployment(res, config))
+			.then((res) => {
+				resolve(res);
+			})
+			.catch((error) => {
+				reject(error)
+			});
+	});
+}
+
+function processDeploymentsList(config, query, deploymentTableName) {
+	return new Promise((resolve, reject) => {
+		var queryParams = {
+			'service': query.service,
+			'domain': query.domain,
+			'environment': query.environment,
+			'status': query.status,
+			'offset': query.offset,
+			'limit': query.limit
+		};
+		validateQueryParams(config, queryParams)
+			.then(() => getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
+			.then((res) => {
+				resolve(res);
+			})
+			.catch((error) => {
+				reject(error)
+			});
+	});
+}
+
+function processDeploymentsUpdate(config, body, deploymentTableName, deploymentId) {
+	return new Promise((resolve, reject) => {
+		validateUpdateInput(config, body, deploymentTableName, deploymentId)
+			.then((data) => updateDeploymentDetails(deploymentTableName, data, deploymentId))
+			.then((res) => {
+				resolve(res);
+			})
+			.catch((error) => {
+				reject(error)
+			});
+	});
+}
+
+function processDeploymentsDeletion(deploymentTableName, deploymentId) {
+	return new Promise((resolve, reject) => {
+		getDeploymentDetailsById(deploymentTableName, deploymentId)
+			.then((res) => deleteServiceByID(res, deploymentTableName, deploymentId))
+			.then((res) => {
+				resolve(res);
+			})
+			.catch((error) => {
+				reject(error)
+			});
+	});
+}
 
 function validateDeploymentDetails(config, deployment_details) {
 	logger.debug("validateDeploymentDetails for creating new deployment");
@@ -449,7 +494,7 @@ function buildNowRequest(serviceDetails, config, refDeployment) {
 		var data = serviceDetails.data,
 			service_name = data.service,
 			domain = data.domain,
-			scm_branch = refDeployment.scm_branch,
+			scm_branch = encodeURI(refDeployment.scm_branch),
 			build_url = config.JOB_BUILD_URL,
 			buildQuery = "/buildWithParameters?service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch,
 			base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64"),

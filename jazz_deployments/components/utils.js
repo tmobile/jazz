@@ -72,12 +72,11 @@ var formatData = (data, format) => {
         } else if (type === "SS") {
             return parsed_value;
         } else if (type === "L") {
-            var parsed_value_list = [];
             try {
-                for (var i = 0; i < parsed_value.length; i++) {
-                    parsed_value_list.push(parseValue(parsed_value[i]));
-                }
-            } catch (e) {}
+                var parsed_value_list = parsed_value.map((items) => parsed_value[items]);
+            } catch (e) {
+                console.log(e);
+            }
             return parsed_value_list;
         } else {
             // probably should be error
@@ -107,9 +106,9 @@ var getSchemaKeyName = (key) => {
         return null;
     }
     var mapKeyName = {
-        "SERVICE_NAME" : "service",
-        "DEPLOYMENT_STATUS" : "status",
-        "DOMAIN_NAME" : "domain"
+        "SERVICE_NAME": "service",
+        "DEPLOYMENT_STATUS": "status",
+        "DOMAIN_NAME": "domain"
     }
     var keyName = mapKeyName[key] ? mapKeyName[key] : key.toLowerCase();
     return keyName
@@ -134,15 +133,15 @@ var ConvertKeysToLowerCase = (obj) => {
 // function to convert key name in schema to database column name
 var getDeploymentDatabaseKeyName = (key) => {
     // Some of the keys in schema may be reserved keywords, so it may need some manipulation
-    
+
     if (!key) {
         return null;
     } else {
         var mapKeyName = {
-            "service" : "SERVICE_NAME",
-            "status" : "DEPLOYMENT_STATUS",
-            "domain" : "DOMAIN_NAME",
-            "environment" : "ENVIRONMENT_LOGICAL_ID"
+            "service": "SERVICE_NAME",
+            "status": "DEPLOYMENT_STATUS",
+            "domain": "DOMAIN_NAME",
+            "environment": "ENVIRONMENT_LOGICAL_ID"
         }
         var returnval = mapKeyName[key] ? mapKeyName[key] : key.toUpperCase();
         return returnval;
@@ -199,7 +198,7 @@ var filterUtil = (data, filter_value) => {
     return newArr;
 };
 
-var paginateUtil = (data, limit, offset) =>{
+var paginateUtil = (data, limit, offset) => {
     var newArr = [];
     if (offset > data.length || offset === data.length || !limit) {
         data = [];

@@ -25,7 +25,7 @@
 const moment = require("moment");
 const Uuid = require("uuid/v4");
 
-const utils = require("../utils.js")(); 
+const utils = require("../utils.js")();
 
 module.exports = (deploymentData, tableName, onComplete) => {
 
