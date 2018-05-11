@@ -83,7 +83,7 @@ function validateStatusFieldValue(deployment_data, status_field_list) {
 };
 
 function validateRemoveEmptyValues(deployment_data) {
-    // check for empty values before updating environments table
+    // check for empty values before updating Deployments table
     logger.debug("Inside validateRemoveEmptyValues: ");
     return new Promise((resolve, reject) => {
         validateUtils.validateRemoveEmptyValues(deployment_data, (error, data) => {

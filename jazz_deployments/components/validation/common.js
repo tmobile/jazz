@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-    Common Validation functions for Environments-Catalog
+    Common Validation functions for Deployments-Catalog
     @module: common.js
     @description: Defines common validate functions.
     @author:

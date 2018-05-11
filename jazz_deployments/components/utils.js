@@ -15,9 +15,9 @@
 // =========================================================================
 
 /**
-    Helper functions for Environment
+    Helper functions for Deployments
     @module: utils.js
-    @description: Defines functions like format the output as per Environment schema etc.
+    @description: Defines functions like format the output as per Deployments schema etc.
     @author:
     @version: 1.0
 **/
