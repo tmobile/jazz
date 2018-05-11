@@ -27,7 +27,7 @@ export class EnvironmentDetailComponent implements OnInit {
 @ViewChild('envoverview') envoverview:EnvOverviewSectionComponent;
 @ViewChild('envdeployments') envdeployments:EnvDeploymentsSectionComponent;
 
-
+isFunction:boolean = false;
 breadcrumbs = [];
 api_doc_name:string='';
   selectedTab = 0; 
@@ -128,6 +128,7 @@ api_doc_name:string='';
 
     if (service !== undefined && service !== "") {
       this.service = this.processService(service);
+      if(this.service.serviceType == "function") this.isFunction = true;
       if( this.friendly_name != undefined ){
       }
       this.breadcrumbs = [{
@@ -158,11 +159,13 @@ api_doc_name:string='';
       let cachedData = this.cache.get(id);
 
       if (cachedData) {
-          this.onDataFetched(cachedData)
+          this.onDataFetched(cachedData);
           if(this.service.serviceType === "website")
           {
               this.tabData = ['overview','deployments','code quality','assets'];
           }
+          else if(this.service.serviceType == "function")
+            this.isFunction=true;
       } else{
          if ( this.subscription ) {
             this.subscription.unsubscribe();
@@ -173,17 +176,16 @@ api_doc_name:string='';
                     this.service.regions=env_internal.urls.regions;
                   this.service=response.data.data;
                   if(environment.envName=='oss')this.service=response.data;
-
-                  
                   if(this.service.type === "website")
                   {
                       this.tabData = ['overview','deployments','code quality','assets'];
                   }
+                  else if(this.service.type == "function")
+                      this.isFunction=true;
+
                   this.cache.set(id, this.service);
-                  this.onDataFetched(this.service);
-                  
-                  this.envoverview.notify(this.service);
-                  
+                  this.onDataFetched(this.service);                  
+                  this.envoverview.notify(this.service);                  
               },
               err => {
                   this.isLoadingService = false;
