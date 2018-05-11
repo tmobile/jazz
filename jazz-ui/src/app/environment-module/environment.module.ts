@@ -18,6 +18,8 @@ import { SharedModule } from '../shared-module/shared.module';
 import { RouterModule } from '@angular/router';
 import { routes } from './environment.route';
 import { AdvancedFilterService } from '../advanced-filter.service';
+import {EnvTryServiceSidebarComponent} from '../secondary-components/env-try-service-sidebar/env-try-service-sidebar.component';
+
 @NgModule({
   imports: [
     CommonModule,
@@ -38,6 +40,7 @@ import { AdvancedFilterService } from '../advanced-filter.service';
     EnvCodequalitySectionComponent,
     EnvLogsSectionComponent,
     EnvOverviewSectionComponent,
+    EnvTryServiceSidebarComponent
   ],
   providers: [AdvancedFilterService],
 })
