@@ -192,6 +192,17 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+    
+			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/dev-config.json"
+			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/stg-config.json"
+			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/prod-config.json"
+
+			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/dev-config.json"
+			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/stg-config.json"
+			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/prod-config.json"
+			}
 		}
 
 		if (service_name.trim() == "jazz_services") {
