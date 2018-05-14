@@ -13,6 +13,7 @@
     "json-query": "*",
     "moment": "*",
     "request": "*",
+    "lodash": "*",
     "request-promise-native": "^1.0.5"
   },
   "devDependencies": {
