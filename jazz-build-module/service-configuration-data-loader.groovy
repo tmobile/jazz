@@ -126,11 +126,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-			
-			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./config/prod-config.json"
-			
+						
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
@@ -189,16 +185,12 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-		  
-			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-		  
-			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
-			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 
