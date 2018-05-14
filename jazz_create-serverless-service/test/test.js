@@ -392,9 +392,9 @@ describe('create-serverless-service', function () {
         }
         assert.isTrue(bool);
       })
-      
+      reqStub.restore();
     })
-    reqStub.restore();
+
   })
   describe("getServiceData", () => {
     beforeEach(function () {
