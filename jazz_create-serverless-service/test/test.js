@@ -263,12 +263,7 @@ describe('create-serverless-service', function () {
       //trigger the spy wrapping the logger by calling handler() with valid params
       let callFunction = index.handler(event, context, (err, res) => {
         reqStub.restore()
-        if (err) {
-          logger.info(err)
-          assert.fail()
-        } else {
-          expect(res.data).to.be.equal("Successfully created your service.");
-        }
+          expect(res.data).to.be.equal("Successfully created your service."); 
       })
     });
     it("should Return the Error message if jenkinks job failed ", () => {
@@ -303,9 +298,9 @@ describe('create-serverless-service', function () {
       };
       event.stage = "dev";
       let config = configObj(event);
-      // wrapping requests 
+// wrapping requests 
       reqStub = sinon.stub(request, "Request", (obj) => {
-        // Matching response Object to the corresponding Request call
+ // Matching response Object to the corresponding Request call
         if (obj.uri === (config.SERVICE_API_URL + config.TOKEN_URL)) {
           return obj.callback(null, responseObject_getToken, responseObject_getToken.body);
         } else if (obj.uri === "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services") {
@@ -319,7 +314,6 @@ describe('create-serverless-service', function () {
         } else if (obj.uri = 'https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services/ghd93-3240-2343') {
           obj.callback(null, responseObject_update, responseObject_update.body);
         }
-        //return obj.callback(null, responseObject, responseObject.body);
       });
       let callFunction = index.handler(event, context, (err, res) => {
         err = JSON.parse(err);
@@ -398,9 +392,9 @@ describe('create-serverless-service', function () {
         }
         assert.isTrue(bool);
       })
-      reqStub.restore();
+      
     })
-
+    reqStub.restore();
   })
   describe("getServiceData", () => {
     beforeEach(function () {
@@ -465,7 +459,7 @@ describe('create-serverless-service', function () {
           }
         }
         assert.isTrue(bool);
-      }).catch()
+      })
     });
     it("should return input object with METADATA values for valid input parameters for service type function (event_source s3)", () => {
       let authToken = "temp-auth-token";
@@ -482,7 +476,7 @@ describe('create-serverless-service', function () {
           }
         }
         assert.isTrue(bool);
-      }).catch()
+      })
     });
     it("should return input object with METADATA values for valid input parameters for service type function (event source dynamoDB)", () => {
       let authToken = "temp-auth-token";
@@ -499,7 +493,7 @@ describe('create-serverless-service', function () {
           }
         }
         assert.isTrue(bool);
-      }).catch()
+      })
     });
     it("should return input object with METADATA values for valid input parameters for service type function (event source stream", () => {
       let authToken = "temp-auth-token";
@@ -516,7 +510,7 @@ describe('create-serverless-service', function () {
           }
         }
         assert.isTrue(bool);
-      }).catch()
+      })
     })
 
   })
@@ -569,8 +563,6 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      }).catch(() => {
-        assert.isTrue(false);
       })
       reqStub.restore();
     })
@@ -689,8 +681,6 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      }).catch((err) => {
-        assert.fail();
       })
     })
 
