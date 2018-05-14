@@ -199,7 +199,7 @@ def loadServiceConfigurationData() {
 			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/stg-config.json"
 			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/prod-config.json"
 
-				sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/dev-config.json"
+			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/dev-config.json"
 			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/stg-config.json"
 			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/prod-config.json"
 			}
