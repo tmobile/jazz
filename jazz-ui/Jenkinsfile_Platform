@@ -74,16 +74,35 @@ node ()  {
     dir('jazz-ui') {
       checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz-ui")]]])
 	    def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
+      if(config_loader.UI_CONFIG.service_tabs.overview)
+      
+            sh "sed -i 's/{overview}/overview/g' ./src/environments/environment.oss.ts";
+      else
+           sh "sed -i 's/{overview}//g' ./src/environments/environment.oss.ts";
+
+      if(config_loader.UI_CONFIG.service_tabs.logs)
+            sh "sed -i 's/{logs}/logs/g' ./src/environments/environment.oss.ts";
+      else
+           sh "sed -i 's/{logs}//g' ./src/environments/environment.oss.ts";
+
+      if(config_loader.UI_CONFIG.environment_tabs.overview)
+            sh "sed -i 's/{env_overview}/overview/g' ./src/environments/environment.oss.ts";
+      else
+           sh "sed -i 's/{env_overview}//g' ./src/environments/environment.oss.ts";
+
+      if(config_loader.UI_CONFIG.environment_tabs.deployments)
+            sh "sed -i 's/{deployments}/deployments/g' ./src/environments/environment.oss.ts";
+      else
+           sh "sed -i 's/{deployments}//g' ./src/environments/environment.oss.ts";
      
 
       sh "sed -i 's/{api_doc_name}/${config_loader.AWS.S3.API_DOC}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{multi_env}/${config_loader.UI_CONFIG.feature.multi_env}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{service_tabs}/${config_loader.UI_CONFIG.service_tabs}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{environment_tabs}/${config_loader.UI_CONFIG.environment_tabs}/g' ./src/environments/environment.oss.ts"
-
+      
       def envFile = readFile('./src/environments/environment.oss.ts');
+      echo "displaying env file :"
       echo "$envFile";
     }
   }
