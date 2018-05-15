@@ -93,11 +93,10 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-          "create_cloudfront_url": false //, //?
-          //"enableEventSchedule" : false
+          "create_cloudfront_url": false
         }
       };
-      //   authStub = sinon.stub(index, 'getToken').returns(Promise.resolve("mock-auth-token"));
+      
       context = awsContext();
       callback = (err, responseObj) => {
         if (err) {
@@ -124,6 +123,7 @@ describe('create-serverless-service', function () {
      * @params {object, function} default aws context and callback function as assigned above respectively
      * @returns index.handler() should return an InternalServerError notification
      */
+
     it("should inform user of error if given an event with no body property", function () {
       let errMessage = "Service inputs are not defined";
       let errType = "BadRequest";
@@ -138,6 +138,7 @@ describe('create-serverless-service', function () {
      * @params {object, function} default aws context and callback function as assigned above respectively
      * @returns index.handler() should return an InternalServerError notification
      */
+
     it("should inform user of error if given an event with no body.service_type", function () {
       let errMessage = "'service_type' is not defined";
       let errType = "BadRequest";
@@ -152,6 +153,7 @@ describe('create-serverless-service', function () {
      * @params {object, function} default aws context and callback function as assigned above respectively
      * @returns index.handler() should return a descriptive InternalServerError notification
      */
+
     it("should inform user of error if given an event with an invalid body.service_name", function () {
       //no characters
       let invalidName1 = "";
@@ -176,6 +178,7 @@ describe('create-serverless-service', function () {
      * @params {object, function} default aws context and callback function as assigned above respectively
      * @returns index.handler() should return an InternalServerError notification
      */
+
     it("should inform of error if given no event.body.runtime for a service other than website", () => {
       let runtime = "";
       let errType = "BadRequest";
@@ -192,6 +195,7 @@ describe('create-serverless-service', function () {
      * @params {object, function} default aws context and callback function as assigned above respectively
      * @returns index.handler() should return an InternalServerError notification
      */
+
     it("should inform user of error if invalid domain value", function () {
       //invalid if containing a non-alphanumeric character
       let invalidName2 = "f!utterShy";
@@ -207,6 +211,7 @@ describe('create-serverless-service', function () {
      * @params {object, function} default aws context and callback function as assigned above respectively
      * @returns index.handler() should return an UnAuthorized error notification
      */
+
     it("should state the user isn't authorized if no principalId is given", function () {
       let errMessage = "User is not authorized to access this service";
       let errType = "Forbidden";
@@ -219,6 +224,7 @@ describe('create-serverless-service', function () {
      * @params {object, object, function} default event, aws context, callback
      * @returns index.handler() should attempt an http POST if given valid paramters
      */
+
     it("should give success message if service onboarding in Jenkins setup attempt is succesfull", () => {
       let responseObject_getToken = {
         statusCode: 200,
@@ -257,7 +263,6 @@ describe('create-serverless-service', function () {
 
           return obj.callback(null, responseObject_serviceOnboarding, responseObject_serviceOnboarding.body);
         }
-        //return obj.callback(null, responseObject, responseObject.body);
       });
 
       //trigger the spy wrapping the logger by calling handler() with valid params
@@ -266,6 +271,7 @@ describe('create-serverless-service', function () {
           expect(res.data).to.be.equal("Successfully created your service."); 
       })
     });
+
     it("should Return the Error message if jenkinks job failed ", () => {
       let bool = false;
       let responseObject_getToken = {
@@ -342,12 +348,12 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-          "create_cloudfront_url": false //, //?
-          //"enableEventSchedule" : false
+          "create_cloudfront_url": false
         }
       };
       config = configObj(event);
     })
+
     it("Should Return authToken when called with valid paramenters", () => {
       let bool = false;
       let responseObject = {
@@ -369,6 +375,7 @@ describe('create-serverless-service', function () {
       })
       reqStub.restore();
     })
+
     it("Should Return error message  when called with invalid paramenters", () => {
       let bool = false;
       let errMessage = "Could not get authentication token for updating service catalog.";
@@ -413,8 +420,7 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-          "create_cloudfront_url": false //, //?
-          //"enableEventSchedule" : false
+          "create_cloudfront_url": false 
         }
       };
       service_creation_data = event.body;
@@ -427,6 +433,7 @@ describe('create-serverless-service', function () {
         }
       };
     });
+
     it("should should return error when passed an invalid rateExpression", () => {
       let cronValues = [null, "", "P!nk!e_P!e"];
       let authToken = "temp-auth-token";
@@ -434,7 +441,7 @@ describe('create-serverless-service', function () {
       let bool = false;
       for (let cron in cronValues) {
         service_creation_data.rateExpression = cron
-        index.getServiceData(service_creation_data, authToken, config).then().catch((errorMsg) => {
+        index.getServiceData(service_creation_data, authToken, config).catch((errorMsg) => {
 
           if (errorMsg.result === "invalid") {
             bool = true;
@@ -444,6 +451,7 @@ describe('create-serverless-service', function () {
       }
 
     });
+
     it("should return input object with METADATA values for valid input parameters for service type function (event_source e2c)", () => {
       let authToken = "temp-auth-token";
       let bool = false;
@@ -461,11 +469,11 @@ describe('create-serverless-service', function () {
         assert.isTrue(bool);
       })
     });
+
     it("should return input object with METADATA values for valid input parameters for service type function (event_source s3)", () => {
       let authToken = "temp-auth-token";
       let bool = false;
       service_creation_data["enableEventSchedule"] = true;
-      //service_creation_data.event_source_ec2 = "temp-url";
       service_creation_data.event_action_s3 = "temp-url";
       service_creation_data.event_source_s3 = "sample-test-data"
       let config = configObj(event);
@@ -478,6 +486,7 @@ describe('create-serverless-service', function () {
         assert.isTrue(bool);
       })
     });
+
     it("should return input object with METADATA values for valid input parameters for service type function (event source dynamoDB)", () => {
       let authToken = "temp-auth-token";
       let bool = false;
@@ -495,6 +504,7 @@ describe('create-serverless-service', function () {
         assert.isTrue(bool);
       })
     });
+
     it("should return input object with METADATA values for valid input parameters for service type function (event source stream", () => {
       let authToken = "temp-auth-token";
       let bool = false;
@@ -537,6 +547,7 @@ describe('create-serverless-service', function () {
         }
       }
     })
+
     it("should send an http POST given valid input parameters ", () => {
       stub = sinon.stub(request, "Request", spy);
       //trigger the spy wrapping the request by calling handler() with valid params
@@ -544,6 +555,7 @@ describe('create-serverless-service', function () {
       stub.restore();
       assert.isTrue(spy.called);
     })
+
     it("should Return service id of Created Service in case of successfull service creation", () => {
       let bool = false;
       let responseObject = {
@@ -566,6 +578,7 @@ describe('create-serverless-service', function () {
       })
       reqStub.restore();
     })
+
     it("Should Return error when service creation failed", () => {
       let bool = false;
       let responseObject = {
@@ -608,14 +621,15 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-          "create_cloudfront_url": false //, //?
-          //"enableEventSchedule" : false
+          "create_cloudfront_url": false
+         
         }
       };
       service_creation_data =  event.body;
       config = configObj(event);
       service_id = "ghd93-3240-2343";
     })
+
     it("should return error message if request to start jenkins job failed ", () => {
       let bool = false;
       let responseObject = {
@@ -641,6 +655,7 @@ describe('create-serverless-service', function () {
       })
       reqStub.restore();
     })
+
     it("should return error message when jenkins job has failed", () => {
       let bool = false;
       let errMessage = "Failed to kick off service onboarding job."
@@ -663,6 +678,7 @@ describe('create-serverless-service', function () {
       })
       reqStub.restore();
     })
+
     it("should return success message when jenkins job has executed succesfully", () => {
       let bool = false;
       let Message = "Successfully created your service.";
