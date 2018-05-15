@@ -20,11 +20,13 @@
   @version: 1.0
 **/
 
+var _get = require('./get.js');
 var _update = require('./update.js');
 
 
 module.exports = () => {
     return {
+        get: _get,
         update: _update
     }
 }
