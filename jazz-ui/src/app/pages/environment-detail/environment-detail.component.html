@@ -48,12 +48,9 @@
                 <div class="tab-component" [class.oss]='isOSS'>
                     <tabs [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
 
-                    <button (click)="setSidebar('overview')">VIWEW ALL</button>
-                    <button (click)="setSidebar('try-service')">TRY IT ONOW</button>
                     <section class="page-content" *ngIf="selectedTab == 0">
                         <env-overview-section #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service"></env-overview-section>
                     </section>
-
 
                     <section class="page-content" *ngIf="selectedTab == 1">
                         <env-deployments-section #envdeployments [service]="service"></env-deployments-section>
@@ -79,6 +76,9 @@
                 </sidebar>
                 <sidebar [show]="sidebar === 'try-service'" (onClose)="setSidebar()">
                   <env-try-service-sidebar [service]="service" (onClose)="setSidebar()"></env-try-service-sidebar>
+                </sidebar>
+                <sidebar [show]="sidebar==='api'">
+                    <button (click)="openRedoc()">OPEN</button>
                 </sidebar>
             </section>
             <footer></footer>

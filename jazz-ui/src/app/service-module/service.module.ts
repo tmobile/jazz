@@ -1,4 +1,4 @@
-import {NgModule} from '@angular/core';
+import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
 import {RouterModule} from '@angular/router';
 import {environment} from '../../environments/environment';
 import {routes} from './service.route';
@@ -57,8 +57,7 @@ for(let i in specificComponents){
     ...declarationsArray,
     // AdvFilters,
     
-  ],
-  
+  ]
 })
 export class ServiceModule {
   constructor(){

@@ -93,6 +93,9 @@ export class EnvironmentDetailComponent implements OnInit {
     }
   }
 
+  openRedoc(url) {
+  }
+
   frndload(event) {
     if (event != undefined) {
       this.friendly_name = event;
@@ -196,14 +199,14 @@ export class EnvironmentDetailComponent implements OnInit {
     switch (type) {
       case 'api':
         if (environment.envName == 'oss') {
-          var SwaggerUrl = 'http://editor.swagger.io/?url=' + this.api_doc_name + '/' + this.service.domain + '/' + this.service.name + '/' + this.envSelected + '/swagger.json'
-          window.open(SwaggerUrl);
+          let swaggerUrl = this.api_doc_name + '/' + this.service.domain + '/' + this.service.name + '/' + this.envSelected + '/swagger.json';
+          let location = 'assets/redoc/index.html?url=' + swaggerUrl;
+          window.open(location);
         }
         else {
           window.open('/test-api?service=' + this.service.name + '&domain=' + this.service.domain + '&env=' + this.envSelected);
 
         }
-
         break;
 
       case 'website' :

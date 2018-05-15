@@ -1,4 +1,5 @@
 @import './../../../main-styles';
+
 $border-grey: #8B8B8B;
 $primary-pink: #fc2f98;
 
@@ -61,6 +62,7 @@ section {
 }
 
 textarea {
+  resize: vertical;
   flex-grow: 1;
   outline: none;
   border: none;
@@ -115,6 +117,12 @@ button {
       border: 1px solid $primary-pink;
     }
   }
+  &.btn-xs {
+    font-size: 10px;
+    padding: .2rem .3rem;
+    height: 1.5rem;
+    line-height: inherit;
+  }
 }
 
 .warning {
@@ -123,9 +131,24 @@ button {
   font-size: 10px;
   color: #ed008c;
 }
+
 .try-service-cb {
   display: flex;
   align-items: center;
   justify-content: flex-start;
+}
+
+.loading-overlay {
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: rgba(255, 255, 255, .8);
+  transition: background-color 200ms;
 }
 

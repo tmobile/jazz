@@ -26,15 +26,17 @@
         "scripts": [
             "../node_modules/jquery/dist/jquery.min.js",
             "../node_modules/bootstrap/dist/js/bootstrap.min.js",
-            
-            "../node_modules/ion-rangeslider/js/ion.rangeSlider.min.js"
+
+            "../node_modules/ion-rangeslider/js/ion.rangeSlider.min.js",
+            "../node_modules/kotlin/kotlin.js/",
+            "../node_modules/really-relaxed-json/src/output-min.js"
         ],
         "environmentSource": "environments/environment.ts",
         "environments": {
             "dev": "environments/environment.ts",
             "internal": "environments/environment.internal.ts",
             "oss": "environments/environment.oss.ts"
-           
+
         }
     }],
     "e2e": {
