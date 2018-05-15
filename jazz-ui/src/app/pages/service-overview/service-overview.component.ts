@@ -632,7 +632,7 @@ export class ServiceOverviewComponent implements OnInit {
                     continue;
                 }
                 else {
-                    if(this.environ_arr[i].status !== 'aborted'){
+                    if(this.environ_arr[i].status !== 'archived'){
                         this.Environments[j]=this.environ_arr[i];
                         this.envList[k]=this.environ_arr[i].logical_id;
                         if(this.environ_arr[i].friendly_name != undefined){
