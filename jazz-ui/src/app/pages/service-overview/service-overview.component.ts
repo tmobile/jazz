@@ -648,19 +648,18 @@ export class ServiceOverviewComponent implements OnInit {
                 env : this.envList,
                 friendly_name : this.friendlist
             }
-
-            if(this.Environments.length==0){
-                this.noSubEnv=true;
-            }
-            if(this.prodEnv.logical_id==undefined){
-                this.noProd=true;
-            }
-            if(this.stgEnv.logical_id==undefined){
-                this.noStg=true;
-            }
-        
-            this.cache.set('envList',this.list);
         }
+        if(this.Environments.length==0){
+            this.noSubEnv=true;
+        }
+        if(this.prodEnv.logical_id==undefined){
+            this.noProd=true;
+        }
+        if(this.stgEnv.logical_id==undefined){
+            this.noStg=true;
+        }
+    
+        this.cache.set('envList',this.list);
     }
     
     sortEnvArr(){
