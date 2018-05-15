@@ -620,7 +620,7 @@ export class ServiceOverviewComponent implements OnInit {
         var k=2;
         this.sortEnvArr();
 
-        if(this.environ_arr!=undefined)
+        if(this.environ_arr!=undefined){
             for(var i=0;i<this.environ_arr.length;i++){
                 this.environ_arr[i].status=this.environ_arr[i].status.replace("_"," ");
                 if(this.environ_arr[i].logical_id == 'prd' || this.environ_arr[i].logical_id == 'prod'){
@@ -631,26 +631,24 @@ export class ServiceOverviewComponent implements OnInit {
                     this.stgEnv=this.environ_arr[i];
                     continue;
                 }
-                else
-                {    this.Environments[j]=this.environ_arr[i];   
-                    this.envList[k]=this.environ_arr[i].logical_id; 
-                    if(this.environ_arr[i].friendly_name != undefined){
-                        this.friendlist[k++]=this.environ_arr[i].friendly_name;   
-                    }else{
-                        this.friendlist[k++]=this.environ_arr[i].logical_id;
+                else {
+                    if(this.environ_arr[i].status !== 'aborted'){
+                        this.Environments[j]=this.environ_arr[i];
+                        this.envList[k]=this.environ_arr[i].logical_id;
+                        if(this.environ_arr[i].friendly_name != undefined){
+                            this.friendlist[k++]=this.environ_arr[i].friendly_name;
+                        }else{
+                            this.friendlist[k++]=this.environ_arr[i].logical_id;
+                        }
+                        j++;
                     }
-                            
-                    j++;
-                    
                 }
-                
-
             }
             this.list = {
                 env : this.envList,
                 friendly_name : this.friendlist
             }
-            
+        }
 
         if(this.Environments.length==0){
             this.noSubEnv=true;
