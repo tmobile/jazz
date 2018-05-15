@@ -373,6 +373,7 @@ describe('create-serverless-service', function () {
         }
         assert.isTrue(bool);
       })
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     })
 
@@ -399,6 +400,7 @@ describe('create-serverless-service', function () {
         }
         assert.isTrue(bool);
       })
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     })
 
@@ -576,6 +578,7 @@ describe('create-serverless-service', function () {
         }
         assert.isTrue(bool);
       })
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     })
 
@@ -599,6 +602,7 @@ describe('create-serverless-service', function () {
         }
         assert.isTrue(bool);
       })
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
 
@@ -653,6 +657,7 @@ describe('create-serverless-service', function () {
         }
         assert.isTrue(bool);
       })
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     })
 
@@ -676,6 +681,7 @@ describe('create-serverless-service', function () {
         }
         assert.isTrue(bool);
       })
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     })
 
@@ -698,6 +704,8 @@ describe('create-serverless-service', function () {
         }
         assert.isTrue(bool);
       })
+      sinon.assert.calledOnce(reqStub);
+      reqStub.restore()
     })
 
   })
