@@ -1,2 +1,0 @@
-Amazon API Gateway Swagger Importer
-Copyright 2013-2015 Amazon.com, Inc. or its affiliates. All Rights Reserved.
