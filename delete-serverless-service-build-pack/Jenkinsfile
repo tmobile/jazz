@@ -25,6 +25,7 @@ import groovy.transform.Field
 @Field def auth_token = ''
 @Field def service_config
 @Field def context_map = [:]
+@Field def is_service_deletion = true;
 
 node {
 	echo "Starting delete service job with params : $params"
@@ -42,7 +43,6 @@ node {
 	def flowType	
 	def service_id = params.db_service_id
 	def environmentIds = []
-	def is_service_deletion = true;
 
 	if (params.version) {
 		version = params.version.trim()
@@ -153,6 +153,7 @@ node {
 						} catch (ex) {
 							echo "Environment Deletion failed for envId: $_envId . Error Details:" + ex
 							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+							error "Environment Deletion failed for envId: $_envId . Error Details:" + ex
 						}
 					}
 				}
@@ -176,6 +177,7 @@ node {
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
 							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+							error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
 						}
 					}
 				}
@@ -203,6 +205,7 @@ node {
 						} catch (ex) {
 							echo "error occured when Deleting  Environment: " + ex
 							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+							error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
 						}
 					}
 
@@ -218,6 +221,20 @@ node {
 		}
 	}
 
+}
+
+
+def handleFailureEvent(ex){
+	if (is_service_deletion) {
+		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
+		send_status_email("FAILED")
+		error "deleteProject failed. "+ ex.getMessage()
+	} else {
+		echo "error occured when Deleting  Environment: " + ex
+		send_status_email("FAILED")
+		events.sendFailureEvent('DELETE_ENVIRONMENT', ex.getMessage(), null, _envId)
+		error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
+	}
 }
 
 /**
@@ -245,9 +262,7 @@ def unDeployService(stage) {
 
 			echo "Service undeployed"
 		} catch (ex) {
-			events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-			send_status_email("FAILED")
-			error ex.getMessage()
+			handleFailureEvent(ex)
 		}
 	}
 }
@@ -268,9 +283,7 @@ def checkoutSCM(repo_name) {
 					[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repo_url]
 				]])
 		} catch (ex) {
-			send_status_email("FAILED")
-			events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-			error "checkoutSCM Failed. "+ ex.getMessage()
+			handleFailureEvent(ex)
 		}
 	}
 }
@@ -289,9 +302,7 @@ def updateServiceNameConfig() {
 		sh "sed -i -- 's/name: \${self:service}/name: ${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}/g' serverless.yml"
 		writeServerlessFile()
 	} catch (ex) {
-		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-		send_status_email("FAILED")
-		error "updateServiceNameConfig Failed. "+ ex.getMessage()
+		handleFailureEvent(ex)
 	}
 }
 
@@ -341,9 +352,7 @@ def updateSwaggerConfig() {
 			sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 		}
 	} catch (ex) {
-		send_status_email("FAILED")
-		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-		error "updateServiceNameConfig Failed. "+ ex.getMessage()
+		handleFailureEvent(ex)
 	}
 }
 
@@ -405,26 +414,25 @@ def cleanUpApiGatewayResources(stage, path) {
 					}
 				}
 			} catch (ex) {
-				send_status_email("FAILED")
-				events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-				error "findResourceId Failed"+ ex.getMessage()
+				handleFailureEvent(ex)
 			}
 			if (resource_id != null && resource_id != "") {
 				def status_json = sh(
 					script: "aws apigateway delete-resource --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --resource-id ${resource_id} --output json",
 					returnStdout: true
 				).trim()
-				def deployment_status_json = sh(
-					script: "aws apigateway create-deployment --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --stage-name ${current_environment} --description 'API deployment after resource clean up' --output json",
-					returnStdout: true
-				).trim()
+				try {
+					def deployment_status_json = sh(
+						script: "aws apigateway create-deployment --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --stage-name ${current_environment} --description 'API deployment after resource clean up' --output json",
+						returnStdout: true
+					).trim()
+				} catch (ex) {
+				}
 			} else {
 				echo "Resource Id does not exists in API gateway."
 			}
 		} catch (ex) {
-			send_status_email("FAILED")
-			events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-			error ex.getMessage()
+			handleFailureEvent(ex)
 		}
 	}
 }
@@ -485,9 +493,7 @@ def cleanUpApiDocs(stage) {
 			def apiRootFolder = getApiDocsFolder(stage)
 			sh "aws s3 rm s3://${apiRootFolder}/${service_config['domain']}/${service_config['service']}/${stage} --recursive"
 		} catch (ex) {
-			send_status_email("FAILED")
-			events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-			error "cleanUpApiDocs Failed. "+ ex.getMessage()
+			handleFailureEvent(ex)
 		}
 	}
 }
@@ -538,9 +544,7 @@ def getResourcePath() {
 		resourcepath = (basePath + "/" + pathInfo).replaceAll("//", "/")
 		return resourcepath
 	} catch (ex) {
-		send_status_email("FAILED")
-		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-		error "getResourcePath Failed. "+ ex.getMessage()
+		handleFailureEvent(ex)
 	}
 }
 
@@ -581,9 +585,7 @@ def unDeployWebsite(stage) {
 				sh "aws s3 rm s3://${serviceS3FolderUrl} --recursive"
 			}
 		} catch (ex) {
-			send_status_email("FAILED")
-			events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-			error ex.getMessage()
+			handleFailureEvent(ex)
 		}
 	}
 }
@@ -659,9 +661,7 @@ def cleanupS3BucketPolicy(stage, bucket) {
 		} catch (ex) {
             resetCredentials()
 			if (ex.getMessage().indexOf("groovy.json.internal.LazyMap") < 0) {
-				send_status_email("FAILED")
-				events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-				error "cleanupS3BucketPolicy Failed. "+ ex.getMessage()
+				handleFailureEvent(ex)
 			}
 		}
 	}
@@ -684,9 +684,7 @@ def updateBucketPolicy(policy_json, bucketName){
 				--bucket "+ bucketName + " \
 				--policy \'${policy_json}\'"
 	} catch (e) {
-		send_status_email("FAILED")
-		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-		error e.getMessage()
+		handleFailureEvent(ex)
 	}
 }
 /**
@@ -720,9 +718,7 @@ def cleanupCloudFrontDistribution(stage) {
 			if ((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
 				echo "Could not find a CloudFront distribution Id for service: ${service_config['service']} and environment $stage"
 			} else {
-				send_status_email("FAILED")
-				events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-				error "cleanupCloudFrontDistribution Failed. "+ ex.getMessage()
+				handleFailureEvent(ex)
 			}
 		}
 	}
@@ -777,9 +773,7 @@ def getDistributionConfig(distributionID) {
 		)
 		return distributionConfig
 	} catch (ex) {
-		send_status_email("FAILED")
-		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-		error "getDistributionConfig Failed."+ ex.getMessage()
+		handleFailureEvent(ex)
 	}
 
 }
@@ -806,9 +800,7 @@ def generateDistributionConfigForDisable(distributionConfig) {
 		} catch (ex) { }
 		return eTag
 	} catch (ex) {
-		send_status_email("FAILED")
-		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-		error "generateDistributionConfigForDisable Failed."+ ex.getMessage()
+		handleFailureEvent(ex)
 	}
 }
 
@@ -839,8 +831,7 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 		echo "disable eTag...$eTag"
 		return eTag
 	} catch (ex) {
-		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
-		error "disableCloudFrontDistribution. "+ ex.getMessage()
+		handleFailureEvent(ex)
 	}
 }
 
@@ -928,8 +919,7 @@ def setCredentials() {
 			return tokenJson_token
 		}
 		catch (e) {
-			echo "error occured: " + e.getMessage()
-			error "error occured: " + e.getMessage()
+			handleFailureEvent(ex)
 		}
 	}
 }
