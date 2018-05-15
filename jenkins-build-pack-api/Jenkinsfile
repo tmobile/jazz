@@ -42,9 +42,6 @@ node() {
 	def gitCommitOwner
 	def gitCommitHash
 	def context_map
-	def isVSScanEnabled = configLoader.CODE_QUALITY.SONAR.ENABLE_VULNERABILITY_SCAN && configLoader.CODE_QUALITY.SONAR.ENABLE_VULNERABILITY_SCAN == "true"
-	def SONAR_JAZZ_PROFILE = configLoader.CODE_QUALITY.SONAR.JAZZ_PROFILE
-
 
 	if (domain && domain != "") {
 		repo_name = params.domain + "_" + params.service_name
@@ -121,7 +118,7 @@ node() {
 		// @TODO: the below statement will be replaced with regular expression in very near future;
 		def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
-
+		sonarModule.initialize(configLoader, service, domain, branch, runtime)
 
 		loadServerlessConfig(config)
 
@@ -166,8 +163,6 @@ node() {
 			try {
 				clearVirtualEnv()
 				runValidation(runtime)
-
-				sonarModule.configureForProject(service, domain, branch, runtime, SONAR_JAZZ_PROFILE, isVSScanEnabled)
 				sonarModule.doAnalysis()
 
 			}catch(ex) {
@@ -772,7 +767,6 @@ def loadBuildModules(buildModuleUrl){
 		echo "Environment deployment data loader module loaded successfully."
 
 		sonarModule = load "sonar-module.groovy"
-		sonarModule.initialize(configLoader)
 		echo "Sonar module loaded successfully."
 
 	}

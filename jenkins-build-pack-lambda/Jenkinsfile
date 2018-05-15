@@ -121,8 +121,7 @@ node()  {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
-	def isVSScanEnabled = configLoader.CODE_QUALITY.SONAR.ENABLE_VULNERABILITY_SCAN && configLoader.CODE_QUALITY.SONAR.ENABLE_VULNERABILITY_SCAN == "true"
-	def SONAR_JAZZ_PROFILE = configLoader.CODE_QUALITY.SONAR.JAZZ_PROFILE
+	sonarModule.initialize(configLoader, service, domain, branch, runtime)
 
 	stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
@@ -169,10 +168,7 @@ node()  {
 			events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
 			try {
 				runValidation(runtime)
-
-				sonarModule.configureForProject(service, domain, branch, runtime, SONAR_JAZZ_PROFILE, isVSScanEnabled)
 				sonarModule.doAnalysis()
-
 			}catch(ex) {
 				events.sendFailureEvent('CODE_QUALITY_CHECK', ex.getMessage(), context_map, environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
@@ -814,7 +810,6 @@ def loadBuildModules(buildModuleUrl){
 		echo "Util module loaded successfully."
 
 		sonarModule = load "sonar-module.groovy"
-		sonarModule.initialize(configLoader)
 		echo "Sonar module loaded successfully."
 
 		environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"

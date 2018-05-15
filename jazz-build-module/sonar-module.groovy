@@ -9,7 +9,7 @@ echo "Sonar code analyzer module loaded successfully"
 */
 
 @Field def configLoader
-@Field def g_sonar_enabled = false // Note: set environment variable ENABLE_SONAR=true to enable sonar code analysis
+@Field def g_sonar_enabled = false 
 @Field def g_runtime_type = ""
 @Field def g_sonar_projectKey = ""
 @Field def g_sonar_projectName = ""
@@ -24,9 +24,9 @@ echo "Sonar code analyzer module loaded successfully"
 @Field def g_sonar_project_properties = [:]
 @Field def g_isVSScanEnabled = false
 @Field def g_dependencyCheckOutputFileName = "dependency-check-report.xml"
-@Field def g_dependencyCheckNISTFilesLocation = env.DEPENDENCY_CHECK_NIST_FILES_LOCATION 
-@Field def g_NISTDataMirrorUtility = env.DEPENDENCY_CHECK_NIST_MIRROR_UTILITY   //https://github.com/stevespringett/nist-data-mirror/releases/download/1.1.0/nist-data-mirror.jar
-@Field def g_dependencyCheckNumberOfHoursBeforeUpdate = env.DEPENDENCY_CHECK_ELAPSED_HOURS_BEFORE_UPDATES
+@Field def g_dependencyCheckNISTFilesLocation 
+@Field def g_NISTDataMirrorUtility
+@Field def g_dependencyCheckNumberOfHoursBeforeUpdate
 @Field def g_dependency_check_properties = [:]
 
 /**
@@ -67,15 +67,38 @@ echo "Sonar code analyzer module loaded successfully"
  }
 
  /**
-  * Configure Project for static code analysis
+  * Initialization for static code analysis
+  * @param configData - Configuration Data
   * @param service - Service name
   * @param domain - domain
-  * @param stage - the stage whether dev, stg or prod
   * @param branch - current branch being built
-  * @param sonarProfile - specify the sonar profile 
+  * @param runtime - specify the service runtime
   */
+ 
+ def initialize(configData, service, domain, branch, runtime) {
+	configLoader = configData;
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: configLoader.JENKINS.CREDENTIALS.SONAR, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+		def host_name = "http://"+configLoader.CODE_QUALITY.SONAR.HOST_NAME
+		setCredentials(host_name, UNAME, PWD) 
+	}
+	g_dependencyCheckNISTFilesLocation = configLoader.CODE_QUALITY.SONAR.DEPENDENCY_CHECK_NIST_FILES_LOCATION;
+	g_NISTDataMirrorUtility = configLoader.CODE_QUALITY.SONAR.DEPENDENCY_CHECK_NIST_MIRROR_UTILITY;
+	g_dependencyCheckNumberOfHoursBeforeUpdate = configLoader.CODE_QUALITY.SONAR.DEPENDENCY_CHECK_ELAPSED_HOURS_BEFORE_UPDATES;
 
- def configureForProject(service, domain, branch, runtime, sonarProfile, isVSScanEnabled) {
+	if(configLoader.CODE_QUALITY.SONAR.JAZZ_PROFILE) {
+		g_sonar_profile =  configLoader.CODE_QUALITY.SONAR.JAZZ_PROFILE 
+	}else{
+		g_sonar_profile = ""
+	}
+
+	if( configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR &&  configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
+		g_sonar_enabled = true
+	}
+
+	if( configLoader.CODE_QUALITY.SONAR.ENABLE_VULNERABILITY_SCAN && configLoader.CODE_QUALITY.SONAR.ENABLE_VULNERABILITY_SCAN == "true") {
+		g_isVSScanEnabled = true
+	}
+
 	if(service && branch) {
 		def projectKey = service+"_"+branch.replaceAll("/","-")
 		if(domain) {
@@ -83,34 +106,15 @@ echo "Sonar code analyzer module loaded successfully"
 		}
 		projectKey = g_key_prefix+"_"+projectKey
 
-		if(sonarProfile && sonarProfile.size() > 0) {
-			g_sonar_profile =  sonarProfile 
-		}else{
-			g_sonar_profile = ""
-		}
-
 		setProjectKey(projectKey)
 		setProjectName(projectKey)
 		setRuntimeType(runtime)
-		
-		if(env.ENABLE_SONAR && env.ENABLE_SONAR == "true") {
-			g_sonar_enabled = true
-		}
-		
-		g_isVSScanEnabled = isVSScanEnabled
+
 	} else {
 		error "Invalid project configurations for Sonar"
 	}
 
- }
 
- 
- def initialize(configData) {
-	 configLoader = configData;
-	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: configLoader.JENKINS.CREDENTIALS.SONAR, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-		def host_name = "http://"+configLoader.CODE_QUALITY.SONAR.HOST_NAME
-		setCredentials(host_name, UNAME, PWD) 
-	}	 
  }
 
 /**
