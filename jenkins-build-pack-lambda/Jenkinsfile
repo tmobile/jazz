@@ -696,8 +696,7 @@ def getLambdaARN (String stackName) {
 		def cloudformation_resources = "";
 		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
 
-		def jsonSlurper = new JsonSlurper()
-		def parsedObject = jsonSlurper.parseText(cloudformation_resources);
+	    def parsedObject = parseJson(cloudformation_resources);
 		def outputs = parsedObject.Stacks[0].Outputs;
 
 		for (output in outputs) {

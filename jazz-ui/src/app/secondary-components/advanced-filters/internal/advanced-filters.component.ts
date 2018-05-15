@@ -104,7 +104,10 @@ export class AdvancedFiltersComponent implements OnInit {
         
     }
     onEnvSelected(envt){
+        
         this.envSelected = envt;
+        var index = this.envList.indexOf(envt);
+        envt = this.environment_object.env[index];
         this.selectFilter["key"]='environment';
         this.selectFilter["value"]=envt;
         this.onFilterSelect.emit(this.selectFilter);
@@ -176,8 +179,10 @@ export class AdvancedFiltersComponent implements OnInit {
     isAPI:boolean = false;
    hideleft:boolean=false;
    changeCss:boolean = false;
+   environment_object:any;
     ngOnInit(){
         var env_list=this.cache.get('envList')
+        this.environment_object=env_list;
         if(env_list != undefined)
             this.envList=env_list.friendly_name;
 
