@@ -102,6 +102,14 @@ node()  {
 	gitCommitHash = scmModule.getRepoCommitHash()
 	gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 
+	def requestId = utilModule.generateRequestId()
+	if (requestId != null) {
+		events.setRequestId(requestId)
+		environmentDeploymentMetadata.setRequestId(requestId)
+	} else {
+		error "Request Id Generation failed"
+	}
+
 	dir(repo_name)
 	{
 		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, , gitCommitHash), environment)
