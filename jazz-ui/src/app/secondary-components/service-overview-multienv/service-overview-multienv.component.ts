@@ -257,24 +257,13 @@ export class ServiceOverviewMultienvComponent implements OnInit {
             tst.classList.remove('toaster-anim');
           }, 3000);
     }
-   
-   
-  
 
-
-    
-
-
-  
- 
-
-  
     modifyEnvArr(){
         var j=0;
         var k=2;
         this.sortEnvArr();
 
-        if(this.environ_arr!=undefined)
+        if(this.environ_arr!=undefined){
             for(var i=0;i<this.environ_arr.length;i++){
                 this.environ_arr[i].status=this.environ_arr[i].status.replace("_"," ");
                 // this.environ_arr[i].status=this.environ_arr[i].status.split(" ").join("\ n")
@@ -285,27 +274,24 @@ export class ServiceOverviewMultienvComponent implements OnInit {
                 if(this.environ_arr[i].logical_id == 'stg'){
                     this.stgEnv=this.environ_arr[i];
                     continue;
-                }
-                else
-                {    this.Environments[j]=this.environ_arr[i];   
-                    this.envList[k]=this.environ_arr[i].logical_id; 
-                    if(this.environ_arr[i].friendly_name != undefined){
-                        this.friendlist[k++]=this.environ_arr[i].friendly_name;   
-                    }else{
-                        this.friendlist[k++]=this.environ_arr[i].logical_id;
+                } else {
+                    if(this.environ_arr[i].status !== 'archived') {
+                        this.Environments[j]=this.environ_arr[i];   
+                        this.envList[k]=this.environ_arr[i].logical_id; 
+                        if(this.environ_arr[i].friendly_name != undefined){
+                            this.friendlist[k++]=this.environ_arr[i].friendly_name;   
+                        }else{
+                            this.friendlist[k++]=this.environ_arr[i].logical_id;
+                        }
+                        j++;
                     }
-                            
-                    j++;
-                    
                 }
-                
-
             }
             this.list = {
                 env : this.envList,
                 friendly_name : this.friendlist
             }
-            
+        }
 
         if(this.Environments.length==0){
             this.noSubEnv=true;
@@ -413,15 +399,6 @@ export class ServiceOverviewMultienvComponent implements OnInit {
         isLoading:boolean=false;
         sjson:any={};
 		djson:any={};
-		// isLoading:boolean=false;
-		
-				
-				
-			
-			
-			 
-				
-               
         is_multi_env:boolean = false;
         ngOnInit() {
             if(environment.multi_env) this.is_multi_env=true;
@@ -431,17 +408,14 @@ export class ServiceOverviewMultienvComponent implements OnInit {
             this.prodEnv={};
             this.stgEnv={};
             if((this.service.domain!=undefined)){
-                this.getenvData();
-                
+                this.getenvData();              
             }
-            
     }
 
     testingStatus(){
         setInterval(() => {
         this.onload.emit(this.service.status);
         },500);
-        
     }
     transform_env_oss(data){
     //   alert('ososos')
