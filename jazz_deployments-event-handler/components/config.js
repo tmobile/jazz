@@ -1,6 +1,6 @@
 /**
   @module: config.js
-  @description: Defines variables/functions to retrieve environment related data
+  @description: Defines variables/functions to retrieve deployment related data
 	@author:
 	@version: 1.0
 **/

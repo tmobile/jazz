@@ -1,20 +1,21 @@
 /**
 	Deployments event handler function.
-	@Author: SWilson162
+	@Author: 
 	@version: 1.0
 **/
-
-const config = require("./components/config.js"); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
-const errorHandlerModule = require("./components/error-handler.js");
 
 const _ = require("lodash");
 const request = require("request");
 const rp = require('request-promise-native');
 const Uuid = require("uuid/v4");
 
-var errorHandler = errorHandlerModule(logger);
+const config = require("./components/config.js"); 
+const logger = require("./components/logger.js"); 
+const errorHandlerModule = require("./components/error-handler.js");
 const fcodes = require('./utils/failure-codes.js');
+
+var errorHandler = errorHandlerModule(logger);
+
 var failureCodes = fcodes();
 var processedEvents = [];
 var failedEvents = [];
@@ -79,7 +80,7 @@ var processEventRecords = (event, configData, authToken) => {
 				return resolve(result);
 			})
 			.catch((error) => {
-				logger.error("processEventRecords failed" + JSON.stringify(error));
+				logger.error("processEventRecords failed: " + JSON.stringify(error));
 				return reject(error);
 			});
 	});
@@ -106,7 +107,7 @@ var processEventRecord = (record, configData, authToken) => {
 				return resolve(result);
 			})
 			.catch(err => {
-				logger.error("processEventRecord failed for " + JSON.stringify(record));
+				logger.error("processEventRecord failed for: " + JSON.stringify(record));
 				handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
 				return reject(err);
 			});
@@ -157,7 +158,7 @@ var processEvent = (eventPayload, configData, authToken) => {
 			}
 		} else {
 			logger.info("Service Context is not defined");
-			var err = handleError(failureCodes.PR_ERROR_4.code, "Service Context is not defined");
+			var err = handleError(failureCodes.PR_ERROR_4.code, "Service context is not defined");
 			return reject(err);
 		}
 	});
@@ -316,7 +317,7 @@ var updateDeployments = (res, deploymentPayload, configData, authToken) => {
 						deploymentPayload[key] = deploymentData[key];
 					}
 				});
-				logger.info("Update deployment Request payload:" + JSON.stringify(deploymentPayload));
+				logger.info("Update deployment request payload: " + JSON.stringify(deploymentPayload));
 				var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE + "/" + deploymentData.deployment_id;
 				var svcPayload = getSvcPayload("PUT", deploymentPayload, apiEndpoint, authToken);
 				procesRequest(svcPayload)
