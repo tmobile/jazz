@@ -42,6 +42,8 @@ node()  {
 	def domain = params.domain
 	def service = params.service_name
 	def repo_name = params.service_name
+	def gitCommitOwner
+	def gitCommitHash
 
 	if (domain && domain != "") {
 		repo_name = params.domain + "_" + params.service_name
@@ -52,7 +54,7 @@ node()  {
 
 	auth_token = setCredentials()
 
-        stage('Checkout code base') {
+    stage('Checkout code base') {
 
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
@@ -96,9 +98,21 @@ node()  {
 
 	def create_cloudfront_url
 	context_map = [created_by : config['created_by']]
+	scmModule.setServiceConfig(config)
+	gitCommitHash = scmModule.getRepoCommitHash()
+	gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
+
+	def requestId = utilModule.generateRequestId()
+	if (requestId != null) {
+		events.setRequestId(requestId)
+		environmentDeploymentMetadata.setRequestId(requestId)
+	} else {
+		error "Request Id Generation failed"
+	}
 
 	dir(repo_name)
 	{
+		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, , gitCommitHash), environment)
 		stage('Pre-Build Validation'){
 
 			events.sendStartedEvent("VALIDATE_INPUT", 'pre-build validation starts', context_map)
@@ -125,6 +139,7 @@ node()  {
 			} catch (ex) {
 				send_status_email('FAILED', config, '')
 				events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
 				error ex.getMessage()
 			}
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)
@@ -187,11 +202,13 @@ node()  {
 							environmentDeploymentMetadata.setEnvironmentEndpoint(url)
 							send_status_email('COMPLETED', config, svc_status)
 							events.sendCompletedEvent('UPDATE_ASSET', 'update assets completed', context_map)
+							events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
 							events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed",   environment), environment)
 							events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 						} catch (ex) {
 							send_status_email('FAILED', config, '')
 							events.sendFailureEvent('UPDATE_ASSET', ex.getMessage(), context_map)
+							events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
 							events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment), environment)
 							events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 						}
@@ -224,11 +241,13 @@ node()  {
 							environmentDeploymentMetadata.setEnvironmentEndpoint(url)
 							send_status_email('COMPLETED', config, svc_status)
 							events.sendCompletedEvent('CREATE_ASSET', 'create assets completed', context_map)
+							events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for stage deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
 							events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed",   environment), environment)
 							events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 						} catch (ex) {
 							send_status_email('FAILED', config, '')
 							events.sendFailureEvent('CREATE_ASSET', ex.getMessage(), context_map)
+							events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
 							events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment), environment)
 							events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 						}
