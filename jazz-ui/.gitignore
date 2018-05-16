@@ -28,6 +28,7 @@
 /coverage/*
 /libpeerconnection.log
 npm-debug.log
+*/package-lock.json
 testem.log
 /typings
 
