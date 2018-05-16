@@ -204,7 +204,7 @@ api_doc_name:string='';
         if (environment.envName == "oss") {
           var apiPath =  this.api_doc_name + "/" + this.service.domain + "/" + this.service.name + "/" + this.envSelected + "/swagger.json";
           var SwaggerUrl = "http://editor.swagger.io/?url=" + apiPath;
-          var RedocUrl = "./assets/redoc/index.html/?url" + apiPath;
+          var RedocUrl = "./assets/redoc/index.html?url=" + apiPath;
           var link = document.createElement('a');
           link.setAttribute('target', '_blank');
           link.setAttribute('href', RedocUrl);
