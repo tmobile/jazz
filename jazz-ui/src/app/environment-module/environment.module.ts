@@ -1,5 +1,5 @@
-import {CUSTOM_ELEMENTS_SCHEMA, NgModule} from '@angular/core';
-import {CommonModule, JsonPipe} from '@angular/common';
+import { NgModule } from '@angular/core';
+import {CommonModule } from '@angular/common';
 import { EnvLogsSectionComponent } from '../pages/environment-logs/env-logs-section.component';
 import { EnvironmentDetailComponent } from '../pages/environment-detail/environment-detail.component';
 import { EnvAssetsSectionComponent } from '../pages/environment-assets/env-assets-section.component';
@@ -42,7 +42,7 @@ import {EnvTryServiceSidebarComponent} from '../secondary-components/env-try-ser
     EnvOverviewSectionComponent,
     EnvTryServiceSidebarComponent
   ],
-  providers: [AdvancedFilterService, JsonPipe]
+  providers: [AdvancedFilterService]
 })
 
 export class EnvironmentModule {
