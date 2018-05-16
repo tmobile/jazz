@@ -110,4 +110,10 @@ export class EnvTryServiceSidebarComponent implements OnInit {
     return jsonString;
   }
 
+  closeSideMenu() {
+    this.outputValue = '';
+
+    this.onClose.emit();
+  }
+
 }

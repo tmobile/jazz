@@ -9,60 +9,62 @@
                 <!-- <span  class="reduxC" *ngIf='service.status == "deletion completed"'></span>
                 <span  class="reduxS" *ngIf='service.status == "deletion started"'></span> -->
             <!-- <router-outlet></router-outlet> -->
-            <jazz-mob-header [icon]="'notification'" [headText]="service.name" [status]="'green'"></jazz-mob-header>
-            <section class="page-container">
-                <navigation-bar [links]="breadcrumbs" [data]="friendly_name"></navigation-bar>
-                <div class="content">
-                    <div class="page-title-wrap hide-for-mobile">
-                        <div class="servie-details-container">
-                            <h1 class="page-hdr bold-title relative">{{friendly_name}}
-                                    <div title='{{envStatus}}' *ngIf='status_val < 3' class='icon-icon-good inactive-icon succ'>
-                                        <span class="path1"></span><span class="path2"></span>
-                                    </div>
-                                    <div title='{{envStatus}} '*ngIf='status_val == 3' class='icon-In-Progress inactive-icon'></div>
-                                    <div title='{{envStatus}}' *ngIf='status_val > 3' class='icon-icon-inactive inactive-icon'></div>
+<jazz-mob-header [icon]="'notification'" [headText]="service.name" [status]="'green'"></jazz-mob-header>
+<section class="page-container">
+    <navigation-bar [links]="breadcrumbs" [data]="friendly_name"></navigation-bar>
+    <div class="content">
+        <div class="page-title-wrap hide-for-mobile">
+            <div class="servie-details-container">
+                <h1 class="page-hdr bold-title relative">{{friendly_name}}
+                        <div title='{{envStatus}}' *ngIf='status_val < 3' class='icon-icon-good inactive-icon succ'>
+                            <span class="path1"></span><span class="path2"></span>
+                        </div>
+                        <div title='{{envStatus}} '*ngIf='status_val == 3' class='icon-In-Progress inactive-icon'></div>
+                        <div title='{{envStatus}}' *ngIf='status_val > 3' class='icon-icon-inactive inactive-icon'></div>
 
                             </h1>
 
-                            <span class="page-sub-title">{{service.name}}</span><br>
-                        </div>
-                        <btn-jazz-secondary *ngIf="service.serviceType=='api'" [disablebtn]='disablingApiButton' class="testApiBtn" text="TEST API" (click)="testApi('api')"></btn-jazz-secondary>
-                        <btn-jazz-secondary *ngIf="service.serviceType=='function'" [disablebtn]='disablingApiButton' class="testApiBtn" text="Test ARN" (click)="testApi('function')"></btn-jazz-secondary>
-                        <btn-jazz-secondary *ngIf="service.serviceType=='website'"  [disablebtn]='disablingApiButton' class="testApiBtn" text="GO TO WEBSITE" (click)="testApi('website')"></btn-jazz-secondary>
-                        <!-- <btn-jazz-secondary *ngIf="selectedTab == 3" [disablebtn]='false' class="testApiBtn" text="SONAR PROJECT"></btn-jazz-secondary>  -->
-                        <div class="status-container status-inactive-def hide" >
-                            <span class="status-hdr" [class.inactive]="status_val > 2">Status</span>
-                            <div class="status-state-oval" [class.inactive-bg]="status_val > 2"></div>
-                        </div>
-                        <!--<btn-jazz-secondary *ngIf="selectedTab == 13" class="testApiBtn" text="SONAR PROJECT"></btn-jazz-secondary>-->
-                    </div>
+                <span class="page-sub-title">{{service.name}}</span><br>
+            </div>
+            <btn-jazz-secondary *ngIf="service.serviceType=='api'" [disablebtn]='disablingApiButton' class="testApiBtn" text="TEST API" (click)="testApi('api')"></btn-jazz-secondary>
+            <btn-jazz-secondary *ngIf="service.serviceType=='function'" [disablebtn]='disablingFunctionButton' class="testApiBtn" text="Test ARN" (click)="testApi('function')"></btn-jazz-secondary>
+            <btn-jazz-secondary *ngIf="service.serviceType=='website'"  [disablebtn]='disablingApiButton' class="testApiBtn" text="GO TO WEBSITE" (click)="testApi('website')"></btn-jazz-secondary> 
+            <!-- <btn-jazz-secondary *ngIf="selectedTab == 3" [disablebtn]='false' class="testApiBtn" text="SONAR PROJECT"></btn-jazz-secondary>  -->
+            <div class="status-container status-inactive-def hide" >
+                <span class="status-hdr" [class.inactive]="status_val > 2">Status</span>
+                <div class="status-state-oval" [class.inactive-bg]="status_val > 2"></div>
+            </div>
+            <!--<btn-jazz-secondary *ngIf="selectedTab == 13" class="testApiBtn" text="SONAR PROJECT"></btn-jazz-secondary>-->
+        </div>
+        
+        <!-- <div class="page-status-row  hide-for-mobile">
+            <div class="page-status" [ngClass]="service.status"><span>Status</span></div>
 
-                    <!-- <div class="page-status-row  hide-for-mobile">
-                        <div class="page-status" [ngClass]="service.status"><span>Status</span></div>
+        </div> -->
+       
+    <div *ngIf='status_val > 4' class="alert alert-warning" role="alert">
+            Looks like this environment is inactive, related assets might not be available during this time.
+    </div>
+    <div class="tab-component" [class.oss]='isOSS'>
+        <tabs [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+        
+        
+        <section class="page-content" *ngIf="selectedTab == 0">
+            <env-overview-section #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service"></env-overview-section>
+        </section>
 
-                    </div> -->
+        
+        <section class="page-content" *ngIf="selectedTab == 1">
+            <env-deployments-section #envdeployments [service]="service"></env-deployments-section>
+        </section>
 
-                <div *ngIf='status_val > 4' class="alert alert-warning" role="alert">
-                        Looks like this environment is inactive, related assets might not be available during this time.
-                </div>
-                <div class="tab-component" [class.oss]='isOSS'>
-                    <tabs [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+        <section class="page-content" *ngIf="selectedTab == 2">
+                <env-codequality-section [service]="service"></env-codequality-section>
+            </section>
 
-                    <section class="page-content" *ngIf="selectedTab == 0">
-                        <env-overview-section #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service"></env-overview-section>
-                    </section>
-
-                    <section class="page-content" *ngIf="selectedTab == 1">
-                        <env-deployments-section #envdeployments [service]="service"></env-deployments-section>
-                    </section>
-
-                    <section class="page-content" *ngIf="selectedTab == 2">
-                            <env-codequality-section [service]="service"></env-codequality-section>
-                        </section>
-
-                    <section class="page-content" *ngIf="selectedTab == 3">
-                        <env-assets-section [service]="service"></env-assets-section>
-                    </section>
+        <section class="page-content" *ngIf="selectedTab == 3">
+            <env-assets-section [service]="service"></env-assets-section>
+        </section>
 
                     <section class="page-content" *ngIf="selectedTab == 4">
                         <env-logs-section [service]="service"></env-logs-section>
@@ -76,9 +78,6 @@
                 </sidebar>
                 <sidebar [show]="sidebar === 'try-service'" (onClose)="setSidebar()">
                   <env-try-service-sidebar [service]="service" (onClose)="setSidebar()"></env-try-service-sidebar>
-                </sidebar>
-                <sidebar [show]="sidebar==='api'">
-                    <button (click)="openRedoc()">OPEN</button>
                 </sidebar>
             </section>
             <footer></footer>

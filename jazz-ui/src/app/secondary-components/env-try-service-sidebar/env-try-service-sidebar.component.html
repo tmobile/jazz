@@ -4,7 +4,7 @@
   </div>
   <div class='title'>
     <span>{{service?.name}}</span>
-    <div class='icon-icon-close pointer' (click)='onClose.emit()'></div>
+    <div class='icon-icon-close pointer' (click)='closeSideMenu()'></div>
   </div>
   <div class="try-service-sections">
     <section>
@@ -20,7 +20,7 @@
           <input id="try-service-cb" type="checkbox" [checked]="savingPayload"
                  (click)="toggleSavePayload(!savingPayload)">
           <label for="try-service-cb"></label>
-          <div class="cb-status-dets"></div>c
+          <div class="cb-status-dets">Click here to save your input data for later!</div>
         </div>
       </div>
     </section>
@@ -45,7 +45,7 @@
         </div>
         <p class="warning" *ngIf="!valid">{{validityMessage}}</p>
         <div class="button-group">
-          <button (click)="onClose.emit()" class="btn-round secondary">CANCEL</button>
+          <button (click)="closeSideMenu()" class="btn-round secondary">CANCEL</button>
           <button (click)="startTest()" class="btn-round primary start-button">TEST</button>
         </div>
       </div>

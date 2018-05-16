@@ -1,19 +1,20 @@
-import {Component, OnInit} from '@angular/core';
-import {ToasterService} from 'angular2-toaster';
-import {Router, ActivatedRoute} from '@angular/router';
-import {DataCacheService, MessageService, RequestService} from '../../core/services';
-import {EnvOverviewSectionComponent} from '../environment-overview/env-overview-section.component';
-import {SharedService} from '../../SharedService.service';
-import {Http, Headers, Response} from '@angular/http';
-import {Output, EventEmitter} from '@angular/core';
-import {AfterViewInit, ViewChild} from '@angular/core';
-import {DataService} from '../data-service/data.service';
-import {environment} from '../../../environments/environment';
-import {environment as env_internal} from './../../../environments/environment.internal';
-import {environment as env_oss} from '../../../environments/environment.oss';
+import { Component, OnInit } from '@angular/core';
+import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
+import { ToasterService} from 'angular2-toaster';
+import { Router, ActivatedRoute } from '@angular/router';
+import { EnvOverviewSectionComponent} from './../environment-overview/env-overview-section.component';
+import { SharedService } from "../../SharedService.service";
+import { Http, Headers, Response } from '@angular/http';
+import { Output, EventEmitter } from '@angular/core';
+import { AfterViewInit, ViewChild } from '@angular/core';
+import { DataService } from "../data-service/data.service";
+import { environment } from './../../../environments/environment';
+import { environment as env_internal } from './../../../environments/environment.internal';
+import { environment as env_oss } from './../../../environments/environment.oss';
 
 
-import {EnvDeploymentsSectionComponent} from '../environment-deployment/env-deployments-section.component';
+
+import { EnvDeploymentsSectionComponent} from './../environment-deployment/env-deployments-section.component';
 
 
 @Component({
@@ -26,11 +27,11 @@ export class EnvironmentDetailComponent implements OnInit {
   @ViewChild('envoverview') envoverview: EnvOverviewSectionComponent;
   @ViewChild('envdeployments') envdeployments: EnvDeploymentsSectionComponent;
 
-
-  breadcrumbs = [];
-  api_doc_name: string = '';
-  selectedTab = 0;
-  service: any = {};
+isFunction:boolean = false;
+breadcrumbs = [];
+api_doc_name:string='';
+  selectedTab = 0; 
+  service: any= {};
   friendly_name: any;
   status_val: number;
   serviceId: any;
@@ -47,10 +48,11 @@ export class EnvironmentDetailComponent implements OnInit {
   baseUrl: string = '';
   swaggerUrl: string = '';
   disablingWebsiteButton: boolean = true;
-  disablingFunctionButton: boolean = true;
+  disablingFunctionButton: boolean = false;
   disablingApiButton: boolean = true;
   nonClickable: boolean = false;
   message: string;
+  isOSS:boolean=false;
 
   public sidebar: string = '';//String value that determines which sidebar is shown
   private sub: any;
@@ -110,26 +112,27 @@ export class EnvironmentDetailComponent implements OnInit {
       }];
   }
 
-  processService(service) {
-    if (service === undefined) {
-      return {};
-    } else {
-      return {
-        id: service.id,
-        name: service.service,
-        serviceType: service.type,
-        runtime: service.runtime,
-        status: service.status,
-        domain: service.domain,
-        repository: service.repository
+  processService(service){
+      if (service === undefined) {
+          return {};
+      } else{
+          return {
+              id: service.id,
+              name: service.service,
+              serviceType: service.type,
+              runtime: service.runtime,
+              status: service.status,
+              domain: service.domain,
+              repository:service.repository
+          }
       }
-    }
   };
 
   onDataFetched(service) {
     if (service !== undefined && service !== '') {
       this.service = this.processService(service);
-      if (this.friendly_name != undefined) {
+      if(this.service.serviceType == "function") this.isFunction = true;
+      if( this.friendly_name != undefined ){
       }
       this.breadcrumbs = [{
         'name': this.service['name'],
@@ -158,58 +161,60 @@ export class EnvironmentDetailComponent implements OnInit {
     this.isLoadingService = true;
     let cachedData = this.cache.get(id);
 
-    if (cachedData) {
-      this.onDataFetched(cachedData);
-      if (this.service.serviceType === 'website') {
-        this.tabData = ['overview', 'deployments', 'code quality', 'assets'];
-      }
-    } else {
-      if (this.subscription) {
-        this.subscription.unsubscribe();
-      }
-      this.subscription = this.http.get('/jazz/services/' + id).subscribe(
-        response => {
-          this.service.accounts = env_internal.urls.accounts;
-          this.service.regions = env_internal.urls.regions;
-          this.service = response.data.data;
-          if (environment.envName == 'oss') this.service = response.data;
-
-
-          if (this.service.type === 'website') {
-            this.tabData = ['overview', 'deployments', 'code quality', 'assets'];
+      if (cachedData) {
+          this.onDataFetched(cachedData);
+          if(this.service.serviceType === "website")
+          {
+              this.tabData = ['overview','deployments','code quality','assets'];
           }
-          this.cache.set(id, this.service);
-          this.onDataFetched(this.service);
+          else if(this.service.serviceType == "function")
+            this.isFunction=true;
+      } else{
+         if ( this.subscription ) {
+            this.subscription.unsubscribe();
+          }
+          this.subscription = this.http.get('/jazz/services/'+id).subscribe(
+            response => {
+              this.service.accounts=env_internal.urls.accounts;
+                    this.service.regions=env_internal.urls.regions;
+                  this.service=response.data.data;
+                  if(environment.envName=='oss')this.service=response.data;
+                  if(this.service.type === "website")
+                  {
+                      this.tabData = ['overview','deployments','code quality','assets'];
+                  }
+                  else if(this.service.type == "function")
+                      this.isFunction=true;
 
-          this.envoverview.notify(this.service);
-
-        },
-        err => {
-          this.isLoadingService = false;
-          let errorMessage = this.messageservice.errorMessage(err, 'serviceDetail');
-          this.toast_pop('error', 'Oops!', errorMessage)
-
-        }
-      )
-    }
+                  this.cache.set(id, this.service);
+                  this.onDataFetched(this.service);                  
+                  this.envoverview.notify(this.service);                  
+              },
+              err => {
+                  this.isLoadingService = false;
+                  let errorMessage = this.messageservice.errorMessage(err,"serviceDetail");
+                  this.toast_pop('error', 'Oops!', errorMessage)
+                  
+              }
+          )
+      }
 
   };
 
   testApi(type) {
     switch (type) {
       case 'api':
-        this.setSidebar('try-service');
+        if (environment.envName == "oss") {
+          var apiPath =  this.api_doc_name + "/" + this.service.domain + "/" + this.service.name + "/" + this.envSelected + "/swagger.json";
+          var SwaggerUrl = "http://editor.swagger.io/?url=" + apiPath;
+          var RedocUrl = "assets/redoc/index.html/?url" + apiPath;
+          window.open(RedocUrl);
+        }
+        else {
+          window.open('/test-api?service=' + this.service.name + '&domain=' + this.service.domain + '&env=' + this.envSelected);
+        }
+
         break;
-        // if (environment.envName == 'oss') {
-        //   let swaggerUrl = this.api_doc_name + '/' + this.service.domain + '/' + this.service.name + '/' + this.envSelected + '/swagger.json';
-        //   let location = 'assets/redoc/index.html?url=' + swaggerUrl;
-        //   window.open(location);
-        // }
-        // else {
-        //   window.open('/test-api?service=' + this.service.name + '&domain=' + this.service.domain + '&env=' + this.envSelected);
-        //
-        // }
-        // break;
 
       case 'website' :
         if (this.endpoint_env != (undefined || '')) {
@@ -218,9 +223,6 @@ export class EnvironmentDetailComponent implements OnInit {
         break;
       case 'function' :
         this.setSidebar('try-service');
-        // if (this.endpoint_env != (undefined || '')) {
-        //   window.open('/404');
-        // }
         break;
       case 'lambda' :
         if (this.endpoint_env != (undefined || '')) {
@@ -230,43 +232,42 @@ export class EnvironmentDetailComponent implements OnInit {
     }
   }
 
-  toast_pop(error, oops, errorMessage) {
-    var tst = document.getElementById('toast-container');
-    tst.classList.add('toaster-anim');
-    this.toasterService.pop(error, oops, errorMessage);
-    setTimeout(() => {
-      tst.classList.remove('toaster-anim');
-    }, 3000);
+  toast_pop(error,oops,errorMessage) {
+     var tst = document.getElementById('toast-container');
+         tst.classList.add('toaster-anim');                            
+        this.toasterService.pop(error,oops,errorMessage);        
+        setTimeout(() => {
+            tst.classList.remove('toaster-anim');
+          }, 3000);
   }
 
-  isOSS: boolean = false;
-
-  setSidebar(sidebar) {
-    this.sidebar = sidebar
+  setSidebar(sidebarValue?) {
+    this.sidebar = sidebarValue;
   }
+
 
   ngOnInit() {
-    this.api_doc_name = env_oss.api_doc_name;
-    if (environment.envName == 'oss') this.isOSS = true;
-    this.sub = this.route.params.subscribe(params => {
-      let id = params['id'];
-      this.serviceId = id;
-      this.envSelected = params['env'];
-      this.fetchService(id);
-      this.friendly_name = this.envSelected;
-
-    });
-    this.breadcrumbs = [
-      {
-        'name': this.service['name'],
-        'link': 'services/' + this.service['id']
-      },
-      {
-        'name': this.friendly_name,
-        'link': ''
-      }
-    ];
-
+    this.api_doc_name=env_oss.api_doc_name;
+    if(environment.envName=="oss")this.isOSS = true;
+      this.sub = this.route.params.subscribe(params => {
+        let id = params['id'];
+        this.serviceId=id;
+        this.envSelected = params['env'];
+        this.fetchService(id);
+        this.friendly_name = this.envSelected;
+          
+      });
+      this. breadcrumbs = [
+        {
+          'name' : this.service['name'],
+          'link' : 'services/' + this.service['id']
+        },
+        {
+          'name' : this.friendly_name,
+          'link' : ''
+        }
+      ];
+  
   }
 
   ngOnChanges(x: any) {
