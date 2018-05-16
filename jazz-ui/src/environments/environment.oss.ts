@@ -1,7 +1,7 @@
 export const environment = {
   production:true,
   configFile: 'config/config.oss.json',
-  baseurl: "https://cc1mbvmofe.execute-api.us-east-1.amazonaws.com/prod",
+  baseurl: "https://a32wzpxs8i.execute-api.us-east-1.amazonaws.com/prod",
   api_doc_name : "https://jazz20180514-jazz-s3-api-doc-20180514214617523800000010.s3.amazonaws.com",
   envName:"oss",
   multi_env:"{multi_env}",

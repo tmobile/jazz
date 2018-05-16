@@ -24,6 +24,9 @@ import { TestApiComponent } from './pages/testapi/test-api.component';
 import { Error404Component } from './pages/error404/error404.component';
 import { SharedModule } from './shared-module/shared.module';
 import { routes } from './app.route';
+import {Session} from "selenium-webdriver";
+import {SessionStorageService} from "./core/helpers/session-storage.service";
+import {RelaxedJsonService} from "./core/helpers/relaxed-json.service";
 let environmentval = environment.envName;
 let loadedModule;
 if (environmentval == "oss") {
@@ -58,6 +61,8 @@ else{
     RequestService,
     MessageService,
     ConfigService,
+    SessionStorageService,
+    RelaxedJsonService,
     {
       provide: APP_INITIALIZER,
       useFactory: ConfigLoader,

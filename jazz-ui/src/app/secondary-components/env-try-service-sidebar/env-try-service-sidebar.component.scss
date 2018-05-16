@@ -51,6 +51,7 @@ section {
 }
 
 .column-input {
+  position: relative;
   margin-left: 3rem;
   flex-grow: 1;
 }
@@ -90,8 +91,9 @@ textarea {
 
 button {
   outline: none;
-  padding: 1rem 1.3rem;
-  height: 3.5rem;
+  padding: 1rem 0;
+  text-align: center;
+  width: 6rem;
   &.btn-round {
     border-radius: 30px;
   }
@@ -110,26 +112,28 @@ button {
     color: $primary-pink;
     background-color: white;
     border: 1px solid white;
-
     &:hover {
       color: white;
       background-color: $primary-pink;
       border: 1px solid $primary-pink;
+      box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.15);
     }
   }
   &.btn-xs {
     font-size: 10px;
-    padding: .2rem .3rem;
-    height: 1.5rem;
-    line-height: inherit;
+    padding: .4rem 0;
+    width: 4rem;
+    line-height: 1;
   }
 }
 
 .warning {
-  margin-top: 1rem;
+  position: absolute;
+  left: 0;
+  bottom: 2rem;
   padding: 2px;
   font-size: 10px;
-  color: #ed008c;
+  color: #d0021b;
 }
 
 .try-service-cb {
@@ -150,5 +154,9 @@ button {
   justify-content: space-around;
   background: rgba(255, 255, 255, .8);
   transition: background-color 200ms;
+}
+
+.format-button {
+  padding: 1rem 0;
 }
 

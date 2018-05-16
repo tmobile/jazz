@@ -1,14 +1,14 @@
 import {Component, EventEmitter, Input, OnChanges, OnInit, Output} from '@angular/core';
-import {JsonPipe} from "@angular/common";
+import {SessionStorageService} from "../../core/helpers/session-storage.service";
+import {RelaxedJsonService} from "../../core/helpers/relaxed-json.service";
 
-declare var output;
-
+declare var Promise;
 @Component({
   selector: 'env-try-service-sidebar',
   templateUrl: './env-try-service-sidebar.component.html',
   styleUrls: ['./env-try-service-sidebar.component.scss']
 })
-export class EnvTryServiceSidebarComponent implements OnInit, OnChanges {
+export class EnvTryServiceSidebarComponent implements OnInit {
 
   public contentTypeMenu = ['application/json'];
   public contentTypeSelected = this.contentTypeMenu[0];
@@ -24,18 +24,15 @@ export class EnvTryServiceSidebarComponent implements OnInit, OnChanges {
   @Input() service;
   @Output() onClose = new EventEmitter();
 
-  constructor(private jsonPipe: JsonPipe) {
+  constructor(private sessionStorage: SessionStorageService,
+              private relaxedJson: RelaxedJsonService) {
   }
 
   ngOnInit() {
-    let saved = window.sessionStorage.getItem(this.sessionStorageKey);
+    let saved = this.sessionStorage.getItem(this.sessionStorageKey);
     if (saved) {
-      this.inputValue = JSON.parse(saved);
+      this.inputValue = saved;
     }
-  }
-
-
-  ngOnChanges(changes) {
   }
 
 
@@ -43,10 +40,10 @@ export class EnvTryServiceSidebarComponent implements OnInit, OnChanges {
     this.inputIsValid();
     if (this.valid) {
       this.loading = true;
-      setTimeout(() => {
-        this.loading = false;
+
+      var promise = new Promise((resolve, reject) => {
         let payload = JSON.parse(this.inputValue);
-        console.log('start test', payload);
+
         let outputObject = {
           status: 200,
           headers: {
@@ -56,9 +53,14 @@ export class EnvTryServiceSidebarComponent implements OnInit, OnChanges {
             message: 'success'
           }
         };
-        this.outputValue = this.stringToPrettyString(JSON.stringify(outputObject));
-      }, 2000);
 
+        setTimeout(() => { resolve(outputObject)}, 500)
+      });
+
+      promise.then((response) => {
+        this.loading = false;
+        this.outputValue = this.stringToPrettyString(JSON.stringify(response));
+      });
     }
   }
 
@@ -74,9 +76,9 @@ export class EnvTryServiceSidebarComponent implements OnInit, OnChanges {
   toggleSavePayload(flag) {
     this.savingPayload = flag;
     if (this.savingPayload) {
-      window.sessionStorage.setItem(this.sessionStorageKey, JSON.stringify(this.inputValue));
+      this.sessionStorage.setItem(this.sessionStorageKey, this.inputValue);
     } else {
-      window.sessionStorage.removeItem(this.sessionStorageKey);
+      this.sessionStorage.removeItem(this.sessionStorageKey);
     }
   }
 
@@ -93,9 +95,9 @@ export class EnvTryServiceSidebarComponent implements OnInit, OnChanges {
   }
 
   stringToPrettyString(input) {
-    let parser = output.tv.twelvetone.rjson.RJsonParserFactory.Companion.getDefault().createParser();
+    let parser = this.relaxedJson.getParser();
     let objectValue = parser.stringToValue(input);
-    let PrettyPrinter = output.tv.twelvetone.rjson.PrettyPrinter;
+    let PrettyPrinter = this.relaxedJson.getPrinter();
     let opts = new PrettyPrinter.Options();
     opts.useQuotes = true;
     opts.useArrayCommas = true;

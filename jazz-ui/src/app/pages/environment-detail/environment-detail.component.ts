@@ -198,16 +198,18 @@ export class EnvironmentDetailComponent implements OnInit {
   testApi(type) {
     switch (type) {
       case 'api':
-        if (environment.envName == 'oss') {
-          let swaggerUrl = this.api_doc_name + '/' + this.service.domain + '/' + this.service.name + '/' + this.envSelected + '/swagger.json';
-          let location = 'assets/redoc/index.html?url=' + swaggerUrl;
-          window.open(location);
-        }
-        else {
-          window.open('/test-api?service=' + this.service.name + '&domain=' + this.service.domain + '&env=' + this.envSelected);
-
-        }
+        this.setSidebar('try-service');
         break;
+        // if (environment.envName == 'oss') {
+        //   let swaggerUrl = this.api_doc_name + '/' + this.service.domain + '/' + this.service.name + '/' + this.envSelected + '/swagger.json';
+        //   let location = 'assets/redoc/index.html?url=' + swaggerUrl;
+        //   window.open(location);
+        // }
+        // else {
+        //   window.open('/test-api?service=' + this.service.name + '&domain=' + this.service.domain + '&env=' + this.envSelected);
+        //
+        // }
+        // break;
 
       case 'website' :
         if (this.endpoint_env != (undefined || '')) {

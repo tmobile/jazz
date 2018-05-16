@@ -25,7 +25,7 @@ getTestBed().initTestEnvironment(
   platformBrowserDynamicTesting()
 );
 // Then we find all the tests.
-const context = require.context('./', true, /create-service.component.spec\.ts$/);
+const context = require.context('./', true, /env-try-service-sidebar.component.spec\.ts$/);
 
 //const context = require.context('./', true, /\.spec\.ts$/);
 // And load the modules.
