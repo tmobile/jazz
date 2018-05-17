@@ -204,11 +204,7 @@ api_doc_name:string='';
         if (environment.envName == "oss") {
           var apiPath =  this.api_doc_name + "/" + this.service.domain + "/" + this.service.name + "/" + this.envSelected + "/swagger.json";
           var SwaggerUrl = "http://editor.swagger.io/?url=" + apiPath;
-          var RedocUrl = "./assets/redoc/index.html?url=" + apiPath;
-          var link = document.createElement('a');
-          link.setAttribute('target', '_blank');
-          link.setAttribute('href', RedocUrl);
-          link.click();
+          window.open(SwaggerUrl);
         }
         else {
           window.open('/test-api?service=' + this.service.name + '&domain=' + this.service.domain + '&env=' + this.envSelected);
@@ -244,7 +240,6 @@ api_doc_name:string='';
   setSidebar(sidebarValue?) {
     this.sidebar = sidebarValue;
   }
-
 
   ngOnInit() {
     this.api_doc_name=env_oss.api_doc_name;
