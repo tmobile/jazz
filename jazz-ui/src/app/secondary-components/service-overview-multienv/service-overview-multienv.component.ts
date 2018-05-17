@@ -295,8 +295,40 @@ export class ServiceOverviewMultienvComponent implements OnInit {
       this.noStg = true;
     }
 
-    // this.envList        
-    this.cache.set('envList', this.list);
+    modifyEnvArr(){
+        var j=0;
+        var k=2;
+        this.sortEnvArr();
+
+        if(this.environ_arr!=undefined){
+            for(var i=0;i<this.environ_arr.length;i++){
+                this.environ_arr[i].status=this.environ_arr[i].status.replace("_"," ");
+                // this.environ_arr[i].status=this.environ_arr[i].status.split(" ").join("\ n")
+                if(this.environ_arr[i].logical_id == 'prd' || this.environ_arr[i].logical_id == 'prod'){
+                    this.prodEnv=this.environ_arr[i];
+                    continue;
+                }
+                if(this.environ_arr[i].logical_id == 'stg'){
+                    this.stgEnv=this.environ_arr[i];
+                    continue;
+                } else {
+                    if(this.environ_arr[i].status !== 'archived') {
+                        this.Environments[j]=this.environ_arr[i];   
+                        this.envList[k]=this.environ_arr[i].logical_id; 
+                        if(this.environ_arr[i].friendly_name != undefined){
+                            this.friendlist[k++]=this.environ_arr[i].friendly_name;   
+                        }else{
+                            this.friendlist[k++]=this.environ_arr[i].logical_id;
+                        }
+                        j++;
+                    }
+                }
+            }
+            this.list = {
+                env : this.envList,
+                friendly_name : this.friendlist
+            }
+        }
 
 
   }
@@ -318,8 +350,87 @@ export class ServiceOverviewMultienvComponent implements OnInit {
         this.list_inactive_env[k] = this.environ_arr[i];
         k++;
 
-      }
+        
+    }
+    getenvData(){
+        this.isenvLoading=true;
+        this.ErrEnv=false;
+        if(this.service==undefined){return}
+        this.http.get('/jazz/environments?domain='+this.service.domain+'&service='+this.service.name).subscribe(
+            response => {
+                
+                this.isenvLoading=false;
+                  this.environ_arr=response.data.environment;
+                  if(this.environ_arr!=undefined)    
+                    if(this.environ_arr.length==0 || response.data==''){
+                            this.noEnv=true;   
+                    }             
+                  this.ErrEnv=false;
+              
+                  this.modifyEnvArr();
+                  
+              },
+              err => {
+                this.isenvLoading=false;
+                
+                  console.log('error',err);
+                  this.ErrEnv=true;
+                  if(err.status == 404) this.err404=true;
+                  this.errMessage="Something went wrong while fetching your data";
+                  this.errMessage=this.toastmessage.errorMessage(err,"environment");
+                  var payload = {
+                      "domain" : +this.service.domain,
+                      "service" : this.service.name
+                  }
+                  this.getTime();
+                  this.errorURL = window.location.href;
+                  this.errorAPI = env_internal.baseurl+"/jazz/environments";
+                  this.errorRequest = payload;
+                  this.errorUser = this.authenticationservice.getUserId();
+                  this.errorResponse = JSON.parse(err._body);
+    
+                // let errorMessage=this.toastmessage.errorMessage(err,"serviceCost");
+                // this.popToast('error', 'Oops!', errorMessage);
+            })
+        };
+        getTime() {
+            var now = new Date();
+            this.errorTime = ((now.getMonth() + 1) + '/' + (now.getDate()) + '/' + now.getFullYear() + " " + now.getHours() + ':'
+            + ((now.getMinutes() < 10) ? ("0" + now.getMinutes()) : (now.getMinutes())) + ':' + ((now.getSeconds() < 10) ? ("0" + now.getSeconds()) : (now.getSeconds())));
+            // console.log(this.errorTime);
+          }
+    
+        feedbackRes:boolean=false;
+        openModal:boolean=false;
+        feedbackMsg:string='';
+        feedbackResSuccess:boolean=false;
+        feedbackResErr:boolean=false;
+        isFeedback:boolean=false;
+        toast:any;
+        model:any={
+            userFeedback : ''
+        };
+        buttonText:string='SUBMIT';
+        isLoading:boolean=false;
+        sjson:any={};
+		djson:any={};
+        is_multi_env:boolean = false;
+        ngOnInit() {
+            if(environment.multi_env) this.is_multi_env=true;
+            if(environment.envName == 'oss') this.internal_build = false;
+            var obj;       
 
+            this.prodEnv={};
+            this.stgEnv={};
+            if((this.service.domain!=undefined)){
+                this.getenvData();              
+            }
+    }
+
+    testingStatus(){
+        setInterval(() => {
+        this.onload.emit(this.service.status);
+        },500);
     }
     this.environ_arr = this.list_env.slice(0, this.list_env.length);
 
