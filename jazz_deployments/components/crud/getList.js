@@ -38,7 +38,7 @@ module.exports = (tableName, query, onComplete) => {
         };
 
     if (query) {
-        var keys_list = global.config.REQUIRED_PARAMS;
+        var keys_list = global.config.REQUIRED_PARAMS.slice(0, global.config.REQUIRED_PARAMS.length);
         //appending the optional_keys list along with required_fields
         if (query.status) {
             keys_list.push("status");
@@ -88,7 +88,7 @@ module.exports = (tableName, query, onComplete) => {
             if (err) {
                 onComplete(err);
             } else {
-                var items_formatted = (data.Items.map(item => utils.formatData(item, true)));
+                var items_formatted = (data.Items.map((item) => utils.formatData(item)));
                 if (data.LastEvaluatedKey) {
                     scanparams.ExclusiveStartKey = data.LastEvaluatedKey;
                     scanExecute(onComplete);

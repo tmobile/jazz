@@ -22,7 +22,7 @@
     @version: 1.0
 **/
 
-module.exports = () => {
+module.exports = function () {
     var logLevels = {
         error: 4,
         warn: 3,
