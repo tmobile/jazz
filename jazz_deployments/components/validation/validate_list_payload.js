@@ -22,7 +22,7 @@
     @version: 1.0
 **/
 
-const logger = require("../logger.js"); //Import the logging module.
+const logger = require("../logger.js")(); //Import the logging module.
 const validateUtils = require("./common.js")();
 
 module.exports = (config, deployment_data, onComplete) => {
