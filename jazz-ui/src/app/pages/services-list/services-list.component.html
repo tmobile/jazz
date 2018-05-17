@@ -20,29 +20,46 @@
         <btn-primary-with-icon text="CREATE SERVICE" (click)="showService(true)"></btn-primary-with-icon>
     </div>
     <div class="table-filter-wrap table-mob-view">
+        
         <section class="page-filter-wrap">
+            
             <filters class="filters" [filtersList]="tabData" [multiple]="false" [selectedList]="selectedList" (onSelected)="onFilterSelected($event)"></filters>
+            
             <div class="search-filter-wrap">
+                
+                <search-box #searchbox (onChange)="onServiceSearch($event)"></search-box>
+                
+                <div class="filter-icon"> 
+                    <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
+                    </span>
+                </div>
                 <div class="filter-icon">
-                    <span class="icon-icon-filter-unselected" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
-                        </span>
+                    <span class='pointer refresh icon-icon-refresh' title="Refresh" (click)='serviceCall()' height="19"></span>                
+            
                 </div>
             </div>
+            <!-- <a class='magen pointer refresh' (click)='serviceCall()'>Refresh</a> -->
+            
         </section>
-        <table-template class="table-container service-list-table" [message]="errMessage" [state]="loadingState" (refreshData)="refreshData($event)" [header]="tableHeader2" [showFilters]="filterSelected" (onFilter)="onFilter($event)" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected" (paginatePage)="paginatePage($event)" [currentlyActive]="pageSelected" [totalPageNum]="totalPagesTable">
+        <filter-tags-services #filtertags (OnCancel)='CancelFilters($event)'></filter-tags-services>
+        <table-template #tabletemplate class="table-container service-list-table" (onHere)='showService($event)' [isfromservice]= "fromService" [errcode]="errCode" [message]="errMessage" [state]="loadingState" (refreshData)="refreshData($event)" [header]="tableHeader2" [showFilters]="filterSelected" (onFilter)="onFilter($event)" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected" (paginatePage)="paginatePage($event)" [currentlyActive]="pageSelected" [totalPageNum]="totalPagesTable">
             <div class="table-row table-empty" [class.hide]="!serviceListEmpty">{{tableEmptyMessage}}</div>
-            <div class="table-row" [class.hide]="serviceListEmpty" *ngFor="let row of serviceList; let i = index" (click)="onRowClicked(row, i)" [class.deletingRow]="row.id==deletedServiceId">
+            <div class="table-row pointer" [class.hide]="serviceListEmpty" *ngFor="let row of serviceList; let i = index" (click)="onRowClicked(row, i)" [class.deletingRow]="row.id==deletedServiceId || row.status=='deletion started'">
                 <div class="column">{{row.name}}</div>
                 <div class="column">{{row.type}}</div>
                 <div class="column">{{row.domain}}</div>
                 <div class="column">{{row.lastModified}}</div>
-                <div class="column" [ngClass]="'status ' + row.status">{{row.status}}<span class="deleting-progress">...</span></div>
+                <!-- <div class="column">{{row.lastModified | amDateFormat: 'YYYY-MM-DD HH:mm:ss'}}</div> -->
+               <!--  <div class="column">
+                    <span class="health" [ngClass]="('state-' + row.health)"></span>
+                </div> -->
+                <div class="column" [ngClass]="'status ' + row.status">{{row.status}}
+                    <!-- <span class="deleting-progress">...</span> -->
+                </div>
             </div>
         </table-template>
     </div>
-    <footer>
-        
-    </footer>
+    <footer></footer>
 </section>
 
 <sidebar [show]="showAddService" (onClose)="showService(false)">

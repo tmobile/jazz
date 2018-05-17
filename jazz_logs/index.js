@@ -59,10 +59,6 @@ module.exports.handler = (event, context, cb) => {
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter category.")));
 			}
 
-			if (!_.includes(config.VALID_ENVIRONMENTS, event.body.environment.toLowerCase())){
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for environment - " + config.VALID_ENVIRONMENTS.join(", "))));
-			}
-
 			if (!event.body.type || !_.includes(config.VALID_LOGTYPES, event.body.type.toLowerCase())){
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + config.VALID_LOGTYPES.join(", "))));
 			}
@@ -83,7 +79,7 @@ module.exports.handler = (event, context, cb) => {
 				querys = [];
 
 			//Appending service name with Domain, Env and Jazz_type
-			service = domain + "-" + service + "-" + env;
+			service = domain + "-" + service
 			if(config.ENV_PREFIX){
 				service = config.ENV_PREFIX + "-" + service
 			}
@@ -92,14 +88,26 @@ module.exports.handler = (event, context, cb) => {
 
 			querys.push(utils.setQuery("servicename", service));
 			querys.push(utils.setQuery("environment", env));
-			querys.push(utils.setQuery("log_level", logType));
 
 			//Query to filter Control messages
 			querys.push(utils.setQuery("!message", "START*"));
 			querys.push(utils.setQuery("!message", "END*"));
 			querys.push(utils.setQuery("!message", "REPORT*"));
 
-			logger.info("QueryObj: "+ JSON.stringify(querys));
+			if (logType) {
+				var log_type_config = [];
+
+				log_type_config = config.LOG_LEVELS.map(logLevel => logLevel.Type);
+				
+				if(_.includes(log_type_config, logType.toLowerCase())) {
+					querys.push(utils.setLogLevelQuery(config.LOG_LEVELS, "log_level", logType.toLowerCase()));
+				} else {
+					logger.info("Only following values are allowed for logger type - " + log_type_config.join(", "));
+					return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + log_type_config.join(", "))));
+				}
+			}
+
+			logger.info("QueryObj: " + JSON.stringify(querys));
 
 			var servCategory = [];
 
@@ -111,7 +119,7 @@ module.exports.handler = (event, context, cb) => {
 
 			var req = utils.requestLoad;
 			req.url = config.BASE_URL + "/_plugin/kibana/elasticsearch/_msearch";
-			req.body = setRequestBody(servCategory, querys, startTime, endTime, size, page);
+			req.body = setRequestBody(servCategory, env, querys, startTime, endTime, size, page);
 
 			request(req, function(err, res, body) {
 				if (err) {
@@ -164,9 +172,10 @@ module.exports.handler = (event, context, cb) => {
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("Exception occured while processing the request : "+ JSON.stringify(e))));
 	}
 
-	function setRequestBody(category, querys, startTime, endTime, size, page){
+	function setRequestBody(category, type, querys, startTime, endTime, size, page){
 		var index = {
 			"index": category,
+			"type": type,
 			"ignore_unavailable": true
 			};
 
@@ -174,10 +183,6 @@ module.exports.handler = (event, context, cb) => {
 			"size": size,
 			"from" : page,
 			"sort":[{
-				"request_id":{
-					"order":"desc"
-				}
-			},{
 				"timestamp":{
 					"order":"desc"
 				}

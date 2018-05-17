@@ -1,8 +1,8 @@
 {
   "JOB_BUILD_URL":"{conf-jenkins-host}/job/create-service/buildWithParameters",
   "BUILD_TOKEN":"slf-ust-tm0621",
-  "SVC_USER":"jobexec",
-  "SVC_PASWD":"jenkinsadmin",
+  "SVC_USER":"{ci_user}",
+  "SVC_PASWD":"{ci_pwd}",
   "USER_POOL_ID":"{conf-user-pool-id}",
   "REGION": "{conf-region}",
   "USER_CLIENT_ID": "{conf-client-id}",

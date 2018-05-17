@@ -9,7 +9,9 @@
         "test": "mocha"
     },
     "dependencies": {
-        "request": "^2.75.0"
+        "request": "^2.75.0",
+        "unicode-byte-truncate": "*",
+        "lodash": "*"
 	},
     "devDependencies": {
         "mocha": "^v3.0.0"		

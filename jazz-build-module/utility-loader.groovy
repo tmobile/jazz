@@ -2,6 +2,8 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import groovy.transform.Field
+import static java.util.UUID.randomUUID
+
 echo "Utility module loaded successfully"
 
 
@@ -10,7 +12,7 @@ echo "Utility module loaded successfully"
 
 
 def initialize(configLoader){
-	setConfigLoader(configLoader)	
+	setConfigLoader(configLoader)
 }
 
 
@@ -22,26 +24,26 @@ def initialize(configLoader){
 def generateBucketNameForService(domain, service) {
 	def bucketName
 	def _hash
-	if(service) {
+	if (service) {
 		bucketName = service
-		if(domain) {
-			bucketName = domain+"-"+bucketName
+		if (domain) {
+			bucketName = domain + "-" + bucketName
 		}
 		try {
 			def rd = sh(script: "openssl rand -hex 4", returnStdout:true).trim()
-			if(rd && rd.length() == 8){
+			if (rd && rd.length() == 8) {
 				_hash = rd
 			} else {
 				error "OpenSSL failed to generate a valid hash"
 			}
-		} catch(ex) {
+		} catch (ex) {
 			_hash = sh(script: "echo \${RANDOM}", returnStdout:true).trim()
 		}
 	}
-	if(_hash) {
-		bucketName = bucketName+"-"+_hash
+	if (_hash) {
+		bucketName = bucketName + "-" + _hash
 	}
-	if(bucketName) {
+	if (bucketName) {
 		return bucketName.toLowerCase()
 	} else {
 		error "Could not generate bucket name for service"
@@ -54,21 +56,30 @@ def generateBucketNameForService(domain, service) {
  * @return  folder name
  */
 def getBucket(stage) {
-	if(stage == 'dev') {
+	if (stage == 'dev') {
 		return config_loader.JAZZ.S3.WEBSITE_DEV_BUCKET
-	}else if (stage == 'stg') {
+	} else if (stage == 'stg') {
 		return config_loader.JAZZ.S3.WEBSITE_STG_BUCKET
 	} else if (stage == 'prod') {
 		return config_loader.JAZZ.S3.WEBSITE_PROD_BUCKET
 	}
 }
 
- /**
-  * Jazz shebang that runs quietly and disable all console logs
-  *
-  */
+/**
+ * Jazz shebang that runs quietly and disable all console logs
+ *
+ */
 def jazz_quiet_sh(cmd) {
     sh('#!/bin/sh -e\n' + cmd)
+}
+
+/**
+* Get Request Id 
+* @return   
+*/
+def generateRequestId() {
+	UUID uuid = UUID.randomUUID()
+	return uuid.toString()
 }
 
 /**
@@ -94,11 +105,11 @@ def getAPIId(apiIdMapping, namespace, service) {
 
 	if (apiIdMapping["${namespace}_${service}"]) {
 		return apiIdMapping["${namespace}_${service}"];
-	}else if (apiIdMapping["${namespace}_*"]) {
+	} else if (apiIdMapping["${namespace}_*"]) {
 		return apiIdMapping["${namespace}_*"];
-	}else {
+	} else {
 		apiIdMapping["*"];
-	}   
+	}
 }
 
 /**

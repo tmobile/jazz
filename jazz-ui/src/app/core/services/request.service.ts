@@ -9,10 +9,10 @@ import { Http, Headers, Response, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import { AuthenticationService } from '../../core/services/authentication.service';
 import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/catch';
 import { ConfigService } from '../../app.config';
 import { Router } from '@angular/router';
-import {ServiceCostComponent} from '../../pages/service-cost/service-cost.component'
+import {ServiceCostComponent} from '../../pages/service-cost/service-cost.component';
+import { environment } from '../../../environments/environment';
 
 @Injectable()
 export class RequestService {
@@ -25,7 +25,7 @@ export class RequestService {
         let currentUser;
         currentUser = JSON.parse(localStorage.getItem("currentUser"));
         this.token = currentUser && currentUser.token;
-        this.baseurl = config.getConfiguration().baseurl;
+        this.baseurl = localStorage.getItem('overridehost')? localStorage.getItem('overridehost') :  environment.baseurl;
     }
 
     constructUrl(url: string): string {
@@ -78,11 +78,9 @@ export class RequestService {
                     return (responseBody.error || err);
                 }
             })
-             .catch((err: Response): any => {
-                 console.log(err.status);
-                return this.handleError(err, router);
+             .catch((error: any) => {
+                return this.handleError(error, router);
             })
-             //.catch((err: Response): any => Observable.throw(error.json().error || 'Server error'));
     }
 
     post(url: string, body: any): Observable<any> {
@@ -116,12 +114,9 @@ export class RequestService {
                     return responseBody;
                 }
             })
-            // .catch(this.handleError)
             .catch((error: any) => {
-                
                 return this.handleError(error, router);
             })
-            // .catch((error:any) => Observable.throw(error.json().error || 'Server error'));;
     }
 
     put(url: string, body: any): Observable<any> {
@@ -156,27 +151,18 @@ export class RequestService {
                 }
             })
              .catch((error: any) => {
-                 console.log('put error:', JSON.parse(error));
                 return this.handleError(error, router);
             })
            
     }
     private handleError(error: any, router:any) {
         console.log(error);
-       
-        if(error.status === 401 || error.status === 403){
+       if(error.status === 401 || error.status === 403){
             if (router) {
                router.navigateByUrl('');//route to landing page
                this.authenticationService.logout();
             }
-        }
-        else if(error.message !== undefined && error.message ==="Unauthorized")
-        {
-            if (router) {
-               router.navigateByUrl('');//route to landing page
-               this.authenticationService.logout();
-            }
-        }
+       }
         
         return Observable.throw(error);
     }

@@ -14,7 +14,7 @@ echo "Events module loaded successfully"
 @Field def g_environment = ""
 @Field def g_event_handler = ""
 @Field def g_event_type = ""
-@Field def g_url
+@Field def g_events_api
 @Field def service_metadata
 @Field def config_loader
 
@@ -49,7 +49,11 @@ echo "Events module loaded successfully"
 	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
 	'CREATE_ASSET':'CREATE_ASSET',
 	'UPDATE_ASSET':'UPDATE_ASSET',
-	'CALL_DELETE_WORKFLOW': 'CALL_DELETE_WORKFLOW'
+	'CALL_DELETE_WORKFLOW': 'CALL_DELETE_WORKFLOW',
+	'CREATE_DEPLOYMENT': 'CREATE_DEPLOYMENT',
+	'UPDATE_DEPLOYMENT': 'UPDATE_DEPLOYMENT',
+	'UPDATE_ENVIRONMENT': 'UPDATE_ENVIRONMENT',
+	'DELETE_ENVIRONMENT': 'DELETE_ENVIRONMENT'
 ]
 
 /**
@@ -72,6 +76,17 @@ def initialize(configLoader, serviceConfig, eventType, branch, env, url){
 }
 
 /**
+ * Send a started event.
+ * @param event_name
+ * @param message
+ * @return      
+ */
+def sendStartedEvent(event_name, message = null, moreCxtMap = null) {
+	def environment = g_environment
+	sendStartedEvent(event_name, message, moreCxtMap, environment)
+}
+
+/**
  * Send a started event specific to an environment.
  * @param event_name
  * @param message
@@ -79,7 +94,7 @@ def initialize(configLoader, serviceConfig, eventType, branch, env, url){
  * @param message
  * @return      
  */
-def sendStartedEvent(l_event_name, l_message, l_moreCxtMap) {
+def sendStartedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
 	if (!l_moreCxtMap) {
@@ -94,6 +109,15 @@ def sendStartedEvent(l_event_name, l_message, l_moreCxtMap) {
 }
 
 /**
+ * Send a completed event.
+ * @return      
+ */
+def sendCompletedEvent(event_name, message = null, moreCxtMap = null) {
+	def environment = g_environment
+	sendCompletedEvent(event_name, message, moreCxtMap, environment)
+}
+
+/**
  * Send a completed event specific to an environment .
  * @param event_name
  * @param message
@@ -101,7 +125,7 @@ def sendStartedEvent(l_event_name, l_message, l_moreCxtMap) {
  * @param message
  * @return      
  */
-def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap) {
+def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
 	if (!l_moreCxtMap) {
@@ -117,6 +141,15 @@ def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap) {
 }
 
 /**
+ * Send a failure event.
+ * @return      
+ */
+def sendFailureEvent(event_name, message = null, moreCxtMap = null) {
+	def environment = g_environment
+	sendFailureEvent(event_name, message, moreCxtMap, environment)
+}
+
+/**
  * Send a failure event specific to an environment .
  * @param event_name
  * @param message
@@ -124,7 +157,7 @@ def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap) {
  * @param message
  * @return      
  */
-def sendFailureEvent(l_event_name, l_message, l_moreCxtMap) {
+def sendFailureEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
 	def message = l_message
 	if (!l_moreCxtMap) {
@@ -199,14 +232,14 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 	echo "$event_json"
 	
 	try {
-
-		def shcmd = sh(script: "curl --silent -X POST -k -v \
+		if (service_metadata['domain'] != "jazz") {
+			def shcmd = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
-					$g_url \
-				-d \'${payload}\'", returnStdout:true).trim()	
-				
-		echo "------  Event send.........."
-      
+					$g_events_api \
+				-d \'${payload}\'", returnStdout:true).trim()
+
+			echo "------  Event send.........."
+		}
 	}
 	catch (e) {
 		echo "error occured when recording event: " + e.getMessage()
@@ -288,7 +321,7 @@ def setEventType(eventType) {
  * @return      
  */
 def setUrl(url) {
-	g_url = url
+	g_events_api = url
 
 }
 

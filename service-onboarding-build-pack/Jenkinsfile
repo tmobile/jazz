@@ -57,19 +57,18 @@ node  {
 			error "Service Id is not available."
 		}
 
-
+		scmModule.setServiceConfig(service_config)
 		if (!events) { error "Can't load events module"	} //Fail here
 		events.initialize(configLoader, service_config, "SERVICE_CREATION", "", "", g_base_url + "/jazz/events")
 
 		repo_name = "${service_config['domain']}_${service_config['service']}"
 		context_map = [created_by : service_config['created_by']]
 
-
+		events.sendStartedEvent("VALIDATE_INPUT", 'input validation starts', context_map)
 		if (service_config['type'] == "api" || service_config['type'] == "lambda" || service_config['type'] == "function" || service_config['type'] == "website") {
 			if (service_config['runtime'] == "nodejs" || service_config['runtime'] == "python" || service_config['runtime'] == "java" || service_config['runtime'] == "n/a") {
 
 				switch (service_config['type']) {
-
 					case "api":
 						if (service_config['runtime'] == "nodejs") {
 							service_template = "api-template-nodejs"
@@ -112,13 +111,12 @@ node  {
 			events.sendFailureEvent('VALIDATE_INPUT', ex.getMessage(), context_map)
 			error "Invalid Service Type"
 		}
+		events.sendCompletedEvent('VALIDATE_INPUT', 'input validation completed', context_map)
 	}
 
 
-	stage('Get Service Template')
-	{
+	stage('Get Service Template'){
 		try {
-
 			try {
 				sh 'rm -rf *'
 				sh 'rm -rf .*'
@@ -128,7 +126,7 @@ node  {
 			}
 
 			echo "service_template : $service_template"
-
+			events.sendStartedEvent("CLONE_TEMPLATE", 'cloning template starts', context_map)
 			sh 'mkdir ' + service_template
 			dir(service_template)
 			{
@@ -150,6 +148,7 @@ node  {
 				context_map['repository'] = repo_url
 				context_map['metadata'] = serviceMetadataJson
 			}
+			events.sendCompletedEvent('CLONE_TEMPLATE', 'cloning template completed', context_map)
 		}
 		catch (ex) {
 			send_status_email("FAILED")
@@ -161,9 +160,9 @@ node  {
 	stage('Update Service Template')
 	{
 		try {
-
 			dir(service_template)
 			{
+				events.sendStartedEvent("MODIFY_TEMPLATE", 'modify template starts', context_map)
 				//Clearing depoyment-env.yml
 				sh "echo -n > ./deployment-env.yml"
 				// Add service_id  in deployment-env.yml
@@ -174,10 +173,11 @@ node  {
 				sh "sed -i -- 's/{domain}/${service_config['domain']}/g' ./Jenkinsfile"
 				
 			}
+			events.sendCompletedEvent('MODIFY_TEMPLATE', 'modify template completed', context_map)
 		}
 		catch (ex) {
 			send_status_email("FAILED")
-			events.sendFailureEvent('LOCK_MASTER_BRANCH', ex.getMessage(), context_map)
+			events.sendFailureEvent('MODIFY_TEMPLATE', ex.getMessage(), context_map)
 			error ex.getMessage()
 		}
 	}
@@ -187,11 +187,13 @@ node  {
 		dir(service_template)
 		{
 			try {
+				events.sendStartedEvent("CREATE_SERVICE_REPO", 'service repo creation starts', context_map)
 				scmModule.createProject(service_config['created_by'], repo_name)
+				events.sendCompletedEvent('CREATE_SERVICE_REPO', 'modify template completed', context_map)
 			}
 			catch (ex) {
 				send_status_email("FAILED")
-				events.sendFailureEvent('LOCK_MASTER_BRANCH', ex.getMessage(), context_map)
+				events.sendFailureEvent('CREATE_SERVICE_REPO', ex.getMessage(), context_map)
 				error ex.getMessage()
 			}
 		}
@@ -221,6 +223,7 @@ node  {
 
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 				try {
+					events.sendStartedEvent("ADD_WEBHOOK", 'service repo creation starts', context_map)
 					def scm_webhook_target_url
 					if (configLoader.SCM.TYPE == "gitlab") {
 						scm_webhook_target_url = "http://${configLoader.JENKINS.USERNAME}:${configLoader.JENKINS.JENKINS_PASSWORD}@${JenkinsLocationConfiguration.get().getUrl().split('/')[2]}/project/Gitlab-Trigger-Job"
@@ -228,37 +231,42 @@ node  {
 						scm_webhook_target_url = JenkinsLocationConfiguration.get().getUrl() + "/bitbucket-scmsource-hook/notify"
 					}
 					scmModule.addWebhook(repo_name, "notify-jenkins", scm_webhook_target_url)
+					scmModule.addWebhook(repo_name, "notify-events", "${g_base_url}/jazz/scm-webhook")
+					events.sendCompletedEvent('ADD_WEBHOOK', 'modify template completed', context_map)
 				}
 				catch (ex) {
 					send_status_email("FAILED")
-					events.sendFailureEvent('LOCK_MASTER_BRANCH', ex.getMessage(), context_map)
+					events.sendFailureEvent('ADD_WEBHOOK', ex.getMessage(), context_map)
 					error ex.getMessage()
 				}
 
 				try {
+					events.sendStartedEvent("PUSH_TEMPLATE_TO_SERVICE_REPO", 'push template to repo started', context_map)
 					sh "git add --all"
 					sh "git commit -m 'Code from the standard template'"
 					sh "git remote -v"
 					sh "git push -u origin master "
-
+					events.sendCompletedEvent('PUSH_TEMPLATE_TO_SERVICE_REPO', 'push template completed', context_map)
 				}
 				catch (ex) {
 					send_status_email("FAILED")
-					events.sendFailureEvent('LOCK_MASTER_BRANCH', ex.getMessage(), context_map)
+					events.sendFailureEvent('PUSH_TEMPLATE_TO_SERVICE_REPO', ex.getMessage(), context_map)
 					error ex.getMessage()
 				}
 
 				try {
+					events.sendStartedEvent("ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO", 'adding write permission to repo started', context_map)
 					scmModule.setRepoPermissions(service_config['created_by'], repo_name, admin_group)
-
+					events.sendCompletedEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO', 'adding write permission to repo started', context_map)
 				}
 				catch (ex) {
 					send_status_email("FAILED")
-					events.sendFailureEvent('LOCK_MASTER_BRANCH', ex.getMessage(), context_map)
+					events.sendFailureEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO', ex.getMessage(), context_map)
 					error ex.getMessage()
 				}
 
 				try {
+					events.sendStartedEvent("LOCK_MASTER_BRANCH", 'set branch permission to repo started', context_map)
 					scmModule.setBranchPermissions(repo_name)
 				}
 				catch (ex) {

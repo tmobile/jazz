@@ -1,11 +1,14 @@
+<div class="override-url-wrap" *ngIf="override">
+    <div class="override-text">Loading services from URL: {{overridingUrl}}</div>
+    <btn-jazz-primary text="STOP" (click)="closeOverride()"></btn-jazz-primary>
+ </div>
 <header class="jazz-header">
     <div class="header-section left logo-wrp">
         <img (click)="goToLanding()" src="assets/images/icons/Jazz_Logo@2x.png">
     </div>
     <div *ngIf="type == 'landing'" class="header-section right">
         <ul class="dashboardLinks">
-            <li (click)="goToAbout('features')" [class.hide] = 'noLink'> Features</li>
-            <li class="hide" (click)="goToAbout('releaseCalendars')"> Release Calendar</li>
+            <li (click)="goToAbout('features')" [class.hide] = 'noLink'> Features</li>            
             <li (click)="goToAbout('about')" [class.hide] = 'noLink'>About Us</li>
             <li [class.hide]="isLoggedIn">
                 <div class="login">
@@ -16,18 +19,18 @@
                 <div class="header-section right">
                     <div class="header-profile-section">
                         <div class="notification hide" [ngClass]="{'active': notificationsAvailable}">
-                            <img src="assets/images/icons/icon-notifcation.png">
+                            <span class="icon-icon-notifcation"></span>
                         </div>
                         <div class="profile" (clickOutside)="profileClicked = false">
-                            <img (click)="profileClick()" src="assets/images/profile-icon.png">
+                            <div class="icon-icon-profile" (click)="profileClick()" title="Logged in as user"></div>
                             <div class="profile-options" [ngClass]="{'fade': profileClicked , 'fade-out': !profileClicked}">
                                 <ul>
                                     <li class="hide" (click)="profileClicked = !profileClicked">
                                         <div class="profile-list"><span class="icon-icon-settings"></span> Settings
                                         </div>
                                     </li>
-                                    <li class="hide" (click)="profileClicked = !profileClicked">
-                                        <div class="profile-list"><span class="icon-icon-feedback"></span>Feedback</div>
+                                    <li *ngIf='!isOSS' class="" (click)="profileClicked = !profileClicked">
+                                        <div class="profile-list" (click)='openFeedbackForm()'><span class="icon-icon-feedback"></span>Feedback</div>
                                     </li>
                                     <li (click)="profileClicked = !profileClicked">
                                         <div class="profile-list" (click)='onNavigate($event)'><span class="icon-icon-help"></span>Help</div>
@@ -63,18 +66,18 @@
         <div class="header-section right">
             <div class="header-profile-section">
                 <div class="notification hide" [ngClass]="{'active': notificationsAvailable}">
-                    <img src="assets/images/icons/icon-notifcation.png">
+                    <span class="icon-icon-notifcation"></span>
                 </div>
                 <div class="profile" (clickOutside)="profileClicked = false">
-                    <img (click)="profileClick()" src="assets/images/profile-icon.png">
+                    <div class="icon-icon-profile" (click)="profileClick()" title="Logged in as {{loggedinUser}}"></div>
                     <div class="profile-options" [ngClass]="{'fade': profileClicked , 'fade-out': !profileClicked}">
                         <ul>
                             <li class="hide" (click)="profileClicked = !profileClicked">
                                 <div class="profile-list"><span class="icon-icon-settings"></span> Settings
                                 </div>
                             </li>
-                            <li class="hide" (click)="profileClicked = !profileClicked">
-                                <div class="profile-list"><span class="icon-icon-feedback"></span>Feedback</div>
+                            <li *ngIf='!isOSS' class="" (click)="profileClicked = !profileClicked">
+                                <div class="profile-list" (click)='openFeedbackForm()'><span class="icon-icon-feedback"></span>Feedback</div>
                             </li>
                             <li (click)="profileClicked = !profileClicked">
                                 <div class="profile-list" (click)='onNavigate($event)'><span class="icon-icon-help"></span>Help</div>
@@ -90,3 +93,35 @@
         </div>
     </div>
 </header>
+<div class='feedback-overlay' *ngIf="isFeedback">
+    <div class='feedback-wrap relative'>
+        <div class='feedback-hdr relative'>Let Us Know What You Think!
+        </div>
+        <div class="separator-row"></div>
+        <div class="loading-row" [class.show]="isLoading">
+            <div class="loading-circle"></div>
+        </div>
+        <!-- <div> -->
+            <div class='feedback-text-wrap' [class.invisible]="isLoading || feedbackRes">
+                <p>We would love to hear ways to improve Jazz, please leave any feedback in the form below.</p>
+                <textarea rows="5" cols="50" type="text" name='userFeedback' id="userFeedback" placeholder="Enter your feedback here" [(ngModel)]="model.userFeedback"  #userFeedback='ngModel'></textarea>
+            </div>
+            <div class="feedback-text-wrap feedbackRes" [class.show]="feedbackRes">
+                <div class="hide feedbackResSuccess" [class.show]="feedbackResSuccess">
+                    <div>{{feedbackMsg}}</div>
+                </div>
+                <div class="hide feedbackResErr" [class.show]="feedbackResErr"> Oops! {{feedbackMsg}}
+                    <span> or <a (click)="mailTo()"> contact us</a> via email.</span>
+                </div>
+                <!-- <btn-jazz-primary text="DONE" class="feedback-submit" [disablePrimaryBtn]="!model.userFeedback" (click)='isFeedback = !isFeedback;'></btn-jazz-primary> -->
+            </div>
+            <div class='feedback-btn-wrap'>
+                <a (click)='isFeedback = !isFeedback;isLoading=false'  [class.invisible]="isLoading || feedbackRes">CANCEL</a>
+                <btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading" [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'" (click)='submitFeedback(buttonText)'></btn-jazz-primary>
+            </div>
+        <!-- </div> -->
+        
+        
+    </div>
+    
+</div>

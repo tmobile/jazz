@@ -1,0 +1,43 @@
+<div class="service-overview-wrp relative">
+  <div class="stage-wrp" *ngFor="let overview of environments" [ngClass]="overview.stage" [class.active]="activeEnv == overview.stage" (click)="stageClicked(overview.stage)">
+      <div class="stage-title">{{overview.stage}}</div>
+      <div class="stage-overview">
+          <ul class="service-overview">
+              <li class="overview-item health">
+                  <div class="overview-value">NA</div>
+                  <div class="overview-label">Service Health</div>
+              </li>
+              <li class="overview-item last-status" *ngIf="overview.serviceHealth == 'good'">
+                  <div class="overview-value">NA</div>
+                  <div class="overview-label">Last Successful Deployment</div>
+              </li>
+              <li class="overview-item last-status" *ngIf="overview.serviceHealth == 'bad'">
+                  <div class="overview-value">NA</div>
+                  <div class="overview-label">Last Successful Deployment</div>
+              </li>
+              <li class="overview-item deployments-count">
+                  <div class="overview-value">NA</div>
+                  <div class="overview-label">
+                      <div># of Deployments </div>
+                      <div>({{overview.deploymentsCount.duration}})</div>
+                  </div>
+              </li>
+              <li class="overview-item cost" >
+                  <div class="overview-value">NA
+                  </div>
+                  <div class="overview-label">
+                      <div>Cost </div>
+                      <div>({{overview.cost.duration}})</div>
+                  </div>
+              </li>
+              <li class="overview-item code-quality" >
+                  <div class="overview-value">NA
+                  </div>
+                  <div class="overview-label">
+                      <span>Code Quality</span>
+                  </div>
+              </li>
+          </ul>
+      </div>
+  </div>
+</div>

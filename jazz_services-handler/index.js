@@ -26,6 +26,7 @@ const AWS = require('aws-sdk');
 const rp = require('request-promise-native');
 const errorHandlerModule = require("./components/error-handler.js");
 const request = require('request');
+const _ = require("lodash");
 const scEvents = require('./utils/service-creation-events.js');
 const fcodes = require('./utils/failure-codes.js');
 const crud = require("./components/crud")(); //Import the utils module.
@@ -41,6 +42,7 @@ var handler = (event, context, cb) => {
 	processedEvents = [];
 	failedEvents = [];
 
+	logger.info("event : " + JSON.stringify(event));
 	rp(getToken(configData))
 		.then(result => { return validateAuthToken(result); })
 		.then(authToken => { return processRecords(event, configData, authToken); })
@@ -101,12 +103,12 @@ var processRecords = function (event, configData, authToken) {
 	});
 }
 
-var processRecord = function (record, configData,authToken) {
+var processRecord = function (record, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var sequenceNumber = record.kinesis.sequenceNumber;
 		var encodedPayload = record.kinesis.data;
 		var payload;
-		return checkInterest(encodedPayload, sequenceNumber)
+		return checkInterest(encodedPayload, sequenceNumber, configData)
 			.then(result => {
 				payload = result.payload;
 				if (result.interested_event) {
@@ -123,16 +125,26 @@ var processRecord = function (record, configData,authToken) {
 			});
 	});
 }
-var checkInterest = function (encodedPayload, sequenceNumber) {
+var checkInterest = function (encodedPayload, sequenceNumber, configData) {
 	return new Promise((resolve, reject) => {
-		var payload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
-		if (payload.Item.EVENT_TYPE && payload.Item.EVENT_TYPE.S) {
-			logger.info("found " + payload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
-			resolve({
-				"interested_event": true,
-				"payload": payload.Item
-			});
-		} 
+		var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
+		logger.info("kinesisPayload : " + JSON.stringify(kinesisPayload));
+		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
+			if (_.includes(configData.EVENTS.EVENT_TYPE, kinesisPayload.Item.EVENT_TYPE.S) &&
+				_.includes(configData.EVENTS.EVENT_NAME, kinesisPayload.Item.EVENT_NAME.S)) {
+				logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
+				return resolve({
+					"interested_event": true,
+					"payload": kinesisPayload.Item
+				});
+			} else {
+				logger.error("Not an interested event or event type");
+				return resolve({
+					"interested_event": false,
+					"payload": kinesisPayload.Item
+				});
+			}
+		}
 	});
 }
 
@@ -143,41 +155,85 @@ var processEvent = function (payload, configData, authToken) {
 			var err = handleError(failureCodes.PR_ERROR_1.code, "Validation error while processing event for service");
 			return reject(err);
 		}
+		getServiceId(payload, configData, authToken)
+			.then(result => { return updateService(result, payload, configData, authToken); })
+			.then(result => { return resolve({ "message": "updated service " + serviceContext.service + " in service catalog." }); })
+			.catch(err => {
+				logger.error("Error updating service in service catalog : " + JSON.stringify(err));
+				var error = handleError(failureCodes.PR_ERROR_2.code, "Error updating service in service catalog ");
+				return reject(error);
+			});
+	});
+}
 
+var updateService = function (result, payload, configData, authToken) {
+	return new Promise((resolve, reject) => {
 		var svcContext = JSON.parse(payload.SERVICE_CONTEXT.S);
 		var serviceContext = getServiceContext(svcContext);
 		serviceContext.service = payload.SERVICE_NAME.S
 		serviceContext.created_by = payload.USERNAME.S
-		serviceContext.service_id = payload.SERVICE_ID.S
+		serviceContext.service_id = result.service_id
 		var statusResponse = getUpdateServiceStatus(payload, configData);
+		var inputs = {
+			"TOKEN": authToken,
+			"SERVICE_API_URL": configData.SERVICE_API_URL,
+			"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
+			"ID": serviceContext.service_id,
+			"DESCRIPTION": serviceContext.description,
+			"REPOSITORY": serviceContext.repository,
+			"EMAIL": serviceContext.email,
+			"SLACKCHANNEL": serviceContext.slackChannel,
+			"TAGS": serviceContext.tags,
+			"STATUS": statusResponse.status,
+			"METADATA": serviceContext.metadata
+		};
+		logger.info("update input : " + JSON.stringify(inputs));
+		crud.update(inputs, function (err, results) {
+			if (err) {
+				var error = handleError(failureCodes.PR_ERROR_2.code, err.error);
+				return reject(error);
+			} else {
+				logger.info("updated service " + serviceContext.service + " in service catalog.");
+				return resolve({ "message": "updated service " + serviceContext.service + " in service catalog." });
+			}
+		});
+	});
+}
 
-		if (statusResponse.interested_event) {
+var getServiceId = function (payload, configData, authToken) {
+	return new Promise((resolve, reject) => {
+		if (payload.SERVICE_ID.S) {
+			logger.info("Service id present in the event payload");
+			return resolve({ "service_id": payload.SERVICE_ID.S });
+		} else {
+			logger.info("Service id not present in the event payload");
+			var svcContext = JSON.parse(payload.SERVICE_CONTEXT.S);
+			if (!svcContext.domain) {
+				var error = handleError(failureCodes.PR_ERROR_4.code, "Service domain not found");
+				return reject(error);
+			}
+			if (!payload.SERVICE_NAME.S) {
+				var error = handleError(failureCodes.PR_ERROR_4.code, "Service name not found");
+				return reject(error);
+			}
+
 			var inputs = {
 				"TOKEN": authToken,
 				"SERVICE_API_URL": configData.SERVICE_API_URL,
 				"SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-				"ID": serviceContext.service_id,
-				"DESCRIPTION": serviceContext.description,
-				"REPOSITORY": serviceContext.repository,
-				"EMAIL": serviceContext.email,
-				"SLACKCHANNEL": serviceContext.slackChannel,
-				"TAGS": serviceContext.tags,
-				"ENDPOINTS": serviceContext.endpoints,
-				"STATUS": statusResponse.status,
-				"METADATA": serviceContext.metadata
+				"DOMAIN": svcContext.domain,
+				"SERVICE_NAME": payload.SERVICE_NAME.S
 			};
-
-			crud.update(inputs, function (err, results) {
+			logger.info("get input : " + JSON.stringify(inputs));
+			crud.get(inputs, function (err, results) {
 				if (err) {
-					var error = handleError(failureCodes.PR_ERROR_2.code, err.error);
+					logger.error("Failed while fetching service from service catalog : " + JSON.stringify(err));
+					var error = handleError(failureCodes.PR_ERROR_4.code, err.error);
 					return reject(error);
 				} else {
-					logger.info("updated service " + serviceContext.service + " in service catalog.");
-					return resolve({ "message": "updated service " + serviceContext.service + " in service catalog." });
+					return resolve({ "service_id": results.id });
 				}
 			});
-		} else {
-			return resolve({ "message": "Not an interesting event to process" });
 		}
 	});
 }
@@ -185,31 +241,23 @@ var processEvent = function (payload, configData, authToken) {
 var getUpdateServiceStatus = function (payload, configData) {
 	var statusResponse = {};
 	if (payload.EVENT_TYPE.S === "SERVICE_CREATION") {
-		if (payload.EVENT_NAME.S === configData.SERVICE_CREATION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
-			statusResponse = { 'status': "creation_completed", 'interested_event': true };
+		if (payload.EVENT_NAME.S === configData.EVENTS.SERVICE_CREATION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
+			statusResponse = { 'status': "creation_completed" };
 		} else if (payload.EVENT_STATUS.S === "FAILED") {
-			statusResponse = { 'status': "creation_failed", 'interested_event': true };
-		} else {
-			statusResponse = { 'interested_event': false };
+			statusResponse = { 'status': "creation_failed" };
 		}
 	} else if (payload.EVENT_TYPE.S === "SERVICE_DELETION") {
-		if (payload.EVENT_NAME.S === configData.SERVICE_DELETION_EVENT_START && payload.EVENT_STATUS.S === "STARTED") {
-			statusResponse = { 'status': "deletion_started", 'interested_event': true };
-		} else if (payload.EVENT_NAME.S === configData.SERVICE_DELETION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
-			statusResponse = { 'status': "deletion_completed", 'interested_event': true };
+		if (payload.EVENT_NAME.S === configData.EVENTS.SERVICE_DELETION_EVENT_START && payload.EVENT_STATUS.S === "STARTED") {
+			statusResponse = { 'status': "deletion_started" };
+		} else if (payload.EVENT_NAME.S === configData.EVENTS.SERVICE_DELETION_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
+			statusResponse = { 'status': "deletion_completed" };
 		} else if (payload.EVENT_STATUS.S === "FAILED") {
-			statusResponse = { 'status': "deletion_failed", 'interested_event': true };
-		} else {
-			statusResponse = { 'interested_event': false };
+			statusResponse = { 'status': "deletion_failed" };
 		}
 	} else if (payload.EVENT_TYPE.S === "SERVICE_DEPLOYMENT") {
-		if (payload.EVENT_NAME.S === configData.SERVICE_DEPLOYMENT_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
-			statusResponse = { 'status': "active", 'interested_event': true };
-		} else {
-			statusResponse = { 'interested_event': false };
+		if (payload.EVENT_NAME.S === configData.EVENTS.SERVICE_DEPLOYMENT_EVENT_END && payload.EVENT_STATUS.S === "COMPLETED") {
+			statusResponse = { 'status': "active" };
 		}
-	} else {
-		statusResponse = { 'interested_event': false };
 	}
 	return statusResponse;
 }
@@ -247,9 +295,6 @@ var getServiceContext = function (svcContext) {
 	}
 	if (svcContext.metadata) {
 		json.metadata = svcContext.metadata;
-	}
-	if (svcContext.endpoints) {
-		json.endpoints = svcContext.endpoints;
 	}
 
 	return json;
@@ -292,5 +337,7 @@ module.exports = {
 	handleProcessedEvents: handleProcessedEvents,
 	getEventProcessStatus: getEventProcessStatus,
 	getServiceContext: getServiceContext,
+	updateService: updateService,
+	getServiceId: getServiceId,
 	handler: handler
 }

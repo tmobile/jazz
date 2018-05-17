@@ -10,8 +10,8 @@
   },
   "dependencies": {
     "request": "*",
-    "deasync": "*",
-    "guid": "0.0.12"
+    "uuid": "3.2.1",
+    "moment": "*"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",

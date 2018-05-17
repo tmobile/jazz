@@ -1,0 +1,40 @@
+{
+    "Item": {
+      "EVENT_ID": {
+        "S": "1ce51243-e670-4874-bb5a-f01068ac92c2"
+      },
+      "TIMESTAMP": {
+        "S": "2018-04-16T16:38:39:807"
+      },
+      "REQUEST_ID": {
+        "S": "2519b9dc-94e6-4fe6-8b0d-5a31420a6af7"
+      },
+      "EVENT_HANDLER": {
+        "S": "JENKINS"
+      },
+      "EVENT_NAME": {
+        "S": "UPDATE_ENVIRONMENT"
+      },
+      "SERVICE_NAME": {
+        "S": "test-env-oss-3"
+      },
+      "SERVICE_ID": {
+        "S": "a0144c91-b858-5ae0-7ef7-31228b8abed0"
+      },
+      "EVENT_STATUS": {
+        "S": "STARTED"
+      },
+      "EVENT_TYPE": {
+        "S": "SERVICE_DEPLOYMENT"
+      },
+      "USERNAME": {
+        "S": "Tester"
+      },
+      "EVENT_TIMESTAMP": {
+        "S": "2018-04-16T16:38:39:144"
+      },
+      "SERVICE_CONTEXT": {
+        "S": "{\"service_type\":\"website\",\"branch\":\"master\",\"runtime\":\"\",\"domain\":\"jazztesting\",\"iam_role\":\"Tester\",\"environment\":\"stg\",\"region\":\"\",\"message\":\"Environment Update event for deployment completion\",\"status\":\"deployment_started\",\"endpoint\":\"http://testsite.com/stg/index.html\"}"
+      }
+    }
+  }
