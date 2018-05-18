@@ -161,8 +161,8 @@ describe("checkforIntrestedEvents", () => {
     })
   })
 })
-describe("processEventRecord",()=>{
-  beforeEach(()=>{
+describe("processEventRecord", () => {
+  beforeEach(() => {
     var payload = {
       Item: {
         EVENT_ID: {
@@ -204,28 +204,56 @@ describe("processEventRecord",()=>{
       }
     }
   })
-  it("should call processEvent for intrested events",()=>{
+  afterEach(()=>{
+    if(reqStub){
+      reqStub.restore();
+    }
+  })
+  it.only("should call processEvent for intrested events", () => {
     let message = "Succesfully Updated Creation Event"
     let responseObject = {
       statusCode: 200,
       body: {
-        data:{
-        message: message
+        data: {
+          message: message
         }
       }
     };
-     reqStub= sinon.stub(request, "Request", (obj) => {
-        return obj.callback(null, responseObject, responseObject.body);
-     })
-     var tempAuth = "Auth_token"
-     index.processEventRecord(event.Records[0],configData,tempAuth).then((obj)=>{
-       expect(obj).to.not.eq(null);
-       expect(obj.data.message).to.eq(message)
-       reqStub.restore()
-     })
-     reqStub.restore();
+    reqStub = sinon.stub(request, "Request", (obj) => {
+      return obj.callback(null, responseObject, responseObject.body);
+    })
+    var checkForInterestedEvents = sinon.stub(index,"checkForInterestedEvents",()=>{
+      console.log("stub for CIE is called ");
+    })
+    var processEventStub = sinon.stub(index,"processEvent")
+    var tempAuth = "Auth_token"
+    index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
+    
+      reqStub.restore()
+    })
   })
-  it("should return error message for not intrested events",()=>{
+  it("should Return success message when called with valid paramenters", () => {
+    let message = "Succesfully Updated Creation Event"
+    let responseObject = {
+      statusCode: 200,
+      body: {
+        data: {
+          message: message
+        }
+      }
+    };
+    reqStub = sinon.stub(request, "Request", (obj) => {
+      console.log("stub is called ")
+      return obj.callback(null, responseObject, responseObject.body);
+    })
+    var tempAuth = "Auth_token"
+    index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
+      expect(obj).to.not.eq(null);
+      expect(obj.data.message).to.eq(message)
+      reqStub.restore()
+    })
+  })
+  it("should return error message for not intrested events", () => {
     var message = "Not an interesting event";
     var payload = {
       Item: {
@@ -270,31 +298,34 @@ describe("processEventRecord",()=>{
     var tempAuth = "Auth_token";
     var encoded = Buffer.from(JSON.stringify(payload)).toString('base64');
     event.Records[0].kinesis.data = encoded;
-    index.processEventRecord(event.Records[0],configData,tempAuth).then((obj)=>{
+    index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
       expect(obj.message).to.eq(message)
     })
   })
-  it.only("should return error message for not intrested events",()=>{
-    var tempAuth = "Auth_token";
-    let message = "Creation Event failed"
-    let responseObject = {
-      statusCode: 401,
-      body: {
-        data:{
-        message: message
-        }
-      }
-    };
-    let error ={
-      failure_code: "401 service not found",
-      failure_message :"serivice not found"
+})
+describe("getDeploymentPayload", () => {
+  var svcContext 
+  beforeEach(() => {
+     svcContext = {
+      "service_type": "api",
+      "branch": "",
+      "runtime": "nodejs",
+      "domain": "jazztest",
+      "iam_role": "arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1",
+      "environment": "",
+      "region": "us-east-1",
+      "message": "input validation starts",
+      "created_by": "serverless@t-mobile.com"
     }
-     reqStub= sinon.stub(request, "Request", (obj) => {
-        return obj.callback(error, responseObject, responseObject.body);
-     })
-     var tempAuth = "Auth_token"
-    index.processEventRecord(event.Records[0],configData,tempAuth).then((obj)=>{
-      expect(obj.message).to.eq(message)
-    })
   })
+  it("should return deploymentPayload with values passed by svcContext",()=>{
+  var deploymentPayload = index.getDeploymentPayload(svcContext)  
+  expect(deploymentPayload.domain).to.eq(svcContext.domain);
+  })
+})
+describe("processUpdateEvent",()=>{
+  beforeEach(()=>{
+    
+  })
+
 })
