@@ -216,7 +216,8 @@ describe("processEventRecord",()=>{
      reqStub= sinon.stub(request, "Request", (obj) => {
         return obj.callback(null, responseObject, responseObject.body);
      })
-     index.processEventRecord(event.Records[0],configData,"asasd").then((obj)=>{
+     var tempAuth = "Auth_token"
+     index.processEventRecord(event.Records[0],configData,tempAuth).then((obj)=>{
        console.log(obj)
      })
   })
