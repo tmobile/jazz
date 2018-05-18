@@ -23,7 +23,7 @@
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
+const logger = require("./components/logger.js")(); //Import the logging module.
 const utils = require("./components/utils.js")(); //Import the utils module.
 const validateUtils = require("./components/validation")(); //Import validation module
 const crud = require("./components/crud")(); //Import the crud module.
