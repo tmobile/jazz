@@ -205,11 +205,12 @@ describe("processEventRecord",()=>{
     }
   })
   it("should call processEvent for intrested events",()=>{
+    let message = "Succesfully Updated Creation Event"
     let responseObject = {
       statusCode: 200,
       body: {
         data:{
-        message: "401 UNAUTHORIZED Jenkins Job Not triggered"
+        message: message
         }
       }
     };
@@ -219,6 +220,8 @@ describe("processEventRecord",()=>{
      var tempAuth = "Auth_token"
      index.processEventRecord(event.Records[0],configData,tempAuth).then((obj)=>{
        console.log(obj)
+       expect(obj).to.not.eq(null);
+       expect(obj.body.data.message).to.eq(message)
      })
   })
   it("should return error message for not intrested events",()=>{
