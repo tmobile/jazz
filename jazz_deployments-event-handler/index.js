@@ -114,7 +114,8 @@ var processEventRecord = (record, configData, authToken) => {
 	});
 };
 
-var checkForInterestedEvents = (encodedPayload, sequenceNumber, configData) => {
+function checkForInterestedEvents(encodedPayload, sequenceNumber, configData)  {
+	console.log("in the actual function 2");
 	return new Promise((resolve, reject) => {
 		var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
@@ -366,7 +367,7 @@ module.exports = {
 	getTokenRequest: getTokenRequest,
 	getAuthResponse: getAuthResponse,
 	handleError: handleError,
-	checkForInterestedEvents: checkForInterestedEvents,
+	checkForInterestedEvents,
 	handleProcessedEvents: handleProcessedEvents,
 	handleFailedEvents: handleFailedEvents,
 	getEventProcessStatus: getEventProcessStatus,

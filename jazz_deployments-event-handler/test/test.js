@@ -203,8 +203,10 @@ describe("processEventRecord", () => {
         }
       }
     }
+    sandbox = sinon.createSandbox();
   })
   afterEach(()=>{
+    sandbox.restore();
     if(reqStub){
       reqStub.restore();
     }
@@ -219,17 +221,11 @@ describe("processEventRecord", () => {
         }
       }
     };
-    reqStub = sinon.stub(request, "Request", (obj) => {
-      return obj.callback(null, responseObject, responseObject.body);
-    })
-    var checkForInterestedEvents = sinon.stub(index,"checkForInterestedEvents",()=>{
-      console.log("stub for CIE is called ");
-    })
+    
+    var checkForInterestedEvents = sinon.stub(index,"checkForInterestedEvents").withArgs("a","b","c").resolves("somthing");
     var processEventStub = sinon.stub(index,"processEvent")
     var tempAuth = "Auth_token"
     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
-    
-      reqStub.restore()
     })
   })
   it("should Return success message when called with valid paramenters", () => {
