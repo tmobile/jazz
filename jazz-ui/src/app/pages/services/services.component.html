@@ -2,9 +2,6 @@
     <div class="view-hdr-wrp">
         <jazz-header class="hide-for-mobile"></jazz-header>
     </div>
-    <!-- Commenting this to remove the side pannel |uncomment back to get the side pannel - make corresponding css(width) changes for services-content-wrp class  -->
-    <!-- <side-tile-fixed [inputData]="recentActivities" [actState]='mobSecState'></side-tile-fixed> -->
-    
     <div class="view-container" [class.translate-for-mob]="mobSecState == 2">
         <div class="services-content-wrp">
                 <!-- <span  class="reduxC" *ngIf='service.status == "deletion completed"'></span>

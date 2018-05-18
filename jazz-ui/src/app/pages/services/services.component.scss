@@ -1,7 +1,5 @@
 @import './../../../main-styles';
 .services-content-wrp {
-  width: 80%; //fallback
-  width: calc(100% - 300px);// with side pannel |Overriding for now to remove sidepannel 
   width:100%;
   display: inline-block;
   padding: 0 37px 0px 37px;
