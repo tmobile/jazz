@@ -219,12 +219,82 @@ describe("processEventRecord",()=>{
      })
      var tempAuth = "Auth_token"
      index.processEventRecord(event.Records[0],configData,tempAuth).then((obj)=>{
-       console.log(obj)
        expect(obj).to.not.eq(null);
-       expect(obj.body.data.message).to.eq(message)
+       expect(obj.data.message).to.eq(message)
+       reqStub.restore()
      })
+     reqStub.restore();
   })
   it("should return error message for not intrested events",()=>{
-
+    var message = "Not an interesting event";
+    var payload = {
+      Item: {
+        EVENT_ID: {
+          S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4'
+        },
+        TIMESTAMP: {
+          S: '2018-05-16T12:12:42:821'
+        },
+        REQUEST_ID: {
+          NULL: true
+        },
+        EVENT_HANDLER: {
+          S: 'JENKINS'
+        },
+        EVENT_NAME: {
+          S: 'CREATE_DEPLOYMENT'
+        },
+        SERVICE_NAME: {
+          S: 'test-02'
+        },
+        SERVICE_ID: {
+          S: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7'
+        },
+        EVENT_STATUS: {
+          S: 'STARTED'
+        },
+        EVENT_TYPE: {
+          S: 'NOT_SERVICE_DEPLOYMENT'
+        },
+        USERNAME: {
+          S: 'serverless@t-mobile.com'
+        },
+        EVENT_TIMESTAMP: {
+          S: '2018-05-16T12:12:41:083'
+        },
+        SERVICE_CONTEXT: {
+          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1","environment":"","region":"us-east-1","message":"input validation starts","created_by":"serverless@t-mobile.com"}'
+        }
+      }
+    }
+    var tempAuth = "Auth_token";
+    var encoded = Buffer.from(JSON.stringify(payload)).toString('base64');
+    event.Records[0].kinesis.data = encoded;
+    index.processEventRecord(event.Records[0],configData,tempAuth).then((obj)=>{
+      expect(obj.message).to.eq(message)
+    })
+  })
+  it.only("should return error message for not intrested events",()=>{
+    var tempAuth = "Auth_token";
+    let message = "Creation Event failed"
+    let responseObject = {
+      statusCode: 401,
+      body: {
+        data:{
+        message: message
+        }
+      }
+    };
+    let error ={
+      failure_code: "401 service not found",
+      failure_message :"serivice not found"
+    }
+     reqStub= sinon.stub(request, "Request", (obj) => {
+        return obj.callback(error, responseObject, responseObject.body);
+     })
+     var tempAuth = "Auth_token"
+    index.processEventRecord(event.Records[0],configData,tempAuth).then((obj)=>{
+      expect(obj.message).to.eq(message)
+    })
   })
 })
