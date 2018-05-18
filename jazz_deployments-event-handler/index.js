@@ -143,14 +143,14 @@ var processEvent = (eventPayload, configData, authToken) => {
 				processCreateEvent(eventPayload, configData, authToken)
 					.then(result => { return resolve(result); })
 					.catch(err => {
-						logger.error("processCreateEvent failed: " + err);
+						logger.error("processCreateEvent failed: " + JSON.stringify(err));
 						return reject(err);
 					});
 			} else if (eventPayload.EVENT_NAME.S === configData.EVENTS.update_event_name) {
 				processUpdateEvent(eventPayload, configData, authToken)
 					.then(result => { return resolve(result); })
 					.catch(err => {
-						logger.error("processUpdateEvent failed: " + err);
+						logger.error("processUpdateEvent failed: " + JSON.stringify(err));
 						return reject(err);
 					});
 			} else if (eventPayload.EVENT_NAME.S === configData.EVENTS.delete_event_name) {
@@ -219,15 +219,15 @@ var getSvcPayload = (method, payload, apiEndpoint, authToken) => {
 	if (payload) {
 		svcPayload.json = payload;
 	}
-	logger.info("Deployment API payload for CREATE: " + JSON.stringify(svcPayload));
+	logger.info("Deployment API payload :" + JSON.stringify(svcPayload));
 	return svcPayload;
 };
 
 var procesRequest = (svcPayload) => {
 	return new Promise((resolve, reject) => {
 		request(svcPayload, function (error, response, body) {
-			if (response.statusCode === 200 && body && body.data) {
-				return resolve(null, body);
+			if (response.statusCode === 200 && body) {
+				return resolve(body);
 			} else {
 				logger.error("Error processing request: " + JSON.stringify(response));
 				var error = handleError(failureCodes.PR_ERROR_3.code, response.body.message);
@@ -251,7 +251,7 @@ var processCreateEvent = (eventPayload, configData, authToken) => {
 		procesRequest(svcPayload)
 			.then(result => { return resolve(result); })
 			.catch(err => {
-				logger.error("processCreateEvent failed: " + err);
+				logger.error("processCreateEvent failed: " + JSON.stringify(err));
 				return reject(err);
 			});
 	});
@@ -270,7 +270,7 @@ var processUpdateEvent = (eventPayload, configData, authToken) => {
 			.then(result => { return updateDeployments(result, deploymentPayload, configData, authToken); })
 			.then(result => { return resolve(result); })
 			.catch(err => {
-				logger.error("processUpdateEvent failed: " + err);
+				logger.error("processUpdateEvent failed: " + JSON.stringify(err));
 				return reject(err);
 			});
 	});
@@ -283,26 +283,26 @@ var getDeployments = (deploymentPayload, configData, authToken) => {
 			var service_name = deploymentPayload.service;
 			var domain = deploymentPayload.domain;
 			var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE + "?service=" + service_name + "&domain=" + domain + "&environment=" + env_id;;
-			var svcPayload = getSvcPayload("GET", deploymentPayload, apiEndpoint, authToken);
+			var svcPayload = getSvcPayload("GET", null, apiEndpoint, authToken);
 			procesRequest(svcPayload)
 				.then(result => { return resolve(result); })
 				.catch(err => {
-					logger.error("processCreateEvent failed: " + err);
+					logger.error("getDeployments failed: " + JSON.stringify(err));
 					return reject(err);
 				});
 		} else {
-			logger.info("Environment logical id is not defined");
+			logger.error("Environment logical id is not defined");
 			var err = handleError(failureCodes.PR_ERROR_4.code, "Environment logical id is not defined");
 			return reject(err);
 		}
 	});
 };
 
-var updateDeployments = (result, deploymentPayload, configData, authToken) => {
+var updateDeployments = (res, deploymentPayload, configData, authToken) => {
 	return new Promise((resolve, reject) => {
-		var deploymentsCollection = result.data.deployments;
-
-		if (deploymentsCollection.length > 0) {
+		var deploymentResults = JSON.parse(res);
+		if (deploymentResults.data && deploymentResults.data.deployments && deploymentResults.data.deployments.length > 0) {
+			var deploymentsCollection = deploymentResults.data.deployments;
 			var deploymentData;
 
 			for (var idx in deploymentsCollection) {
@@ -323,16 +323,16 @@ var updateDeployments = (result, deploymentPayload, configData, authToken) => {
 				procesRequest(svcPayload)
 					.then(result => { return resolve(result); })
 					.catch(err => {
-						logger.error("updateDeployments failed: " + err);
+						logger.error("updateDeployments failed: " + JSON.stringify(err));
 						return reject(err);
 					});
 			} else {
-				logger.info("Deployment details not found!");
+				logger.error("Deployment details not found!");
 				var err = handleError(failureCodes.PR_ERROR_4.code, "Deployment details not found!");
 				return reject(err);
 			}
 		} else {
-			logger.info("Deployment details not found!");
+			logger.error("Deployment details not found!");
 			var err = handleError(failureCodes.PR_ERROR_4.code, "Deployment details not found!");
 			return reject(err);
 		}

@@ -294,7 +294,7 @@ export class ServiceOverviewMultienvComponent implements OnInit {
     if (this.stgEnv.logical_id == undefined) {
       this.noStg = true;
     }
-
+    
     // this.envList        
     this.cache.set('envList', this.list);
 
@@ -318,10 +318,10 @@ export class ServiceOverviewMultienvComponent implements OnInit {
         this.list_inactive_env[k] = this.environ_arr[i];
         k++;
 
-      }
+            }
 
-    }
-    this.environ_arr = this.list_env.slice(0, this.list_env.length);
+        }
+        this.environ_arr = this.list_env.slice(0, this.list_env.length);
 
     this.environ_arr.push.apply(this.environ_arr, this.list_inactive_env);
 

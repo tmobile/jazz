@@ -13,7 +13,7 @@ import { Observable } from 'rxjs/Rx';
 import { Subscription } from 'rxjs/Subscription';
 import { ServiceDetailComponent } from '../service-detail/service-detail.component'
 import { environment } from './../../../environments/environment';
-import { environment as env_internal } from './../../../environments/environment.internal';
+import {  environment as env_internal } from './../../../environments/environment.internal';
 
 
 declare var $: any;
