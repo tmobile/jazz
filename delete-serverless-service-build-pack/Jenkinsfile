@@ -556,29 +556,31 @@ def getResourcePath() {
 def generateAssetInfo(environment){
 	def assetInfo = [:]
 	def s3Bucket
+	def assetBase
+	
 	if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
-		echo "bucket per service is true"
 		if (service_config['s3_bucket_name']) {
 			s3Bucket = service_config['s3_bucket_name']
 		} else {
 			handleFailureEvent("Failed to get S3 bucket information from service catalog.")
 		}
-		assetInfo['s3Bucket'] = s3Bucket
-		assetInfo['asset_info'] = "${s3Bucket}/${environment}"
-		assetInfo['asset_name'] = "${s3Bucket}-${environment}"
-		assetInfo['folder_name'] = "${s3Bucket}"
+		
+		assetBase = "${s3Bucket}"
 	} else {
-		echo "bucket per service is false"
 		if (environment.endsWith("-dev")) {
 			s3Bucket = utilModule.getBucket('dev')
 		} else {
 			s3Bucket = utilModule.getBucket(environment)
 		}
-		assetInfo['s3Bucket'] = s3Bucket
-		assetInfo['asset_info'] = "${s3Bucket}/${service_config['domain']}-${service_config['service']}/${environment}"
-		assetInfo['asset_name'] = "${s3Bucket}-${service_config['domain']}-${service_config['service']}-${environment}"
-		assetInfo['folder_name'] = "${s3Bucket}-${service_config['domain']}-${service_config['service']}"
+		
+		assetBase = "${s3Bucket}-${service_config['domain']}-${service_config['service']}"
 	}
+	
+	assetInfo['s3Bucket'] = s3Bucket
+	assetInfo['asset_info'] = "${assetBase}/${environment}"
+	assetInfo['asset_name'] = "${assetBase}-${environment}"
+	assetInfo['folder_name'] = "${assetBase}"
+	
 	return assetInfo
 }
 
