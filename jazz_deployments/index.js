@@ -499,12 +499,7 @@ function buildNowRequest(serviceDetails, config, refDeployment) {
 			buildQuery = "/buildWithParameters?service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch,
 			base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64"),
 			rebuild_url = "";
-		var buildPackMap = {
-			"api": "build_pack_api",
-			"lambda": "build_pack_lambda",
-			"website": "build_pack_website"
-		}
-		rebuild_url = build_url + buildPackMap[data.type.toLowerCase()] + buildQuery;
+		rebuild_url = build_url + config.BUILDPACKMAP[data.type.toLowerCase()] + buildQuery;
 
 		if (build_url) {
 			var options = {
