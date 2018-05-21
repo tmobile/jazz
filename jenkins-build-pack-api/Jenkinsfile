@@ -158,14 +158,14 @@ node() {
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
 		}
 
-		stage ('Code Quality Check'){
+		stage('Code Quality Check'){
 			events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
 			try {
 				clearVirtualEnv()
 				runValidation(runtime)
 				sonarModule.doAnalysis()
 
-			}catch(ex) {
+			} catch (ex) {
 				events.sendFailureEvent('CODE_QUALITY_CHECK', ex.getMessage(), context_map, environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
 				error ex.getMessage()
@@ -679,18 +679,18 @@ def send_status_email (config, build_status, email_content) {
 /** Run validation based on runtime
 */
 def runValidation(String runtime) {
-	if(runtime.indexOf("nodejs") > -1) {
+	if (runtime.indexOf("nodejs") > -1) {
 		echo "running validations for $runtime"
 		sh "jshint *.js"
-	}else if(runtime.indexOf("java") > -1) {
+	} else if (runtime.indexOf("java") > -1) {
 		echo "running validations for $runtime"
 		dir('_java') {
-			sh 'wget -q $CHECKSTYLE_LIB'
+			sh "wget -q ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB}"
 		}
 
 		sh 'java -cp _java/checkstyle-7.6-all.jar com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src'
 
-	}else if(runtime.indexOf("python") > -1) {
+	} else if (runtime.indexOf("python") > -1) {
 		echo "running validations for $runtime"
 
 	}
