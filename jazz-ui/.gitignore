@@ -27,7 +27,10 @@
 /connect.lock
 /coverage/*
 /libpeerconnection.log
+*/target/
+.nyc_output/
 npm-debug.log
+*/package-lock.json
 testem.log
 /typings
 

@@ -25,7 +25,7 @@ module.exports = (inputs, callback) => {
 	
 	var jsonBody = getServiceData(inputs);
 	var svcPayload = {
-		uri: inputs.SERVICE_API_URL + inputs.SERVICE_API_RESOURCE+ "/" + inputs.ID,
+		uri: inputs.SERVICE_API_URL + inputs.SERVICE_API_RESOURCE + "/" + inputs.ID,
 		method: 'PUT',
 		headers: {'Authorization': inputs.TOKEN },
 		json: jsonBody,

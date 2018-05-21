@@ -41,13 +41,16 @@ node()  {
 	def domain = params.domain
 	def service = params.service_name
 	def repo_name = params.service_name
+	def gitCommitOwner
+	def gitCommitHash
 
 	if (domain && domain != "") {
 		repo_name = params.domain + "_" + params.service_name
 	}
 
 	auth_token = setCredentials()
-    def current_environment
+
+  def current_environment
 	stage('Checkout code base') {
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
@@ -89,8 +92,22 @@ node()  {
 
 	def create_cloudfront_url
 	context_map = [created_by : service_config['created_by']]
+	scmModule.setServiceConfig(service_config)
+	gitCommitHash = scmModule.getRepoCommitHash()
+	gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 
-	dir(repo_name)	{
+	def requestId = utilModule.generateRequestId()
+	if (requestId != null) {
+		events.setRequestId(requestId)
+		environmentDeploymentMetadata.setRequestId(requestId)
+	} else {
+		error "Request Id Generation failed"
+	}
+
+	dir(repo_name)
+	{
+		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, , gitCommitHash), environment)
+
 		stage('Pre-Build Validation'){
 
 			events.sendStartedEvent("VALIDATE_INPUT", 'pre-build validation starts', context_map)
@@ -113,6 +130,7 @@ node()  {
 			} catch (ex) {
 				send_status_email('FAILED', '')
 				events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
 				error ex.getMessage()
 			}
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)

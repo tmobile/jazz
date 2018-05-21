@@ -31,17 +31,15 @@ const crud = require("./components/crud")(); //Import the utils module.
     @author:
     @version: 1.0
 **/
-
-module.exports.handler = (event, context, cb) => {
+var user_id;
+var serviceId;
+var serviceDataObject;
+var handler = (event, context, cb) => {
 
     var errorHandler = errorHandlerModule();
     var config = configObj(event);
     logger.init(event, context);
-
-    var serviceId;
-    var serviceDataObject;
     var service_creation_data = event.body;
-
     try {
         var isValidName = function (name) {
             return /^[A-Za-z0-9\-]+$/.test(name);
@@ -59,7 +57,7 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("Namespace is not appropriate")));
         }
 
-        var user_id = event.principalId;
+        user_id = event.principalId;
         if (!user_id) {
             logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
             return cb(JSON.stringify(errorHandler.throwUnAuthorizedError("User is not authorized to access this service")));
@@ -101,201 +99,208 @@ module.exports.handler = (event, context, cb) => {
         logger.error(e);
         cb(JSON.stringify(errorHandler.throwInternalServerError(e)));
     }
+}
 
-    function startServiceOnboarding(service_creation_data, config, service_id) {
-        return new Promise((resolve, reject) => {
-            try {
-                var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
-                var userlist = "";
-                var approvers = service_creation_data.approvers;
-                
-                userlist = approvers.reduce((stringSoFar, approver) => {
-                    return stringSoFar + util.format("name=%s&", approver);
-                }, "");
+var startServiceOnboarding = (service_creation_data, config, service_id) => {
+    return new Promise((resolve, reject) => {
+        try {
+            var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
+            var userlist = "";
+            var approvers = service_creation_data.approvers;
 
-                var input = {
-                    token: config.BUILD_TOKEN,
-                    admin_group: userlist,
-                    service_id: service_id
-                };
-                request({
-                    url: config.JOB_BUILD_URL,
-                    method: 'POST',
-                    headers: {
-                        "Authorization": base_auth_token
-                    },
-                    qs: input
-                }, function (err, response, body) {
-                    if (err) {
-                        logger.error('Error while starting service onboarding: ' + err);
-                        err.jenkins_api_failure = true;
-                        reject(err);
-                    } else {
-                        if (response.statusCode <= 299) { // handle all 2xx response codes as success
-                            resolve("Successfully created your service.");
-                        } else {
-                            logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
-                            var message = {
-                                'message': "Failed to kick off service onboarding job.",
-                                'jenkins_api_failure': true
-                            };
-                            reject(message);
-                        }
-                    }
-                });
-            } catch (e) {
-                logger.error('Error during startServiceOnboarding: ' + e.message);
-                reject(e);
-            }
-        });
-    }
+            userlist = approvers.reduce((stringSoFar, approver) => {
+                return stringSoFar + util.format("name=%s&", approver);
+            }, "");
 
-    function getToken(configData) {
-        return new Promise((resolve, reject) => {
-            var svcPayload = {
-                uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
-                method: 'post',
-                json: {
-                    "username": configData.SERVICE_USER,
-                    "password": configData.TOKEN_CREDS
+            var input = {
+                token: config.BUILD_TOKEN,
+                admin_group: userlist,
+                service_id: service_id
+            };
+            request({
+                url: config.JOB_BUILD_URL,
+                method: 'POST',
+                headers: {
+                    "Authorization": base_auth_token
                 },
-                rejectUnauthorized: false
-            };
-
-            request(svcPayload, (error, response, body) => {
-                if (response.statusCode === 200 && body && body.data) {
-                    var authToken = body.data.token;
-                    return resolve(authToken);
-                } else {
-                    return reject({
-                        "error": "Could not get authentication token for updating service catalog.",
-                        "message": response.body.message
-                    });
-                }
-            });
-        });
-    }
-
-    function createService(service_data) {
-        return new Promise((resolve, reject) => {
-            crud.create(service_data, (err, results) => {
+                qs: input
+            }, function (err, response, body) {
                 if (err) {
-                    reject({
-                        "message": err.error
-                    });
+                    logger.error('Error while starting service onboarding: ' + err);
+                    err.jenkins_api_failure = true;
+                    reject(err);
                 } else {
-                    logger.info("created a new service in service catalog.");
-                    serviceId = results.data.service_id;
-                    resolve(results.data.service_id);
+                    if (response.statusCode <= 299) { // handle all 2xx response codes as success
+                        resolve("Successfully created your service.");
+                    } else {
+                        logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
+                        var message = {
+                            'message': "Failed to kick off service onboarding job.",
+                            'jenkins_api_failure': true
+                        };
+                        reject(message);
+                    }
                 }
             });
+        } catch (e) {
+            logger.error('Error during startServiceOnboarding: ' + e.message);
+            reject(e);
+        }
+    });
+}
+
+var getToken = (configData) => {
+    return new Promise((resolve, reject) => {
+        var svcPayload = {
+            uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
+            method: 'post',
+            json: {
+                "username": configData.SERVICE_USER,
+                "password": configData.TOKEN_CREDS
+            },
+            rejectUnauthorized: false
+        };
+
+        request(svcPayload, (error, response, body) => {
+            if (response.statusCode === 200 && body && body.data) {
+                var authToken = body.data.token;
+                return resolve(authToken);
+            } else {
+                return reject({
+                    "error": "Could not get authentication token for updating service catalog.",
+                    "message": response.body.message
+                });
+            }
         });
-    }
+    });
+}
 
-    function getServiceData(service_creation_data, authToken, configData) {
-        return new Promise((resolve, reject) => {
-            var inputs = {
-                "TOKEN": authToken,
-                "SERVICE_API_URL": configData.SERVICE_API_URL,
-                "SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
-                "SERVICE_NAME": service_creation_data.service_name.toLowerCase(),
-                "DOMAIN": service_creation_data.domain.toLowerCase(),
-                "DESCRIPTION": service_creation_data.description,
-                "TYPE": service_creation_data.service_type,
-                "RUNTIME": service_creation_data.runtime,
-                "REGION": service_creation_data.region,
-                "USERNAME": user_id,
-                "IS_PUBLIC_ENDPOINT": service_creation_data.is_public_endpoint || false,
-                "STATUS": "creation_started"
-            };
-
-            var serviceMetadataObj = {};
-            if (service_creation_data.tags) {
-                inputs.TAGS = service_creation_data.tags;
+var createService = (service_data) => {
+    return new Promise((resolve, reject) => {
+        crud.create(service_data, (err, results) => {
+            if (err) {
+                reject({
+                    "message": err.error
+                });
+            } else {
+                logger.info("created a new service in service catalog.");
+                serviceId = results.data.service_id;
+                resolve(results.data.service_id);
             }
+        });
+    });
+}
 
-            if (service_creation_data.email) {
-                inputs.EMAIL = service_creation_data.email;
-            }
+var getServiceData = (service_creation_data, authToken, configData) => {
+    return new Promise((resolve, reject) => {
+        var inputs = {
+            "TOKEN": authToken,
+            "SERVICE_API_URL": configData.SERVICE_API_URL,
+            "SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
+            "SERVICE_NAME": service_creation_data.service_name.toLowerCase(),
+            "DOMAIN": service_creation_data.domain.toLowerCase(),
+            "DESCRIPTION": service_creation_data.description,
+            "TYPE": service_creation_data.service_type,
+            "RUNTIME": service_creation_data.runtime,
+            "REGION": service_creation_data.region,
+            "USERNAME": user_id,
+            "IS_PUBLIC_ENDPOINT": service_creation_data.is_public_endpoint || false,
+            "STATUS": "creation_started"
+        };
 
-            if (service_creation_data.slack_channel) {
-                inputs.SLACKCHANNEL = service_creation_data.slack_channel;
-            }
+        var serviceMetadataObj = {};
+        if (service_creation_data.tags) {
+            inputs.TAGS = service_creation_data.tags;
+        }
 
-            if ((service_creation_data.service_type === "api" || service_creation_data.service_type === "function") && (service_creation_data.require_internal_access)) {
-                serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
-            }
+        if (service_creation_data.email) {
+            inputs.EMAIL = service_creation_data.email;
+        }
 
-            // Pass the flag to enable authentication on API
-            if (service_creation_data.service_type === "api") {
-                serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;
-                if (service_creation_data.authorizer_arn) {
-                    // Validate ARN format - arn:aws:lambda:region:account-id:function:function-name
-                    if (!validateARN(service_creation_data.authorizer_arn)) {
-                        return cb(JSON.stringify(errorHandler.throwInputValidationError("authorizer arn is invalid, expected format=arn:aws:lambda:region:account-id:function:function-name")));
-                    } else {
-                        serviceMetadataObj.authorizer_arn = service_creation_data.authorizer_arn;
-                    }
+        if (service_creation_data.slack_channel) {
+            inputs.SLACKCHANNEL = service_creation_data.slack_channel;
+        }
+
+        if ((service_creation_data.service_type === "api" || service_creation_data.service_type === "function") && (service_creation_data.require_internal_access)) {
+            serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
+        }
+
+        // Pass the flag to enable authentication on API
+        if (service_creation_data.service_type === "api") {
+            serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;
+            if (service_creation_data.authorizer_arn) {
+                // Validate ARN format - arn:aws:lambda:region:account-id:function:function-name
+                if (!validateARN(service_creation_data.authorizer_arn)) {
+                    return cb(JSON.stringify(errorHandler.throwInputValidationError("authorizer arn is invalid, expected format=arn:aws:lambda:region:account-id:function:function-name")));
+                } else {
+                    serviceMetadataObj.authorizer_arn = service_creation_data.authorizer_arn;
                 }
             }
+        }
 
-            // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
-            if (service_creation_data.service_type === "api" && service_creation_data.is_public_endpoint) {
-                serviceMetadataObj.require_internal_access = false;
-                serviceMetadataObj.enable_api_security = false;
-            }
+        // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
+        if (service_creation_data.service_type === "api" && service_creation_data.is_public_endpoint) {
+            serviceMetadataObj.require_internal_access = false;
+            serviceMetadataObj.enable_api_security = false;
+        }
 
-            if (service_creation_data.service_type === "website") {
-                var create_cloudfront_url = "true";
-                serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
-                inputs.RUNTIME = 'n/a';
-            }
-            // Add rate expression to the propertiesObject;
-            if (service_creation_data.service_type === "function") {
-                if (service_creation_data.rateExpression !== undefined) {
-                    var cronExpValidator = CronParser.validateCronExpression(service_creation_data.rateExpression);
-                    if (cronExpValidator.result === 'valid') {
-                        var rate_expression = service_creation_data.rateExpression;
-                        var enable_eventschedule;
-                        if (service_creation_data.enableEventSchedule === false) {
-                            enable_eventschedule = service_creation_data.enableEventSchedule;
-                        } else {
-                            enable_eventschedule = true;
-                        }
-
-                        if (rate_expression && rate_expression.trim() !== "") {
-                            serviceMetadataObj["eventScheduleRate"] = "cron(" + rate_expression + ")";
-                        }
-                        if (enable_eventschedule && enable_eventschedule !== "") {
-                            serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
-                        }
-                        if (service_creation_data.event_source_ec2 && service_creation_data.event_action_ec2) {
-                            serviceMetadataObj["event_action_ec2"] = service_creation_data.event_source_ec2;
-                            serviceMetadataObj["event_action_ec2"] = service_creation_data.event_action_ec2;
-                        }
-                        if (service_creation_data.event_source_s3 && service_creation_data.event_action_s3) {
-                            serviceMetadataObj["event_source_s3"] = service_creation_data.event_source_s3;
-                            serviceMetadataObj["event_action_s3"] = service_creation_data.event_action_s3;
-                        }
-                        if (service_creation_data.event_source_dynamodb && service_creation_data.event_action_dynamodb) {
-                            serviceMetadataObj["event_source_dynamodb"] = service_creation_data.event_source_dynamodb;
-                            serviceMetadataObj["event_action_dynamodb"] = service_creation_data.event_action_dynamodb;
-                        }
-                        if (service_creation_data.event_source_stream && service_creation_data.event_action_stream) {
-                            serviceMetadataObj["event_source_stream"] = service_creation_data.event_source_stream;
-                            serviceMetadataObj["event_action_stream"] = service_creation_data.event_action_stream;
-                        }
-
+        if (service_creation_data.service_type === "website") {
+            var create_cloudfront_url = "true";
+            serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
+            inputs.RUNTIME = 'n/a';
+        }
+        // Add rate expression to the propertiesObject;
+        if (service_creation_data.service_type === "function") {
+            if (service_creation_data.rateExpression ) {
+                var cronExpValidator = CronParser.validateCronExpression(service_creation_data.rateExpression);
+                if (cronExpValidator.result === 'valid') {
+                    var rate_expression = service_creation_data.rateExpression;
+                    var enable_eventschedule;
+                    if (service_creation_data.enableEventSchedule === false) {
+                        enable_eventschedule = service_creation_data.enableEventSchedule;
                     } else {
-                        logger.error('cronExpValidator : ', cronExpValidator);
-                        reject(cronExpValidator);
+                        enable_eventschedule = true;
                     }
+
+                    if (rate_expression && rate_expression.trim() !== "") {
+                        serviceMetadataObj["eventScheduleRate"] = "cron(" + rate_expression + ")";
+                    }
+                    if (enable_eventschedule && enable_eventschedule !== "") {
+                        serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
+                    }
+                    if (service_creation_data.event_source_ec2 && service_creation_data.event_action_ec2) {
+                        serviceMetadataObj["event_action_ec2"] = service_creation_data.event_source_ec2;
+                        serviceMetadataObj["event_action_ec2"] = service_creation_data.event_action_ec2;
+                    }
+                    if (service_creation_data.event_source_s3 && service_creation_data.event_action_s3) {
+                        serviceMetadataObj["event_source_s3"] = service_creation_data.event_source_s3;
+                        serviceMetadataObj["event_action_s3"] = service_creation_data.event_action_s3;
+                    }
+                    if (service_creation_data.event_source_dynamodb && service_creation_data.event_action_dynamodb) {
+                        serviceMetadataObj["event_source_dynamodb"] = service_creation_data.event_source_dynamodb;
+                        serviceMetadataObj["event_action_dynamodb"] = service_creation_data.event_action_dynamodb;
+                    }
+                    if (service_creation_data.event_source_stream && service_creation_data.event_action_stream) {
+                        serviceMetadataObj["event_source_stream"] = service_creation_data.event_source_stream;
+                        serviceMetadataObj["event_action_stream"] = service_creation_data.event_action_stream;
+                    }
+
+                } else {
+                    logger.error('cronExpValidator : ', cronExpValidator);
+                    reject(cronExpValidator);
                 }
             }
+        }
 
-            inputs.METADATA = serviceMetadataObj;
-            serviceDataObject = inputs;
-            resolve(inputs);
-        });
-    }
-};
+        inputs.METADATA = serviceMetadataObj;
+        serviceDataObject = inputs;
+        resolve(inputs);
+    });
+}
+module.exports = {
+    handler: handler,
+    startServiceOnboarding: startServiceOnboarding,
+    getToken: getToken,
+    createService: createService,
+    getServiceData: getServiceData
+}

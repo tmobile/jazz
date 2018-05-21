@@ -54,7 +54,34 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./index.js"
 		}
 
-		if ( (service_name.trim() == "jazz_scm-webhook") ) {
+		if ( (service_name.trim() == "jazz_deployments") ) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+		
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_scm-webhook")) {
+
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
@@ -65,7 +92,7 @@ def loadServiceConfigurationData() {
 
 		}
 
-		if ( (service_name.trim() == "jazz_environments") ) {
+		if ((service_name.trim() == "jazz_environments")) {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
@@ -84,6 +111,24 @@ def loadServiceConfigurationData() {
 		}
 
 		if ((service_name.trim() == "jazz_environment-event-handler")) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+			
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_deployments-event-handler")) {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
@@ -126,11 +171,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-			
-			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./config/prod-config.json"
-			
+						
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
@@ -189,17 +230,24 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/prod-config.json"
 
-			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-		  
-			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-		  
-			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
-			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+    
+			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/dev-config.json"
+			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/stg-config.json"
+			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/prod-config.json"
+
+			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/dev-config.json"
+			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/stg-config.json"
+			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/prod-config.json"
+			}
 		}
 
 		if (service_name.trim() == "jazz_services") {
@@ -302,7 +350,8 @@ def setUtilModule(util){
 	utilModule = util
 }
 def setKinesisStream(config){
-	if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") || (config['service'] == "environment-event-handler")) {
+	if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") || 
+	(config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler")) {
 		def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
 		def event_source_list = sh(
 			script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"",

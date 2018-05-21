@@ -135,7 +135,7 @@ node() {
 		}
 
 
-		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
+		
 		def requestId = utilModule.generateRequestId()
 		if (requestId != null) {
 			events.setRequestId(requestId)
@@ -143,6 +143,7 @@ node() {
 		} else {
 			error "Request Id Generation failed"
 		}
+		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
 		stage('Pre-Build Validation') {
 			try {
@@ -327,11 +328,10 @@ def buildLambda(runtime) {
         sh """
         pip install virtualenv
         virtualenv venv
-			.venv / bin / activate
-        pip install - r requirements- dev.txt
+		. venv/bin/activate
+        pip install pytest
         """
     }
-
 }
 
 
