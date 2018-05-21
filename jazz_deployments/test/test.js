@@ -456,6 +456,7 @@ describe('jazz_deployments', function () {
       expect(getToken.then((res) => {
         return res;
       })).to.eventually.deep.equal(responseObj.body.data.token);
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
   
@@ -474,6 +475,7 @@ describe('jazz_deployments', function () {
       expect(getToken.then((res) => {
         return res;
       })).to.be.rejectedWith(responseObj.body.message);
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
   
@@ -485,6 +487,7 @@ describe('jazz_deployments', function () {
       expect(getToken.then((res) => {
         return res;
       })).to.be.rejectedWith(err.message);
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
   });
@@ -514,6 +517,7 @@ describe('jazz_deployments', function () {
         res.should.have.deep.property('data.service');
         return res;
       }));
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
   
@@ -540,6 +544,7 @@ describe('jazz_deployments', function () {
         res.should.have.deep.property('data.errorType');
         return res;
       }));
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
   });
@@ -568,6 +573,7 @@ describe('jazz_deployments', function () {
       expect(buildNowRequest.then((res) => {
         return res;
       })).to.eventually.deep.equal(result);
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
   
@@ -594,6 +600,7 @@ describe('jazz_deployments', function () {
       expect(buildNowRequest.then((res) => {
         return res;
       })).to.be.rejectedWith(result);
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
   
@@ -617,6 +624,7 @@ describe('jazz_deployments', function () {
       expect(buildNowRequest.then((res) => {
         return res;
       })).to.be.rejectedWith('unknown error occurred');
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
   });
@@ -796,6 +804,7 @@ describe('jazz_deployments', function () {
         reqStub.restore();
         return res;
       })).to.eventually.deep.equal(result);
+      sinon.assert.calledOnce(reqStub);
     });
   
     it("should indicate error while re-building the deployment", () => {
@@ -821,6 +830,7 @@ describe('jazz_deployments', function () {
       expect(reBuildDeployment.then((res) => {      
         return res;
       })).to.be.rejectedWith(err.message);
+      sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
   });
@@ -879,6 +889,7 @@ describe('jazz_deployments', function () {
         return cb(null, dataObj);
       });
       reqStub = sinon.stub(request, "Request", (obj) => {
+        console.log(obj);
         if(obj.method.toLowerCase() === 'post') {
           return obj.callback(null, responseObj, responseObj.body)
         } else if (obj.method === 'get') {
@@ -889,9 +900,11 @@ describe('jazz_deployments', function () {
       index.handler(event, context,(err, res) => {
           res.should.have.deep.property('data.result');
           AWS.restore("DynamoDB.DocumentClient");
+          sinon.assert.calledThrice(reqStub);
           reqStub.restore();
           return res;
-      })
+      });
+      
     });
   
     it("should indicate internal server error while initiating re-build deployment using POST method",() => {
@@ -916,10 +929,12 @@ describe('jazz_deployments', function () {
       message = '{"errorType":"InternalServerError","message":"unhandled error occurred"}'
       index.handler(event, context,(err, res) => {
         err.should.be.equal(message);
+        sinon.assert.calledOnce(reqStub);
         AWS.restore("DynamoDB.DocumentClient");
         reqStub.restore();
         return res;
-      })
+      });
+      
     });
   
     it("should indicate NotFound error while initiating re-build deployment using POST method",() => {
@@ -938,7 +953,10 @@ describe('jazz_deployments', function () {
         }
         return cb(null, dataObj);
       });
+      var i=0;
       reqStub = sinon.stub(request, "Request", (obj) => {
+        i++;
+        console.log(i)
         if(obj.method.toLowerCase() === 'post') {
           if(obj.uri === config.SERVICE_API_URL+config.TOKEN_URL){
             return obj.callback(null, responseObj, responseObj.body)
@@ -954,10 +972,11 @@ describe('jazz_deployments', function () {
       message = '{"errorType":"NotFound","message":"Unable to re-build mag!c as requested service is unavailable."}'
       index.handler(event, context,(err, res) => {
         err.should.be.equal(message);
+        sinon.assert.calledThrice(reqStub);
         AWS.restore("DynamoDB.DocumentClient");
         reqStub.restore();
         return res;
-      })
+      });
     });
   
     it("should indicate internal server error while initiating re-build deployment using POST method",() => {
@@ -987,10 +1006,11 @@ describe('jazz_deployments', function () {
       message = '{"errorType":"InternalServerError","message":"unhandled error occurred"}'
       index.handler(event, context,(err, res) => {
         err.should.be.equal(message);
+        sinon.assert.calledOnce(reqStub);
         AWS.restore("DynamoDB.DocumentClient");
         reqStub.restore();
         return res;
-      })
+      });
     });
   
     it("should successfully get list of deployments with provided query params using GET method", () => {
