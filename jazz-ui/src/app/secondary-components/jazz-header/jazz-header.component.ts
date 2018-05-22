@@ -70,6 +70,10 @@ export class JazzHeaderComponent implements OnInit {
         setTimeout(this.goToAbout(link), 10000);
     }
 
+    startUserJourney() {
+      return this.router.navigate(['/user-journey']);
+    }
+
     profileClick(){
         this.profileClicked = !this.profileClicked;
     }
