@@ -563,22 +563,21 @@ def generateAssetInfo(environment){
 			s3Bucket = service_config['s3_bucket_name']
 		} else {
 			handleFailureEvent("Failed to get S3 bucket information from service catalog.")
-		}
-		
+		}		
 		assetBase = "${s3Bucket}"
+		assetInfo['asset_name'] = "${s3Bucket}-${environment}"
 	} else {
 		if (environment.endsWith("-dev")) {
 			s3Bucket = utilModule.getBucket('dev')
 		} else {
 			s3Bucket = utilModule.getBucket(environment)
-		}
-		
-		assetBase = "${s3Bucket}-${service_config['domain']}-${service_config['service']}"
+		}		
+		assetBase = "${s3Bucket}/${service_config['domain']}-${service_config['service']}"
+		assetInfo['asset_name'] = "${s3Bucket}-${service_config['domain']}-${service_config['service']}-${environment}"
 	}
 	
 	assetInfo['s3Bucket'] = s3Bucket
-	assetInfo['asset_info'] = "${assetBase}/${environment}"
-	assetInfo['asset_name'] = "${assetBase}-${environment}"
+	assetInfo['asset_info'] = "${assetBase}/${environment}"	
 	assetInfo['folder_name'] = "${assetBase}"
 	
 	return assetInfo
@@ -677,13 +676,14 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 			policyObjectUpdated.Id = policyObject.Id
 			def statements = []
 			for (items in policyObject.Statement) {
-				if ((items.Sid != "list-${assetInfo['asset_name']}" ) ||
-				(aStmt['Resource'] == "arn:aws:s3:::${assetInfo['asset_info']}/*")) {
+				if ((items.Sid != "list-${assetInfo['asset_name']}" )) {				
 					def copy = [:]
 					copy.putAll(items)
 					statements.add(copy)
 				}
 			}
+
+			echo "updated Policy : $statements"
 			policyObjectUpdated.Statement = statements
 			def policy_json = JsonOutput.toJson(policyObjectUpdated)
 			//def bucketName = bucket
