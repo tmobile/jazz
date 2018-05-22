@@ -36,6 +36,8 @@ export class EnvTryServiceSidebarComponent implements OnInit {
   }
 
 
+  //Starts testing lamda function
+  //Current output is stubbed and will be replaced
   startTest() {
     this.inputIsValid();
     if (this.valid) {
@@ -112,7 +114,6 @@ export class EnvTryServiceSidebarComponent implements OnInit {
 
   closeSideMenu() {
     this.outputValue = '';
-
     this.onClose.emit();
   }
 

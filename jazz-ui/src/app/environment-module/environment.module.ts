@@ -19,6 +19,8 @@ import { RouterModule } from '@angular/router';
 import { routes } from './environment.route';
 import { AdvancedFilterService } from '../advanced-filter.service';
 import {EnvTryServiceSidebarComponent} from '../secondary-components/env-try-service-sidebar/env-try-service-sidebar.component';
+import {SessionStorageService} from "../core/helpers/session-storage.service";
+import {RelaxedJsonService} from "../core/helpers/relaxed-json.service";
 
 @NgModule({
   imports: [
@@ -42,7 +44,11 @@ import {EnvTryServiceSidebarComponent} from '../secondary-components/env-try-ser
     EnvOverviewSectionComponent,
     EnvTryServiceSidebarComponent
   ],
-  providers: [AdvancedFilterService]
+  providers: [
+    AdvancedFilterService,
+    SessionStorageService,
+    RelaxedJsonService,
+  ]
 })
 
 export class EnvironmentModule {

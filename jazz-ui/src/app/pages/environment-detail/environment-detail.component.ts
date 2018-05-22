@@ -54,7 +54,7 @@ api_doc_name:string='';
   message: string;
   isOSS:boolean=false;
 
-  public sidebar: string = '';//String value that determines which sidebar is shown
+  public sidebar: string = '';
   private sub: any;
   private subscription: any;
 
@@ -221,9 +221,7 @@ api_doc_name:string='';
         this.setSidebar('try-service');
         break;
       case 'lambda' :
-        if (this.endpoint_env != (undefined || '')) {
-          window.open('/404');
-        }
+        this.setSidebar('try-service');
         break;
     }
   }
@@ -237,6 +235,9 @@ api_doc_name:string='';
           }, 3000);
   }
 
+  //sets string value that determines which sidebar is shown
+  // 'try-service': EnvTryServiceSidebarComponent
+  // 'overview': OverviewSidebarComponent
   setSidebar(sidebarValue?) {
     this.sidebar = sidebarValue;
   }
