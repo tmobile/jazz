@@ -1,6 +1,6 @@
 ![Jazz Logo](logo.png)
 # Jazz Serverless Platform
-[![Build Status](https://travis-ci.org/tmobile/jazz.svg?branch=master)](https://travis-ci.org/tmobile/jazz)
+[![Build Status](https://travis-ci.org/tmobile/jazz.svg?branch=master)](https://travis-ci.org/tmobile/jazz) [![Join the chat at https://gitter.im/serverless-jazz/Lobby](https://badges.gitter.im/serverless-jazz/Lobby.svg)](https://gitter.im/serverless-jazz/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 **Seamlessly build, deploy & manage cloud-native applications.**
 
