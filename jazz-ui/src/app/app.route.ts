@@ -14,6 +14,10 @@ export const routes: Routes = [
     component: LandingComponent
   },
   {
+    path: 'admin',
+    loadChildren: 'app/admin-modules/admin.module#AdminModule'
+  },
+  {
     path: '404',
     component: Error404Component
   },
