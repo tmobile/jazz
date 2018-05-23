@@ -564,23 +564,22 @@ def generateAssetInfo(environment){
 		} else {
 			handleFailureEvent("Failed to get S3 bucket information from service catalog.")
 		}
-		
 		assetBase = "${s3Bucket}"
+		assetInfo['asset_name'] = "${s3Bucket}-${environment}"
 	} else {
 		if (environment.endsWith("-dev")) {
 			s3Bucket = utilModule.getBucket('dev')
 		} else {
 			s3Bucket = utilModule.getBucket(environment)
 		}
-		
-		assetBase = "${s3Bucket}-${service_config['domain']}-${service_config['service']}"
+		assetBase = "${s3Bucket}/${service_config['domain']}-${service_config['service']}"
+		assetInfo['asset_name'] = "${s3Bucket}-${service_config['domain']}-${service_config['service']}-${environment}"
 	}
-	
+
 	assetInfo['s3Bucket'] = s3Bucket
 	assetInfo['asset_info'] = "${assetBase}/${environment}"
-	assetInfo['asset_name'] = "${assetBase}-${environment}"
 	assetInfo['folder_name'] = "${assetBase}"
-	
+
 	return assetInfo
 }
 
@@ -605,10 +604,18 @@ def unDeployWebsite(stage) {
 			echo "BucketName :: ${assetInfo['s3Bucket']} and BucketURL :: ${assetInfo['asset_info']}" 
 			def _exists = checkIfWebsiteExists(assetInfo['asset_info'])
 			if (_exists) {
-				sh "aws s3 rm s3://${assetInfo['asset_info']} --recursive"
 				cleanupS3BucketPolicy(stage, assetInfo)
+				sh "aws s3 rm s3://${assetInfo['asset_info']} --recursive"				
 			}
-			if (!checkIfBucketFolderHasObjects(assetInfo['folder_name'])) {
+			def isEmpty 
+
+			if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+				isEmpty = isBucketEmpty(assetInfo['folder_name'])
+			} else {
+				isEmpty = isBucketFolderEmpty(assetInfo['folder_name'])
+			}
+
+			if (isEmpty) {
 				echo "Cleaning up service folder since service folder is empty:: ${assetInfo['asset_info']}"
 				if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
 					sh "aws s3 rb s3://${assetInfo['folder_name']} --force"					
@@ -638,13 +645,24 @@ def checkIfWebsiteExists(bucketUrl) {
 	return status
 }
 
-def checkIfBucketFolderHasObjects(bucketFolderName){
-	def status = true;
+def isBucketEmpty(bucketName){
+	def status = false;
+	try {
+		sh("aws s3api list-objects --bucket ${bucketName}  --output json --query '[length(Contents[])]'")
+	} catch (ex) {
+		echo "Bucket $bucketName is empty"
+		status = true
+	}
+	return status
+}
+
+def isBucketFolderEmpty(bucketFolderName){
+	def status = false;
 	try {
 		sh("aws s3 ls s3://${bucketFolderName}  --output json --query '[length(Contents[])]'")
 	} catch (ex) {
 		echo "Bucket $bucketFolderName is empty"
-		status = false
+		status = true
 	}
 	return status
 }
@@ -677,17 +695,19 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 			policyObjectUpdated.Id = policyObject.Id
 			def statements = []
 			for (items in policyObject.Statement) {
-				if ((items.Sid != "list-${assetInfo['asset_name']}" ) ||
-				(aStmt['Resource'] == "arn:aws:s3:::${assetInfo['asset_info']}/*")) {
+				if ((items.Sid != "list-${assetInfo['asset_name']}")) {
 					def copy = [:]
 					copy.putAll(items)
 					statements.add(copy)
 				}
 			}
-			policyObjectUpdated.Statement = statements
-			def policy_json = JsonOutput.toJson(policyObjectUpdated)
-			//def bucketName = bucket
-			updateBucketPolicy(policy_json, assetInfo['s3Bucket'])
+
+			echo "updated Policy : $statements"
+			if (statements.size() > 0) {
+				policyObjectUpdated.Statement = statements
+				def policy_json = JsonOutput.toJson(policyObjectUpdated)
+				updateBucketPolicy(policy_json, assetInfo['s3Bucket'])
+			}
             resetCredentials()
 		} catch (ex) {
             resetCredentials()
@@ -964,7 +984,6 @@ def setCredentials() {
 * @return
 */
 def send_status_email (build_status) {
-	def email_id = ''
 
 	def email_content = ''
 	def body_subject = ''
@@ -990,12 +1009,12 @@ def send_status_email (build_status) {
 	}
 	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
- 						 from : fromStr,
- 						 to : email_id,
- 						 subject : body_subject,
- 						 text : body_text,
- 						 cc : cc_email,
- 						 html : body_html
+		from : fromStr,
+		to : service_config['created_by']
+        subject : body_subject,
+		text : body_text,
+		cc : cc_email,
+		html : body_html
 	])
  		 try {
 		def sendMail = sh(script: "curl -X POST \
