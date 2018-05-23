@@ -12,6 +12,7 @@ import groovy.transform.Field
 /**
  * The Service delete workflow for service types: API, function & website
 */
+
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
@@ -26,7 +27,7 @@ import groovy.transform.Field
 @Field def service_config
 @Field def context_map = [:]
 @Field def is_service_deletion = true;
-
+@Field def current_environment_id
 node {
 	echo "Starting delete service job with params : $params"
 
@@ -136,6 +137,7 @@ node {
 					updateServiceNameConfig()
 					def path = getResourcePath()
 					for (_envId in environmentIds) {
+						current_environment_id = _envId
 						try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
@@ -164,6 +166,7 @@ node {
 					updateServiceNameConfig()
 
 					for (_envId in environmentIds) {
+						current_environment_id = _envId
 						try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
@@ -186,6 +189,7 @@ node {
 			case "WEBSITE":
 				stage('Undeploy Website') {
 					for (_envId in environmentIds) {
+						current_environment_id = _envId
 						try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							echo "Branch ::: $branch"
@@ -224,16 +228,16 @@ node {
 }
 
 
-def handleFailureEvent(ex){
+def handleFailureEvent(errorMessage){
 	if (is_service_deletion) {
-		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
+		events.sendFailureEvent('DELETE_PROJECT', errorMessage, context_map)
 		send_status_email("FAILED")
-		error "deleteProject failed. "+ ex.getMessage()
+		error "deleteProject failed. "+ errorMessage
 	} else {
-		echo "error occured when Deleting  Environment: " + ex
+		echo "error occured when Deleting  Environment: " + errorMessage
 		send_status_email("FAILED")
-		events.sendFailureEvent('DELETE_ENVIRONMENT', ex.getMessage(), null, _envId)
-		error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
+		events.sendFailureEvent('DELETE_ENVIRONMENT', errorMessage, null, current_environment_id)
+		error "Environment cleanup for " + current_environment_id + " failed! " + errorMessage
 	}
 }
 
@@ -262,7 +266,7 @@ def unDeployService(stage) {
 
 			echo "Service undeployed"
 		} catch (ex) {
-			handleFailureEvent(ex)
+			handleFailureEvent(ex.getMessage())
 		}
 	}
 }
@@ -283,7 +287,7 @@ def checkoutSCM(repo_name) {
 					[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repo_url]
 				]])
 		} catch (ex) {
-			handleFailureEvent(ex)
+			handleFailureEvent(ex.getMessage())
 		}
 	}
 }
@@ -302,7 +306,7 @@ def updateServiceNameConfig() {
 		sh "sed -i -- 's/name: \${self:service}/name: ${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}/g' serverless.yml"
 		writeServerlessFile()
 	} catch (ex) {
-		handleFailureEvent(ex)
+		handleFailureEvent(ex.getMessage())
 	}
 }
 
@@ -352,7 +356,7 @@ def updateSwaggerConfig() {
 			sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 		}
 	} catch (ex) {
-		handleFailureEvent(ex)
+		handleFailureEvent(ex.getMessage())
 	}
 }
 
@@ -414,7 +418,7 @@ def cleanUpApiGatewayResources(stage, path) {
 					}
 				}
 			} catch (ex) {
-				handleFailureEvent(ex)
+				handleFailureEvent(ex.getMessage())
 			}
 			if (resource_id != null && resource_id != "") {
 				def status_json = sh(
@@ -432,7 +436,7 @@ def cleanUpApiGatewayResources(stage, path) {
 				echo "Resource Id does not exists in API gateway."
 			}
 		} catch (ex) {
-			handleFailureEvent(ex)
+			handleFailureEvent(ex.getMessage())
 		}
 	}
 }
@@ -493,7 +497,7 @@ def cleanUpApiDocs(stage) {
 			def apiRootFolder = getApiDocsFolder(stage)
 			sh "aws s3 rm s3://${apiRootFolder}/${service_config['domain']}/${service_config['service']}/${stage} --recursive"
 		} catch (ex) {
-			handleFailureEvent(ex)
+			handleFailureEvent(ex.getMessage())
 		}
 	}
 }
@@ -544,8 +548,39 @@ def getResourcePath() {
 		resourcepath = (basePath + "/" + pathInfo).replaceAll("//", "/")
 		return resourcepath
 	} catch (ex) {
-		handleFailureEvent(ex)
+		handleFailureEvent(ex.getMessage())
 	}
+}
+
+
+def generateAssetInfo(environment){
+	def assetInfo = [:]
+	def s3Bucket
+	def assetBase
+	
+	if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+		if (service_config['s3_bucket_name']) {
+			s3Bucket = service_config['s3_bucket_name']
+		} else {
+			handleFailureEvent("Failed to get S3 bucket information from service catalog.")
+		}
+		assetBase = "${s3Bucket}"
+		assetInfo['asset_name'] = "${s3Bucket}-${environment}"
+	} else {
+		if (environment.endsWith("-dev")) {
+			s3Bucket = utilModule.getBucket('dev')
+		} else {
+			s3Bucket = utilModule.getBucket(environment)
+		}
+		assetBase = "${s3Bucket}/${service_config['domain']}-${service_config['service']}"
+		assetInfo['asset_name'] = "${s3Bucket}-${service_config['domain']}-${service_config['service']}-${environment}"
+	}
+
+	assetInfo['s3Bucket'] = s3Bucket
+	assetInfo['asset_info'] = "${assetBase}/${environment}"
+	assetInfo['folder_name'] = "${assetBase}"
+
+	return assetInfo
 }
 
 /**
@@ -554,7 +589,7 @@ def getResourcePath() {
  * @return
  */
 def unDeployWebsite(stage) {
-	echo "unDeployWebsite::${service_config['service']}::${['domain']} ${['stage']}"
+	echo "unDeployWebsite::${service_config['service']}::${service_config['domain']} ${stage}"
 
 	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
@@ -565,27 +600,31 @@ def unDeployWebsite(stage) {
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
-			def bucketName
-			if (stage.endsWith("-dev")) {
-				bucketName = utilModule.getBucket('dev')
-			} else {
-				bucketName = utilModule.getBucket(stage)
-			}
-			echo "BucketName :: $bucketName" 
-			def bucketUrl = "${bucketName}/${service_config['domain']}-${service_config['service']}/${stage}"
-			echo "BucketURL :: $bucketUrl" 
-			def _exists = checkIfWebsiteExists(bucketUrl)
+			def assetInfo = generateAssetInfo(stage)
+			echo "BucketName :: ${assetInfo['s3Bucket']} and BucketURL :: ${assetInfo['asset_info']}" 
+			def _exists = checkIfWebsiteExists(assetInfo['asset_info'])
 			if (_exists) {
-				sh "aws s3 rm s3://${bucketUrl} --recursive"
-				cleanupS3BucketPolicy(stage, bucketName)
+				cleanupS3BucketPolicy(stage, assetInfo)
+				sh "aws s3 rm s3://${assetInfo['asset_info']} --recursive"				
 			}
-			def serviceS3FolderUrl = "${bucketName}/${service_config['domain']}-${service_config['service']}"
-			if (!checkIfBucketFolderHasObjects(serviceS3FolderUrl)) {
-				echo "Cleaning up service folder since service folder is empty:: $serviceS3FolderUrl"
-				sh "aws s3 rm s3://${serviceS3FolderUrl} --recursive"
+			def isEmpty 
+
+			if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+				isEmpty = isBucketEmpty(assetInfo['folder_name'])
+			} else {
+				isEmpty = isBucketFolderEmpty(assetInfo['folder_name'])
+			}
+
+			if (isEmpty) {
+				echo "Cleaning up service folder since service folder is empty:: ${assetInfo['asset_info']}"
+				if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+					sh "aws s3 rb s3://${assetInfo['folder_name']} --force"					
+				} else {
+					sh "aws s3 rm s3://${assetInfo['folder_name']} --recursive"
+				}
 			}
 		} catch (ex) {
-			handleFailureEvent(ex)
+			handleFailureEvent(ex.getMessage())
 		}
 	}
 }
@@ -606,13 +645,24 @@ def checkIfWebsiteExists(bucketUrl) {
 	return status
 }
 
-def checkIfBucketFolderHasObjects(bucketFolderName){
-	def status = true;
+def isBucketEmpty(bucketName){
+	def status = false;
+	try {
+		sh("aws s3api list-objects --bucket ${bucketName}  --output json --query '[length(Contents[])]'")
+	} catch (ex) {
+		echo "Bucket $bucketName is empty"
+		status = true
+	}
+	return status
+}
+
+def isBucketFolderEmpty(bucketFolderName){
+	def status = false;
 	try {
 		sh("aws s3 ls s3://${bucketFolderName}  --output json --query '[length(Contents[])]'")
 	} catch (ex) {
 		echo "Bucket $bucketFolderName is empty"
-		status = false
+		status = true
 	}
 	return status
 }
@@ -624,7 +674,7 @@ def checkIfBucketFolderHasObjects(bucketFolderName){
  * @param stage
  * @return
  */
-def cleanupS3BucketPolicy(stage, bucket) {
+def cleanupS3BucketPolicy(stage, assetInfo) {
 	echo "cleanupS3BucketPolicy called"
 
 	withCredentials([
@@ -635,9 +685,8 @@ def cleanupS3BucketPolicy(stage, bucket) {
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
-			def folderName = "${service_config['domain']}-${service_config['service']}/${stage}"
 			def bucketPolicy = sh(
-				script: "aws s3api get-bucket-policy --bucket ${bucket} --output json",
+				script: "aws s3api get-bucket-policy --bucket ${assetInfo['s3Bucket']} --output json",
 				returnStdout: true
 			).trim()
 			def policyObject = parseJson(parseJson(bucketPolicy).Policy)
@@ -645,23 +694,25 @@ def cleanupS3BucketPolicy(stage, bucket) {
 			policyObjectUpdated.Version = policyObject.Version
 			policyObjectUpdated.Id = policyObject.Id
 			def statements = []
-			def resourcePattern = "${bucket}/${folderName}/"
 			for (items in policyObject.Statement) {
-				if (items.Sid != folderName || !(items.Resource.indexOf(resourcePattern) > -1)) {
+				if ((items.Sid != "list-${assetInfo['asset_name']}")) {
 					def copy = [:]
 					copy.putAll(items)
 					statements.add(copy)
 				}
 			}
-			policyObjectUpdated.Statement = statements
-			def policy_json = JsonOutput.toJson(policyObjectUpdated)
-			//def bucketName = bucket
-			updateBucketPolicy(policy_json, bucket)
+
+			echo "updated Policy : $statements"
+			if (statements.size() > 0) {
+				policyObjectUpdated.Statement = statements
+				def policy_json = JsonOutput.toJson(policyObjectUpdated)
+				updateBucketPolicy(policy_json, assetInfo['s3Bucket'])
+			}
             resetCredentials()
 		} catch (ex) {
             resetCredentials()
 			if (ex.getMessage().indexOf("groovy.json.internal.LazyMap") < 0) {
-				handleFailureEvent(ex)
+				handleFailureEvent(ex.getMessage())
 			}
 		}
 	}
@@ -684,7 +735,7 @@ def updateBucketPolicy(policy_json, bucketName){
 				--bucket "+ bucketName + " \
 				--policy \'${policy_json}\'"
 	} catch (e) {
-		handleFailureEvent(ex)
+		handleFailureEvent(ex.getMessage())
 	}
 }
 /**
@@ -718,44 +769,47 @@ def cleanupCloudFrontDistribution(stage) {
 			if ((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
 				echo "Could not find a CloudFront distribution Id for service: ${service_config['service']} and environment $stage"
 			} else {
-				handleFailureEvent(ex)
+				handleFailureEvent(ex.getMessage())
 			}
 		}
 	}
-
 }
 
 /**
- * Get the CloudFront distribution Id corresponding to the service
- * @param service
- * @param stage
- * @return
+ * Get dist Id if exists
+ *
  */
-def getDistributionId(stage) {
+def getDistributionId(environment) {
 	def distributionID
-	def outputStr
 	try {
-		def cloudFrontId = "${configLoader.INSTANCE_PREFIX}-${stage}-static-website-origin-${service_config['domain']}-${service_config['service']}"
-		echo "CloudFront ID: $cloudFrontId"
-		outputStr = sh(
-			script: "aws cloudfront list-distributions \
-				--output json \
-				--query \"DistributionList.Items[?Origins.Items[?Id=='${cloudFrontId}']].{Distribution:domainName, Id:Id}\"",
-			returnStdout: true
-		)
-
+		def outputStr = listDistribution(environment)
 		if (outputStr) {
+			echo "### OutputStr for getting Distribution Id: $outputStr"
 			def outputObj = new JsonSlurper().parseText(outputStr)
-
-			if (outputObj) {
+			if (outputObj && outputObj[0].Id) {
 				distributionID = outputObj[0].Id
 			}
 		}
+		return distributionID
 	} catch (ex) {
-		error "getDistributionId Failed: "+ ex.getMessage()
+		return distributionID
 	}
+}
 
-	return distributionID
+def listDistribution(environment){
+	def outputStr = null
+	def service = "${service_config['domain']}-${service_config['service']}"
+	try {
+		outputStr = sh(
+			script: "aws cloudfront list-distributions \
+				--output json \
+				--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\"",
+			returnStdout: true
+		)
+		return outputStr
+	} catch (ex) {
+		return outputStr
+	}
 }
 
 /**
@@ -773,7 +827,7 @@ def getDistributionConfig(distributionID) {
 		)
 		return distributionConfig
 	} catch (ex) {
-		handleFailureEvent(ex)
+		handleFailureEvent(ex.getMessage())
 	}
 
 }
@@ -800,7 +854,7 @@ def generateDistributionConfigForDisable(distributionConfig) {
 		} catch (ex) { }
 		return eTag
 	} catch (ex) {
-		handleFailureEvent(ex)
+		handleFailureEvent(ex.getMessage())
 	}
 }
 
@@ -831,7 +885,7 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 		echo "disable eTag...$eTag"
 		return eTag
 	} catch (ex) {
-		handleFailureEvent(ex)
+		handleFailureEvent(ex.getMessage())
 	}
 }
 
@@ -919,7 +973,7 @@ def setCredentials() {
 			return tokenJson_token
 		}
 		catch (e) {
-			handleFailureEvent(ex)
+			handleFailureEvent(ex.getMessage())
 		}
 	}
 }
@@ -930,7 +984,6 @@ def setCredentials() {
 * @return
 */
 def send_status_email (build_status) {
-	def email_id = ''
 
 	def email_content = ''
 	def body_subject = ''
@@ -956,12 +1009,12 @@ def send_status_email (build_status) {
 	}
 	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
- 						 from : fromStr,
- 						 to : email_id,
- 						 subject : body_subject,
- 						 text : body_text,
- 						 cc : cc_email,
- 						 html : body_html
+		from : fromStr,
+		to : service_config['created_by']
+        subject : body_subject,
+		text : body_text,
+		cc : cc_email,
+		html : body_html
 	])
  		 try {
 		def sendMail = sh(script: "curl -X POST \
