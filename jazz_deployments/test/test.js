@@ -14,6 +14,7 @@ const logger = require("../components/logger.js");
 const configObj = require('../components/config.js');
 const crud = require('../components/crud')();
 const errorHandler = require("../components/error-handler.js")();
+const validateUtils = require("../components/validation")();
 
 describe('jazz_deployments', function () {
   var tableName, global, spy, stub, err, errMessage, errType, dataObj, event, context, callback, callbackObj, logMessage, logStub, indexName, responseObj;
@@ -156,7 +157,10 @@ describe('jazz_deployments', function () {
       event.query = {};
       event.path = {};
       config = configObj(event);
+      console.log(validateUtils.validateCreatePayload)
+      const validateCreatePayload = sinon.stub(validateUtils, "validateCreatePayload").callsFake(()=>{console.log("something")});
       var validateDeploymentDetails = index.validateDeploymentDetails(config, event.body);
+      sinon.assert.calledOnce(validateCreatePayload);
       expect(validateDeploymentDetails.then((res) => {
         return res;
       })).to.eventually.deep.equal(null);
@@ -634,9 +638,16 @@ describe('jazz_deployments', function () {
       AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
         return cb(null, dataObj);
       });
+      const validateDeploymentDetails = sinon.stub(index, "validateDeploymentDetails").resolves(null);
+      const addNewDeploymentDetails = sinon.stub(index, "addNewDeploymentDetails").resolves({result:'success', deployment_id:'123'})
+      // console.log(validateDeploymentDetails.validateDeploymentDetails)
       var processDeploymentCreation = index.processDeploymentCreation(config, event.body, tableName);
+      console.log(processDeploymentCreation)
       expect(processDeploymentCreation.then((res) => {
-        expect(res).to.include.keys('result')
+        console.log(res)
+        expect(res).to.include.keys('result');
+        sinon.assert.calledOnce(validateDeploymentDetails);
+        sinon.assert.calledOnce(addNewDeploymentDetails);
         AWS.restore("DynamoDB.DocumentClient");
         return res;
       }));
