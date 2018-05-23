@@ -1,0 +1,85 @@
+// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
+/**
+    Get Assets-Catalog by id from dynamodb table
+    @module: get.js
+    @description: CRUD functions for assets catalog
+	  @author: 
+    @version: 1.0
+**/
+
+const utils = require("../utils.js")(); //Import the utils module.
+const logger = require("../logger.js"); //Import the logging module.
+const _ = require("lodash");
+
+
+module.exports = (assets_id, onComplete) => {
+    // initialize docCLient
+    var docClient = utils.initDocClient();
+
+    var params = {
+        TableName: global.assets_table       
+    };
+    var callBack = function(err,data){
+        if (err) {
+            logger.error(err);
+            onComplete(err);
+        } else {
+            var responseData = data.Item || data.Items;
+            if (_.isEmpty(responseData) ) {
+                    logger.debug('Invalid asset with id: ' + assets_id);
+                    onComplete({
+                        "result":"notFoundError",
+                        "message":'Invalid asset with id: ' + assets_id
+                    });
+                }
+            else{
+                logger.debug('onComplete get responseData are : ' + JSON.stringify(responseData));
+                onComplete(null, responseData);
+            }
+        }
+    };
+    if(assets_id){
+		params.Key = {
+			"id": assets_id
+		};
+        docClient.get(params, function(err, data) {
+            callBack(err,data);
+        });
+    }else{        
+		var items = [];
+		var scanExecute = function (callBack) {
+			docClient.scan(params, function(err, data) {
+				if (err) {
+					callBack(err,null);
+				} else {
+					items = items.concat(data.Items);				
+					if (data.LastEvaluatedKey) {
+						params.ExclusiveStartKey = data.LastEvaluatedKey;
+						scanExecute(callBack);
+					} else {
+						var assets = {};
+						assets.Items = items;
+						callBack(null, assets);
+					}
+				}
+			});
+		};
+		scanExecute(callBack);			
+    }
+   
+};

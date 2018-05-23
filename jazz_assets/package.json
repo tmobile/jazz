@@ -1,0 +1,26 @@
+{
+  "name": "assets",
+  "version": "0.0.1",
+  "description": "CRUD APIs for Assets Catalog",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "json-query": "*",
+    "request": "*",
+    "aws-sdk": "*",
+    "guid": "0.0.12",
+    "async": "*",
+    "deasync": "*",
+    "moment": "*",
+	"lodash": "*"
+  },
+  "devDependencies": {
+    "mocha": "^v3.0.0",
+    "chai": "^3.5.0",
+    "nock":"*"
+  }
+}
