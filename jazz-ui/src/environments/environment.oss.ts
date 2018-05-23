@@ -5,8 +5,8 @@ export const environment = {
   api_doc_name : "https://{api_doc_name}.s3.amazonaws.com",
   envName:"oss",
   multi_env:{multi_env},
-  serviceTabs:["overview","logs"],
-  environmentTabs:["overview"],
+  serviceTabs:["{overview}","{access control}","{metrics}","{logs}","{cost}"],
+  environmentTabs:["{env_overview}","{deployments}","{code quality}","{assets}","{env_logs}"],
   urls:{
     docs_link:"https://github.com/tmobile/jazz/wiki",
 }
