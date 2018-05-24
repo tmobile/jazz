@@ -1,10 +1,6 @@
-import {Component, Input, OnInit, ViewChild, ViewEncapsulation} from '@angular/core';
-import {UserJourneyOss} from './user-journey.oss';
-import {UserJourneyInternal} from './user-journey.internal';
-import {NavigationEnd, Router} from '@angular/router';
-import {LoginComponent} from '../../pages/login/oss/login.component';
-import index from '@angular/cli/lib/cli';
-import {environment} from "../../../environments/environment";
+import {Component, OnInit, ViewEncapsulation} from '@angular/core';
+import { Router } from '@angular/router';
+import {UserJourney} from "./user-journey";
 
 @Component({
   selector: 'user-journey',
@@ -15,7 +11,7 @@ import {environment} from "../../../environments/environment";
 export class UserJourneyComponent implements OnInit {
   public last = false;
   public stepIndex = 0;
-  public steps: any = environment.envName === 'oss' ? UserJourneyOss : UserJourneyInternal;
+  public steps: any = UserJourney;
   public currentStep;
   public bitbucketStep = 7;
   public loaded = false;

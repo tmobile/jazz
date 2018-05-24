@@ -5,6 +5,7 @@ export const environment = {
     serviceTabs:"{service_tabs}",
     environmentTabs:"{environment_tabs}",
     urls:{
+        content_base: "{{content_base}}",
         privacyPolicy:"{{privacy_policy}}",
         docs:"{{docs_link}}",
         forgotPassword:"{{forgot_password}}",
