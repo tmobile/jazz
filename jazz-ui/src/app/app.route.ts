@@ -15,7 +15,7 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
-    loadChildren: 'app/admin-modules/admin.module#AdminModule'
+    loadChildren: 'app/admin-module/admin.module#AdminModule'
   },
   {
     path: '404',

@@ -27,8 +27,10 @@
     "@ng-bootstrap/ng-bootstrap": "^1.0.0-alpha.26",
     "@ng-idle/core": "2.0.0-beta.12",
     "@ng-idle/keepalive": "2.0.0-beta.12",
+    "agm-json-viewer": "^0.1.2",
     "angular2-moment": "^1.6.0",
     "angular2-number-picker": "^0.8.8",
+    "angular2-prettyjson": "^3.0.1",
     "angular2-toaster": "^2.0.0",
     "bootstrap": "^3.3.7",
     "chart.js": "^2.7.0",
@@ -42,9 +44,11 @@
     "ng2-nouislider": "^1.7.0",
     "ng2-popover": "0.0.14",
     "ngx-bootstrap": "^1.7.1",
+    "ngx-json-viewer": "^1.0.0",
     "nouislider": "^10.1.0",
     "rxjs": "^5.4.1",
     "slick-carousel": "^1.6.0",
+    "t-json-viewer": "^1.2.7",
     "ts-helpers": "^1.1.1"
   },
   "devDependencies": {

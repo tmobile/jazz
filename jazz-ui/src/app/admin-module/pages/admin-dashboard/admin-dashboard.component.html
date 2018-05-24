@@ -1,3 +1,16 @@
-<p>
-  admin-dashboard works!
-</p>
+<jazz-mob-header (addClick)='showService(true)' [icon]="'add'" [headText]="'Services'" [status]="'none'"></jazz-mob-header>
+<section class="table-wrap">
+  <navigation-bar tabindex="-1"></navigation-bar>
+  <div class="page-title-wrap hide-for-mobile">
+    <h1 class="header1 bold-title">Admin</h1>
+  </div>
+  <section class="json-viewer-container" *ngIf="adminData">
+    <!--<t-json-viewer [json]="adminData"></t-json-viewer>-->
+    <!--<prettyjson [obj]="adminData"></prettyjson>-->
+    <agm-json-viewer [json]="adminData"></agm-json-viewer>
+  </section>
+  <footer></footer>
+</section>
+
+
+

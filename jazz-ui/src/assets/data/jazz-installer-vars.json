@@ -1,0 +1,95 @@
+{
+  "AWS_CREDENTIAL_ID": "awscreds1",
+  "INSTANCE_PREFIX": "jazz20180522",
+  "AWS": {
+    "SECURITY_GROUP_IDS": "sg-f7525e82",
+    "SUBNET_IDS": "subnet-1ec9747a",
+    "LAMBDA_EXECUTION_ROLE": "jazz20180522_lambda2_basic_execution_1",
+    "CLOUDFRONT_ORIGIN_ID": "origin-access-identity/cloudfront/E3US37AFI6QOTS",
+    "ACCOUNTID": "192006145812",
+    "REGION": "us-east-1",
+    "ROLEID": "arn:aws:iam::192006145812:role/jazz20180522_lambda2_basic_execution_1",
+    "ES_HOSTNAME": "search-jazz20180522-sose3lhzcqpnhox56f2pbckkaq.us-east-1.es.amazonaws.com",
+    "COGNITO": {
+      "USER_POOL_ID": "us-east-1_UXLdgV7Or",
+      "CLIENT_ID": "3cuhtng0t5bob958obaka5br0v"
+    },
+    "API": {
+      "PROD": {
+        "*": "rs0npinxr2",
+        "jazz_*": "rs0npinxr2"
+      },
+      "STG": {
+        "*": "e9qgwpgwe5",
+        "jazz_*": "e9qgwpgwe5"
+      },
+      "DEV": {
+        "*": "4frbmrdtq1"
+      }
+    },
+    "S3": {
+      "API_DOC": "jazz20180522-jazz-s3-api-doc-20180522112631865600000010",
+      "DEV_BUCKET": "jazz20180522-apis-deployment-dev-20180522112357915500000003",
+      "STG_BUCKET": "jazz20180522-apis-deployment-stg-20180522112452845100000006",
+      "PROD_BUCKET": "jazz20180522-apis-deployment-prod-20180522112344600100000002"
+    }
+  },
+  "REPOSITORY": {
+    "BASE_URL": "jazz-daily-installer-bitbucket-1723618883.us-east-1.elb.amazonaws.com",
+    "CREDENTIAL_ID": "jenkins1cred",
+    "REPO_BASE_SERVICES": "cas",
+    "REPO_BASE_PLATFORM": "slf"
+  },
+  "API": {
+    "API_BUILD_URI": "/job/build_pack_api/buildWithParameters?token=slf-java-api-build-101"
+  },
+  "LAMBDA": {
+    "LAMBDA_BUILD_URI": "/job/build-pack-lambda/buildWithParameters?token=slf-lambda-build-101"
+  },
+  "WEBSITE": {
+    "WEBSITE_BUILD_URI": "/job/build-pack-website/buildWithParameters?token=slf-website-build-0907"
+  },
+  "JAZZ": {
+    "ADMIN": "serverless@t-mobile.com",
+    "PASSWD": "@9rsdnCmrA",
+    "S3_BUCKET_NAME_SUFFIX": "_BUCKET",
+    "S3_BUCKET_WEB": "jazz20180522-web-20180522112636567200000011",
+    "BUCKET_PER_SERVICE": "false",
+    "S3": {
+      "WEBSITE_DEV_BUCKET": "jazz20180522-dev-web-20180522112429554400000004",
+      "WEBSITE_STG_BUCKET": "jazz20180522-stg-web-20180522112106113300000001",
+      "WEBSITE_PROD_BUCKET": "jazz20180522-prod-web-20180522112450272300000005"
+    }
+  },
+  "JENKINS": {
+    "USERNAME": "jenkinsuser",
+    "JENKINS_PASSWORD": "jenkinsuser",
+    "CREDENTIAL_ID": "jobexecutor"
+  },
+  "SCM": {
+    "TYPE": "bitbucket",
+    "PRIVATE_TOKEN": "",
+    "CAS_NAMESPACE_ID": "",
+    "USERNAME": "bitbucketuser",
+    "PASSWORD": "bitbucketuser"
+  },
+  "UI_CONFIG": {
+    "feature": {
+      "multi_env": true
+    },
+    "service_tabs": {
+      "overview": true,
+      "access_control": false,
+      "metrics": false,
+      "logs": true,
+      "cost": false
+    },
+    "environment_tabs": {
+      "overview": true,
+      "deployments": true,
+      "code_quality": false,
+      "logs": false,
+      "assets": false
+    }
+  }
+}

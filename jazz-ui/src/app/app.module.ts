@@ -24,6 +24,7 @@ import { TestApiComponent } from './pages/testapi/test-api.component';
 import { Error404Component } from './pages/error404/error404.component';
 import { SharedModule } from './shared-module/shared.module';
 import { routes } from './app.route';
+
 let environmentval = environment.envName;
 let loadedModule;
 if (environmentval == "oss") {
@@ -47,7 +48,7 @@ else{
     HttpModule,
     ToasterModule,
     NgIdleKeepaliveModule.forRoot(),
-    SharedModule,
+    SharedModule
   ],
   providers: [
     AuthenticationService,
