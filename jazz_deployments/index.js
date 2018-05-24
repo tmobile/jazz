@@ -217,7 +217,7 @@ function genericInputValidation (event) {
 
 function processDeploymentCreation (config, deployment_details, deploymentTableName) {
 	return new Promise((resolve, reject) => {
-		return factory.validateDeploymentDetails(config, deployment_details)
+		factory.validateDeploymentDetails(config, deployment_details)
 			.then(() => factory.addNewDeploymentDetails(deployment_details, deploymentTableName))
 			.then((res) => {
 				resolve(res);
@@ -230,8 +230,8 @@ function processDeploymentCreation (config, deployment_details, deploymentTableN
 
 function processDeploymentRebuild (config, deploymentId, deploymentTableName) {
 	return new Promise((resolve, reject) => {
-		getDeploymentDetailsById(deploymentTableName, deploymentId)
-			.then((res) => reBuildDeployment(res, config))
+		factory.getDeploymentDetailsById(deploymentTableName, deploymentId)
+			.then((res) => factory.reBuildDeployment(res, config))
 			.then((res) => {
 				resolve(res);
 			})
@@ -251,8 +251,8 @@ function processDeploymentsList (config, query, deploymentTableName) {
 			'offset': query.offset,
 			'limit': query.limit
 		};
-		validateQueryParams(config, queryParams)
-			.then(() => getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
+		factory.validateQueryParams(config, queryParams)
+			.then(() => factory.getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
 			.then((res) => {
 				resolve(res);
 			})
@@ -264,8 +264,8 @@ function processDeploymentsList (config, query, deploymentTableName) {
 
 function processDeploymentsUpdate (config, body, deploymentTableName, deploymentId) {
 	return new Promise((resolve, reject) => {
-		validateUpdateInput(config, body, deploymentTableName, deploymentId)
-			.then((data) => updateDeploymentDetails(deploymentTableName, data, deploymentId))
+		factory.validateUpdateInput(config, body, deploymentTableName, deploymentId)
+			.then((data) => factory.updateDeploymentDetails(deploymentTableName, data, deploymentId))
 			.then((res) => {
 				resolve(res);
 			})
@@ -277,8 +277,8 @@ function processDeploymentsUpdate (config, body, deploymentTableName, deployment
 
 function processDeploymentsDeletion (deploymentTableName, deploymentId) {
 	return new Promise((resolve, reject) => {
-		getDeploymentDetailsById(deploymentTableName, deploymentId)
-			.then((res) => deleteServiceByID(res, deploymentTableName, deploymentId))
+		factory.getDeploymentDetailsById(deploymentTableName, deploymentId)
+			.then((res) => factory.deleteServiceByID(res, deploymentTableName, deploymentId))
 			.then((res) => {
 				resolve(res);
 			})
@@ -418,9 +418,9 @@ function deleteServiceByID (getDeploymentDetails, deploymentTableName, deploymen
 function reBuildDeployment (refDeployment, config) {
 	logger.debug("Inside reBuildDeployment" + JSON.stringify(refDeployment));
 	return new Promise((resolve, reject) => {
-		getToken(config)
-			.then((authToken) => getServiceDetails(config, refDeployment.service_id, authToken))
-			.then((res) => buildNowRequest(res, config, refDeployment))
+		factory.getToken(config)
+			.then((authToken) => factory.getServiceDetails(config, refDeployment.service_id, authToken))
+			.then((res) => factory.buildNowRequest(res, config, refDeployment))
 			.then((res) => {
 				resolve(res);
 			})
