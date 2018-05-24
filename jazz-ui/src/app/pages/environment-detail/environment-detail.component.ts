@@ -24,8 +24,8 @@ import { EnvDeploymentsSectionComponent} from './../environment-deployment/env-d
   styleUrls: ['./environment-detail.component.scss']
 })
 export class EnvironmentDetailComponent implements OnInit {
-  @ViewChild('envoverview') envoverview: EnvOverviewSectionComponent;
-  @ViewChild('envdeployments') envdeployments: EnvDeploymentsSectionComponent;
+ @ViewChild('envoverview') envoverview:EnvOverviewSectionComponent;
+ @ViewChild('envdeployments') envdeployments:EnvDeploymentsSectionComponent;
 
 isFunction:boolean = false;
 breadcrumbs = [];
@@ -198,29 +198,27 @@ api_doc_name:string='';
 
   };
 
-  testApi(type) {
-    switch (type) {
+  testApi(type){
+    switch(type){
       case 'api':
-        if (environment.envName == "oss") {
-          var apiPath =  this.api_doc_name + "/" + this.service.domain + "/" + this.service.name + "/" + this.envSelected + "/swagger.json";
-          var SwaggerUrl = "http://editor.swagger.io/?url=" + apiPath;
+        if(environment.envName == "oss"){
+          var SwaggerUrl="http://editor.swagger.io/?url="+this.api_doc_name+"/"+this.service.domain +"/"+ this.service.name +"/"+this.envSelected+"/swagger.json"
           window.open(SwaggerUrl);
         }
-        else {
-          window.open('/test-api?service=' + this.service.name + '&domain=' + this.service.domain + '&env=' + this.envSelected);
+        else{
+          window.open('/test-api?service=' + this.service.name + '&domain='+ this.service.domain + '&env=' +this.envSelected);
+
         }
 
         break;
 
       case 'website' :
-        if (this.endpoint_env != (undefined || '')) {
+        if(this.endpoint_env!=(undefined||'')){
           window.open(this.endpoint_env);
         }
         break;
       case 'function' :
-        this.setSidebar('try-service');
-        break;
-      case 'lambda' :
+      case 'lamda':
         this.setSidebar('try-service');
         break;
     }
