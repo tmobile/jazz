@@ -1010,7 +1010,7 @@ def send_status_email (build_status) {
 	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 		from : fromStr,
-		to : service_config['created_by']
+		to : service_config['created_by'],
         subject : body_subject,
 		text : body_text,
 		cc : cc_email,
