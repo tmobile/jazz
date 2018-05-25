@@ -57,7 +57,6 @@ var context = {
 var configData = configObj(context);
 describe("getTokenRequest", function () {
   it("should return Request token when called", () => {
-
     let result = index.getTokenRequest(configData);
     expect(result.uri).to.eq(configData.BASE_API_URL + configData.TOKEN_URL)
     expect(result.method).to.eq('post')
@@ -108,7 +107,6 @@ describe("checkforIntrestedEvents", () => {
     var sequenceNumber = record.kinesis.sequenceNumber;
     var encodedPayload = record.kinesis.data;
     index.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
-      // console.log(res);
       assert.isTrue(res.interested_event);
     })
   })
@@ -162,8 +160,9 @@ describe("checkforIntrestedEvents", () => {
   })
 })
 describe("processEventRecord", () => {
+  var payload
   beforeEach(() => {
-    var payload = {
+    payload = {
       Item: {
         EVENT_ID: {
           S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4'
@@ -203,15 +202,13 @@ describe("processEventRecord", () => {
         }
       }
     }
-    sandbox = sinon.createSandbox();
   })
-  afterEach(()=>{
-    sandbox.restore();
-    if(reqStub){
+  afterEach(() => {
+    if (reqStub) {
       reqStub.restore();
     }
   })
-  it.only("should call processEvent for intrested events", () => {
+  it("should call processEvent for intrested events", () => {
     let message = "Succesfully Updated Creation Event"
     let responseObject = {
       statusCode: 200,
@@ -221,11 +218,19 @@ describe("processEventRecord", () => {
         }
       }
     };
-    
-    var checkForInterestedEvents = sinon.stub(index,"checkForInterestedEvents").withArgs("a","b","c").resolves("somthing");
-    var processEventStub = sinon.stub(index,"processEvent")
+    reqStub = sinon.stub(request, "Request").callsFake((obj) => {
+      return obj.callback(null, responseObject, responseObject.body);
+    })
+    var checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves({
+      "interested_event": true,
+      "payload": payload.Item
+    })
+    var processEventStub = sinon.stub(index, "processEvent")
     var tempAuth = "Auth_token"
     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
+      sinon.assert.calledOnce(processEventStub)
+      checkForInterestedEventsStub.restore()
+      processEventStub.restore()
     })
   })
   it("should Return success message when called with valid paramenters", () => {
@@ -238,20 +243,109 @@ describe("processEventRecord", () => {
         }
       }
     };
-    reqStub = sinon.stub(request, "Request", (obj) => {
-      console.log("stub is called ")
+    reqStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
+    })
+    var checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves({
+      "interested_event": true,
+      "payload": payload.Item
     })
     var tempAuth = "Auth_token"
     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
+      console.log(obj);
       expect(obj).to.not.eq(null);
       expect(obj.data.message).to.eq(message)
       reqStub.restore()
+      checkForInterestedEventsStub.restore()
     })
   })
   it("should return error message for not intrested events", () => {
     var message = "Not an interesting event";
-    var payload = {
+    var checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves({
+      "interested_event": false,
+      "payload": payload.Item
+    })
+    var tempAuth = "Auth_token";
+    index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
+      expect(obj.message).to.eq(message)
+    })
+  })
+})
+describe("getDeploymentPayload", () => {
+  var svcContext
+  beforeEach(() => {
+    svcContext = {
+      "service_type": "api",
+      "branch": "",
+      "runtime": "nodejs",
+      "domain": "jazztest",
+      "iam_role": "arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1",
+      "environment": "",
+      "region": "us-east-1",
+      "message": "input validation starts",
+      "created_by": "serverless@t-mobile.com"
+    }
+  })
+  it("should return deploymentPayload with values passed by svcContext", () => {
+    var deploymentPayload = index.getDeploymentPayload(svcContext)
+    expect(deploymentPayload.domain).to.eq(svcContext.domain);
+  })
+})
+describe("procesRequest", () => {
+  afterEach(() => {
+    if (reqStub) {
+      reqStub.restore();
+    }
+  })
+  it("should make a request with svcpayload and resolve the response body for success scenario", () => {
+    var svcPayload = {
+      headers: {
+        'content-type': "application/json",
+        'authorization': "abc"
+      },
+      rejectUnauthorized: false
+    }
+    let responseObject = {
+      statusCode: 200,
+      body: {
+        data: {}
+      }
+    };
+    reqStub = sinon.stub(request, "Request").callsFake((obj) => {
+      return obj.callback(null, responseObject, responseObject.body);
+    })
+    index.procesRequest(svcPayload).then((obj) => {
+      expect(obj).not.null;
+    })
+  })
+  it("should  call Error Handler function for error case scenarios (status code!-200)", () => {
+    var svcPayload = {
+      headers: {
+        'content-type': "application/json",
+        'authorization': "abc"
+      },
+      rejectUnauthorized: false
+    }
+    let responseObject = {
+      statusCode: 401,
+      body: {
+        data: {}
+      }
+    };
+    reqStub = sinon.stub(request, "Request").callsFake((obj) => {
+      return obj.callback(null, responseObject, responseObject.body);
+    })
+    var handleErrorStub = sinon.stub(index, "handleError")
+    index.procesRequest(svcPayload).catch((err) => {
+      sinon.assert.calledOnce(handleErrorStub);
+      handleErrorStub.restore()
+    })
+  })
+})
+describe("processCreateEvent", () => {
+  var payload;
+  beforeEach(() => {
+    payload = {
       Item: {
         EVENT_ID: {
           S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4'
@@ -291,37 +385,209 @@ describe("processEventRecord", () => {
         }
       }
     }
-    var tempAuth = "Auth_token";
-    var encoded = Buffer.from(JSON.stringify(payload)).toString('base64');
-    event.Records[0].kinesis.data = encoded;
-    index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
-      expect(obj.message).to.eq(message)
+  })
+  afterEach(() => {
+    if (reqStub) {
+      reqStub.restore();
+    }
+  })
+  it("should call processEvents with SvcPayload", () => {
+    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
+      x: 1
+    })
+    index.processCreateEvent(payload.Item, configData, "tempAuth").then(() => {
+      sinon.assert.calledOnce(procesRequestStub)
+      procesRequestStub.restore()
     })
   })
 })
-describe("getDeploymentPayload", () => {
-  var svcContext 
+describe("processUpdateEvent", () => {
+  var payload;
   beforeEach(() => {
-     svcContext = {
-      "service_type": "api",
-      "branch": "",
-      "runtime": "nodejs",
-      "domain": "jazztest",
-      "iam_role": "arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1",
-      "environment": "",
-      "region": "us-east-1",
-      "message": "input validation starts",
-      "created_by": "serverless@t-mobile.com"
+    payload = {
+      Item: {
+        EVENT_ID: {
+          S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4'
+        },
+        TIMESTAMP: {
+          S: '2018-05-16T12:12:42:821'
+        },
+        REQUEST_ID: {
+          NULL: true
+        },
+        EVENT_HANDLER: {
+          S: 'JENKINS'
+        },
+        EVENT_NAME: {
+          S: 'CREATE_DEPLOYMENT'
+        },
+        SERVICE_NAME: {
+          S: 'test-02'
+        },
+        SERVICE_ID: {
+          S: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7'
+        },
+        EVENT_STATUS: {
+          S: 'STARTED'
+        },
+        EVENT_TYPE: {
+          S: 'NOT_SERVICE_DEPLOYMENT'
+        },
+        USERNAME: {
+          S: 'serverless@t-mobile.com'
+        },
+        EVENT_TIMESTAMP: {
+          S: '2018-05-16T12:12:41:083'
+        },
+        SERVICE_CONTEXT: {
+          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1","environment":"","region":"us-east-1","message":"input validation starts","created_by":"serverless@t-mobile.com"}'
+        }
+      }
     }
   })
-  it("should return deploymentPayload with values passed by svcContext",()=>{
-  var deploymentPayload = index.getDeploymentPayload(svcContext)  
-  expect(deploymentPayload.domain).to.eq(svcContext.domain);
+  afterEach(() => {
+    if (reqStub) {
+      reqStub.restore();
+    }
+  })
+  it("should call getDeployments for true case scenarios", () => {
+    var temp = {
+      "x": 1
+    }
+    var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp)
+    var updateDeploymentsStub = sinon.stub(index, "updateDeployments").resolves(temp)
+    index.processUpdateEvent(payload.Item, configData, "tempAuth").then(() => {
+      sinon.assert.calledOnce(getDeploymentsStub)
+      getDeploymentsStub.restore()
+      updateDeploymentsStub.restore()
+    })
+  })
+  it("should call updateDeployments when getDeployment resolves the promise and returns result", () => {
+    var temp = {
+      "x": 1
+    }
+    var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp)
+    var updateDeploymentsStub = sinon.stub(index, "updateDeployments").resolves(temp)
+    index.processUpdateEvent(payload.Item, configData, "tempAuth").then(() => {
+      sinon.assert.calledOnce(updateDeploymentsStub);
+      getDeploymentsStub.restore()
+      updateDeploymentsStub.restore()
+    })
+  })
+  it("should return error  when updateDeployment resolves the promise and returns result", () => {
+    var temp = {
+      "x": 1
+    }
+    var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp)
+    var updateDeploymentsStub = sinon.stub(index, "updateDeployments").rejects(temp)
+    index.processUpdateEvent(payload.Item, configData, "tempAuth").catch((obj) => {
+      assert.isNotNull(obj);
+      getDeploymentsStub.restore()
+      updateDeploymentsStub.restore()
+    })
   })
 })
-describe("processUpdateEvent",()=>{
-  beforeEach(()=>{
-    
+describe("getDeployments", () => {
+  var deploymentPayload
+  beforeEach(() => {
+    deploymentPayload = {
+      domain: 'jazztest',
+      service_id: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7',
+      service: 'test-02',
+      environment_logical_id: 'temp_env_ID'
+    }
+  })
+  it("should call process Events with deploymentpayload", () => {
+    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
+      x: 1
+    })
+    index.getDeployments(deploymentPayload, configData, "temp_auth").then((obj) => {
+      console.log(obj);
+      sinon.assert.calledOnce(procesRequestStub)
+      procesRequestStub.restore()
+
+    })
+  })
+  it("should return error if processEvents returns unsuccesfull", () => {
+    var procesRequestStub = sinon.stub(index, "procesRequest").rejects({
+      message: "ProcessRequest Falied"
+    })
+    index.getDeployments(deploymentPayload, configData, "temp_auth").catch((obj) => {
+      expect(obj.message).to.eq("ProcessRequest Falied");
+      procesRequestStub.restore()
+    })
+  })
+  it("should throw error is enviornment_id is not defined in deploymentpayload passed", () => {
+    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
+      x: 1
+    })
+    deploymentPayload.environment_logical_id = undefined;
+    index.getDeployments(deploymentPayload, configData, "temp_auth").catch((err) => {
+      expect(err.failure_message).to.eq("Environment logical id is not defined");
+      procesRequestStub.restore()
+    })
+  })
+})
+describe("updateDeployments", () => {
+  var res, deploymentpayload
+  beforeEach(() => {
+    deploymentPayload = {
+      domain: 'jazztest',
+      service_id: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7',
+      service: 'test-02',
+      environment_logical_id: 'temp_env_ID',
+      provider_build_url: "http://xdwxdwcdwc/dccdw.com",
+      provider_build_id: "xdwxdwcdc"
+    }
+    res = {
+      "data": {
+        "deployments": [
+          { "deployment_id": "Temp_ID",
+            "service_id": "54c65c47-ce38-49b8-8eef-62017088eadb",
+            "service": "deployments",
+            "domain": "jazz",
+            "environment_logical_id": "prod",
+            "provider_build_url": "http://xdwxdwcdwc/dccdw.com",
+            "provider_build_id": "xdwxdwcdc",
+            "scm_commit_hash": "cdwcdwcdwcdcdc",
+            "scm_url": "http://xdwxdwcdwc/dccdw.com",
+            "scm_branch": "master",
+            "status": "in_progress",
+            "request_id": "984a1083-7fef-4107-bf3b-b0cb0eb245cc"
+          }
+        ]
+      }
+
+    }
   })
 
+  it("should call processRequest for success scenario ", () => {
+    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
+      x: 1
+    })
+    index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").then((obj) => {
+      sinon.assert.calledOnce(procesRequestStub)
+      procesRequestStub.restore()
+    })
+  })
+  it("should call return error if  processRequest is unsucesfull", () => {
+    var procesRequestStub = sinon.stub(index, "procesRequest").rejects({
+      message: "Process Request failed"
+    })
+    index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
+      sinon.assert.calledOnce(procesRequestStub)
+      expect(err.message).to.eq("Process Request failed")
+      procesRequestStub.restore()
+    })
+  })
+  it("should return error if deployment id is  processRequest for success scenario ", () => {
+    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
+      x: 1
+    })
+    res.data.deployments[0].deployment_id = undefined;
+    index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
+      expect(err.failure_message).to.eq('Deployment details not found!')
+      procesRequestStub.restore()
+    })
+  })
 })
