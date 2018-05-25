@@ -70,6 +70,10 @@ node()  {
 
 	}
 
+	if(!service_config){
+		error "Failed to fetch service metadata from catalog"
+	}
+
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
 	def environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
