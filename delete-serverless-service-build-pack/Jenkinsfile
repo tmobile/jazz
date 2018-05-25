@@ -83,9 +83,16 @@ node {
 			error "Service Id is not available."
 		}
 
+		if(!service_config){
+			error "Failed to fetch service metadata from catalog"
+		}
 		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 		def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
 		echo "Environment List: $environmentList"
+
+		if (!events) { error "Can't load events module"	} //Fail here
+		events.initialize(configLoader, service_config, "SERVICE_DELETION", "", "", g_base_url + "/jazz/events")
+		context_map = [created_by : service_config['created_by']]
 
 		if (environmentIds.size() > 0) {
 			//validate each id in environment catalog
@@ -100,11 +107,7 @@ node {
 			}
 		} else if (environmentList.size() == 0) {
 			echo "$repo_name doesn't contain any active environment logical id in environment catalog!"
-		}
-
-		if (!events) { error "Can't load events module"	} //Fail here
-		events.initialize(configLoader, service_config, "SERVICE_DELETION", "", "", g_base_url + "/jazz/events")
-		context_map = [created_by : service_config['created_by']]
+		}		
 
 		dir(repo_name){
 			echo "loadServerlessConfig......."
@@ -287,7 +290,7 @@ def checkoutSCM(repo_name) {
 					[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repo_url]
 				]])
 		} catch (ex) {
-			handleFailureEvent(ex.getMessage())
+			error "checkout SCM failed."
 		}
 	}
 }
@@ -973,7 +976,7 @@ def setCredentials() {
 			return tokenJson_token
 		}
 		catch (e) {
-			handleFailureEvent(ex.getMessage())
+			echo "Failed to fetch authentication details."
 		}
 	}
 }
@@ -1010,7 +1013,7 @@ def send_status_email (build_status) {
 	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
 		from : fromStr,
-		to : service_config['created_by']
+		to : service_config['created_by'],
         subject : body_subject,
 		text : body_text,
 		cc : cc_email,

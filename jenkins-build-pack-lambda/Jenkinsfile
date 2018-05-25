@@ -79,6 +79,10 @@ node()  {
 
 	}
 
+	if(!config){
+		error "Failed to fetch service metadata from catalog"
+	}
+
 	dir(repo_name)
 	{
 		scmModule.setServiceConfig(config)
