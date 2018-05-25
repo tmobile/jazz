@@ -39,8 +39,7 @@ function handler (event, context, cb) {
 	logger.init(event, context);
 
 	//validate inputs
-	logger.info(event);
-	genericInputValidation(event)
+	factory.genericInputValidation(event)
 		.then(() => {
 			var deploymentTableName = config.DEPLOYMENT_TABLE,
 				method = event.method,
@@ -49,8 +48,8 @@ function handler (event, context, cb) {
 				body = event.body;
 
 			if (method === "POST" && !Object.keys(path).length) {
-				logger.info("creating new deployment details");
-				processDeploymentCreation(config, body, deploymentTableName)
+				logger.debug("creating new deployment details");
+				factory.processDeploymentCreation(config, body, deploymentTableName)
 					.then((res) => {
 						logger.info("Create deployment result:" + JSON.stringify(res));
 						return cb(null, responseObj(res, body));
@@ -67,7 +66,7 @@ function handler (event, context, cb) {
 
 			if (method === "POST" && Object.keys(path).length) {
 				logger.info("GET Deployment details using deployment Id :" + path.id);
-				processDeploymentRebuild(config, path.id, deploymentTableName)
+				factory.processDeploymentRebuild(config, path.id, deploymentTableName)
 					.then((res) => {
 						logger.info("Re-build result:" + JSON.stringify(res));
 						return cb(null, responseObj(res, path));
@@ -84,7 +83,7 @@ function handler (event, context, cb) {
 
 			if (method === 'GET' && query && utils.isEmpty(path)) {
 				logger.info("GET Deployment details using query params :" + JSON.stringify(query));
-				processDeploymentsList(config, query, deploymentTableName)
+				factory.processDeploymentsList(config, query, deploymentTableName)
 					.then((res) => {
 						logger.info("Get list of deployments:" + JSON.stringify(res));
 						return cb(null, responseObj(res, query));
@@ -101,7 +100,7 @@ function handler (event, context, cb) {
 
 			if (method === 'GET' && path && utils.isEmpty(query)) {
 				logger.info("GET Deployment details using deployment Id :" + path.id);
-				getDeploymentDetailsById(deploymentTableName, path.id)
+				factory.getDeploymentDetailsById(deploymentTableName, path.id)
 					.then((res) => {
 						logger.info("Get Success. " + JSON.stringify(res));
 						return cb(null, responseObj(res, path));
@@ -117,7 +116,7 @@ function handler (event, context, cb) {
 			}
 
 			if (method === "PUT" && path) {
-				processDeploymentsUpdate(config, body, deploymentTableName, path.id)
+				factory.processDeploymentsUpdate(config, body, deploymentTableName, path.id)
 					.then((res) => {
 						logger.info("Updated data:" + JSON.stringify(res));
 						return cb(null, responseObj({
@@ -138,7 +137,7 @@ function handler (event, context, cb) {
 
 			if (method === "DELETE" && path) {
 				logger.info("Deleting deployment details for id : " + path.id);
-				processDeploymentsDeletion(deploymentTableName, path.id)
+				factory.processDeploymentsDeletion(deploymentTableName, path.id)
 					.then((res) => {
 						logger.info("DeleteItem succeeded");
 						var msg = "Successfully Deleted deployment details of id :" + path.id;
@@ -166,7 +165,7 @@ function handler (event, context, cb) {
 };
 
 function genericInputValidation (event) {
-	logger.info("Inside genericInputValidation");
+	logger.debug("Inside genericInputValidation");
 	return new Promise((resolve, reject) => {
 		// event.method cannot be empty, throw error
 		if (!event || !event.method) {
@@ -229,6 +228,7 @@ function processDeploymentCreation (config, deployment_details, deploymentTableN
 }
 
 function processDeploymentRebuild (config, deploymentId, deploymentTableName) {
+	logger.debug("processDeploymentRebuild")
 	return new Promise((resolve, reject) => {
 		factory.getDeploymentDetailsById(deploymentTableName, deploymentId)
 			.then((res) => factory.reBuildDeployment(res, config))
@@ -289,7 +289,7 @@ function processDeploymentsDeletion (deploymentTableName, deploymentId) {
 }
 
 function validateDeploymentDetails (config, deployment_details) {
-	logger.info("validateDeploymentDetails for creating new deployment");
+	logger.debug("validateDeploymentDetails for creating new deployment");
 	return new Promise((resolve, reject) => {
 		return validateUtils.validateCreatePayload(config, deployment_details, (error, data) => {
 			if (error) {

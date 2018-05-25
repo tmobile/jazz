@@ -74,16 +74,14 @@ describe('jazz_deployments', function () {
 
   describe('genericInputValidation', () => {
     it("should indicate that method is missing/empty", () => {
-      errType = "BadRequest";
       errMessage = "method cannot be empty";
       var invalidArray = ["", null, undefined];
-      var genericInputValidation;
       for (i in invalidArray) {
         event.method = invalidArray[0];
-        genericInputValidation = index.genericInputValidation(event);
-        expect(genericInputValidation.then((res) => {
-          return res;
-        })).to.be.rejectedWith(errMessage)
+        index.genericInputValidation(event)
+        .catch(error => {
+          expect(error).to.include({result: 'inputError', message:errMessage})
+        });
       };
     });
 
@@ -91,64 +89,58 @@ describe('jazz_deployments', function () {
       event.path = "";
       event.query = "";
       event.method = "GET";
-      errType = "BadRequest";
       errMessage = "GET API can be called only with following query params: domain, service and environment OR GET API can be called only with deployment_id as path param.";
-      var genericInputValidation = index.genericInputValidation(event);
-      expect(genericInputValidation.then((res) => {
-        return res;
-      })).to.be.rejectedWith(errMessage)
+      index.genericInputValidation(event)
+      .catch(error => {
+        expect(error).to.include({result: 'inputError', message:errMessage})
+      });
     });
 
     it("should indicate error if deployment_id is unavailable for GET, PUT and DELETE methods", () => {
-      errType = "BadRequest";
       errMessage = "Missing input parameter deployment id";
       event.path.id = "";
       var methods = ["GET", "PUT", "DELETE"];
-      var genericInputValidation;
       for (method in methods) {
         event.method = methods[method];
-        genericInputValidation = index.genericInputValidation(event);
-        expect(genericInputValidation.then((res) => {
-          return res;
-        })).to.be.rejectedWith(errMessage)
+        index.genericInputValidation(event)
+        .catch(error => {
+          expect(error).to.include({result: 'inputError',message:errMessage})
+        });
       }
     });
 
     it("should indicate error if update data is not unavailable for PUT method", () => {
-      errType = "BadRequest";
       errMessage = "Deployment data is required for updating a deployment";
       event.body = {};
       event.method = "PUT";
-      var genericInputValidation = index.genericInputValidation(event);
-      expect(genericInputValidation.then((res) => {
-        return res;
-      })).to.be.rejectedWith(errMessage)
+      index.genericInputValidation(event)
+      .catch(error => {
+        expect(error).to.include({result: 'inputError',message:errMessage})
+      });
     });
 
     it("should indicate error if create payload is unavailable for POST method", () => {
-      errType = "BadRequest";
       errMessage = "Deployment details are required for creating a deployment";
       event.body = {};
       event.path = {};
       event.method = "POST";
-      var genericInputValidation = index.genericInputValidation(event);
-      expect(genericInputValidation.then((res) => {
-        return res;
-      })).to.be.rejectedWith(errMessage)
+      index.genericInputValidation(event)
+      .catch(error => {
+        expect(error).to.include({result: 'inputError',message:errMessage})
+      });
     });
 
     it("should indicate error if deployment_id is unavailable for POST method with re-build path", () => {
-      errType = "BadRequest";
       errMessage = "Re-build API can be called with deployment_id as path param";
       event.body = {};
       event.path = {
         id: undefined
       };
       event.method = "POST";
-      var genericInputValidation = index.genericInputValidation(event);
-      expect(genericInputValidation.then((res) => {
-        return res;
-      })).to.be.rejectedWith(errMessage)
+      index.genericInputValidation(event)
+      .catch(error => {
+        expect(error).to.include({result: 'inputError',message:errMessage})
+      });
     });
   });
 
@@ -211,8 +203,8 @@ describe('jazz_deployments', function () {
       index.addNewDeploymentDetails(event.body, tableName)
         .then(res => {
           expect(res).to.have.property('deployment_id');
+          AWS.restore("DynamoDB.DocumentClient")
         });
-      AWS.restore("DynamoDB.DocumentClient")
     });
 
     it("should indicate error while adding new deployment details to dynamodb", () => {
@@ -222,9 +214,8 @@ describe('jazz_deployments', function () {
       });
       index.addNewDeploymentDetails(event.body, tableName)
         .catch(error => {
-          expect(error).to.include({
-            result: 'databaseError'
-          });
+          expect(error).to.include({ result: 'databaseError'});
+          AWS.restore("DynamoDB.DocumentClient")
         });
     });
   });
@@ -263,8 +254,8 @@ describe('jazz_deployments', function () {
       index.getDeploymentDetailsByQueryParam(tableName, event.query)
         .then(res => {
           expect(res).to.have.property('deployments');
+          AWS.restore("DynamoDB");
         });
-      AWS.restore("DynamoDB");
     });
 
     it("should indicate error if DynamoDB.scan fails", () => {
@@ -272,10 +263,10 @@ describe('jazz_deployments', function () {
         return cb(err, null);
       });
       index.getDeploymentDetailsByQueryParam(tableName, event.query)
-        .catch(error => {
-          expect(error).to.include(err);
-        });
-      AWS.restore("DynamoDB");
+      .catch(error => {
+        expect(error).to.include(err);
+        AWS.restore("DynamoDB");
+      });
     });
   });
 
@@ -288,14 +279,28 @@ describe('jazz_deployments', function () {
         return cb(null, dataObj);
       });
       index.getDeploymentDetailsById(tableName, event.path.id)
-        .then(res => {
-          expect(res).to.include(event.body);
-        });
-      AWS.restore("DynamoDB.DocumentClient");
+      .then(res => {
+        expect(res).to.include(event.body);
+        AWS.restore("DynamoDB.DocumentClient");
+      });
+    });
+
+    it("should indicate notFound error if provided deployment_id does not exist in DynamoDB", () => {
+      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+        var dataObj = {
+          Items: []
+        }
+        return cb(null, dataObj);
+      });
+      index.getDeploymentDetailsById(tableName, event.path.id)
+      .catch(error => {
+        expect(error).to.include({result: 'notFound'});
+        AWS.restore("DynamoDB.DocumentClient");
+      });
     })
 
     it("should indicate error while accessing deployment data by deployment_id of archived/missing deployments", () => {
-      message = "Cannot get details for archived/missing deployments.";
+      errMessage = "Cannot get details for archived/missing deployments.";
       AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
         event.body.DEPLOYMENT_STATUS = "archived"
         var dataObj = {
@@ -304,12 +309,10 @@ describe('jazz_deployments', function () {
         return cb(null, dataObj);
       });
       index.getDeploymentDetailsById(tableName, event.path.id)
-        .catch(error => {
-          expect(error).to.include({
-            message: "Cannot get details for archived/missing deployments."
-          });
-        });
-      AWS.restore("DynamoDB.DocumentClient");
+      .catch(error => {
+        expect(error).to.include({message: errMessage});
+        AWS.restore("DynamoDB.DocumentClient");
+      });
     });
 
     it("should indicate error while accessing deployment data by deployment_id using DynamoDB.DocumentClient.quer", () => {
@@ -320,8 +323,8 @@ describe('jazz_deployments', function () {
       index.getDeploymentDetailsById(tableName, event.path.id)
         .catch(error => {
           expect(error).to.include(err);
+          AWS.restore("DynamoDB.DocumentClient");
         });
-      AWS.restore("DynamoDB.DocumentClient");
     });
   });
 
@@ -339,8 +342,8 @@ describe('jazz_deployments', function () {
       index.validateUpdateInput(config, update_data, tableName, event.path.id)
         .then(res => {
           expect(res).to.include(update_data);
+          AWS.restore("DynamoDB.DocumentClient");
         });
-      AWS.restore("DynamoDB.DocumentClient");
     });
 
     it("should indicate input error while validating update payload for deployment", () => {
@@ -355,11 +358,40 @@ describe('jazz_deployments', function () {
       });
       index.validateUpdateInput(config, update_data, tableName, event.path.id)
         .catch(error => {
-          expect(error).to.include({
-            result: "inputError"
-          });
+          expect(error).to.include({result: "inputError"});
+          AWS.restore("DynamoDB.DocumentClient");
         });
-      AWS.restore("DynamoDB.DocumentClient");
+    });
+
+    it("should indicate notFound error while validating update payload for deployment", () => {
+      var update_data = {
+        status: "in_progress"
+      }
+      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+        var dataObj = {
+          Items: []
+        }
+        return cb(null, dataObj);
+      });
+      index.validateUpdateInput(config, update_data, tableName, event.path.id)
+      .catch(error => {
+        expect(error).to.include({result: 'notFound'});
+        AWS.restore("DynamoDB.DocumentClient");
+      });
+    });
+
+    it("should indicate internal server error while validating update payload for deployment", () => {
+      var update_data = {
+        status: "in_progress"
+      }
+      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+        return cb(err, null);
+      });
+      index.validateUpdateInput(config, update_data, tableName, event.path.id)
+      .catch(error => {
+        expect(error).to.include(err);
+        AWS.restore("DynamoDB.DocumentClient");
+      });
     });
   });
 
@@ -377,8 +409,8 @@ describe('jazz_deployments', function () {
       index.updateDeploymentDetails(tableName, update_data, event.path.id)
         .then(res => {
           expect(res).to.include(dataObj);
+          AWS.restore("DynamoDB.DocumentClient");
         });
-      AWS.restore("DynamoDB.DocumentClient");
     });
 
     it("should indicate error while updating deployment data using DynamoDB.DocumentClient.update", () => {
@@ -390,11 +422,10 @@ describe('jazz_deployments', function () {
       });
       index.updateDeploymentDetails(tableName, update_data, event.path.id)
         .catch(error => {
-          expect(error).to.include({
-            result: 'databaseError'
-          });
+          expect(error).to.include({result: 'databaseError'});
+          AWS.restore("DynamoDB.DocumentClient");
         });
-      AWS.restore("DynamoDB.DocumentClient");
+      
     });
   });
 
@@ -411,9 +442,9 @@ describe('jazz_deployments', function () {
       });
       index.deleteServiceByID(event.body, tableName, event.path.id)
         .then(res => {
-          expect(res).to.include(responseObj)
+          expect(res).to.include(responseObj);
+          AWS.restore("DynamoDB.DocumentClient");
         });
-      AWS.restore("DynamoDB.DocumentClient");
     });
 
     it("Should indicate error while deleting deployment data from the dynamoDB using DynamoDB.DocumentClient.delete", () => {
@@ -423,8 +454,8 @@ describe('jazz_deployments', function () {
       index.deleteServiceByID(event.body, tableName, event.path.id)
         .catch(error => {
           expect(error).to.include(err);
+          AWS.restore("DynamoDB.DocumentClient");
         });
-      AWS.restore("DynamoDB.DocumentClient");
     });
   });
 
@@ -530,9 +561,22 @@ describe('jazz_deployments', function () {
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObj, responseObj.body)
       });
-      var getServiceDetails = index.getServiceDetails(config, event.body.service_id, authToken)
+      index.getServiceDetails(config, event.body.service_id, authToken)
         .then(res => {
           expect(res).to.have.deep.property('data.errorType');
+        });
+      sinon.assert.calledOnce(reqStub);
+      reqStub.restore();
+    });
+
+    it("should indicate error while accessing service details by making request to services api", () => {
+      var authToken = "zaqwsxcderfv.qawsedrftg.qxderfvbhy";
+      reqStub = sinon.stub(request, "Request").callsFake((obj) => {
+        return obj.callback(err, null, null)
+      });
+      index.getServiceDetails(config, event.body.service_id, authToken)
+        .catch(error => {
+          expect(error).to.include(err);
         });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
@@ -616,6 +660,38 @@ describe('jazz_deployments', function () {
           expect(error).to.include("unknown error occurred");
           sinon.assert.calledOnce(reqStub);
           reqStub.restore();
+        });
+    });
+
+    it("should indicate error while initiating deployment re-build", () => {
+      var serviceDetails = {
+          data: {
+            service: "mag!c",
+            domain: "k!ngd0m",
+            type: "api"
+          }
+        };
+      reqStub = sinon.stub(request, "Request").callsFake((obj) => {
+        return obj.callback(err, null, null)
+      });
+      index.buildNowRequest(serviceDetails, config, event.body)
+        .catch(error => {
+          expect(error).to.include(err);
+          sinon.assert.calledOnce(reqStub);
+          reqStub.restore();
+        });
+    });
+
+    it("should indicate error if service details are not provided while initiating deployment re-build", () => {
+      var serviceDetails = {
+          data: {
+            type: "api"
+          }
+        };
+        config.JOB_BUILD_URL = "";
+      index.buildNowRequest(serviceDetails, config, event.body)
+        .catch(error => {
+          expect(error).to.include("unable to find deployment details");
         });
     });
 
@@ -849,343 +925,346 @@ describe('jazz_deployments', function () {
   });
 
   describe('handler', () => {
-    it("should indicate error during the generic validation", () => {
+    it("should indicate input error during the generic validation", () => {
       event.method = undefined;
+      const genericInputValidation = sinon.stub(index, "genericInputValidation").rejects({result:"inputError", message:"method cannot be empty"})
       message = '{"errorType":"BadRequest","message":"method cannot be empty"}';
       index.handler(event, context, (err, res) => {
-        err.should.be.equal(message);
-        return err;
+         expect(err).to.include(message);
+      });
+
+      sinon.assert.calledOnce(genericInputValidation);
+      genericInputValidation.restore();
+    });
+
+    it("should indicate internal server error during the generic validation", () => {
+      event.method = undefined;
+      const genericInputValidation = sinon.stub(index, "genericInputValidation").rejects(err)
+      message = '{"errorType":"InternalServerError","message":"Unexpected error occurred."}';
+      index.handler(event, context, (err, res) => {
+         expect(err).to.include(message);
+      });
+
+      sinon.assert.calledOnce(genericInputValidation);
+      genericInputValidation.restore();
+    });
+
+    describe('handler with success genericInputValidation', () => {
+      let genericInputValidation;
+      beforeEach(() => {
+        genericInputValidation = sinon.stub(index, "genericInputValidation").resolves(null);
+      });
+      afterEach(() => {
+        genericInputValidation.restore();
       })
-    });
-
-    it("should successfully create new deployment using POST method", () => {
-      event.method = "POST";
-      event.path = {};
-      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
-        return cb(null, dataObj);
-      });
-      index.handler(event, context, (err, res) => {
-        res.should.have.deep.property('data.deployment_id');
-        AWS.restore("DynamoDB.DocumentClient");
-        return res;
-      })
-    });
-
-    it("should indicate error while creating new deployment using POST method", () => {
-      event.method = "POST";
-      event.path = {};
-      message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}';
-      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
-        return cb(err, null);
-      });
-      index.handler(event, context, (err, res) => {
-        err.should.be.equal(message);
-        AWS.restore("DynamoDB.DocumentClient");
-        return err;
-      })
-    });
-
-    it("should successfully initiate re-build deployment using POST method", () => {
-      event.method = "POST";
-      var responseObj = {
-        statusCode: 200,
-        body: {
-          data: {
-            token: "zaqwsxcderfv.qawsedrftg.qxderfvbhy"
-          }
-        }
-      };
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var dataObj = {
-          Items: [event.body]
-        }
-        return cb(null, dataObj);
-      });
-      reqStub = sinon.stub(request, "Request").callsFake((obj) => {
-        if (obj.method.toLowerCase() === 'post') {
-          return obj.callback(null, responseObj, responseObj.body)
-        } else if (obj.method === 'get') {
-          responseObj.body = "{\"data\":{\"service\":\"mag!c\",\"domain\":\"k!ngd0m\",\"type\":\"api\"},\"input\":{\"service_id\":\"k!ngd0m_0f_mewni\"}}"
-          return obj.callback(null, responseObj, responseObj.body)
-        }
-      });
-      index.handler(event, context, (err, res) => {
-        res.should.have.deep.property('data.result');
-        AWS.restore("DynamoDB.DocumentClient");
-        sinon.assert.calledThrice(reqStub);
-        reqStub.restore();
-        return res;
+      it("should successfully create new deployment using POST method", () => {
+        event.method = "POST";
+        event.path = {};      
+        const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").resolves({
+          result: 'success',
+          deployment_id: '123'
+        });
+  
+        index.handler(event, context, (err, res) => {
+          expect(res).to.have.deep.property('data.deployment_id')
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentCreation);
+  
+          processDeploymentCreation.restore();
+        }); 
       });
 
-    });
+      it("should indicate internal server error while creating new deployment using POST method", () => {
+        event.method = "POST";
+        event.path = {};
+        message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}';
 
-    it("should indicate internal server error while initiating re-build deployment using POST method", () => {
-      event.method = "POST";
-      var responseObj = {
-        statusCode: 400,
-        body: {
-          data: {
-            token: "zaqwsxcderfv.qawsedrftg.qxderfvbhy"
-          }
-        }
-      };
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var dataObj = {
-          Items: [event.body]
-        }
-        return cb(null, dataObj);
+        const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").rejects({
+          result: "inputError",
+          message: "Input payload cannot be empty"
+        });
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message)
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentCreation);
+  
+          processDeploymentCreation.restore();
+        });
       });
-      reqStub = sinon.stub(request, "Request").callsFake((obj) => {
-        return obj.callback(null, responseObj, responseObj.body)
-      });
-      message = '{"errorType":"InternalServerError","message":"unhandled error occurred"}'
-      index.handler(event, context, (err, res) => {
-        err.should.be.equal(message);
-        sinon.assert.calledOnce(reqStub);
-        AWS.restore("DynamoDB.DocumentClient");
-        reqStub.restore();
-        return err;
-      });
+  
+      it("should indicate internal server error while creating new deployment using POST method", () => {
+        event.method = "POST";
+        event.path = {};
+        message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}';
 
-    });
-
-    it("should indicate NotFound error while initiating re-build deployment using POST method", () => {
-      event.method = "POST";
-      var responseObj = {
-        statusCode: 200,
-        body: {
-          data: {
-            token: "zaqwsxcderfv.qawsedrftg.qxderfvbhy"
-          }
-        }
-      };
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var dataObj = {
-          Items: [event.body]
-        }
-        return cb(null, dataObj);
+        const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").rejects(err);
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message)
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentCreation);
+  
+          processDeploymentCreation.restore();
+        });
       });
-      var i = 0;
-      reqStub = sinon.stub(request, "Request").callsFake((obj) => {
-        if (obj.method.toLowerCase() === 'post') {
-          if (obj.uri === config.SERVICE_API_URL + config.TOKEN_URL) {
-            return obj.callback(null, responseObj, responseObj.body)
-          } else {
-            responseObj.statusCode = 404;
-            return obj.callback(null, responseObj, responseObj.body)
-          }
-        } else if (obj.method === 'get') {
-          responseObj.body = "{\"data\":{\"service\":\"mag!c\",\"domain\":\"k!ngd0m\",\"type\":\"api\"},\"input\":{\"service_id\":\"k!ngd0m_0f_mewni\"}}"
-          return obj.callback(null, responseObj, responseObj.body)
-        }
-      });
-      message = '{"errorType":"NotFound","message":"Unable to re-build mag!c as requested service is unavailable."}'
-      index.handler(event, context, (err, res) => {
-        err.should.be.equal(message);
-        sinon.assert.calledThrice(reqStub);
-        AWS.restore("DynamoDB.DocumentClient");
-        reqStub.restore();
-        return err;
-      });
-    });
-
-    it("should indicate internal server error while initiating re-build deployment using POST method", () => {
-      event.method = "POST";
-      var responseObj = {
-        statusCode: 200,
-        body: {
-          data: {
-            token: "zaqwsxcderfv.qawsedrftg.qxderfvbhy"
-          }
-        }
-      };
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var dataObj = {
-          Items: [event.body]
-        }
-        return cb(null, dataObj);
-      });
-      reqStub = sinon.stub(request, "Request").callsFake((obj) => {
-        if (obj.method.toLowerCase() === 'post') {
-          return obj.callback(null, responseObj, responseObj.body)
-        } else if (obj.method === 'get') {
-          responseObj.body = "{\"data\":{\"errorType\":\"NotFound\"},\"input\":{\"service_id\":\"k!ngd0m_0f_mewni\"}}"
-          return obj.callback(err, null, null)
-        }
-      });
-      message = '{"errorType":"InternalServerError","message":"unhandled error occurred"}'
-      index.handler(event, context, (err, res) => {
-        err.should.be.equal(message);
-        sinon.assert.calledOnce(reqStub);
-        AWS.restore("DynamoDB.DocumentClient");
-        reqStub.restore();
-        return err;
-      });
-    });
-
-    it("should successfully get list of deployments with provided query params using GET method", () => {
-      event.method = "GET";
-      event.path = {};
-      AWS.mock("DynamoDB", "scan", (params, cb) => {
-        var dataObj = {
-          Items: [event.body]
+  
+      it("should successfully initiate re-build deployment using POST method", () => {
+        event.method = "POST";
+        var responseObj = {
+          result: 'success',
+          message: "deployment started."
         };
-        return cb(null, dataObj);
+        
+        const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").resolves(responseObj)
+        index.handler(event, context, (err, res) => {
+          expect(res).to.have.deep.property('data.result');
+  
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentRebuild);
+  
+          processDeploymentRebuild.restore();
+        });
+  
       });
-      index.handler(event, context, (err, res) => {
-        res.should.have.deep.property('data.deployments')
-        AWS.restore("DynamoDB");
-        return res
-      })
-    });
+  
+      it("should indicate internal server error while initiating re-build deployment using POST method", () => {
+        event.method = "POST";
+        message = '{"errorType":"InternalServerError","message":"unhandled error occurred"}'
+        
+        const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").rejects(err)
+        index.handler(event, context, (err, res) => {
+          expect(err).include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentRebuild);
+  
+          processDeploymentRebuild.restore();
+        });
+  
+      });
+  
+      it("should indicate NotFound error while initiating re-build deployment using POST method", () => {
+        event.method = "POST";
+        var responseObj = {
+          result: "notFound",
+          message: "Unable to rebuild deployment"
+        };
+        message = '{"errorType":"NotFound","message":"Unable to rebuild deployment"}'
+        
+        const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").rejects(responseObj)
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentRebuild);
+  
+          processDeploymentRebuild.restore();
+        });
+      });
+  
+      it("should successfully get list of deployments with provided query params using GET method", () => {
+        event.method = "GET";
+        event.path = {};
+        var responseObj = {
+          count: 1,
+          deployments: [event.body]
+        };
+        
+        const processDeploymentsList = sinon.stub(index, "processDeploymentsList").resolves(responseObj)
+        index.handler(event, context, (err, res) => {
+          expect(res).to.have.deep.property('data.deployments');
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentsList);
+  
+          processDeploymentsList.restore();
+        });
+      });
+  
+      it("should indicate error while fecthing list of deployments with provided query params using GET method", () => {
+        event.method = "GET";
+        event.path = {};
+        message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}'
+        
+        const processDeploymentsList = sinon.stub(index, "processDeploymentsList").rejects({
+          result: "inputError",
+          message: "Input payload cannot be empty"
+        });
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentsList);
+  
+          processDeploymentsList.restore();
+        });
+      });
 
-    it("should indicate error while fecthing list of deployments with provided query params using GET method", () => {
-      event.method = "GET";
-      event.path = {};
-      message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
-      AWS.mock("DynamoDB", "scan", (params, cb) => {
-        return cb(err, null);
+      it("should indicate error while fecthing list of deployments with provided query params using GET method", () => {
+        event.method = "GET";
+        event.path = {};
+        message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
+        
+        const processDeploymentsList = sinon.stub(index, "processDeploymentsList").rejects(err)
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentsList);
+  
+          processDeploymentsList.restore();
+        });
       });
-      index.handler(event, context, (err, res) => {
-        err.should.be.equal(message);
-        AWS.restore("DynamoDB");
-        return err;
-      })
-    });
-
-    it("should successfully get deployment with provided path param using GET method", () => {
-      event.method = "GET";
-      event.query = {};
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        event.body.deployment_id = event.path.id;
-        var dataObj = {
-          Items: [event.body]
-        }
-        return cb(null, dataObj);
+  
+      it("should successfully get deployment with provided path param using GET method", () => {
+        event.method = "GET";
+        event.query = {};
+        
+        const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").resolves(event.body)
+        index.handler(event, context, (err, res) => {
+          expect(res).to.have.deep.property('data.deployment_id');
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(getDeploymentDetailsById);
+        });
+        getDeploymentDetailsById.restore();
+        
       });
-      index.handler(event, context, (err, res) => {
-        res.should.have.deep.property('data.deployment_id');
-        AWS.restore("DynamoDB.DocumentClient");
-        return res
-      })
-    });
-
-    it("should indicate error while fetching deployment data with provided path param using GET method", () => {
-      event.method = "GET";
-      event.query = {};
-      message = '{"errorType":"NotFound","message":"Cannot get details for archived/missing deployments."}'
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        event.body.deployment_id = event.path.id;
-        event.body.DEPLOYMENT_STATUS = 'archived'
-        var dataObj = {
-          Items: [event.body]
-        }
-        return cb(null, dataObj);
+  
+      it("should indicate notFound error while fetching deployment data with provided path param using GET method", () => {
+        event.method = "GET";
+        event.query = {};
+        message = '{"errorType":"NotFound","message":"Cannot get details for archived/missing deployments."}'
+        
+        const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").rejects({
+          result: "deployment_already_deleted_error",
+          message: "Cannot get details for archived/missing deployments."
+        })
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(getDeploymentDetailsById);
+  
+          getDeploymentDetailsById.restore();
+        });
       });
-      index.handler(event, context, (err, res) => {
-        err.should.be.equal(message);
-        AWS.restore("DynamoDB.DocumentClient");
-        return err;
-      })
-    });
-
-    it("should successfully update deployment data using PUT method", () => {
-      event.method = "PUT";
-      var dataObj = {
-        data: event.body
-      }
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var obj = {
-          Items: [event.body]
-        }
-        return cb(null, obj);
+  
+      it("should indicate internal server error while fetching deployment data with provided path param using GET method", () => {
+        event.method = "GET";
+        event.query = {};
+        message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
+        
+        const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").rejects(err)
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(getDeploymentDetailsById);
+  
+          getDeploymentDetailsById.restore();
+        });
       });
-      AWS.mock("DynamoDB.DocumentClient", "update", (param, cb) => {
-        return cb(null, dataObj);
+  
+      it("should successfully update deployment data using PUT method", () => {
+        event.method = "PUT";
+        
+        const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").resolves(event.body)
+        index.handler(event, context, (err, res) => {
+          expect(res).to.have.deep.property('data.message');
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentsUpdate);
+  
+          processDeploymentsUpdate.restore();
+        });
       });
-      index.handler(event, context, (err, res) => {
-        res.should.have.deep.property('data.message');
-        AWS.restore("DynamoDB.DocumentClient");
-        return res;
-      })
-    });
-
-    it("should indicate error while updating deployment data using PUT method", () => {
-      event.method = "PUT";
-      var dataObj = {
-        data: event.body
-      };
-      message = '{"errorType":"NotFound","message":"Cannot find deployment details with id :' + event.path.id + '"}'
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var obj = {
-          Items: []
-        }
-        return cb(null, obj);
+  
+      it("should indicate notFound error while updating deployment data using PUT method", () => {
+        event.method = "PUT";
+        message = '{"errorType":"NotFound","message":"Cannot find deployment details with id :' + event.path.id + '"}'
+        
+        const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects({
+          result: "notFound",
+          message: 'Cannot find deployment details with id :' + event.path.id
+        });
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentsUpdate);
+  
+          processDeploymentsUpdate.restore();
+        });
       });
-      AWS.mock("DynamoDB.DocumentClient", "update", (param, cb) => {
-        return cb(null, dataObj);
+  
+      it("should indicate input error while updating deployment data using PUT method", () => {
+        event.method = "PUT";
+        message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}'
+        
+        const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects({
+          result: "inputError",
+          message: "Input payload cannot be empty"
+        });
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentsUpdate);
+  
+          processDeploymentsUpdate.restore();
+        });
       });
-      index.handler(event, context, (err, res) => {
-        err.should.be.equal(message);
-        AWS.restore("DynamoDB.DocumentClient");
-        return err;
-      })
-    });
-
-    it("should successfully delete deployment data using DELETE method", () => {
-      event.method = "DELETE";
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var deploymentObj = {
-          Items: [event.body]
-        }
-        return cb(null, deploymentObj);
+  
+      it("should indicate internal server error while updating deployment data using PUT method", () => {
+        event.method = "PUT";
+        message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
+        
+        const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects(err);
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentsUpdate);
+  
+          processDeploymentsUpdate.restore();
+        });
       });
-      AWS.mock("DynamoDB.DocumentClient", "delete", (param, cb) => {
-        var dataObj = {
-          data: {}
-        }
-        return cb(null, dataObj);
+  
+      it("should successfully delete deployment data using DELETE method", () => {
+        event.method = "DELETE";
+        const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").resolves({
+          deploymentId: event.path.id
+        })
+        index.handler(event, context, (err, res) => {
+          expect(res).to.have.deep.property('data.message');
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentsDeletion);
+  
+          processDeploymentsDeletion.restore();
+        });
       });
-      index.handler(event, context, (err, res) => {
-        res.should.have.deep.property('data.message');
-        AWS.restore("DynamoDB.DocumentClient");
-        return res;
-      })
-    });
-
-    it("should indicate notFound error while deleting deployment data using DELETE method", () => {
-      event.method = "DELETE";
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var deploymentObj = {
-          Items: []
-        }
-        return cb(null, deploymentObj);
+  
+      it("should indicate notFound error while deleting deployment data using DELETE method", () => {
+        event.method = "DELETE";
+        message = '{"errorType":"NotFound","message":"Cannot find deployment details with id :' + event.path.id + '"}'
+        
+        const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").rejects({
+          result: "notFound",
+          message: 'Cannot find deployment details with id :' + event.path.id
+        })
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentsDeletion);
+  
+          processDeploymentsDeletion.restore();
+        });
       });
-      AWS.mock("DynamoDB.DocumentClient", "delete", (param, cb) => {
-        var dataObj = {
-          data: {}
-        }
-        return cb(null, dataObj);
+  
+      it("should indicate error while deleting deployment data using DELETE method", () => {
+        event.method = "DELETE";
+        message = '{"errorType":"InternalServerError","message":"unexpected error occurred "}'
+        AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+          return cb(err, null);
+        });
+        
+        const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").rejects(err)
+        index.handler(event, context, (err, res) => {
+          expect(err).to.include(message);
+          sinon.assert.calledOnce(genericInputValidation);
+          sinon.assert.calledOnce(processDeploymentsDeletion);
+  
+          processDeploymentsDeletion.restore();
+        });
       });
-      message = '{"errorType":"NotFound","message":"Cannot find deployment details with id :' + event.path.id + '"}'
-      index.handler(event, context, (err, res) => {
-        err.should.be.equal(message);
-        AWS.restore("DynamoDB.DocumentClient");
-        return err;
-      })
-    });
-
-    it("should indicate error while deleting deployment data using DELETE method", () => {
-      event.method = "DELETE";
-      message = '{"errorType":"InternalServerError","message":"unexpected error occurred "}'
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        return cb(err, null);
-      });
-      index.handler(event, context, (err, res) => {
-        err.should.be.equal(message);
-        AWS.restore("DynamoDB.DocumentClient");
-        return err;
-      })
     });
   });
 });
