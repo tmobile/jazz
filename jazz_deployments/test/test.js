@@ -951,320 +951,325 @@ describe('jazz_deployments', function () {
 
     describe('handler with success genericInputValidation', () => {
       let genericInputValidation;
+
       beforeEach(() => {
         genericInputValidation = sinon.stub(index, "genericInputValidation").resolves(null);
       });
+
       afterEach(() => {
         genericInputValidation.restore();
-      })
-      it("should successfully create new deployment using POST method", () => {
-        event.method = "POST";
-        event.path = {};      
-        const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").resolves({
-          result: 'success',
-          deployment_id: '123'
-        });
-  
-        index.handler(event, context, (err, res) => {
-          expect(res).to.have.deep.property('data.deployment_id')
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentCreation);
-  
-          processDeploymentCreation.restore();
-        }); 
       });
 
-      it("should indicate internal server error while creating new deployment using POST method", () => {
-        event.method = "POST";
-        event.path = {};
-        message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}';
+      describe('POST method', () => {
+        beforeEach(() => {
+          event.method = "POST";
+        });
 
-        const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").rejects({
-          result: "inputError",
-          message: "Input payload cannot be empty"
-        });
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message)
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentCreation);
-  
-          processDeploymentCreation.restore();
-        });
-      });
-  
-      it("should indicate internal server error while creating new deployment using POST method", () => {
-        event.method = "POST";
-        event.path = {};
-        message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}';
-
-        const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").rejects(err);
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message)
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentCreation);
-  
-          processDeploymentCreation.restore();
-        });
-      });
-  
-      it("should successfully initiate re-build deployment using POST method", () => {
-        event.method = "POST";
-        var responseObj = {
-          result: 'success',
-          message: "deployment started."
-        };
-        
-        const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").resolves(responseObj)
-        index.handler(event, context, (err, res) => {
-          expect(res).to.have.deep.property('data.result');
-  
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentRebuild);
-  
-          processDeploymentRebuild.restore();
+        it("should successfully create new deployment using POST method", () => {
+          event.path = {};      
+          const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").resolves({
+            result: 'success',
+            deployment_id: '123'
+          });
+    
+          index.handler(event, context, (err, res) => {
+            expect(res).to.have.deep.property('data.deployment_id')
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentCreation);
+    
+            processDeploymentCreation.restore();
+          }); 
         });
   
-      });
+        it("should indicate internal server error while creating new deployment using POST method", () => {
+          event.path = {};
+          message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}';
   
-      it("should indicate internal server error while initiating re-build deployment using POST method", () => {
-        event.method = "POST";
-        message = '{"errorType":"InternalServerError","message":"unhandled error occurred"}'
-        
-        const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").rejects(err)
-        index.handler(event, context, (err, res) => {
-          expect(err).include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentRebuild);
-  
-          processDeploymentRebuild.restore();
+          const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").rejects({
+            result: "inputError",
+            message: "Input payload cannot be empty"
+          });
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message)
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentCreation);
+    
+            processDeploymentCreation.restore();
+          });
         });
+    
+        it("should indicate internal server error while creating new deployment using POST method", () => {
+          event.path = {};
+          message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}';
   
-      });
-  
-      it("should indicate NotFound error while initiating re-build deployment using POST method", () => {
-        event.method = "POST";
-        var responseObj = {
-          result: "notFound",
-          message: "Unable to rebuild deployment"
-        };
-        message = '{"errorType":"NotFound","message":"Unable to rebuild deployment"}'
-        
-        const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").rejects(responseObj)
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentRebuild);
-  
-          processDeploymentRebuild.restore();
+          const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").rejects(err);
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message)
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentCreation);
+    
+            processDeploymentCreation.restore();
+          });
         });
-      });
-  
-      it("should successfully get list of deployments with provided query params using GET method", () => {
-        event.method = "GET";
-        event.path = {};
-        var responseObj = {
-          count: 1,
-          deployments: [event.body]
-        };
-        
-        const processDeploymentsList = sinon.stub(index, "processDeploymentsList").resolves(responseObj)
-        index.handler(event, context, (err, res) => {
-          expect(res).to.have.deep.property('data.deployments');
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentsList);
-  
-          processDeploymentsList.restore();
+    
+        it("should successfully initiate re-build deployment using POST method", () => {
+          var responseObj = {
+            result: 'success',
+            message: "deployment started."
+          };
+          
+          const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").resolves(responseObj)
+          index.handler(event, context, (err, res) => {
+            expect(res).to.have.deep.property('data.result');
+    
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentRebuild);
+    
+            processDeploymentRebuild.restore();
+          });
+    
         });
-      });
-  
-      it("should indicate error while fecthing list of deployments with provided query params using GET method", () => {
-        event.method = "GET";
-        event.path = {};
-        message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}'
-        
-        const processDeploymentsList = sinon.stub(index, "processDeploymentsList").rejects({
-          result: "inputError",
-          message: "Input payload cannot be empty"
+    
+        it("should indicate internal server error while initiating re-build deployment using POST method", () => {
+          message = '{"errorType":"InternalServerError","message":"unhandled error occurred"}'
+          
+          const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").rejects(err)
+          index.handler(event, context, (err, res) => {
+            expect(err).include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentRebuild);
+    
+            processDeploymentRebuild.restore();
+          });
+    
         });
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentsList);
-  
-          processDeploymentsList.restore();
+    
+        it("should indicate NotFound error while initiating re-build deployment using POST method", () => {
+          var responseObj = {
+            result: "notFound",
+            message: "Unable to rebuild deployment"
+          };
+          message = '{"errorType":"NotFound","message":"Unable to rebuild deployment"}'
+          
+          const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").rejects(responseObj)
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentRebuild);
+    
+            processDeploymentRebuild.restore();
+          });
         });
       });
 
-      it("should indicate error while fecthing list of deployments with provided query params using GET method", () => {
-        event.method = "GET";
-        event.path = {};
-        message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
-        
-        const processDeploymentsList = sinon.stub(index, "processDeploymentsList").rejects(err)
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentsList);
-  
-          processDeploymentsList.restore();
+      describe('GET method', () => {
+        beforeEach(() => {
+          event.method = "GET";
         });
-      });
-  
-      it("should successfully get deployment with provided path param using GET method", () => {
-        event.method = "GET";
-        event.query = {};
-        
-        const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").resolves(event.body)
-        index.handler(event, context, (err, res) => {
-          expect(res).to.have.deep.property('data.deployment_id');
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(getDeploymentDetailsById);
+        it("should successfully get list of deployments with provided query params using GET method", () => {
+          event.path = {};
+          var responseObj = {
+            count: 1,
+            deployments: [event.body]
+          };
+          
+          const processDeploymentsList = sinon.stub(index, "processDeploymentsList").resolves(responseObj)
+          index.handler(event, context, (err, res) => {
+            expect(res).to.have.deep.property('data.deployments');
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentsList);
+    
+            processDeploymentsList.restore();
+          });
         });
-        getDeploymentDetailsById.restore();
-        
-      });
+    
+        it("should indicate error while fecthing list of deployments with provided query params using GET method", () => {
+          event.path = {};
+          message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}'
+          
+          const processDeploymentsList = sinon.stub(index, "processDeploymentsList").rejects({
+            result: "inputError",
+            message: "Input payload cannot be empty"
+          });
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentsList);
+    
+            processDeploymentsList.restore();
+          });
+        });
   
-      it("should indicate notFound error while fetching deployment data with provided path param using GET method", () => {
-        event.method = "GET";
-        event.query = {};
-        message = '{"errorType":"NotFound","message":"Cannot get details for archived/missing deployments."}'
-        
-        const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").rejects({
-          result: "deployment_already_deleted_error",
-          message: "Cannot get details for archived/missing deployments."
-        })
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(getDeploymentDetailsById);
-  
+        it("should indicate error while fecthing list of deployments with provided query params using GET method", () => {
+          event.path = {};
+          message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
+          
+          const processDeploymentsList = sinon.stub(index, "processDeploymentsList").rejects(err)
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentsList);
+    
+            processDeploymentsList.restore();
+          });
+        });
+    
+        it("should successfully get deployment with provided path param using GET method", () => {
+          event.query = {};
+          
+          const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").resolves(event.body)
+          index.handler(event, context, (err, res) => {
+            expect(res).to.have.deep.property('data.deployment_id');
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(getDeploymentDetailsById);
+          });
           getDeploymentDetailsById.restore();
+          
+        });
+    
+        it("should indicate notFound error while fetching deployment data with provided path param using GET method", () => {
+          event.query = {};
+          message = '{"errorType":"NotFound","message":"Cannot get details for archived/missing deployments."}'
+          
+          const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").rejects({
+            result: "deployment_already_deleted_error",
+            message: "Cannot get details for archived/missing deployments."
+          })
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(getDeploymentDetailsById);
+    
+            getDeploymentDetailsById.restore();
+          });
+        });
+    
+        it("should indicate internal server error while fetching deployment data with provided path param using GET method", () => {
+          event.query = {};
+          message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
+          
+          const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").rejects(err)
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(getDeploymentDetailsById);
+    
+            getDeploymentDetailsById.restore();
+          });
         });
       });
   
-      it("should indicate internal server error while fetching deployment data with provided path param using GET method", () => {
-        event.method = "GET";
-        event.query = {};
-        message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
-        
-        const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").rejects(err)
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(getDeploymentDetailsById);
-  
-          getDeploymentDetailsById.restore();
+      describe('PUT method', () => {
+        beforeEach(() => {
+          event.method = "PUT";
+        });
+        it("should successfully update deployment data using PUT method", () => {
+          const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").resolves(event.body)
+          index.handler(event, context, (err, res) => {
+            expect(res).to.have.deep.property('data.message');
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentsUpdate);
+    
+            processDeploymentsUpdate.restore();
+          });
+        });
+    
+        it("should indicate notFound error while updating deployment data using PUT method", () => {
+          message = '{"errorType":"NotFound","message":"Cannot find deployment details with id :' + event.path.id + '"}'
+          
+          const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects({
+            result: "notFound",
+            message: 'Cannot find deployment details with id :' + event.path.id
+          });
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentsUpdate);
+    
+            processDeploymentsUpdate.restore();
+          });
+        });
+    
+        it("should indicate input error while updating deployment data using PUT method", () => {
+          message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}'
+          
+          const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects({
+            result: "inputError",
+            message: "Input payload cannot be empty"
+          });
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentsUpdate);
+    
+            processDeploymentsUpdate.restore();
+          });
+        });
+    
+        it("should indicate internal server error while updating deployment data using PUT method", () => {
+          message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
+          
+          const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects(err);
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentsUpdate);
+    
+            processDeploymentsUpdate.restore();
+          });
         });
       });
   
-      it("should successfully update deployment data using PUT method", () => {
-        event.method = "PUT";
-        
-        const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").resolves(event.body)
-        index.handler(event, context, (err, res) => {
-          expect(res).to.have.deep.property('data.message');
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentsUpdate);
-  
-          processDeploymentsUpdate.restore();
+      describe('DELETE method', () => {
+        beforeEach(() => {
+          event.method = "DELETE";
+        });
+        it("should successfully delete deployment data using DELETE method", () => {
+          const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").resolves({
+            deploymentId: event.path.id
+          })
+          index.handler(event, context, (err, res) => {
+            expect(res).to.have.deep.property('data.message');
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentsDeletion);
+    
+            processDeploymentsDeletion.restore();
+          });
+        });
+    
+        it("should indicate notFound error while deleting deployment data using DELETE method", () => {
+          message = '{"errorType":"NotFound","message":"Cannot find deployment details with id :' + event.path.id + '"}'
+          
+          const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").rejects({
+            result: "notFound",
+            message: 'Cannot find deployment details with id :' + event.path.id
+          })
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentsDeletion);
+    
+            processDeploymentsDeletion.restore();
+          });
+        });
+    
+        it("should indicate error while deleting deployment data using DELETE method", () => {
+          message = '{"errorType":"InternalServerError","message":"unexpected error occurred "}'
+          AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+            return cb(err, null);
+          });
+          
+          const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").rejects(err)
+          index.handler(event, context, (err, res) => {
+            expect(err).to.include(message);
+            sinon.assert.calledOnce(genericInputValidation);
+            sinon.assert.calledOnce(processDeploymentsDeletion);
+    
+            processDeploymentsDeletion.restore();
+          });
         });
       });
-  
-      it("should indicate notFound error while updating deployment data using PUT method", () => {
-        event.method = "PUT";
-        message = '{"errorType":"NotFound","message":"Cannot find deployment details with id :' + event.path.id + '"}'
-        
-        const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects({
-          result: "notFound",
-          message: 'Cannot find deployment details with id :' + event.path.id
-        });
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentsUpdate);
-  
-          processDeploymentsUpdate.restore();
-        });
-      });
-  
-      it("should indicate input error while updating deployment data using PUT method", () => {
-        event.method = "PUT";
-        message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}'
-        
-        const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects({
-          result: "inputError",
-          message: "Input payload cannot be empty"
-        });
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentsUpdate);
-  
-          processDeploymentsUpdate.restore();
-        });
-      });
-  
-      it("should indicate internal server error while updating deployment data using PUT method", () => {
-        event.method = "PUT";
-        message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
-        
-        const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects(err);
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentsUpdate);
-  
-          processDeploymentsUpdate.restore();
-        });
-      });
-  
-      it("should successfully delete deployment data using DELETE method", () => {
-        event.method = "DELETE";
-        const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").resolves({
-          deploymentId: event.path.id
-        })
-        index.handler(event, context, (err, res) => {
-          expect(res).to.have.deep.property('data.message');
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentsDeletion);
-  
-          processDeploymentsDeletion.restore();
-        });
-      });
-  
-      it("should indicate notFound error while deleting deployment data using DELETE method", () => {
-        event.method = "DELETE";
-        message = '{"errorType":"NotFound","message":"Cannot find deployment details with id :' + event.path.id + '"}'
-        
-        const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").rejects({
-          result: "notFound",
-          message: 'Cannot find deployment details with id :' + event.path.id
-        })
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentsDeletion);
-  
-          processDeploymentsDeletion.restore();
-        });
-      });
-  
-      it("should indicate error while deleting deployment data using DELETE method", () => {
-        event.method = "DELETE";
-        message = '{"errorType":"InternalServerError","message":"unexpected error occurred "}'
-        AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-          return cb(err, null);
-        });
-        
-        const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").rejects(err)
-        index.handler(event, context, (err, res) => {
-          expect(err).to.include(message);
-          sinon.assert.calledOnce(genericInputValidation);
-          sinon.assert.calledOnce(processDeploymentsDeletion);
-  
-          processDeploymentsDeletion.restore();
-        });
-      });
+      
     });
   });
 });
