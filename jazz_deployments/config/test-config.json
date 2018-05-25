@@ -32,5 +32,10 @@
     "SERVICE_API_RESOURCE": "/test/jazz/services",
     "TOKEN_URL": "/test/jazz/login",
     "SERVICE_USER": "test-user",
-    "TOKEN_CREDS": "test-creds"
+    "TOKEN_CREDS": "test-creds",
+    "BUILDPACKMAP" : {
+      "api": "build_pack_api",
+      "function": "build-pack-lambda",
+      "website": "build-pack-website"
+    }  
   }
