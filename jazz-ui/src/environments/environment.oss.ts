@@ -9,7 +9,7 @@ export const environment = {
   environmentTabs:["overview"],
   urls:{
     docs_link:"https://github.com/tmobile/jazz/wiki",
-    content_base: "https://raw.githubusercontent/tmobile/jazz/jazz-content/jazz-ui/user-journey/"
+    content_base: "https://raw.githubusercontent/tmobile/jazz/jazz-content/jazz-ui/"
 }
 
 };
