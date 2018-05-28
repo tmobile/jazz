@@ -1,6 +1,6 @@
 language: node_js
 node_js:
- - "7"
+ - "node"
 env:
  - PLATFORM_SERVICE=jazz_login
  - PLATFORM_SERVICE=jazz_logout
