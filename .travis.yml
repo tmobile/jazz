@@ -2,13 +2,15 @@ language: node_js
 node_js:
  - "7"
 env:
- - PLATFORM_SERVICE=platform_login
- - PLATFORM_SERVICE=platform_logout
- - PLATFORM_SERVICE=create-serverless-service
- - PLATFORM_SERVICE=delete-serverless-service
- - PLATFORM_SERVICE=is-service-available
- - PLATFORM_SERVICE=platform_services
- - PLATFORM_SERVICE=platform_logs
+ - PLATFORM_SERVICE=jazz_login
+ - PLATFORM_SERVICE=jazz_logout
+ - PLATFORM_SERVICE=jazz_create-serverless-service
+ - PLATFORM_SERVICE=jazz_delete-serverless-service
+ - PLATFORM_SERVICE=jazz_is-service-available
+ - PLATFORM_SERVICE=jazz_services
+ - PLATFORM_SERVICE=jazz_logs
+ - PLATFORM_SERVICE=jazz_environments
+ - PLATFORM_SERVICE=jazz_environment-event-handler
 
 before_script:
   - npm prune
