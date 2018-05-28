@@ -45,14 +45,14 @@ var event = {
 }
 var context = {
   "callbackWaitsForEmptyEventLoop": true,
-  "logGroupName": "/aws/lambda/gitlab180515-jazz-services-handler-prod",
-  "logStreamName": "2018/05/16/[$LATEST]2beb5567c06b42dabe390268cfca8427",
-  "functionName": "gitlab180515-jazz-services-handler-prod",
+  "logGroupName": "/aws/lambda/gitlab1234567-test-name",
+  "logStreamName": "2018/05/16/temp_test0000012910",
+  "functionName": "gitlab001-test-services-handler-prod",
   "memoryLimitInMB": "256",
   "functionVersion": "$LATEST",
-  "invokeid": "bb61d7b3-d439-4efe-9c6d-4ea78d7349d9",
-  "awsRequestId": "bb61d7b3-d439-4efe-9c6d-4ea78d7349d9",
-  "invokedFunctionArn": "arn:aws:lambda:us-east-1:192006145812:function:gitlab180515-jazz-services-handler-prod"
+  "invokeid": "00001-test-000001",
+  "awsRequestId": "00001-test-000001",
+  "invokedFunctionArn": "arn:aws:lambda:us-east-1:192006145812:function:gitlab001-test-services-handler-prod"
 }
 var configData = configObj(context);
 describe("getTokenRequest", function () {
@@ -132,7 +132,7 @@ describe("checkforIntrestedEvents", () => {
           S: 'test-02'
         },
         SERVICE_ID: {
-          S: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7'
+          S: '00001-test-serivice-id-00001'
         },
         EVENT_STATUS: {
           S: 'STARTED'
@@ -183,7 +183,7 @@ describe("processEventRecord", () => {
           S: 'test-02'
         },
         SERVICE_ID: {
-          S: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7'
+          S: '00001-test-serivice-id-00001'
         },
         EVENT_STATUS: {
           S: 'STARTED'
@@ -366,7 +366,7 @@ describe("processCreateEvent", () => {
           S: 'test-02'
         },
         SERVICE_ID: {
-          S: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7'
+          S: '00001-test-serivice-id-00001'
         },
         EVENT_STATUS: {
           S: 'STARTED'
@@ -425,7 +425,7 @@ describe("processUpdateEvent", () => {
           S: 'test-02'
         },
         SERVICE_ID: {
-          S: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7'
+          S: '00001-test-serivice-id-00001'
         },
         EVENT_STATUS: {
           S: 'STARTED'
@@ -492,7 +492,7 @@ describe("getDeployments", () => {
   beforeEach(() => {
     deploymentPayload = {
       domain: 'jazztest',
-      service_id: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7',
+      service_id: '00001-test-serivice-id-00001',
       service: 'test-02',
       environment_logical_id: 'temp_env_ID'
     }
@@ -533,7 +533,7 @@ describe("updateDeployments", () => {
   beforeEach(() => {
     deploymentPayload = {
       domain: 'jazztest',
-      service_id: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7',
+      service_id: '00001-test-serivice-id-00001',
       service: 'test-02',
       environment_logical_id: 'temp_env_ID',
       provider_build_url: "http://temp_testing/dccdw.com",
@@ -543,7 +543,7 @@ describe("updateDeployments", () => {
       "data": {
         "deployments": [
           { "deployment_id": "Temp_ID",
-            "service_id": "54c65c47-ce38-49b8-8eef-62017088eadb",
+            "service_id": "00001-test-serivice-id-00001",
             "service": "deployments",
             "domain": "jazz",
             "environment_logical_id": "prod",
