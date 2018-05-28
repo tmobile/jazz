@@ -38,7 +38,7 @@ var event = {
     "eventVersion": "1.0",
     "eventID": "shardId-000000000000:49584481860528260622422554690105735408360629197594427394",
     "eventName": "aws:kinesis:record",
-    "invokeIdentityArn": "arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1",
+    "invokeIdentityArn": "arn:aws:iam::12345678:role/gitlabtest10001_test01",
     "awsRegion": "us-east-1",
     "eventSourceARN": "arn:aws:kinesis:us-east-1:192006145812:stream/gitlab180515-events-hub-prod"
   }]
@@ -141,13 +141,13 @@ describe("checkforIntrestedEvents", () => {
           S: 'NOT_SERVICE_DEPLOYMENT'
         },
         USERNAME: {
-          S: 'serverless@t-mobile.com'
+          S: 'temp@testing.com'
         },
         EVENT_TIMESTAMP: {
           S: '2018-05-16T12:12:41:083'
         },
         SERVICE_CONTEXT: {
-          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1","environment":"","region":"us-east-1","message":"input validation starts","created_by":"serverless@t-mobile.com"}'
+          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'
         }
       }
     }
@@ -192,13 +192,13 @@ describe("processEventRecord", () => {
           S: 'NOT_SERVICE_DEPLOYMENT'
         },
         USERNAME: {
-          S: 'serverless@t-mobile.com'
+          S: 'temp@testing.com'
         },
         EVENT_TIMESTAMP: {
           S: '2018-05-16T12:12:41:083'
         },
         SERVICE_CONTEXT: {
-          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1","environment":"","region":"us-east-1","message":"input validation starts","created_by":"serverless@t-mobile.com"}'
+          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'
         }
       }
     }
@@ -279,11 +279,11 @@ describe("getDeploymentPayload", () => {
       "branch": "",
       "runtime": "nodejs",
       "domain": "jazztest",
-      "iam_role": "arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1",
+      "iam_role": "arn:aws:iam::12345678:role/gitlabtest10001_test01",
       "environment": "",
       "region": "us-east-1",
       "message": "input validation starts",
-      "created_by": "serverless@t-mobile.com"
+      "created_by": "temp@testing.com"
     }
   })
   it("should return deploymentPayload with values passed by svcContext", () => {
@@ -375,13 +375,13 @@ describe("processCreateEvent", () => {
           S: 'NOT_SERVICE_DEPLOYMENT'
         },
         USERNAME: {
-          S: 'serverless@t-mobile.com'
+          S: 'temp@testing.com'
         },
         EVENT_TIMESTAMP: {
           S: '2018-05-16T12:12:41:083'
         },
         SERVICE_CONTEXT: {
-          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1","environment":"","region":"us-east-1","message":"input validation starts","created_by":"serverless@t-mobile.com"}'
+          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'
         }
       }
     }
@@ -434,13 +434,13 @@ describe("processUpdateEvent", () => {
           S: 'NOT_SERVICE_DEPLOYMENT'
         },
         USERNAME: {
-          S: 'serverless@t-mobile.com'
+          S: 'temp@testing.com'
         },
         EVENT_TIMESTAMP: {
           S: '2018-05-16T12:12:41:083'
         },
         SERVICE_CONTEXT: {
-          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::192006145812:role/gitlab180515_lambda2_basic_execution_1","environment":"","region":"us-east-1","message":"input validation starts","created_by":"serverless@t-mobile.com"}'
+          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'
         }
       }
     }
@@ -536,7 +536,7 @@ describe("updateDeployments", () => {
       service_id: '09ed3279-c8b9-e360-2a78-4e1ed093e6a7',
       service: 'test-02',
       environment_logical_id: 'temp_env_ID',
-      provider_build_url: "http://xdwxdwcdwc/dccdw.com",
+      provider_build_url: "http://temp_testing/dccdw.com",
       provider_build_id: "xdwxdwcdc"
     }
     res = {
@@ -547,10 +547,10 @@ describe("updateDeployments", () => {
             "service": "deployments",
             "domain": "jazz",
             "environment_logical_id": "prod",
-            "provider_build_url": "http://xdwxdwcdwc/dccdw.com",
+            "provider_build_url": "http://temp_testing/dccdw.com",
             "provider_build_id": "xdwxdwcdc",
             "scm_commit_hash": "cdwcdwcdwcdcdc",
-            "scm_url": "http://xdwxdwcdwc/dccdw.com",
+            "scm_url": "http://temp_testing/dccdw.com",
             "scm_branch": "master",
             "status": "in_progress",
             "request_id": "984a1083-7fef-4107-bf3b-b0cb0eb245cc"
@@ -580,7 +580,7 @@ describe("updateDeployments", () => {
       procesRequestStub.restore()
     })
   })
-  it("should return error if deployment id is  processRequest for success scenario ", () => {
+  it("should return error if deployment id is not defined", () => {
     var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
       x: 1
     })
