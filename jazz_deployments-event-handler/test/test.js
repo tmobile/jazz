@@ -21,7 +21,6 @@ const request = require('request');
 const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon');
 const logger = require("../components/logger.js");
-//const CronParser = require("../components/cron-parser.js");
 const configObj = require("../components/config.js");
 
 var reqStub
@@ -77,7 +76,7 @@ describe("getAuthResponse", () => {
       }
     };
   })
-  it("should give return auth token when called with valid paramentes", () => {
+  it("should give return auth token when called with valid parameters", () => {
     let result = {
       statusCode: 200,
       body: {
@@ -101,7 +100,7 @@ describe("getAuthResponse", () => {
   })
 
 })
-describe("checkforIntrestedEvents", () => {
+describe("checkforInterestedEvents", () => {
   it("should return object with paramenter interested_event set to true", () => {
     var record = event.Records[0];
     var sequenceNumber = record.kinesis.sequenceNumber;
@@ -156,6 +155,36 @@ describe("checkforIntrestedEvents", () => {
     var encodedPayload = encoded;
     index.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
       assert.isFalse(res.interested_event);
+    })
+  })
+})
+describe("processEventRecords", () => {
+  var  procesEverntRecordStub
+  beforeEach(() => {
+    
+  })
+  afterEach(() => {
+    if (procesEverntRecordStub) {
+      procesEverntRecordStub.restore();
+    }
+  })
+  it("should resolve all for success scenario from processEventRecord",()=>{
+    procesEverntRecordStub = sinon.stub(index, "processEventRecord").resolves({
+      "status":"succesfully processed Event Rcord"
+    })
+    index.processEventRecords(event,configData,"temp_auth").then((obj)=>{
+      for(let i=0;i<obj.length;i++){expect(obj[i].status).to.eq("succesfully processed Event Rcord")}
+      procesEverntRecordStub.restore();
+    })
+  })
+  it("should reject all for Error case scenario from processEventRecord",()=>{
+    procesEverntRecordStub = sinon.stub(index, "processEventRecord").resolves({
+      "status":"Process Event Record failed"
+    })
+    index.processEventRecords(event,configData,"temp_auth").catch((err)=>{
+      console.log(obj);
+      expect(err.status).to.eq("Process Event Record failed");
+      procesEverntRecordStub.restore()
     })
   })
 })
@@ -283,12 +312,28 @@ describe("getDeploymentPayload", () => {
       "environment": "",
       "region": "us-east-1",
       "message": "input validation starts",
-      "created_by": "temp@testing.com"
+      "created_by": "temp@testing.com",
+      "environment_logical_id": "prod",
+      "provider_build_url": "http://temp_testing/dccdw.com",
+      "provider_build_id": "temp_build_id",
+      "scm_commit_hash": "cdwcdwcdwcdcdc",
+      "scm_url": "http://temp_testing/dccdw.com",
+      "scm_branch": "master",
+      "status": "in_progress",
+      "request_id": "temp-reqid-0001"
     }
   })
   it("should return deploymentPayload with values passed by svcContext", () => {
     var deploymentPayload = index.getDeploymentPayload(svcContext)
     expect(deploymentPayload.domain).to.eq(svcContext.domain);
+    expect(deploymentPayload.environment_logical_id).to.eq(svcContext.environment_logical_id);
+    expect(deploymentPayload.provider_build_id).to.eq(svcContext.provider_build_id);
+    expect(deploymentPayload.provider_build_url).to.eq(svcContext.provider_build_url);
+    expect(deploymentPayload.scm_commit_hash).to.eq(svcContext.scm_commit_hash);
+    expect(deploymentPayload.scm_url).to.eq(svcContext.scm_url);
+    expect(deploymentPayload.scm_branch).to.eq(svcContext.scm_branch);
+    expect(deploymentPayload.request_id).to.eq(svcContext.request_id);
+    expect(deploymentPayload.status).to.eq(svcContext.status);
   })
 })
 describe("procesRequest", () => {
@@ -537,25 +582,24 @@ describe("updateDeployments", () => {
       service: 'test-02',
       environment_logical_id: 'temp_env_ID',
       provider_build_url: "http://temp_testing/dccdw.com",
-      provider_build_id: "xdwxdwcdc"
+      provider_build_id: "temp_build_id"
     }
     res = {
       "data": {
-        "deployments": [
-          { "deployment_id": "Temp_ID",
-            "service_id": "00001-test-serivice-id-00001",
-            "service": "deployments",
-            "domain": "jazz",
-            "environment_logical_id": "prod",
-            "provider_build_url": "http://temp_testing/dccdw.com",
-            "provider_build_id": "xdwxdwcdc",
-            "scm_commit_hash": "cdwcdwcdwcdcdc",
-            "scm_url": "http://temp_testing/dccdw.com",
-            "scm_branch": "master",
-            "status": "in_progress",
-            "request_id": "984a1083-7fef-4107-bf3b-b0cb0eb245cc"
-          }
-        ]
+        "deployments": [{
+          "deployment_id": "Temp_ID",
+          "service_id": "00001-test-serivice-id-00001",
+          "service": "deployments",
+          "domain": "jazz",
+          "environment_logical_id": "prod",
+          "provider_build_url": "http://temp_testing/dccdw.com",
+          "provider_build_id": "temp_build_id",
+          "scm_commit_hash": "cdwcdwcdwcdcdc",
+          "scm_url": "http://temp_testing/dccdw.com",
+          "scm_branch": "master",
+          "status": "in_progress",
+          "request_id": "temp-reqid-0001"
+        }]
       }
 
     }
@@ -585,6 +629,16 @@ describe("updateDeployments", () => {
       x: 1
     })
     res.data.deployments[0].deployment_id = undefined;
+    index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
+      expect(err.failure_message).to.eq('Deployment details not found!')
+      procesRequestStub.restore()
+    })
+  })
+  it("should return error if deployments array is empty", () => {
+    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
+      x: 1
+    })
+    res.data.deployments = undefined;
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
       expect(err.failure_message).to.eq('Deployment details not found!')
       procesRequestStub.restore()
