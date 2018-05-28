@@ -1,6 +1,6 @@
 language: node_js
 node_js:
- - "node"
+ - "7"
 env:
  - PLATFORM_SERVICE=platform_login
  - PLATFORM_SERVICE=platform_logout
@@ -10,7 +10,7 @@ env:
  - PLATFORM_SERVICE=platform_services
  - PLATFORM_SERVICE=platform_logs
 
- before_script:
+before_script:
   - npm prune
   
 script: cd $PLATFORM_SERVICE && npm install && npm test
