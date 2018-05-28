@@ -50,7 +50,7 @@ node()  {
 
 	auth_token = setCredentials()
 
-  def current_environment
+	def current_environment
 	stage('Checkout code base') {
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
@@ -70,7 +70,7 @@ node()  {
 
 	}
 
-	if(!service_config){
+	if (!service_config) {
 		error "Failed to fetch service metadata from catalog"
 	}
 
@@ -134,7 +134,7 @@ node()  {
 			} catch (ex) {
 				send_status_email('FAILED', '')
 				events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map)
-				events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
 				error ex.getMessage()
 			}
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)
@@ -194,8 +194,7 @@ node()  {
 							cleanupCloudFrontDistribution()
 						}
 						generateBucketPolicy(false)
-						sh "aws s3 website s3://$s3Bucket --index-document index.html --error-document error.html"
-						url = "http://${s3Bucket}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/${environment}/index.html"
+						url = "https://s3.amazonaws.com/${asset_info}/index.html"
 						echo "You can access the website at $url"
 					}
 					def svc_status = "You can access your website using following link: ${url}"
@@ -394,11 +393,17 @@ def updateBucketPolicy(isCloudfront, existingPolicyObj){
 		def stmtCfList = '{"Sid":"","Effect":"Allow","Principal":{"AWS":""},"Action":"s3:ListBucket","Resource":"arn:aws:s3:::"}'
 		def existingStmts = policyObj.Statement
 		def cleanupIndex = -1
-		def CFOAI = sh(
-			script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
+		def CFOAI
+
+		try {
+			CFOAI = sh(
+				script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
 			--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\"",
-			returnStdout: true
-		).trim()
+				returnStdout: true
+			).trim()
+		} catch (ex) {
+			echo "Failed to list cloudfront origin access identities" 
+		}
 
 		for (aStmt in existingStmts) {
 			cleanupIndex++
@@ -429,7 +434,6 @@ def updateBucketPolicy(isCloudfront, existingPolicyObj){
 			newStmtObj.Sid = "list-$asset_name"
 			newStmtObj.Principal = principal
 			newStmtObj.Resource += "$asset_info/*"
-			newStmtObj.Condition.IpAddress["aws:SourceIp"] = getAllowedIPs()
 			policyObj.Statement << newStmtObj
 		}
 
@@ -594,6 +598,11 @@ def generateDistributionConfig() {
 	sh "sed -i -- 's/{conf_s3bucketname}/${s3Bucket}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's:{conf_origin_id}:${configLoader.AWS.CLOUDFRONT_ORIGIN_ID}:g' distribution_config_with_tags.json"
+	if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+		sh "sed -i -- 's/{origin_path}/${environment}/g' distribution_config_with_tags.json"
+	} else {
+		sh "sed -i -- 's:{origin_path}:${service_config['domain']}-${service_config['service']}/${environment}:g' distribution_config_with_tags.json"
+	}
 
 	sh "sed -i -- 's/{owner}/${service_config['created_by']}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{domain_name}/${service_config['domain']}/g' distribution_config_with_tags.json"
