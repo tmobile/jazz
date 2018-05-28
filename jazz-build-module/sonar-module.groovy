@@ -9,10 +9,10 @@ echo "Sonar code analyzer module loaded successfully"
 */
 
 @Field def configLoader
+@Field def service_config
 @Field def g_sonar_enabled = false 
-@Field def g_runtime_type = ""
+@Field def g_branch
 @Field def g_sonar_projectKey = ""
-@Field def g_sonar_projectName = ""
 @Field def g_sonar_projectVersion = "1.0"
 @Field def g_sonar_profile = ""
 @Field def g_sonar_sources = "."
@@ -20,7 +20,6 @@ echo "Sonar code analyzer module loaded successfully"
 @Field def g_sonar_host_url = ""
 @Field def g_sonar_login = ""
 @Field def g_sonar_password = ""
-@Field def g_key_prefix = "jazz"
 @Field def g_sonar_project_properties = [:]
 @Field def g_isVSScanEnabled = false
 @Field def g_dependencyCheckOutputFileName = "dependency-check-report.xml"
@@ -38,18 +37,29 @@ echo "Sonar code analyzer module loaded successfully"
 	try {
 		g_sonar_project_properties = [:]
 
-		def sonar_projectKey = g_sonar_projectKey
-		def sonar_projectName = g_sonar_projectName
+		if(service_config['service'] && g_branch) {
+		def projectKey = service_config['service'] +"_"+ g_branch.replaceAll("/","-")
+		if(service_config['domain']) {
+			projectKey = service_config['domain']+"_"+projectKey
+		}
+		projectKey = "${configLoader.CODE_QUALITY.SONAR.KEY_PREFIX}_${projectKey}"
+
+		setProjectKey(projectKey)
+
+	} else {
+		error "Invalid project configurations for Sonar"
+	}
+
 		def sonar_projectVersion = g_sonar_projectVersion
 		def sonar_sources = g_sonar_sources
 		def sonar_profile = g_sonar_profile
 		
-		g_sonar_project_properties["sonar.projectKey"] = sonar_projectKey
-		g_sonar_project_properties["sonar.projectName"] = sonar_projectName
+		g_sonar_project_properties["sonar.projectKey"] = g_sonar_projectKey
+		g_sonar_project_properties["sonar.projectName"] = g_sonar_projectKey
 		g_sonar_project_properties["sonar.projectVersion"] = sonar_projectVersion
 		g_sonar_project_properties["sonar.sources"] = sonar_sources
 
-		if (g_runtime_type.indexOf("java") > -1) {
+		if (service_config['runtime'].indexOf("java") > -1) {
 			g_sonar_project_properties["sonar.java.binaries"] = g_sonar_java_binaries
 		}
 
@@ -75,8 +85,10 @@ echo "Sonar code analyzer module loaded successfully"
   * @param runtime - specify the service runtime
   */
  
- def initialize(configData, service, domain, branch, runtime) {
+ def initialize(configData, serviceConfig, branch) {
 	configLoader = configData;
+	service_config = serviceConfig
+	g_branch = branch
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: configLoader.JENKINS.CREDENTIALS.SONAR, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		def host_name = "http://"+configLoader.CODE_QUALITY.SONAR.HOST_NAME
 		setCredentials(host_name, UNAME, PWD) 
@@ -98,23 +110,6 @@ echo "Sonar code analyzer module loaded successfully"
 	if( configLoader.CODE_QUALITY.SONAR.ENABLE_VULNERABILITY_SCAN && configLoader.CODE_QUALITY.SONAR.ENABLE_VULNERABILITY_SCAN == "true") {
 		g_isVSScanEnabled = true
 	}
-
-	if(service && branch) {
-		def projectKey = service+"_"+branch.replaceAll("/","-")
-		if(domain) {
-			projectKey = domain+"_"+projectKey
-		}
-		projectKey = g_key_prefix+"_"+projectKey
-
-		setProjectKey(projectKey)
-		setProjectName(projectKey)
-		setRuntimeType(runtime)
-
-	} else {
-		error "Invalid project configurations for Sonar"
-	}
-
-
  }
 
 /**
@@ -179,12 +174,12 @@ def runReport() {
  * previous builds. 
  */
 def cleanUpWorkspace() {
-	if (g_runtime_type.indexOf("nodejs") > -1) {
+	if (service_config['runtime'].indexOf("nodejs") > -1) {
 		sh "rm -rf ./node_modules"
-	} else if (g_runtime_type.indexOf("java") > -1) {
+	} else if (service_config['runtime'].indexOf("java") > -1) {
 		sh "rm -rf ./target"
 		sh "mvn compile"	
-	} else if(g_runtime_type.indexOf("python") > -1) {
+	} else if(service_config['runtime'].indexOf("python") > -1) {
 		sh "rm -rf ./library"
 	}
 	
@@ -198,7 +193,6 @@ def doAnalysis() {
 		if(g_sonar_enabled) {
 			configureScanner()
 			configureSonarProperties()
-
 			if (g_isVSScanEnabled) {
 				runVulnerabilityScan()
 			}
@@ -262,6 +256,68 @@ def runVulnerabilityScan() {
 	}
  }
 
+def cleanupCodeQualityReports(){
+	try {
+		def cleanupList = getSonarProject()
+		def cleanedupListStr = cleanupList.join(',');
+		def creds = "${configLoader.CODE_QUALITY.SONAR.USER_NAME}:${configLoader.CODE_QUALITY.SONAR.PASSWORD}"
+		def token = creds.getBytes().encodeBase64().toString()
+		def url = "${configLoader.CODE_QUALITY.SONAR.SONARQUBE_BASE_URL}/api/projects/bulk_delete?keys=${cleanedupListStr}"
+		def response = sh(script: "curl -X POST \
+					 ${url} \
+					 -k -v -H \"Authorization: $token\" \
+					 -H \"Content-Type: application/x-www-form-urlencoded\" ", returnStdout: true).trim()
+		def responseJSON = parseJson(response)
+		if (responseJSON.statusCode === 200 || responseJSON.statusCode === 204) {
+			echo "Successfully cleaned the code quality reports from sonar. Please find the cleaned reports : ${cleanupList}"
+		} else {
+            error "error occured While deleting code quality reports: " + responseJSON.error.message
+		}
+	} catch (ex) {
+		echo "error occured While deleting code quality reports: " + ex.getMessage()
+		error ex.getMessage()
+	}
+}
+
+def getSonarProject(){
+	try {
+		def project_key = "${configLoader.CODE_QUALITY.SONAR.KEY_PREFIX}_${service_config['domain']}_${service_config['service']}";
+		def creds = "${configLoader.CODE_QUALITY.SONAR.USER_NAME}:${configLoader.CODE_QUALITY.SONAR.PASSWORD}"
+		def token = creds.getBytes().encodeBase64().toString()
+		def url = "${configLoader.CODE_QUALITY.SONAR.SONARQUBE_BASE_URL}/api/projects/index?search=${project_key}"
+		def response = sh(script: "curl -X POST \
+					 ${url} \
+					 -k -v -H \"Authorization: $token\" \
+					 -H \"Content-Type: application/x-www-form-urlencoded\" ", returnStdout: true).trim()
+
+		def responseJSON = parseJson(response)
+		def filtered = [];
+		if (responseJSON) {
+			for (data in responseJSON.body) {
+				var pKey = data.k;
+				echo "projectKey : ${pKey}" 
+				var patternStr = "^${project_key}_(.*)";
+				Matcher keyMatcher = Pattern.compile(patternStr).matcher(pKey);
+				while (keyMatcher.find()) {
+					filtered.push(pKey)
+				}
+			}
+		}
+		return filtered
+	} catch (ex) {
+		echo "error occured While fetching code quality reports from sonar : " + ex.getMessage()
+		error ex.getMessage()
+	}
+}
+
+@NonCPS
+def parseJson(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    def m = [:]
+    m.putAll(lazyMap)
+    return m
+}
+
  /**
   * Jazz shebang that runs quietly and disable all console logs
   *
@@ -280,16 +336,9 @@ def setProjectKey(projectKey) {
 
 }
 
-/**
- * Set projectName
- * @return
- */
-
-def setProjectName(projectName) {
-	g_sonar_projectName = projectName
-
+def setBranch(branch) {
+	g_branch = branch
 }
-
 
 /**
  * Set Host URL
@@ -328,16 +377,6 @@ def setPassword(password) {
 
 def setSonarEnabled(flag) {
 	g_sonar_enabled = flag
-
-}
-
-/**
- * Set the runtime type
- * @return
- */
-
-def setRuntimeType(runtime) {
-	g_runtime_type = runtime
 
 }
 
