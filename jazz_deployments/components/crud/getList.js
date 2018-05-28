@@ -23,7 +23,7 @@
  **/
 
 const utils = require("../utils.js")(); //Import the utils module.
-const logger = require("../logger.js"); //Import the logging module.
+const logger = require("../logger.js")(); //Import the logging module.
 
 module.exports = (tableName, query, onComplete) => {
     // initialize dynamodb
@@ -38,7 +38,7 @@ module.exports = (tableName, query, onComplete) => {
         };
 
     if (query) {
-        var keys_list = global.config.REQUIRED_PARAMS;
+        var keys_list = global.config.REQUIRED_PARAMS.slice(0, global.config.REQUIRED_PARAMS.length);
         //appending the optional_keys list along with required_fields
         if (query.status) {
             keys_list.push("status");

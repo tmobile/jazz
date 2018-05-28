@@ -23,7 +23,7 @@
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
+const logger = require("./components/logger.js")(); //Import the logging module.
 const utils = require("./components/utils.js")(); //Import the utils module.
 const validateUtils = require("./components/validation")(); //Import validation module
 const crud = require("./components/crud")(); //Import the crud module.
@@ -499,12 +499,7 @@ function buildNowRequest(serviceDetails, config, refDeployment) {
 			buildQuery = "/buildWithParameters?service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch,
 			base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64"),
 			rebuild_url = "";
-		var buildPackMap = {
-			"api": "build_pack_api",
-			"lambda": "build_pack_lambda",
-			"website": "build_pack_website"
-		}
-		rebuild_url = build_url + buildPackMap[data.type.toLowerCase()] + buildQuery;
+		rebuild_url = build_url + config.BUILDPACKMAP[data.type.toLowerCase()] + buildQuery;
 
 		if (build_url) {
 			var options = {

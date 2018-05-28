@@ -289,5 +289,5 @@ function updatePassword(cognitoClient, config, userData) {
 
 function getRequestToCreateSCMUser(config, userData) {
 	var scm = new scmFactory(config);
-	return scm.addUserRequest(userData.userid, userData.userpassword);
+	return scm.addUserRequest(userData.userid.toLowerCase(), userData.userpassword);
 }

@@ -24,13 +24,18 @@
     "max_limit": 100
   },
   "DEPLOYMENT_STATUS": ["successful", "started", "failed", "archived", "aborted", "in_progress"],
-  "SVC_USER": "jobexec",
-  "SVC_PASWD": "jenkinsadmin",
+  "SVC_USER": "{ci_user}",
+  "SVC_PASWD": "{ci_pwd}",
   "ddb_region": "{conf-region}",
   "JOB_BUILD_URL": "{conf-jenkins-host}/job/",
   "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
   "SERVICE_API_RESOURCE": "/stg/jazz/services",
   "TOKEN_URL": "/stg/jazz/login",
   "SERVICE_USER": "{jazz_admin}",
-  "TOKEN_CREDS": "{jazz_admin_creds}"
+  "TOKEN_CREDS": "{jazz_admin_creds}",
+  "BUILDPACKMAP" : {
+    "api": "build_pack_api",
+    "function": "build-pack-lambda",
+    "website": "build-pack-website"
+  }
 }
