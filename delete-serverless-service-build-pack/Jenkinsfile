@@ -94,7 +94,7 @@ node {
 		if (!events) { error "Can't load events module"	} //Fail here
 		events.initialize(configLoader, service_config, "SERVICE_DELETION", "", "", g_base_url + "/jazz/events")
 		context_map = [created_by : service_config['created_by']]
-    sonarModule.initialize(configLoader, config, "")
+                sonarModule.initialize(configLoader, config, "")
 
 		if (environmentIds.size() > 0) {
 			//validate each id in environment catalog
