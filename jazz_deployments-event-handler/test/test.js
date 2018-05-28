@@ -644,3 +644,93 @@ describe("updateDeployments", () => {
     })
   })
 })
+describe("processEvent",()=>{
+  var payload,tempobj,errObj
+  beforeEach(()=>{
+    payload = {
+        EVENT_ID: {
+          S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4'
+        },
+        TIMESTAMP: {
+          S: '2018-05-16T12:12:42:821'
+        },
+        REQUEST_ID: {
+          NULL: true
+        },
+        EVENT_HANDLER: {
+          S: 'JENKINS'
+        },
+        EVENT_NAME: {
+          S: 'UPDATE_DEPLOYMENT'
+        },
+        SERVICE_NAME: {
+          S: 'test-02'
+        },
+        SERVICE_ID: {
+          S: '00001-test-serivice-id-00001'
+        },
+        EVENT_STATUS: {
+          S: 'STARTED'
+        },
+        EVENT_TYPE: {
+          S: 'NOT_SERVICE_DEPLOYMENT'
+        },
+        USERNAME: {
+          S: 'temp@testing.com'
+        },
+        EVENT_TIMESTAMP: {
+          S: '2018-05-16T12:12:41:083'
+        },
+        SERVICE_CONTEXT: {
+          S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'
+        }
+    }
+    tempobj = {
+      temp_param :"temp_param"
+    }
+    errObj ={
+      message :"Process Failed"
+    }
+  })
+  it("should call processCreateEvent when the event is create_deployment",()=>{
+    payload.EVENT_NAME.S =  "CREATE_DEPLOYMENT"
+    var processCreateEventStub = sinon.stub(index,'processCreateEvent').resolves(tempobj);
+    index.processEvent(payload,configData,"temp_auth").then(()=>{
+      sinon.assert.calledOnce(processCreateEventStub)
+      processCreateEventStub.restore()
+    })
+  })
+  it("should throw error when processCreateEvent returns error when the event is create_deployment",()=>{
+    payload.EVENT_NAME.S =  "CREATE_DEPLOYMENT"
+    var processCreateEventStub = sinon.stub(index,'processCreateEvent').rejects(errObj);
+    index.processEvent(payload,configData,"temp_auth").catch((err)=>{
+      sinon.assert.calledOnce(processCreateEventStub)
+      expect(err.message).to.eq(errObj.message);
+      processCreateEventStub.restore()
+    })
+  })
+  it("should call processUpdateEvent when the event is create_deployment",()=>{
+    var processUpdateEventStub = sinon.stub(index,'processUpdateEvent').resolves(tempobj);
+    index.processEvent(payload,configData,"temp_auth").then(()=>{
+      sinon.assert.calledOnce(processUpdateEventStub)
+      processUpdateEventStub.restore()
+    })
+  })
+  it("should throw an error when processUpdateEvent returns error ,and the event is create_deployment",()=>{
+    var processUpdateEventStub = sinon.stub(index,'processUpdateEvent').rejects(errObj);
+    index.processEvent(payload,configData,"temp_auth").catch((err)=>{
+      sinon.assert.calledOnce(processUpdateEventStub)
+      expect(err.message).to.eq(errObj.message);
+      processUpdateEventStub.restore()
+    })
+  })
+  it("should return error if service context is not defined in the payload",()=>{
+    payload.SERVICE_CONTEXT =  undefined;
+    index.processEvent(payload,configData,"temp_auth").catch((err)=>{
+  
+    expect(err.failure_message).to.eq("Service context is not defined")
+    
+  })
+})
+
+})
