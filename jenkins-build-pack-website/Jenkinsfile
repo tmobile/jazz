@@ -94,8 +94,6 @@ node()  {
 	if (!events) { error "Can't load events module"	} //Fail here
 	events.initialize(configLoader, service_config, "SERVICE_DEPLOYMENT", branch, environment, g_base_url + "/jazz/events")
 
-	echo "bucket per service : ${configLoader.JAZZ.BUCKET_PER_SERVICE}"
-
 	def create_cloudfront_url
 	context_map = [created_by : service_config['created_by']]
 	scmModule.setServiceConfig(service_config)
