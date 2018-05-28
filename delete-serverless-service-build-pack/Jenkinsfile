@@ -20,6 +20,7 @@ import groovy.transform.Field
 @Field def utilModule
 @Field def serviceMetadataLoader
 @Field def environmentMetadataLoader
+@Field def sonarModule
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -104,6 +105,7 @@ node {
 
 		if (!events) { error "Can't load events module"	} //Fail here
 		events.initialize(configLoader, service_config, "SERVICE_DELETION", "", "", g_base_url + "/jazz/events")
+		sonarModule.initialize(configLoader, config, "")
 		context_map = [created_by : service_config['created_by']]
 
 		dir(repo_name){
@@ -142,6 +144,7 @@ node {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
 								events.setBranch(branch)
+								sonarModule.setBranch(branch)
 								branch = 'NA'
 							}
 							events.setEnvironment(_envId)
@@ -171,6 +174,7 @@ node {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
 								events.setBranch(branch)
+								sonarModule.setBranch(branch)
 								branch = 'NA'
 							}
 							events.setEnvironment(_envId)
@@ -196,6 +200,7 @@ node {
 							echo "ENVIRONMENT ::: $_envId"
 							if (branch && branch != 'NA') {
 								events.setBranch(branch)
+								sonarModule.setBranch(branch)
 								branch = 'NA'
 							}
 							events.setEnvironment(_envId)
@@ -219,6 +224,11 @@ node {
 	}
 
 	if (is_service_deletion) {
+		if (configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+			stage('Cleanup Code Quality Reports') {
+				cleanupCodeQualityReports()
+			}
+		}
 		stage('Cleanup SCM') {
 			cleanup(repo_name)
 			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
@@ -227,6 +237,16 @@ node {
 
 }
 
+
+
+def cleanupCodeQualityReports(){
+	try {
+		sonarModule.cleanupCodeQualityReports()
+	} catch (ex) {
+		echo "error occured While deleting code quality reports: " + ex.getMessage()
+		error ex.getMessage()
+	}
+}
 
 def handleFailureEvent(errorMessage){
 	if (is_service_deletion) {
@@ -563,7 +583,7 @@ def generateAssetInfo(environment){
 			s3Bucket = service_config['s3_bucket_name']
 		} else {
 			handleFailureEvent("Failed to get S3 bucket information from service catalog.")
-		}		
+		}
 		assetBase = "${s3Bucket}"
 		assetInfo['asset_name'] = "${s3Bucket}-${environment}"
 	} else {
@@ -571,15 +591,15 @@ def generateAssetInfo(environment){
 			s3Bucket = utilModule.getBucket('dev')
 		} else {
 			s3Bucket = utilModule.getBucket(environment)
-		}		
+		}
 		assetBase = "${s3Bucket}/${service_config['domain']}-${service_config['service']}"
 		assetInfo['asset_name'] = "${s3Bucket}-${service_config['domain']}-${service_config['service']}-${environment}"
 	}
-	
+
 	assetInfo['s3Bucket'] = s3Bucket
-	assetInfo['asset_info'] = "${assetBase}/${environment}"	
+	assetInfo['asset_info'] = "${assetBase}/${environment}"
 	assetInfo['folder_name'] = "${assetBase}"
-	
+
 	return assetInfo
 }
 
@@ -676,7 +696,7 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 			policyObjectUpdated.Id = policyObject.Id
 			def statements = []
 			for (items in policyObject.Statement) {
-				if ((items.Sid != "list-${assetInfo['asset_name']}" )) {				
+				if ((items.Sid != "list-${assetInfo['asset_name']}")) {
 					def copy = [:]
 					copy.putAll(items)
 					statements.add(copy)
@@ -1048,6 +1068,8 @@ def loadBuildModules(buildModuleUrl){
 		environmentMetadataLoader = load "environment-deployment-metadata-loader.groovy"
 		echo "Environment metadata loader module loaded successfully."
 
+		sonarModule = load "sonar-module.groovy"
+		echo "Sonar module loaded successfully."
 	}
 }
 

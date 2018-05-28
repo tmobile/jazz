@@ -121,7 +121,7 @@ node()  {
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
-	sonarModule.initialize(configLoader, service, domain, branch, runtime)
+	sonarModule.initialize(configLoader, config, branch)
 
 	stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
