@@ -8,7 +8,6 @@ env:
  - PLATFORM_SERVICE=jazz_events
  - PLATFORM_SERVICE=jazz_environments
  - PLATFORM_SERVICE=jazz_environment-event-handler
- - PLATFORM_SERVICE=jazz_services-handler
 
 before_script:
   - npm prune
