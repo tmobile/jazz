@@ -88,7 +88,6 @@ function processEventRecord (record, configData, authToken){
 		var sequenceNumber = record.kinesis.sequenceNumber;
 		var encodedPayload = record.kinesis.data;
 		var payload;
-		console.log("reached here")
 		return factory.checkForInterestedEvents(encodedPayload, sequenceNumber, configData)
 			.then(result => {
 				payload = result.payload;
@@ -113,7 +112,6 @@ function processEventRecord (record, configData, authToken){
 };
 
 function checkForInterestedEvents(encodedPayload, sequenceNumber, configData)  {
-	console.log("in the actual function 2");
 	return new Promise((resolve, reject) => {
 		var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {

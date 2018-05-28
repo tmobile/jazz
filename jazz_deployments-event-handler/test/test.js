@@ -182,7 +182,6 @@ describe("processEventRecords", () => {
       "status":"Process Event Record failed"
     })
     index.processEventRecords(event,configData,"temp_auth").catch((err)=>{
-      console.log(obj);
       expect(err.status).to.eq("Process Event Record failed");
       procesEverntRecordStub.restore()
     })
@@ -281,7 +280,7 @@ describe("processEventRecord", () => {
     })
     var tempAuth = "Auth_token"
     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
-      console.log(obj);
+      
       expect(obj).to.not.eq(null);
       expect(obj.data.message).to.eq(message)
       reqStub.restore()
@@ -547,7 +546,7 @@ describe("getDeployments", () => {
       x: 1
     })
     index.getDeployments(deploymentPayload, configData, "temp_auth").then((obj) => {
-      console.log(obj);
+      
       sinon.assert.calledOnce(procesRequestStub)
       procesRequestStub.restore()
 
