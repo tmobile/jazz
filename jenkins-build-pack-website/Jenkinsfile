@@ -67,7 +67,6 @@ node()  {
 		} else {
 			error "Service Id is not available."
 		}
-
 	}
 
 	if (!service_config) {
