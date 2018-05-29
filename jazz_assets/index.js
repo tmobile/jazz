@@ -198,13 +198,17 @@ function validateUpdateData(assets_id, update_data) {
 function updateAssetsData(assets_id, update_data) {
     logger.debug("Inside updateAssetsData");
     return new Promise((resolve, reject) => {
-        crud.update(assets_id, update_data, (error, data) => {
-            if(error) {
-                reject(error);
-            } else {
-                resolve(data);
-            }
-        });
+        if(Object.keys(update_data).length !== 0) {
+            crud.update(assets_id, update_data, (error, data) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(data);
+                }
+            });
+        } else {
+            reject({result:"inputError", message:"Provided Asset data can not be updated."});
+        }
     });
 };
 
