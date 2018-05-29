@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {AdminUtilsService} from "../../services/admin-utils.service";
 
 @Component({
@@ -10,13 +10,19 @@ export class AdminDashboardComponent implements OnInit {
 
   public adminData;
 
-  constructor(private adminUtils: AdminUtilsService) { }
+  constructor(private adminUtils: AdminUtilsService) {
+  }
 
   ngOnInit() {
     this.adminUtils.getExampleVars()
-      .then((data: any) =>{
+      .then((data: any) => {
         this.adminData = data;
       })
+  }
+
+
+  submit(model) {
+    console.log(model);
   }
 
 }

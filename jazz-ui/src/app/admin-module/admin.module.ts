@@ -6,20 +6,18 @@ import {CommonModule} from "@angular/common";
 import {NgModule} from "@angular/core";
 import { AdminComponent } from './pages/admin/admin.component';
 import {AdminUtilsService} from "./services/admin-utils.service";
-import {TJsonViewerModule} from 't-json-viewer';
-import { AgmJsonViewerModule } from 'agm-json-viewer';
+import {JsonViewerComponent} from "../primary-components/json-viewer/json-viewer.component";
 
 @NgModule({
   declarations: [
     AdminDashboardComponent,
-    AdminComponent
+    AdminComponent,
+    JsonViewerComponent
   ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
-    SharedModule,
-    TJsonViewerModule,
-    AgmJsonViewerModule
+    SharedModule
   ],
   providers: [
     AdminUtilsService

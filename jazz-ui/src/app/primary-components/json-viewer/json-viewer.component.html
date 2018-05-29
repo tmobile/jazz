@@ -1,0 +1,22 @@
+<div *ngFor="let key of getKeys(json); let i = index"
+     [class.parent]="parent"
+     class="json-viewer-row">
+    <div *ngIf="!hasChildren(json[key])" class="json-viewer-element primitive">
+      <span class="json-header">{{key + ':'}}</span>
+      <span class="json-value">{{toString(json[key])}}</span>
+    </div>
+
+    <div *ngIf="hasChildren(json[key])" class="json-viewer-element">
+      <div>
+        <div class="arrow collapse-arrow"
+             [ngClass]="collapseTracker[i] ? 'right' : 'down'"
+             (click)="collapseTracker[i] = !collapseTracker[i]"></div>
+        <div class="json-header">{{key}}</div>
+        <div class="json-collapsed" *ngIf="collapseTracker[i] && getType(json[key]) === 'array'">{{'[ . . . ]'}}</div>
+        <div class="json-collapsed" *ngIf="collapseTracker[i] && getType(json[key]) === 'object'">{{'{ . . . }'}}</div>
+      </div>
+      <div class="json-indent" [class.collapsed]="collapseTracker[i]">
+        <json-viewer [parent]="false" [parentType]="type" [json]="json[key]"></json-viewer>
+      </div>
+    </div>
+</div>

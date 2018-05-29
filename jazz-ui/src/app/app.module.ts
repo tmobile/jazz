@@ -29,7 +29,7 @@ let environmentval = environment.envName;
 let loadedModule;
 if (environmentval == "oss") {
   loadedModule = require('./pages/login/oss/login.component')
-} 
+}
 else{
   loadedModule = require('./pages/login/internal/login.component')
 }
@@ -38,7 +38,7 @@ else{
     AppComponent,
     LandingComponent,
     Error404Component,
-    TestApiComponent,
+    TestApiComponent
   ],
   imports: [
     RouterModule.forRoot(routes),

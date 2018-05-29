@@ -5,9 +5,7 @@
     <h1 class="header1 bold-title">Admin</h1>
   </div>
   <section class="json-viewer-container" *ngIf="adminData">
-    <!--<t-json-viewer [json]="adminData"></t-json-viewer>-->
-    <!--<prettyjson [obj]="adminData"></prettyjson>-->
-    <agm-json-viewer [json]="adminData"></agm-json-viewer>
+    <json-viewer [json]="adminData" [parentType]="'object'"></json-viewer>
   </section>
   <footer></footer>
 </section>

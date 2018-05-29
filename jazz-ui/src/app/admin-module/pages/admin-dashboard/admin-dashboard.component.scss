@@ -416,7 +416,10 @@ search- box {
 // }
 
 section.json-viewer-container {
-  background-color: turquoise;
-  height: 100%;
+  background-color: white;
+  box-shadow: 0 2px 4px 0 rgba(180, 180, 211, .4);
+  padding: 20px;
+  height: 65vh;
   width: 100%;
+  overflow-y: scroll;
 }
