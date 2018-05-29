@@ -118,7 +118,7 @@ module.exports.handler = (event, context, cb) => {
                 validateSearchData(assets_data)
                 .then(() => postSearch(assets_data))
                 .then(res => {
-                    logger.info("create asset result:"+JSON.stringify(res));
+                    logger.info("search asset result:"+JSON.stringify(res));
                     handleResponse(null,res,assets_data);
                 })
                 .catch(error => {

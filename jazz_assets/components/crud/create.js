@@ -23,17 +23,17 @@
 **/
 
 const utils = require("../utils.js")(); //Import the utils module.
-const Guid = require("guid");
+const Uuid = require("uuid/v4");
 const moment = require('moment');
 
 module.exports = (assets_data, onComplete) => {
     var docClient = utils.initDocClient();
 
-    var assets_id = Guid.create();
+    var assets_id = Uuid();
     var timestamp = moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS');
     var params = {
         Item: {
-            "id": assets_id.value,
+            "id": assets_id,
             "timestamp": timestamp
 			},
         ReturnConsumedCapacity: "TOTAL",
@@ -59,7 +59,7 @@ module.exports = (assets_data, onComplete) => {
             }, null);
         } else {
 			onComplete(null, {
-                "assets_id": assets_id.value
+                "assets_id": assets_id
             });
         }
     });
