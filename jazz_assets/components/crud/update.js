@@ -20,17 +20,14 @@
     @author:
     @version: 1.0
 **/
-const logger = require("../logger.js"); //Import the logging module.
-var _get = require('./get.js');
-var _validate = require('./validate.js')();
+
 const utils = require("../utils.js")(); //Import the utils module.
 const _ = require("lodash");
-const async = require('async');
 
-var getUpdate = function(assets_id, update_data, onComplete){
+module.exports = (assets_id, update_data, onComplete) => {
     var docClient = utils.initDocClient();
     var params = {
-        TableName: global.assets_table,
+        TableName: global.ASSETS_TABLE,
         Key: {
             "id": assets_id
         }
@@ -41,7 +38,7 @@ var getUpdate = function(assets_id, update_data, onComplete){
     var attributeValues = {};
     var attributeNames = {};
     var count = 0;
-    keys_list.forEach(function(key) {
+    keys_list.map((key) => {
         var key_name = key;		
 		if(_.includes(_.keys(update_data), key)){
 			update_exp = update_exp + '#key' + count + ' = :' + key_name + ", ";
@@ -49,7 +46,6 @@ var getUpdate = function(assets_id, update_data, onComplete){
 			attributeNames[("#key" + count)] = key_name;
 			count++;
 		}
-       
     });
     if (update_exp) {
         params.UpdateExpression = "set " + update_exp.substring(0, update_exp.length - 2);
@@ -57,69 +53,14 @@ var getUpdate = function(assets_id, update_data, onComplete){
         params.ExpressionAttributeNames = attributeNames;
         params.ReturnValues = "ALL_NEW";
 
-        docClient.update(params, function(err, data) {
+        docClient.update(params, (err, data) => {
             if (err) {
                 onComplete(err);
             } else {
-                onComplete(null, data.Attributes);
+                onComplete(null, {data: data.Attributes, input:update_data});
             }
         });
     } else {
         onComplete(null, null);
     }
-};
-var validateAssetsExistsById = function (assets_id, onComplete){
-    _get(assets_id, 
-        function onAssetGet(error, data) {
-            if (error) {
-                onComplete(error, null);
-            } else {
-                onComplete(null, {
-                    "result": "success",
-                    "input": "asset exists"
-                });
-            }
-        });
-};
-
-var validateAndUpdate = function(assets_id, update_data, onComplete){    
-	update_data = utils.toLowercase(update_data);
-	async.series({
-        validateAssetsExists: function(onComplete) {
-            validateAssetsExistsById(assets_id, onComplete);
-        },
-        validateIsEmptyInputData: function(onComplete) {
-            _validate.validateIsEmptyInputData(update_data, onComplete);
-        },
-        validateInputFieldTypes: function(onComplete) {
-            _validate.validateInputFieldTypes(update_data, onComplete);
-        },
-		validateEnumValues: function(onComplete) {
-            _validate.validateEnumValues(update_data, onComplete);
-        },
-        updateAssetsByID: function(onComplete) {
-            logger.debug('Update data ' + JSON.stringify(update_data));
-            if (update_data) {
-                getUpdate(assets_id, update_data, onComplete);
-            } else {
-                onComplete(null, null);
-            }
-        }
-    }, function(error, data) {
-        if (error) {
-            logger.error(JSON.stringify(error));
-            onComplete(error);
-        }
-        else{
-            logger.debug(JSON.stringify(data));
-            var updatedAsset = data.updateAssetsByID;
-            onComplete(null, { 'message': 'Successfully Updated asset with id: ' + assets_id, 'updatedAsset': updatedAsset });
-        }
-
-    });
-};
-module.exports = () => {
-    return {
-        validateAndUpdate: validateAndUpdate
-    };
 };

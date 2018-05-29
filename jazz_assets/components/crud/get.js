@@ -23,24 +23,21 @@
 **/
 
 const utils = require("../utils.js")(); //Import the utils module.
-const logger = require("../logger.js"); //Import the logging module.
-const _ = require("lodash");
-
+const logger = require("../logger.js")(); //Import the logging module.
 
 module.exports = (assets_id, onComplete) => {
     // initialize docCLient
     var docClient = utils.initDocClient();
 
     var params = {
-        TableName: global.assets_table       
+        TableName: global.ASSETS_TABLE       
     };
-    var callBack = function(err,data){
+    var callBack = (err,data)=> {
         if (err) {
-            logger.error(err);
             onComplete(err);
         } else {
             var responseData = data.Item || data.Items;
-            if (_.isEmpty(responseData) ) {
+            if (Object.keys(responseData).length === 0) {
                     logger.debug('Invalid asset with id: ' + assets_id);
                     onComplete({
                         "result":"notFoundError",
@@ -57,13 +54,13 @@ module.exports = (assets_id, onComplete) => {
 		params.Key = {
 			"id": assets_id
 		};
-        docClient.get(params, function(err, data) {
+        docClient.get(params, (err, data) => {
             callBack(err,data);
         });
     }else{        
 		var items = [];
-		var scanExecute = function (callBack) {
-			docClient.scan(params, function(err, data) {
+		var scanExecute = (callBack) => {
+			docClient.scan(params, (err, data) => {
 				if (err) {
 					callBack(err,null);
 				} else {
@@ -81,5 +78,4 @@ module.exports = (assets_id, onComplete) => {
 		};
 		scanExecute(callBack);			
     }
-   
 };

@@ -2,16 +2,14 @@
     Search a Asset-Catalog entry in dynamodb table
     @module: postSearch.js
     @description: CRUD functions for asset catalog
-    @author: Rashmi Chachan
+    @author:
     @version: 1.0
 **/
 
 const utils = require("../utils.js")(); //Import the utils module.
-const logger = require("../logger.js"); //Import the logging module.
-var _validate = require('./validate.js')();
-const async = require('async');
+const logger = require("../logger.js")(); //Import the logging module.
 
-var search = function (query, onComplete){
+module.exports = (query, onComplete) => {
     // initialize dynamodb
     var docClient = utils.initDocClient();
 
@@ -21,7 +19,7 @@ var search = function (query, onComplete){
     var attributeNames = {};
 
     var params = {
-        TableName: global.assets_table,
+        TableName: global.ASSETS_TABLE,
         IndexName: global.global_config.ASSETS_DOMAIN_SERVICE_INDEX,
         KeyConditionExpression: "#d = :service_domain and service = :service_name",
         ExpressionAttributeValues: {
@@ -36,11 +34,10 @@ var search = function (query, onComplete){
     var keys_list = global.global_config.ASSET_SEARCH_OPTIONAL_FILTER_PARAMS;
 
     // Generate filter string
-    keys_list.forEach(function(key) {
+    keys_list.map((key) => {
         var key_name = utils.getDatabaseKeyName(key);
 
         if (query[key] && key_name) {
-
             if (key_name === "type") {
                 // hack - to be removed: special case to deal with reserved keyword - 'type'
                 filter = filter + " #asset_type = :" + key_name + insertAndString;
@@ -61,8 +58,8 @@ var search = function (query, onComplete){
     logger.debug("Query params generated from the seach request: " + JSON.stringify(params));
 
     var items = [];
-	var queryExecute = function (onComplete) {
-		docClient.query(params, function(err, data) {
+	var queryExecute = (onComplete) => {
+		docClient.query(params, (err, data) => {
 			if (err) {
 				onComplete(err,null);
 			} else {
@@ -77,36 +74,4 @@ var search = function (query, onComplete){
 		});
 	};
 	queryExecute(onComplete);
-};
-
-var validateAndSearch = function(assets_data,onComplete){
-	assets_data = utils.toLowercase(assets_data);
-	
-    async.series({
-        validateIsEmptyInputData: function(onComplete) {
-             _validate.validateIsEmptyInputData(assets_data, onComplete);
-        },
-        validateEmptyFieldsVal: function(onComplete) {
-             _validate.validateEmptyFieldsVal(assets_data, onComplete);
-        },
-        fetchAssets: function(onComplete) {
-            search(assets_data, onComplete);
-        }
-    }, function(error, data) {
-        if (error) {
-            logger.error(JSON.stringify(error));
-            onComplete(error);            
-        }else{
-            logger.debug(JSON.stringify(data));
-            var searchAsset = data.fetchAssets;           
-            onComplete(null, searchAsset);
-        }
-        
-    });
-};
-
-module.exports = () => {
-     return {
-        validateAndSearch: validateAndSearch
-    };
 };

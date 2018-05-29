@@ -1,3 +1,4 @@
 {
-    "ASSETS_TABLE": "{conf_stack_prefix}_Assets_Dev"
+    "ASSETS_TABLE": "{conf_stack_prefix}_Assets_Dev",
+    "DDB_REGION": "us-east-1"
 }

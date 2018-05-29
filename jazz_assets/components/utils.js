@@ -27,88 +27,92 @@ const AWS = require('aws-sdk');
 const _ = require("lodash");
 
 // initialize document CLient for dynamodb
-var initDocClient = function() {
-    AWS.config.update({ region: 'us-west-2' });
-    var docClient = new AWS.DynamoDB.DocumentClient();
+var initDocClient = () => {
+	AWS.config.update({
+		region: global.config.DDB_REGION
+	});
+	var docClient = new AWS.DynamoDB.DocumentClient();
 
-    return docClient;
+	return docClient;
 };
 
-var initDynamodb = function() {
-    AWS.config.update({ region: 'us-west-2' });
-    var dynamodb = new AWS.DynamoDB();
+var initDynamodb = () => {
+	AWS.config.update({
+		region: global.config.DDB_REGION
+	});
+	var dynamodb = new AWS.DynamoDB();
 
-    return dynamodb;
+	return dynamodb;
 };
 
-var getDatabaseKeyName = function(key) {
-    if (!key) {
-        return null;
-    }
-	
+var getDatabaseKeyName = (key) => {
+	if (!key) {
+		return null;
+	}
+	var keyMap = {
+		"service" : "service",
+		"domain" : "domain",
+		"environment" : "environment",
+		"type" : "type",
+		"provider" : "provider",
+		"provider_id" : "provider_id"
+	}
 	// mapping between database field names and keys in the request payload, they might be same for now.
-    if (key === "service") {
-        return "service";
-    }
-    if (key === "domain") {
-        return "domain";
+	if(key === keyMap[key]){
+		return keyMap[key];
+	} else {
+		return null
 	}
-	if (key === "environment") {
-        return "environment";
-	}
-	if (key === "type") {
-        return "type";
-	}
-	if (key === "provider") {
-        return "provider";
-	}
-	if (key === "provider_id") {
-        return "provider_id";
-	}
-	else {
-		// TODO: Handle this gracefully. Ideally, it should be handled at request validation step.
-        return null;
-    }
 };
 
 
-var createFilterExpression = function(assets_data){
-	
+var createFilterExpression = (assets_data) => {
+
 	var asset_type = assets_data.type;
 	var filter_expression = {};
-	if(asset_type === 's3' || asset_type === 'cloudfront' || asset_type === 'lambda'){
-		filter_expression = { 'service': assets_data.service, 'domain': assets_data.domain, 'provider': assets_data.provider, 'type': asset_type,'environment' :assets_data.environment };
-	}else{
-		filter_expression = { 'service': assets_data.service, 'domain': assets_data.domain, 'provider': assets_data.provider, 'provider_id': assets_data.provider_id };
+	if (asset_type === 's3' || asset_type === 'cloudfront' || asset_type === 'lambda') {
+		filter_expression = {
+			'service': assets_data.service,
+			'domain': assets_data.domain,
+			'provider': assets_data.provider,
+			'type': asset_type,
+			'environment': assets_data.environment
+		};
+	} else {
+		filter_expression = {
+			'service': assets_data.service,
+			'domain': assets_data.domain,
+			'provider': assets_data.provider,
+			'provider_id': assets_data.provider_id
+		};
 	}
-	
 	return filter_expression;
 };
 
-var toLowercase = function(input_data){
+var toLowercase = (input_data) => {
 	var asset_data = {};
-	for (var field in input_data) {
-		if(input_data[field] && input_data[field].constructor !== Array){
-			if(_.includes(global.global_config.CASE_SENSITIVE_FIELDS, field.toLowerCase())){
+	Object.keys(input_data).map((field) => {
+		if (input_data[field] && input_data[field].constructor !== Array) {
+			if (_.includes(global.global_config.CASE_SENSITIVE_FIELDS, field.toLowerCase())) {
 				asset_data[field.toLowerCase()] = input_data[field].toLowerCase();
-			}else{
+			} else {
 				asset_data[field.toLowerCase()] = input_data[field];
-			}			
-		} else if(input_data[field] && input_data[field].constructor === Array){
+			}
+		} else if (input_data[field] && input_data[field].constructor === Array) {
 			asset_data[field.toLowerCase()] = input_data[field];
-		} else if(!input_data[field] ){
+		} else if (!input_data[field]) {
 			asset_data[field.toLowerCase()] = null;
 		}
-    }
+	});
 	return asset_data;
 };
 
 module.exports = () => {
-    return {
-        initDynamodb: initDynamodb,
-        initDocClient: initDocClient,
+	return {
+		initDynamodb: initDynamodb,
+		initDocClient: initDocClient,
 		createFilterExpression: createFilterExpression,
 		toLowercase: toLowercase,
 		getDatabaseKeyName: getDatabaseKeyName
-    };
+	};
 };
