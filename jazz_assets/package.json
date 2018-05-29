@@ -4,23 +4,27 @@
   "description": "CRUD APIs for Assets Catalog",
   "main": "index.js",
   "private": true,
-  "author": [],
+  "author": {
+    "name": "Jazz"
+  },
   "scripts": {
     "test": "mocha"
   },
   "dependencies": {
     "json-query": "*",
     "request": "*",
-    "aws-sdk": "*",
+
     "guid": "0.0.12",
-    "async": "*",
-    "deasync": "*",
     "moment": "*",
-	"lodash": "*"
+    "lodash": "*"
   },
   "devDependencies": {
-    "mocha": "^v3.0.0",
+    "aws-lambda-mock-context": "^3.1.1",
+    "aws-sdk": "*",
+    "aws-sdk-mock": "^1.7.0",
     "chai": "^3.5.0",
-    "nock":"*"
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^v3.0.0",
+    "sinon": "^1.17.7"
   }
 }
