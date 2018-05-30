@@ -15,12 +15,9 @@ $pink: #ed008c;
     left: 0;
     height: 100vh;
     width: 100vw;
-    opacity: 0;
     padding: 18vh 18vw;
+    opacity: 1;
     transition: left 450ms 0ms ease-in-out, opacity 1.2s;
-    &.loaded {
-      opacity: 1;
-    }
     &.modal-overlay.current {
       transition: left 450ms 0ms ease-in-out, background-color 300ms 450ms ease-in-out;
       background-color: rgba(0,0,0, .5);

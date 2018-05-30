@@ -39,7 +39,6 @@ export class UserJourneyComponent implements OnInit {
     let playingVideo: any = document.getElementById('user-journey-video-' + this.stepIndex);
     if(playingVideo) {
       playingVideo.currentTime = 0;
-      playingVideo.load();
       setTimeout(() => {
         if(this.stepIndex === index) playingVideo.play();
       }, 500);
@@ -54,11 +53,6 @@ export class UserJourneyComponent implements OnInit {
     this.router.navigate(['/landing']);
   }
 
-  loadImage(imageIndex) {
-    if (imageIndex === 0) {
-      this.loaded = true;
-    }
-  }
 
   getExtension(stepInput) {
     let fileNameAndQuery = stepInput.src.split("/").pop();
