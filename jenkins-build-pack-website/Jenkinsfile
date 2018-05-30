@@ -67,7 +67,6 @@ node()  {
 		} else {
 			error "Service Id is not available."
 		}
-
 	}
 
 	if (!service_config) {
@@ -194,7 +193,8 @@ node()  {
 							cleanupCloudFrontDistribution()
 						}
 						generateBucketPolicy(false)
-						url = "https://s3.amazonaws.com/${asset_info}/index.html"
+						sh "aws s3 website s3://$s3Bucket --index-document index.html --error-document error.html"					
+						url = generateAssetUrl()
 						echo "You can access the website at $url"
 					}
 					def svc_status = "You can access your website using following link: ${url}"
@@ -219,6 +219,15 @@ node()  {
 	}
 }
 
+def generateAssetUrl(){
+	def url = ""
+	if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+		url = "http://${s3Bucket}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/${environment}/index.html"
+	} else {
+		url = "http://${s3Bucket}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/${service_config['domain']}-${service_config['service']}/${environment}/index.html"
+	}
+	return url
+}
 
 def generateAssetInfo(){
 	if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
