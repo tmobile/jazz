@@ -39,7 +39,7 @@ var event = {
     "eventName": "aws:kinesis:record",
     "invokeIdentityArn": "arn:aws:iam::12345678:role/gitlabtest10001_test01",
     "awsRegion": "us-east-1",
-    "eventSourceARN": "arn:aws:kinesis:us-east-1:192006145812:stream/gitlab180515-events-hub-prod"
+    "eventSourceARN": "arn:aws:kinesis:us-east-1:100000002:teststream/gitlab10001-events-hub-prod"
   }]
 }
 var context = {
@@ -51,7 +51,7 @@ var context = {
   "functionVersion": "$LATEST",
   "invokeid": "00001-test-000001",
   "awsRequestId": "00001-test-000001",
-  "invokedFunctionArn": "arn:aws:lambda:us-east-1:192006145812:function:gitlab001-test-services-handler-prod"
+  "invokedFunctionArn": "arn:aws:lambda:us-east-1:100000001:function:gitlab001-test-services-handler-prod"
 }
 var configData = configObj(context);
 describe("getTokenRequest", function () {
@@ -159,31 +159,35 @@ describe("checkforInterestedEvents", () => {
   })
 })
 describe("processEventRecords", () => {
-  var  procesEverntRecordStub
+  var  procesEventRecordStub
   beforeEach(() => {
     
   })
   afterEach(() => {
-    if (procesEverntRecordStub) {
-      procesEverntRecordStub.restore();
+    if (procesEventRecordStub) {
+      procesEventRecordStub.restore();
     }
   })
   it("should resolve all for success scenario from processEventRecord",()=>{
-    procesEverntRecordStub = sinon.stub(index, "processEventRecord").resolves({
+    procesEventRecordStub = sinon.stub(index, "processEventRecord").resolves({
       "status":"succesfully processed Event Rcord"
     })
     index.processEventRecords(event,configData,"temp_auth").then((obj)=>{
-      for(let i=0;i<obj.length;i++){expect(obj[i].status).to.eq("succesfully processed Event Rcord")}
-      procesEverntRecordStub.restore();
+      sinon.assert.calledOnce(procesEventRecordStub)
+      for(let i=0;i<obj.length;i++){
+        expect(obj[i].status).to.eq("succesfully processed Event Rcord")
+      }
+      procesEventRecordStub.restore();
     })
   })
   it("should reject all for Error case scenario from processEventRecord",()=>{
-    procesEverntRecordStub = sinon.stub(index, "processEventRecord").resolves({
+    procesEventRecordStub = sinon.stub(index, "processEventRecord").resolves({
       "status":"Process Event Record failed"
     })
     index.processEventRecords(event,configData,"temp_auth").catch((err)=>{
+      sinon.assert.calledOnce(procesEventRecordStub)
       expect(err.status).to.eq("Process Event Record failed");
-      procesEverntRecordStub.restore()
+      procesEventRecordStub.restore()
     })
   })
 })
@@ -296,6 +300,7 @@ describe("processEventRecord", () => {
     var tempAuth = "Auth_token";
     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
       expect(obj.message).to.eq(message)
+      sinon.assert.calledOnce(checkForInterestedEventsStub)
     })
   })
 })
@@ -446,8 +451,12 @@ describe("processCreateEvent", () => {
   })
 })
 describe("processUpdateEvent", () => {
-  var payload;
+  var payload,temp;
   beforeEach(() => {
+    temp = {
+      "x": 1
+    };
+
     payload = {
       Item: {
         EVENT_ID: {
@@ -495,9 +504,7 @@ describe("processUpdateEvent", () => {
     }
   })
   it("should call getDeployments for true case scenarios", () => {
-    var temp = {
-      "x": 1
-    }
+    
     var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp)
     var updateDeploymentsStub = sinon.stub(index, "updateDeployments").resolves(temp)
     index.processUpdateEvent(payload.Item, configData, "tempAuth").then(() => {
@@ -507,9 +514,7 @@ describe("processUpdateEvent", () => {
     })
   })
   it("should call updateDeployments when getDeployment resolves the promise and returns result", () => {
-    var temp = {
-      "x": 1
-    }
+   
     var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp)
     var updateDeploymentsStub = sinon.stub(index, "updateDeployments").resolves(temp)
     index.processUpdateEvent(payload.Item, configData, "tempAuth").then(() => {
@@ -519,13 +524,13 @@ describe("processUpdateEvent", () => {
     })
   })
   it("should return error  when updateDeployment resolves the promise and returns result", () => {
-    var temp = {
-      "x": 1
-    }
+    
     var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp)
     var updateDeploymentsStub = sinon.stub(index, "updateDeployments").rejects(temp)
     index.processUpdateEvent(payload.Item, configData, "tempAuth").catch((obj) => {
       assert.isNotNull(obj);
+      sinon.assert.calledOnce(updateDeploymentsStub);
+      sinon.assert.calledOnce(getDeploymentsStub);
       getDeploymentsStub.restore()
       updateDeploymentsStub.restore()
     })
@@ -546,7 +551,6 @@ describe("getDeployments", () => {
       x: 1
     })
     index.getDeployments(deploymentPayload, configData, "temp_auth").then((obj) => {
-      
       sinon.assert.calledOnce(procesRequestStub)
       procesRequestStub.restore()
 
@@ -558,17 +562,15 @@ describe("getDeployments", () => {
     })
     index.getDeployments(deploymentPayload, configData, "temp_auth").catch((obj) => {
       expect(obj.message).to.eq("ProcessRequest Falied");
+      sinon.assert.calledOnce(procesRequestStub)
       procesRequestStub.restore()
     })
   })
   it("should throw error is enviornment_id is not defined in deploymentpayload passed", () => {
-    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
-      x: 1
-    })
+    
     deploymentPayload.environment_logical_id = undefined;
     index.getDeployments(deploymentPayload, configData, "temp_auth").catch((err) => {
       expect(err.failure_message).to.eq("Environment logical id is not defined");
-      procesRequestStub.restore()
     })
   })
 })
@@ -609,7 +611,7 @@ describe("updateDeployments", () => {
       x: 1
     })
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").then((obj) => {
-      sinon.assert.calledOnce(procesRequestStub)
+      sinon.assert.calledOnce(procesRequestStub);
       procesRequestStub.restore()
     })
   })
@@ -624,23 +626,17 @@ describe("updateDeployments", () => {
     })
   })
   it("should return error if deployment id is not defined", () => {
-    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
-      x: 1
-    })
     res.data.deployments[0].deployment_id = undefined;
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
       expect(err.failure_message).to.eq('Deployment details not found!')
-      procesRequestStub.restore()
     })
   })
   it("should return error if deployments array is empty", () => {
-    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
-      x: 1
-    })
+    
     res.data.deployments = undefined;
+    
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
       expect(err.failure_message).to.eq('Deployment details not found!')
-      procesRequestStub.restore()
     })
   })
 })
@@ -727,7 +723,6 @@ describe("processEvent",()=>{
   it("should return error if service context is not defined in the payload",()=>{
     payload.SERVICE_CONTEXT =  undefined;
     index.processEvent(payload,configData,"temp_auth").catch((err)=>{
-  
     expect(err.failure_message).to.eq("Service context is not defined")
     
   })

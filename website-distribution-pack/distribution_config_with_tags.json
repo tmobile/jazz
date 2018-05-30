@@ -9,7 +9,7 @@
       "Items": [{
         "Id": "{conf_stack_prefix}-{env}-static-website-origin-{service_name}",
         "DomainName": "{conf_s3bucketname}.s3.amazonaws.com",
-        "OriginPath": "/{service_name}/{env}",
+        "OriginPath": "/{origin_path}",
         "S3OriginConfig": {
           "OriginAccessIdentity": "{conf_origin_id}"
         }
