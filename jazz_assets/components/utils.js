@@ -93,7 +93,7 @@ var toLowercase = (input_data) => {
 	var asset_data = {};
 	Object.keys(input_data).map((field) => {
 		if (input_data[field] && input_data[field].constructor !== Array) {
-			if (_.includes(global.global_config.CASE_SENSITIVE_FIELDS, field.toLowerCase())) {
+			if (global.global_config.CASE_SENSITIVE_FIELDS.indexOf(field.toLowerCase()) > -1) {
 				asset_data[field.toLowerCase()] = input_data[field].toLowerCase();
 			} else {
 				asset_data[field.toLowerCase()] = input_data[field];

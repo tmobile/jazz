@@ -40,7 +40,7 @@ module.exports = (assets_id, update_data, onComplete) => {
     var count = 0;
     keys_list.map((key) => {
         var key_name = key;		
-		if(_.includes(_.keys(update_data), key)){
+		if(Object.keys(update_data).indexOf(key) > -1){
 			update_exp = update_exp + '#key' + count + ' = :' + key_name + ", ";
 			attributeValues[(":" + key_name)] = update_data[key];
 			attributeNames[("#key" + count)] = key_name;

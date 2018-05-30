@@ -124,7 +124,7 @@ var validateDataTypes = (field, prop_value) => {
     Object.keys(fields_type).map((type) => {
         if (field === type) {
             if (fields_type[type] === 'String') {
-                if (prop_value && (typeof prop_value == 'string' || prop_value instanceof String)) {
+                if (prop_value && (typeof prop_value === 'string' || prop_value instanceof String)) {
                     field_status = true;
                 }
             } else if (fields_type[type] === 'Array') {
@@ -144,12 +144,12 @@ var validateEnumValues = (assets_data, onComplete) => {
             var value = assets_data[field];
             switch (field) {
                 case 'status':
-                    if (!_.includes(global.global_config.ASSET_STATUS, value)) {
+                    if (global.global_config.ASSET_STATUS.indexOf(value) === -1) {
                         invalid_fields.push(field);
                     }
                     break;
                 case 'type':
-                    if (!_.includes(global.global_config.ASSET_TYPES, value)) {
+                    if (global.global_config.ASSET_TYPES.indexOf(value) === -1) {
                         invalid_fields.push(field);
                     }
                     break;
