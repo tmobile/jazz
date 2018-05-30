@@ -24,7 +24,6 @@
 
 
 const AWS = require('aws-sdk');
-const _ = require("lodash");
 
 // initialize document CLient for dynamodb
 var initDocClient = () => {

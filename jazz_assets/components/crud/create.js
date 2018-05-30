@@ -40,7 +40,7 @@ module.exports = (assets_data, onComplete) => {
         TableName: global.ASSETS_TABLE
     };
 
-    Object.keys(assets_data).map((key) => {
+    Object.keys(assets_data).forEach((key) => {
         var param_key = key;
         var param_value = assets_data[key];
 		

@@ -22,7 +22,6 @@
 **/
 
 const utils = require("../utils.js")(); //Import the utils module.
-const _ = require("lodash");
 
 module.exports = (assets_id, update_data, onComplete) => {
     var docClient = utils.initDocClient();
