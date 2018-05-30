@@ -202,11 +202,13 @@ node()  {
 					environmentDeploymentMetadata.setEnvironmentEndpoint(url)
 					send_status_email('COMPLETED', svc_status)
 					events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", context_map)
+					events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
 					events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment), environment)
 					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
 				} catch (ex) {
 					send_status_email('FAILED', '')
 					events.sendFailureEvent(asset_event, ex.getMessage(), context_map)
+					events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
 					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment), environment)
 					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 					error "Deployment Failed. "+ ex.getMessage()
