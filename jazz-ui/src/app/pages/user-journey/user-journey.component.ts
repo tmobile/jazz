@@ -60,6 +60,15 @@ export class UserJourneyComponent implements OnInit {
     }
   }
 
+  getExtension(stepInput) {
+    let fileNameAndQuery = stepInput.src.split("/").pop();
+    let breakdown = fileNameAndQuery.split('?');
+    let fileName = breakdown[0];
+    let query = breakdown[1] || null;
+    let extension = fileName.split('.').pop();
+    return extension;
+  }
+
   getPosition(index) {
     var position = index - this.stepIndex;
 
