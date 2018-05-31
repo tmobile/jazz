@@ -687,12 +687,9 @@ def runValidation(String runtime) {
 		dir('_java') {
 			sh "wget -q ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB}"
 		}
-
 		sh 'java -cp _java/checkstyle-7.6-all.jar com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src'
-
 	} else if (runtime.indexOf("python") > -1) {
 		echo "running validations for $runtime"
-
 	}
 }
 
