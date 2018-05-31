@@ -79,6 +79,10 @@ node()  {
 
 	}
 
+	if(!config){
+		error "Failed to fetch service metadata from catalog"
+	}
+
 	dir(repo_name)
 	{
 		scmModule.setServiceConfig(config)
@@ -125,7 +129,7 @@ node()  {
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled) {
 		isEventSchdld = true
 	}
-	events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
+	
 	def requestId = utilModule.generateRequestId()
 	if (requestId != null) {
 		events.setRequestId(requestId)
@@ -133,6 +137,8 @@ node()  {
 	} else {
 		error "Request Id Generation failed"
 	}
+
+	events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
 	dir(repo_name){
 		loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)

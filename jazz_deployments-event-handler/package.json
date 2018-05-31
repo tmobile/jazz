@@ -1,0 +1,21 @@
+{
+  "name": "jazz_deployments-event-handler",
+  "version": "0.0.1",
+  "description": "Deployments event handler function",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "*",
+    "request-promise-native": "^1.0.5",
+    "lodash": "*",
+    "uuid": "*"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0"
+  }
+}
