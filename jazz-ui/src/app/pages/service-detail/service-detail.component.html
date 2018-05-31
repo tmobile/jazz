@@ -60,7 +60,7 @@
                     <input name="serviceName" type="text" class="textForm" placeholder="Service Name" id="service-name-search" [(ngModel)]="ServiceName" (ngModelChange)="onServiceNameChange()">
                 </div>
                 <div class="footer-btns" [class.invisible]="isLoading">
-                    <btn-jazz-primary text="DELETE" (click)="deleteServiveInit()" newclass="delete-btn" [disablePrimaryBtn]="disblebtn"></btn-jazz-primary>
+                    <btn-jazz-primary text="DELETE" (click)="deleteServiceInit()" newclass="delete-btn" [disablePrimaryBtn]="disblebtn"></btn-jazz-primary>
                     <a (click)="hideDeletePopup()">CANCEL</a>
                 </div>
             </div>
