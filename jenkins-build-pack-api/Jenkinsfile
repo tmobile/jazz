@@ -80,6 +80,10 @@ node() {
 		}
 	}
 
+	if(!config){
+		error "Failed to fetch service metadata from catalog"
+	}
+
 	dir(repo_name)
 	{
 		scmModule.setServiceConfig(config)
@@ -159,6 +163,7 @@ node() {
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
 		}
 
+if(config['domain'] && config['domain'] != 'jazz'){
 		stage('Code Quality Check'){
 			events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
 			try {
@@ -173,7 +178,7 @@ node() {
 			}
 			events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
 		}
-
+}
 		stage('Build') {
 			try {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)

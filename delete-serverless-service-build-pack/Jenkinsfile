@@ -84,9 +84,17 @@ node {
 			error "Service Id is not available."
 		}
 
+		if(!service_config){
+			error "Failed to fetch service metadata from catalog"
+		}
 		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 		def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
 		echo "Environment List: $environmentList"
+
+		if (!events) { error "Can't load events module"	} //Fail here
+		events.initialize(configLoader, service_config, "SERVICE_DELETION", "", "", g_base_url + "/jazz/events")
+		context_map = [created_by : service_config['created_by']]
+                sonarModule.initialize(configLoader, config, "")
 
 		if (environmentIds.size() > 0) {
 			//validate each id in environment catalog
@@ -101,12 +109,8 @@ node {
 			}
 		} else if (environmentList.size() == 0) {
 			echo "$repo_name doesn't contain any active environment logical id in environment catalog!"
-		}
+		}		
 
-		if (!events) { error "Can't load events module"	} //Fail here
-		events.initialize(configLoader, service_config, "SERVICE_DELETION", "", "", g_base_url + "/jazz/events")
-		sonarModule.initialize(configLoader, config, "")
-		context_map = [created_by : service_config['created_by']]
 
 		dir(repo_name){
 			echo "loadServerlessConfig......."
@@ -307,7 +311,7 @@ def checkoutSCM(repo_name) {
 					[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repo_url]
 				]])
 		} catch (ex) {
-			handleFailureEvent(ex.getMessage())
+			error "checkout SCM failed."
 		}
 	}
 }
@@ -624,10 +628,18 @@ def unDeployWebsite(stage) {
 			echo "BucketName :: ${assetInfo['s3Bucket']} and BucketURL :: ${assetInfo['asset_info']}" 
 			def _exists = checkIfWebsiteExists(assetInfo['asset_info'])
 			if (_exists) {
-				sh "aws s3 rm s3://${assetInfo['asset_info']} --recursive"
 				cleanupS3BucketPolicy(stage, assetInfo)
+				sh "aws s3 rm s3://${assetInfo['asset_info']} --recursive"				
 			}
-			if (!checkIfBucketFolderHasObjects(assetInfo['folder_name'])) {
+			def isEmpty 
+
+			if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+				isEmpty = isBucketEmpty(assetInfo['folder_name'])
+			} else {
+				isEmpty = isBucketFolderEmpty(assetInfo['folder_name'])
+			}
+
+			if (isEmpty) {
 				echo "Cleaning up service folder since service folder is empty:: ${assetInfo['asset_info']}"
 				if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
 					sh "aws s3 rb s3://${assetInfo['folder_name']} --force"					
@@ -657,13 +669,24 @@ def checkIfWebsiteExists(bucketUrl) {
 	return status
 }
 
-def checkIfBucketFolderHasObjects(bucketFolderName){
-	def status = true;
+def isBucketEmpty(bucketName){
+	def status = false;
+	try {
+		sh("aws s3api list-objects --bucket ${bucketName}  --output json --query '[length(Contents[])]'")
+	} catch (ex) {
+		echo "Bucket $bucketName is empty"
+		status = true
+	}
+	return status
+}
+
+def isBucketFolderEmpty(bucketFolderName){
+	def status = false;
 	try {
 		sh("aws s3 ls s3://${bucketFolderName}  --output json --query '[length(Contents[])]'")
 	} catch (ex) {
 		echo "Bucket $bucketFolderName is empty"
-		status = false
+		status = true
 	}
 	return status
 }
@@ -704,10 +727,11 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 			}
 
 			echo "updated Policy : $statements"
-			policyObjectUpdated.Statement = statements
-			def policy_json = JsonOutput.toJson(policyObjectUpdated)
-			//def bucketName = bucket
-			updateBucketPolicy(policy_json, assetInfo['s3Bucket'])
+			if (statements.size() > 0) {
+				policyObjectUpdated.Statement = statements
+				def policy_json = JsonOutput.toJson(policyObjectUpdated)
+				updateBucketPolicy(policy_json, assetInfo['s3Bucket'])
+			}
             resetCredentials()
 		} catch (ex) {
             resetCredentials()
@@ -973,7 +997,7 @@ def setCredentials() {
 			return tokenJson_token
 		}
 		catch (e) {
-			handleFailureEvent(ex.getMessage())
+			echo "Failed to fetch authentication details."
 		}
 	}
 }
@@ -984,7 +1008,6 @@ def setCredentials() {
 * @return
 */
 def send_status_email (build_status) {
-	def email_id = ''
 
 	def email_content = ''
 	def body_subject = ''
@@ -1010,12 +1033,12 @@ def send_status_email (build_status) {
 	}
 	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 	body = JsonOutput.toJson([
- 						 from : fromStr,
- 						 to : email_id,
- 						 subject : body_subject,
- 						 text : body_text,
- 						 cc : cc_email,
- 						 html : body_html
+		from : fromStr,
+		to : service_config['created_by'],
+        subject : body_subject,
+		text : body_text,
+		cc : cc_email,
+		html : body_html
 	])
  		 try {
 		def sendMail = sh(script: "curl -X POST \

@@ -35,7 +35,7 @@
   "TOKEN_CREDS": "{jazz_admin_creds}",
   "BUILDPACKMAP" : {
     "api": "build_pack_api",
-    "lambda": "build_pack_lambda",
-    "website": "build_pack_website"
+    "function": "build-pack-lambda",
+    "website": "build-pack-website"
   }
 }
