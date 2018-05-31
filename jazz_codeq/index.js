@@ -64,7 +64,7 @@ function handler(event, context, cb) {
 						const output = responseObj(data.get_codeq_report, serviceContext.query);
 						return cb(null, output);
 					}).catch(err => {
-						const output = factory.getReportOnError(err, metrics, config, serviceContext);
+						const output = exportable.getReportOnError(err, metrics, config, serviceContext);
 						if(output.error) {
 							logger.error(output.error);
 							return cb(JSON.stringify(errorHandler.throwInputValidationError(output.error)));
@@ -198,8 +198,9 @@ function getReportOnError(err, metrics, config, serviceContext) {
 	}
 }
 
-const factory = {
+const exportable = {
 	getReportOnError,
 	handler
 }
-module.exports = factory;
+
+module.exports = exportable;
