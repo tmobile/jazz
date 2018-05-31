@@ -51,7 +51,7 @@ def getEnvironmentLogicalId() {
 			}
 			if (environmentOutput != null && environmentOutput.data != null && environmentOutput.data.environment != null) {
 				for (environment in environmentOutput.data.environment) {
-					if (environment.physical_id.equals(g_service_branch)) {
+					if (environment.physical_id.equals(g_service_branch.toLowerCase())) {
 						environment_logical_id = environment.logical_id
 						break;
 					}
