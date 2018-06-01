@@ -39,7 +39,7 @@ function handler (event, context, cb) {
 	logger.init(event, context);
 
 	//validate inputs
-	factory.genericInputValidation(event)
+	exportable.genericInputValidation(event)
 		.then(() => {
 			var deploymentTableName = config.DEPLOYMENT_TABLE,
 				method = event.method,
@@ -49,7 +49,7 @@ function handler (event, context, cb) {
 
 			if (method === "POST" && !Object.keys(path).length) {
 				logger.debug("creating new deployment details");
-				factory.processDeploymentCreation(config, body, deploymentTableName)
+				exportable.processDeploymentCreation(config, body, deploymentTableName)
 					.then((res) => {
 						logger.info("Create deployment result:" + JSON.stringify(res));
 						return cb(null, responseObj(res, body));
@@ -66,7 +66,7 @@ function handler (event, context, cb) {
 
 			if (method === "POST" && Object.keys(path).length) {
 				logger.info("GET Deployment details using deployment Id :" + path.id);
-				factory.processDeploymentRebuild(config, path.id, deploymentTableName)
+				exportable.processDeploymentRebuild(config, path.id, deploymentTableName)
 					.then((res) => {
 						logger.info("Re-build result:" + JSON.stringify(res));
 						return cb(null, responseObj(res, path));
@@ -83,7 +83,7 @@ function handler (event, context, cb) {
 
 			if (method === 'GET' && query && utils.isEmpty(path)) {
 				logger.info("GET Deployment details using query params :" + JSON.stringify(query));
-				factory.processDeploymentsList(config, query, deploymentTableName)
+				exportable.processDeploymentsList(config, query, deploymentTableName)
 					.then((res) => {
 						logger.info("Get list of deployments:" + JSON.stringify(res));
 						return cb(null, responseObj(res, query));
@@ -100,7 +100,7 @@ function handler (event, context, cb) {
 
 			if (method === 'GET' && path && utils.isEmpty(query)) {
 				logger.info("GET Deployment details using deployment Id :" + path.id);
-				factory.getDeploymentDetailsById(deploymentTableName, path.id)
+				exportable.getDeploymentDetailsById(deploymentTableName, path.id)
 					.then((res) => {
 						logger.info("Get Success. " + JSON.stringify(res));
 						return cb(null, responseObj(res, path));
@@ -116,7 +116,7 @@ function handler (event, context, cb) {
 			}
 
 			if (method === "PUT" && path) {
-				factory.processDeploymentsUpdate(config, body, deploymentTableName, path.id)
+				exportable.processDeploymentsUpdate(config, body, deploymentTableName, path.id)
 					.then((res) => {
 						logger.info("Updated data:" + JSON.stringify(res));
 						return cb(null, responseObj({
@@ -137,7 +137,7 @@ function handler (event, context, cb) {
 
 			if (method === "DELETE" && path) {
 				logger.info("Deleting deployment details for id : " + path.id);
-				factory.processDeploymentsDeletion(deploymentTableName, path.id)
+				exportable.processDeploymentsDeletion(deploymentTableName, path.id)
 					.then((res) => {
 						logger.info("DeleteItem succeeded");
 						var msg = "Successfully Deleted deployment details of id :" + path.id;
@@ -216,8 +216,8 @@ function genericInputValidation (event) {
 
 function processDeploymentCreation (config, deployment_details, deploymentTableName) {
 	return new Promise((resolve, reject) => {
-		factory.validateDeploymentDetails(config, deployment_details)
-			.then(() => factory.addNewDeploymentDetails(deployment_details, deploymentTableName))
+		exportable.validateDeploymentDetails(config, deployment_details)
+			.then(() => exportable.addNewDeploymentDetails(deployment_details, deploymentTableName))
 			.then((res) => {
 				resolve(res);
 			})
@@ -230,8 +230,8 @@ function processDeploymentCreation (config, deployment_details, deploymentTableN
 function processDeploymentRebuild (config, deploymentId, deploymentTableName) {
 	logger.debug("processDeploymentRebuild")
 	return new Promise((resolve, reject) => {
-		factory.getDeploymentDetailsById(deploymentTableName, deploymentId)
-			.then((res) => factory.reBuildDeployment(res, config))
+		exportable.getDeploymentDetailsById(deploymentTableName, deploymentId)
+			.then((res) => exportable.reBuildDeployment(res, config))
 			.then((res) => {
 				resolve(res);
 			})
@@ -251,8 +251,8 @@ function processDeploymentsList (config, query, deploymentTableName) {
 			'offset': query.offset,
 			'limit': query.limit
 		};
-		factory.validateQueryParams(config, queryParams)
-			.then(() => factory.getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
+		exportable.validateQueryParams(config, queryParams)
+			.then(() => exportable.getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
 			.then((res) => {
 				resolve(res);
 			})
@@ -264,8 +264,8 @@ function processDeploymentsList (config, query, deploymentTableName) {
 
 function processDeploymentsUpdate (config, body, deploymentTableName, deploymentId) {
 	return new Promise((resolve, reject) => {
-		factory.validateUpdateInput(config, body, deploymentTableName, deploymentId)
-			.then((data) => factory.updateDeploymentDetails(deploymentTableName, data, deploymentId))
+		exportable.validateUpdateInput(config, body, deploymentTableName, deploymentId)
+			.then((data) => exportable.updateDeploymentDetails(deploymentTableName, data, deploymentId))
 			.then((res) => {
 				resolve(res);
 			})
@@ -277,8 +277,8 @@ function processDeploymentsUpdate (config, body, deploymentTableName, deployment
 
 function processDeploymentsDeletion (deploymentTableName, deploymentId) {
 	return new Promise((resolve, reject) => {
-		factory.getDeploymentDetailsById(deploymentTableName, deploymentId)
-			.then((res) => factory.deleteServiceByID(res, deploymentTableName, deploymentId))
+		exportable.getDeploymentDetailsById(deploymentTableName, deploymentId)
+			.then((res) => exportable.deleteServiceByID(res, deploymentTableName, deploymentId))
 			.then((res) => {
 				resolve(res);
 			})
@@ -418,9 +418,9 @@ function deleteServiceByID (getDeploymentDetails, deploymentTableName, deploymen
 function reBuildDeployment (refDeployment, config) {
 	logger.debug("Inside reBuildDeployment" + JSON.stringify(refDeployment));
 	return new Promise((resolve, reject) => {
-		factory.getToken(config)
-			.then((authToken) => factory.getServiceDetails(config, refDeployment.service_id, authToken))
-			.then((res) => factory.buildNowRequest(res, config, refDeployment))
+		exportable.getToken(config)
+			.then((authToken) => exportable.getServiceDetails(config, refDeployment.service_id, authToken))
+			.then((res) => exportable.buildNowRequest(res, config, refDeployment))
 			.then((res) => {
 				resolve(res);
 			})
