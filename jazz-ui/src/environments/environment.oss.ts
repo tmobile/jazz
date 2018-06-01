@@ -6,7 +6,7 @@ export const environment = {
   envName:"oss",
   multi_env:"{multi_env}",
   serviceTabs:["{overview}","{access control}","{metrics}","{logs}","{cost}"],
-  environmentTabs:[true, true,true ,true , true],
+  environmentTabs:["overview", "deployments", "code quality", "assets", "logs"],
   urls:{
     docs_link:"https://github.com/tmobile/jazz/wiki",
 }
