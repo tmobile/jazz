@@ -1,0 +1,20 @@
+{
+  "name": "jazz_codeq",
+  "version": "0.0.1",
+  "description": "API for code quality",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "moment": "*",
+    "request": "*"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0",
+    "sinon": "^5.0.7"
+  }
+}
