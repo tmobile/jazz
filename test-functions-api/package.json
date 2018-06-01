@@ -1,0 +1,19 @@
+{
+  "name": "api-nodejs-template",
+  "version": "0.0.1",
+  "description": "Nodejs Template project",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "*",
+    "deasync": "*"
+  },
+  "devDependencies": {
+    "mocha": "^v3.0.0",
+    "chai": "^3.5.0"
+  }
+}
