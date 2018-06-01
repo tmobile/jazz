@@ -23,7 +23,7 @@ const sinon = require('sinon');
 const logger = require("../components/logger.js");
 const configObj = require("../components/config.js");
 
-var reqStub
+var reqStub;
 var event = {
   "Records": [{
     "kinesis": {
@@ -41,7 +41,7 @@ var event = {
     "awsRegion": "us-east-1",
     "eventSourceARN": "arn:aws:kinesis:us-east-1:100000002:teststream/gitlab10001-events-hub-prod"
   }]
-}
+};
 var context = {
   "callbackWaitsForEmptyEventLoop": true,
   "logGroupName": "/aws/lambda/gitlab1234567-test-name",
@@ -52,13 +52,13 @@ var context = {
   "invokeid": "00001-test-000001",
   "awsRequestId": "00001-test-000001",
   "invokedFunctionArn": "arn:aws:lambda:us-east-1:100000001:function:gitlab001-test-services-handler-prod"
-}
+};
 var configData = configObj(context);
 describe("getTokenRequest", function () {
   it("should return Request token when called", () => {
     let result = index.getTokenRequest(configData);
-    expect(result.uri).to.eq(configData.BASE_API_URL + configData.TOKEN_URL)
-    expect(result.method).to.eq('post')
+    expect(result.uri).to.eq(configData.BASE_API_URL + configData.TOKEN_URL);
+    expect(result.method).to.eq('post');
   })
 })
 describe("getAuthResponse", () => {
@@ -84,7 +84,7 @@ describe("getAuthResponse", () => {
           "token": "ghd93-3240-2343"
         }
       }
-    }
+    };
     index.getAuthResponse(result).then((auth) => {
       expect(auth).to.eq(result.body.data.token);
     })
@@ -93,7 +93,7 @@ describe("getAuthResponse", () => {
     let result = {
       statusCode: 401,
       body: {}
-    }
+    };
     index.getAuthResponse(result).catch((err) => {
       expect(err.message).to.eq('Invalid token response from API');
     })
@@ -107,7 +107,7 @@ describe("checkforInterestedEvents", () => {
     var encodedPayload = record.kinesis.data;
     index.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
       assert.isTrue(res.interested_event);
-    })
+    });
   })
   it("should reject with paramenter interested_event set to false", () => {
     var payload = {
@@ -149,7 +149,7 @@ describe("checkforInterestedEvents", () => {
           S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'
         }
       }
-    }
+    };
     var encoded = Buffer.from(JSON.stringify(payload)).toString('base64');
     var sequenceNumber = "test_sequence01";
     var encodedPayload = encoded;
@@ -183,7 +183,7 @@ describe("processEventRecords", () => {
   it("should reject all for Error case scenario from processEventRecord",()=>{
     procesEventRecordStub = sinon.stub(index, "processEventRecord").resolves({
       "status":"Process Event Record failed"
-    })
+    });
     index.processEventRecords(event,configData,"temp_auth").catch((err)=>{
       sinon.assert.calledOnce(procesEventRecordStub)
       expect(err.status).to.eq("Process Event Record failed");
@@ -305,7 +305,7 @@ describe("processEventRecord", () => {
   })
 })
 describe("getDeploymentPayload", () => {
-  var svcContext
+  var svcContext;
   beforeEach(() => {
     svcContext = {
       "service_type": "api",
@@ -353,7 +353,7 @@ describe("procesRequest", () => {
         'authorization': "abc"
       },
       rejectUnauthorized: false
-    }
+    };
     let responseObject = {
       statusCode: 200,
       body: {
@@ -362,7 +362,7 @@ describe("procesRequest", () => {
     };
     reqStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
-    })
+    });
     index.procesRequest(svcPayload).then((obj) => {
       expect(obj).not.null;
     })
@@ -374,7 +374,7 @@ describe("procesRequest", () => {
         'authorization': "abc"
       },
       rejectUnauthorized: false
-    }
+    };
     let responseObject = {
       statusCode: 401,
       body: {
@@ -383,12 +383,12 @@ describe("procesRequest", () => {
     };
     reqStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
-    })
+    });
     var handleErrorStub = sinon.stub(index, "handleError")
     index.procesRequest(svcPayload).catch((err) => {
       sinon.assert.calledOnce(handleErrorStub);
       handleErrorStub.restore()
-    })
+    });
   })
 })
 describe("processCreateEvent", () => {
@@ -434,12 +434,12 @@ describe("processCreateEvent", () => {
         }
       }
     }
-  })
+  });
   afterEach(() => {
     if (reqStub) {
       reqStub.restore();
     }
-  })
+  });
   it("should call processEvents with SvcPayload", () => {
     var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
       x: 1
@@ -448,7 +448,7 @@ describe("processCreateEvent", () => {
       sinon.assert.calledOnce(procesRequestStub)
       procesRequestStub.restore()
     })
-  })
+  });
   it("should call processEvents with SvcPayload", () => {
     var procesRequestStub = sinon.stub(index, "procesRequest").rejects({
       message: "process request failed"
@@ -458,7 +458,7 @@ describe("processCreateEvent", () => {
       expect(err.message).to.eq("process request failed");
       procesRequestStub.restore()
     })
-  })
+  });
 })
 describe("processUpdateEvent", () => {
   var payload,temp;
@@ -515,24 +515,24 @@ describe("processUpdateEvent", () => {
   })
   it("should call getDeployments for true case scenarios", () => {
     
-    var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp)
-    var updateDeploymentsStub = sinon.stub(index, "updateDeployments").resolves(temp)
+    var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp);
+    var updateDeploymentsStub = sinon.stub(index, "updateDeployments").resolves(temp);
     index.processUpdateEvent(payload.Item, configData, "tempAuth").then(() => {
       sinon.assert.calledOnce(getDeploymentsStub)
       getDeploymentsStub.restore()
       updateDeploymentsStub.restore()
     })
-  })
+  });
   it("should call updateDeployments when getDeployment resolves the promise and returns result", () => {
    
-    var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp)
-    var updateDeploymentsStub = sinon.stub(index, "updateDeployments").resolves(temp)
+    var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp);
+    var updateDeploymentsStub = sinon.stub(index, "updateDeployments").resolves(temp);
     index.processUpdateEvent(payload.Item, configData, "tempAuth").then(() => {
       sinon.assert.calledOnce(updateDeploymentsStub);
-      getDeploymentsStub.restore()
-      updateDeploymentsStub.restore()
+      getDeploymentsStub.restore();
+      updateDeploymentsStub.restore();
     })
-  })
+  });
   it("should return error  when updateDeployment resolves the promise and returns result", () => {
     
     var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp)
@@ -541,10 +541,10 @@ describe("processUpdateEvent", () => {
       assert.isNotNull(obj);
       sinon.assert.calledOnce(updateDeploymentsStub);
       sinon.assert.calledOnce(getDeploymentsStub);
-      getDeploymentsStub.restore()
-      updateDeploymentsStub.restore()
+      getDeploymentsStub.restore();
+      updateDeploymentsStub.restore();
     })
-  })
+  });
 })
 describe("getDeployments", () => {
   var deploymentPayload
@@ -555,25 +555,25 @@ describe("getDeployments", () => {
       service: 'test-02',
       environment_logical_id: 'temp_env_ID'
     }
-  })
+  });
   it("should call process Events with deploymentpayload", () => {
     var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
       x: 1
     })
     index.getDeployments(deploymentPayload, configData, "temp_auth").then((obj) => {
-      sinon.assert.calledOnce(procesRequestStub)
-      procesRequestStub.restore()
+      sinon.assert.calledOnce(procesRequestStub);
+      procesRequestStub.restore();
 
-    })
+    });
   })
   it("should return error if processEvents returns unsuccesfull", () => {
     var procesRequestStub = sinon.stub(index, "procesRequest").rejects({
       message: "ProcessRequest Falied"
-    })
+    });
     index.getDeployments(deploymentPayload, configData, "temp_auth").catch((obj) => {
       expect(obj.message).to.eq("ProcessRequest Falied");
-      sinon.assert.calledOnce(procesRequestStub)
-      procesRequestStub.restore()
+      sinon.assert.calledOnce(procesRequestStub);
+      procesRequestStub.restore();
     })
   })
   it("should throw error is enviornment_id is not defined in deploymentpayload passed", () => {
@@ -585,7 +585,7 @@ describe("getDeployments", () => {
   })
 })
 describe("updateDeployments", () => {
-  var res, deploymentpayload
+  var res, deploymentpayload;
   beforeEach(() => {
     deploymentPayload = {
       domain: 'jazztest',
@@ -594,7 +594,7 @@ describe("updateDeployments", () => {
       environment_logical_id: 'temp_env_ID',
       provider_build_url: "http://temp_testing/dccdw.com",
       provider_build_id: "temp_build_id"
-    }
+    };
     res = {
       "data": {
         "deployments": [{
@@ -612,42 +612,41 @@ describe("updateDeployments", () => {
           "request_id": "temp-reqid-0001"
         }]
       }
-
-    }
+    };
   })
 
   it("should call processRequest for success scenario ", () => {
     var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
       x: 1
-    })
+    });
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").then((obj) => {
       sinon.assert.calledOnce(procesRequestStub);
-      procesRequestStub.restore()
+      procesRequestStub.restore();
     })
   })
   it("should call return error if  processRequest is unsucesfull", () => {
     var procesRequestStub = sinon.stub(index, "procesRequest").rejects({
       message: "Process Request failed"
-    })
+    });
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
-      sinon.assert.calledOnce(procesRequestStub)
-      expect(err.message).to.eq("Process Request failed")
-      procesRequestStub.restore()
+      sinon.assert.calledOnce(procesRequestStub);
+      expect(err.message).to.eq("Process Request failed");
+      procesRequestStub.restore();
     })
   })
   it("should return error if deployment id is not defined", () => {
     res.data.deployments[0].deployment_id = undefined;
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
-      expect(err.failure_message).to.eq('Deployment details not found!')
-    })
+      expect(err.failure_message).to.eq('Deployment details not found!');
+    });
   })
   it("should return error if deployments array is empty", () => {
     
     res.data.deployments = undefined;
     
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
-      expect(err.failure_message).to.eq('Deployment details not found!')
-    })
+      expect(err.failure_message).to.eq('Deployment details not found!');
+    });
   })
 })
 describe("processEvent",()=>{
@@ -699,41 +698,41 @@ describe("processEvent",()=>{
     }
   })
   it("should call processCreateEvent when the event is create_deployment",()=>{
-    payload.EVENT_NAME.S =  "CREATE_DEPLOYMENT"
+    payload.EVENT_NAME.S =  "CREATE_DEPLOYMENT";
     var processCreateEventStub = sinon.stub(index,'processCreateEvent').resolves(tempobj);
     index.processEvent(payload,configData,"temp_auth").then(()=>{
-      sinon.assert.calledOnce(processCreateEventStub)
-      processCreateEventStub.restore()
+      sinon.assert.calledOnce(processCreateEventStub);
+      processCreateEventStub.restore();
     })
   })
   it("should throw error when processCreateEvent returns error when the event is create_deployment",()=>{
-    payload.EVENT_NAME.S =  "CREATE_DEPLOYMENT"
+    payload.EVENT_NAME.S =  "CREATE_DEPLOYMENT";
     var processCreateEventStub = sinon.stub(index,'processCreateEvent').rejects(errObj);
     index.processEvent(payload,configData,"temp_auth").catch((err)=>{
-      sinon.assert.calledOnce(processCreateEventStub)
+      sinon.assert.calledOnce(processCreateEventStub);
       expect(err.message).to.eq(errObj.message);
-      processCreateEventStub.restore()
+      processCreateEventStub.restore();
     })
   })
   it("should call processUpdateEvent when the event is create_deployment",()=>{
     var processUpdateEventStub = sinon.stub(index,'processUpdateEvent').resolves(tempobj);
     index.processEvent(payload,configData,"temp_auth").then(()=>{
-      sinon.assert.calledOnce(processUpdateEventStub)
-      processUpdateEventStub.restore()
+      sinon.assert.calledOnce(processUpdateEventStub);
+      processUpdateEventStub.restore();
     })
   })
   it("should throw an error when processUpdateEvent returns error ,and the event is create_deployment",()=>{
     var processUpdateEventStub = sinon.stub(index,'processUpdateEvent').rejects(errObj);
     index.processEvent(payload,configData,"temp_auth").catch((err)=>{
-      sinon.assert.calledOnce(processUpdateEventStub)
+      sinon.assert.calledOnce(processUpdateEventStub);
       expect(err.message).to.eq(errObj.message);
-      processUpdateEventStub.restore()
+      processUpdateEventStub.restore();
     })
   })
   it("should return error if service context is not defined in the payload",()=>{
     payload.SERVICE_CONTEXT =  undefined;
     index.processEvent(payload,configData,"temp_auth").catch((err)=>{
-    expect(err.failure_message).to.eq("Service context is not defined")
+    expect(err.failure_message).to.eq("Service context is not defined");
     
   })
 })
