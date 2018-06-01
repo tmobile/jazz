@@ -4,12 +4,14 @@
 
 **Seamlessly build, deploy & manage cloud-native applications.**
 
-Jazz addresses gaps and pain points with serverless, particularly for production applications. It is not another FaaS implementation. Rather, it enhances the usability of existing FaaS systems. Jazz has a beautiful UI designed to let developers quickly self-start and focus on code. Its modular design makes it easy to add new integrations:
+Jazz accelerates adoption of serverless services. Jazz comes with a UI that lets developers quickly create serverless services with the click of a button. Its modular design makes it easy to add new integrations:
 
-* **Services** - Today devs can build functions, APIs and static websites. The template-based system makes it easy to define new ones.
+* **Services** - Jazz can help build functions, APIs and static websites. The template-based system makes it easy to define new ones.
 * **Deployment Targets** - Currently we deploy to AWS (Lambda, API gateway and S3). We plan to support Azure Functions and Docker containers in the near future.
-* **Features** - Services seamlessly integrate features like monitoring (CloudWatch), logging (ElasticSearch), authentication (Cognito) and secret management (KMS, Vault coming soon).
-* **Deployment & CI/CD** - We leverage [Serverless Framework](http://www.serverless.com) and Git/Bitbucket/Jenkins.
+* **Features** - Services seamlessly integrate features like monitoring (CloudWatch), logging (ElasticSearch), authentication (Cognito).
+* **Deployment & CI/CD** - CI/CD platform is driven using Jenkins where it leverages [Serverless Framework](http://www.serverless.com) for deployment of serverless services.
+* **SCM** - Jazz works with Gitlab as well as Bitbucket.
+
 
 Jazz is [open-sourced](http://opensource.t-mobile.com) and under active development by T-Mobile's Cloud Center of Excellence.
 
@@ -20,7 +22,7 @@ Jazz is [open-sourced](http://opensource.t-mobile.com) and under active developm
 You can [install Jazz](https://github.com/tmobile/jazz-installer) in your account using the automated installer.
 
 ## Try Jazz!
-You can try out public preview version of Jazz by registering with your email address [here](http://try.tmo-jazz.net). You will need a registration code which can be requested by joining [slack](https://tmo-oss-getinvite.herokuapp.com/). Once in slack, go to `#jazz-serverless` channel to get a working registration code.
+You can try out public preview version of Jazz by registering with your email address [here](http://try.tmo-jazz.net). You will need a registration code which can be requested by joining [slack](https://tmo-oss-getinvite.herokuapp.com/). Once in slack, you can request a registration code.
 
 ## User Guide
 
