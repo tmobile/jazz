@@ -132,6 +132,13 @@ export class EnvAssetsSectionComponent implements OnInit {
 		},5000);
    }
 
+  refresh() {
+    this.envResponseEmpty = false;
+    this.envResponseError = false;
+    this.envResponseTrue = false;
+    this.callServiceEnvAssets();
+  }
+
 
 	 getFilter(filterServ){
 	

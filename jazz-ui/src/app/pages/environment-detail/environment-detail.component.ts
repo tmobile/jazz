@@ -26,6 +26,7 @@ import { EnvDeploymentsSectionComponent} from './../environment-deployment/env-d
 export class EnvironmentDetailComponent implements OnInit {
 @ViewChild('envoverview') envoverview:EnvOverviewSectionComponent;
 @ViewChild('envdeployments') envdeployments:EnvDeploymentsSectionComponent;
+@ViewChild('selectedTabComponent') selectedTabComponent;
 
 isFunction:boolean = false;
 breadcrumbs = [];
@@ -67,7 +68,10 @@ api_doc_name:string='';
     private data: DataService
   ) {}
 
-  
+  refreshTab() {
+    this.selectedTabComponent.refresh();
+  }
+
   onSelectedDr(selected){
     this.selectedTab = selected;
   }
