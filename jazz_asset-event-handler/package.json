@@ -1,7 +1,7 @@
 {
     "name": "jazz_asset-event-handler",
     "version": "0.0.1",
-    "description": "The event handler funtion to handle environment related events and catalog updates",
+    "description": "The event handler funtion to handle asset related events and catalog updates",
     "main": "index.js",
     "private": true,
     "author": [],
