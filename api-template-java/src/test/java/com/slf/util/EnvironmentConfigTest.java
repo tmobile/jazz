@@ -2,15 +2,12 @@ package com.slf.util;
 
 
 import com.slf.model.Request;
-
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-/**
- * @Author: Asif Sajjad
- *
- */
+
 public class EnvironmentConfigTest {
 
 
@@ -32,13 +29,10 @@ public class EnvironmentConfigTest {
 
         try {
             config = new EnvironmentConfig(request);
-            assertTrue("This method should have thrown BadResquestException",false);
+            assertTrue("This method should have thrown BadRequestException",false);
         }
         catch (Exception e){
             assertTrue(true);
         }
     }
-
-
-
 }
