@@ -212,7 +212,7 @@ function validateEnvironmentExists(environment_data, indexName, tableName) {
         environment_data.logical_id = environment_data.logical_id.toLowerCase();
         environment_data.service = environment_data.service.toLowerCase();
         environment_data.domain = environment_data.domain.toLowerCase();
-        environment_data.physical_id = environment_data.physical_id.toLowerCase();
+
         query = {
             logical_id: environment_data.logical_id,
             service: environment_data.service,
