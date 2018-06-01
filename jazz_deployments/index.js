@@ -550,7 +550,7 @@ function buildNowRequest (serviceDetails, config, refDeployment) {
 	});
 }
 
-const factory = {
+const exportable = {
 	handler,
 	genericInputValidation,
 	processDeploymentCreation,
@@ -572,4 +572,4 @@ const factory = {
 	buildNowRequest
 }
 
-module.exports = factory;
+module.exports = exportable;
