@@ -449,6 +449,16 @@ describe("processCreateEvent", () => {
       procesRequestStub.restore()
     })
   })
+  it("should call processEvents with SvcPayload", () => {
+    var procesRequestStub = sinon.stub(index, "procesRequest").rejects({
+      message: "process request failed"
+    })
+    index.processCreateEvent(payload.Item, configData, "tempAuth").catch((err) => {
+      sinon.assert.calledOnce(procesRequestStub)
+      expect(err.message).to.eq("process request failed");
+      procesRequestStub.restore()
+    })
+  })
 })
 describe("processUpdateEvent", () => {
   var payload,temp;
