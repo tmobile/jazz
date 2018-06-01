@@ -3,10 +3,10 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" except for config_loader
-@Field def repo_credential_id = "jenkins1cred"
-@Field def repo_base = "jazz-daily-installer-bitbucket-1723618883.us-east-1.elb.amazonaws.com"
-@Field def repo_core = "slf"
-@Field def scm_type = "bitbucket"
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
+@Field def scm_type
 
 @Field def config_loader
 
