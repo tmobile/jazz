@@ -1,0 +1,11 @@
+{
+    "ASSETS_API_URL": "https://{conf-host-name}",
+    "ASSETS_API_RESOURCE": "/test/jazz/assets",
+    "ASSETS_API_SEARCH_RESOURCE": "/test/jazz/assets/search",
+    "INTERESTED_EVENT_CONFIGURATION": {
+        "EVENT_NAMES": ["CREATE_ASSET", "UPDATE_ASSET"],
+        "EVENT_STATUS": ["COMPLETED"],
+        "EVENT_CREATE_ASSET": "CREATE_ASSET",
+        "EVENT_UPDATE_ASSET": "UPDATE_ASSET"
+    }
+}
