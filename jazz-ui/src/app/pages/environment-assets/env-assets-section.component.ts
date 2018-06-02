@@ -472,4 +472,14 @@ public goToAbout(hash){
 	this.cache.set('scroll_id',hash);
 }
 
+  public assetTypeToLabel(type) {
+    switch(type) {
+      case 'swagger_url':
+      case 'endpoint_url':
+        return 'URL';
+      default:
+        return 'ARN';
+    }
+  }
+
 }
