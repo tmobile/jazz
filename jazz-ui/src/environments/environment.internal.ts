@@ -18,7 +18,10 @@ export const environment = {
         serverless_slack:"{{serverless_slack}}",
         username_prefix:"{{username_prefix}}",
         slack_messages:'{{slack_messages}}',
-    }
+    },
+  swaggerLocation: (domain, name, env) => {
+    return '/' + domain + '_' + name+ '/' + env +'/swagger.json';
+  }
 };
 
 

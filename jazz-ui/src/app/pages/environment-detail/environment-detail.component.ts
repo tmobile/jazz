@@ -202,37 +202,28 @@ api_doc_name:string='';
 
   };
 
-    testApi(type){
-        switch(type){
-            case 'api': 
-            if(environment.envName == "oss"){
-              var SwaggerUrl="http://editor.swagger.io/?url="+this.api_doc_name+"/"+this.service.domain +"/"+ this.service.name +"/"+this.envSelected+"/swagger.json"
-              window.open(SwaggerUrl);
-            } 
-            else{
-              window.open('/test-api?service=' + this.service.name + '&domain='+ this.service.domain + '&env=' +this.envSelected);
-
-            }        
-            
-            break;
-
-            case 'website' :
-            if(this.endpoint_env!=(undefined||'')){
-              window.open(this.endpoint_env);    
-            }
-            break;
-            case 'function' :
-            if(this.endpoint_env!=(undefined||'')){
-              window.open('/404');    
-            }
-            break;
-            case 'lambda' :
-            if(this.endpoint_env!=(undefined||'')){
-              window.open('/404');    
-            }
-            break;
-        }
-    }
+  testApi(type){
+      switch(type){
+          case 'api':
+            let swaggerFile = environment.swaggerLocation(this.service.domain, this.service.name, this.envSelected);
+            return window.open(environment.urls['swagger_editor'] + '/?url=' + environment['api_doc_name'] + swaggerFile);
+          case 'website' :
+          if(this.endpoint_env!=(undefined||'')){
+            window.open(this.endpoint_env);
+          }
+          break;
+          case 'function' :
+          if(this.endpoint_env!=(undefined||'')){
+            window.open('/404');
+          }
+          break;
+          case 'lambda' :
+          if(this.endpoint_env!=(undefined||'')){
+            window.open('/404');
+          }
+          break;
+      }
+  }
 
  toast_pop(error,oops,errorMessage)
   {
