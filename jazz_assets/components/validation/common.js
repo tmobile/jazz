@@ -48,7 +48,7 @@ var validateEmptyFieldsVal = (assets_data, onComplete) => {
     });
 
     if (invalid_fields.length > 0) {
-        var message = "Following fields does not provided a valid value - " + invalid_fields.join(", ");
+        var message = "Following fields do not have a valid value - " + invalid_fields.join(", ");
         onComplete({
             "result": "inputError",
             "message": message
@@ -64,7 +64,7 @@ var validateEmptyFieldsVal = (assets_data, onComplete) => {
 var validateUnAllowedFieldsInInput = (assets_data, fields_list, onComplete) => {
     var invalid_fields = _.difference(_.keys(assets_data), _.values(fields_list));
     if (invalid_fields.length > 0) {
-        var message = "Following fields are invalid :  " + invalid_fields.join(", ") + ". ";
+        var message = "Following fields are invalid: " + invalid_fields.join(", ") + ". ";
         onComplete({
             "result": "inputError",
             "message": message
@@ -158,7 +158,7 @@ var validateEnumValues = (assets_data, onComplete) => {
     });
 
     if (invalid_fields.length > 0) {
-        var message = "The following field's value is not valid - " + invalid_fields.join(", ");
+        var message = "The following field's value are not valid - " + invalid_fields.join(", ");
         onComplete({
             "result": "inputError",
             "message": message
