@@ -27,7 +27,7 @@ const _ = require("lodash");
 const crud = require("./crud")();
 const utils = require("./utils.js");
 
-function validateIsEmptyInputData (assets_data) {
+function validateIsEmptyInputData(assets_data) {
     logger.debug("Inside validateIsEmptyInputData");
     return new Promise((resolve, reject) => {
         if (Object.keys(assets_data).length === 0) {
@@ -44,7 +44,7 @@ function validateIsEmptyInputData (assets_data) {
     });
 };
 
-function validateEmptyFieldsVal (assets_data) {
+function validateEmptyFieldsVal(assets_data) {
     logger.debug("Inside validateEmptyFieldsVal");
     return new Promise((resolve, reject) => {
         var invalid_fields = [];
@@ -70,7 +70,7 @@ function validateEmptyFieldsVal (assets_data) {
     });
 };
 
-function validateUnAllowedFieldsInInput (assets_data, fields_list) {
+function validateUnAllowedFieldsInInput(assets_data, fields_list) {
     logger.debug("Inside validateUnAllowedFieldsInInput");
     return new Promise((resolve, reject) => {
         var invalid_fields = _.difference(_.keys(assets_data), _.values(fields_list));
@@ -85,11 +85,11 @@ function validateUnAllowedFieldsInInput (assets_data, fields_list) {
                 "result": "success",
                 "input": assets_data
             });
-        } 
+        }
     });
 };
 
-function validateAllRequiredFields (assets_data, required_fields) {
+function validateAllRequiredFields(assets_data, required_fields) {
     logger.debug("Inside validateAllRequiredFields");
     return new Promise((resolve, reject) => {
         var missing_required_fields = _.difference(_.values(required_fields), _.keys(assets_data));
@@ -104,11 +104,11 @@ function validateAllRequiredFields (assets_data, required_fields) {
                 "result": "success",
                 "input": assets_data
             });
-        }     
+        }
     });
 };
 
-function validateInputFieldTypes (assets_data) {
+function validateInputFieldTypes(assets_data) {
     logger.debug("Inside validateInputFieldTypes");
     return new Promise((resolve, reject) => {
         var invalid_fields = [];
@@ -119,7 +119,7 @@ function validateInputFieldTypes (assets_data) {
                 }
             }
         })
-    
+
         if (invalid_fields.length > 0) {
             var message = "The following field's value/type is not valid - " + invalid_fields.join(", ");
             reject({
@@ -131,11 +131,11 @@ function validateInputFieldTypes (assets_data) {
                 "result": "success",
                 "input": "Input value is valid"
             });
-        } 
+        }
     });
 };
 
-function validateDataTypes (field, prop_value) {
+function validateDataTypes(field, prop_value) {
     logger.debug("Inside validateDataTypes");
     var fields_type = global.global_config.FIELD_DATA_TYPES;
     var field_status = false;
@@ -155,7 +155,7 @@ function validateDataTypes (field, prop_value) {
     return field_status;
 };
 
-function validateEnumValues (assets_data) {
+function validateEnumValues(assets_data) {
     logger.debug("Inside validateEnumValues");
     return new Promise((resolve, reject) => {
         var invalid_fields = [];
@@ -188,11 +188,11 @@ function validateEnumValues (assets_data) {
                 "result": "success",
                 "input": "Input value is valid"
             });
-        } 
+        }
     });
 };
 
-function validateEditableFields (update_data, editableFields) {
+function validateEditableFields(update_data, editableFields) {
     logger.debug("Inside validateEditableFields");
     var invalid_fields = _.difference(_.keys(update_data), _.values(editableFields));
     invalid_fields.map((value) => {

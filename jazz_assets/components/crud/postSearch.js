@@ -1,17 +1,17 @@
  /**
-     Search a Asset-Catalog entry in dynamodb table
-     @module: postSearch.js
-     @description: CRUD functions for asset catalog
-     @author:
-     @version: 1.0
- **/
+      Search a Asset-Catalog entry in dynamodb table
+      @module: postSearch.js
+      @description: CRUD functions for asset catalog
+      @author:
+      @version: 1.0
+  **/
 
  const utils = require("../utils.js"); //Import the utils module.
  const logger = require("../logger.js")(); //Import the logging module.
 
-module.exports = (query, asset_table, onComplete) => {
-    // initialize dynamodb
-    var docClient = utils.initDocClient();
+ module.exports = (query, asset_table, onComplete) => {
+     // initialize dynamodb
+     var docClient = utils.initDocClient();
 
      var filter = "";
      var insertAndString = " AND ";

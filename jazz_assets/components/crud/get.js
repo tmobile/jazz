@@ -30,7 +30,7 @@ module.exports = (assets_id, asset_table, onComplete) => {
     var docClient = utils.initDocClient();
 
     var params = {
-        TableName: asset_table       
+        TableName: asset_table
     };
     var callBack = (err, data) => {
         if (err) {

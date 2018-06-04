@@ -71,14 +71,14 @@ function handler(event, context, cb) {
                 if (event.method === 'GET' && assets_id) {
                     logger.info('GET assets by ID : ' + assets_id);
                     processAssetData(assets_id, asset_table)
-                    .then(res => {
-                        logger.info("get asset by Id result:" + JSON.stringify(res));
-                        handleResponse(null, res, event.path);
-                    })
-                    .catch(error => {
-                        logger.error("update error:" + JSON.stringify(error));
-                        handleResponse(error, null, event.path);
-                    });
+                        .then(res => {
+                            logger.info("get asset by Id result:" + JSON.stringify(res));
+                            handleResponse(null, res, event.path);
+                        })
+                        .catch(error => {
+                            logger.error("update error:" + JSON.stringify(error));
+                            handleResponse(error, null, event.path);
+                        });
                 }
 
                 // Update assets
