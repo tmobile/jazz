@@ -28,7 +28,7 @@ const crud = require("./crud")();
 const utils = require("./utils.js");
 
 function validateIsEmptyInputData (assets_data) {
-    logger.info("Inside validateIsEmptyInputData");
+    logger.debug("Inside validateIsEmptyInputData");
     return new Promise((resolve, reject) => {
         if (Object.keys(assets_data).length === 0) {
             reject({
@@ -45,7 +45,7 @@ function validateIsEmptyInputData (assets_data) {
 };
 
 function validateEmptyFieldsVal (assets_data) {
-    logger.info("Inside validateEmptyFieldsVal");
+    logger.debug("Inside validateEmptyFieldsVal");
     return new Promise((resolve, reject) => {
         var invalid_fields = [];
         Object.keys(assets_data).map((field) => {
@@ -71,7 +71,7 @@ function validateEmptyFieldsVal (assets_data) {
 };
 
 function validateUnAllowedFieldsInInput (assets_data, fields_list) {
-    logger.info("Inside validateUnAllowedFieldsInInput");
+    logger.debug("Inside validateUnAllowedFieldsInInput");
     return new Promise((resolve, reject) => {
         var invalid_fields = _.difference(_.keys(assets_data), _.values(fields_list));
         if (invalid_fields.length > 0) {
@@ -90,7 +90,7 @@ function validateUnAllowedFieldsInInput (assets_data, fields_list) {
 };
 
 function validateAllRequiredFields (assets_data, required_fields) {
-    logger.info("Inside validateAllRequiredFields");
+    logger.debug("Inside validateAllRequiredFields");
     return new Promise((resolve, reject) => {
         var missing_required_fields = _.difference(_.values(required_fields), _.keys(assets_data));
         if (missing_required_fields.length > 0) {
@@ -109,7 +109,7 @@ function validateAllRequiredFields (assets_data, required_fields) {
 };
 
 function validateInputFieldTypes (assets_data) {
-    logger.info("Inside validateInputFieldTypes");
+    logger.debug("Inside validateInputFieldTypes");
     return new Promise((resolve, reject) => {
         var invalid_fields = [];
         Object.keys(assets_data).map((field) => {
@@ -136,7 +136,7 @@ function validateInputFieldTypes (assets_data) {
 };
 
 function validateDataTypes (field, prop_value) {
-    logger.info("Inside validateDataTypes");
+    logger.debug("Inside validateDataTypes");
     var fields_type = global.global_config.FIELD_DATA_TYPES;
     var field_status = false;
     Object.keys(fields_type).map((type) => {
@@ -156,7 +156,7 @@ function validateDataTypes (field, prop_value) {
 };
 
 function validateEnumValues (assets_data) {
-    logger.info("Inside validateEnumValues");
+    logger.debug("Inside validateEnumValues");
     return new Promise((resolve, reject) => {
         var invalid_fields = [];
         Object.keys(assets_data).map((field) => {
@@ -193,7 +193,7 @@ function validateEnumValues (assets_data) {
 };
 
 function validateEditableFields (update_data, editableFields) {
-    logger.info("Inside validateEditableFields");
+    logger.debug("Inside validateEditableFields");
     var invalid_fields = _.difference(_.keys(update_data), _.values(editableFields));
     invalid_fields.map((value) => {
         delete update_data[value];
@@ -206,7 +206,7 @@ function validateEditableFields (update_data, editableFields) {
 };
 
 function validateAssetExists(assets_data, asset_table) {
-    logger.info("Inside validateExists");
+    logger.debug("Inside validateExists");
     return new Promise((resolve, reject) => {
         var filter_expression = utils.createFilterExpression(assets_data);
         crud.postSearch(filter_expression, asset_table, (error, data) => {
@@ -231,11 +231,9 @@ function validateAssetExists(assets_data, asset_table) {
 };
 
 function validateAssetsExistsById(assets_id, asset_table) {
-    logger.info("Inside validateAssetsExistsById:")
+    logger.debug("Inside validateAssetsExistsById:")
     return new Promise((resolve, reject) => {
         crud.get(assets_id, asset_table, (error, data) => {
-            logger.info("validateAssetsExistsById"+JSON.stringify(error));
-            logger.info(data)
             if (error) {
                 reject(error);
             } else {
