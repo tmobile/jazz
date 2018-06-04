@@ -22,15 +22,15 @@
     @version: 1.0
 **/
 
-const utils = require("../utils.js")(); //Import the utils module.
+const utils = require("../utils.js"); //Import the utils module.
 const logger = require("../logger.js")(); //Import the logging module.
 
-module.exports = (assets_id, onComplete) => {
+module.exports = (assets_id, asset_table, onComplete) => {
     // initialize docCLient
     var docClient = utils.initDocClient();
 
     var params = {
-        TableName: global.ASSETS_TABLE
+        TableName: asset_table       
     };
     var callBack = (err, data) => {
         if (err) {

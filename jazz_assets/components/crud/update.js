@@ -21,12 +21,12 @@
     @version: 1.0
 **/
 
-const utils = require("../utils.js")(); //Import the utils module.
+const utils = require("../utils.js"); //Import the utils module.
 
-module.exports = (assets_id, update_data, onComplete) => {
+module.exports = (assets_id, update_data, asset_table, onComplete) => {
     var docClient = utils.initDocClient();
     var params = {
-        TableName: global.ASSETS_TABLE,
+        TableName: asset_table,
         Key: {
             "id": assets_id
         }

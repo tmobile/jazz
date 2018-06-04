@@ -6,12 +6,12 @@
      @version: 1.0
  **/
 
- const utils = require("../utils.js")(); //Import the utils module.
+ const utils = require("../utils.js"); //Import the utils module.
  const logger = require("../logger.js")(); //Import the logging module.
 
- module.exports = (query, onComplete) => {
-     // initialize dynamodb
-     var docClient = utils.initDocClient();
+module.exports = (query, asset_table, onComplete) => {
+    // initialize dynamodb
+    var docClient = utils.initDocClient();
 
      var filter = "";
      var insertAndString = " AND ";
@@ -19,7 +19,7 @@
      var attributeNames = {};
 
      var params = {
-         TableName: global.ASSETS_TABLE,
+         TableName: asset_table,
          IndexName: global.global_config.ASSETS_DOMAIN_SERVICE_INDEX,
          KeyConditionExpression: "#d = :service_domain and service = :service_name",
          ExpressionAttributeValues: {

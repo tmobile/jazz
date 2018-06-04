@@ -106,12 +106,10 @@ var toLowercase = (input_data) => {
 	return asset_data;
 };
 
-module.exports = () => {
-	return {
-		initDynamodb: initDynamodb,
-		initDocClient: initDocClient,
-		createFilterExpression: createFilterExpression,
-		toLowercase: toLowercase,
-		getDatabaseKeyName: getDatabaseKeyName
-	};
+module.exports = {
+	initDynamodb,
+	initDocClient,
+	createFilterExpression,
+	toLowercase,
+	getDatabaseKeyName
 };

@@ -22,11 +22,11 @@
     @version: 1.0
 **/
 
-const utils = require("../utils.js")(); //Import the utils module.
+const utils = require("../utils.js"); //Import the utils module.
 const Uuid = require("uuid/v4");
 const moment = require('moment');
 
-module.exports = (assets_data, onComplete) => {
+module.exports = (assets_data, asset_table, onComplete) => {
     var docClient = utils.initDocClient();
 
     var assets_id = Uuid();
@@ -37,7 +37,7 @@ module.exports = (assets_data, onComplete) => {
             "timestamp": timestamp
         },
         ReturnConsumedCapacity: "TOTAL",
-        TableName: global.ASSETS_TABLE
+        TableName: asset_table
     };
 
     Object.keys(assets_data).forEach((key) => {

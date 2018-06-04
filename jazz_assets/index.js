@@ -26,7 +26,8 @@ const configObj = require("./components/config.js"); //Import the environment da
 const logger = require("./components/logger.js")(); //Import the logging module.
 const crud = require("./components/crud")(); //Import the CRUD module.
 const global_config = require("./config/global-config.json"); //Import the logging module.
-const validateutils = require("./components/validation")();
+const validateutils = require("./components/validation");
+global.global_config = global_config;
 
 function handler(event, context, cb) {
     //Initializations
@@ -35,9 +36,10 @@ function handler(event, context, cb) {
     logger.info(event);
     var config = configObj(event);
     global.config = config;
-    global.global_config = global_config;
+    // global.global_config = global_config;
     var assets_id;
     var assets_data;
+    var asset_table = global.config.ASSETS_TABLE;
 
     if (event.path && event.path.id) {
         assets_id = event.path.id;
@@ -63,15 +65,19 @@ function handler(event, context, cb) {
 
     try {
 
-        global.ASSETS_TABLE = config.ASSETS_TABLE;
-
         genericInputValidation(event)
             .then(() => {
 
                 if (event.method === 'GET' && assets_id) {
                     logger.info('GET assets by ID : ' + assets_id);
-                    crud.get(assets_id, (error, data) => {
-                        handleResponse(error, data, event.path);
+                    processAssetData(assets_id, asset_table)
+                    .then(res => {
+                        logger.info("get asset by Id result:" + JSON.stringify(res));
+                        handleResponse(null, res, event.path);
+                    })
+                    .catch(error => {
+                        logger.error("update error:" + JSON.stringify(error));
+                        handleResponse(error, null, event.path);
                     });
                 }
 
@@ -80,7 +86,7 @@ function handler(event, context, cb) {
                 else if (event.method === 'PUT' && assets_id) {
                     logger.info('Update asset assets_id ' + assets_id);
                     var update_data = event.body;
-                    processAssetsUpdate(assets_id, update_data)
+                    processAssetsUpdate(assets_id, update_data, asset_table)
                         .then(res => {
                             logger.info("update result:" + JSON.stringify(res));
                             handleResponse(null, res.data, res.input);
@@ -95,7 +101,7 @@ function handler(event, context, cb) {
                 else if (event.method === 'POST' && !assets_id) {
                     logger.debug('Create new asset');
                     assets_data = event.body;
-                    processAssetCreation(assets_data)
+                    processAssetCreation(assets_data, asset_table)
                         .then(res => {
                             logger.info("create asset result:" + JSON.stringify(res));
                             handleResponse(null, res, assets_data);
@@ -109,7 +115,7 @@ function handler(event, context, cb) {
                 else if (event.method === 'POST' && assets_id === 'search') {
                     assets_data = event.body;
                     logger.info('POST search assets' + JSON.stringify(assets_data));
-                    processAssetSearch(assets_data)
+                    processAssetSearch(assets_data, asset_table)
                         .then(res => {
                             logger.info("search asset result:" + JSON.stringify(res));
                             handleResponse(null, res, assets_data);
@@ -174,63 +180,62 @@ function genericInputValidation(event) {
     });
 };
 
-function processAssetsUpdate(assets_id, update_data) {
+function processAssetData(assets_id, asset_table) {
     return new Promise((resolve, reject) => {
-        validateUpdateData(assets_id, update_data)
-            .then(res => updateAssetsData(assets_id, res.input))
-            .then(res => {
-                resolve(res);
-            })
-            .catch(error => {
-                reject(error)
-            });
-    });
-};
-
-function processAssetCreation(assets_data) {
-    return new Promise((resolve, reject) => {
-        validateCreateData(assets_data)
-            .then(() => createNewAsset(assets_data))
-            .then(res => {
-                resolve(res);
-            })
-            .catch(error => {
-                reject(error)
-            });
-    });
-};
-
-function processAssetSearch(assets_data) {
-    return new Promise((resolve, reject) => {
-        validateSearchData(assets_data)
-            .then(() => postSearch(assets_data))
-            .then(res => {
-                resolve(res);
-            })
-            .catch(error => {
-                reject(error)
-            });
-    });
-};
-
-function validateUpdateData(assets_id, update_data) {
-    logger.debug("Inside validateUpdateData");
-    return new Promise((resolve, reject) => {
-        validateutils.validateUpdatePayload(assets_id, update_data, (error, data) => {
+        crud.get(assets_id, asset_table, (error, data) => {
             if (error) {
                 reject(error);
             } else {
                 resolve(data);
             }
         });
+    })
+}
+
+function processAssetsUpdate(assets_id, update_data, asset_table) {
+    return new Promise((resolve, reject) => {
+        validateutils.validateUpdatePayload(assets_id, update_data, asset_table)
+            .then(res => updateAssetsData(assets_id, res.input, asset_table))
+            .then(res => {
+                resolve(res);
+            })
+            .catch(error => {
+                reject(error)
+            });
     });
 };
 
-function updateAssetsData(assets_id, update_data) {
+function processAssetCreation(assets_data, asset_table) {
+    return new Promise((resolve, reject) => {
+        validateutils.validateCreatePayload(assets_data, asset_table)
+            .then(() => createNewAsset(assets_data, asset_table))
+            .then(res => {
+                resolve(res);
+            })
+            .catch(error => {
+                reject(error)
+            });
+    });
+};
+
+function processAssetSearch(assets_data, asset_table) {
+    return new Promise((resolve, reject) => {
+        validateutils.validateSearchPayload(assets_data)
+            .then(() => postSearch(assets_data, asset_table))
+            .then(res => {
+                resolve(res);
+            })
+            .catch(error => {
+                reject(error)
+            });
+    });
+};
+
+function updateAssetsData(assets_id, update_data, asset_table) {
     logger.debug("Inside updateAssetsData");
     return new Promise((resolve, reject) => {
         if (Object.keys(update_data).length !== 0) {
-            crud.update(assets_id, update_data, (error, data) => {
+            crud.update(assets_id, update_data, asset_table, (error, data) => {
                 if (error) {
                     reject(error);
                 } else {
@@ -246,23 +251,10 @@ function updateAssetsData(assets_id, update_data) {
     });
 };
 
-function validateCreateData(assets_data) {
-    logger.debug("Inside validateCreateData");
-    return new Promise((resolve, reject) => {
-        validateutils.validateCreatePayload(assets_data, (error, data) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-};
-
-function createNewAsset(assets_data) {
+function createNewAsset(assets_data, asset_table) {
     logger.debug("Inside createNewAsset");
     return new Promise((resolve, reject) => {
-        crud.create(assets_data, (error, data) => {
+        crud.create(assets_data, asset_table, (error, data) => {
             if (error) {
                 reject(error);
             } else {
@@ -272,23 +264,10 @@ function createNewAsset(assets_data) {
     });
 };
 
-function validateSearchData(assets_data) {
-    logger.debug("Inside validateSearchData");
-    return new Promise((resolve, reject) => {
-        validateutils.validateSearchPayload(assets_data, (error, data) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(data);
-            }
-        });
-    });
-};
-
-function postSearch(assets_data) {
+function postSearch(assets_data, asset_table) {
     logger.debug("Inside postSearch");
     return new Promise((resolve, reject) => {
-        crud.postSearch(assets_data, (error, data) => {
+        crud.postSearch(assets_data, asset_table, (error, data) => {
             if (error) {
                 reject(error);
             } else {
@@ -297,3 +276,17 @@ function postSearch(assets_data) {
         });
     });
 };
+
+const exportable = {
+    handler,
+    genericInputValidation,
+    processAssetData,
+    processAssetsUpdate,
+    processAssetCreation,
+    processAssetSearch,
+    updateAssetsData,
+    createNewAsset,
+    postSearch
+}
+
+module.exports = exportable;
