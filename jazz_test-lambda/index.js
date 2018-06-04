@@ -23,7 +23,6 @@ var handler = (event, context, cb) => {
     }
     var requestJson
     if (event !== undefined && event.method !== undefined && event.method === 'POST') {
-      logger.info("reached here 1")
       if (!event.body) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Event Body not Defined")));
       } else if (!event.body.functionARN) {
@@ -57,7 +56,6 @@ var handler = (event, context, cb) => {
 
 var invokeLambda = (functionARN, inputJSON) => {
   return new Promise((resolve, reject) => {
-    logger.info("ARN IS VALID")
     try {
       var aws = require('aws-sdk');
       var lambda = new aws.Lambda({
@@ -68,18 +66,15 @@ var invokeLambda = (functionARN, inputJSON) => {
         Payload: JSON.stringify(inputJSON, null, 2) // pass params
       }, function (error, data) {
         if (error) {
-          logger.info("in error")
           logger.error(error)
           reject("Got error from Lambda invokation")
         } else if (data.Payload) {
-          logger.info("oMGGGGGG")
           logger.info(data)
           resolve(data)
         }
       });
     } catch (e) {
       reject("Error in invoking Lambda")
-      logger.info("Error In Invoking Lambda")
       logger.error(e)
     }
   })
