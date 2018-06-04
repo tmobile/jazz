@@ -30,52 +30,51 @@ module.exports = (assets_id, onComplete) => {
     var docClient = utils.initDocClient();
 
     var params = {
-        TableName: global.ASSETS_TABLE       
+        TableName: global.ASSETS_TABLE
     };
-    var callBack = (err,data)=> {
+    var callBack = (err, data) => {
         if (err) {
             onComplete(err);
         } else {
             var responseData = data.Item || data.Items;
             if (Object.keys(responseData).length === 0) {
-                    logger.debug('Invalid asset with id: ' + assets_id);
-                    onComplete({
-                        "result":"notFoundError",
-                        "message":'Invalid asset with id: ' + assets_id
-                    });
-                }
-            else{
+                logger.debug('Invalid asset with id: ' + assets_id);
+                onComplete({
+                    "result": "notFoundError",
+                    "message": 'Invalid asset with id: ' + assets_id
+                });
+            } else {
                 logger.debug('onComplete get responseData are : ' + JSON.stringify(responseData));
                 onComplete(null, responseData);
             }
         }
     };
-    if(assets_id){
-		params.Key = {
-			"id": assets_id
-		};
+    if (assets_id) {
+        params.Key = {
+            "id": assets_id
+        };
         docClient.get(params, (err, data) => {
-            callBack(err,data);
+            callBack(err, data);
         });
-    }else{        
-		var items = [];
-		var scanExecute = (callBack) => {
-			docClient.scan(params, (err, data) => {
-				if (err) {
-					callBack(err,null);
-				} else {
-					items = items.concat(data.Items);				
-					if (data.LastEvaluatedKey) {
-						params.ExclusiveStartKey = data.LastEvaluatedKey;
-						scanExecute(callBack);
-					} else {
-						var assets = {};
-						assets.Items = items;
-						callBack(null, assets);
-					}
-				}
-			});
-		};
-		scanExecute(callBack);			
+    } else {
+        var items = [];
+        var scanExecute = (callBack) => {
+            docClient.scan(params, (err, data) => {
+                if (err) {
+                    callBack(err, null);
+                } else {
+                    items = items.concat(data.Items);
+                    if (data.LastEvaluatedKey) {
+                        params.ExclusiveStartKey = data.LastEvaluatedKey;
+                        scanExecute(callBack);
+                    } else {
+                        var assets = {};
+                        assets.Items = items;
+                        callBack(null, assets);
+                    }
+                }
+            });
+        };
+        scanExecute(callBack);
     }
 };

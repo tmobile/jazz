@@ -49,15 +49,15 @@ var getDatabaseKeyName = (key) => {
 		return null;
 	}
 	var keyMap = {
-		"service" : "service",
-		"domain" : "domain",
-		"environment" : "environment",
-		"type" : "type",
-		"provider" : "provider",
-		"provider_id" : "provider_id"
+		"service": "service",
+		"domain": "domain",
+		"environment": "environment",
+		"type": "type",
+		"provider": "provider",
+		"provider_id": "provider_id"
 	}
 	// mapping between database field names and keys in the request payload, they might be same for now.
-	if(key === keyMap[key]){
+	if (key === keyMap[key]) {
 		return keyMap[key];
 	} else {
 		return null

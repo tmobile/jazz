@@ -26,25 +26,25 @@ const logger = require("../logger.js")();
 const validateUtils = require("./common.js")();
 const utils = require("../utils.js")();
 
-module.exports =  (assets_data, onComplete) => {
-    logger.info("Inside validate post search:"+JSON.stringify(assets_data));
-	assets_data = utils.toLowercase(assets_data);
-    
+module.exports = (assets_data, onComplete) => {
+    logger.info("Inside validate post search:" + JSON.stringify(assets_data));
+    assets_data = utils.toLowercase(assets_data);
+
     validateIsEmptyInputData(assets_data)
-    .then(() => validateEmptyFieldsVal(assets_data))
-    .then((res) => {
-        onComplete(null, res);
-    })
-    .catch(error => {
-        onComplete(error, null);
-    });
+        .then(() => validateEmptyFieldsVal(assets_data))
+        .then((res) => {
+            onComplete(null, res);
+        })
+        .catch(error => {
+            onComplete(error, null);
+        });
 };
 
 function validateIsEmptyInputData(assets_data) {
     logger.debug("Inside validateIsEmptyInputData");
     return new Promise((resolve, reject) => {
         validateUtils.validateIsEmptyInputData(assets_data, (error, data) => {
-            if(error){
+            if (error) {
                 reject(error);
             } else {
                 resolve(data);
@@ -57,7 +57,7 @@ function validateEmptyFieldsVal(assets_data) {
     logger.debug("Inside validateEmptyFieldsVal");
     return new Promise((resolve, reject) => {
         validateUtils.validateEmptyFieldsVal(assets_data, (error, data) => {
-            if(error){
+            if (error) {
                 reject(error);
             } else {
                 resolve(data);

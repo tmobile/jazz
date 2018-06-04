@@ -27,10 +27,10 @@ var _create = require('./create.js');
 var _update = require('./update.js');
 
 module.exports = () => {
-    return {
-        get: _get,
-        update: _update,
-        create: _create,
-        postSearch: _postSearch
-    };
+  return {
+    get: _get,
+    update: _update,
+    create: _create,
+    postSearch: _postSearch
+  };
 };

@@ -38,13 +38,13 @@ module.exports = (assets_id, update_data, onComplete) => {
     var attributeNames = {};
     var count = 0;
     keys_list.map((key) => {
-        var key_name = key;		
-		if(Object.keys(update_data).indexOf(key) > -1){
-			update_exp = update_exp + '#key' + count + ' = :' + key_name + ", ";
-			attributeValues[(":" + key_name)] = update_data[key];
-			attributeNames[("#key" + count)] = key_name;
-			count++;
-		}
+        var key_name = key;
+        if (Object.keys(update_data).indexOf(key) > -1) {
+            update_exp = update_exp + '#key' + count + ' = :' + key_name + ", ";
+            attributeValues[(":" + key_name)] = update_data[key];
+            attributeNames[("#key" + count)] = key_name;
+            count++;
+        }
     });
     if (update_exp) {
         params.UpdateExpression = "set " + update_exp.substring(0, update_exp.length - 2);
@@ -56,7 +56,10 @@ module.exports = (assets_id, update_data, onComplete) => {
             if (err) {
                 onComplete(err);
             } else {
-                onComplete(null, {data: data.Attributes, input:update_data});
+                onComplete(null, {
+                    data: data.Attributes,
+                    input: update_data
+                });
             }
         });
     } else {

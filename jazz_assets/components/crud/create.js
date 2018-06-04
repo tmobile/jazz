@@ -35,7 +35,7 @@ module.exports = (assets_data, onComplete) => {
         Item: {
             "id": assets_id,
             "timestamp": timestamp
-			},
+        },
         ReturnConsumedCapacity: "TOTAL",
         TableName: global.ASSETS_TABLE
     };
@@ -43,22 +43,22 @@ module.exports = (assets_data, onComplete) => {
     Object.keys(assets_data).forEach((key) => {
         var param_key = key;
         var param_value = assets_data[key];
-		
+
         if (!param_value) {
             params.Item[param_key] = null;
         } else {
-			params.Item[param_key] = param_value;
+            params.Item[param_key] = param_value;
         }
     });
 
-   docClient.put(params, (err, data) => {
+    docClient.put(params, (err, data) => {
         if (err) {
             onComplete({
                 "result": "databaseError",
                 "message": "Error adding Item to dynamodb " + err.message
             }, null);
         } else {
-			onComplete(null, {
+            onComplete(null, {
                 "assets_id": assets_id
             });
         }

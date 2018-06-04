@@ -103,7 +103,7 @@ function validateEnumValues(update_data) {
 function validateEditableFields(update_data, editableFields) {
     logger.debug("Inside validateEditableFields");
     return new Promise((resolve, reject) => {
-        validateUtils.validateEditableFields(update_data,  editableFields,(error, data) => {
+        validateUtils.validateEditableFields(update_data, editableFields, (error, data) => {
             if (error) {
                 reject(error);
             } else {
