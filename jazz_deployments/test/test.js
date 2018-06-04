@@ -184,14 +184,20 @@ describe('jazz_deployments', function () {
     it("should indicate missing required data error while validating create payload for new deployment", () => {
       event.query = {};
       event.path = {};
-      event.body.service = "";
-      index.validateDeploymentDetails(config, event.body)
-        .catch(error => {
-          expect(error).to.include({
-            result: 'inputError'
+      
+      var required_fields = config.DEPLOYMENT_CREATION_REQUIRED_FIELDS;
+      
+      for (var i in required_fields) {
+        const payload = Object.assign({}, event.body);
+        const removeField = required_fields[i];
+        delete payload[required_fields[i]];
+        index.validateDeploymentDetails(config, payload)
+          .catch(error => {
+            expect(error).to.include({result:'inputError',message:'Following field(s) are required - '+removeField});  
           });
-        });
+      };
     });
+
   });
 
   describe('addNewDeploymentDetails', () => {
@@ -232,11 +238,49 @@ describe('jazz_deployments', function () {
       event.query.invalid = "";
       index.validateQueryParams(config, event.query)
         .catch(error => {
-          expect(error).to.include({
-            "result": "inputError"
-          })
+          expect(error).to.include({ result: 'inputError',
+          message: 'Following fields are invalid :  invalid. ' })
         });
     });
+
+    it("should indicate that required fields are missing error while validating query params", () => {
+      const required_fields = config.REQUIRED_PARAMS;
+      for(var i in required_fields) {
+        const payload = Object.assign({}, event.query);
+        const removedField = required_fields[i];
+        delete payload[required_fields[i]]
+        
+        index.validateQueryParams(config, payload)
+          .catch(error => {
+            expect(error).to.include({ result: 'inputError',
+            message: 'Following field(s) are required - '+removedField })
+          });
+      }
+    });
+
+    it("should indicate that required field values are missing while validating query params", () => {
+      const required_fields = config.REQUIRED_PARAMS;
+      for(var i in required_fields) {
+        const payload = Object.assign({}, event.query);
+        const removedField = required_fields[i];
+        payload[required_fields[i]] = "";
+        
+        index.validateQueryParams(config, payload)
+          .catch(error => {
+            expect(error).to.include({ result: 'inputError',
+            message: 'Following field(s) value cannot be empty - '+removedField })
+          });
+      }
+    });
+
+    it("should indicate empty payload error while validating query params", () => {
+      index.validateQueryParams(config, {})
+        .catch(error => {
+          expect(error).to.include({ result: 'inputError',
+          message: 'Input payload cannot be empty' })
+        });
+    });
+
   });
 
   describe('getDeploymentDetailsByQueryParam', () => {
@@ -358,10 +402,50 @@ describe('jazz_deployments', function () {
       });
       index.validateUpdateInput(config, update_data, tableName, event.path.id)
         .catch(error => {
-          expect(error).to.include({result: "inputError"});
+          expect(error).to.include({"result":"inputError","message":"Only following values can be allowed for status field - "+config.DEPLOYMENT_STATUS.join(", ")});
           AWS.restore("DynamoDB.DocumentClient");
         });
     });
+
+    it("should indicate input error while validating update payload for deployment", () => {
+      index.validateUpdateInput(config, {}, tableName, event.path.id)
+        .catch(error => {
+          expect(error).to.include({result:"inputError", message:"Input payload cannot be empty"});
+        });
+    });
+
+    it("should remove non-editable fileds from the payload while validaing the update data for deployment", () => {
+      const non_editable_fields = config.REQUIRED_PARAMS;
+      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+        var dataObj = {
+          Items: [event.body]
+        }
+        return cb(null, dataObj);
+      });
+      index.validateUpdateInput(config, event.body, tableName, event.path.id)
+      .then(res => {
+        expect(event.body).to.not.have.keys(non_editable_fields);
+        AWS.restore("DynamoDB.DocumentClient");
+      });
+    });
+
+    it("should remove empty fileds from the payload while validaing the update data for deployment", () => {
+      const non_editable_fields = config.REQUIRED_PARAMS;
+      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+        var dataObj = {
+          Items: [event.body]
+        }
+        return cb(null, dataObj);
+      });
+      const payload = {
+        "scm_branch":""
+      }
+      index.validateUpdateInput(config, payload, tableName, event.path.id)
+      .then(res => {
+        expect(payload).to.be.an('object').that.is.empty;
+        AWS.restore("DynamoDB.DocumentClient");
+      })
+    })
 
     it("should indicate notFound error while validating update payload for deployment", () => {
       var update_data = {
@@ -375,7 +459,10 @@ describe('jazz_deployments', function () {
       });
       index.validateUpdateInput(config, update_data, tableName, event.path.id)
       .catch(error => {
-        expect(error).to.include({result: 'notFound'});
+        expect(error).to.include({
+          result: "notFound",
+          message: 'Cannot find deployment details with id :' + event.path.id
+      });
         AWS.restore("DynamoDB.DocumentClient");
       });
     });
