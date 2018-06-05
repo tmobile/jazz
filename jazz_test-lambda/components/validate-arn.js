@@ -22,6 +22,5 @@ var validateARN = (arn) => {
 
 module.exports = (arn) => {
   var isarnvalid = validateARN(arn);
-  logger.info("inside validate function")
   return isarnvalid;
 };
