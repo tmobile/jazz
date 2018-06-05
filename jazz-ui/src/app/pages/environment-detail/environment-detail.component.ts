@@ -205,7 +205,7 @@ api_doc_name:string='';
   testApi(type){
       switch(type){
           case 'api':
-            let swaggerFile = this.swaggerLocation(this.service.domain, this.service.name, this.envSelected);
+            let swaggerFile = '/' + this.service.domain + '_' + this.service.name + '/' + this.envSelected + '/swagger.json';
             return window.open(environment.urls['swagger_editor'] + '/?url=' + environment['api_doc_name'] + swaggerFile);
           case 'website' :
           if(this.endpoint_env!=(undefined||'')){
@@ -269,10 +269,6 @@ isOSS:boolean=false;
 
   }
 
-
-  swaggerLocation(domain, name, env) {
-    return '/' + domain + '/' + name + '/' + env + '/swagger.json';
-  }
 
   ngOnChanges(x:any){
     this.fetchService(this.serviceId);
