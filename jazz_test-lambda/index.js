@@ -43,16 +43,16 @@ var handler = (event, context, cb) => {
       if (!event.body) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Event Body not Defined")));
       } else if (!event.body.functionARN) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Function ARN to be tested not Defined")));
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("No function ARN provided")));
       } else if (!validateARN(event.body.functionARN)) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Function ARN to be tested is Invalid")));
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Function ARN is invalid")));
       } else if (!event.body.inputJSON) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function to be tested is not Defined")));
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is not defined")));
       } else {
         var functionARN = event.body.functionARN;
         
         if (event.body.inputJSON && !validateJSON(event.body.inputJSON)) {
-          return cb(JSON.stringify(errorHandler.throwInputValidationError("Not a valid JSON")));
+          return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is an invalid JSON")));
         }
         var inputJSON = JSON.parse(event.body.inputJSON);
         invokeLambda(functionARN,inputJSON).then((data) => {
@@ -61,12 +61,14 @@ var handler = (event, context, cb) => {
           }
           return cb(null, responseObj(testResponse, event.body)); // Test Failed 
         }).catch((err) => {
+          logger.info(" TEST FAILED  : " + JSON.stringify(err));
           return cb(null, responseObj(testResponse, event.body)); // Test Failed 
         })
       }
     }
   } catch (e) {
-    cb(JSON.stringify(errorHandler.throwInternalServerError("Lambda Invocation Failed")));
+    logger.error("Failed to invoke lambda : " + JSON.stringify(err));
+    cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to invoke lambda")));
   }
 
 };
@@ -91,8 +93,9 @@ var invokeLambda = (functionARN, inputJSON) => {
         }
       });
     } catch (e) {
-      reject("Error in invoking Lambda")
       logger.error(e)
+      reject("Error in invoking Lambda")
+      
     }
   })
 }
