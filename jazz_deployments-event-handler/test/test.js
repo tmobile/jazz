@@ -440,7 +440,7 @@ describe("processCreateEvent", () => {
       reqStub.restore();
     }
   });
-  it("should call processEvents with SvcPayload", () => {
+  it("should call procesRequest with SvcPayload", () => {
     var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
       x: 1
     })
@@ -449,7 +449,7 @@ describe("processCreateEvent", () => {
       procesRequestStub.restore()
     })
   });
-  it("should call processEvents with SvcPayload", () => {
+  it("should call procesRequest with SvcPayload and handle error when processRequest fails ", () => {
     var procesRequestStub = sinon.stub(index, "procesRequest").rejects({
       message: "process request failed"
     })
