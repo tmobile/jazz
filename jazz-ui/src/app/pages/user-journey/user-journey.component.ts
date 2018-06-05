@@ -5,8 +5,7 @@ import {UserJourney} from "./user-journey";
 @Component({
   selector: 'user-journey',
   templateUrl: './user-journey.component.html',
-  styleUrls: ['./user-journey.component.scss'],
-  encapsulation: ViewEncapsulation.None
+  styleUrls: ['./user-journey.component.scss']
 })
 export class UserJourneyComponent implements OnInit {
   public last = false;
