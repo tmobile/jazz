@@ -1,7 +1,7 @@
 {
   "name": "api-nodejs-template",
   "version": "0.0.1",
-  "description": "Nodejs Template project",
+  "description": "Provides an API for Testing a lambda function and returns the Execution Status",
   "main": "index.js",
   "private": true,
   "author": [],

@@ -85,10 +85,10 @@ var invokeLambda = (functionARN, inputJSON) => {
         Payload: JSON.stringify(inputJSON, null, 2) // pass params
       }, function (error, data) {
         if (error) {
-          logger.error(error)
-          reject("Got error from Lambda invokation")
+          logger.error(error);
+          reject(error)
         } else if (data.Payload) {
-          logger.info(data)
+          logger.info(data);
           resolve(data)
         }
       });
