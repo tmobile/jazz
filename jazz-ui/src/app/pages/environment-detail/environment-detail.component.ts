@@ -31,7 +31,7 @@ export class EnvironmentDetailComponent implements OnInit {
 isFunction:boolean = false;
 breadcrumbs = [];
 api_doc_name:string='';
-  selectedTab = 0; 
+  selectedTab = 0;
   service: any= {};
   friendly_name: any;
   status_val:number;
@@ -77,18 +77,18 @@ api_doc_name:string='';
   }
 
   onTabSelected (i) {
-    
+
     this.selectedTab = i;
   };
 
   EnvLoad(event){
     this.environment_obj=event.environment[0];
-    this.status_val = parseInt(status[this.environment_obj.status]); 
+    this.status_val = parseInt(status[this.environment_obj.status]);
     if((this.status_val < 2) || (this.status_val == 4) )
     {
       this.disablingApiButton=false;
     }
-  
+
     this.status_inactive=true;
   }
 
@@ -157,7 +157,7 @@ api_doc_name:string='';
 
 
   fetchService(id: string){
-      
+
       this.isLoadingService = true;
 
       let cachedData = this.cache.get(id);
@@ -188,14 +188,14 @@ api_doc_name:string='';
                       this.isFunction=true;
 
                   this.cache.set(id, this.service);
-                  this.onDataFetched(this.service);                  
-                  this.envoverview.notify(this.service);                  
+                  this.onDataFetched(this.service);
+                  this.envoverview.notify(this.service);
               },
               err => {
                   this.isLoadingService = false;
                   let errorMessage = this.messageservice.errorMessage(err,"serviceDetail");
                   this.toast_pop('error', 'Oops!', errorMessage)
-                  
+
               }
           )
       }
@@ -205,7 +205,7 @@ api_doc_name:string='';
   testApi(type){
       switch(type){
           case 'api':
-            let swaggerFile = environment.swaggerLocation(this.service.domain, this.service.name, this.envSelected);
+            let swaggerFile = this.swaggerLocation(this.service.domain, this.service.name, this.envSelected);
             return window.open(environment.urls['swagger_editor'] + '/?url=' + environment['api_doc_name'] + swaggerFile);
           case 'website' :
           if(this.endpoint_env!=(undefined||'')){
@@ -228,8 +228,8 @@ api_doc_name:string='';
  toast_pop(error,oops,errorMessage)
   {
      var tst = document.getElementById('toast-container');
-         tst.classList.add('toaster-anim');                            
-        this.toasterService.pop(error,oops,errorMessage);        
+         tst.classList.add('toaster-anim');
+        this.toasterService.pop(error,oops,errorMessage);
         setTimeout(() => {
             tst.classList.remove('toaster-anim');
           }, 3000);
@@ -254,7 +254,7 @@ isOSS:boolean=false;
         this.envSelected = params['env'];
         this.fetchService(id);
         this.friendly_name = this.envSelected;
-          
+
       });
       this. breadcrumbs = [
         {
@@ -266,7 +266,12 @@ isOSS:boolean=false;
           'link' : ''
         }
       ];
-  
+
+  }
+
+
+  swaggerLocation(domain, name, env) {
+    return '/' + domain + '/' + name + '/' + env + '/swagger.json';
   }
 
   ngOnChanges(x:any){
