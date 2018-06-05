@@ -36,7 +36,6 @@ function handler(event, context, cb) {
     logger.info(event);
     var config = configObj(event);
     global.config = config;
-    // global.global_config = global_config;
     var assets_id;
     var assets_data;
     var asset_table = global.config.ASSETS_TABLE;

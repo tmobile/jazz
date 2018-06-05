@@ -48,7 +48,7 @@ function validateEmptyFieldsVal(assets_data) {
     logger.debug("Inside validateEmptyFieldsVal");
     return new Promise((resolve, reject) => {
         var invalid_fields = [];
-        Object.keys(assets_data).map((field) => {
+        Object.keys(assets_data).forEach((field) => {
             var value = assets_data[field];
             if (!value) {
                 invalid_fields.push(field);
@@ -112,7 +112,7 @@ function validateInputFieldTypes(assets_data) {
     logger.debug("Inside validateInputFieldTypes");
     return new Promise((resolve, reject) => {
         var invalid_fields = [];
-        Object.keys(assets_data).map((field) => {
+        Object.keys(assets_data).forEach((field) => {
             if (assets_data[field]) {
                 if (!validateDataTypes(field, assets_data[field])) {
                     invalid_fields.push(field);
@@ -139,7 +139,7 @@ function validateDataTypes(field, prop_value) {
     logger.debug("Inside validateDataTypes");
     var fields_type = global.global_config.FIELD_DATA_TYPES;
     var field_status = false;
-    Object.keys(fields_type).map((type) => {
+    Object.keys(fields_type).forEach((type) => {
         if (field === type) {
             if (fields_type[type] === 'String') {
                 if (prop_value && (typeof prop_value === 'string' || prop_value instanceof String)) {
@@ -159,7 +159,7 @@ function validateEnumValues(assets_data) {
     logger.debug("Inside validateEnumValues");
     return new Promise((resolve, reject) => {
         var invalid_fields = [];
-        Object.keys(assets_data).map((field) => {
+        Object.keys(assets_data).forEach((field) => {
             if (assets_data[field]) {
                 var value = assets_data[field];
                 switch (field) {
@@ -195,13 +195,15 @@ function validateEnumValues(assets_data) {
 function validateEditableFields(update_data, editableFields) {
     logger.debug("Inside validateEditableFields");
     var invalid_fields = _.difference(_.keys(update_data), _.values(editableFields));
-    invalid_fields.map((value) => {
-        delete update_data[value];
+    var editable_data = Object.keys(update_data).filter(key => {return (invalid_fields.indexOf(key) > -1) ? false : true;});
+    var data = {};
+    editable_data.forEach(key => {
+        data[key] = update_data[key]
     });
-
+   
     return ({
         result: "success",
-        input: update_data
+        input: data
     });
 };
 

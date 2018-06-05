@@ -37,7 +37,7 @@ module.exports = (assets_id, update_data, asset_table, onComplete) => {
     var attributeValues = {};
     var attributeNames = {};
     var count = 0;
-    keys_list.map((key) => {
+    keys_list.forEach((key) => {
         var key_name = key;
         if (Object.keys(update_data).indexOf(key) > -1) {
             update_exp = update_exp + '#key' + count + ' = :' + key_name + ", ";

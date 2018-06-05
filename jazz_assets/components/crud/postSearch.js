@@ -34,7 +34,7 @@
      var keys_list = global.global_config.ASSET_SEARCH_OPTIONAL_FILTER_PARAMS;
 
      // Generate filter string
-     keys_list.map((key) => {
+     keys_list.forEach((key) => {
          var key_name = utils.getDatabaseKeyName(key);
 
          if (query[key] && key_name) {

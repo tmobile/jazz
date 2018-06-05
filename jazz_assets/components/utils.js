@@ -90,7 +90,7 @@ var createFilterExpression = (assets_data) => {
 
 var toLowercase = (input_data) => {
 	var asset_data = {};
-	Object.keys(input_data).map((field) => {
+	Object.keys(input_data).forEach((field) => {
 		if (input_data[field] && input_data[field].constructor !== Array) {
 			if (global.global_config.CASE_SENSITIVE_FIELDS.indexOf(field.toLowerCase()) > -1) {
 				asset_data[field.toLowerCase()] = input_data[field].toLowerCase();
