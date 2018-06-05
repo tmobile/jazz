@@ -621,6 +621,7 @@ export class ServiceOverviewComponent implements OnInit {
         friendly_name: this.friendlist
       }
     }
+
     if (this.Environments.length == 0) {
       this.noSubEnv = true;
     }
@@ -632,6 +633,8 @@ export class ServiceOverviewComponent implements OnInit {
     }
 
     this.cache.set('envList', this.list);
+
+
   }
 
   sortEnvArr() {

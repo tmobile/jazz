@@ -257,7 +257,9 @@ def parseJson(jsonString) {
 }
 
 def getRepoCommitHash() {
-    return sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+    dir(getRepoName()) {
+        return sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+    }
 }
 
 def getRepoName(){

@@ -80,6 +80,10 @@ node() {
 		}
 	}
 
+	if(!config){
+		error "Failed to fetch service metadata from catalog"
+	}
+
 	dir(repo_name)
 	{
 		scmModule.setServiceConfig(config)
@@ -135,7 +139,7 @@ node() {
 		}
 
 
-		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
+		
 		def requestId = utilModule.generateRequestId()
 		if (requestId != null) {
 			events.setRequestId(requestId)
@@ -143,6 +147,7 @@ node() {
 		} else {
 			error "Request Id Generation failed"
 		}
+		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
 		stage('Pre-Build Validation') {
 			try {

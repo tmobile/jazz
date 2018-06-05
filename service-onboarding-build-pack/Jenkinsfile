@@ -102,14 +102,14 @@ node  {
 
 			} else {
 				send_status_email("FAILED")
-				events.sendFailureEvent('VALIDATE_INPUT', ex.getMessage(), context_map)
-				error "Invalid ${service_config['runtime']}"
+				events.sendFailureEvent('VALIDATE_INPUT', "Invalid runtime: ${service_config['runtime']}", context_map)
+				error "Invalid runtime: ${service_config['runtime']}"
 			}
 
 		} else {
 			send_status_email("FAILED")
-			events.sendFailureEvent('VALIDATE_INPUT', ex.getMessage(), context_map)
-			error "Invalid Service Type"
+			events.sendFailureEvent('VALIDATE_INPUT', "Invalid service type", context_map)
+			error "Invalid service type"
 		}
 		events.sendCompletedEvent('VALIDATE_INPUT', 'input validation completed', context_map)
 	}
