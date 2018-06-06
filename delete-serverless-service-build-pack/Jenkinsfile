@@ -469,7 +469,7 @@ def cleanUpApiGatewayResources(stage, path) {
 @NonCPS
 def parseJson(jsonString) {
 	def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
-	def m = [: ]
+	def m = [:]
 	m.putAll(lazyMap)
 	return m
 }
