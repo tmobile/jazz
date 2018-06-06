@@ -168,7 +168,7 @@ function validateEnumValues(assets_data) {
                             invalid_fields.push(field);
                         }
                         break;
-                    case 'type':
+                    case 'asset_type':
                         if (global.global_config.ASSET_TYPES.indexOf(value) === -1) {
                             invalid_fields.push(field);
                         }

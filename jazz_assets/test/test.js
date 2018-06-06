@@ -37,7 +37,7 @@ describe('jazz_assets', function () {
         "provider_id": "arn:aws:execute-api:example",
         "tags": ["check"],
         "domain": "jazztest",
-        "type": "apigateway"
+        "asset_type": "apigateway"
       }
     };
     context = awsContext();
@@ -123,25 +123,25 @@ describe('jazz_assets', function () {
     it("should indicate invalid input data type error while validating create payload", () => {
       var payload = Object.assign({}, event.body);
       payload.tags = "invalid";
-      payload.type = ["invalidArray"]
+      payload.asset_type = ["invalidArray"]
       var validateCreatePayload = validateutils.validateCreatePayload(payload, assetTable)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
-            message: "The following field's value/type is not valid - tags, type"
+            message: "The following field's value/asset_type is not valid - tags, asset_type"
           });
         });
     });
 
-    it("should indicate invalid status and type value while validating create payload", () => {
+    it("should indicate invalid status and asset_type value while validating create payload", () => {
       var payload = Object.assign({}, event.body);
       payload.status = "invalidStatus";
-      payload.type = "invalidType"
+      payload.asset_type = "invalidType"
       var validateCreatePayload = validateutils.validateCreatePayload(payload, assetTable)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
-            message: "The following field's value are not valid - status, type"
+            message: "The following field's value are not valid - status, asset_type"
           });
         });
     });

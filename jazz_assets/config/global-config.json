@@ -3,7 +3,7 @@
 		"service",
 		"domain",
 		"environment",
-		"type",
+		"asset_type",
 		"provider",
 		"provider_id",
 		"created_by",
@@ -14,7 +14,7 @@
 		"service",
 		"domain",
 		"environment",
-		"type",
+		"asset_type",
 		"provider",
 		"provider_id"
 	],
@@ -39,13 +39,13 @@
 	"CASE_SENSITIVE_FIELDS": [
 		"environment",
 		"status",
-		"type"
+		"asset_type"
 	],
 	"FIELD_DATA_TYPES": {
 		"service": "String",
 		"domain": "String",
 		"environment": "String",
-		"type": "String",
+		"asset_type": "String",
 		"provider": "String",
 		"provider_id": "String",
 		"created_by": "String",
@@ -54,7 +54,7 @@
 	},
 	"ASSET_SEARCH_OPTIONAL_FILTER_PARAMS": [
 		"environment",
-		"type",
+		"asset_type",
 		"provider",
 		"provider_id"
 	],

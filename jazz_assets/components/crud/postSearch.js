@@ -38,13 +38,7 @@
          var key_name = utils.getDatabaseKeyName(key);
 
          if (query[key] && key_name) {
-             if (key_name === "type") {
-                 // hack - to be removed: special case to deal with reserved keyword - 'type'
-                 filter = filter + " #asset_type = :" + key_name + insertAndString;
-                 params.ExpressionAttributeNames["#asset_type"] = key_name;
-             } else {
-                 filter = filter + key_name + " = :" + key_name + insertAndString;
-             }
+             filter = filter + key_name + " = :" + key_name + insertAndString;
              params.ExpressionAttributeValues[":" + key_name] = query[key];
          }
      });

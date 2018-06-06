@@ -52,7 +52,7 @@ var getDatabaseKeyName = (key) => {
 		"service": "service",
 		"domain": "domain",
 		"environment": "environment",
-		"type": "type",
+		"asset_type": "asset_type",
 		"provider": "provider",
 		"provider_id": "provider_id"
 	}
@@ -67,14 +67,14 @@ var getDatabaseKeyName = (key) => {
 
 var createFilterExpression = (assets_data) => {
 
-	var asset_type = assets_data.type;
+	var asset_type = assets_data.asset_type;
 	var filter_expression = {};
 	if (asset_type === 's3' || asset_type === 'cloudfront' || asset_type === 'lambda') {
 		filter_expression = {
 			'service': assets_data.service,
 			'domain': assets_data.domain,
 			'provider': assets_data.provider,
-			'type': asset_type,
+			'asset_type': asset_type,
 			'environment': assets_data.environment
 		};
 	} else {
