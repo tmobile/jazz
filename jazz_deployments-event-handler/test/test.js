@@ -22,6 +22,7 @@ const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon');
 const logger = require("../components/logger.js");
 const configObj = require("../components/config.js");
+const rp = require('request-promise-native');
 
 var reqStub;
 var event = {
@@ -737,4 +738,62 @@ describe("processEvent",()=>{
   })
 })
 
+})
+describe("handler",()=>{
+  result = {
+    result: "sample Resopnse"
+  }
+  record = {
+		"processed_events": 3,
+		"failed_events": 1
+  }
+  error ={
+    message: "sample error message"
+  }
+  var rpStub,getTokenRequestStub,getAuthResponseStub,processEventRecordsStub,getEventProcessStatusStub;
+  beforeEach(()=>{
+   rpStub =   sinon.stub(rp, 'Request').returns(Promise.resolve(result));
+   getTokenRequestStub =  sinon.stub(index,"getTokenRequest").returns("sample URL");
+   getAuthResponseStub =  sinon.stub(index,"getAuthResponse").resolves("sampleAuthToken");
+   processEventRecordsStub =  sinon.stub(index,"processEventRecords").resolves(result);
+   getEventProcessStatusStub =  sinon.stub(index,"getEventProcessStatus").returns(record);
+  })
+  afterEach(()=>{
+    if(rpStub){rpStub.restore()}
+    if(getTokenRequestStub){getTokenRequestStub.restore()}
+    if(getAuthResponseStub){getAuthResponseStub.restore()}
+    if(processEventRecordsStub){processEventRecordsStub.restore()}
+    if(getEventProcessStatusStub){getEventProcessStatusStub.restore()}
+  })
+  it("Should send Request for authtoken ",()=>{
+    index.handler(event,context,(error,records)=>{
+      sinon.assert.calledOnce(rpStub)
+    })
+  })
+  it("should call processEventRecord",()=>{
+    index.handler(event,context,(error,records)=>{
+      sinon.assert.calledOnce(processEventRecordsStub)
+    })
+  })
+  it("should call getEventProcessStatus after processing Events ",()=>{
+    index.handler(event,context,(error,records)=>{
+      sinon.assert.calledOnce(getEventProcessStatusStub)
+    })
+  })
+   
+  it("should return the record of processed and falied events ",()=>{
+    index.handler(event,context,(error,records)=>{
+      expect(records.processed_events).to.eq(3)
+      expect(records.failed_events).to.eq(1)
+    })
+  })
+  it("should catch error and return records when processEventRecords throws error ",()=>{
+    processEventRecordsStub.restore()
+    processEventRecordsStub =  sinon.stub(index,"processEventRecords").rejects(result);
+    index.handler(event,context,(error,records)=>{
+      sinon.assert.calledOnce(processEventRecordsStub)
+      expect(records.processed_events).to.eq(3)
+      expect(records.failed_events).to.eq(1)
+    })
+  })
 })
