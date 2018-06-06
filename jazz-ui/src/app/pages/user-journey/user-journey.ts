@@ -25,21 +25,21 @@ export const UserJourney = [
   },
   {
     message: `You have just created your service! Currently the status column will show "creation started"
-    After a few minutes the status will change to "creation completed" and then you can begin making changes to your service.`,
+    After a few minutes the status will change to "active" and then you can begin making changes to your service.`,
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-go-to-service.mp4?raw=true",
   },
   {
-    message: "This link will take you to the repository in Bitbucket.",
+    message: "This link will take you to the repository in Git.",
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-service-details.mp4?raw=true"
   },
   {
-    message: "From Bitbucket you will clone the repository and create a new feature branch. Make a change in that branch and push it back to Bitbucket. Jazz watches the repository and will create a new non-production environment for each branch it detects.",
+    message: "From Git you will clone the repository and create a new feature branch. Make a change in that branch and push it back to Git. Jazz watches the repository and will create a new non-production environment for each branch it detects.",
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-bitbucket-environment.mp4?raw=true",
     class: "modal-overlay",
     contentStyle: {"padding": "4rem", "z-index": 1},
   },
   {
-    message: `This is the Environment Details page. Here you can see all of this service's environments as well as the deployment status of those environments.`,
+    message: `This is the environment details page. Here you can see all of this service's environments as well as the deployment status of those environments.`,
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-go-to-environment.mp4?raw=true",
     class: "modal-overlay-next"
   },
