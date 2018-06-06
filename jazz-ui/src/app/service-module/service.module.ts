@@ -57,8 +57,7 @@ for(let i in specificComponents){
     ...declarationsArray,
     // AdvFilters,
     
-  ],
-  
+  ]
 })
 export class ServiceModule {
   constructor(){

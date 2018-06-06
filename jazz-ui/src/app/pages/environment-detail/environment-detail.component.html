@@ -2,7 +2,7 @@
     <div class="view-hdr-wrp">
         <jazz-header class="hide-for-mobile"></jazz-header>
     </div>
-    
+    <side-tile-fixed [inputData]="recentActivities" [actState]='mobSecState'></side-tile-fixed>
     <div class="view-container" [class.translate-for-mob]="mobSecState == 2">
         <div class="services-content-wrp">
                 <!-- <span  class="reduxC" *ngIf='service.status == "deletion completed"'></span>
@@ -21,12 +21,12 @@
                         <div title='{{envStatus}} '*ngIf='status_val == 3' class='icon-In-Progress inactive-icon'></div>
                         <div title='{{envStatus}}' *ngIf='status_val > 3' class='icon-icon-inactive inactive-icon'></div>
 
-                </h1>
+                            </h1>
 
                 <span class="page-sub-title">{{service.name}}</span><br>
             </div>
             <btn-jazz-secondary *ngIf="service.serviceType=='api'" [disablebtn]='disablingApiButton' class="testApiBtn" text="TEST API" (click)="testApi('api')"></btn-jazz-secondary>
-            <btn-jazz-secondary *ngIf="service.serviceType=='function'" [disablebtn]='disablingApiButton || isFunction' class="testApiBtn" text="Test ARN" (click)="testApi('function')"></btn-jazz-secondary> 
+            <btn-jazz-secondary *ngIf="service.serviceType=='function'" [disablebtn]='disablingFunctionButton' class="testApiBtn" text="Test ARN" (click)="testApi('function')"></btn-jazz-secondary>
             <btn-jazz-secondary *ngIf="service.serviceType=='website'"  [disablebtn]='disablingApiButton' class="testApiBtn" text="GO TO WEBSITE" (click)="testApi('website')"></btn-jazz-secondary> 
             <!-- <btn-jazz-secondary *ngIf="selectedTab == 3" [disablebtn]='false' class="testApiBtn" text="SONAR PROJECT"></btn-jazz-secondary>  -->
             <div class="status-container status-inactive-def hide" >
@@ -65,22 +65,24 @@
             <env-assets-section [service]="service"></env-assets-section>
         </section>
 
-        <section class="page-content" *ngIf="selectedTab == 4">
-            <env-logs-section [service]="service"></env-logs-section>
-        </section>
-</div>
-</div>
-</section>
-<section class='overview-sidebar'>
-    <sidebar [show]="close" (onClose)="closeSidebar($event)">
-            <overview-sidebar (onClose)="closeSidebar($event)"></overview-sidebar>
-    </sidebar>
-</section>
-<footer></footer>
-
+                    <section class="page-content" *ngIf="selectedTab == 4">
+                        <env-logs-section [service]="service"></env-logs-section>
+                    </section>
+            </div>
+            </div>
+            </section>
+            <section class='overview-sidebar'>
+                <sidebar [show]="sidebar === 'overview'" (onClose)="setSidebar()">
+                  <overview-sidebar (onClose)="setSidebar()"></overview-sidebar>
+                </sidebar>
+                <sidebar [show]="sidebar === 'try-service'" (onClose)="setSidebar()">
+                  <env-try-service-sidebar [service]="service" (onClose)="setSidebar()"></env-try-service-sidebar>
+                </sidebar>
+            </section>
+            <footer></footer>
         </div>
     </div>
-    
+
     <mobile-secondary-tab (mobSecClicked)='changeActivity($event)' [tabList]='mobTabData'></mobile-secondary-tab>
 </div>
 

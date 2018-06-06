@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {CommonModule } from '@angular/common';
 import { EnvLogsSectionComponent } from '../pages/environment-logs/env-logs-section.component';
 import { EnvironmentDetailComponent } from '../pages/environment-detail/environment-detail.component';
 import { EnvAssetsSectionComponent } from '../pages/environment-assets/env-assets-section.component';
@@ -18,6 +18,10 @@ import { SharedModule } from '../shared-module/shared.module';
 import { RouterModule } from '@angular/router';
 import { routes } from './environment.route';
 import { AdvancedFilterService } from '../advanced-filter.service';
+import {EnvTryServiceSidebarComponent} from '../secondary-components/env-try-service-sidebar/env-try-service-sidebar.component';
+import {SessionStorageService} from "../core/helpers/session-storage.service";
+import {RelaxedJsonService} from "../core/helpers/relaxed-json.service";
+
 @NgModule({
   imports: [
     CommonModule,
@@ -38,8 +42,13 @@ import { AdvancedFilterService } from '../advanced-filter.service';
     EnvCodequalitySectionComponent,
     EnvLogsSectionComponent,
     EnvOverviewSectionComponent,
+    EnvTryServiceSidebarComponent
   ],
-  providers: [AdvancedFilterService],
+  providers: [
+    AdvancedFilterService,
+    SessionStorageService,
+    RelaxedJsonService,
+  ]
 })
 
 export class EnvironmentModule {
