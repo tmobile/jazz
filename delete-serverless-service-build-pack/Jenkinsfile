@@ -639,7 +639,7 @@ def unDeployWebsite(stage) {
 				isEmpty = isBucketFolderEmpty(assetInfo['folder_name'])
 			}
 
-			if (isEmpty) {
+			if (_exists && isEmpty) {
 				echo "Cleaning up service folder since service folder is empty:: ${assetInfo['asset_info']}"
 				if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
 					sh "aws s3 rb s3://${assetInfo['folder_name']} --force"					

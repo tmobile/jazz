@@ -88,7 +88,7 @@ module.exports = (tableName, query, onComplete) => {
             if (err) {
                 onComplete(err);
             } else {
-                var items_formatted = (data.Items.map(item => utils.formatData(item, true)));
+                var items_formatted = (data.Items.map((item) => utils.formatData(item)));
                 if (data.LastEvaluatedKey) {
                     scanparams.ExclusiveStartKey = data.LastEvaluatedKey;
                     scanExecute(onComplete);
