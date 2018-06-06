@@ -224,7 +224,7 @@ node {
 							unDeployWebsite(_envId)
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
-							echo "error occured when Deleting  Environment: " + ex
+							echo "error occured when deleting environment: " + ex
 							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
 							error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
 						}
@@ -248,7 +248,7 @@ def cleanupCodeQualityReports(){
 	try {
 		sonarModule.cleanupCodeQualityReports()
 	} catch (ex) {
-		echo "error occured While deleting code quality reports: " + ex.getMessage()
+		echo "error occured while deleting code quality reports: " + ex.getMessage()
 		error ex.getMessage()
 	}
 }
@@ -257,7 +257,7 @@ def handleFailureEvent(errorMessage){
 	if (is_service_deletion) {
 		events.sendFailureEvent('DELETE_PROJECT', errorMessage, context_map)
 		send_status_email("FAILED")
-		error "deleteProject failed. " + errorMessage
+		error "deleteProject failed: " + errorMessage
 	} else {
 		echo "error occured when Deleting  Environment: " + errorMessage
 		send_status_email("FAILED")
@@ -715,13 +715,13 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 				returnStdout: true
 			).trim()
 			def policyObject = parseJson(parseJson(bucketPolicy).Policy)
-			def policyObjectUpdated = [: ]
+			def policyObjectUpdated = [:]
 			policyObjectUpdated.Version = policyObject.Version
 			policyObjectUpdated.Id = policyObject.Id
 			def statements = []
 			for (items in policyObject.Statement) {
 				if ((items.Sid != "list-${assetInfo['asset_name']}")) {
-					def copy = [: ]
+					def copy = [:]
 					copy.putAll(items)
 					statements.add(copy)
 				}
@@ -907,7 +907,7 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 			def disableConfigObj = new JsonSlurper().parseText(disableOutput)
 			eTag = disableConfigObj.ETag
 		}
-		echo "disable eTag...$eTag"
+		echo "disable eTag: $eTag"
 		return eTag
 	} catch (ex) {
 		handleFailureEvent(ex.getMessage())
@@ -917,7 +917,7 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 def LoadConfiguration() {
 	def result = readFile('deployment-env.yml').trim()
 	echo "result of yaml parsing....$result"
-	def prop = [: ]
+	def prop = [:]
 	def resultList = result.tokenize("\n")
 
 	// delete commented lines
@@ -1127,7 +1127,7 @@ def jsonParse(jsonString) {
 def parseJsonMap(jsonString) {
 	def jsonSlurper = new groovy.json.JsonSlurperClassic()
 	def jsonObj = jsonSlurper.parseText(jsonString)
-	def lazyMap = [: ]
+	def lazyMap = [:]
 	lazyMap.putAll(jsonObj)
 	return lazyMap
 }
