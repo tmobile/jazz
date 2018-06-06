@@ -55,7 +55,7 @@ var handler = (event, context, cb) => {
           return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is an invalid JSON")));
         }
         if(event.body.region && event.body.region != "" ){
-          config.AWS_REGION =  event.body.region
+          config.AWS_REGION =  event.body.region // If Request Specifies AWS_REGION || Over rides the Configuration value 
         }
         var inputJSON = JSON.parse(event.body.inputJSON);
         invokeLambda(functionARN,inputJSON).then((data) => {
@@ -81,11 +81,11 @@ var invokeLambda = (functionARN, inputJSON) => {
     try {
       var aws = require('aws-sdk');
       var lambda = new aws.Lambda({
-        region: config.AWS_REGION //change to your region
+        region: config.AWS_REGION  //Uses the default configuration value , Unless Region is provided in the Request Payload 
       });
       lambda.invoke({
         FunctionName: functionARN,
-        Payload: JSON.stringify(inputJSON, null, 2) // pass params
+        Payload: JSON.stringify(inputJSON, null, 2)
       }, function (error, data) {
         if (error) {
           logger.error(error);
