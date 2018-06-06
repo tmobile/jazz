@@ -237,7 +237,7 @@ function  getSvcPayload(method, payload, apiEndpoint, authToken) {
 	return svcPayload;
 };
 
-function procesRequest(svcPayload){
+function processRequest(svcPayload){
 	return new Promise((resolve, reject) => {
 		request(svcPayload, function (error, response, body) {
 			if (response.statusCode === 200 && body) {
@@ -262,7 +262,7 @@ function  processCreateEvent(eventPayload, configData, authToken) {
 		var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE;
 		var svcPayload = exportable.getSvcPayload("POST", deploymentPayload, apiEndpoint, authToken);
 
-		exportable.procesRequest(svcPayload)
+		exportable.processRequest(svcPayload)
 			.then(result => { return resolve(result); })
 			.catch(err => {
 				logger.error("processCreateEvent failed: " + JSON.stringify(err));
@@ -298,7 +298,7 @@ function getDeployments(deploymentPayload, configData, authToken) {
 			var domain = deploymentPayload.domain;
 			var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE + "?service=" + service_name + "&domain=" + domain + "&environment=" + env_id;;
 			var svcPayload = exportable.getSvcPayload("GET", null, apiEndpoint, authToken);
-			exportable.procesRequest(svcPayload)
+			exportable.processRequest(svcPayload)
 				.then(result => { return resolve(result); })
 				.catch(err => {
 					logger.error("getDeployments failed: " + JSON.stringify(err));
@@ -334,7 +334,7 @@ function updateDeployments(res, deploymentPayload, configData, authToken)  {
 				logger.info("Update deployment request payload: " + JSON.stringify(deploymentPayload));
 				var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE + "/" + deploymentData.deployment_id;
 				var svcPayload = getSvcPayload("PUT", deploymentPayload, apiEndpoint, authToken);
-				exportable.procesRequest(svcPayload)
+				exportable.processRequest(svcPayload)
 					.then(result => { return resolve(result); })
 					.catch(err => {
 						logger.error("updateDeployments failed: " + JSON.stringify(err));
@@ -390,7 +390,7 @@ function  handleFailedEvents(id, failure_message, payload, failure_code) {
 	processEvent,
 	getDeploymentPayload,
 	getSvcPayload,
-	procesRequest,
+	processRequest,
 	processCreateEvent,
 	processUpdateEvent,
 	getDeployments,

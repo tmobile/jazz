@@ -341,7 +341,7 @@ describe("getDeploymentPayload", () => {
     expect(deploymentPayload.status).to.eq(svcContext.status);
   })
 })
-describe("procesRequest", () => {
+describe("processRequest", () => {
   afterEach(() => {
     if (reqStub) {
       reqStub.restore();
@@ -364,7 +364,7 @@ describe("procesRequest", () => {
     reqStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
     });
-    index.procesRequest(svcPayload).then((obj) => {
+    index.processRequest(svcPayload).then((obj) => {
       expect(obj).not.null;
     })
   })
@@ -386,7 +386,7 @@ describe("procesRequest", () => {
       return obj.callback(null, responseObject, responseObject.body);
     });
     var handleErrorStub = sinon.stub(index, "handleError")
-    index.procesRequest(svcPayload).catch((err) => {
+    index.processRequest(svcPayload).catch((err) => {
       sinon.assert.calledOnce(handleErrorStub);
       handleErrorStub.restore()
     });
@@ -441,23 +441,23 @@ describe("processCreateEvent", () => {
       reqStub.restore();
     }
   });
-  it("should call procesRequest with SvcPayload", () => {
-    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
+  it("should call processRequest with SvcPayload", () => {
+    var processRequestStub = sinon.stub(index, "processRequest").resolves({
       x: 1
     })
     index.processCreateEvent(payload.Item, configData, "tempAuth").then(() => {
-      sinon.assert.calledOnce(procesRequestStub)
-      procesRequestStub.restore()
+      sinon.assert.calledOnce(processRequestStub)
+      processRequestStub.restore()
     })
   });
-  it("should call procesRequest with SvcPayload and handle error when processRequest fails ", () => {
-    var procesRequestStub = sinon.stub(index, "procesRequest").rejects({
+  it("should call processRequest with SvcPayload and handle error when processRequest fails ", () => {
+    var processRequestStub = sinon.stub(index, "processRequest").rejects({
       message: "process request failed"
     })
     index.processCreateEvent(payload.Item, configData, "tempAuth").catch((err) => {
-      sinon.assert.calledOnce(procesRequestStub)
+      sinon.assert.calledOnce(processRequestStub)
       expect(err.message).to.eq("process request failed");
-      procesRequestStub.restore()
+      processRequestStub.restore()
     })
   });
 })
@@ -558,23 +558,23 @@ describe("getDeployments", () => {
     }
   });
   it("should call process Events with deploymentpayload", () => {
-    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
+    var processRequestStub = sinon.stub(index, "processRequest").resolves({
       x: 1
     })
     index.getDeployments(deploymentPayload, configData, "temp_auth").then((obj) => {
-      sinon.assert.calledOnce(procesRequestStub);
-      procesRequestStub.restore();
+      sinon.assert.calledOnce(processRequestStub);
+      processRequestStub.restore();
 
     });
   })
   it("should return error if processEvents returns unsuccesfull", () => {
-    var procesRequestStub = sinon.stub(index, "procesRequest").rejects({
+    var processRequestStub = sinon.stub(index, "processRequest").rejects({
       message: "ProcessRequest Falied"
     });
     index.getDeployments(deploymentPayload, configData, "temp_auth").catch((obj) => {
       expect(obj.message).to.eq("ProcessRequest Falied");
-      sinon.assert.calledOnce(procesRequestStub);
-      procesRequestStub.restore();
+      sinon.assert.calledOnce(processRequestStub);
+      processRequestStub.restore();
     })
   })
   it("should throw error is enviornment_id is not defined in deploymentpayload passed", () => {
@@ -617,22 +617,22 @@ describe("updateDeployments", () => {
   })
 
   it("should call processRequest for success scenario ", () => {
-    var procesRequestStub = sinon.stub(index, "procesRequest").resolves({
+    var processRequestStub = sinon.stub(index, "processRequest").resolves({
       x: 1
     });
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").then((obj) => {
-      sinon.assert.calledOnce(procesRequestStub);
-      procesRequestStub.restore();
+      sinon.assert.calledOnce(processRequestStub);
+      processRequestStub.restore();
     })
   })
   it("should call return error if  processRequest is unsucesfull", () => {
-    var procesRequestStub = sinon.stub(index, "procesRequest").rejects({
+    var processRequestStub = sinon.stub(index, "processRequest").rejects({
       message: "Process Request failed"
     });
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
-      sinon.assert.calledOnce(procesRequestStub);
+      sinon.assert.calledOnce(processRequestStub);
       expect(err.message).to.eq("Process Request failed");
-      procesRequestStub.restore();
+      processRequestStub.restore();
     })
   })
   it("should return error if deployment id is not defined", () => {
