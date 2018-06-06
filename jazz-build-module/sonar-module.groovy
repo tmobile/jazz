@@ -114,7 +114,7 @@ def configureScanner() {
 		def update_pwd_cmd = "echo 'sonar.password=${sonar_password}' >> /opt/sonar-scanner-3.0.3.778-linux/conf/sonar-scanner.properties"
 		jazz_quiet_sh(update_pwd_cmd)
 	} catch (ex) {
-		error "configureScanner Failed. " + ex.getMessage()
+		error "configureScanner failed: " + ex.getMessage()
 	}
 }
 
@@ -131,7 +131,7 @@ def runReport() {
 		}
 		sh sonar_scanner_cl
 	} catch (ex) {
-		error "runReport Failed. " + ex.getMessage()
+		error "runReport failed: " + ex.getMessage()
 	}
 }
 
@@ -166,7 +166,7 @@ def doAnalysis() {
 		}
 
 	} catch (ex) {
-		error "Sonar Analysis Failed. " + ex.getMessage()
+		error "Sonar analysis failed: " + ex.getMessage()
 	}
 	finally {
 		resetConfig() //**reset the credentials if there is a failure
@@ -217,7 +217,7 @@ def resetConfig() {
 		sh "echo '' > /opt/sonar-scanner-3.0.3.778-linux/conf/sonar-scanner.properties"
 		sh "echo '' > ./sonar-project.properties"
 	} catch (ex) {
-		error "resetConfig Failed. " + ex.getMessage()
+		error "resetConfig failed: " + ex.getMessage()
 	}
 }
 
@@ -238,10 +238,10 @@ def cleanupCodeQualityReports(){
 				error "error occured While deleting code quality reports"
 			}
 		} else {
-			echo "No sonar reports present."
+			echo "No sonar reports found."
 		}
 	} catch (ex) {
-		echo "error occured While deleting code quality reports: " + ex.getMessage()
+		echo "error occured while deleting code quality reports: " + ex.getMessage()
 		error ex.getMessage()
 	}
 }
