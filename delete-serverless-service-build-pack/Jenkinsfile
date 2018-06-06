@@ -26,7 +26,7 @@ import groovy.transform.Field
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def auth_token = ''
 @Field def service_config
-@Field def context_map = [: ]
+@Field def context_map = [:]
 @Field def is_service_deletion = true;
 @Field def current_environment_id
 node {

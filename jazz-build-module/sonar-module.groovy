@@ -3,7 +3,7 @@ import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import groovy.transform.Field
 
-	echo "Sonar code analyzer module loaded successfully"
+echo "Sonar code analyzer module loaded successfully"
 
 /**
  * The Sonar module to run static code analysis - for JAVA, NodeJs & Python
@@ -20,7 +20,7 @@ import groovy.transform.Field
 @Field def g_sonar_password = ""
 @Field def g_sonar_project_properties
 @Field def g_dependencyCheckOutputFileName = "dependency-check-report.xml"
-@Field def g_dependency_check_properties = [: ]
+@Field def g_dependency_check_properties = [:]
 
 /**
  * Configure sonar and create the map for project specific sonar
@@ -29,7 +29,7 @@ import groovy.transform.Field
  */
 def configureSonarProperties() {
 	try {
-		g_sonar_project_properties = [: ]
+		g_sonar_project_properties = [:]
 		def projectKey = getSonarProjectKey()
 		setProjectKey(projectKey)
 		g_sonar_project_properties["sonar.projectKey"] = g_sonar_projectKey
