@@ -299,7 +299,7 @@ def echoServerlessFile() {
 def LoadConfiguration() {
 	def result = readFile('deployment-env.yml').trim()
 	echo "result of yaml parsing....$result"
-	def prop = [: ]
+	def prop = [:]
 	def resultList = result.tokenize("\n")
 
 	// delete commented lines
@@ -713,7 +713,7 @@ def updatePlatformServiceTemplate(config, roleARN, roleId, environment_logical_i
 @NonCPS
 def parseJson(jsonString) {
 	def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-	def m = [: ]
+	def m = [:]
 	m.putAll(lazyMap)
 	return m
 }
