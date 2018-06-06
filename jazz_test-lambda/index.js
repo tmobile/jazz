@@ -32,7 +32,7 @@ var handler = (event, context, cb) => {
   var errorHandler = errorHandlerModule();
   var config = configObj(event);
   logger.init(event, context);
-
+  var AWS_REGION =  config.AWS_REGION;
   try {
     var testResponse = {
       "StatusCode": 200,
@@ -55,7 +55,7 @@ var handler = (event, context, cb) => {
           return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is an invalid JSON")));
         }
         if(event.body.region && event.body.region != "" ){
-          config.AWS_REGION =  event.body.region // If Request Specifies AWS_REGION || Over rides the Configuration value 
+          AWS_REGION =  event.body.region // If Request Specifies AWS_REGION || Over rides the Configuration value 
         }
         var inputJSON = JSON.parse(event.body.inputJSON);
         invokeLambda(functionARN,inputJSON).then((data) => {
@@ -81,7 +81,7 @@ var invokeLambda = (functionARN, inputJSON) => {
     try {
       var aws = require('aws-sdk');
       var lambda = new aws.Lambda({
-        region: config.AWS_REGION  //Uses the default configuration value , Unless Region is provided in the Request Payload 
+        region: AWS_REGION  //Uses the default configuration value , Unless Region is provided in the Request Payload 
       });
       lambda.invoke({
         FunctionName: functionARN,
