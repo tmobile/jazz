@@ -64,12 +64,12 @@ function handler(event, context, cb) {
 
     try {
 
-        genericInputValidation(event)
+        exportable.genericInputValidation(event)
             .then(() => {
 
                 if (event.method === 'GET' && assets_id) {
                     logger.info('GET assets by ID : ' + assets_id);
-                    processAssetData(assets_id, asset_table)
+                    exportable.processAssetData(assets_id, asset_table)
                         .then(res => {
                             logger.info("get asset by Id result:" + JSON.stringify(res));
                             handleResponse(null, res, event.path);
@@ -85,7 +85,7 @@ function handler(event, context, cb) {
                 else if (event.method === 'PUT' && assets_id) {
                     logger.info('Update asset assets_id ' + assets_id);
                     var update_data = event.body;
-                    processAssetsUpdate(assets_id, update_data, asset_table)
+                    exportable.processAssetsUpdate(assets_id, update_data, asset_table)
                         .then(res => {
                             logger.info("update result:" + JSON.stringify(res));
                             handleResponse(null, res.data, res.input);
@@ -100,7 +100,7 @@ function handler(event, context, cb) {
                 else if (event.method === 'POST' && !assets_id) {
                     logger.debug('Create new asset');
                     assets_data = event.body;
-                    processAssetCreation(assets_data, asset_table)
+                    exportable.processAssetCreation(assets_data, asset_table)
                         .then(res => {
                             logger.info("create asset result:" + JSON.stringify(res));
                             handleResponse(null, res, assets_data);
@@ -114,7 +114,7 @@ function handler(event, context, cb) {
                 else if (event.method === 'POST' && assets_id === 'search') {
                     assets_data = event.body;
                     logger.info('POST search assets' + JSON.stringify(assets_data));
-                    processAssetSearch(assets_data, asset_table)
+                    exportable.processAssetSearch(assets_data, asset_table)
                         .then(res => {
                             logger.info("search asset result:" + JSON.stringify(res));
                             handleResponse(null, res, assets_data);
@@ -194,7 +194,7 @@ function processAssetData(assets_id, asset_table) {
 function processAssetsUpdate(assets_id, update_data, asset_table) {
     return new Promise((resolve, reject) => {
         validateutils.validateUpdatePayload(assets_id, update_data, asset_table)
-            .then(res => updateAssetsData(assets_id, res.input, asset_table))
+            .then(res => exportable.updateAssetsData(assets_id, res.input, asset_table))
             .then(res => {
                 resolve(res);
             })
@@ -207,7 +207,7 @@ function processAssetsUpdate(assets_id, update_data, asset_table) {
 function processAssetCreation(assets_data, asset_table) {
     return new Promise((resolve, reject) => {
         validateutils.validateCreatePayload(assets_data, asset_table)
-            .then(() => createNewAsset(assets_data, asset_table))
+            .then(() => exportable.createNewAsset(assets_data, asset_table))
             .then(res => {
                 resolve(res);
             })
@@ -220,7 +220,7 @@ function processAssetCreation(assets_data, asset_table) {
 function processAssetSearch(assets_data, asset_table) {
     return new Promise((resolve, reject) => {
         validateutils.validateSearchPayload(assets_data)
-            .then(() => postSearch(assets_data, asset_table))
+            .then(() => exportable.postSearch(assets_data, asset_table))
             .then(res => {
                 resolve(res);
             })
