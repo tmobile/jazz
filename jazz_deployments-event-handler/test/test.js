@@ -182,7 +182,7 @@ describe("processEventRecords", () => {
     })
   })
   it("should reject all for Error case scenario from processEventRecord",()=>{
-    procesEventRecordStub = sinon.stub(index, "processEventRecord").resolves({
+    procesEventRecordStub = sinon.stub(index, "processEventRecord").rejects({
       "status":"Process Event Record failed"
     });
     index.processEventRecords(event,configData,"temp_auth").catch((err)=>{
