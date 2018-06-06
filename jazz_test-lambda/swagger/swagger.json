@@ -390,11 +390,15 @@
       "properties": {
         "functionARN": {
           "type": "string",
-          "description": "Sample key in the input object"
+          "description": "ARN For the lambda to be tested"
         },
         "inputJSON": {
           "type": "string",
-          "description": "Sample key in the input object"
+          "description": "Json String to be passed to the lambda"
+        },
+        "region": {
+          "type": "string",
+          "description": "AWS-Region | Optional"
         }
       }
     },

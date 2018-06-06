@@ -54,6 +54,9 @@ var handler = (event, context, cb) => {
         if (event.body.inputJSON && !validateJSON(event.body.inputJSON)) {
           return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is an invalid JSON")));
         }
+        if(event.body.region && event.body.region != "" ){
+          config.AWS_REGION =  event.body.region
+        }
         var inputJSON = JSON.parse(event.body.inputJSON);
         invokeLambda(functionARN,inputJSON).then((data) => {
           if (data && data.StatusCode === 200) {
