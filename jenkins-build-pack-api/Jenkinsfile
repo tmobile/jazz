@@ -35,9 +35,9 @@ node() {
 	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
 
-    echo "Build triggered via branch: " + params.scm_branch
+	echo "Build triggered via branch: " + params.scm_branch
 
-   	def branch = params.scm_branch
+	def branch = params.scm_branch
 	def repo_name = params.service_name
 	def gitCommitOwner
 	def gitCommitHash
@@ -50,7 +50,7 @@ node() {
 	def config
 	def domain = params.domain
 
-    stage('Checkout code base') {
+	stage('Checkout code base') {
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
 
@@ -80,7 +80,7 @@ node() {
 		}
 	}
 
-	if(!config){
+	if (!config) {
 		error "Failed to fetch service metadata from catalog"
 	}
 
@@ -106,7 +106,7 @@ node() {
 			error "The environment has not been created yet and its missing the environment id"
 		}
 
-		if (!events) { error "Can't load events module"	} //Fail here
+		if (!events) { error "Can't load events module" } //Fail here
 		def eventsApi = "${g_base_url}/jazz/events"
 		events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, environment_logical_id, eventsApi)
 
@@ -139,7 +139,7 @@ node() {
 		}
 
 
-		
+
 		def requestId = utilModule.generateRequestId()
 		if (requestId != null) {
 			events.setRequestId(requestId)
@@ -163,22 +163,22 @@ node() {
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
 		}
 
-if(config['domain'] && config['domain'] != 'jazz'){
-		stage('Code Quality Check'){
-			events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
-			try {
-				clearVirtualEnv()
-				runValidation(runtime)
-				sonarModule.doAnalysis()
+		if (config['domain'] && config['domain'] != 'jazz') {
+			stage('Code Quality Check'){
+				events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
+				try {
+					clearVirtualEnv()
+					runValidation(runtime)
+					sonarModule.doAnalysis()
 
-			} catch (ex) {
-				events.sendFailureEvent('CODE_QUALITY_CHECK', ex.getMessage(), context_map, environment_logical_id)
-				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
-				error ex.getMessage()
+				} catch (ex) {
+					events.sendFailureEvent('CODE_QUALITY_CHECK', ex.getMessage(), context_map, environment_logical_id)
+					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
+					error ex.getMessage()
+				}
+				events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
 			}
-			events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
 		}
-}
 		stage('Build') {
 			try {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
@@ -241,7 +241,7 @@ if(config['domain'] && config['domain'] != 'jazz'){
 						sh "cat swagger/swagger.json "
 
 						echo "Deploying to API Gateway environment.."
-						sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+ " --profile cloud-api"
+						sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile cloud-api"
 						sh "aws apigateway create-deployment --rest-api-id ${api_id} --stage-name ${current_environment} --profile cloud-api"
 						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
 						if (current_environment == 'prod' || config['domain'] == 'jazz') {
@@ -259,7 +259,7 @@ if(config['domain'] && config['domain'] != 'jazz'){
 						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
 						echo "completed deployment........."
 
-						def svc_status  = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
+						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
 
 						send_status_email(config, 'COMPLETED', svc_status)
 					}
@@ -267,7 +267,7 @@ if(config['domain'] && config['domain'] != 'jazz'){
 					if (domain && domain == "jazz") {
 						serviceConfigdata.setLogStreamPermission(config)
 					}
-                }
+				}
 			} catch (ex) {
 				events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id), environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -302,29 +302,29 @@ def LoadConfiguration() {
 	def prop = [: ]
 	def resultList = result.tokenize("\n")
 
-    // delete commented lines
-    def cleanedList = []
-    for (i in resultList) {
-        if (i.toLowerCase().startsWith("#")) { } else {
-            cleanedList.add(i)
-        }
-    }
-    // echo "result of yaml parsing after clean up....$cleanedList"
-    for (item in cleanedList) {
-        // Clean up to avoid issues with more ":" in the values
+	// delete commented lines
+	def cleanedList = []
+	for (i in resultList) {
+		if (i.toLowerCase().startsWith("#")) { } else {
+			cleanedList.add(i)
+		}
+	}
+	// echo "result of yaml parsing after clean up....$cleanedList"
+	for (item in cleanedList) {
+		// Clean up to avoid issues with more ":" in the values
 		item = item.replaceAll(" ", "").replaceFirst(":", "#");
 		def eachItemList = item.tokenize("#")
-        //handle empty values
-        def value = null;
-        if (eachItemList[1]) {
-            value = eachItemList[1].trim();
-        }
+		//handle empty values
+		def value = null;
+		if (eachItemList[1]) {
+			value = eachItemList[1].trim();
+		}
 
-        if (eachItemList[0]) {
-            prop.put(eachItemList[0].trim(), value)
-        }
+		if (eachItemList[0]) {
+			prop.put(eachItemList[0].trim(), value)
+		}
 
-    }
+	}
 	echo "Loaded configurations....$prop"
 	return prop
 }
@@ -334,24 +334,24 @@ def LoadConfiguration() {
 	Build project based on runtime
 */
 def buildLambda(runtime) {
-    echo "installing dependencies for $runtime"
-    if (runtime.indexOf("nodejs") > -1) {
-        sh "npm install --save"
-    } else if (runtime.indexOf("java") > -1) {
-        sh "mvn package"
-    } else if (runtime.indexOf("python") > -1) {
-        // install requirements.txt in library folder, these python modules
-        // will be a part of deployment package
-        sh "pip install -r requirements.txt -t library"
+	echo "installing dependencies for $runtime"
+	if (runtime.indexOf("nodejs") > -1) {
+		sh "npm install --save"
+	} else if (runtime.indexOf("java") > -1) {
+		sh "mvn package"
+	} else if (runtime.indexOf("python") > -1) {
+		// install requirements.txt in library folder, these python modules
+		// will be a part of deployment package
+		sh "pip install -r requirements.txt -t library"
 
-        // create virtual environment and install dev-requirements
-        sh """
-        pip install virtualenv
-        virtualenv venv
-		. venv/bin/activate
-        pip install pytest
-        """
-    }
+		// create virtual environment and install dev-requirements
+		sh """
+		pip install virtualenv
+		virtualenv venv
+			.venv / bin / activate
+		pip install pytest
+		"""
+	}
 }
 
 
@@ -359,11 +359,11 @@ def buildLambda(runtime) {
 	Generate the swagger file specific to each environment
 */
 def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
-    sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
-    sh "sed -i -- 's/{api_deployment_node_title}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
-    sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
-    sh "sed -i -- 's/{api_host_name}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
-    sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
+	sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
+	sh "sed -i -- 's/{api_deployment_node_title}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
+	sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
+	sh "sed -i -- 's/{api_host_name}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
+	sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
@@ -411,9 +411,9 @@ def setLambdaExecutionRole(role) {
 	Reset credentials
 */
 def resetCredentials() {
-    echo "resetting AWS credentials"
-    sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-    sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXX"
+	echo "resetting AWS credentials"
+	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXX"
 }
 
 /**
@@ -422,98 +422,98 @@ def resetCredentials() {
 */
 def validateDeploymentConfigurations(def prop) {
 
-    if (prop.containsKey("service")) {
-        if (prop['service'] == "") {
-            error "Wrong configuration. Value for Key 'service' is missing in the configuration"
-        }
+	if (prop.containsKey("service")) {
+		if (prop['service'] == "") {
+			error "Wrong configuration. Value for Key 'service' is missing in the configuration"
+		}
 
-    } else {
-        error "Wrong configuration. Key 'service' is missing in the configuration"
-    }
+	} else {
+		error "Wrong configuration. Key 'service' is missing in the configuration"
+	}
 
-    if (prop.containsKey("providerRuntime")) {
-        def _runtime = prop['providerRuntime']
-        if (_runtime == "") {
-            error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
+	if (prop.containsKey("providerRuntime")) {
+		def _runtime = prop['providerRuntime']
+		if (_runtime == "") {
+			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 
-        } else {
-            def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports. DSundar3
-            def flag = false
-            for (int i = 0; i < validRuntimes.size(); i++) {
-                if (_runtime == validRuntimes[i]) {
-                    flag = true
-                }
-            }
+		} else {
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports. DSundar3
+			def flag = false
+			for (int i = 0; i < validRuntimes.size(); i++) {
+				if (_runtime == validRuntimes[i]) {
+					flag = true
+				}
+			}
 
-            if (!flag) {
-                echo "$flag"
-                error "Runtime given in the configuration is not valid."
-            }
-        }
+			if (!flag) {
+				echo "$flag"
+				error "Runtime given in the configuration is not valid."
+			}
+		}
 
-    } else {
-        error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
-    }
+	} else {
+		error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
+	}
 
-    if (prop.containsKey("providerTimeout")) {
-        if (prop['providerTimeout'] == "") {
-            error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
-        } else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
-            error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
-        }
+	if (prop.containsKey("providerTimeout")) {
+		if (prop['providerTimeout'] == "") {
+			error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
+		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
+			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
+		}
 
-    } else {
-        error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
-    }
+	} else {
+		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
+	}
 
 
-    def runtime = prop['providerRuntime']
-    if (runtime.indexOf("java") > -1) {
+	def runtime = prop['providerRuntime']
+	if (runtime.indexOf("java") > -1) {
 
-        if (prop.containsKey("artifact")) {
-            if (prop['artifact'] == "") {
-                error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
-            }
+		if (prop.containsKey("artifact")) {
+			if (prop['artifact'] == "") {
+				error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
+			}
 
-        } else {
-            error "Wrong configuration. Key 'artifact' is missing in the configuration"
-        }
+		} else {
+			error "Wrong configuration. Key 'artifact' is missing in the configuration"
+		}
 
-        if (prop.containsKey("mainClass")) {
-            if (prop['mainClass'] == "") {
-                error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
-            }
-        } else {
-            error "Wrong configuration. Key 'mainClass' is missing in the configuration"
-        }
-    }
+		if (prop.containsKey("mainClass")) {
+			if (prop['mainClass'] == "") {
+				error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
+			}
+		} else {
+			error "Wrong configuration. Key 'mainClass' is missing in the configuration"
+		}
+	}
 
 }
 
 def addVpcDetails() {
-    echo "addVpcdetails to serverless.yml file"
-    sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
+	echo "addVpcdetails to serverless.yml file"
+	sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
 }
 
 def loadServerlessConfig(config) {
-    dir('_config') {
+	dir('_config') {
 		def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
 
 		checkout([$class: 'GitSCM', branches: [
-            [name: '*/master']
-        ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
 				[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: configPackURL]
 
 			]])
-    }
+	}
 
-    if (config['providerRuntime'].indexOf("nodejs") > -1) {
-        sh "cp _config/serverless-nodejs.yml ./serverless.yml"
-    } else if (config['providerRuntime'].indexOf("java") > -1) {
-        sh "cp _config/serverless-java.yml ./serverless.yml"
-    } else if (config['providerRuntime'].indexOf("python") > -1) {
-        sh "cp _config/serverless-python.yml ./serverless.yml"
-    }
+	if (config['providerRuntime'].indexOf("nodejs") > -1) {
+		sh "cp _config/serverless-nodejs.yml ./serverless.yml"
+	} else if (config['providerRuntime'].indexOf("java") > -1) {
+		sh "cp _config/serverless-java.yml ./serverless.yml"
+	} else if (config['providerRuntime'].indexOf("python") > -1) {
+		sh "cp _config/serverless-python.yml ./serverless.yml"
+	}
 
 	if ((config['service'] == 'cloud-logs-streamer' || config['service'] == 'logs') && config['domain'] == 'jazz') {
 		//addVpcDetails()
@@ -531,19 +531,19 @@ def validateSwaggerSpec() {
 }
 
 def validateSwaggerFile(service, domain, apiHostName){
-    if (fileExists('swagger/swagger.json')) {
-        def swaggerFile = readFile('swagger/swagger.json').trim()
-        echo "after reading swagger file/....."
-        def slurper = new groovy.json.JsonSlurper()
-        def inputJSON = slurper.parseText(swaggerFile)
-        def swagger_host = inputJSON.host
-        def swagger_service = inputJSON.paths.keySet() as List
-        def swagger_domain = inputJSON.basePath
-        assert swagger_domain == ~ "/" + domain
-        assert swagger_service[0] == "/" + service
+	if (fileExists('swagger/swagger.json')) {
+		def swaggerFile = readFile('swagger/swagger.json').trim()
+		echo "after reading swagger file/....."
+		def slurper = new groovy.json.JsonSlurper()
+		def inputJSON = slurper.parseText(swaggerFile)
+		def swagger_host = inputJSON.host
+		def swagger_service = inputJSON.paths.keySet() as List
+		def swagger_domain = inputJSON.basePath
+		assert swagger_domain == ~ "/" + domain
+		assert swagger_service[0] == "/" + service
 
-    }
-    sh "sed -i -- 's/host\": \"[^\"]*\"/host\": \"" + apiHostName + "\"/g' swagger/swagger.json"
+	}
+	sh "sed -i -- 's/host\": \"[^\"]*\"/host\": \"" + apiHostName + "\"/g' swagger/swagger.json"
 }
 
 /**
@@ -571,7 +571,7 @@ def createSubscriptionFilters(stackName, region, roleId) {
 		).trim()
 		echo "${filter_json}"
 		def resultJson = parseJson(filter_json)
-        filtername = resultJson.subscriptionFilters[0].filterName
+		filtername = resultJson.subscriptionFilters[0].filterName
 		echo "removing existing filter... $filtername"
 		if (filtername != "" && !filtername.equals(lambda)) {
 			sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --region ${region}"
@@ -610,7 +610,7 @@ def setCredentials() {
 			token = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 					$loginUrl \
-				-d \'${payload}\'", returnStdout:true).trim()
+				-d \'${payload}\'", returnStdout: true).trim()
 
 			def tokenJson = parseJson(token)
 			tokenJson_token = tokenJson.data.token
@@ -629,7 +629,7 @@ def setCredentials() {
 * Supported build status values = STARTED, FAILED & COMPLETED
 * @return
 */
-def send_status_email (config, build_status, email_content) {
+def send_status_email(config, build_status, email_content) {
 	if (domain != "jazz") {
 		echo "Sending build notification to ${config['created_by']}"
 		def body_subject = ''
@@ -689,10 +689,7 @@ def runValidation(String runtime) {
 		sh "jshint *.js"
 	} else if (runtime.indexOf("java") > -1) {
 		echo "running validations for $runtime"
-		dir('_java') {
-			sh "wget -q ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB}"
-		}
-		sh 'java -cp _java/checkstyle-7.6-all.jar com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src'
+		sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
 	} else if (runtime.indexOf("python") > -1) {
 		echo "running validations for $runtime"
 	}
@@ -702,8 +699,8 @@ def runValidation(String runtime) {
 *   Clear Virtualenvironment
 **/
 def clearVirtualEnv() {
-    // sh "virtualenv --clear venv" // to uninstall all the packages installed in venv
-    sh "rm -rf venv" // just delete the venv folder
+	// sh "virtualenv --clear venv" // to uninstall all the packages installed in venv
+	sh "rm -rf venv" // just delete the venv folder
 }
 
 def updatePlatformServiceTemplate(config, roleARN, roleId, environment_logical_id, repo_name)	{
@@ -715,19 +712,19 @@ def updatePlatformServiceTemplate(config, roleARN, roleId, environment_logical_i
 
 @NonCPS
 def parseJson(jsonString) {
-    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-    def m = [:]
-    m.putAll(lazyMap)
-    return m
+	def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+	def m = [: ]
+	m.putAll(lazyMap)
+	return m
 }
 
 def getBuildModuleUrl() {
-    if (scm_type && scm_type != "bitbucket") {
+	if (scm_type && scm_type != "bitbucket") {
 		// right now only bitbucket has this additional tag scm in its git clone path
 		return "http://${repo_base}/${repo_core}/jazz-build-module.git"
-    } else {
+	} else {
 		return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    }
+	}
 }
 
 /*
@@ -773,4 +770,3 @@ def loadBuildModules(buildModuleUrl){
 
 	}
 }
-

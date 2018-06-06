@@ -2,9 +2,8 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import groovy.transform.Field
-import java.util.regex.*
 
-echo "Sonar code analyzer module loaded successfully"
+	echo "Sonar code analyzer module loaded successfully"
 
 /**
  * The Sonar module to run static code analysis - for JAVA, NodeJs & Python
@@ -21,7 +20,7 @@ echo "Sonar code analyzer module loaded successfully"
 @Field def g_sonar_password = ""
 @Field def g_sonar_project_properties
 @Field def g_dependencyCheckOutputFileName = "dependency-check-report.xml"
-@Field def g_dependency_check_properties = [:]
+@Field def g_dependency_check_properties = [: ]
 
 /**
  * Configure sonar and create the map for project specific sonar
@@ -30,18 +29,9 @@ echo "Sonar code analyzer module loaded successfully"
  */
 def configureSonarProperties() {
 	try {
-		g_sonar_project_properties = [:]
-
-		if (service_config['service'] && g_branch) {
-			def projectKey = service_config['service'] + "_" + g_branch.replaceAll("/", "-")
-			if (service_config['domain']) {
-				projectKey = service_config['domain'] + "_" + projectKey
-			}
-			projectKey = "${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}_${projectKey}"
-			setProjectKey(projectKey)
-		} else {
-			error "Invalid project configurations for Sonar"
-		}
+		g_sonar_project_properties = [: ]
+		def projectKey = getSonarProjectKey()
+		setProjectKey(projectKey)
 		g_sonar_project_properties["sonar.projectKey"] = g_sonar_projectKey
 		g_sonar_project_properties["sonar.projectName"] = g_sonar_projectKey
 		g_sonar_project_properties["sonar.projectVersion"] = g_sonar_projectVersion
@@ -60,7 +50,21 @@ def configureSonarProperties() {
 		}
 
 	} catch (ex) {
-		error "configureSonarProperties Failed. "+ ex.getMessage()
+		error "configureSonarProperties Failed. " + ex.getMessage()
+	}
+}
+
+
+def getSonarProjectKey(){
+	if (service_config['service'] && g_branch) {
+		def projectKey = service_config['service'] + "_" + g_branch.replaceAll("/", "-")
+		if (service_config['domain']) {
+			projectKey = service_config['domain'] + "_" + projectKey
+		}
+		projectKey = "${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}_${projectKey}"
+		return projectKey
+	} else {
+		error "Invalid project configurations for Sonar"
 	}
 }
 
@@ -78,7 +82,7 @@ def initialize(configLoader, serviceConfig, branch) {
 	setConfigLoader(configLoader)
 	setBranch(branch)
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.CODE_QUALITY.SONAR.ADMIN_SONAR_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-		setCredentials( UNAME, PWD)
+		setCredentials(UNAME, PWD)
 	}
 }
 
@@ -110,7 +114,7 @@ def configureScanner() {
 		def update_pwd_cmd = "echo 'sonar.password=${sonar_password}' >> /opt/sonar-scanner-3.0.3.778-linux/conf/sonar-scanner.properties"
 		jazz_quiet_sh(update_pwd_cmd)
 	} catch (ex) {
-		error "configureScanner Failed. "+ ex.getMessage()
+		error "configureScanner Failed. " + ex.getMessage()
 	}
 }
 
@@ -127,25 +131,24 @@ def runReport() {
 		}
 		sh sonar_scanner_cl
 	} catch (ex) {
-		error "runReport Failed. "+ ex.getMessage()
+		error "runReport Failed. " + ex.getMessage()
 	}
 }
 
 /**
  * Clean up the build workspace folder for fresh code analysis
  * docker instances will be reused based on availability which may come with build artifacts from
- * previous builds. 
+ * previous builds.
  */
 def cleanUpWorkspace() {
 	if (service_config['runtime'].indexOf("nodejs") > -1) {
 		sh "rm -rf ./node_modules"
 	} else if (service_config['runtime'].indexOf("java") > -1) {
 		sh "rm -rf ./target"
-		sh "mvn compile"	
+		sh "mvn compile"
 	} else if (service_config['runtime'].indexOf("python") > -1) {
 		sh "rm -rf ./library"
 	}
-
 }
 
 /**
@@ -163,7 +166,7 @@ def doAnalysis() {
 		}
 
 	} catch (ex) {
-		error "Sonar Analysis Failed. "+ ex.getMessage()
+		error "Sonar Analysis Failed. " + ex.getMessage()
 	}
 	finally {
 		resetConfig() //**reset the credentials if there is a failure
@@ -176,7 +179,7 @@ Setup, configure and run dependency-check
 def runVulnerabilityScan() {
 	// create dir if not exists
 	sh "mkdir -p ${config_loader.CODE_QUALITY.SONAR.DEPENDENCY_CHECK_NIST_FILES_LOCATION}"
-	
+
 	def isDirEmpty_cl = "[ -z \"\$(find ${config_loader.CODE_QUALITY.SONAR.DEPENDENCY_CHECK_NIST_FILES_LOCATION} -maxdepth 1 -type f)\" ];"
 
 	def downloadFiles_cl = " wget ${config_loader.CODE_QUALITY.SONAR.DEPENDENCY_CHECK_NIST_MIRROR_UTILITY} -q -O nist-data-mirror.jar && java -jar nist-data-mirror.jar nist_files && mv nist_files/* ${config_loader.CODE_QUALITY.SONAR.DEPENDENCY_CHECK_NIST_FILES_LOCATION}"
@@ -214,26 +217,28 @@ def resetConfig() {
 		sh "echo '' > /opt/sonar-scanner-3.0.3.778-linux/conf/sonar-scanner.properties"
 		sh "echo '' > ./sonar-project.properties"
 	} catch (ex) {
-		error "resetConfig Failed. "+ ex.getMessage()
+		error "resetConfig Failed. " + ex.getMessage()
 	}
 }
 
 def cleanupCodeQualityReports(){
 	try {
 		def cleanupList = getSonarProject()
-		def cleanedupListStr = cleanupList.join(',');
-		def creds = "${config_loader.CODE_QUALITY.SONAR.USER_NAME}:${config_loader.CODE_QUALITY.SONAR.PASSWORD}"
-		def token = creds.getBytes().encodeBase64().toString()
-		def url = "${config_loader.CODE_QUALITY.SONAR.SONARQUBE_BASE_URL}/api/projects/bulk_delete?keys=${cleanedupListStr}"
-		def response = sh(script: "curl -X POST \
-					 ${url} \
-					 -k -v -H \"Authorization: $token\" \
-					 -H \"Content-Type: application/x-www-form-urlencoded\" ", returnStdout: true).trim()
-		def responseJSON = parseJson(response)
-		if (responseJSON.statusCode == 200 || responseJSON.statusCode == 204) {
-			echo "Successfully cleaned the code quality reports from sonar. Please find the cleaned reports : ${cleanupList}"
+		if (cleanupList.size() > 0) {
+			def cleanedupListStr = cleanupList.join(',');
+			def url = "http://${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/api/projects/bulk_delete?keys=${cleanedupListStr}"
+			def response = sh(script: "curl -X POST  -IL --silent \
+                           --write-out %{http_code} --silent --output /dev/null  ${url} \
+					 -k -v -u  $g_sonar_login:$g_sonar_password ", returnStdout: true).trim()
+
+			echo "cleanupCodeQualityReports : $response"
+			if (response == "200" || response == "204") {
+				echo "Successfully cleaned the code quality reports from sonar. Please find the cleaned reports : ${cleanupList}"
+			} else {
+				error "error occured While deleting code quality reports"
+			}
 		} else {
-            error "error occured While deleting code quality reports: " + responseJSON.error.message
+			echo "No sonar reports present."
 		}
 	} catch (ex) {
 		echo "error occured While deleting code quality reports: " + ex.getMessage()
@@ -243,10 +248,10 @@ def cleanupCodeQualityReports(){
 
 def getSonarProject(){
 	try {
-		def project_key = "${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}_${service_config['domain']}_${service_config['service']}";
-		def creds = "${config_loader.CODE_QUALITY.SONAR.USER_NAME}:${config_loader.CODE_QUALITY.SONAR.PASSWORD}"
+		def project_key = getSonarProjectKey()
+		def creds = "${g_sonar_login}:${g_sonar_password}"
 		def token = creds.getBytes().encodeBase64().toString()
-		def url = "${config_loader.CODE_QUALITY.SONAR.SONARQUBE_BASE_URL}/api/projects/index?search=${project_key}"
+		def url = "http://${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/api/projects/index?search=${project_key}"
 		def response = sh(script: "curl -X POST \
 					 ${url} \
 					 -k -v -H \"Authorization: $token\" \
@@ -254,17 +259,13 @@ def getSonarProject(){
 
 		def responseJSON = parseJson(response)
 		def filtered = [];
-		if (responseJSON) {
-			for (data in responseJSON.body) {
-				var pKey = data.k;
-				echo "projectKey : ${pKey}" 
-				var patternStr = "^${project_key}_(.*)";
-				Matcher keyMatcher = Pattern.compile(patternStr).matcher(pKey);
-				while (keyMatcher.find()) {
-					filtered.push(pKey)
-				}
+		echo "getSonarProject : $responseJSON"
+		if (responseJSON.size() > 0) {
+			for (data in responseJSON) {
+				filtered.push(data.k)
 			}
 		}
+		echo "getSonarProject : $filtered"
 		return filtered
 	} catch (ex) {
 		echo "error occured While fetching code quality reports from sonar : " + ex.getMessage()
@@ -274,10 +275,8 @@ def getSonarProject(){
 
 @NonCPS
 def parseJson(jsonString) {
-    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-    def m = [:]
-    m.putAll(lazyMap)
-    return m
+	def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+	return nonLazyMap
 }
 
 /**
@@ -285,7 +284,7 @@ def parseJson(jsonString) {
  *
  */
 def jazz_quiet_sh(cmd) {
-    sh('#!/bin/sh -e\n' + cmd)
+	sh('#!/bin/sh -e\n' + cmd)
 }
 
 /**
