@@ -1,0 +1,13 @@
+{
+  "AWS_CREDENTIAL_ID": "awscreds1",
+  "INSTANCE_PREFIX": "jazz_prefix",
+  "REPOSITORY": {
+    "BASE_URL": "jazz-daily-installer-bitbucket-1723618883.com",
+    "CREDENTIAL_ID": "jenkins1cred",
+    "REPO_BASE_SERVICES": "cas",
+    "REPO_BASE_PLATFORM": "slf"
+  },
+  "API": {
+    "API_BUILD_URI": "/job/build_pack_api/buildWithParameters?token=slf-java-api-build-101"
+  }
+}

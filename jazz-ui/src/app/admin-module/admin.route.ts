@@ -10,6 +10,11 @@ export const routes: Routes = [
     component: AdminComponent,
     children: [
       {
+        path: '',
+        redirectTo: 'dash',
+        pathMatch: 'full'
+      },
+      {
         path: 'dash',
         component: AdminDashboardComponent
       }

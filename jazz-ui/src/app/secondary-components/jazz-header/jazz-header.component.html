@@ -8,7 +8,7 @@
     </div>
     <div *ngIf="type == 'landing'" class="header-section right">
         <ul class="dashboardLinks">
-            <li (click)="goToAbout('features')" [class.hide] = 'noLink'> Features</li>            
+            <li (click)="goToAbout('features')" [class.hide] = 'noLink'> Features</li>
             <li (click)="goToAbout('about')" [class.hide] = 'noLink'>About Us</li>
             <li [class.hide]="isLoggedIn">
                 <div class="login">
@@ -60,7 +60,13 @@
         <div class="header-section left">
             <div class="header-tabs">
                 <div class="header-tab hide" [ngClass]="{'active': selectedTab == 'dashboard'}">Dashboard</div>
-                <div class="header-tab" [ngClass]="{'active': selectedTab == 'services'}">Services</div>
+                <div class="header-tab"
+                     routerLink="/services"
+                     routerLinkActive="active">Services</div>
+                <div class="header-tab"
+                     *ngIf="isAdmin"
+                     routerLink="/admin"
+                     routerLinkActive="active">Admin</div>
             </div>
         </div>
         <div class="header-section right">
@@ -120,8 +126,8 @@
                 <btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading" [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'" (click)='submitFeedback(buttonText)'></btn-jazz-primary>
             </div>
         <!-- </div> -->
-        
-        
+
+
     </div>
-    
+
 </div>

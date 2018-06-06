@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnInit, ViewChild} from '@angular/core';
 import {AdminUtilsService} from "../../services/admin-utils.service";
 
 @Component({
@@ -8,7 +8,9 @@ import {AdminUtilsService} from "../../services/admin-utils.service";
 })
 export class AdminDashboardComponent implements OnInit {
 
+  @ViewChild('jsonRoot') jsonRoot;
   public adminData;
+  public isCollapsed = true;
 
   constructor(private adminUtils: AdminUtilsService) {
   }
@@ -23,6 +25,11 @@ export class AdminDashboardComponent implements OnInit {
 
   submit(model) {
     console.log(model);
+  }
+
+  toggleCollapse() {
+    this.isCollapsed = !this.isCollapsed;
+    this.jsonRoot.setCollapse(this.isCollapsed);
   }
 
 }

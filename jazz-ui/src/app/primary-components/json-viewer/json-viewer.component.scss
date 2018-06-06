@@ -1,4 +1,4 @@
-.parent {
+.json-viewer-root {
   margin: 0 calc(1.5em);
 }
 
@@ -7,6 +7,9 @@
   border-top: 1px solid #ddd;
   &:first-child {
     border-top: none;
+  }
+  &:last-child {
+    padding-bottom: 0;
   }
 }
 
@@ -20,8 +23,10 @@
   }
 }
 
-.json-indent {
+.json-viewer-list {
   padding-left: 25px;
+  overflow: hidden;
+  transition: max-height 1s ease-in-out;
 }
 
 
@@ -42,13 +47,10 @@
   font-weight: 700;
 }
 
-.collapsed {
-  display: none;
-}
-
 .collapse-arrow {
   font-size: 10px;
   position: absolute;
+  top: 3px;
   right: calc(100% + .8em + 5px);
   transition: transform 200ms ease-in-out;
 }

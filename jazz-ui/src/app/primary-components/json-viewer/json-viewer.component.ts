@@ -1,4 +1,4 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, Input, OnInit, ViewChildren} from '@angular/core';
 
 @Component({
   selector: 'json-viewer',
@@ -8,53 +8,64 @@ import {Component, Input, OnInit} from '@angular/core';
 export class JsonViewerComponent implements OnInit {
 
   @Input() json: any = {};
-  @Input() parent = true;
-  @Input() parentType: String;
-  public type: String;
-  public collapseTracker;
+  @Input() root = true;
+  @Input() parent;
+  @ViewChildren('jsonChild') jsonChildren;
+  public rowTracker;
 
   constructor() {
   }
 
   ngOnInit() {
-    console.log('parsing', this.json);
-    this.type = this.getType(this.json);
-    this.collapseTracker = Object.keys(this.json).map(() => {return true});
+    this.rowTracker = Object.keys(this.json).map((key) => {
+      return {
+        key: key,
+        collapsed: true,
+        children: this.hasChildren(this.json(key)),
+        value: this.toString(this.json[key]),
+        collapsedSymbol: this.isArray(this.json(key)) ? '[ . . . ]' : '{ . . . }'
+      }
+    });
+  }
+
+  setCollapse(flag) {
+    this.rowTracker.forEach((row) => {
+      row.collapsed = flag;
+    });
+    this.jsonChildren.forEach((jsonChild) => {
+      jsonChild.setCollapse(flag);
+    });
   }
 
   getKeys(obj) {
     return Object.keys(obj);
   }
 
-  getType(input) {
-    if (input === null) {
-      return 'null'
-    } else if (typeof input === 'string') {
-      return 'string'
-    } else if (typeof input === 'number') {
-      return 'number';
-    } else if (input.length) {
-      return 'array';
-    } else if (typeof input === 'object') {
-      return 'object';
+  hasChildren(input) {
+    try {
+      return Object.keys(input).length;
+    } catch(error) {
+      return false;
     }
   }
 
-  hasChildren(input) {
-    let inputString = this.getType(input);
-    return !(inputString === 'null' ||
-      inputString === 'undefined' ||
-      inputString === 'string' ||
-      inputString === 'number');
+  isArray(input) {
+    return this.hasChildren(input) &&
+      input.length &&
+      typeof input.length === 'number';
   }
 
   toString(input) {
-    if (input === null) {
-      return 'null';
+    if(input === null) {
+      return null;
     } else if (input === undefined) {
       return 'undefined';
+    } else if (this.isArray(input)) {
+      return '[]';
+    } else if(typeof input === 'object') {
+      return '{}';
     } else {
-      return input;
+      return input
     }
   }
 
