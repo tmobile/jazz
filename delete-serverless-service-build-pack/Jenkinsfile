@@ -159,9 +159,7 @@ node {
 							cleanUpApiDocs(_envId)
 							unDeployService(_envId)
 							if (configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
-								stage('Cleanup Code Quality Reports') {
-									cleanupCodeQualityReports()
-								}
+								cleanupCodeQualityReports()								
 							}
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
