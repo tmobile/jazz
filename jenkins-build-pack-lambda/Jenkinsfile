@@ -29,7 +29,7 @@ node()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
 
-    def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
+	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
 	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 
 	echo "Build triggered via branch: " + params.scm_branch + " with params " + params
@@ -49,11 +49,11 @@ node()  {
 	def config
 	def domain = params.domain
 
-    stage('Checkout code base') {
+	stage('Checkout code base') {
 
 		sh 'rm -rf ' + repo_name
 		sh 'mkdir ' + repo_name
-        sh 'pwd'
+		sh 'pwd'
 
 		def repocloneUrl
 		if (domain && domain == "jazz") {
@@ -80,7 +80,7 @@ node()  {
 
 	}
 
-	if(!config){
+	if (!config) {
 		error "Failed to fetch service metadata from catalog"
 	}
 
@@ -106,7 +106,7 @@ node()  {
 			error "The environment has not been created yet and its missing the environment id"
 		}
 	}
-	if (!events) { error "Can't load events module"	} //Fail here
+	if (!events) { error "Can't load events module" } //Fail here
 	def eventsApi = "${g_base_url}/jazz/events"
 	events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, environment_logical_id, eventsApi)
 
@@ -169,20 +169,20 @@ node()  {
 			}
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
 		}
-if(config['domain'] && config['domain'] != 'jazz'){
-		stage('Code Quality Check'){
-			events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
-			try {
-				runValidation(runtime)
-				sonarModule.doAnalysis()
-			} catch (ex) {
-				events.sendFailureEvent('CODE_QUALITY_CHECK', ex.getMessage(), context_map, environment_logical_id)
-				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
-				error ex.getMessage()
+		if (config['domain'] && config['domain'] != 'jazz') {
+			stage('Code Quality Check'){
+				events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
+				try {
+					runValidation(runtime)
+					sonarModule.doAnalysis()
+				} catch (ex) {
+					events.sendFailureEvent('CODE_QUALITY_CHECK', ex.getMessage(), context_map, environment_logical_id)
+					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
+					error ex.getMessage()
+				}
+				events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
 			}
-			events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
 		}
-}
 
 		stage('Build') {
 			events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
@@ -310,29 +310,29 @@ def LoadConfiguration() {
 	def prop = [: ]
 	def resultList = result.tokenize("\n")
 
-    // delete commented lines
-    def cleanedList = []
-    for (i in resultList) {
-        if (i.toLowerCase().startsWith("#")) { } else {
-            cleanedList.add(i)
-        }
-    }
-    // echo "result of yaml parsing after clean up....$cleanedList"
-    for (item in cleanedList) {
-        // Clean up to avoid issues with more ":" in the values
+	// delete commented lines
+	def cleanedList = []
+	for (i in resultList) {
+		if (i.toLowerCase().startsWith("#")) { } else {
+			cleanedList.add(i)
+		}
+	}
+	// echo "result of yaml parsing after clean up....$cleanedList"
+	for (item in cleanedList) {
+		// Clean up to avoid issues with more ":" in the values
 		item = item.replaceAll(" ", "").replaceFirst(":", "#");
 		def eachItemList = item.tokenize("#")
-        //handle empty values
-        def value = null;
-        if (eachItemList[1]) {
-            value = eachItemList[1].trim();
-        }
+		//handle empty values
+		def value = null;
+		if (eachItemList[1]) {
+			value = eachItemList[1].trim();
+		}
 
-        if (eachItemList[0]) {
-            prop.put(eachItemList[0].trim(), value)
-        }
+		if (eachItemList[0]) {
+			prop.put(eachItemList[0].trim(), value)
+		}
 
-    }
+	}
 	echo "Loaded configurations....$prop"
 	return prop
 }
@@ -365,7 +365,7 @@ def buildLambda(String runtime) {
 		virtualenv venv
 		. venv/bin/activate
 		pip install pytest
-		"""
+		"""	
 	}
 }
 
@@ -529,14 +529,14 @@ def createSubscriptionFilters(stackName, region, roleId) {
 		).trim()
 		echo "${filter_json}"
 		def resultJson = parseJson(filter_json)
-        filtername = resultJson.subscriptionFilters[0].filterName
+		filtername = resultJson.subscriptionFilters[0].filterName
 		echo "removing existing filter... $filtername"
 		if (filtername != "" && !filtername.equals(lambda)) {
-			sh "aws logs delete-subscription-filter --output json --log-group-name \""+ lambda + "\" --filter-name \"" + filtername + "\" --region " + region
+			sh "aws logs delete-subscription-filter --output json --log-group-name \"" + lambda + "\" --filter-name \"" + filtername + "\" --region " + region
 		}
 	} catch (Exception ex) { }// ignore error if not created yet
 	try {
-		sh "aws logs put-subscription-filter --output json --log-group-name \""+ lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
+		sh "aws logs put-subscription-filter --output json --log-group-name \"" + lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
 	} catch (Exception ex) {
 		echo "error occured: " + ex.getMessage()
 	}
@@ -602,7 +602,7 @@ def setCredentials() {
 			token = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 					$loginUrl \
-				-d \'${payload}\'", returnStdout:true).trim()
+				-d \'${payload}\'", returnStdout: true).trim()
 
 			def tokenJson = parseJson(token)
 			tokenJson_token = tokenJson.data.token
@@ -621,7 +621,7 @@ def setCredentials() {
 * Supported build status values = STARTED, FAILED & COMPLETED
 * @return
 */
-def send_status_email (config, build_status, email_content) {
+def send_status_email(config, build_status, email_content) {
 	if (domain != "jazz") {
 		echo "Sending build notification to ${config['created_by']}"
 		def body_subject = ''
@@ -688,7 +688,7 @@ def getEventsArn(domain, service, env) {
 		if (domain) {
 			lambdaFnName = domain + "-" + lambdaFnName
 		}
-		def lambdaPolicyTxt = sh(script:"aws lambda get-policy --function-name $lambdaFnName --output json", returnStdout: true)
+		def lambdaPolicyTxt = sh(script: "aws lambda get-policy --function-name $lambdaFnName --output json", returnStdout: true)
 		def policyLists = null
 		if (lambdaPolicyTxt) {
 			def lambdaPolicyJson = new groovy.json.JsonSlurperClassic()
@@ -706,19 +706,19 @@ def getEventsArn(domain, service, env) {
 		return eventsArn
 	} catch (ex) {
 		// Skip the 'ResourceNotFoundException' when deploying first time. Workflow can't fail here.
-		echo  "Can't fetch the events policy configurations for lambda. "+ ex.getMessage()
+		echo  "Can't fetch the events policy configurations for lambda. " + ex.getMessage()
 		return []
 	}
 }
 
-def getLambdaARN (String stackName) {
+def getLambdaARN(String stackName) {
 	def ARN = "";
 
 	try {
 		def cloudformation_resources = "";
 		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
 
-	    def parsedObject = parseJson(cloudformation_resources);
+		def parsedObject = parseJson(cloudformation_resources);
 		def outputs = parsedObject.Stacks[0].Outputs;
 
 		for (output in outputs) {
@@ -741,10 +741,7 @@ def runValidation(String runtime) {
 		sh "jshint *.js"
 	} else if (runtime.indexOf("java") > -1) {
 		echo "running validations for $runtime"
-		dir('_java') {
-			sh 'wget -q ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB}'
-		}
-		sh 'java -cp _java/checkstyle-7.6-all.jar com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src'
+		sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
 	} else if (runtime.indexOf("python") > -1) {
 		echo "running validations for $runtime"
 	}
@@ -765,10 +762,10 @@ def generateAssetMap(provider, providerId, type, created_by) {
 
 @NonCPS
 def parseJson(jsonString) {
-    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-    def m = [:]
-    m.putAll(lazyMap)
-    return m
+	def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+	def m = [:]
+	m.putAll(lazyMap)
+	return m
 }
 
 def updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)	{
@@ -820,10 +817,10 @@ def loadBuildModules(buildModuleUrl){
 }
 
 def getBuildModuleUrl() {
-    if (scm_type && scm_type != "bitbucket") {
+	if (scm_type && scm_type != "bitbucket") {
 		// right now only bitbucket has this additional tag scm in its git clone path
 		return "http://${repo_base}/${repo_core}/jazz-build-module.git"
-    } else {
+	} else {
 		return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    }
+	}
 }
