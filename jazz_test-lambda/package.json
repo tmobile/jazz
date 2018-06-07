@@ -9,7 +9,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "request": "*",
+    "request": "*"
   },
   "devDependencies": {
     "mocha": "^v3.0.0",

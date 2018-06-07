@@ -32,13 +32,12 @@ var handler = (event, context, cb) => {
   var errorHandler = errorHandlerModule();
   var config = configObj(event);
   logger.init(event, context);
-  var AWS_REGION =  config.AWS_REGION;
+  var AWS_REGION = config.AWS_REGION;
   try {
     var testResponse = {
       "StatusCode": 200,
       "execStatus": 0
-    }
-    var requestJson
+    };
     if (event !== undefined && event.method !== undefined && event.method === 'POST') {
       if (!event.body) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Event Body not Defined")));
@@ -50,38 +49,38 @@ var handler = (event, context, cb) => {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is not defined")));
       } else {
         var functionARN = event.body.functionARN;
-        
+
         if (event.body.inputJSON && !validateJSON(event.body.inputJSON)) {
           return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is an invalid JSON")));
         }
-        if(event.body.region && event.body.region != "" ){
-          AWS_REGION =  event.body.region // If Request Specifies AWS_REGION || Over rides the Configuration value 
+        if (event.body.region && event.body.region != "") {
+          AWS_REGION = event.body.region; // If Request Specifies AWS_REGION || Over rides the Configuration value 
         }
         var inputJSON = JSON.parse(event.body.inputJSON);
-        invokeLambda(functionARN,inputJSON).then((data) => {
+        invokeLambda(functionARN, inputJSON, AWS_REGION).then((data) => {
           if (data && data.StatusCode === 200) {
-            testResponse.execStatus = 1 // Test Succesfull
+            testResponse.execStatus = 1; // Test Succesfull
           }
           return cb(null, responseObj(testResponse, event.body)); // Test Failed 
         }).catch((err) => {
           logger.info(" TEST FAILED  : " + JSON.stringify(err));
           return cb(null, responseObj(testResponse, event.body)); // Test Failed 
-        })
+        });
       }
     }
-  } catch (e) {
+  } catch (err) {
     logger.error("Failed to invoke lambda : " + JSON.stringify(err));
     cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to invoke lambda")));
   }
 
 };
 
-var invokeLambda = (functionARN, inputJSON) => {
+var invokeLambda = (functionARN, inputJSON, AWS_REGION) => {
   return new Promise((resolve, reject) => {
     try {
       var aws = require('aws-sdk');
       var lambda = new aws.Lambda({
-        region: AWS_REGION  //Uses the default configuration value , Unless Region is provided in the Request Payload 
+        region: AWS_REGION //Uses the default configuration value , Unless Region is provided in the Request Payload 
       });
       lambda.invoke({
         FunctionName: functionARN,
@@ -89,20 +88,20 @@ var invokeLambda = (functionARN, inputJSON) => {
       }, function (error, data) {
         if (error) {
           logger.error(error);
-          reject(error)
+          reject(error);
         } else if (data.Payload) {
           logger.info(data);
-          resolve(data)
+          resolve(data);
         }
       });
     } catch (e) {
-      logger.error(e)
-      reject("Error in invoking Lambda")
-      
+      logger.error(e);
+      reject("Error in invoking Lambda");
+
     }
-  })
-}
+  });
+};
 module.exports = {
   handler: handler,
   invokeLambda: invokeLambda
-}
+};
