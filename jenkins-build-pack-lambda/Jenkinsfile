@@ -363,9 +363,9 @@ def buildLambda(String runtime) {
 		sh """
 		pip install virtualenv
 		virtualenv venv
-			.venv / bin / activate
+		.venv/bin/activate
 		pip install pytest
-		"""
+		"""	
 	}
 }
 

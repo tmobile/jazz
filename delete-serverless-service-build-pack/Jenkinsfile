@@ -579,7 +579,7 @@ def getResourcePath() {
 
 
 def generateAssetInfo(environment){
-	def assetInfo = [: ]
+	def assetInfo = [:]
 	def s3Bucket
 	def assetBase
 
