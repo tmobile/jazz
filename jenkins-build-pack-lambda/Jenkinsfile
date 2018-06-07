@@ -132,7 +132,7 @@ node()  {
 	if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled) {
 		isEventSchdld = true
 	}
-	
+
 	def requestId = utilModule.generateRequestId()
 	if (requestId != null) {
 		events.setRequestId(requestId)
@@ -169,7 +169,7 @@ node()  {
 			}
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
 		}
-
+if(config['domain'] && config['domain'] != 'jazz'){
 		stage('Code Quality Check'){
 			events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
 			try {
@@ -182,7 +182,7 @@ node()  {
 			}
 			events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
 		}
-
+}
 
 		stage('Build') {
 			events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
@@ -202,7 +202,7 @@ node()  {
 		} else {
 			env_key = "DEV"
 		}
-		stage("Deployment to ${env_key} environment") {	
+		stage("Deployment to ${env_key} environment") {
 			events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
 			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
 			echo "starts Deployment to ${env_key} Env"
@@ -229,7 +229,7 @@ node()  {
 
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
-						
+
 					lambdaARN = getLambdaARN(stackName)
 					events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", lambdaARN, config["type"], config['created_by']), environment_logical_id);
 					echo "lambdaARN: ${lambdaARN}"
@@ -545,12 +545,12 @@ def createSubscriptionFilters(stackName, region, roleId) {
 def writeServerlessFile(config, current_environment){
 	sh "pwd"
 	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
-	
+
 	sh "sed -i -- 's/{env-stage}/${current_environment}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
-	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml" 	
+	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
@@ -558,7 +558,7 @@ def writeServerlessFile(config, current_environment){
 	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
-	
+
 	if (config['artifact']) {
 		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
 	}
@@ -585,7 +585,7 @@ def setLambdaExecutionRole(role) {
 def setCredentials() {
 	def loginUrl = g_base_url + '/jazz/login'
 	def token
-	
+
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		echo "user name is $UNAME"
 
@@ -792,21 +792,21 @@ def loadBuildModules(buildModuleUrl){
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
 		echo "config loader loaded successfully."
-		
+
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
 		echo "SCM module loaded successfully."
 
 		serviceConfigdata = load "service-configuration-data-loader.groovy"
 		echo "Service configuration module loaded successfully."
-		
+
 		events = load "events-module.groovy"
 		echo "Event module loaded successfully."
 
 		serviceMetadataLoader = load "service-metadata-loader.groovy"
 		serviceMetadataLoader.initialize(configLoader)
 		echo "Service metadata loader module loaded successfully."
-    
+
 		utilModule = load "utility-loader.groovy"
 		echo "Util module loaded successfully."
 
@@ -814,7 +814,7 @@ def loadBuildModules(buildModuleUrl){
 		echo "Sonar module loaded successfully."
 
 		environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
-		echo "Environment deployment data loader module loaded successfully."		
+		echo "Environment deployment data loader module loaded successfully."
 
 	}
 }
@@ -826,4 +826,4 @@ def getBuildModuleUrl() {
     } else {
 		return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     }
-} 
+}

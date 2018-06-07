@@ -10,6 +10,7 @@
         <ul class="dashboardLinks">
             <li (click)="goToAbout('features')" [class.hide] = 'noLink'> Features</li>            
             <li (click)="goToAbout('about')" [class.hide] = 'noLink'>About Us</li>
+            <li (click)="startUserJourney()" [class.hide] = 'noLink'>Tutorial</li>
             <li [class.hide]="isLoggedIn">
                 <div class="login">
                     <btn-jazz-primary newclass="login" text="LOGIN" (click)="toggleLoginPanel()"></btn-jazz-primary>

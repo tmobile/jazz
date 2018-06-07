@@ -163,6 +163,7 @@ node() {
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
 		}
 
+if(config['domain'] && config['domain'] != 'jazz'){
 		stage('Code Quality Check'){
 			events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
 			try {
@@ -177,7 +178,7 @@ node() {
 			}
 			events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
 		}
-
+}
 		stage('Build') {
 			try {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
@@ -691,12 +692,9 @@ def runValidation(String runtime) {
 		dir('_java') {
 			sh "wget -q ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB}"
 		}
-
 		sh 'java -cp _java/checkstyle-7.6-all.jar com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src'
-
 	} else if (runtime.indexOf("python") > -1) {
 		echo "running validations for $runtime"
-
 	}
 }
 
