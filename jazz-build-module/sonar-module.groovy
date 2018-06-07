@@ -254,7 +254,7 @@ def getSonarProject(){
 		def url = "http://${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/api/projects/index?search=${project_key}"
 		def response = sh(script: "curl -X POST \
 					 ${url} \
-					 -k -v -H \"Authorization: $token\" \
+					 -k -v -H -u  $g_sonar_login:$g_sonar_password  \
 					 -H \"Content-Type: application/x-www-form-urlencoded\" ", returnStdout: true).trim()
 
 		def responseJSON = parseJson(response)
