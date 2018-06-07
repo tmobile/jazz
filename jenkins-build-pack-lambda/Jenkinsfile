@@ -715,21 +715,36 @@ def getLambdaARN (String stackName) {
 	def ARN = "";
 
 	try {
-		def cloudformation_resources = "";
-		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
-
-	    def parsedObject = parseJson(cloudformation_resources);
-		def outputs = parsedObject.Stacks[0].Outputs;
-
-		for (output in outputs) {
-			if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
-				ARN = output.OutputValue
-			}
-		}
+		ARN = tryDescribeStacks(stackName);
 	} catch (ex) {
-		error ex.getMessage();
+		
+		if (ex.getMessage().contains("The security token included in the request is invalid")) {
+			try {//retry if invalid token
+			    echo "Retrying due to exception with invalid token";
+				ARN = tryDescribeStacks(stackName);
+			} catch(e) {
+				error ex.getMessage();
+			}
+		} else {
+			error ex.getMessage();
+		}
 	}
 
+	return ARN;
+}
+
+def tryDescribeStacks(String stackName) {
+	def cloudformation_resources = "";
+	cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+
+	def parsedObject = parseJson(cloudformation_resources);
+	def outputs = parsedObject.Stacks[0].Outputs;
+
+	for (output in outputs) {
+		if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
+			ARN = output.OutputValue
+		}
+	}
 	return ARN;
 }
 
