@@ -1,0 +1,45 @@
+{
+    "namespaces":{
+        "lambda":{
+            "metrics": [
+                { "MetricName": "Invocations", "Unit": "Count", "Dimensions": ["FunctionName","Resource","Version","Alias"] },
+                { "MetricName": "Errors", "Unit": "Count", "Dimensions": ["FunctionName","Resource","Version","Alias"] },
+                { "MetricName": "Dead Letter Error", "Unit": "Count", "Dimensions": ["FunctionName","Resource","Version","Alias"] },
+                { "MetricName": "Duration", "Unit": "Milliseconds", "Dimensions": ["FunctionName","Resource","Version","Alias"] },
+                { "MetricName": "Throttles", "Unit": "Count", "Dimensions": ["FunctionName","Resource","Version","Alias"] },
+                { "MetricName": "IteratorAge", "Unit": "Milliseconds", "Dimensions": ["FunctionName","Resource","Version","Alias"] }
+            ],
+            "dimensions" : ["FunctionName"]
+        },
+        "apigateway":{
+            "metrics":[
+                { "MetricName": "4XXError", "Unit": "Count", "Dimensions": ["ApiName","Method","Resource","Stage"]},
+                { "MetricName": "5XXError", "Unit": "Count", "Dimensions": ["ApiName","Method","Resource","Stage"]},
+                { "MetricName": "CacheHitCount", "Unit": "Count", "Dimensions": ["ApiName","Method","Resource","Stage"]},
+                { "MetricName": "CacheMissCount", "Unit": "Count", "Dimensions": ["ApiName","Method","Resource","Stage"]},
+                { "MetricName": "Count", "Unit": "Count", "Dimensions": ["ApiName","Method","Resource","Stage"]},
+                { "MetricName": "IntegrationLatency", "Unit": "Milliseconds", "Dimensions": ["ApiName","Method","Resource","Stage"]},
+                { "MetricName": "Latency", "Unit": "Milliseconds", "Dimensions": ["ApiName","Method","Resource","Stage"]}
+            ],
+            "dimensions" : ["ApiName","Method","Resource","Stage"]
+        },
+        "s3":{
+            "metrics": [
+                { "MetricName": "BucketSizeBytes", "Unit": "Bytes", "Statistics": "Average", "Dimensions": ["StorageType","BucketName","FilterId"]  },
+                { "MetricName": "NumberOfObjects", "Unit": "Count", "Statistics": "Average", "Dimensions": ["StorageType","BucketName","FilterId"]  }
+            ],
+            "dimensions" : ["BucketName","StorageType"]
+        },
+        "cloudfront":{
+            "metrics": [
+                { "MetricName": "Requests", "Unit": "None", "Dimensions": ["DistributionId","Region"]},
+                { "MetricName": "BytesDownloaded", "Unit": "None", "Dimensions": ["DistributionId","Region"]},
+                { "MetricName": "BytesUploaded", "Unit": "None", "Dimensions": ["DistributionId","Region"]},
+                { "MetricName": "TotalErrorRate", "Unit": "Percent", "Dimensions": ["DistributionId","Region"]},
+                { "MetricName": "4xxErrorRate", "Unit": "Percent", "Dimensions": ["DistributionId","Region"]},
+                { "MetricName": "5xxErrorRate", "Unit": "Percent", "Dimensions": ["DistributionId","Region"]}
+            ],
+            "dimensions" : ["DistributionId","Region"]
+        }
+    }
+}
