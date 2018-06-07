@@ -50,6 +50,42 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
 		}
 
+		if ( (service_name.trim() == "jazz_codeq") ) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			//TODO: figure out the correct values to enter for sonar
+			sh "sed -i -- 's/{sonar_url}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{sonar_url}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{sonar_url}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/prod-config.json"
+
+			//TODO: figure out the correct values to enter for sonar
+			sh "sed -i -- 's/{sonar_user}/${config_loader.CODE_QUALITY.SONAR.USER}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{sonar_user}/${config_loader.CODE_QUALITY.SONAR.USER}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{sonar_user}/${config_loader.CODE_QUALITY.SONAR.USER}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{sonar_creds}/${config_loader.CODE_QUALITY.SONAR.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{sonar_creds}/${config_loader.CODE_QUALITY.SONAR.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{sonar_creds}/${config_loader.CODE_QUALITY.SONAR.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{sonar_project_key}/${config_loader.CODE_QUALITY.SONAR.PROJECT_KEY}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{sonar_project_key}/${config_loader.CODE_QUALITY.SONAR.PROJECT_KEY}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{sonar_project_key}/${config_loader.CODE_QUALITY.SONAR.PROJECT_KEY}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+		}
+
 		if ((service_name.trim() == "jazz_delete-serverless-service")) {
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./index.js"
 		}

@@ -18,6 +18,7 @@ import groovy.transform.Field
 @Field def serviceMetadataLoader
 @Field def utilModule
 @Field def environmentDeploymentMetadata
+@Field def sonarModule
 
 @Field def auth_token = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -41,7 +42,6 @@ node() {
 	def gitCommitOwner
 	def gitCommitHash
 	def context_map
-
 
 	if (domain && domain != "") {
 		repo_name = params.domain + "_" + params.service_name
@@ -122,7 +122,7 @@ node() {
 		// @TODO: the below statement will be replaced with regular expression in very near future;
 		def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
-
+		sonarModule.initialize(configLoader, config, branch)
 
 		loadServerlessConfig(config)
 
@@ -161,6 +161,21 @@ node() {
 				error ex.getMessage()
 			}
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
+		}
+
+		stage('Code Quality Check'){
+			events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
+			try {
+				clearVirtualEnv()
+				runValidation(runtime)
+				sonarModule.doAnalysis()
+
+			} catch (ex) {
+				events.sendFailureEvent('CODE_QUALITY_CHECK', ex.getMessage(), context_map, environment_logical_id)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
+				error ex.getMessage()
+			}
+			events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
 		}
 
 		stage('Build') {
@@ -665,6 +680,34 @@ def send_status_email (config, build_status, email_content) {
 	}
 }
 
+/** Run validation based on runtime
+*/
+def runValidation(String runtime) {
+	if (runtime.indexOf("nodejs") > -1) {
+		echo "running validations for $runtime"
+		sh "jshint *.js"
+	} else if (runtime.indexOf("java") > -1) {
+		echo "running validations for $runtime"
+		dir('_java') {
+			sh "wget -q ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB}"
+		}
+
+		sh 'java -cp _java/checkstyle-7.6-all.jar com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src'
+
+	} else if (runtime.indexOf("python") > -1) {
+		echo "running validations for $runtime"
+
+	}
+}
+
+/**
+*   Clear Virtualenvironment
+**/
+def clearVirtualEnv() {
+    // sh "virtualenv --clear venv" // to uninstall all the packages installed in venv
+    sh "rm -rf venv" // just delete the venv folder
+}
+
 def updatePlatformServiceTemplate(config, roleARN, roleId, environment_logical_id, repo_name)	{
 	echo "loadServerlessConfig......."
 	def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
@@ -726,6 +769,9 @@ def loadBuildModules(buildModuleUrl){
 
 		environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
 		echo "Environment deployment data loader module loaded successfully."
+
+		sonarModule = load "sonar-module.groovy"
+		echo "Sonar module loaded successfully."
 
 	}
 }
