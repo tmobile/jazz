@@ -48,11 +48,8 @@ function validateEmptyFieldsVal(assets_data) {
     logger.debug("Inside validateEmptyFieldsVal");
     return new Promise((resolve, reject) => {
         var invalid_fields = [];
-        Object.keys(assets_data).forEach((field) => {
-            var value = assets_data[field];
-            if (!value) {
-                invalid_fields.push(field);
-            }
+        var invalid_fields = Object.keys(assets_data).filter((field) => {
+            if(!assets_data[field]) return field;
         });
 
         if (invalid_fields.length > 0) {
@@ -158,23 +155,10 @@ function validateDataTypes(field, prop_value) {
 function validateEnumValues(assets_data) {
     logger.debug("Inside validateEnumValues");
     return new Promise((resolve, reject) => {
-        var invalid_fields = [];
-        Object.keys(assets_data).forEach((field) => {
-            if (assets_data[field]) {
-                var value = assets_data[field];
-                switch (field) {
-                    case 'status':
-                        if (global.global_config.ASSET_STATUS.indexOf(value) === -1) {
-                            invalid_fields.push(field);
-                        }
-                        break;
-                    case 'asset_type':
-                        if (global.global_config.ASSET_TYPES.indexOf(value) === -1) {
-                            invalid_fields.push(field);
-                        }
-                        break;
-                }
-            }
+        var invalid_fields = Object.keys(assets_data).filter((field) => {
+            var value = assets_data[field];
+            if(value && field === "status" && (global.global_config.ASSET_STATUS.indexOf(value) === -1)) {return field};
+            if(value && field === "asset_type" && (global.global_config.ASSET_TYPES.indexOf(value) === -1)) {return field}; 
         });
 
         if (invalid_fields.length > 0) {

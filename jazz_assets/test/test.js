@@ -1,19 +1,26 @@
-const chai = require('chai');
-const assert = require('chai').assert;
+// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
 const expect = require('chai').expect;
-const should = require('chai').should();
-const chaiAsPromised = require('chai-as-promised');
-chai.use(chaiAsPromised);
 const awsContext = require('aws-lambda-mock-context');
 const AWS = require("aws-sdk-mock");
-const request = require('request');
 const sinon = require('sinon');
 
 const index = require('../index');
-const logger = require("../components/logger.js");
 const configObj = require('../components/config.js');
-const crud = require('../components/crud')();
-const errorHandler = require("../components/error-handler.js")();
 const validateutils = require("../components/validation.js");
 const global_config = require("../config/global-config.json");
 
@@ -126,10 +133,7 @@ describe('jazz_assets', function () {
       payload.asset_type = ["invalidArray"]
       var validateCreatePayload = validateutils.validateCreatePayload(payload, assetTable)
         .catch(error => {
-          expect(error).to.include({
-            result: 'inputError',
-            message: "The following field's value/asset_type is not valid - tags, asset_type"
-          });
+          expect(error).to.include({result: 'inputError', message: 'The following field\'s value/type is not valid - tags, asset_type'});
         });
     });
 
@@ -576,7 +580,6 @@ describe('jazz_assets', function () {
         var resObj = '{"errorType":"InternalServerError","message":"Unexpected Server Error"}';
         const genericInputValidation = sinon.stub(index, "genericInputValidation");
         index.handler(event, context,(error, data) => {
-          console.log(error)
           expect(error).to.be.eq(resObj);
           sinon.assert.calledOnce(genericInputValidation);
           genericInputValidation.restore();
