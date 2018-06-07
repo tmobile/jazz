@@ -157,7 +157,7 @@ node() {
 				validateSwaggerSpec();
 			} catch (ex) {
 				events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map, environment_logical_id)
-				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
 				error ex.getMessage()
 			}
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
@@ -173,7 +173,7 @@ node() {
 
 				} catch (ex) {
 					events.sendFailureEvent('CODE_QUALITY_CHECK', ex.getMessage(), context_map, environment_logical_id)
-					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
+					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
 					error ex.getMessage()
 				}
 				events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
@@ -185,7 +185,7 @@ node() {
 				buildLambda(runtime)
 			} catch (ex) {
 				events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
-				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
 				error ex.getMessage()
 			}
 			events.sendCompletedEvent('BUILD', 'build completed', context_map, environment_logical_id)

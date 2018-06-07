@@ -1,4 +1,5 @@
 #!groovy
+
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
@@ -25,7 +26,7 @@ import groovy.transform.Field
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def current_environment = ''
 @Field def stack_name
-node()  {
+node() {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
 
@@ -63,12 +64,15 @@ node()  {
 			repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
 		}
 
-		dir(repo_name)
-		{
-			checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: repocloneUrl]]])
+		dir(repo_name) {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/' + params.scm_branch]
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: repocloneUrl]
+			]])
 		}
 
-		def configObj = dir(repo_name){
+		def configObj = dir(repo_name) {
 			LoadConfiguration()
 		}
 
@@ -84,14 +88,13 @@ node()  {
 		error "Failed to fetch service metadata from catalog"
 	}
 
-	dir(repo_name)
-	{
+	dir(repo_name) {
 		scmModule.setServiceConfig(config)
 		def envApi = "${g_base_url}/jazz/environments"
 		environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, envApi, auth_token)
 		gitCommitHash = scmModule.getRepoCommitHash()
 		gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
-		context_map = [created_by : config['created_by'], deployed_by: gitCommitOwner]
+		context_map = [created_by: config['created_by'], deployed_by: gitCommitOwner]
 		environment_logical_id = '';
 
 		if (branch == 'master') {
@@ -106,7 +109,9 @@ node()  {
 			error "The environment has not been created yet and its missing the environment id"
 		}
 	}
-	if (!events) { error "Can't load events module" } //Fail here
+	if (!events) {
+		error "Can't load events module"
+	} //Fail here
 	def eventsApi = "${g_base_url}/jazz/events"
 	events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, environment_logical_id, eventsApi)
 
@@ -143,20 +148,19 @@ node()  {
 
 	events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
-	dir(repo_name){
+	dir(repo_name) {
 		loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
 		if (domain && domain == "jazz") {
-			stage('Update Service Template'){
+			stage('Update Service Template') {
 				echo "Inside Update service template"
 				try {
 					updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)
-				}
-				catch (error) {
+				} catch (error) {
 					error "Error occured while updating service template."
 				}
 			}
 		}
-		stage('Pre-Build Validation'){
+		stage('Pre-Build Validation') {
 			events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
 			try {
 				send_status_email(config, 'STARTED', "")
@@ -164,20 +168,20 @@ node()  {
 			} catch (ex) {
 				send_status_email(config, 'FAILED', "")
 				events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map, environment_logical_id)
-				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
 				error ex.getMessage()
 			}
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
 		}
 		if (config['domain'] && config['domain'] != 'jazz') {
-			stage('Code Quality Check'){
+			stage('Code Quality Check') {
 				events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
 				try {
 					runValidation(runtime)
 					sonarModule.doAnalysis()
 				} catch (ex) {
 					events.sendFailureEvent('CODE_QUALITY_CHECK', ex.getMessage(), context_map, environment_logical_id)
-					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
+					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
 					error ex.getMessage()
 				}
 				events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
@@ -190,7 +194,7 @@ node()  {
 				buildLambda(runtime)
 			} catch (ex) {
 				events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
-				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), context_map, environment_logical_id)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
 				error ex.getMessage()
 			}
 			events.sendCompletedEvent('BUILD', 'build completed', context_map, environment_logical_id)
@@ -210,7 +214,9 @@ node()  {
 			environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
 
 			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([
+				[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+			]) {
 				try {
 					// initialize aws credentials
 					sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
@@ -253,13 +259,13 @@ node()  {
 					error ex.getMessage()
 				}
 				environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
-				def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
+				def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
 				events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
 				events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
 				events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
 
-			}//end of withCredentials
-		}//end of stage to production
+			} //end of withCredentials
+		} //end of stage to production
 	}
 }
 
@@ -295,7 +301,7 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
 
 
 /**
-*/
+ */
 def isEnabled(config, key) {
 	if (config.containsKey(key)) {
 		return true
@@ -313,7 +319,7 @@ def LoadConfiguration() {
 	// delete commented lines
 	def cleanedList = []
 	for (i in resultList) {
-		if (i.toLowerCase().startsWith("#")) { } else {
+		if (i.toLowerCase().startsWith("#")) {} else {
 			cleanedList.add(i)
 		}
 	}
@@ -339,14 +345,14 @@ def LoadConfiguration() {
 
 
 /** Run validation based on runtime
-*/
+ */
 /*def runValidation(String runtime) {
 
 
 } */
 
 /**	Build project based on runtime
-*/
+ */
 def buildLambda(String runtime) {
 	echo "installing dependencies for $runtime"
 	if (runtime.indexOf("nodejs") > -1) {
@@ -360,12 +366,14 @@ def buildLambda(String runtime) {
 		sh "pip install -r requirements.txt -t library"
 		sh "touch library/__init__.py"
 		// create virtual environment and install pytest
-		sh """
+		sh ""
+		"
 		pip install virtualenv
 		virtualenv venv
-		. venv/bin/activate
+			.venv / bin / activate
 		pip install pytest
-		"""	
+			""
+		"	
 	}
 }
 
@@ -373,7 +381,7 @@ def buildLambda(String runtime) {
 
 
 /** Reset credentials
-*/
+ */
 def resetCredentials() {
 	echo "resetting AWS credentials"
 	sh "aws configure set profile.tmoDevOps.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
@@ -396,7 +404,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"]  //@TODO. Add more runtime supports. DSundar3
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports. DSundar3
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {
@@ -455,7 +463,7 @@ def validateDeploymentConfigurations(def prop) {
 }
 
 
-def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isStreamEnabled, def isDynamoDbEnabled){
+def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
 
 	def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
 
@@ -463,8 +471,8 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: configPackURL]
-			]])
+			[credentialsId: repo_credential_id, url: configPackURL]
+		]])
 	}
 
 	echo "isEventSchdld: $isEventSchdld,isScheduleEnabled: $isScheduleEnabled, isEc2EventEnabled: $isEc2EventEnabled,  isS3EventEnabled: $isS3EventEnabled, isStreamEnabled: $isStreamEnabled, isDynamoDbEnabled: $isDynamoDbEnabled"
@@ -520,7 +528,7 @@ def createSubscriptionFilters(stackName, region, roleId) {
 	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
 	try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
-	} catch (Exception ex) { }// ignore if already existing
+	} catch (Exception ex) {} // ignore if already existing
 
 	try {
 		filter_json = sh(
@@ -534,7 +542,7 @@ def createSubscriptionFilters(stackName, region, roleId) {
 		if (filtername != "" && !filtername.equals(lambda)) {
 			sh "aws logs delete-subscription-filter --output json --log-group-name \"" + lambda + "\" --filter-name \"" + filtername + "\" --region " + region
 		}
-	} catch (Exception ex) { }// ignore error if not created yet
+	} catch (Exception ex) {} // ignore error if not created yet
 	try {
 		sh "aws logs put-subscription-filter --output json --log-group-name \"" + lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
 	} catch (Exception ex) {
@@ -542,7 +550,7 @@ def createSubscriptionFilters(stackName, region, roleId) {
 	}
 }
 
-def writeServerlessFile(config, current_environment){
+def writeServerlessFile(config, current_environment) {
 	sh "pwd"
 	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
 
@@ -586,7 +594,9 @@ def setCredentials() {
 	def loginUrl = g_base_url + '/jazz/login'
 	def token
 
-	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+	withCredentials([
+		[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']
+	]) {
 		echo "user name is $UNAME"
 
 		def login_json = []
@@ -608,8 +618,7 @@ def setCredentials() {
 			tokenJson_token = tokenJson.data.token
 
 			return tokenJson_token
-		}
-		catch (e) {
+		} catch (e) {
 			echo "error occured: " + e.getMessage()
 			error "error occured: " + e.getMessage()
 		}
@@ -617,10 +626,10 @@ def setCredentials() {
 }
 
 /**
-* Send email to the recipient with the build status and any additional text content
-* Supported build status values = STARTED, FAILED & COMPLETED
-* @return
-*/
+ * Send email to the recipient with the build status and any additional text content
+ * Supported build status values = STARTED, FAILED & COMPLETED
+ * @return
+ */
 def send_status_email(config, build_status, email_content) {
 	if (domain != "jazz") {
 		echo "Sending build notification to ${config['created_by']}"
@@ -647,12 +656,12 @@ def send_status_email(config, build_status, email_content) {
 		}
 		def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
 		body = JsonOutput.toJson([
-			from : fromStr,
-			to : config['created_by'],
-			subject : body_subject,
-			text : body_text,
-			cc : cc_email,
-			html : body_html
+			from: fromStr,
+			to: config['created_by'],
+			subject: body_subject,
+			text: body_text,
+			cc: cc_email,
+			html: body_html
 		])
 
 		try {
@@ -706,7 +715,7 @@ def getEventsArn(domain, service, env) {
 		return eventsArn
 	} catch (ex) {
 		// Skip the 'ResourceNotFoundException' when deploying first time. Workflow can't fail here.
-		echo  "Can't fetch the events policy configurations for lambda. " + ex.getMessage()
+		echo "Can't fetch the events policy configurations for lambda. " + ex.getMessage()
 		return []
 	}
 }
@@ -734,7 +743,7 @@ def getLambdaARN(String stackName) {
 }
 
 /** Run validation based on runtime
-*/
+ */
 def runValidation(String runtime) {
 	if (runtime.indexOf("nodejs") > -1) {
 		echo "running validations for $runtime"
@@ -763,27 +772,27 @@ def generateAssetMap(provider, providerId, type, created_by) {
 @NonCPS
 def parseJson(jsonString) {
 	def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-	def m = [:]
+	def m = [: ]
 	m.putAll(lazyMap)
 	return m
 }
 
-def updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)	{
+def updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name) {
 	echo "loadServerlessConfig......."
 	def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
 	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name, utilModule)
 	serviceConfigdata.loadServiceConfigurationData()
 }
 /*
-* Load build modules
-*/
-def loadBuildModules(buildModuleUrl){
+ * Load build modules
+ */
+def loadBuildModules(buildModuleUrl) {
 	dir('build_modules') {
 		checkout([$class: 'GitSCM', branches: [
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: buildModuleUrl]
-			]])
+			[credentialsId: repo_credential_id, url: buildModuleUrl]
+		]])
 
 		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
