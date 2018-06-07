@@ -4,6 +4,7 @@ node_modules
 .DS_Store
 .classpath
 .project
+.idea
 .settings/
 target/
 .vscode/
