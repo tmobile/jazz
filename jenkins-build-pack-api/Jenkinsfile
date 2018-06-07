@@ -685,7 +685,7 @@ def send_status_email(config, build_status, email_content) {
 */
 def runValidation(String runtime) {
 	if (runtime.indexOf("nodejs") > -1) {
-		echo "running validations for $runtime"
+		echo "running validations for $runtime"		
 		sh "jshint *.js"
 	} else if (runtime.indexOf("java") > -1) {
 		echo "running validations for $runtime"
