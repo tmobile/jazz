@@ -80,7 +80,7 @@ var invokeLambda = (functionARN, inputJSON, AWS_REGION) => {
     try {
       var aws = require('aws-sdk');
       var lambda = new aws.Lambda({
-        region: AWS_REGION //Uses the default configuration value , Unless Region is provided in the Request Payload 
+        region: AWS_REGION 
       });
       lambda.invoke({
         FunctionName: functionARN,
