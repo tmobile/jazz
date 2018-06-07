@@ -88,8 +88,8 @@ describe("getAuthResponse", () => {
     };
     index.getAuthResponse(result).then((auth) => {
       expect(auth).to.eq(result.body.data.token);
-    })
-  })
+    });
+  });
   it("should give error message when authentication fails ", () => {
     let result = {
       statusCode: 401,
@@ -97,10 +97,10 @@ describe("getAuthResponse", () => {
     };
     index.getAuthResponse(result).catch((err) => {
       expect(err.message).to.eq('Invalid token response from API');
-    })
-  })
+    });
+  });
 
-})
+});
 describe("checkforInterestedEvents", () => {
   it("should return object with paramenter interested_event set to true", () => {
     var record = event.Records[0];
@@ -109,7 +109,7 @@ describe("checkforInterestedEvents", () => {
     index.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
       assert.isTrue(res.interested_event);
     });
-  })
+  });
   it("should reject with paramenter interested_event set to false", () => {
     var payload = {
       Item: {
@@ -156,31 +156,31 @@ describe("checkforInterestedEvents", () => {
     var encodedPayload = encoded;
     index.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
       assert.isFalse(res.interested_event);
-    })
-  })
-})
+    });
+  });
+});
 describe("processEventRecords", () => {
-  var  procesEventRecordStub
+  var  procesEventRecordStub;
   beforeEach(() => {
     
-  })
+  });
   afterEach(() => {
     if (procesEventRecordStub) {
       procesEventRecordStub.restore();
     }
-  })
+  });
   it("should resolve all for success scenario from processEventRecord",()=>{
     procesEventRecordStub = sinon.stub(index, "processEventRecord").resolves({
       "status":"succesfully processed Event Rcord"
-    })
+    });
     index.processEventRecords(event,configData,"temp_auth").then((obj)=>{
       sinon.assert.calledOnce(procesEventRecordStub)
       for(let i=0;i<obj.length;i++){
         expect(obj[i].status).to.eq("succesfully processed Event Rcord")
       }
       procesEventRecordStub.restore();
-    })
-  })
+    });
+  });
   it("should reject all for Error case scenario from processEventRecord",()=>{
     procesEventRecordStub = sinon.stub(index, "processEventRecord").rejects({
       "status":"Process Event Record failed"
@@ -189,11 +189,11 @@ describe("processEventRecords", () => {
       sinon.assert.calledOnce(procesEventRecordStub)
       expect(err.status).to.eq("Process Event Record failed");
       procesEventRecordStub.restore()
-    })
-  })
-})
+    });
+  });
+});
 describe("processEventRecord", () => {
-  var payload
+  var payload;
   beforeEach(() => {
     payload = {
       Item: {
@@ -234,13 +234,13 @@ describe("processEventRecord", () => {
           S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'
         }
       }
-    }
-  })
+    };
+  });
   afterEach(() => {
     if (reqStub) {
       reqStub.restore();
     }
-  })
+  });
   it("should call processEvent for intrested events", () => {
     let message = "Succesfully Updated Creation Event"
     let responseObject = {
@@ -253,11 +253,11 @@ describe("processEventRecord", () => {
     };
     reqStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
-    })
+    });
     var checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves({
       "interested_event": true,
       "payload": payload.Item
-    })
+    });
     var processEventStub = sinon.stub(index, "processEvent")
     var tempAuth = "Auth_token"
     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
