@@ -52,6 +52,7 @@ import {AdvancedFiltersComponent} from '../secondary-components/advanced-filters
 import { AdvFilters }            from '../adv-filter.directive';
 import {SafeHtmlPipe} from "../core/pipes/safe-html.pipe";
 import {SafeUrlPipe} from "../core/pipes/safe-url.pipe";
+import {RouterModule} from '@angular/router';
 let specificComponents:any
 let specificModules: any;
 if(environment.envName == 'oss'){
