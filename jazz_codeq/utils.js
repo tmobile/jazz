@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // =========================================================================
-
+/*jshint loopfunc:true */
 const logger = require("./components/logger.js"); //Import the logging module.
 const request = require('request');
 
@@ -61,7 +61,6 @@ function getReport(metrics, sonarMeasures, config) {
 						"link": config.SERVICE_API_URL + config.HELP_SERVICE + "?metrics=" + metricName,
 						"values": getHistoryValues(record.history)
 					});
-					
 				}
 			} else {
 				for (let n = metrics.length - 1; n >= 0; n--) {
@@ -91,7 +90,7 @@ function getQuery(serviceContext) {
 
 function getMetrics(query, config, messages) {
 	//if metrics is in query validate the metrics requested against allowed metrics
-	let results = {};
+	let result = {};
 	let metrics;
 	
 	if (query && query.metrics) {
@@ -151,7 +150,7 @@ function getJazzToken(config) {
 		
 		logger.debug("Getting token for calling Environment API...");
 		request(svcPayload, (error, response, body) => {
-			if (response.statusCode === 200 && body && body.data) {
+			if (response.statusCode === 200 && body) {
 				resolve({ "auth_token": body.data.token });
 			} else {
 				logger.error(response.body.message);
@@ -181,8 +180,8 @@ function getProjectBranch(authToken, query, config) {
 		logger.debug(`Calling Environment API to get project branch with uri - ${svcPayload.uri}`);
 
 		request(svcPayload, (error, response, body) => {
-			if (response.statusCode === 200 && body && body.data) {
-				parsedBody = (typeof body === 'string') ? JSON.parse(body) : body;
+			if (response.statusCode === 200 && body) {
+				let parsedBody = (typeof body === 'string') ? JSON.parse(body) : body;
 				
 				logger.info("ENV :" + parsedBody.data.environment[0]);
 				const physicalID = parsedBody.data.environment[0].physical_id;
@@ -214,7 +213,7 @@ function getCodeqReport(metrics, branch, toDate, fromDate, query, config) {
 
 		const component =  config.SONAR_PROJECT_KEY + "_" + query.domain + "_" + query.service + "_" + branch;
 		const svcPayload = {
-			uri: config.SONAR_URL + "?metrics=" + metricString + "&from=" + fromDate + "&to=" + toDate + "&component=" + component,
+			uri: config.SONAR_URL + config.SONAR_ENV_SERVICE + "?metrics=" + metricString + "&from=" + fromDate + "&to=" + toDate + "&component=" + component,
 			method: 'GET',
 			headers: {
 				'Authorization': "Basic " + new Buffer(config.SONAR_USER + ":" + config.SONAR_PASSWORD).toString("base64"),
@@ -226,9 +225,9 @@ function getCodeqReport(metrics, branch, toDate, fromDate, query, config) {
 		logger.info(`Calling Sonar API to get report with url - ${svcPayload.uri}`);
 
 		request(svcPayload, (error, response, body) => {
-			
-			if (response.statusCode === 200 && body && body.data) {
-				parsedBody = (typeof body === 'string') ? JSON.parse(body) : body;
+			if (response.statusCode === 200 && body) {
+				
+				let parsedBody = (typeof body === 'string') ? JSON.parse(body) : body;
 				getReport(metrics, parsedBody.measures, config)
 				.then(results => resolve(results))
 				.catch(err => { 
@@ -264,4 +263,4 @@ module.exports = {
     getJazzToken,
     getProjectBranch,
     getCodeqReport
-}
+};
