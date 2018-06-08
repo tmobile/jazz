@@ -7,6 +7,8 @@ export const environment = {
     multi_env:false,
     serviceTabs:["overview","logs"],
     environmentTabs:["overview","logs"],
-    urls:{}
+    urls:{},
+    userJourney: {
+      registrationMessage: ''
+    }
   };
-  
