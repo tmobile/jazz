@@ -50,18 +50,3 @@ var assetPayload = {
 	"status": "deployment_started",
 	"endpoint": "http://testsite.com/stg/index.html"
 };
-
-var serviceContext = {
-	"service_type": "website",
-	"branch": "feature/clearwater_tab",
-	"runtime": "",
-	"domain": "jazz",
-	"iam_role": "aanand12",
-	"environment": "38sktlzm0d-dev",
-	"region": "",
-	"message": "No Message",
-	"provider": "aws",
-	"provider_id": "s3://jazz-webapp-0b0e2eb1/38sktlzm0d-dev",
-	"type": "s3",
-	"created_by": "aanand12"
-}
