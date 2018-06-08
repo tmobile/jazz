@@ -1,0 +1,22 @@
+{
+  "version": 0.9,
+  "timestamp": "2018-05-22T19:07:25.671Z",
+  "resource": "http://cloud-api-doc.corporate.t-mobile.com/jazz_is-service-available/prod/swagger.json",
+  "results": {
+    "message": "Swagger validation failed",
+    "score": {
+      "current": 76,
+      "organizationGoal": 100,
+      "organizationAverage": 78
+    },
+    "errors": 105,
+    "warnings": 0,
+    "details": {
+      "MissingRequiredProperty": {
+        "score": -2,
+        "status": "error",
+        "description": "Required property in missing"
+      }
+    }
+  }
+}
