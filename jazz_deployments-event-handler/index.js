@@ -1,3 +1,20 @@
+// =========================================================================
+// Copyright � 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
+'use strict';
 /**
 	Deployments event handler function.
 	@Author: 
@@ -8,42 +25,39 @@ const _ = require("lodash");
 const request = require("request");
 const rp = require('request-promise-native');
 const Uuid = require("uuid/v4");
-
 const config = require("./components/config.js"); 
 const logger = require("./components/logger.js"); 
 const errorHandlerModule = require("./components/error-handler.js");
 const fcodes = require('./utils/failure-codes.js');
-
 var errorHandler = errorHandlerModule(logger);
-
 var failureCodes = fcodes();
 var processedEvents = [];
 var failedEvents = [];
 
-var handler = (event, context, cb) => {
+function handler(event, context, cb){
 	var configData = config(context);
 	var authToken;
 
-	rp(getTokenRequest(configData))
+	rp(exportable.getTokenRequest(configData))
 		.then(result => {
-			return getAuthResponse(result);
+			return exportable.getAuthResponse(result);
 		})
 		.then(authToken => {
-			return processEventRecords(event, configData, authToken);
+			return exportable.processEventRecords(event, configData, authToken);
 		})
 		.then(result => {
-			var records = getEventProcessStatus();
+			var records = exportable.getEventProcessStatus();
 			logger.info("Successfully processed events: " + JSON.stringify(records));
 			return cb(null, records);
 		})
 		.catch(err => {
-			var records = getEventProcessStatus();
+			var records = exportable.getEventProcessStatus();
 			logger.error("Error processing events: " + JSON.stringify(err));
 			return cb(null, records);
 		});
 };
 
-var getTokenRequest = (configData) => {
+function getTokenRequest(configData){
 	return {
 		uri: configData.BASE_API_URL + configData.TOKEN_URL,
 		method: 'post',
@@ -56,9 +70,9 @@ var getTokenRequest = (configData) => {
 			return response;
 		}
 	};
-};
+}
 
-var getAuthResponse = (result) => {
+function getAuthResponse(result) {
 	return new Promise((resolve, reject) => {
 		if (result.statusCode === 200 && result.body && result.body.data && result.body.data.token) {
 			return resolve(result.body.data.token);
@@ -69,11 +83,11 @@ var getAuthResponse = (result) => {
 	});
 };
 
-var processEventRecords = (event, configData, authToken) => {
+function processEventRecords(event, configData, authToken){
 	return new Promise((resolve, reject) => {
 		var processEventRecordPromises = [];
 		for (var i = 0; i < event.Records.length; i++) {
-			processEventRecordPromises.push(processEventRecord(event.Records[i], configData, authToken));
+			processEventRecordPromises.push(exportable.processEventRecord(event.Records[i], configData, authToken));
 		}
 		Promise.all(processEventRecordPromises)
 			.then((result) => {
@@ -86,16 +100,16 @@ var processEventRecords = (event, configData, authToken) => {
 	});
 };
 
-var processEventRecord = (record, configData, authToken) => {
+function processEventRecord (record, configData, authToken){
 	return new Promise((resolve, reject) => {
 		var sequenceNumber = record.kinesis.sequenceNumber;
 		var encodedPayload = record.kinesis.data;
 		var payload;
-		return checkForInterestedEvents(encodedPayload, sequenceNumber, configData)
+		return exportable.checkForInterestedEvents(encodedPayload, sequenceNumber, configData)
 			.then(result => {
 				payload = result.payload;
 				if (result.interested_event) {
-					return processEvent(payload, configData, authToken);
+					return exportable.processEvent(payload, configData, authToken);
 				} else {
 					return new Promise((resolve, reject) => {
 						resolve({ "message": "Not an interesting event" });
@@ -103,18 +117,18 @@ var processEventRecord = (record, configData, authToken) => {
 				}
 			})
 			.then(result => {
-				handleProcessedEvents(sequenceNumber, payload);
+				exportable.handleProcessedEvents(sequenceNumber, payload);
 				return resolve(result);
 			})
 			.catch(err => {
 				logger.error("processEventRecord failed for: " + JSON.stringify(record));
-				handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
+				exportable.handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
 				return reject(err);
 			});
 	});
 };
 
-var checkForInterestedEvents = (encodedPayload, sequenceNumber, configData) => {
+function checkForInterestedEvents(encodedPayload, sequenceNumber, configData)  {
 	return new Promise((resolve, reject) => {
 		var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
@@ -136,18 +150,18 @@ var checkForInterestedEvents = (encodedPayload, sequenceNumber, configData) => {
 	});
 };
 
-var processEvent = (eventPayload, configData, authToken) => {
+function processEvent (eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		if (eventPayload.SERVICE_CONTEXT && eventPayload.SERVICE_CONTEXT.S) {
 			if (eventPayload.EVENT_NAME.S === configData.EVENTS.create_event_name) {
-				processCreateEvent(eventPayload, configData, authToken)
+				exportable.processCreateEvent(eventPayload, configData, authToken)
 					.then(result => { return resolve(result); })
 					.catch(err => {
 						logger.error("processCreateEvent failed: " + JSON.stringify(err));
 						return reject(err);
 					});
 			} else if (eventPayload.EVENT_NAME.S === configData.EVENTS.update_event_name) {
-				processUpdateEvent(eventPayload, configData, authToken)
+				exportable.processUpdateEvent(eventPayload, configData, authToken)
 					.then(result => { return resolve(result); })
 					.catch(err => {
 						logger.error("processUpdateEvent failed: " + JSON.stringify(err));
@@ -158,20 +172,20 @@ var processEvent = (eventPayload, configData, authToken) => {
 			}
 		} else {
 			logger.info("Service Context is not defined");
-			var err = handleError(failureCodes.PR_ERROR_4.code, "Service context is not defined");
+			var err = exportable.handleError(failureCodes.PR_ERROR_4.code, "Service context is not defined");
 			return reject(err);
 		}
 	});
 };
 
-var handleError = (errorType, message) => {
+function handleError(errorType, message){
 	var error = {};
 	error.failure_code = errorType;
 	error.failure_message = message;
 	return error;
 };
 
-var getDeploymentPayload = (svcContext) => {
+function getDeploymentPayload(svcContext){
 	var deploymentPayload = {};
 
 	if (svcContext.domain) {
@@ -205,7 +219,7 @@ var getDeploymentPayload = (svcContext) => {
 	return deploymentPayload;
 };
 
-var getSvcPayload = (method, payload, apiEndpoint, authToken) => {
+function  getSvcPayload(method, payload, apiEndpoint, authToken) {
 	var svcPayload = {
 		headers: {
 			'content-type': "application/json",
@@ -223,32 +237,32 @@ var getSvcPayload = (method, payload, apiEndpoint, authToken) => {
 	return svcPayload;
 };
 
-var procesRequest = (svcPayload) => {
+function processRequest(svcPayload){
 	return new Promise((resolve, reject) => {
 		request(svcPayload, function (error, response, body) {
 			if (response.statusCode === 200 && body) {
 				return resolve(body);
 			} else {
 				logger.error("Error processing request: " + JSON.stringify(response));
-				var error = handleError(failureCodes.PR_ERROR_3.code, response.body.message);
+				var error = exportable.handleError(failureCodes.PR_ERROR_3.code, response.body.message);
 				return reject(error);
 			}
 		});
 	});
 };
 
-var processCreateEvent = (eventPayload, configData, authToken) => {
+function  processCreateEvent(eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
 		logger.info("svcContext: " + JSON.stringify(svcContext));
 
-		var deploymentPayload = getDeploymentPayload(svcContext);
+		var deploymentPayload = exportable.getDeploymentPayload(svcContext);
 		deploymentPayload.service_id = eventPayload.SERVICE_ID.S
 		deploymentPayload.service = eventPayload.SERVICE_NAME.S
 		var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE;
-		var svcPayload = getSvcPayload("POST", deploymentPayload, apiEndpoint, authToken);
+		var svcPayload = exportable.getSvcPayload("POST", deploymentPayload, apiEndpoint, authToken);
 
-		procesRequest(svcPayload)
+		exportable.processRequest(svcPayload)
 			.then(result => { return resolve(result); })
 			.catch(err => {
 				logger.error("processCreateEvent failed: " + JSON.stringify(err));
@@ -257,17 +271,17 @@ var processCreateEvent = (eventPayload, configData, authToken) => {
 	});
 };
 
-var processUpdateEvent = (eventPayload, configData, authToken) => {
+function  processUpdateEvent(eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
 		logger.info("svcContext: " + JSON.stringify(svcContext));
 
-		var deploymentPayload = getDeploymentPayload(svcContext);
+		var deploymentPayload = exportable.getDeploymentPayload(svcContext);
 		deploymentPayload.service_id = eventPayload.SERVICE_ID.S
 		deploymentPayload.service = eventPayload.SERVICE_NAME.S
 
-		getDeployments(deploymentPayload, configData, authToken)
-			.then(result => { return updateDeployments(result, deploymentPayload, configData, authToken); })
+		exportable.getDeployments(deploymentPayload, configData, authToken)
+			.then(result => { return exportable.updateDeployments(result, deploymentPayload, configData, authToken); })
 			.then(result => { return resolve(result); })
 			.catch(err => {
 				logger.error("processUpdateEvent failed: " + JSON.stringify(err));
@@ -276,15 +290,15 @@ var processUpdateEvent = (eventPayload, configData, authToken) => {
 	});
 };
 
-var getDeployments = (deploymentPayload, configData, authToken) => {
+function getDeployments(deploymentPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var env_id = deploymentPayload.environment_logical_id;
 		if (env_id) {
 			var service_name = deploymentPayload.service;
 			var domain = deploymentPayload.domain;
 			var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE + "?service=" + service_name + "&domain=" + domain + "&environment=" + env_id;;
-			var svcPayload = getSvcPayload("GET", null, apiEndpoint, authToken);
-			procesRequest(svcPayload)
+			var svcPayload = exportable.getSvcPayload("GET", null, apiEndpoint, authToken);
+			exportable.processRequest(svcPayload)
 				.then(result => { return resolve(result); })
 				.catch(err => {
 					logger.error("getDeployments failed: " + JSON.stringify(err));
@@ -298,7 +312,7 @@ var getDeployments = (deploymentPayload, configData, authToken) => {
 	});
 };
 
-var updateDeployments = (res, deploymentPayload, configData, authToken) => {
+function updateDeployments(res, deploymentPayload, configData, authToken)  {
 	return new Promise((resolve, reject) => {
 		var deploymentResults = JSON.parse(res);
 		if (deploymentResults.data && deploymentResults.data.deployments && deploymentResults.data.deployments.length > 0) {
@@ -320,7 +334,7 @@ var updateDeployments = (res, deploymentPayload, configData, authToken) => {
 				logger.info("Update deployment request payload: " + JSON.stringify(deploymentPayload));
 				var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE + "/" + deploymentData.deployment_id;
 				var svcPayload = getSvcPayload("PUT", deploymentPayload, apiEndpoint, authToken);
-				procesRequest(svcPayload)
+				exportable.processRequest(svcPayload)
 					.then(result => { return resolve(result); })
 					.catch(err => {
 						logger.error("updateDeployments failed: " + JSON.stringify(err));
@@ -339,21 +353,21 @@ var updateDeployments = (res, deploymentPayload, configData, authToken) => {
 	});
 };
 
-var getEventProcessStatus = () => {
+function  getEventProcessStatus(){
 	return {
 		"processed_events": processedEvents.length,
 		"failed_events": failedEvents.length
 	};
 };
 
-var handleProcessedEvents = function (id, payload) {
+function handleProcessedEvents(id, payload) {
 	processedEvents.push({
 		"sequence_id": id,
 		"event": payload
 	});
 };
 
-var handleFailedEvents = function (id, failure_message, payload, failure_code) {
+function  handleFailedEvents(id, failure_message, payload, failure_code) {
 	failedEvents.push({
 		"sequence_id": id,
 		"event": payload,
@@ -362,23 +376,24 @@ var handleFailedEvents = function (id, failure_message, payload, failure_code) {
 	});
 };
 
-module.exports = {
-	getTokenRequest: getTokenRequest,
-	getAuthResponse: getAuthResponse,
-	handleError: handleError,
-	checkForInterestedEvents: checkForInterestedEvents,
-	handleProcessedEvents: handleProcessedEvents,
-	handleFailedEvents: handleFailedEvents,
-	getEventProcessStatus: getEventProcessStatus,
-	handler: handler,
-	processEventRecords: processEventRecords,
-	processEventRecord: processEventRecord,
-	processEvent: processEvent,
-	getDeploymentPayload: getDeploymentPayload,
-	getSvcPayload: getSvcPayload,
-	procesRequest: procesRequest,
-	processCreateEvent: processCreateEvent,
-	processUpdateEvent: processUpdateEvent,
-	getDeployments: getDeployments,
-	updateDeployments: updateDeployments
+ const exportable= {
+	getTokenRequest,
+	getAuthResponse,
+	handleError,
+	checkForInterestedEvents,
+	handleProcessedEvents,
+	handleFailedEvents,
+	getEventProcessStatus,
+	handler,
+	processEventRecords,
+	processEventRecord,
+	processEvent,
+	getDeploymentPayload,
+	getSvcPayload,
+	processRequest,
+	processCreateEvent,
+	processUpdateEvent,
+	getDeployments,
+	updateDeployments
 };
+module.exports = exportable;
