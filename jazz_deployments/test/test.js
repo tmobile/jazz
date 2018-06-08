@@ -167,7 +167,6 @@ describe('jazz_deployments', function () {
       event.principalId = "";
       index.genericInputValidation(event)
         .catch(error => {
-          console.log(error);
           expect(error).to.include({
             result: 'unauthorized',
             message: 'Unauthorized.'
@@ -1105,7 +1104,6 @@ describe('jazz_deployments', function () {
       })
       message = '{"errorType":"Unauthorized","message":"Unauthorized"}';
       index.handler(event, context, (err, res) => {
-        console.log(err)
         expect(err).to.include(message);
       });
 
