@@ -31,7 +31,7 @@ var getStageConfig = (event) => {
       // cw events default to dev
       stage = 'dev';
   }else {
-      stage = event.stage
+      stage = event.stage;
   } 
   
   var configObj;

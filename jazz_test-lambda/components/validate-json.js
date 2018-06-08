@@ -31,7 +31,7 @@ var validateJSON = (jsonString) =>  {
       }
     } catch (e) {}
     return false;
-  }
+  };
 module.exports = (jsonString) => {
   var isarnvalid = validateJSON(jsonString);
   return isarnvalid;
