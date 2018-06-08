@@ -88,7 +88,10 @@ isOSS:boolean=false;
     }
     docs_int_jazz:string =  env_internal.urls.docs;
 docs_oss_jazz:string=env_oss.urls.docs_link;
-
+  
+    startUserJourney() {
+      return this.router.navigate(['/user-journey']);
+    }
 
     goToLanding(){
         this.router.navigateByUrl('');// Route to landing page

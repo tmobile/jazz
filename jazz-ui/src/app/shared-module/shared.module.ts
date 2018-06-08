@@ -50,10 +50,8 @@ import { OverviewSidebarComponent } from './../secondary-components/overview-sid
 import {AdvancedFiltersComponentOSS} from '../secondary-components/advanced-filters/OSS/advanced-filters.component';
 import {AdvancedFiltersComponent} from '../secondary-components/advanced-filters/internal/advanced-filters.component';
 import { AdvFilters }            from '../adv-filter.directive';
-import {RouterModule} from '@angular/router';
-import {SafeHtmlPipe} from '../core/pipes/safe-html.pipe';
-import {SafeUrlPipe} from '../core/pipes/safe-url.pipe';
-import {OopsErrorComponent} from '../primary-components/oops-error/oops-error.component';
+import {SafeHtmlPipe} from "../core/pipes/safe-html.pipe";
+import {SafeUrlPipe} from "../core/pipes/safe-url.pipe";
 let specificComponents:any
 let specificModules: any;
 if(environment.envName == 'oss'){
