@@ -1,22 +1,23 @@
 {
-  "name": "api-nodejs-template",
+  "name": "jazz_metrics",
   "version": "0.0.1",
   "description": "Nodejs Template project",
   "main": "index.js",
   "private": true,
-  "author": [],
+  "author": {
+    "name": "Jazz"
+  },
   "scripts": {
     "test": "mocha"
   },
   "dependencies": {
     "request": "*",
     "deasync": "*",
-    "aws-arn-parser":"*",
+    "aws-arn-parser": "*",
     "async": "^2.1.2"
-      },
+  },
   "devDependencies": {
     "mocha": "^v3.0.0",
     "chai": "^3.5.0"
-
   }
 }

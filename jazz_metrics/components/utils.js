@@ -2,11 +2,12 @@
     massage functions for output data
     @module: utils.js
     @description: Defines functions like format the output as per metrics catalog.
-    @author: Rashmi Chachan
+    @author:
     @version: 1.0
 **/
 const parser = require('aws-arn-parser');
 const metricConfig = require("./metrics.json");
+const global_config = require("../config/global-config.json")
 
 
 var massageData = function(assetResults, event) {
@@ -85,13 +86,13 @@ var validateMetricsInput = function(data){
     return output_obj;
 };
 var validateGeneralFields = function(input){
-        var required_fields = ["service","domain","environment","end_time","start_time","interval","statistics"];
+        var required_fields = global_config.REQUIRED_FIELDS;
         var output_obj = validateRequiredFields(input,required_fields);
         return output_obj;
 };
 
 var validateAssetFields =function(input){
-        var asset_required_fields = ["type","asset_name","statistics"];
+        var asset_required_fields = global_config.ASSET_REQUIRED_FIELDS;
         var output_obj = validateRequiredFields(input,asset_required_fields);
         return output_obj;
 };
@@ -167,7 +168,7 @@ var extractValueFromString = function(string, keyword){
 var getApiName = function(string){
 
     var value;
-
+// generalize for open source
     switch(string){
         case "6zfek2hkof":
           value = "dev-cloud-api";
@@ -199,7 +200,7 @@ var getAssetsObj = function(assetsArray,userStatistics){
 
 
         
-        var assetType = asset.type; 
+        var assetType = asset.asset_type; 
         // var assetType = getAssetType(asset.provider_id);
 
         var metricNamespace = namespaces[assetType];

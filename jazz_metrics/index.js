@@ -1,6 +1,6 @@
 /**
 Fetch metrics per service using CloudWatch APIs
-@author: Rashmi Chachan
+@author:
 @version: 1.0
  **/
 
@@ -18,7 +18,7 @@ module.exports.handler = (event, context, cb) => {
     var errorHandler = errorHandlerModule();
     var config = configObj(event);
     var cloudwatch = new aws.CloudWatch({ apiVersion: '2010-08-01' });
-    if (event.body === null || event.body === undefined) {
+    if (!event && !event.body) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid Input Error")));
     }
 
@@ -38,7 +38,7 @@ module.exports.handler = (event, context, cb) => {
 
         //Iteration & validation for parameters in array - "service","domain","environment","end_time","start_time","interval","statistics"
         var undefined_fields;
-        undefined_fields = utils.validateGeneralFields(event.body);
+        undefined_fields = utils.validateGeneralFields(event.body)
         var assetsArray = [];
         if(undefined_fields.isError){
             logger.error("Missing required input: " + undefined_fields.message);
@@ -59,7 +59,7 @@ module.exports.handler = (event, context, cb) => {
                     "environment" : event.body.environment
                 };
                 var asset_api_options = {
-                    url: config.assets_url,
+                    url: config.SERVICE_API_URL + config.ASSETS_URL,
                     headers: {
                         "Content-Type": "application/json"
                     },
