@@ -48,8 +48,11 @@ export class AuthenticationService {
                     // set token property
                     this.token = token;
                     // store username and jwt token in local storage to keep user logged in between page refreshes
-                    localStorage.setItem('currentUser', JSON.stringify({ username: username, token: token }));
-                    
+                    localStorage.setItem('currentUser', JSON.stringify({
+                      username: username,
+                      token: token,
+                      globaladmin: true//response_data.globaladmin
+                    }));
                     // return true to indicate successful login
                     return true;
                 } else {
@@ -100,6 +103,12 @@ export class AuthenticationService {
             this.userid = currentUser.username;
         }
         return this.userid;
+    }
+
+    getAuthenticatedUser() {
+      if(this.isLoggedIn()) {
+        return JSON.parse(localStorage.getItem('currentUser'));
+      }
     }
 }
 
