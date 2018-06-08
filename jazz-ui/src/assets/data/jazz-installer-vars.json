@@ -1,22 +1,97 @@
 {
-  "version": 0.9,
-  "timestamp": "2018-05-22T19:07:25.671Z",
-  "resource": "http://cloud-api-doc.corporate.t-mobile.com/jazz_is-service-available/prod/swagger.json",
-  "results": {
-    "message": "Swagger validation failed",
-    "score": {
-      "current": 76,
-      "organizationGoal": 100,
-      "organizationAverage": 78
+  "AWS_CREDENTIAL_ID": "awscreds1",
+  "INSTANCE_PREFIX": "",
+  "AWS": {
+    "SECURITY_GROUP_IDS": "",
+    "SUBNET_IDS": "",
+    "LAMBDA_EXECUTION_ROLE": "",
+    "CLOUDFRONT_ORIGIN_ID": "",
+    "ACCOUNTID": "",
+    "REGION": "",
+    "ROLEID": "",
+    "ES_HOSTNAME": "",
+    "COGNITO": {
+      "USER_POOL_ID": "",
+      "CLIENT_ID": ""
     },
-    "errors": 105,
-    "warnings": 0,
-    "details": {
-      "MissingRequiredProperty": {
-        "score": -2,
-        "status": "error",
-        "description": "Required property in missing"
+    "API": {
+      "PROD": {
+        "*": "{AWS_PROD_API_ID_DEFAULT}",
+        "jazz_*": "{AWS_PROD_API_ID_JAZZ}"
+      },
+      "STG": {
+        "*": "{AWS_STG_API_ID_DEFAULT}",
+        "jazz_*": "{AWS_STG_API_ID_JAZZ}"
+      },
+      "DEV": {
+        "*": "{AWS_DEV_API_ID_DEFAULT}"
       }
+    },
+    "S3": {
+      "API_DOC": "",
+      "DEV_BUCKET": "",
+      "STG_BUCKET": "",
+      "PROD_BUCKET": ""
+    }
+  },
+  "REPOSITORY": {
+    "BASE_URL": "",
+    "CREDENTIAL_ID": "jenkins1cred",
+    "REPO_BASE_SERVICES": "cas",
+    "REPO_BASE_PLATFORM" : "slf"
+  },
+  "API": {
+    "API_BUILD_URI": "/job/build_pack_api/buildWithParameters?token=slf-java-api-build-101"
+  },
+  "LAMBDA": {
+    "LAMBDA_BUILD_URI": "/job/build-pack-lambda/buildWithParameters?token=slf-lambda-build-101"
+  },
+  "WEBSITE": {
+    "WEBSITE_BUILD_URI": "/job/build-pack-website/buildWithParameters?token=slf-website-build-0907"
+  },
+  "JAZZ": {
+    "ADMIN": "",
+    "PASSWD": "",
+    "S3_BUCKET_NAME_SUFFIX": "_BUCKET",
+    "S3_BUCKET_WEB": "",
+    "BUCKET_PER_SERVICE": "false",
+    "S3": {
+      "WEBSITE_DEV_BUCKET": "",
+      "WEBSITE_STG_BUCKET": "",
+      "WEBSITE_PROD_BUCKET": ""
+    }
+  },
+  "JENKINS": {
+    "USERNAME": "jenkins_username",
+    "JENKINS_PASSWORD": "",
+    "CREDENTIAL_ID": "jobexecutor"
+  },
+  "SCM": {
+    "TYPE": "bitbucket",
+    "PRIVATE_TOKEN": "",
+    "CAS_NAMESPACE_ID": "",
+    "USERNAME": "scm_username",
+    "PASSWORD": ""
+  },
+  "UI_CONFIG": {
+    "feature": {
+      "multi_env": true
+    },
+    "service_tabs":
+    {
+      "overview": true,
+      "access_control": false,
+      "metrics": false,
+      "logs": true,
+      "cost": false
+    },
+    "environment_tabs":
+    {
+      "overview": true,
+      "deployments": true,
+      "code_quality": false,
+      "logs": false,
+      "assets": false
     }
   }
 }

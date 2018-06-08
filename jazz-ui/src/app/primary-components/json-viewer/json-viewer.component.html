@@ -18,7 +18,7 @@
            (click)="rowTracker[i].collapsed = !rowTracker[i].collapsed"></div>
 
       <div class="json-header">{{key}}</div>
-      <div class="json-collapsed" *ngIf="!rowTracker[i].collapsed">{{rowTracker[i].collapsedSymbol}}</div>
+      <div class="json-collapsed" *ngIf="rowTracker[i].collapsed">{{rowTracker[i].collapsedSymbol}}</div>
     </div>
     <div class="json-viewer-list"
       [class.collapsed]="rowTracker[i].collapsed">
