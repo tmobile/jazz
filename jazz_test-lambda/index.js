@@ -54,7 +54,7 @@ var handler = (event, context, cb) => {
         if (event.body.inputJSON && !validateJSON(event.body.inputJSON)) {
           return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is an invalid JSON")));
         }
-        if (event.body.region && event.body.region != "") {
+        if (event.body.region) {
           AWS_REGION = event.body.region; // If Request Specifies AWS_REGION || Over rides the Configuration value 
         }
         var inputJSON = JSON.parse(event.body.inputJSON);
