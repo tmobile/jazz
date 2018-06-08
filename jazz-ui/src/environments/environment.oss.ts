@@ -10,6 +10,9 @@ export const environment = {
   urls:{
     docs_link:"https://github.com/tmobile/jazz/wiki",
     content_base: "https://github.com/tmobile/jazz-content/blob/master"
-}
+  },
+  userJourney: {
+    registrationMessage: 'Please contact your Jazz Admin(s) to get a registration code.'
+  }
 
 };
