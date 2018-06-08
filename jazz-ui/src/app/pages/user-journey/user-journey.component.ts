@@ -27,6 +27,7 @@ export class UserJourneyComponent implements OnInit {
   }
 
   previousStep() {
+    if(!this.stepIndex) return;
     this.setStep(this.stepIndex - 1);
   }
 

@@ -8,48 +8,47 @@ export const UserJourney = [
     contentStyle: {'top': '-24vh'}
   },
   {
-    message: "If you already have an account, continue to the next slide, otherwise click <button class='user-journey-btn message-button'>GET STARTED NOW</button> and use the Registration link to get registered.",
+    message: "If you already have an account, continue to the next slide, otherwise click <button class='user-journey-btn message-button'>GET STARTED NOW</button> and use the Registration link to create an account. " + environment.userJourney.registrationMessage,
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-registration.mp4?raw=true"
   },
   {
-    message: "Once you have an account, click <button class='user-journey-btn message-button'>GET STARTED NOW</button> and use the login window to begin.",
+    message: "Click <button class='user-journey-btn message-button'>GET STARTED NOW</button> and enter your credentials in the login window.",
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-login.mp4?raw=true"
   },
   {
-    message: "You are now at the Jazz dashboard. Here you will see all of the services you have created. Click <button class='user-journey-btn message-button'>CREATE SERVICE</button>to begin making your first service.",
+    message: "This is your Jazz dashboard. Here you will see all of the services you have created. Click <button class='user-journey-btn message-button'>CREATE SERVICE</button>to begin making your first service.",
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-create-service.mp4?raw=true"
   },
   {
-    message: `Here you will configure your service. Your service will need a service type, deployment target, program runtime, name, and namespace. Click <button class='user-journey-btn message-button'>SUBMIT</button> when you are finished.`,
+    message: `Provide a name and namespace for your service and click <button class='user-journey-btn message-button'>SUBMIT</button> to create your service.`,
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-configure-service.mp4?raw=true",
   },
   {
-    message: `You have just created your service! Currently the status column will show "creation started"
-    After a few minutes the status will change to "active" and then you can begin making changes to your service.`,
+    message: `You have just created your service! The status column will start with "creation started" and turn "active" in a few minutes. Once <i>active</i>, you can begin making changes to your service.`,
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-go-to-service.mp4?raw=true",
   },
   {
-    message: "This link will take you to the repository in Git.",
+    message: "This link will take you to you service's Git repository.",
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-service-details.mp4?raw=true"
   },
   {
-    message: "From Git you will clone the repository and create a new feature branch. Make a change in that branch and push it back to Git. Jazz watches the repository and will create a new non-production environment for each branch it detects.",
+    message: "You can now clone the repository and create a branch. Make a change and push it to your Git repository. Jazz will create a new non-production environment for your branch and deploy your changes.",
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-bitbucket-environment.mp4?raw=true",
     class: "modal-overlay",
     contentStyle: {"padding": "4rem", "z-index": 1},
   },
   {
-    message: `This is the environment details page. Here you can see all of this service's environments as well as the deployment status of those environments.`,
+    message: `This is the service detail page. You can view all the environments as well as their deployment status for your service.`,
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-go-to-environment.mp4?raw=true",
     class: "modal-overlay-next"
   },
   {
-    message: "Click <button class='user-journey-btn message-button secondary'>TEST API</button> and see your service up and running!",
+    message: "You can click <button class='user-journey-btn message-button secondary'>TEST API</button> to test and validate you API!",
     src: environment.urls["content_base"] + "/jazz-ui/user-journey/jazz-test-api.mp4?raw=true"
   },
   {
     title: "THANKS FOR USING JAZZ!",
-    message: "Additional information can be found here;",
+    message: "Additional information can be found here: ",
     messageLink: environment.urls["docs_link"],
     src: "assets/images/icons/Jazz_S.svg",
     contentStyle: {'top': '-24vh'}
