@@ -30,7 +30,7 @@ const crud = require("./components/crud")(); //Import the crud module.
 const request = require('request');
 const util = require('util');
 
-function handler (event, context, cb) {
+function handler(event, context, cb) {
 
 	//Initializations
 	var errorHandler = errorHandlerModule(),
@@ -166,7 +166,7 @@ function handler (event, context, cb) {
 		});
 };
 
-function genericInputValidation (event) {
+function genericInputValidation(event) {
 	logger.debug("Inside genericInputValidation");
 	return new Promise((resolve, reject) => {
 		// event.method cannot be empty, throw error
@@ -213,17 +213,17 @@ function genericInputValidation (event) {
 		}
 
 		if (!event.principalId) {
-            reject({
-                result: "unauthorized",
-                message: "Unauthorized."
-            });
-        }
+			reject({
+				result: "unauthorized",
+				message: "Unauthorized."
+			});
+		}
 
 		resolve();
 	});
 };
 
-function processDeploymentCreation (config, deployment_details, deploymentTableName) {
+function processDeploymentCreation(config, deployment_details, deploymentTableName) {
 	return new Promise((resolve, reject) => {
 		exportable.validateDeploymentDetails(config, deployment_details)
 			.then(() => exportable.addNewDeploymentDetails(deployment_details, deploymentTableName))
@@ -236,7 +236,7 @@ function processDeploymentCreation (config, deployment_details, deploymentTableN
 	});
 }
 
-function processDeploymentRebuild (config, deploymentId, deploymentTableName) {
+function processDeploymentRebuild(config, deploymentId, deploymentTableName) {
 	logger.debug("processDeploymentRebuild")
 	return new Promise((resolve, reject) => {
 		exportable.getDeploymentDetailsById(deploymentTableName, deploymentId)
@@ -250,7 +250,7 @@ function processDeploymentRebuild (config, deploymentId, deploymentTableName) {
 	});
 }
 
-function processDeploymentsList (config, query, deploymentTableName) {
+function processDeploymentsList(config, query, deploymentTableName) {
 	return new Promise((resolve, reject) => {
 		var queryParams = {
 			'service': query.service,
@@ -271,7 +271,7 @@ function processDeploymentsList (config, query, deploymentTableName) {
 	});
 }
 
-function processDeploymentsUpdate (config, body, deploymentTableName, deploymentId) {
+function processDeploymentsUpdate(config, body, deploymentTableName, deploymentId) {
 	return new Promise((resolve, reject) => {
 		exportable.validateUpdateInput(config, body, deploymentTableName, deploymentId)
 			.then((data) => exportable.updateDeploymentDetails(deploymentTableName, data, deploymentId))
@@ -284,7 +284,7 @@ function processDeploymentsUpdate (config, body, deploymentTableName, deployment
 	});
 }
 
-function processDeploymentsDeletion (deploymentTableName, deploymentId) {
+function processDeploymentsDeletion(deploymentTableName, deploymentId) {
 	return new Promise((resolve, reject) => {
 		exportable.getDeploymentDetailsById(deploymentTableName, deploymentId)
 			.then((res) => exportable.deleteServiceByID(res, deploymentTableName, deploymentId))
@@ -297,7 +297,7 @@ function processDeploymentsDeletion (deploymentTableName, deploymentId) {
 	});
 }
 
-function validateDeploymentDetails (config, deployment_details) {
+function validateDeploymentDetails(config, deployment_details) {
 	logger.debug("validateDeploymentDetails for creating new deployment");
 	return new Promise((resolve, reject) => {
 		return validateUtils.validateCreatePayload(config, deployment_details, (error, data) => {
@@ -311,7 +311,7 @@ function validateDeploymentDetails (config, deployment_details) {
 	});
 }
 
-function addNewDeploymentDetails (deployment_details, deploymentTableName) {
+function addNewDeploymentDetails(deployment_details, deploymentTableName) {
 	logger.debug("Inside addNewDeploymentDetails");
 	return new Promise((resolve, reject) => {
 		crud.create(deployment_details, deploymentTableName, (error, data) => {
@@ -325,7 +325,7 @@ function addNewDeploymentDetails (deployment_details, deploymentTableName) {
 	});
 }
 
-function validateQueryParams (config, params) {
+function validateQueryParams(config, params) {
 	logger.debug("validateQueryParams for deployments");
 	return new Promise((resolve, reject) => {
 		validateUtils.validateDeployment(config, params, (error, data) => {
@@ -339,7 +339,7 @@ function validateQueryParams (config, params) {
 	});
 }
 
-function getDeploymentDetailsByQueryParam (deploymentTableName, queryParams) {
+function getDeploymentDetailsByQueryParam(deploymentTableName, queryParams) {
 	logger.debug("Inside getDeploymentDetailsByQueryParam" + JSON.stringify(queryParams));
 	return new Promise((resolve, reject) => {
 		crud.getList(deploymentTableName, queryParams, (error, data) => {
@@ -353,7 +353,7 @@ function getDeploymentDetailsByQueryParam (deploymentTableName, queryParams) {
 	});
 }
 
-function getDeploymentDetailsById (deploymentTableName, deploymentId) {
+function getDeploymentDetailsById(deploymentTableName, deploymentId) {
 	logger.debug("Inside getDeploymentDetailsById" + JSON.stringify(deploymentId));
 	return new Promise((resolve, reject) => {
 		crud.get(deploymentTableName, deploymentId, (error, data) => {
@@ -375,7 +375,7 @@ function getDeploymentDetailsById (deploymentTableName, deploymentId) {
 	});
 }
 
-function validateUpdateInput (config, update_data, deploymentTableName, deploymentId) {
+function validateUpdateInput(config, update_data, deploymentTableName, deploymentId) {
 	logger.debug("Inside validateUpdateInput");
 	return new Promise((resolve, reject) => {
 		validateUtils.validateUpdatePayload(config, update_data, deploymentTableName, deploymentId, (error, data) => {
@@ -389,7 +389,7 @@ function validateUpdateInput (config, update_data, deploymentTableName, deployme
 	})
 }
 
-function updateDeploymentDetails (deploymentTableName, update_deployment_data, deploymentId) {
+function updateDeploymentDetails(deploymentTableName, update_deployment_data, deploymentId) {
 	logger.debug("Inside updateDeploymentDetails");
 	return new Promise((resolve, reject) => {
 		crud.update(update_deployment_data, deploymentTableName, deploymentId, (error, data) => {
@@ -403,7 +403,7 @@ function updateDeploymentDetails (deploymentTableName, update_deployment_data, d
 	})
 }
 
-function deleteServiceByID (getDeploymentDetails, deploymentTableName, deploymentId) {
+function deleteServiceByID(getDeploymentDetails, deploymentTableName, deploymentId) {
 	logger.debug("Inside deleteServiceByID" + JSON.stringify(getDeploymentDetails));
 	return new Promise((resolve, reject) => {
 		if (!utils.isEmpty(getDeploymentDetails)) {
@@ -424,7 +424,7 @@ function deleteServiceByID (getDeploymentDetails, deploymentTableName, deploymen
 	})
 }
 
-function reBuildDeployment (refDeployment, config) {
+function reBuildDeployment(refDeployment, config) {
 	logger.debug("Inside reBuildDeployment" + JSON.stringify(refDeployment));
 	return new Promise((resolve, reject) => {
 		exportable.getToken(config)
@@ -440,7 +440,7 @@ function reBuildDeployment (refDeployment, config) {
 	});
 }
 
-function getToken (configData) {
+function getToken(configData) {
 	logger.debug("Inside getToken");
 	return new Promise((resolve, reject) => {
 		var svcPayload = {
@@ -458,7 +458,7 @@ function getToken (configData) {
 				resolve(authToken);
 			} else {
 				var message = "";
-				if(error){
+				if (error) {
 					message = error.message
 				} else {
 					message = response.body.message
@@ -472,7 +472,7 @@ function getToken (configData) {
 	});
 }
 
-function getServiceDetails (configData, serviceId, authToken) {
+function getServiceDetails(configData, serviceId, authToken) {
 	logger.debug("Inside getServiceDetails:" + serviceId)
 	return new Promise((resolve, reject) => {
 		var params = {
@@ -501,7 +501,7 @@ function getServiceDetails (configData, serviceId, authToken) {
 	});
 }
 
-function buildNowRequest (serviceDetails, config, refDeployment) {
+function buildNowRequest(serviceDetails, config, refDeployment) {
 	logger.debug("Inside buildNowRequest:")
 	return new Promise((resolve, reject) => {
 		var data = serviceDetails.data,
