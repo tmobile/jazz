@@ -25,9 +25,9 @@ Nodejs Template Project
 **/
 var validateJSON = (jsonString) =>  {
     try {
-      var o = JSON.parse(jsonString);
-      if (o && typeof o === "object") {
-        return o;
+      var inputObjectJSON = JSON.parse(jsonString);
+      if (inputObjectJSON && typeof inputObjectJSON === "object") {
+        return inputObjectJSON;
       }
     } catch (e) {}
     return false;
