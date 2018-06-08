@@ -1,10 +1,10 @@
 {
-  "name": "api-nodejs-template",
+  "name": "test-lambda",
   "version": "0.0.1",
   "description": "Provides an API for Testing a lambda function and returns the Execution Status",
   "main": "index.js",
   "private": true,
-  "author": [],
+  "author": {},
   "scripts": {
     "test": "mocha"
   },
