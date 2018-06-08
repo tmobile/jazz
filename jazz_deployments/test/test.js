@@ -47,7 +47,8 @@ describe('jazz_deployments', function () {
       },
       "headers": {
         "Authorization": "zaqwsxcderfv.qawsedrftg.qxderfvbhy"
-      }
+      },
+      "principalId": "zaqwsxcderfv@here.com"
     };
     context = awsContext();
     callback = (err, responseObj) => {
@@ -79,9 +80,12 @@ describe('jazz_deployments', function () {
       for (i in invalidArray) {
         event.method = invalidArray[0];
         index.genericInputValidation(event)
-        .catch(error => {
-          expect(error).to.include({result: 'inputError', message:errMessage})
-        });
+          .catch(error => {
+            expect(error).to.include({
+              result: 'inputError',
+              message: errMessage
+            })
+          });
       };
     });
 
@@ -91,9 +95,12 @@ describe('jazz_deployments', function () {
       event.method = "GET";
       errMessage = "GET API can be called only with following query params: domain, service and environment OR GET API can be called only with deployment_id as path param.";
       index.genericInputValidation(event)
-      .catch(error => {
-        expect(error).to.include({result: 'inputError', message:errMessage})
-      });
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: errMessage
+          })
+        });
     });
 
     it("should indicate error if deployment_id is unavailable for GET, PUT and DELETE methods", () => {
@@ -103,9 +110,12 @@ describe('jazz_deployments', function () {
       for (method in methods) {
         event.method = methods[method];
         index.genericInputValidation(event)
-        .catch(error => {
-          expect(error).to.include({result: 'inputError',message:errMessage})
-        });
+          .catch(error => {
+            expect(error).to.include({
+              result: 'inputError',
+              message: errMessage
+            })
+          });
       }
     });
 
@@ -114,9 +124,12 @@ describe('jazz_deployments', function () {
       event.body = {};
       event.method = "PUT";
       index.genericInputValidation(event)
-      .catch(error => {
-        expect(error).to.include({result: 'inputError',message:errMessage})
-      });
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: errMessage
+          })
+        });
     });
 
     it("should indicate error if create payload is unavailable for POST method", () => {
@@ -125,9 +138,12 @@ describe('jazz_deployments', function () {
       event.path = {};
       event.method = "POST";
       index.genericInputValidation(event)
-      .catch(error => {
-        expect(error).to.include({result: 'inputError',message:errMessage})
-      });
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: errMessage
+          })
+        });
     });
 
     it("should indicate error if deployment_id is unavailable for POST method with re-build path", () => {
@@ -138,10 +154,25 @@ describe('jazz_deployments', function () {
       };
       event.method = "POST";
       index.genericInputValidation(event)
-      .catch(error => {
-        expect(error).to.include({result: 'inputError',message:errMessage})
-      });
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: errMessage
+          })
+        });
     });
+
+    it("should indicate unauthorized error", () => {
+      event.method = "GET";
+      event.principalId = "";
+      index.genericInputValidation(event)
+        .catch(error => {
+          expect(error).to.include({
+            result: 'unauthorized',
+            message: 'Unauthorized.'
+          });
+        })
+    })
   });
 
   describe('validateDeploymentDetails', () => {
@@ -184,16 +215,19 @@ describe('jazz_deployments', function () {
     it("should indicate missing required data error while validating create payload for new deployment", () => {
       event.query = {};
       event.path = {};
-      
+
       var required_fields = config.DEPLOYMENT_CREATION_REQUIRED_FIELDS;
-      
+
       for (var i in required_fields) {
         const payload = Object.assign({}, event.body);
         const removeField = required_fields[i];
         delete payload[required_fields[i]];
         index.validateDeploymentDetails(config, payload)
           .catch(error => {
-            expect(error).to.include({result:'inputError',message:'Following field(s) are required - '+removeField});  
+            expect(error).to.include({
+              result: 'inputError',
+              message: 'Following field(s) are required - ' + removeField
+            });
           });
       };
     });
@@ -220,7 +254,9 @@ describe('jazz_deployments', function () {
       });
       index.addNewDeploymentDetails(event.body, tableName)
         .catch(error => {
-          expect(error).to.include({ result: 'databaseError'});
+          expect(error).to.include({
+            result: 'databaseError'
+          });
           AWS.restore("DynamoDB.DocumentClient")
         });
     });
@@ -238,37 +274,43 @@ describe('jazz_deployments', function () {
       event.query.invalid = "";
       index.validateQueryParams(config, event.query)
         .catch(error => {
-          expect(error).to.include({ result: 'inputError',
-          message: 'Following fields are invalid :  invalid. ' })
+          expect(error).to.include({
+            result: 'inputError',
+            message: 'Following fields are invalid :  invalid. '
+          })
         });
     });
 
     it("should indicate that required fields are missing error while validating query params", () => {
       const required_fields = config.REQUIRED_PARAMS;
-      for(var i in required_fields) {
+      for (var i in required_fields) {
         const payload = Object.assign({}, event.query);
         const removedField = required_fields[i];
         delete payload[required_fields[i]]
-        
+
         index.validateQueryParams(config, payload)
           .catch(error => {
-            expect(error).to.include({ result: 'inputError',
-            message: 'Following field(s) are required - '+removedField })
+            expect(error).to.include({
+              result: 'inputError',
+              message: 'Following field(s) are required - ' + removedField
+            })
           });
       }
     });
 
     it("should indicate that required field values are missing while validating query params", () => {
       const required_fields = config.REQUIRED_PARAMS;
-      for(var i in required_fields) {
+      for (var i in required_fields) {
         const payload = Object.assign({}, event.query);
         const removedField = required_fields[i];
         payload[required_fields[i]] = "";
-        
+
         index.validateQueryParams(config, payload)
           .catch(error => {
-            expect(error).to.include({ result: 'inputError',
-            message: 'Following field(s) value cannot be empty - '+removedField })
+            expect(error).to.include({
+              result: 'inputError',
+              message: 'Following field(s) value cannot be empty - ' + removedField
+            })
           });
       }
     });
@@ -276,8 +318,10 @@ describe('jazz_deployments', function () {
     it("should indicate empty payload error while validating query params", () => {
       index.validateQueryParams(config, {})
         .catch(error => {
-          expect(error).to.include({ result: 'inputError',
-          message: 'Input payload cannot be empty' })
+          expect(error).to.include({
+            result: 'inputError',
+            message: 'Input payload cannot be empty'
+          })
         });
     });
 
@@ -307,10 +351,10 @@ describe('jazz_deployments', function () {
         return cb(err, null);
       });
       index.getDeploymentDetailsByQueryParam(tableName, event.query)
-      .catch(error => {
-        expect(error).to.include(err);
-        AWS.restore("DynamoDB");
-      });
+        .catch(error => {
+          expect(error).to.include(err);
+          AWS.restore("DynamoDB");
+        });
     });
   });
 
@@ -323,10 +367,10 @@ describe('jazz_deployments', function () {
         return cb(null, dataObj);
       });
       index.getDeploymentDetailsById(tableName, event.path.id)
-      .then(res => {
-        expect(res).to.include(event.body);
-        AWS.restore("DynamoDB.DocumentClient");
-      });
+        .then(res => {
+          expect(res).to.include(event.body);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
     });
 
     it("should indicate notFound error if provided deployment_id does not exist in DynamoDB", () => {
@@ -337,10 +381,12 @@ describe('jazz_deployments', function () {
         return cb(null, dataObj);
       });
       index.getDeploymentDetailsById(tableName, event.path.id)
-      .catch(error => {
-        expect(error).to.include({result: 'notFound'});
-        AWS.restore("DynamoDB.DocumentClient");
-      });
+        .catch(error => {
+          expect(error).to.include({
+            result: 'notFound'
+          });
+          AWS.restore("DynamoDB.DocumentClient");
+        });
     })
 
     it("should indicate error while accessing deployment data by deployment_id of archived/missing deployments", () => {
@@ -353,10 +399,12 @@ describe('jazz_deployments', function () {
         return cb(null, dataObj);
       });
       index.getDeploymentDetailsById(tableName, event.path.id)
-      .catch(error => {
-        expect(error).to.include({message: errMessage});
-        AWS.restore("DynamoDB.DocumentClient");
-      });
+        .catch(error => {
+          expect(error).to.include({
+            message: errMessage
+          });
+          AWS.restore("DynamoDB.DocumentClient");
+        });
     });
 
     it("should indicate error while accessing deployment data by deployment_id using DynamoDB.DocumentClient.quer", () => {
@@ -402,7 +450,10 @@ describe('jazz_deployments', function () {
       });
       index.validateUpdateInput(config, update_data, tableName, event.path.id)
         .catch(error => {
-          expect(error).to.include({"result":"inputError","message":"Only following values can be allowed for status field - "+config.DEPLOYMENT_STATUS.join(", ")});
+          expect(error).to.include({
+            "result": "inputError",
+            "message": "Only following values can be allowed for status field - " + config.DEPLOYMENT_STATUS.join(", ")
+          });
           AWS.restore("DynamoDB.DocumentClient");
         });
     });
@@ -410,7 +461,10 @@ describe('jazz_deployments', function () {
     it("should indicate input error while validating update payload for deployment", () => {
       index.validateUpdateInput(config, {}, tableName, event.path.id)
         .catch(error => {
-          expect(error).to.include({result:"inputError", message:"Input payload cannot be empty"});
+          expect(error).to.include({
+            result: "inputError",
+            message: "Input payload cannot be empty"
+          });
         });
     });
 
@@ -423,10 +477,10 @@ describe('jazz_deployments', function () {
         return cb(null, dataObj);
       });
       index.validateUpdateInput(config, event.body, tableName, event.path.id)
-      .then(res => {
-        expect(event.body).to.not.have.keys(non_editable_fields);
-        AWS.restore("DynamoDB.DocumentClient");
-      });
+        .then(res => {
+          expect(event.body).to.not.have.keys(non_editable_fields);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
     });
 
     it("should remove empty fileds from the payload while validaing the update data for deployment", () => {
@@ -438,13 +492,13 @@ describe('jazz_deployments', function () {
         return cb(null, dataObj);
       });
       const payload = {
-        "scm_branch":""
+        "scm_branch": ""
       }
       index.validateUpdateInput(config, payload, tableName, event.path.id)
-      .then(res => {
-        expect(payload).to.be.an('object').that.is.empty;
-        AWS.restore("DynamoDB.DocumentClient");
-      })
+        .then(res => {
+          expect(payload).to.be.an('object').that.is.empty;
+          AWS.restore("DynamoDB.DocumentClient");
+        })
     })
 
     it("should indicate notFound error while validating update payload for deployment", () => {
@@ -458,13 +512,13 @@ describe('jazz_deployments', function () {
         return cb(null, dataObj);
       });
       index.validateUpdateInput(config, update_data, tableName, event.path.id)
-      .catch(error => {
-        expect(error).to.include({
-          result: "notFound",
-          message: 'Cannot find deployment details with id :' + event.path.id
-      });
-        AWS.restore("DynamoDB.DocumentClient");
-      });
+        .catch(error => {
+          expect(error).to.include({
+            result: "notFound",
+            message: 'Cannot find deployment details with id :' + event.path.id
+          });
+          AWS.restore("DynamoDB.DocumentClient");
+        });
     });
 
     it("should indicate internal server error while validating update payload for deployment", () => {
@@ -475,10 +529,10 @@ describe('jazz_deployments', function () {
         return cb(err, null);
       });
       index.validateUpdateInput(config, update_data, tableName, event.path.id)
-      .catch(error => {
-        expect(error).to.include(err);
-        AWS.restore("DynamoDB.DocumentClient");
-      });
+        .catch(error => {
+          expect(error).to.include(err);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
     });
   });
 
@@ -509,10 +563,12 @@ describe('jazz_deployments', function () {
       });
       index.updateDeploymentDetails(tableName, update_data, event.path.id)
         .catch(error => {
-          expect(error).to.include({result: 'databaseError'});
+          expect(error).to.include({
+            result: 'databaseError'
+          });
           AWS.restore("DynamoDB.DocumentClient");
         });
-      
+
     });
   });
 
@@ -752,12 +808,12 @@ describe('jazz_deployments', function () {
 
     it("should indicate error while initiating deployment re-build", () => {
       var serviceDetails = {
-          data: {
-            service: "mag!c",
-            domain: "k!ngd0m",
-            type: "api"
-          }
-        };
+        data: {
+          service: "mag!c",
+          domain: "k!ngd0m",
+          type: "api"
+        }
+      };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(err, null, null)
       });
@@ -771,11 +827,11 @@ describe('jazz_deployments', function () {
 
     it("should indicate error if service details are not provided while initiating deployment re-build", () => {
       var serviceDetails = {
-          data: {
-            type: "api"
-          }
-        };
-        config.JOB_BUILD_URL = "";
+        data: {
+          type: "api"
+        }
+      };
+      config.JOB_BUILD_URL = "";
       index.buildNowRequest(serviceDetails, config, event.body)
         .catch(error => {
           expect(error).to.include("unable to find deployment details");
@@ -1014,10 +1070,13 @@ describe('jazz_deployments', function () {
   describe('handler', () => {
     it("should indicate input error during the generic validation", () => {
       event.method = undefined;
-      const genericInputValidation = sinon.stub(index, "genericInputValidation").rejects({result:"inputError", message:"method cannot be empty"})
+      const genericInputValidation = sinon.stub(index, "genericInputValidation").rejects({
+        result: "inputError",
+        message: "method cannot be empty"
+      })
       message = '{"errorType":"BadRequest","message":"method cannot be empty"}';
       index.handler(event, context, (err, res) => {
-         expect(err).to.include(message);
+        expect(err).to.include(message);
       });
 
       sinon.assert.calledOnce(genericInputValidation);
@@ -1029,7 +1088,23 @@ describe('jazz_deployments', function () {
       const genericInputValidation = sinon.stub(index, "genericInputValidation").rejects(err)
       message = '{"errorType":"InternalServerError","message":"Unexpected error occurred."}';
       index.handler(event, context, (err, res) => {
-         expect(err).to.include(message);
+        expect(err).to.include(message);
+      });
+
+      sinon.assert.calledOnce(genericInputValidation);
+      genericInputValidation.restore();
+    });
+
+    it("should indicate unauthorized error during the generic validation", () => {
+      event.method = "GET";
+      event.principalId = "";
+      const genericInputValidation = sinon.stub(index, "genericInputValidation").rejects({
+        result: 'unauthorized',
+        message: 'Unauthorized'
+      })
+      message = '{"errorType":"Unauthorized","message":"Unauthorized"}';
+      index.handler(event, context, (err, res) => {
+        expect(err).to.include(message);
       });
 
       sinon.assert.calledOnce(genericInputValidation);
@@ -1053,25 +1128,25 @@ describe('jazz_deployments', function () {
         });
 
         it("should successfully create new deployment using POST method", () => {
-          event.path = {};      
+          event.path = {};
           const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").resolves({
             result: 'success',
             deployment_id: '123'
           });
-    
+
           index.handler(event, context, (err, res) => {
             expect(res).to.have.deep.property('data.deployment_id')
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentCreation);
-    
+
             processDeploymentCreation.restore();
-          }); 
+          });
         });
-  
+
         it("should indicate internal server error while creating new deployment using POST method", () => {
           event.path = {};
           message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}';
-  
+
           const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").rejects({
             result: "inputError",
             message: "Input payload cannot be empty"
@@ -1080,70 +1155,70 @@ describe('jazz_deployments', function () {
             expect(err).to.include(message)
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentCreation);
-    
+
             processDeploymentCreation.restore();
           });
         });
-    
+
         it("should indicate internal server error while creating new deployment using POST method", () => {
           event.path = {};
           message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}';
-  
+
           const processDeploymentCreation = sinon.stub(index, "processDeploymentCreation").rejects(err);
           index.handler(event, context, (err, res) => {
             expect(err).to.include(message)
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentCreation);
-    
+
             processDeploymentCreation.restore();
           });
         });
-    
+
         it("should successfully initiate re-build deployment using POST method", () => {
           var responseObj = {
             result: 'success',
             message: "deployment started."
           };
-          
+
           const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").resolves(responseObj)
           index.handler(event, context, (err, res) => {
             expect(res).to.have.deep.property('data.result');
-    
+
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentRebuild);
-    
+
             processDeploymentRebuild.restore();
           });
-    
+
         });
-    
+
         it("should indicate internal server error while initiating re-build deployment using POST method", () => {
           message = '{"errorType":"InternalServerError","message":"unhandled error occurred"}'
-          
+
           const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").rejects(err)
           index.handler(event, context, (err, res) => {
             expect(err).include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentRebuild);
-    
+
             processDeploymentRebuild.restore();
           });
-    
+
         });
-    
+
         it("should indicate NotFound error while initiating re-build deployment using POST method", () => {
           var responseObj = {
             result: "notFound",
             message: "Unable to rebuild deployment"
           };
           message = '{"errorType":"NotFound","message":"Unable to rebuild deployment"}'
-          
+
           const processDeploymentRebuild = sinon.stub(index, "processDeploymentRebuild").rejects(responseObj)
           index.handler(event, context, (err, res) => {
             expect(err).to.include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentRebuild);
-    
+
             processDeploymentRebuild.restore();
           });
         });
@@ -1159,21 +1234,21 @@ describe('jazz_deployments', function () {
             count: 1,
             deployments: [event.body]
           };
-          
+
           const processDeploymentsList = sinon.stub(index, "processDeploymentsList").resolves(responseObj)
           index.handler(event, context, (err, res) => {
             expect(res).to.have.deep.property('data.deployments');
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentsList);
-    
+
             processDeploymentsList.restore();
           });
         });
-    
+
         it("should indicate error while fecthing list of deployments with provided query params using GET method", () => {
           event.path = {};
           message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}'
-          
+
           const processDeploymentsList = sinon.stub(index, "processDeploymentsList").rejects({
             result: "inputError",
             message: "Input payload cannot be empty"
@@ -1182,28 +1257,28 @@ describe('jazz_deployments', function () {
             expect(err).to.include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentsList);
-    
+
             processDeploymentsList.restore();
           });
         });
-  
+
         it("should indicate error while fecthing list of deployments with provided query params using GET method", () => {
           event.path = {};
           message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
-          
+
           const processDeploymentsList = sinon.stub(index, "processDeploymentsList").rejects(err)
           index.handler(event, context, (err, res) => {
             expect(err).to.include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentsList);
-    
+
             processDeploymentsList.restore();
           });
         });
-    
+
         it("should successfully get deployment with provided path param using GET method", () => {
           event.query = {};
-          
+
           const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").resolves(event.body)
           index.handler(event, context, (err, res) => {
             expect(res).to.have.deep.property('data.deployment_id');
@@ -1211,13 +1286,13 @@ describe('jazz_deployments', function () {
             sinon.assert.calledOnce(getDeploymentDetailsById);
           });
           getDeploymentDetailsById.restore();
-          
+
         });
-    
+
         it("should indicate notFound error while fetching deployment data with provided path param using GET method", () => {
           event.query = {};
           message = '{"errorType":"NotFound","message":"Cannot get details for archived/missing deployments."}'
-          
+
           const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").rejects({
             result: "deployment_already_deleted_error",
             message: "Cannot get details for archived/missing deployments."
@@ -1226,26 +1301,26 @@ describe('jazz_deployments', function () {
             expect(err).to.include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(getDeploymentDetailsById);
-    
+
             getDeploymentDetailsById.restore();
           });
         });
-    
+
         it("should indicate internal server error while fetching deployment data with provided path param using GET method", () => {
           event.query = {};
           message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
-          
+
           const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").rejects(err)
           index.handler(event, context, (err, res) => {
             expect(err).to.include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(getDeploymentDetailsById);
-    
+
             getDeploymentDetailsById.restore();
           });
         });
       });
-  
+
       describe('PUT method', () => {
         beforeEach(() => {
           event.method = "PUT";
@@ -1256,14 +1331,14 @@ describe('jazz_deployments', function () {
             expect(res).to.have.deep.property('data.message');
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentsUpdate);
-    
+
             processDeploymentsUpdate.restore();
           });
         });
-    
+
         it("should indicate notFound error while updating deployment data using PUT method", () => {
           message = '{"errorType":"NotFound","message":"Cannot find deployment details with id :' + event.path.id + '"}'
-          
+
           const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects({
             result: "notFound",
             message: 'Cannot find deployment details with id :' + event.path.id
@@ -1272,14 +1347,14 @@ describe('jazz_deployments', function () {
             expect(err).to.include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentsUpdate);
-    
+
             processDeploymentsUpdate.restore();
           });
         });
-    
+
         it("should indicate input error while updating deployment data using PUT method", () => {
           message = '{"errorType":"BadRequest","message":"Input payload cannot be empty"}'
-          
+
           const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects({
             result: "inputError",
             message: "Input payload cannot be empty"
@@ -1288,25 +1363,25 @@ describe('jazz_deployments', function () {
             expect(err).to.include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentsUpdate);
-    
+
             processDeploymentsUpdate.restore();
           });
         });
-    
+
         it("should indicate internal server error while updating deployment data using PUT method", () => {
           message = '{"errorType":"InternalServerError","message":"unexpected error occurred"}'
-          
+
           const processDeploymentsUpdate = sinon.stub(index, "processDeploymentsUpdate").rejects(err);
           index.handler(event, context, (err, res) => {
             expect(err).to.include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentsUpdate);
-    
+
             processDeploymentsUpdate.restore();
           });
         });
       });
-  
+
       describe('DELETE method', () => {
         beforeEach(() => {
           event.method = "DELETE";
@@ -1319,14 +1394,14 @@ describe('jazz_deployments', function () {
             expect(res).to.have.deep.property('data.message');
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentsDeletion);
-    
+
             processDeploymentsDeletion.restore();
           });
         });
-    
+
         it("should indicate notFound error while deleting deployment data using DELETE method", () => {
           message = '{"errorType":"NotFound","message":"Cannot find deployment details with id :' + event.path.id + '"}'
-          
+
           const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").rejects({
             result: "notFound",
             message: 'Cannot find deployment details with id :' + event.path.id
@@ -1335,28 +1410,28 @@ describe('jazz_deployments', function () {
             expect(err).to.include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentsDeletion);
-    
+
             processDeploymentsDeletion.restore();
           });
         });
-    
+
         it("should indicate error while deleting deployment data using DELETE method", () => {
           message = '{"errorType":"InternalServerError","message":"unexpected error occurred "}'
           AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
             return cb(err, null);
           });
-          
+
           const processDeploymentsDeletion = sinon.stub(index, "processDeploymentsDeletion").rejects(err)
           index.handler(event, context, (err, res) => {
             expect(err).to.include(message);
             sinon.assert.calledOnce(genericInputValidation);
             sinon.assert.calledOnce(processDeploymentsDeletion);
-    
+
             processDeploymentsDeletion.restore();
           });
         });
       });
-      
+
     });
   });
 });
