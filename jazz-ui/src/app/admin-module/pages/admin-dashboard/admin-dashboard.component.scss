@@ -411,15 +411,35 @@ search- box {
   background-color: #faf9f9 !important;
 }
 
-// .status:first-letter {
-//     text-transform:capitalize;
-// }
-
 section.json-viewer-container {
+  position: relative;
   background-color: white;
   box-shadow: 0 2px 4px 0 rgba(180, 180, 211, .4);
   padding: 20px;
   height: 65vh;
   width: 100%;
   overflow-y: scroll;
+}
+
+
+.section-centered {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  justify-content: space-around;
+  align-items: center;
+  display: flex;
+}
+
+.section-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.expandbtn{
+  margin: 0.55rem 1rem;
+  cursor: pointer;
+  font-size: 1.5rem;
 }

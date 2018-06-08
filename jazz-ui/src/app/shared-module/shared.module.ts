@@ -51,6 +51,9 @@ import {AdvancedFiltersComponentOSS} from '../secondary-components/advanced-filt
 import {AdvancedFiltersComponent} from '../secondary-components/advanced-filters/internal/advanced-filters.component';
 import { AdvFilters }            from '../adv-filter.directive';
 import {RouterModule} from '@angular/router';
+import {SafeHtmlPipe} from '../core/pipes/safe-html.pipe';
+import {SafeUrlPipe} from '../core/pipes/safe-url.pipe';
+import {OopsErrorComponent} from '../primary-components/oops-error/oops-error.component';
 let specificComponents:any
 let specificModules: any;
 if(environment.envName == 'oss'){
@@ -116,6 +119,8 @@ for(let i in specificComponents){
     AdvancedFiltersComponentOSS,
     AdvancedFiltersComponent,
     AdvFilters,
+    SafeHtmlPipe,
+    SafeUrlPipe,
     ...declarationsArray,
 
 
@@ -153,6 +158,8 @@ for(let i in specificComponents){
     AdvancedFiltersComponentOSS,
     AdvancedFiltersComponent,
     AdvFilters,
+    SafeHtmlPipe,
+    SafeUrlPipe,
     ...declarationsArray
 
   ],

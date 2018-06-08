@@ -1,4 +1,4 @@
-import {Component, Input, OnInit, ViewChildren} from '@angular/core';
+import {AfterViewInit, Component, EventEmitter, Input, OnInit, Output, ViewChildren} from '@angular/core';
 
 @Component({
   selector: 'json-viewer',
@@ -10,22 +10,33 @@ export class JsonViewerComponent implements OnInit {
   @Input() json: any = {};
   @Input() root = true;
   @Input() parent;
+  @Output() reportSize = new EventEmitter();
   @ViewChildren('jsonChild') jsonChildren;
   public rowTracker;
+  public leafNodes = 1;
+  public size;
 
   constructor() {
   }
 
   ngOnInit() {
     this.rowTracker = Object.keys(this.json).map((key) => {
+      this.leafNodes += this.hasChildren(this.json[key]) ? 0 : 1;
       return {
         key: key,
         collapsed: true,
-        children: this.hasChildren(this.json(key)),
+        children: this.hasChildren(this.json[key]),
         value: this.toString(this.json[key]),
-        collapsedSymbol: this.isArray(this.json(key)) ? '[ . . . ]' : '{ . . . }'
+        collapsedSymbol: this.isArray(this.json[key]) ? '[ . . . ]' : '{ . . . }'
       }
     });
+    this.size = this.leafNodes;
+    this.reportSize.emit(this.leafNodes);
+  }
+
+  childReportSize(reportedValue) {
+    this.size += reportedValue;
+    this.reportSize.emit(reportedValue);
   }
 
   setCollapse(flag) {
@@ -43,8 +54,8 @@ export class JsonViewerComponent implements OnInit {
 
   hasChildren(input) {
     try {
-      return Object.keys(input).length;
-    } catch(error) {
+      return (typeof input === 'object') && Object.keys(input).length;
+    } catch (error) {
       return false;
     }
   }
@@ -56,17 +67,16 @@ export class JsonViewerComponent implements OnInit {
   }
 
   toString(input) {
-    if(input === null) {
+    if (input === null) {
       return null;
     } else if (input === undefined) {
       return 'undefined';
     } else if (this.isArray(input)) {
       return '[]';
-    } else if(typeof input === 'object') {
+    } else if (typeof input === 'object') {
       return '{}';
     } else {
       return input
     }
   }
-
 }

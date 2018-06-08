@@ -67,26 +67,24 @@ export class LoginComponent implements OnInit {
         this.model.username = env_internal.urls.username_prefix;
 
 
-        //to add animation class 
+        //to add animation class
         this.tst = document.getElementById('toast-container');
-        
-        
+
+
     }
 
-    public goToService () {
-        this.router.navigateByUrl('/services');
-    }
+
 
     toast_pop(error,oops,errorMessage)
     {
         var tst = document.getElementById('toast-container');
 
-         tst.classList.add('toaster-anim');                            
-        this.toast = this.toasterService.pop(error,oops,errorMessage);        
+         tst.classList.add('toaster-anim');
+        this.toast = this.toasterService.pop(error,oops,errorMessage);
         setTimeout(() => {
             tst.classList.remove('toaster-anim');
           }, 3000);
-        
+
     }
 
     onChange(val) {
@@ -120,10 +118,10 @@ export class LoginComponent implements OnInit {
             this.loading = true;
             var username = this.model.username;
             var pre = username.substring(0,5).toLowerCase();
-            
+
             if (pre == env_internal.urls.username_prefix.toLowerCase()){
                 username = username.substring(5,username.length);
-            }       
+            }
             this.authenticationService.login(username, this.model.password)
                 .subscribe(result => {
                     if (result === true) {
@@ -142,7 +140,7 @@ export class LoginComponent implements OnInit {
                         if (error.status == 0) {
 
                             //add animation class before the toast pop
-                            //this.tst.classList.add('toaster-anim');                            
+                            //this.tst.classList.add('toaster-anim');
                             this.toast_pop('error', 'Oops!', errorMessage);
                         } else if(error.status == 401){
 
@@ -159,18 +157,18 @@ export class LoginComponent implements OnInit {
                     } else{
                         //this.tst.classList.add('toaster-anim');
                         this.toast_pop('error', 'Oops!', errorMessage);
-                           
+
                     }
                 });
-     
-     
+
+
             }
-            
-            
+
+
         }
         ngOnChanges(x:any){
-           
-            
+
+
         }
 }
 

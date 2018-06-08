@@ -16,15 +16,18 @@
       <div class="pointer arrow collapse-arrow"
            [ngClass]="rowTracker[i].collapsed ? 'right' : 'down'"
            (click)="rowTracker[i].collapsed = !rowTracker[i].collapsed"></div>
+
       <div class="json-header">{{key}}</div>
-      <div class="json-collapsed">{{rowTracker[i].collapsedSymbol}}</div>
+      <div class="json-collapsed" *ngIf="!rowTracker[i].collapsed">{{rowTracker[i].collapsedSymbol}}</div>
     </div>
     <div class="json-viewer-list"
-    [ngStyle]="{'display': rowTracker[i].collapsed ? 'none': 'block'}">
-         <!--[ngStyle]="{'max-height':-->
-         <!--rowTracker[i].collapsed ? '0' : (30 * rowTracker[i].childrenLength) + 'px'}"-->
+      [class.collapsed]="rowTracker[i].collapsed">
 
-      <json-viewer #jsonChild [root]="false" [parent]="json" [json]="json[key]"></json-viewer>
+      <json-viewer #jsonChild
+                   (reportSize)="childReportSize($event)"
+                   [root]="false"
+                   [parent]="json"
+                   [json]="json[key]"></json-viewer>
     </div>
   </div>
 

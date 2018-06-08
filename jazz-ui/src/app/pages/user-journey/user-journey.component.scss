@@ -1,0 +1,173 @@
+$pink: #ed008c;
+
+.user-journey {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  background-color: rgba(0, 0, 0, .85);
+  background-size: cover;
+}
+
+.user-journey-screen {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 100vw;
+  padding: 18vh 18vw;
+  opacity: 1;
+  transition: left 450ms 0ms ease-in-out, opacity 1.2s;
+  &.modal-overlay.current {
+    transition: left 450ms 0ms ease-in-out, background-color 300ms 450ms ease-in-out;
+    background-color: rgba(0, 0, 0, .5);
+  }
+  &.modal-overlay {
+    transition: left 450ms 300ms ease-in-out, background-color 300ms 0ms ease-in-out;
+  }
+  &.modal-overlay-next.current {
+    transition: left 450ms 300ms ease-in-out;
+  }
+}
+
+.user-journey-content {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  position: relative;
+}
+
+.user-journey-media {
+  max-height: 100%;
+  max-width: 100%;
+  z-index: 0;
+  position: relative;
+
+}
+
+.user-journey-message {
+  cursor: initial;
+  position: absolute;
+  top: -11vh;
+  left: 8vw;
+  right: 8vw;
+  font-size: 18px;
+  color: white;
+  z-index: 1;
+  text-align: center;
+  transition: opacity 400ms;
+  &.title {
+    top: 50%;
+    left: 50%;
+    width: 70%;
+    transform: translate(-50%, -50%);
+
+  }
+}
+
+.user-journey-btn {
+  padding: 6px 12px;
+  outline: none;
+  border: 1px solid $pink;
+  border-radius: 30px;
+  height: 40px;
+  width: 150px;
+  color: white;
+  background-color: $pink;
+  transition: background-color 200ms, color 200ms, transform 500ms;
+  &.previous-step {
+    opacity: 1;
+    transition: opacity 300ms;
+    &.hiding {
+      opacity: 0;
+    }
+  }
+  &:hover,
+  &:active {
+    background-color: white;
+    border: 1px solid white;
+    color: #ed008c;
+    outline: none;
+  }
+  &.secondary {
+    color: $pink;
+    background-color: white;
+    border: 1px solid $pink;
+    &:hover,
+    &:active {
+      color: white;
+      background-color: $pink;
+    }
+  }
+  &.message-button {
+    height: initial;
+    width: initial;
+    margin: 0 10px;
+    font-size: 10px;
+    padding: 3px 6px;
+    transform: translateY(-4px);
+  }
+}
+
+.exit-journey {
+  cursor: pointer;
+  text-shadow: none;
+  color: #ed008c;
+  opacity: 1;
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+}
+
+.user-journey-menu {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  bottom: 2vh;
+  padding: 0 3vw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-journey-balls {
+  text-align: center;
+  display: flex;
+  align-items: center;
+}
+
+.step-ball {
+  display: inline-block;
+  margin-left: 5px;
+  margin-right: 5px;
+  height: 10px;
+  width: 10px;
+  border-radius: 20px;
+  background-color: white;
+  cursor: pointer;
+  transition: background-color 450ms, height 450ms, width 450ms;
+  &.current {
+    height: 15px;
+    width: 15px;
+    background-color: #ed008c;
+  }
+}
+
+.hide-message {
+  opacity: 0;
+  transition: opacity 400ms 50ms;
+}
+
+.video-cover:before {
+  position: absolute;
+  content: '';
+  background: rgba(0, 0, 0, 0.35); /*partially transparent image*/
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  transition: background-color 400ms;
+}
