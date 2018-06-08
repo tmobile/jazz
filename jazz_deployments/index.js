@@ -158,6 +158,8 @@ function handler (event, context, cb) {
 		.catch((error) => {
 			if (error.result === "inputError") {
 				return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+			} else if (error.result === "unauthorized") {
+				return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
 			} else {
 				return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected error occurred.")))
 			}
@@ -209,6 +211,13 @@ function genericInputValidation (event) {
 				message: "Re-build API can be called with deployment_id as path param"
 			});
 		}
+
+		if (!event.principalId) {
+            reject({
+                result: "unauthorized",
+                message: "Unauthorized."
+            });
+        }
 
 		resolve();
 	});

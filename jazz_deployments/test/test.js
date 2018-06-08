@@ -47,7 +47,8 @@ describe('jazz_deployments', function () {
       },
       "headers": {
         "Authorization": "zaqwsxcderfv.qawsedrftg.qxderfvbhy"
-      }
+      },
+      "principalId": "zaqwsxcderfv@here.com"
     };
     context = awsContext();
     callback = (err, responseObj) => {
@@ -142,6 +143,16 @@ describe('jazz_deployments', function () {
         expect(error).to.include({result: 'inputError',message:errMessage})
       });
     });
+
+    it("should indicate unauthorized error", () => {
+      event.method = "GET";
+      event.principalId = "";
+      index.genericInputValidation(event)
+      .catch(error => {
+        console.log(error);
+        expect(error).to.include({ result: 'unauthorized', message: 'Unauthorized.' });
+      })
+    })
   });
 
   describe('validateDeploymentDetails', () => {
@@ -1029,6 +1040,20 @@ describe('jazz_deployments', function () {
       const genericInputValidation = sinon.stub(index, "genericInputValidation").rejects(err)
       message = '{"errorType":"InternalServerError","message":"Unexpected error occurred."}';
       index.handler(event, context, (err, res) => {
+         expect(err).to.include(message);
+      });
+
+      sinon.assert.calledOnce(genericInputValidation);
+      genericInputValidation.restore();
+    });
+
+    it("should indicate unauthorized error during the generic validation", () => {
+      event.method = "GET";
+      event.principalId = "";
+      const genericInputValidation = sinon.stub(index, "genericInputValidation").rejects({result:'unauthorized', message: 'Unauthorized'})
+      message = '{"errorType":"Unauthorized","message":"Unauthorized"}';
+      index.handler(event, context, (err, res) => {
+        console.log(err)
          expect(err).to.include(message);
       });
 
