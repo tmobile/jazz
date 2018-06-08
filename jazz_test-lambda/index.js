@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright ©  2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ const configObj = require("./components/config.js"); //Import the environment da
 const logger = require("./components/logger.js"); //Import the logging module.
 const validateARN = require("./components/validate-arn.js");
 const validateJSON = require("./components/validate-json.js");
+const aws = require('aws-sdk');
 var handler = (event, context, cb) => {
 
   //Initializations
@@ -38,7 +39,7 @@ var handler = (event, context, cb) => {
       "StatusCode": 200,
       "execStatus": 0
     };
-    if (event !== undefined && event.method !== undefined && event.method === 'POST') {
+    if (event && event.method && event.method === 'POST') {
       if (!event.body) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Event Body not Defined")));
       } else if (!event.body.functionARN) {
@@ -70,15 +71,14 @@ var handler = (event, context, cb) => {
     }
   } catch (err) {
     logger.error("Failed to invoke lambda : " + JSON.stringify(err));
-    cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to invoke lambda")));
+    return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to invoke lambda")));
   }
 
 };
 
 var invokeLambda = (functionARN, inputJSON, AWS_REGION) => {
   return new Promise((resolve, reject) => {
-    try {
-      var aws = require('aws-sdk');
+    try {  
       var lambda = new aws.Lambda({
         region: AWS_REGION 
       });
