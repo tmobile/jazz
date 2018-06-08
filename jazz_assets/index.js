@@ -53,6 +53,8 @@ function handler(event, context, cb) {
                 return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
             } else if (error.result === 'databaseError') {
                 return cb(JSON.stringify(errorHandler.throwInternalServerError(error.message)));
+            } else if (error.result === 'unauthorized') {
+                return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
             } else {
                 return cb(JSON.stringify(errorHandler.throwInternalServerError('unexpected error occured')));
             }
@@ -174,6 +176,13 @@ function genericInputValidation(event) {
                 result: "inputError",
                 message: "Parameters are not supported for asset search"
             });
+        }
+
+        if(!event.principalId) {
+            reject({
+                result: "unauthorized",
+                message: "Unauthorized"
+            })
         }
         resolve();
     });

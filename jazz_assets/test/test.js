@@ -45,7 +45,8 @@ describe('jazz_assets', function () {
         "tags": ["check"],
         "domain": "jazztest",
         "asset_type": "apigateway"
-      }
+      },
+      "principalId" : "xswdxwscvff@test.com"
     };
     context = awsContext();
     callback = (err, responseObj) => {
@@ -297,6 +298,15 @@ describe('jazz_assets', function () {
           result: "inputError",
           message: errMessage
         }))
+    });
+
+    it('should indicate unauthorized error if principalId is missing', () => {
+      event.principalId = "";
+      event.method = "GET";
+      index.genericInputValidation(event)
+        .catch(error => {
+          expect(error).to.include({ result: 'unauthorized', message: 'Unauthorized' })
+        })
     });
 
   });
@@ -579,6 +589,16 @@ describe('jazz_assets', function () {
       it("should indicate internal server error", () => {
         var resObj = '{"errorType":"InternalServerError","message":"Unexpected Server Error"}';
         const genericInputValidation = sinon.stub(index, "genericInputValidation");
+        index.handler(event, context,(error, data) => {
+          expect(error).to.be.eq(resObj);
+          sinon.assert.calledOnce(genericInputValidation);
+          genericInputValidation.restore();
+        });
+      });
+
+      it("should indicate unauthorized error", () => {
+        var resObj = '{"errorType":"Unauthorized","message":"Unauthorized"}';
+        const genericInputValidation = sinon.stub(index, "genericInputValidation").rejects({result:"unauthorized", message:"Unauthorized"});
         index.handler(event, context,(error, data) => {
           expect(error).to.be.eq(resObj);
           sinon.assert.calledOnce(genericInputValidation);
