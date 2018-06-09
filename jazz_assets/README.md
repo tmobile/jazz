@@ -1,0 +1,2 @@
+The Core API service for assets data.
+Provides an API for getting assets details of services or resources provisioned in AWS Cloud. The api fetches, creates and updates assets data for the specific service, domain, provider and provider id parameters. The lambda function would fetch, create and update asset data for the assets of a particular service name.
