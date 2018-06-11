@@ -1,14 +1,11 @@
 {
-  "JOB_BUILD_URL":"{conf-jenkins-host}/job/create-service/buildWithParameters",
-  "BUILD_TOKEN":"slf-ust-tm0621",
-  "SVC_USER":"{ci_user}",
-  "SVC_PASWD":"{ci_pwd}",
-  "USER_POOL_ID":"{conf-user-pool-id}",
-  "REGION": "{conf-region}",
-  "USER_CLIENT_ID": "{conf-client-id}",
-  "SERVICE_API_URL" : "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
-  "SERVICE_API_RESOURCE" : "/stg/jazz/services",
-  "TOKEN_URL" : "/stg/jazz/login",
-  "SERVICE_USER" : "{jazz_admin}",
-  "TOKEN_CREDS" : "{jazz_admin_creds}"
+    "JOB_BUILD_URL": "{conf-jenkins-host}/job/create-service/buildWithParameters",
+    "JOB_TOKEN": "{job_token}",
+    "API_TOKEN": "{api_token}",
+    "SVC_USER": "{ci_user}",
+    "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+    "SERVICE_API_RESOURCE": "/stg/jazz/services",
+    "TOKEN_URL": "/stg/jazz/login",
+    "SERVICE_USER": "{jazz_admin}",
+    "TOKEN_CREDS": "{jazz_admin_creds}"
 }

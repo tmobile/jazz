@@ -30,8 +30,8 @@ const crud = require("./components/crud")(); //Import the crud module.
 const request = require('request');
 const util = require('util');
 
-function handler(event, context, cb) {
 
+function handler (event, context, cb) {
 	//Initializations
 	var errorHandler = errorHandlerModule(),
 		config = configObj(event);
@@ -509,8 +509,8 @@ function buildNowRequest(serviceDetails, config, refDeployment) {
 			domain = data.domain,
 			scm_branch = encodeURI(refDeployment.scm_branch),
 			build_url = config.JOB_BUILD_URL,
-			buildQuery = "/buildWithParameters?service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch,
-			base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64"),
+			buildQuery = "/buildWithParameters?token=" + config.JOB_TOKEN + "&service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch,
+			base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.API_TOKEN)).toString("base64"),
 			rebuild_url = "";
 		rebuild_url = build_url + config.BUILDPACKMAP[data.type.toLowerCase()] + buildQuery;
 
@@ -577,3 +577,4 @@ const exportable = {
 }
 
 module.exports = exportable;
+
