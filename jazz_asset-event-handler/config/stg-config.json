@@ -12,9 +12,10 @@
             "CREATE_ASSET",
             "UPDATE_ASSET"
         ],
-        "EVENT_STATUS": [
-            "COMPLETED"
-        ],
+        "EVENT_STATUS": {
+            "COMPLETED": "ACTIVE",
+            "DELETED": "DELETED"
+        },
         "CREATE_ASSET": "CREATE_ASSET",
         "UPDATE_ASSET": "UPDATE_ASSET"
     },

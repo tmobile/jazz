@@ -29,7 +29,6 @@ var processedEvents = [];
 var failedEvents = [];
 
 var handler = (event, context, cb) => {
-
     var configData = config(context);
     var authToken;
 
@@ -151,20 +150,39 @@ var processItem = function (eventPayload, configData, authToken) {
     return new Promise((resolve, reject) => {
 
         if (eventPayload.EVENT_NAME.S === configData.EVENTS.CREATE_ASSET) {
-            processCreateAsset(eventPayload, configData, authToken)
-                .then(result => { return resolve(result) })
-                .catch(err => {
-                    logger.error("processCreateAsset Failed" + err);
-                    return reject(err)
+            checkIfAssetExists(eventPayload, configData, authToken)
+                .then(record => {
+                    logger.info("Asset already existing. Updating assets records");
+                    processUpdateAsset(record, eventPayload, configData, authToken)
+                        .then(result => { return resolve(result) })
+                        .catch(err => {
+                            logger.error("processCreateAsset Failed" + err);
+                            return reject(err)
+                        })
+                })
+                .catch(error => {
+                    logger.info("Creating new asset records");
+                    processCreateAsset(eventPayload, configData, authToken)
+                        .then(result => { return resolve(result) })
+                        .catch(err => {
+                            logger.error("processCreateAsset Failed" + err);
+                            return reject(err)
+                        })
                 })
 
         } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.UPDATE_ASSET) {
-            environmentApiPayload.friendly_name = svcContext.branch;
-            processUpdateAsset(eventPayload, configData, authToken)
-                .then(result => { return resolve(result) })
-                .catch(err => {
-                    logger.error("processUpdateAsset Failed" + err);
-                    return reject(err)
+            checkIfAssetExists(eventPayload, configData, authToken)
+                .then(record => {
+                    processUpdateAsset(record, eventPayload, configData, authToken)
+                        .then(result => { return resolve(result) })
+                        .catch(err => {
+                            logger.error("processUpdateAsset Failed" + err);
+                            return reject(err)
+                        })
+                })
+                .catch(error => {
+                    logger.error("No records found for updating. Asset needs to be created first");
+                    return reject(error);
                 })
         }
     });
@@ -173,21 +191,28 @@ var processItem = function (eventPayload, configData, authToken) {
 var processCreateAsset = function (eventPayload, configData, authToken) {
     return new Promise((resolve, reject) => {
         var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
-        logger.info("svcContext: " + JSON.stringify(svcContext));
+        logger.debug("svcContext: " + JSON.stringify(svcContext));
 
         var assetApiPayload = {
             "environment": svcContext.environment,
-            "service": eventPayload.SERVICE_NAME,
+            "service": eventPayload.SERVICE_NAME.S,
             "created_by": svcContext.created_by,
-            "status": eventPayload.EVENT_STATUS,
             "provider": svcContext.provider,
             "provider_id": svcContext.provider_id,
             "tags": svcContext.tags,
             "domain": svcContext.domain,
             "type": svcContext.type
         };
-
-        logger.info("assetApiPayload" + JSON.stringify(assetApiPayload));
+        if (_.includes(Object.keys(configData.EVENTS.EVENT_STATUS), eventPayload.EVENT_STATUS.S)) {
+            assetApiPayload["status"] = configData.EVENTS.EVENT_STATUS[eventPayload.EVENT_STATUS.S]
+        } else {
+            logger.error("Error in creating assets. Invalid status value in the payload");
+            return reject({
+                "error": "Error in creating assets. Invalid status value in the payload",
+                "details": eventPayload.EVENT_STATUS.S
+            });
+        }
+        logger.debug("assetApiPayload" + JSON.stringify(assetApiPayload));
         var svcPayload = {
             uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE,
             method: "POST",
@@ -196,9 +221,10 @@ var processCreateAsset = function (eventPayload, configData, authToken) {
             rejectUnauthorized: false
         };
 
-        logger.info("svcPayload" + JSON.stringify(svcPayload));
+        logger.debug("svcPayload" + JSON.stringify(svcPayload));
         request(svcPayload, function (error, response, body) {
             if (response.statusCode && response.statusCode === 200 && body && body.data) {
+                logger.debug("Success: " + JSON.stringify(body));
                 return resolve(body);
             } else {
                 logger.error("Error in creating assets. " + JSON.stringify(response));
@@ -211,36 +237,36 @@ var processCreateAsset = function (eventPayload, configData, authToken) {
     });
 }
 
-
-var processUpdateAsset = function (eventPayload, configData, authToken) {
+var processUpdateAsset = function (record, eventPayload, configData, authToken) {
     return new Promise((resolve, reject) => {
         var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
-        logger.info("svcContext: " + JSON.stringify(svcContext));
-
+        logger.debug("svcContext: " + JSON.stringify(svcContext));
         var assetApiPayload = {
-            "environment": svcContext.environment,
-            "service": eventPayload.SERVICE_NAME,
-            "created_by": svcContext.created_by,
-            "status": eventPayload.EVENT_STATUS,
-            "provider": svcContext.provider,
-            "provider_id": svcContext.provider_id,
             "tags": svcContext.tags,
-            "domain": svcContext.domain,
             "type": svcContext.type
         };
-
-        logger.info("assetApiPayload" + JSON.stringify(assetApiPayload));
+        if (_.includes(Object.keys(configData.EVENTS.EVENT_STATUS), eventPayload.EVENT_STATUS.S)) {
+            assetApiPayload["status"] = configData.EVENTS.EVENT_STATUS[eventPayload.EVENT_STATUS.S]
+        } else {
+            logger.error("Error in creating assets. Invalid status value in the payload");
+            return reject({
+                "error": "Error in updating assets. Invalid status value in the payload",
+                "details": eventPayload.EVENT_STATUS.S
+            });
+        }
+        logger.debug("assetApiPayload" + JSON.stringify(assetApiPayload));
         var svcPayload = {
-            uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE,
-            method: "POST",
+            uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE + "/" + record.id,
+            method: "PUT",
             headers: { Authorization: authToken },
             json: assetApiPayload,
             rejectUnauthorized: false
         };
 
-        logger.info("svcPayload" + JSON.stringify(svcPayload));
+        logger.debug("svcPayload" + JSON.stringify(svcPayload));
         request(svcPayload, function (error, response, body) {
             if (response.statusCode && response.statusCode === 200 && body && body.data) {
+                logger.debug("Success: " + JSON.stringify(body));
                 return resolve(body);
             } else {
                 logger.error("Error in updating assets. " + JSON.stringify(response));
@@ -253,12 +279,14 @@ var processUpdateAsset = function (eventPayload, configData, authToken) {
     });
 }
 
-var checkIfAssetExists = function (assetApiPayload, configData, authToken) {
+var checkIfAssetExists = function (eventPayload, configData, authToken) {
     return new Promise((resolve, reject) => {
+        var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
         var searchAssetPayload = {
-            provider_id: assetApiPayload.provider_id,
-            service: assetApiPayload.service,
-            domain: assetApiPayload.domain
+            "service": eventPayload.SERVICE_NAME.S,
+            "provider_id": svcContext.provider_id,
+            "type": svcContext.type,
+            "domain": svcContext.domain
         };
 
         var svcPostSearchPayload = {
@@ -269,11 +297,11 @@ var checkIfAssetExists = function (assetApiPayload, configData, authToken) {
             rejectUnauthorized: false
         };
 
-        logger.info("searchAssetPayload" + JSON.stringify(searchAssetPayload));
+        logger.debug("searchAssetPayload" + JSON.stringify(searchAssetPayload));
         request(svcPostSearchPayload, function (error, response, body) {
-            if (response.statusCode && response.statusCode === 200 && body && body.data) {
-                logger.info("Asset found: " + JSON.stringify(body));
-                return resolve(body);
+            if (response.statusCode && response.statusCode === 200 && body && body.data && body.data.length > 0) {
+                logger.debug("Asset found: " + JSON.stringify(body));
+                return resolve(body.data[0]);
             } else {
                 logger.error("No assets found. " + JSON.stringify(response));
                 return reject({
