@@ -150,7 +150,7 @@ function getJazzToken(config) {
 		
 		logger.debug("Getting token for calling Environment API...");
 		request(svcPayload, (error, response, body) => {
-			if (response.statusCode === 200 && body) {
+			if (response.statusCode === 200 && body && body.data) {
 				resolve({ "auth_token": body.data.token });
 			} else {
 				logger.error(response.body.message);
