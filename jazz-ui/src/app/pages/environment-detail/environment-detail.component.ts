@@ -205,7 +205,7 @@ api_doc_name:string='';
   testApi(type){
       switch(type){
           case 'api':
-            let swaggerFile = '/' + this.service.domain + '_' + this.service.name + '/' + this.envSelected + '/swagger.json';
+            let swaggerFile = '/' + this.service.domain + '/' + this.service.name + '/' + this.envSelected + '/swagger.json';
             return window.open(environment.urls['swagger_editor'] + '/?url=' + environment['api_doc_name'] + swaggerFile);
           case 'website' :
           if(this.endpoint_env!=(undefined||'')){
