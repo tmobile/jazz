@@ -36,7 +36,7 @@
   },
   "REPOSITORY": {
     "BASE_URL": "",
-    "CREDENTIAL_ID": "jenkins1cred",
+    "CREDENTIAL_ID": "jenkinspassword",
     "REPO_BASE_SERVICES": "cas",
     "REPO_BASE_PLATFORM" : "slf"
   },
@@ -64,7 +64,7 @@
   "JENKINS": {
     "USERNAME": "jenkins_username",
     "JENKINS_PASSWORD": "",
-    "CREDENTIAL_ID": "jobexecutor"
+    "CREDENTIAL_ID": "jenkins"
   },
   "SCM": {
     "TYPE": "bitbucket",
