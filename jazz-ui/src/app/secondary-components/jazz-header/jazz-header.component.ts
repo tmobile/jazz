@@ -51,7 +51,7 @@ export class JazzHeaderComponent implements OnInit {
     buttonText:string='SUBMIT';
     loggedinUser:string='';
     overridingUrl:string = "";
-    public isAdmin: false;
+    public isAdmin = false;
 
 
     public toggleLoginPanel () {
@@ -126,7 +126,6 @@ docs_oss_jazz:string=env_oss.urls.docs_link;
               this.loading = false;
             //   let errorMessage  = this.toastmessage.errorMessage(error,"logout");
             //   this.toasterService.pop('error', 'Oops!', errorMessage);
-
                //for trmporary period till demo(21 aug '17)
                this.isLoggedIn = this.authenticationService.isLoggedIn();
                this.router.navigateByUrl('');// Route to landing page
@@ -256,8 +255,9 @@ docs_oss_jazz:string=env_oss.urls.docs_link;
 
         this.checkUrl();
         this.isLoggedIn = this.authenticationService.isLoggedIn();
-            this.loggedinUser =this.isLoggedIn && this.authenticationService.getUserId();
-            this.isAdmin = this.isLoggedIn && this.authenticationService.getAuthenticatedUser().globaladmin
+        this.isLoggedIn = this.authenticationService.isLoggedIn();
+        this.loggedinUser =this.isLoggedIn && this.authenticationService.getUserId();
+        this.isAdmin = this.isLoggedIn && this.authenticationService.getAuthenticatedUser().globaladmin
     }
 }
 
