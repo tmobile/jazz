@@ -21,7 +21,7 @@ const getStageConfig = (event) => {
       // cw events default to dev
       stage = 'dev';
   } else {
-      stage = event.stage
+      stage = event.stage;
   } 
 
   let configObj = require(`../config/${stage}-config.json`);
