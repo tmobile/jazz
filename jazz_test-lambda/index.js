@@ -42,8 +42,6 @@ var handler = (event, context, cb) => {
     if (event && event.method && event.method === 'POST') {
       if (!event.body) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Event Body not Defined")));
-      } else if (!event.body.functionARN) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("No function ARN provided")));
       } else if (!validateARN(event.body.functionARN)) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Function ARN is invalid")));
       } else if (!event.body.inputJSON) {
@@ -54,9 +52,8 @@ var handler = (event, context, cb) => {
         if (event.body.inputJSON && !validateJSON(event.body.inputJSON)) {
           return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is an invalid JSON")));
         }
-        if (event.body.region) {
-          AWS_REGION = event.body.region; // If Request Specifies AWS_REGION || Over rides the Configuration value 
-        }
+        var arnvalues = functionARN.split(":");
+        AWS_REGION =  arnvalues[3];//["arn","aws","lambda","us-east-1","000000""] spliting FunctionARN to get the aws-region 
         var inputJSON = JSON.parse(event.body.inputJSON);
         invokeLambda(functionARN, inputJSON, AWS_REGION).then((data) => {
           if (data && data.StatusCode === 200) {
@@ -69,6 +66,7 @@ var handler = (event, context, cb) => {
         });
       }
     }
+    return cb( JSON.stringify(errorHandler.throwNotFoundError("Method not found")))
   } catch (err) {
     logger.error("Failed to invoke lambda : " + JSON.stringify(err));
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to invoke lambda")));
