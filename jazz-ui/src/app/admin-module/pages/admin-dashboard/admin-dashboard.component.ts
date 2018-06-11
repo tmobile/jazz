@@ -32,8 +32,4 @@ export class AdminDashboardComponent implements OnInit{
     this.jsonRoot.setCollapse(this.isCollapsed);
   }
 
-  reportIssue() {
-
-  }
-
 }

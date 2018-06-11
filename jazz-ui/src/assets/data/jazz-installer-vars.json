@@ -1,5 +1,5 @@
 {
-  "AWS_CREDENTIAL_ID": "awscreds1",
+  "AWS_CREDENTIAL_ID": "password",
   "INSTANCE_PREFIX": "",
   "AWS": {
     "SECURITY_GROUP_IDS": "",
@@ -41,13 +41,13 @@
     "REPO_BASE_PLATFORM" : "slf"
   },
   "API": {
-    "API_BUILD_URI": "/job/build_pack_api/buildWithParameters?token=slf-java-api-build-101"
+    "API_BUILD_URI": "some/uri"
   },
   "LAMBDA": {
-    "LAMBDA_BUILD_URI": "/job/build-pack-lambda/buildWithParameters?token=slf-lambda-build-101"
+    "LAMBDA_BUILD_URI": "some/uri"
   },
   "WEBSITE": {
-    "WEBSITE_BUILD_URI": "/job/build-pack-website/buildWithParameters?token=slf-website-build-0907"
+    "WEBSITE_BUILD_URI": "some/uri"
   },
   "JAZZ": {
     "ADMIN": "",

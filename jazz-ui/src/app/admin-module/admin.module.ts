@@ -21,8 +21,7 @@ import {JsonViewerComponent} from "../primary-components/json-viewer/json-viewer
   ],
   providers: [
     AdminUtilsService
-  ],
-  bootstrap: []
+  ]
 })
 
 export class AdminModule {
