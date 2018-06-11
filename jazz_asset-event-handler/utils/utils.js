@@ -19,9 +19,7 @@ const format = require("string-template");
 // function to get notification message from template.
 var getNotificationMessage = function (event_name, event_status, service_name, error, notification_message) {
     var message;
-
-
-
+    
     switch (event_status) {
         case "STARTED":
             message = format(notification_message.EVENT_NAME.STARTED, {
