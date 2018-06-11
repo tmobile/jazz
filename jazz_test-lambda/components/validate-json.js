@@ -19,7 +19,7 @@
 Nodejs Template Project
  /** 
   @module: validate-JSON.js
-  @description: Validates ARN value for a lambda function in this case Authorizer
+  @description: Validates ARN 
   @author:
   @version: 1.0
 **/

@@ -49,8 +49,8 @@ var handler = (event, context, cb) => {
       } else {
         var functionARN = event.body.functionARN;
 
-        if (event.body.inputJSON && !validateJSON(event.body.inputJSON)) {
-          return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is an invalid JSON")));
+        if (event.body.inputJSON) {
+          return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is not a valid JSON")));
         }
         var arnvalues = functionARN.split(":");
         AWS_REGION =  arnvalues[3];//["arn","aws","lambda","us-east-1","000000""] spliting FunctionARN to get the aws-region 

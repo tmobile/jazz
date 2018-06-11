@@ -393,8 +393,8 @@
           "description": "ARN For the lambda to be tested"
         },
         "inputJSON": {
-          "type": "string",
-          "description": "Json String to be passed to the lambda"
+          "type": "object",
+          "description": "Json Object to be passed to the lambda"
         }
       }
     },
