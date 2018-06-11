@@ -31,7 +31,7 @@ node {
   }
 
   stage('Triggering the Jenkins build') {
-    build job: "${config_loader.JENKINS.BUILD_URI.API}", parameters: [string(name: 'scm-webhook', value: 'logs'), string(name: 'domain', value: 'jazz'), string(name: 'scm_branch', value: "${env.BRANCH_NAME}")], wait: false
+    build job: "${config_loader.JENKINS.BUILD_URI.API}", parameters: [string(name: 'service_name', value: 'scm-webhook'), string(name: 'domain', value: 'jazz'), string(name: 'scm_branch', value: "${env.BRANCH_NAME}")], wait: false
   }
 }
 
