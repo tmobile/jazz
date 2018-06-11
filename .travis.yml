@@ -2,12 +2,12 @@ language: node_js
 node_js:
  - "node"
 env:
- - PLATFORM_SERVICE=jazz_login
- - PLATFORM_SERVICE=jazz_logout
- - PLATFORM_SERVICE=jazz_is-service-available
- - PLATFORM_SERVICE=jazz_events
- - PLATFORM_SERVICE=jazz_environments
- - PLATFORM_SERVICE=jazz_environment-event-handler
+ - PLATFORM_SERVICE=core/jazz_login
+ - PLATFORM_SERVICE=core/jazz_logout
+ - PLATFORM_SERVICE=core/jazz_is-service-available
+ - PLATFORM_SERVICE=core/jazz_events
+ - PLATFORM_SERVICE=core/jazz_environments
+ - PLATFORM_SERVICE=core/jazz_environment-event-handler
 
 before_script:
   - npm prune
