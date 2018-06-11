@@ -4,7 +4,6 @@ module.exports = () => {
 	};
 };
 
-
 var tokenResponseObj200 = {
 	"statusCode": 200,
 	"body": {
@@ -40,7 +39,6 @@ var tokenResponseObjInvalid = {
 		}
 	}
 };
-
 
 var assetPayload = {
 	"service": "test-env-oss-3",
