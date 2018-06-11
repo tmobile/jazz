@@ -1,7 +1,7 @@
 {
   "name": "test-lambda",
   "version": "0.0.1",
-  "description": "Provides an API for Testing a lambda function and returns the Execution Status",
+  "description": "API that triggers a function with a test event and returns function execution status/payload back",
   "main": "index.js",
   "private": true,
   "author": {},
