@@ -169,7 +169,9 @@ def doAnalysis() {
 		error "Sonar analysis failed: " + ex.getMessage()
 	}
 	finally {
-		resetConfig() //**reset the credentials if there is a failure
+		if (config_loader.CODE_QUALITY.SONAR.ENABLE_SONAR && config_loader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
+			resetConfig() //**reset the credentials if there is a failure
+		}
 	}
 }
 
