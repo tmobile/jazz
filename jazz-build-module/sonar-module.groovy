@@ -246,7 +246,6 @@ def cleanupCodeQualityReports(){
 			}
 		} catch (ex) {
 			echo "error occured while deleting code quality reports: " + ex.getMessage()
-			error ex.getMessage()
 		}
 	}
 }
@@ -273,7 +272,6 @@ def getSonarProject(){
 			return filtered
 		} catch (ex) {
 			echo "error occured While fetching code quality reports from sonar : " + ex.getMessage()
-			error ex.getMessage()
 		}
 	}
 }
