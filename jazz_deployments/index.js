@@ -495,7 +495,7 @@ function buildNowRequest(serviceDetails, config, refDeployment) {
 							message: "deployment started."
 						});
 					} else if (res.statusCode === 404) {
-						logger.info("Service not available.");
+						logger.error("Service not available.");
 						var msg = 'Unable to re-build ' + service_name + ' as requested service is unavailable.';
 						reject({
 							result: "notFound",
