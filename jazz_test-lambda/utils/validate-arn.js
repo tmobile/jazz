@@ -22,7 +22,6 @@ Nodejs Template Project
   @author:
   @version: 1.0
 **/
-const logger = require("./logger.js");
 
 var validateARN = (arn) => {
   if (arn) {
