@@ -1,0 +1,40 @@
+{
+  "Item": {
+    "EVENT_ID": {
+      "S": "0526fe9c-3379-43f0-ad25-0d092c14e25d"
+    },
+    "TIMESTAMP": {
+      "S": "2018-06-08T07:37:48:846"
+    },
+    "REQUEST_ID": {
+      "S": "f4b8c279-a650-43f2-b8c8-271954be7105"
+    },
+    "EVENT_HANDLER": {
+      "S": "JENKINS"
+    },
+    "EVENT_NAME": {
+      "S": "CREATE_ASSET"
+    },
+    "SERVICE_NAME": {
+      "S": "webapp"
+    },
+    "SERVICE_ID": {
+      "NULL": true
+    },
+    "EVENT_STATUS": {
+      "S": "COMPLETED"
+    },
+    "EVENT_TYPE": {
+      "S": "SERVICE_DEPLOYMENT"
+    },
+    "USERNAME": {
+      "S": "jazzTester"
+    },
+    "EVENT_TIMESTAMP": {
+      "S": "2018-06-08T07:37:48:235"
+    },
+    "SERVICE_CONTEXT": {
+      "S": "{\"service_type\":\"website\",\"branch\":\"feature/clearwater_tab\",\"runtime\":\"\",\"domain\":\"jazz\",\"iam_role\":\"aanand12\",\"environment\":\"38sktlzm0d-dev\",\"region\":\"\",\"message\":\"No Message\",\"provider\":\"aws\",\"provider_id\":\"s3://jazz-webapp-0b0e2eb1/38sktlzm0d-dev\",\"type\":\"s3\",\"created_by\":\"aanand12\"}"
+    }
+  }
+}
