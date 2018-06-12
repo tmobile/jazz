@@ -19,13 +19,9 @@ var getStageConfig = (context) => {
   var configObj = {};
   var stage = functionName.substr(functionName.lastIndexOf('-') + 1, functionName.length);
   // Loads the config files based on the env.
-  // Please edit the JSON files.
+
   if (functionName.endsWith('dev')) {
     configObj = require('../config/dev-config.json');
-  } else if (functionName.endsWith('stg')) {
-    configObj = require('../config/stg-config.json');
-  } else if (functionName.endsWith('prod')) {
-    configObj = require('../config/prod-config.json');
   } else {
     configObj = require('../config/' + stage + '-config.json');
   }
