@@ -178,14 +178,16 @@ function validateAllRequiredFieldsValue(deployment_data, required_fields) {
 
 function validateRemoveEmptyValues(deployment_data) {
     return new Promise((resolve, reject) => {
-        for (var field in deployment_data) {
-            if (!deployment_data[field]) {
-                delete deployment_data[field];
-            }
-        }
+        var data = {};
+        var emptyFields = Object.keys(deployment_data).filter(field => {
+            return (deployment_data[field] ? true : false)
+        });
+        emptyFields.forEach(key => {
+            data[key] = deployment_data[key];
+        })
         resolve({
             result: "success",
-            input: deployment_data
+            input: data
         });
     });
 };
@@ -193,13 +195,15 @@ function validateRemoveEmptyValues(deployment_data) {
 function validateNotEditableFieldsInUpdate(deployment_data, fields_list) {
     return new Promise((resolve, reject) => {
         var invalid_fields = _.intersection(_.keys(deployment_data), _.values(fields_list));
-        invalid_fields.map((value) => {
-            delete deployment_data[value];
+        var editable_data = Object.keys(deployment_data).filter(key => {return (invalid_fields.indexOf(key) > -1) ? false : true;});
+        var data = {};
+        editable_data.forEach(key => {
+            data[key] = deployment_data[key]
         });
 
         resolve({
             result: "success",
-            input: deployment_data
+            input: data
         });
     });
 };
