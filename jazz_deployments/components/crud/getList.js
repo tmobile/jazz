@@ -22,7 +22,7 @@
     @version: 1.0
  **/
 
-const utils = require("../utils.js")(); //Import the utils module.
+const utils = require("../utils.js"); //Import the utils module.
 const logger = require("../logger.js")(); //Import the logging module.
 
 module.exports = (tableName, query, onComplete) => {

@@ -14,7 +14,7 @@ const logger = require("../components/logger.js");
 const configObj = require('../components/config.js');
 const crud = require('../components/crud')();
 const errorHandler = require("../components/error-handler.js")();
-const validateUtils = require("../components/validation")();
+const validateUtils = require("../components/validation.js");
 
 describe('jazz_deployments', function () {
   var tableName, global, spy, stub, err, errMessage, errType, dataObj, event, context, callback, callbackObj, logMessage, logStub, indexName, responseObj;

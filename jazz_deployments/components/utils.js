@@ -25,7 +25,7 @@
 var AWS = require("aws-sdk");
 
 // initialize document CLient for dynamodb
-var initDocClient = () => {
+function initDocClient() {
     AWS.config.update({
         region: global.config.ddb_region
     });
@@ -34,7 +34,7 @@ var initDocClient = () => {
     return docClient;
 };
 
-var initDynamodb = () => {
+function initDynamodb () {
     AWS.config.update({
         region: global.config.ddb_region
     });
@@ -43,7 +43,7 @@ var initDynamodb = () => {
     return dynamodb;
 };
 
-var isEmpty = (obj) => {
+function isEmpty (obj) {
     for (var prop in obj) {
         if (obj.hasOwnProperty(prop)) return false;
     }
@@ -51,7 +51,7 @@ var isEmpty = (obj) => {
 };
 
 // convert object returned from the database, as per schema
-var formatData = (data, format) => {
+function formatData (data, format) {
     if (!data) {
         return {};
     }
@@ -99,7 +99,7 @@ var formatData = (data, format) => {
     return deployment_obj;
 };
 
-var getSchemaKeyName = (key) => {
+function getSchemaKeyName (key) {
     // Convert database key name back, as per schema
 
     if (!key) {
@@ -114,7 +114,7 @@ var getSchemaKeyName = (key) => {
     return keyName
 };
 
-var ConvertKeysToLowerCase = (obj) => {
+function ConvertKeysToLowerCase (obj) {
     var output = {};
     for (i in obj) {
         var data = i.toLowerCase();
@@ -131,7 +131,7 @@ var ConvertKeysToLowerCase = (obj) => {
 };
 
 // function to convert key name in schema to database column name
-var getDeploymentDatabaseKeyName = (key) => {
+function getDeploymentDatabaseKeyName (key) {
     // Some of the keys in schema may be reserved keywords, so it may need some manipulation
 
     if (!key) {
@@ -148,7 +148,7 @@ var getDeploymentDatabaseKeyName = (key) => {
     }
 };
 
-var sortUtil = (data, sort_key, sort_direction) => {
+function sortUtil (data, sort_key, sort_direction) {
     if (sort_key && sort_key === "provider_build_id") {
         data = data.sort((a, b) => {
             var x = parseInt(a[sort_key]);
@@ -180,7 +180,7 @@ var sortUtil = (data, sort_key, sort_direction) => {
     return data;
 };
 
-var filterUtil = (data, filter_value) => {
+function filterUtil (data, filter_value) {
     var newArr = [];
     data.map((ele) => {
         for (var key in ele) {
@@ -198,7 +198,7 @@ var filterUtil = (data, filter_value) => {
     return newArr;
 };
 
-var paginateUtil = (data, limit, offset) => {
+function paginateUtil (data, limit, offset) {
     var newArr = [];
     if (offset > data.length || offset === data.length || !limit) {
         data = [];
@@ -211,16 +211,14 @@ var paginateUtil = (data, limit, offset) => {
 };
 
 
-module.exports = () => {
-    return {
-        initDynamodb: initDynamodb,
-        initDocClient: initDocClient,
-        isEmpty: isEmpty,
-        getDeploymentDatabaseKeyName: getDeploymentDatabaseKeyName,
-        formatData: formatData,
-        ConvertKeysToLowerCase: ConvertKeysToLowerCase,
-        sortUtil: sortUtil,
-        filterUtil: filterUtil,
-        paginateUtil: paginateUtil
-    };
+module.exports = {
+    initDynamodb,
+    initDocClient,
+    isEmpty,
+    getDeploymentDatabaseKeyName,
+    formatData,
+    ConvertKeysToLowerCase,
+    sortUtil,
+    filterUtil,
+    paginateUtil
 };
