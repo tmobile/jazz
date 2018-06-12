@@ -8,7 +8,7 @@
                 <span class="path1"></span><span class="path2"></span>
             </div> -->
         </div>
-        <div class="sign-in-form">
+        <div class="sign-in-form" (keyup.enter)="register ? registerUser($event) : login()">
 
             <!-- <form> -->
                 <div class="form-row">
@@ -21,7 +21,11 @@
                         <span  class="icon-icon-info icon-info-wrap" popoverPlacement="right" [popover]="myPopover" [popoverOnHover]="true"></span>
                     </div>
 
-                    <input class='ip-usr' [class.err-border]='err_username_brd'  (keyup.enter)="login()" type="text" name='username' [(ngModel)]="model.username" (ngModelChange)="onChange($event)">
+                    <input class='ip-usr'
+                           [class.err-border]='err_username_brd'
+                           type="text" name='username'
+                           [(ngModel)]="model.username"
+                           (ngModelChange)="onChange($event)">
                     <div  class='hide-er' [class.error-msg]="error_username_disp">
                         <div>
                             <span class="icon-icon-alert"></span>
@@ -29,9 +33,13 @@
                         </div>
                  </div>
                 </div>
+
                 <div class="form-row">
                         <div class="form-label">Password </div>
-                        <input  (keyup.enter)="login()" [class.err-border]='err_password_brd' type="password" name='password' [(ngModel)]="model.password"  (ngModelChange)="onChange($event)">
+                        <input [class.err-border]='err_password_brd'
+                               type="password" name='password'
+                               [(ngModel)]="model.password"
+                               (ngModelChange)="onChange($event)">
                         <div  class='hide-er' [class.error-msg]="error_password_disp">
                                 <div>
                                     <span class="icon-icon-alert"></span>

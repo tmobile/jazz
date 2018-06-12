@@ -2,6 +2,7 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import groovy.transform.Field
+import jenkins.security.*
 
 echo "Service configuration module loaded successfully"
 
@@ -235,11 +236,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-			
-			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-			
+						
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
@@ -258,19 +255,22 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
 
+			sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{api_token}/${getApiToken()}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{api_token}/${getApiToken()}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{api_token}/${getApiToken()}/g' ./config/prod-config.json"
+
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 
 			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
-    
 			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/dev-config.json"
 			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/stg-config.json"
 			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/prod-config.json"
-
-			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/dev-config.json"
-			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/stg-config.json"
-			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/prod-config.json"
 			}
 		}
 
@@ -402,5 +402,15 @@ def setLogStreamPermission(config){
 		}
 	}
 }
+
+def getApiToken(){    
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "jobexecutor", passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+		User u = User.get(UNAME)  
+		ApiTokenProperty t = u.getProperty(ApiTokenProperty.class)  
+		def token = t.getApiToken()
+		return token
+	}
+}
+
 
 return this
