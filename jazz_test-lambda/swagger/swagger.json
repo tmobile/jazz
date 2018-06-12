@@ -3,7 +3,7 @@
   "info": {
     "version": "2017-01-30T23:30:18Z",
     "title": "{api_deployment_node_title}",
-    "description": "API specification for nodejs template service"
+    "description": "API specification for Test lambda API "
   },
   "host": "{api_host_name}",
   "basePath": "/{domain}",
@@ -90,7 +90,7 @@
         }
       },
       "post": {
-        "description": "Post method swagger for Node template",
+        "description": "Post method swagger for Test Lambda",
         "parameters": [{
           "name": "param",
           "in": "body",
