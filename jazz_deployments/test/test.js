@@ -1,19 +1,12 @@
 const chai = require('chai');
-const assert = require('chai').assert;
 const expect = require('chai').expect;
-const should = require('chai').should();
-const chaiAsPromised = require('chai-as-promised');
-chai.use(chaiAsPromised);
 const awsContext = require('aws-lambda-mock-context');
 const AWS = require("aws-sdk-mock");
 const request = require('request');
 const sinon = require('sinon');
 
 const index = require('../index');
-const logger = require("../components/logger.js");
 const configObj = require('../components/config.js');
-const crud = require('../components/crud')();
-const errorHandler = require("../components/error-handler.js")();
 const validateUtils = require("../components/validation.js");
 
 describe('jazz_deployments', function () {
@@ -175,64 +168,183 @@ describe('jazz_deployments', function () {
     })
   });
 
-  describe('validateDeploymentDetails', () => {
-    it("should validate data for create payload for new deployment", () => {
-      event.query = {};
-      event.path = {};
-      config = configObj(event);
-      index.validateDeploymentDetails(config, event.body)
+  describe('validation', () => {
+    it("should validate create payload", () => {
+      validateUtils.validateCreatePayload(config, event.body)
         .then(res => {
           expect(res).to.be.null;
         });
     });
 
-    it("should indicate invalid status error while validating create payload for new deployment", () => {
-      event.query = {};
-      event.path = {};
-      event.body.status = "invalid-status";
-      config = configObj(event);
-      index.validateDeploymentDetails(config, event.body)
+    it("should indicate empty payload error while validating create payload", () => {
+      validateUtils.validateCreatePayload(config, {})
         .catch(error => {
           expect(error).to.include({
-            result: 'inputError'
+            result: 'inputError',
+            message: 'Input payload cannot be empty'
           });
         });
     });
 
-    it("should indicate empty data error while validating create payload for new deployment", () => {
-      event.query = {};
-      event.path = {};
-      event.body = {};
-      config = configObj(event);
-      index.validateDeploymentDetails(config, event.body)
-        .catch(error => {
-          expect(error).to.include({
-            message: "Input payload cannot be empty"
-          });
-        });
-    });
-
-    it("should indicate missing required data error while validating create payload for new deployment", () => {
-      event.query = {};
-      event.path = {};
-
-      var required_fields = config.DEPLOYMENT_CREATION_REQUIRED_FIELDS;
-
+    it("should indicate that required fields are missing error while validating create payload", () => {
+      const required_fields = config.DEPLOYMENT_CREATION_REQUIRED_FIELDS;
       for (var i in required_fields) {
         const payload = Object.assign({}, event.body);
-        const removeField = required_fields[i];
-        delete payload[required_fields[i]];
-        index.validateDeploymentDetails(config, payload)
+        const removedField = required_fields[i];
+        delete payload[required_fields[i]]
+        validateUtils.validateCreatePayload(config, payload)
           .catch(error => {
             expect(error).to.include({
               result: 'inputError',
-              message: 'Following field(s) are required - ' + removeField
-            });
+              message: 'Following field(s) are required - ' + removedField
+            })
           });
-      };
+      }
     });
 
-  });
+    it("should indicate invalid status error", () => {
+      event.body.status = "invalid";
+      var status_values = config.DEPLOYMENT_STATUS;
+      validateUtils.validateCreatePayload(config, event.body)
+        .catch(error => {
+          expect(error).to.include({
+            result: "inputError",
+            message: "Only following values can be allowed for status field - " + status_values.join(", ")
+          });
+        });
+    });
+
+    it("should indicate invalid/unallowed input field", () => {
+      const payload = Object.assign({}, event.body);
+      payload["invalidKey"] = "invalidValue";
+      validateUtils.validateCreatePayload(config, payload)
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: 'Following fields are invalid :  invalidKey. '
+          })
+        });
+    });
+
+    it("should indicate that required field values are missing", () => {
+      const required_fields = config.DEPLOYMENT_CREATION_REQUIRED_FIELDS;
+      for (var i in required_fields) {
+        const payload = Object.assign({}, event.body);
+        const removedField = required_fields[i];
+        payload[required_fields[i]] = "";
+        validateUtils.validateCreatePayload(config, payload)
+          .catch(error => {
+            expect(error).to.include({
+              result: 'inputError',
+              message: 'Following field(s) value cannot be empty - ' + removedField
+            })
+          });
+      }
+    });
+
+    it("should validate list deployments query params", () => {
+      validateUtils.validateListPayload(config, event.query)
+        .then(res => {
+          expect(res).to.include({
+            result: "success",
+            input: event.query
+          });
+        });
+    });
+
+    it("should indicate empty query while validating deployments query params", () => {
+      validateUtils.validateListPayload(config, {})
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: 'Input payload cannot be empty'
+          });
+        });
+    });
+
+    it("should validate update payload", () => {
+      var update_data = {
+        status: "in_progress"
+      }
+      var dataObj = {
+        Items: [event.body]
+      }
+      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+        return cb(null, dataObj);
+      });
+      validateUtils.validateUpdatePayload(config, update_data, tableName, event.path.id)
+        .then(res => {
+          expect(res).to.include(update_data);
+          AWS.restore("DynamoDB.DocumentClient")
+        });
+    });
+
+    it("should remove empty fileds from the payload while validaing the update data for deployment", () => {
+      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+        var dataObj = {
+          Items: [event.body]
+        }
+        return cb(null, dataObj);
+      });
+      const payload = {
+        "scm_branch": ""
+      }
+      validateUtils.validateUpdatePayload(config, payload, tableName, event.path.id)
+        .then(res => {
+          expect(payload).to.be.an('object').that.is.empty;
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+
+    it("should remove non-editable fileds from the payload while validaing the update data for deployment", () => {
+      const non_editable_fields = config.REQUIRED_PARAMS;
+      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+        var dataObj = {
+          Items: [event.body]
+        }
+        return cb(null, dataObj);
+      });
+      validateUtils.validateUpdatePayload(config, event.body, tableName, event.path.id)
+        .then(res => {
+          expect(event.body).to.not.have.keys(non_editable_fields);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+
+    it("should indicate notFound error while validating update payload for deployment", () => {
+      var update_data = {
+        status: "in_progress"
+      }
+      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+        var dataObj = {
+          Items: []
+        }
+        return cb(null, dataObj);
+      });
+      validateUtils.validateUpdatePayload(config, update_data, tableName, event.path.id)
+        .catch(error => {
+          expect(error).to.include({
+            result: "notFound",
+            message: 'Cannot find deployment details with id :' + event.path.id
+          });
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+
+    it("should indicate internal server error while validating update payload for deployment", () => {
+      var update_data = {
+        status: "in_progress"
+      }
+      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+        return cb(err, null);
+      });
+      validateUtils.validateUpdatePayload(config, update_data, tableName, event.path.id)
+        .catch(error => {
+          expect(error).to.include(err);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+  })
 
   describe('addNewDeploymentDetails', () => {
     it("should add new deployment details to dynamodb", () => {
@@ -262,70 +374,70 @@ describe('jazz_deployments', function () {
     });
   });
 
-  describe('validateQueryParams', () => {
-    it("should validate query params for deployments list", () => {
-      index.validateQueryParams(config, event.query)
-        .then(res => {
-          expect(res).to.be.null
-        });
-    });
+  // describe('validateQueryParams', () => {
+  //   it("should validate query params for deployments list", () => {
+  //     index.validateQueryParams(config, event.query)
+  //       .then(res => {
+  //         expect(res).to.be.null
+  //       });
+  //   });
 
-    it("should indicate invalid field error while validating query params", () => {
-      event.query.invalid = "";
-      index.validateQueryParams(config, event.query)
-        .catch(error => {
-          expect(error).to.include({
-            result: 'inputError',
-            message: 'Following fields are invalid :  invalid. '
-          })
-        });
-    });
+  //   it("should indicate invalid field error while validating query params", () => {
+  //     event.query.invalid = "";
+  //     index.validateQueryParams(config, event.query)
+  //       .catch(error => {
+  //         expect(error).to.include({
+  //           result: 'inputError',
+  //           message: 'Following fields are invalid :  invalid. '
+  //         })
+  //       });
+  //   });
 
-    it("should indicate that required fields are missing error while validating query params", () => {
-      const required_fields = config.REQUIRED_PARAMS;
-      for (var i in required_fields) {
-        const payload = Object.assign({}, event.query);
-        const removedField = required_fields[i];
-        delete payload[required_fields[i]]
+  //   it("should indicate that required fields are missing error while validating query params", () => {
+  //     const required_fields = config.REQUIRED_PARAMS;
+  //     for (var i in required_fields) {
+  //       const payload = Object.assign({}, event.query);
+  //       const removedField = required_fields[i];
+  //       delete payload[required_fields[i]]
 
-        index.validateQueryParams(config, payload)
-          .catch(error => {
-            expect(error).to.include({
-              result: 'inputError',
-              message: 'Following field(s) are required - ' + removedField
-            })
-          });
-      }
-    });
+  //       index.validateQueryParams(config, payload)
+  //         .catch(error => {
+  //           expect(error).to.include({
+  //             result: 'inputError',
+  //             message: 'Following field(s) are required - ' + removedField
+  //           })
+  //         });
+  //     }
+  //   });
 
-    it("should indicate that required field values are missing while validating query params", () => {
-      const required_fields = config.REQUIRED_PARAMS;
-      for (var i in required_fields) {
-        const payload = Object.assign({}, event.query);
-        const removedField = required_fields[i];
-        payload[required_fields[i]] = "";
+  //   it("should indicate that required field values are missing while validating query params", () => {
+  //     const required_fields = config.REQUIRED_PARAMS;
+  //     for (var i in required_fields) {
+  //       const payload = Object.assign({}, event.query);
+  //       const removedField = required_fields[i];
+  //       payload[required_fields[i]] = "";
 
-        index.validateQueryParams(config, payload)
-          .catch(error => {
-            expect(error).to.include({
-              result: 'inputError',
-              message: 'Following field(s) value cannot be empty - ' + removedField
-            })
-          });
-      }
-    });
+  //       index.validateQueryParams(config, payload)
+  //         .catch(error => {
+  //           expect(error).to.include({
+  //             result: 'inputError',
+  //             message: 'Following field(s) value cannot be empty - ' + removedField
+  //           })
+  //         });
+  //     }
+  //   });
 
-    it("should indicate empty payload error while validating query params", () => {
-      index.validateQueryParams(config, {})
-        .catch(error => {
-          expect(error).to.include({
-            result: 'inputError',
-            message: 'Input payload cannot be empty'
-          })
-        });
-    });
+  //   it("should indicate empty payload error while validating query params", () => {
+  //     index.validateQueryParams(config, {})
+  //       .catch(error => {
+  //         expect(error).to.include({
+  //           result: 'inputError',
+  //           message: 'Input payload cannot be empty'
+  //         })
+  //       });
+  //   });
 
-  });
+  // });
 
   describe('getDeploymentDetailsByQueryParam', () => {
     it("should get list of deployments form dynamdb if query params are defined", () => {
@@ -420,121 +532,121 @@ describe('jazz_deployments', function () {
     });
   });
 
-  describe('validateUpdateInput', () => {
-    it("should validate update payload for deployment", () => {
-      var update_data = {
-        status: "in_progress"
-      }
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var dataObj = {
-          Items: [event.body]
-        }
-        return cb(null, dataObj);
-      });
-      index.validateUpdateInput(config, update_data, tableName, event.path.id)
-        .then(res => {
-          expect(res).to.include(update_data);
-          AWS.restore("DynamoDB.DocumentClient");
-        });
-    });
+  // describe('validateUpdateInput', () => {
+  //   it("should validate update payload for deployment", () => {
+  //     var update_data = {
+  //       status: "in_progress"
+  //     }
+  //     AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+  //       var dataObj = {
+  //         Items: [event.body]
+  //       }
+  //       return cb(null, dataObj);
+  //     });
+  //     index.validateUpdateInput(config, update_data, tableName, event.path.id)
+  //       .then(res => {
+  //         expect(res).to.include(update_data);
+  //         AWS.restore("DynamoDB.DocumentClient");
+  //       });
+  //   });
 
-    it("should indicate input error while validating update payload for deployment", () => {
-      var update_data = {
-        status: "invalid-status"
-      };
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var dataObj = {
-          Items: [event.body]
-        }
-        return cb(null, dataObj);
-      });
-      index.validateUpdateInput(config, update_data, tableName, event.path.id)
-        .catch(error => {
-          expect(error).to.include({
-            "result": "inputError",
-            "message": "Only following values can be allowed for status field - " + config.DEPLOYMENT_STATUS.join(", ")
-          });
-          AWS.restore("DynamoDB.DocumentClient");
-        });
-    });
+  //   it("should indicate input error while validating update payload for deployment", () => {
+  //     var update_data = {
+  //       status: "invalid-status"
+  //     };
+  //     AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+  //       var dataObj = {
+  //         Items: [event.body]
+  //       }
+  //       return cb(null, dataObj);
+  //     });
+  //     index.validateUpdateInput(config, update_data, tableName, event.path.id)
+  //       .catch(error => {
+  //         expect(error).to.include({
+  //           "result": "inputError",
+  //           "message": "Only following values can be allowed for status field - " + config.DEPLOYMENT_STATUS.join(", ")
+  //         });
+  //         AWS.restore("DynamoDB.DocumentClient");
+  //       });
+  //   });
 
-    it("should indicate input error while validating update payload for deployment", () => {
-      index.validateUpdateInput(config, {}, tableName, event.path.id)
-        .catch(error => {
-          expect(error).to.include({
-            result: "inputError",
-            message: "Input payload cannot be empty"
-          });
-        });
-    });
+  //   it("should indicate input error while validating update payload for deployment", () => {
+  //     index.validateUpdateInput(config, {}, tableName, event.path.id)
+  //       .catch(error => {
+  //         expect(error).to.include({
+  //           result: "inputError",
+  //           message: "Input payload cannot be empty"
+  //         });
+  //       });
+  //   });
 
-    it("should remove non-editable fileds from the payload while validaing the update data for deployment", () => {
-      const non_editable_fields = config.REQUIRED_PARAMS;
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var dataObj = {
-          Items: [event.body]
-        }
-        return cb(null, dataObj);
-      });
-      index.validateUpdateInput(config, event.body, tableName, event.path.id)
-        .then(res => {
-          expect(event.body).to.not.have.keys(non_editable_fields);
-          AWS.restore("DynamoDB.DocumentClient");
-        });
-    });
+  //   it("should remove non-editable fileds from the payload while validaing the update data for deployment", () => {
+  //     const non_editable_fields = config.REQUIRED_PARAMS;
+  //     AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+  //       var dataObj = {
+  //         Items: [event.body]
+  //       }
+  //       return cb(null, dataObj);
+  //     });
+  //     index.validateUpdateInput(config, event.body, tableName, event.path.id)
+  //       .then(res => {
+  //         expect(event.body).to.not.have.keys(non_editable_fields);
+  //         AWS.restore("DynamoDB.DocumentClient");
+  //       });
+  //   });
 
-    it("should remove empty fileds from the payload while validaing the update data for deployment", () => {
-      const non_editable_fields = config.REQUIRED_PARAMS;
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var dataObj = {
-          Items: [event.body]
-        }
-        return cb(null, dataObj);
-      });
-      const payload = {
-        "scm_branch": ""
-      }
-      index.validateUpdateInput(config, payload, tableName, event.path.id)
-        .then(res => {
-          expect(payload).to.be.an('object').that.is.empty;
-          AWS.restore("DynamoDB.DocumentClient");
-        })
-    })
+  //   it("should remove empty fileds from the payload while validaing the update data for deployment", () => {
+  //     const non_editable_fields = config.REQUIRED_PARAMS;
+  //     AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+  //       var dataObj = {
+  //         Items: [event.body]
+  //       }
+  //       return cb(null, dataObj);
+  //     });
+  //     const payload = {
+  //       "scm_branch": ""
+  //     }
+  //     index.validateUpdateInput(config, payload, tableName, event.path.id)
+  //       .then(res => {
+  //         expect(payload).to.be.an('object').that.is.empty;
+  //         AWS.restore("DynamoDB.DocumentClient");
+  //       })
+  //   })
 
-    it("should indicate notFound error while validating update payload for deployment", () => {
-      var update_data = {
-        status: "in_progress"
-      }
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        var dataObj = {
-          Items: []
-        }
-        return cb(null, dataObj);
-      });
-      index.validateUpdateInput(config, update_data, tableName, event.path.id)
-        .catch(error => {
-          expect(error).to.include({
-            result: "notFound",
-            message: 'Cannot find deployment details with id :' + event.path.id
-          });
-          AWS.restore("DynamoDB.DocumentClient");
-        });
-    });
+  //   it("should indicate notFound error while validating update payload for deployment", () => {
+  //     var update_data = {
+  //       status: "in_progress"
+  //     }
+  //     AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+  //       var dataObj = {
+  //         Items: []
+  //       }
+  //       return cb(null, dataObj);
+  //     });
+  //     index.validateUpdateInput(config, update_data, tableName, event.path.id)
+  //       .catch(error => {
+  //         expect(error).to.include({
+  //           result: "notFound",
+  //           message: 'Cannot find deployment details with id :' + event.path.id
+  //         });
+  //         AWS.restore("DynamoDB.DocumentClient");
+  //       });
+  //   });
 
-    it("should indicate internal server error while validating update payload for deployment", () => {
-      var update_data = {
-        status: "in_progress"
-      }
-      AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-        return cb(err, null);
-      });
-      index.validateUpdateInput(config, update_data, tableName, event.path.id)
-        .catch(error => {
-          expect(error).to.include(err);
-          AWS.restore("DynamoDB.DocumentClient");
-        });
-    });
-  });
+  //   it("should indicate internal server error while validating update payload for deployment", () => {
+  //     var update_data = {
+  //       status: "in_progress"
+  //     }
+  //     AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
+  //       return cb(err, null);
+  //     });
+  //     index.validateUpdateInput(config, update_data, tableName, event.path.id)
+  //       .catch(error => {
+  //         expect(error).to.include(err);
+  //         AWS.restore("DynamoDB.DocumentClient");
+  //       });
+  //   });
+  // });
 
   describe('updateDeploymentDetails', () => {
     it("should update deployment data using DynamoDB.DocumentClient.update", () => {
@@ -842,7 +954,7 @@ describe('jazz_deployments', function () {
 
   describe('processDeploymentCreation', () => {
     it("should process deployment creation", () => {
-      const validateDeploymentDetails = sinon.stub(index, "validateDeploymentDetails").resolves(null);
+      const validateCreatePayload = sinon.stub(validateUtils, "validateCreatePayload").resolves(null);
       const addNewDeploymentDetails = sinon.stub(index, "addNewDeploymentDetails").resolves({
         result: 'success',
         deployment_id: '123'
@@ -850,22 +962,22 @@ describe('jazz_deployments', function () {
       index.processDeploymentCreation(config, event.body, tableName)
         .then(res => {
           expect(res).to.include.keys('result');
-          sinon.assert.calledOnce(validateDeploymentDetails);
+          sinon.assert.calledOnce(validateCreatePayload);
           sinon.assert.calledOnce(addNewDeploymentDetails);
-          validateDeploymentDetails.restore();
+          validateCreatePayload.restore();
           addNewDeploymentDetails.restore();
         });
     });
 
     it("should indicate error while  processing deployment creation", () => {
-      const validateDeploymentDetails = sinon.stub(index, "validateDeploymentDetails").resolves(null);
+      const validateCreatePayload = sinon.stub(validateUtils, "validateCreatePayload").resolves(null);
       const addNewDeploymentDetails = sinon.stub(index, "addNewDeploymentDetails").rejects(err)
       index.processDeploymentCreation(config, event.body, tableName)
         .catch((error) => {
           expect(error).to.be.eq(err);
-          sinon.assert.calledOnce(validateDeploymentDetails);
+          sinon.assert.calledOnce(validateCreatePayload);
           sinon.assert.calledOnce(addNewDeploymentDetails);
-          validateDeploymentDetails.restore();
+          validateCreatePayload.restore();
           addNewDeploymentDetails.restore();
         });
     });
@@ -915,27 +1027,27 @@ describe('jazz_deployments', function () {
         count: 1,
         deployments: [event.body]
       }
-      const validateQueryParams = sinon.stub(index, "validateQueryParams").resolves(null);
+      const validateListPayload = sinon.stub(validateUtils, "validateListPayload").resolves(null);
       const getDeploymentDetailsByQueryParam = sinon.stub(index, "getDeploymentDetailsByQueryParam").resolves(responseObj)
       index.processDeploymentsList(config, event.query, tableName)
         .then(res => {
           expect(res).to.include.keys('deployments');
-          sinon.assert.calledOnce(validateQueryParams);
+          sinon.assert.calledOnce(validateListPayload);
           sinon.assert.calledOnce(getDeploymentDetailsByQueryParam);
-          validateQueryParams.restore();
+          validateListPayload.restore();
           getDeploymentDetailsByQueryParam.restore();
         });
     });
 
     it("should indicate error while  processing deployment list", () => {
-      const validateQueryParams = sinon.stub(index, "validateQueryParams").resolves(null);
+      const validateListPayload = sinon.stub(validateUtils, "validateListPayload").resolves(null);
       const getDeploymentDetailsByQueryParam = sinon.stub(index, "getDeploymentDetailsByQueryParam").rejects(err);
       index.processDeploymentsList(config, event.query, tableName)
         .catch((error) => {
           expect(error).to.be.eq(err);
-          sinon.assert.calledOnce(validateQueryParams);
+          sinon.assert.calledOnce(validateListPayload);
           sinon.assert.calledOnce(getDeploymentDetailsByQueryParam);
-          validateQueryParams.restore();
+          validateListPayload.restore();
           getDeploymentDetailsByQueryParam.restore();
         });
     });
@@ -946,7 +1058,7 @@ describe('jazz_deployments', function () {
       var dataObj = {
         Items: [event.body]
       }
-      const validateUpdateInput = sinon.stub(index, "validateUpdateInput").resolves({
+      const validateUpdatePayload = sinon.stub(validateUtils, "validateUpdatePayload").resolves({
         message: "Deployment with provided Id exist",
         input: event.body
       })
@@ -954,15 +1066,15 @@ describe('jazz_deployments', function () {
       index.processDeploymentsUpdate(config, event.body, tableName, event.path.id)
         .then((res) => {
           expect(res).to.be.eq(dataObj);
-          sinon.assert.calledOnce(validateUpdateInput);
+          sinon.assert.calledOnce(validateUpdatePayload);
           sinon.assert.calledOnce(updateDeploymentDetails);
-          validateUpdateInput.restore();
+          validateUpdatePayload.restore();
           updateDeploymentDetails.restore();
         });
     });
 
     it("should indicate error while processing deployments update", () => {
-      const validateUpdateInput = sinon.stub(index, "validateUpdateInput").resolves({
+      const validateUpdatePayload = sinon.stub(validateUtils, "validateUpdatePayload").resolves({
         message: "Deployment with provided Id exist",
         input: event.body
       })
@@ -970,9 +1082,9 @@ describe('jazz_deployments', function () {
       index.processDeploymentsUpdate(config, event.body, tableName, event.path.id)
         .catch(error => {
           expect(error).to.be.eq(err);
-          sinon.assert.calledOnce(validateUpdateInput);
+          sinon.assert.calledOnce(validateUpdatePayload);
           sinon.assert.calledOnce(updateDeploymentDetails);
-          validateUpdateInput.restore();
+          validateUpdatePayload.restore();
           updateDeploymentDetails.restore();
         });
     });

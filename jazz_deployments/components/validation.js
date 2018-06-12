@@ -35,9 +35,9 @@ function validateCreatePayload(config, deployment_data) {
 
         validateIsEmptyInputData(deployment_data)
             .then(() => validateAllRequiredFields(deployment_data, required_fields_create))
+            .then(() => validateAllRequiredFieldsValue(deployment_data, required_fields_create))
             .then(() => validateStatusFieldValue(deployment_data, status_field_list))
             .then(() => validateUnAllowedFieldsInInput(deployment_data, service_field_list))
-            .then(() => validateAllRequiredFieldsValue(deployment_data, required_fields_create))
             .then(() => validateRemoveEmptyValues(deployment_data))
             .then((result) => {
                 logger.info("# Validate Create Payload Data:" + JSON.stringify(result));
@@ -78,7 +78,7 @@ function validateListPayload(config, deployment_data) {
 };
 
 function validateUpdatePayload(config, deployment_data, deploymentTableName, deploymentId) {
-    logger.info("Inside Validate get list payload: " + JSON.stringify(deployment_data));
+    logger.info("Inside validate deployment update payload: " + JSON.stringify(deployment_data));
     return new Promise((resolve, reject) => {
         var unchangeable_fields = config.REQUIRED_PARAMS;
         // var service_field_list = required_fields.concat(config.OPTIONAL_PARAMS);
