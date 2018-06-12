@@ -250,11 +250,11 @@ export class ServiceDetailComponent implements OnInit {
 
     refreshCostData(event){
         this.isLoading=true;
-        this.deleteServiveInit()
+        this.deleteServiceInit()
     }
 
 
-    deleteServiveInit(){
+    deleteServiceInit(){
 
         this.isLoading=true;
         this.disblebtn =true;

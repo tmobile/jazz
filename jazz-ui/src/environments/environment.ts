@@ -5,10 +5,10 @@ export const environment = {
     api_doc_name : "https://{api_doc_name}.s3.amazonaws.com",
     envName:"jazz",
     multi_env:false,
-    serviceTabs:["overview","logs"],
-    environmentTabs:["overview","logs"],
+  serviceTabs:["{overview}","{access control}","{metrics}","{logs}","{cost}"],
+  environmentTabs:["{env_overview}","{deployments}","{code quality}","{assets}","{env_logs}"],
     urls:{},
     userJourney: {
       registrationMessage: ''
     }
-  };
+};
