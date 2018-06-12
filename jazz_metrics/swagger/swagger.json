@@ -91,17 +91,15 @@
             },
             "post": {
                 "description": "Post method swagger for Node template",
-                "parameters": [
-                    {
-                        "name": "param",
-                        "in": "body",
-                        "description": "post body parameter.",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/MertricsObj"
-                        }
+                "parameters": [{
+                    "name": "param",
+                    "in": "body",
+                    "description": "post body parameter.",
+                    "required": true,
+                    "schema": {
+                        "$ref": "#/definitions/MertricsObj"
                     }
-                ],
+                }],
                 "consumes": [
                     "application/json",
                     "application/x-www-form-urlencoded"
@@ -214,11 +212,9 @@
                         }
                     }
                 },
-                "security": [
-                    {
-                        "{envPrefix}-{domain}-cognito-authorizer": []
-                    }
-                ],
+                "security": [{
+                    "{envPrefix}-{domain}-cognito-authorizer": []
+                }],
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -301,18 +297,18 @@
         }
     },
     "securityDefinitions": {
-      "{envPrefix}-{domain}-cognito-authorizer": {
-        "type": "apiKey",
-        "name": "Authorization",
-        "in": "header",
-        "x-amazon-apigateway-authtype": "custom",
-        "x-amazon-apigateway-authorizer": {
-        "authorizerCredentials": "{conf-role}",
-        "authorizerResultTtlInSeconds": 300,
-        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
-        "type": "token"
+        "{envPrefix}-{domain}-cognito-authorizer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "x-amazon-apigateway-authtype": "custom",
+            "x-amazon-apigateway-authorizer": {
+                "authorizerCredentials": "{conf-role}",
+                "authorizerResultTtlInSeconds": 300,
+                "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
+                "type": "token"
+            }
         }
-      }
     },
     "definitions": {
         "200SuccessResponse": {

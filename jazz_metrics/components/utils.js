@@ -1,5 +1,21 @@
+// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
 /**
-    massage functions for output data
+    Helper functions for Metrics
     @module: utils.js
     @description: Defines functions like format the output as per metrics catalog.
     @author:
@@ -7,27 +23,26 @@
 **/
 const parser = require('aws-arn-parser');
 const metricConfig = require("./metrics.json");
-const global_config = require("../config/global-config.json")
+const global_config = require("../config/global-config.json");
 
-
-var massageData = function(assetResults, event) {
+function massageData(assetResults, eventBody) {
 
     var output_obj = {};
     output_obj = {
-        "domain": event.body.domain,
-        "service": event.body.service,
-        "environment": event.body.environment,
-        "end_time": event.body.end_time,
-        "start_time": event.body.start_time,
-        "interval": event.body.interval,
-        "statistics": event.body.statistics,
+        "domain": eventBody.domain,
+        "service": eventBody.service,
+        "environment": eventBody.environment,
+        "end_time": eventBody.end_time,
+        "start_time": eventBody.start_time,
+        "interval": eventBody.interval,
+        "statistics": eventBody.statistics,
         "assets": assetResults
     }
 
     return output_obj;
 };
 
-var assetData = function(results, assetItem) {
+function assetData (results, assetItem) {
     var asset_obj = {};
    
     asset_obj = {
@@ -50,73 +65,73 @@ var assetData = function(results, assetItem) {
     return asset_obj;
 };
 
-var validateMetricsInput = function(data){
-    var inputErrField = '';
-    var output_obj = {"isError":false,"message":""};
-    data.statistics = data.statistics.toLowerCase();
+// function validateMetricsInput (data){
+//     var inputErrField = '';
+//     var output_obj = {"isError":false,"message":""};
+//     data.statistics = data.statistics.toLowerCase();
 
-    if(data.interval % 60 !== 0){
-        inputErrField = inputErrField + 'interval' + ',';
-    }
+//     if(data.interval % 60 !== 0){
+//         inputErrField = inputErrField + 'interval' + ',';
+//     }
 
-    var patternUTC = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]{0,3})?Z?$/;
+//     var patternUTC = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]{0,3})?Z?$/;
     
-    if(!(patternUTC.test(data.end_time))){
-        inputErrField = inputErrField + 'end_time' + ',';
-    }
+//     if(!(patternUTC.test(data.end_time))){
+//         inputErrField = inputErrField + 'end_time' + ',';
+//     }
     
-    if(!(patternUTC.test(data.start_time))){
-        inputErrField = inputErrField + 'start_time' + ',';
-    }
+//     if(!(patternUTC.test(data.start_time))){
+//         inputErrField = inputErrField + 'start_time' + ',';
+//     }
 
-    if( data.start_time > data.end_time ){
-        inputErrField = inputErrField + 'start_time' + ',' + 'end_time' + ' (start_time should be less than end_time)' + ','; 
-    }
+//     if( data.start_time > data.end_time ){
+//         inputErrField = inputErrField + 'start_time' + ',' + 'end_time' + ' (start_time should be less than end_time)' + ','; 
+//     }
 
-    if(!(data.statistics === "sum" || data.statistics === "average" || data.statistics === "maximum"  || data.statistics === "minimum" || data.statistics === "samplecount")){
-        inputErrField = inputErrField + 'statistics' + ',';
-    }
+//     if(!(data.statistics === "sum" || data.statistics === "average" || data.statistics === "maximum"  || data.statistics === "minimum" || data.statistics === "samplecount")){
+//         inputErrField = inputErrField + 'statistics' + ',';
+//     }
 
-    if(inputErrField.length > 0){
-        inputErrField = inputErrField.substring(0, inputErrField.length-1); // removing last comma
-        output_obj["isError"] = true;
-        output_obj["message"] = inputErrField;
-    }
+//     if(inputErrField.length > 0){
+//         inputErrField = inputErrField.substring(0, inputErrField.length-1); // removing last comma
+//         output_obj["isError"] = true;
+//         output_obj["message"] = inputErrField;
+//     }
 
-    return output_obj;
-};
-var validateGeneralFields = function(input){
-        var required_fields = global_config.REQUIRED_FIELDS;
-        var output_obj = validateRequiredFields(input,required_fields);
-        return output_obj;
-};
+//     return output_obj;
+// };
+// var validateGeneralFields = function(input){
+//         var required_fields = global_config.REQUIRED_FIELDS;
+//         var output_obj = validateRequiredFields(input,required_fields);
+//         return output_obj;
+// };
 
-var validateAssetFields =function(input){
-        var asset_required_fields = global_config.ASSET_REQUIRED_FIELDS;
-        var output_obj = validateRequiredFields(input,asset_required_fields);
-        return output_obj;
-};
+// var validateAssetFields =function(input){
+//         var asset_required_fields = global_config.ASSET_REQUIRED_FIELDS;
+//         var output_obj = validateRequiredFields(input,asset_required_fields);
+//         return output_obj;
+// };
 
-var validateRequiredFields = function(input,required_fields){
-        var output_obj = {"isError":false,"message":""};
-        var undefined_fields = '';
-        required_fields.forEach(function(req_field) {
+// var validateRequiredFields = function(input,required_fields){
+//         var output_obj = {"isError":false,"message":""};
+//         var undefined_fields = '';
+//         required_fields.forEach(function(req_field) {
             
-            var value = input[req_field];
+//             var value = input[req_field];
             
-            if( value === undefined || value === null || value === ''){
-                undefined_fields = undefined_fields + req_field + ',';
-            }
-        });
-        if(undefined_fields.length > 0){
-            undefined_fields = undefined_fields.substring(0, undefined_fields.length-1); // removing last comma            
-            output_obj["isError"] = true;
-            output_obj["message"] = undefined_fields;
-        }
-        return output_obj;
-}
+//             if( value === undefined || value === null || value === ''){
+//                 undefined_fields = undefined_fields + req_field + ',';
+//             }
+//         });
+//         if(undefined_fields.length > 0){
+//             undefined_fields = undefined_fields.substring(0, undefined_fields.length-1); // removing last comma            
+//             output_obj["isError"] = true;
+//             output_obj["message"] = undefined_fields;
+//         }
+//         return output_obj;
+// }
 
-var getNameSpaceAndMetriDimensons = function(nameSpaceFrmAsset){
+function getNameSpaceAndMetriDimensons (nameSpaceFrmAsset){
     var missingAssetNameFields;
     var output_obj = {};
     output_obj["isError"] = false;
@@ -155,7 +170,7 @@ var getNameSpaceAndMetriDimensons = function(nameSpaceFrmAsset){
     return output_obj;
 };
 
-var extractValueFromString = function(string, keyword){
+function extractValueFromString (string, keyword){
 
     var value = "";
     var startIndex = string.indexOf(keyword +":") + (keyword +":").length;
@@ -165,7 +180,7 @@ var extractValueFromString = function(string, keyword){
     return value;
 };
 
-var getApiName = function(string){
+function getApiName (string){
 
     var value;
 // generalize for open source
@@ -187,8 +202,7 @@ var getApiName = function(string){
 
 };
 
-var getAssetsObj = function(assetsArray,userStatistics){
-
+function getAssetsObj (assetsArray,userStatistics){
     var newAssetArr  = [];
     var namespaces = metricConfig.namespaces;
 
@@ -286,15 +300,13 @@ var getAssetsObj = function(assetsArray,userStatistics){
     return newAssetArr;
 
 };
-module.exports = () => {
-    return {
-        massageData: massageData,
-        assetData: assetData,
-        validateMetricsInput: validateMetricsInput,
-        validateGeneralFields: validateGeneralFields,
-        validateAssetFields: validateAssetFields,
-        validateRequiredFields: validateRequiredFields,
-        getNameSpaceAndMetriDimensons: getNameSpaceAndMetriDimensons,
-        getAssetsObj: getAssetsObj
-    };
+module.exports = {
+    massageData,
+    assetData,
+    validateMetricsInput,
+    validateGeneralFields,
+    validateRequiredFields,
+    validateAssetFields,
+    getNameSpaceAndMetriDimensons,
+    getAssetsObj
 };
