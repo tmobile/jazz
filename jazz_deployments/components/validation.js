@@ -219,7 +219,6 @@ function validateStatusFieldValue(deployment_data, status_values) {
             has_invalid_status_values = !_.includes(status_values, statusValue);
         }
         if (has_invalid_status_values) {
-            // return inputError
             reject({
                 result: "inputError",
                 message: "Only following values can be allowed for status field - " + status_values.join(", ")
