@@ -103,7 +103,8 @@
                 "produces": [
                     "application/json"
                 ],
-                "parameters": [{
+                "parameters": [
+                    {
                         "name": "domain",
                         "in": "query",
                         "type": "string",
@@ -266,9 +267,11 @@
                         }
                     }
                 },
-                "security": [{
-                    "{envPrefix}-{domain}-cognito-authorizer": []
-                }],
+                "security": [
+                    {
+                        "{envPrefix}-{domain}-cognito-authorizer": []
+                    }
+                ],
                 "x-amazon-apigateway-integration": {
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
                     "passthroughBehavior": "when_no_templates",
@@ -352,15 +355,17 @@
             },
             "post": {
                 "description": "Create a deployment record",
-                "parameters": [{
-                    "name": "param",
-                    "in": "body",
-                    "description": "post body parameter.",
-                    "required": true,
-                    "schema": {
-                        "$ref": "#/definitions/postInputObj"
+                "parameters": [
+                    {
+                        "name": "param",
+                        "in": "body",
+                        "description": "post body parameter.",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/postInputObj"
+                        }
                     }
-                }],
+                ],
                 "consumes": [
                     "application/json",
                     "application/x-www-form-urlencoded"
@@ -490,9 +495,11 @@
                         }
                     }
                 },
-                "security": [{
-                    "{envPrefix}-{domain}-cognito-authorizer": []
-                }],
+                "security": [
+                    {
+                        "{envPrefix}-{domain}-cognito-authorizer": []
+                    }
+                ],
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -582,12 +589,14 @@
                 "produces": [
                     "application/json"
                 ],
-                "parameters": [{
-                    "name": "id",
-                    "in": "path",
-                    "required": true,
-                    "type": "string"
-                }],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "tags": [
                     "CORS"
                 ],
@@ -671,12 +680,14 @@
                 "produces": [
                     "application/json"
                 ],
-                "parameters": [{
-                    "name": "id",
-                    "in": "path",
-                    "required": true,
-                    "type": "string"
-                }],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Successful Execution",
@@ -798,9 +809,11 @@
                         }
                     }
                 },
-                "security": [{
-                    "{envPrefix}-{domain}-cognito-authorizer": []
-                }],
+                "security": [
+                    {
+                        "{envPrefix}-{domain}-cognito-authorizer": []
+                    }
+                ],
                 "x-amazon-apigateway-integration": {
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
                     "passthroughBehavior": "when_no_templates",
@@ -884,7 +897,8 @@
             },
             "put": {
                 "description": "Update an existing deployment",
-                "parameters": [{
+                "parameters": [
+                    {
                         "name": "param",
                         "in": "body",
                         "description": "post body parameter.",
@@ -1029,9 +1043,11 @@
                         }
                     }
                 },
-                "security": [{
-                    "{envPrefix}-{domain}-cognito-authorizer": []
-                }],
+                "security": [
+                    {
+                        "{envPrefix}-{domain}-cognito-authorizer": []
+                    }
+                ],
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -1113,12 +1129,14 @@
             },
             "delete": {
                 "description": "Delete deployment details with an deployment id",
-                "parameters": [{
-                    "name": "id",
-                    "in": "path",
-                    "required": true,
-                    "type": "string"
-                }],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "consumes": [
                     "application/json",
                     "application/x-www-form-urlencoded"
@@ -1231,9 +1249,11 @@
                         }
                     }
                 },
-                "security": [{
-                    "{envPrefix}-{domain}-cognito-authorizer": []
-                }],
+                "security": [
+                    {
+                        "{envPrefix}-{domain}-cognito-authorizer": []
+                    }
+                ],
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -1323,12 +1343,14 @@
                 "produces": [
                     "application/json"
                 ],
-                "parameters": [{
-                    "name": "id",
-                    "in": "path",
-                    "required": true,
-                    "type": "string"
-                }],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "tags": [
                     "CORS"
                 ],
@@ -1406,12 +1428,14 @@
             },
             "post": {
                 "description": "Create a deployment record",
-                "parameters": [{
-                    "name": "id",
-                    "in": "path",
-                    "required": true,
-                    "type": "string"
-                }],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "consumes": [
                     "application/json",
                     "application/x-www-form-urlencoded"
@@ -1541,9 +1565,11 @@
                         }
                     }
                 },
-                "security": [{
-                    "{envPrefix}-{domain}-cognito-authorizer": []
-                }],
+                "security": [
+                    {
+                        "{envPrefix}-{domain}-cognito-authorizer": []
+                    }
+                ],
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
