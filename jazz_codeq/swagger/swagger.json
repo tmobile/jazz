@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "version": "2017-10-30T23:30:18Z",
-        "title": "Code Quality APIs",
+        "title": "{api_deployment_node_title}",
         "description": "APIs for Code Quality and Vulnerability Reports"
     },
     "host": "{api_host_name}",
