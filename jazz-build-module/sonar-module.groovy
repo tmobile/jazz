@@ -32,6 +32,10 @@ def configureSonarProperties() {
 		g_sonar_project_properties = [:]
 		def projectKey = getSonarProjectKey()
 		setProjectKey(projectKey)
+
+		g_sonar_project_properties["sonar.host.url"] = "http://${config_loader.CODE_QUALITY.SONAR.HOST_NAME}"
+		g_sonar_project_properties["sonar.login"] = g_sonar_login
+		g_sonar_project_properties["sonar.password"] = g_sonar_password
 		g_sonar_project_properties["sonar.projectKey"] = g_sonar_projectKey
 		g_sonar_project_properties["sonar.projectName"] = g_sonar_projectKey
 		g_sonar_project_properties["sonar.projectVersion"] = g_sonar_projectVersion
@@ -101,24 +105,6 @@ def setCredentials(username, password) {
 }
 
 /**
- * Configure the scanner
- * Update the sonar-scanner properties file with host, login credentials
- *
- */
-
-def configureScanner() {
-	try {
-		def sonar_password = g_sonar_password
-		sh "echo 'sonar.host.url=http://${config_loader.CODE_QUALITY.SONAR.HOST_NAME}' >> /opt/sonar-scanner-3.0.3.778-linux/conf/sonar-scanner.properties"
-		sh "echo 'sonar.login=${g_sonar_login}' >> /opt/sonar-scanner-3.0.3.778-linux/conf/sonar-scanner.properties"
-		def update_pwd_cmd = "echo 'sonar.password=${sonar_password}' >> /opt/sonar-scanner-3.0.3.778-linux/conf/sonar-scanner.properties"
-		jazz_quiet_sh(update_pwd_cmd)
-	} catch (ex) {
-		error "configureScanner failed: " + ex.getMessage()
-	}
-}
-
-/**
  * Run the scanner for code analysis report based on the project settings
  *
  */
@@ -129,7 +115,7 @@ def runReport() {
 		for (item in g_sonar_project_properties) {
 			sonar_scanner_cl += " -D${item.key}=${item.value} "
 		}
-		sh sonar_scanner_cl
+		jazz_quiet_sh(sonar_scanner_cl)
 	} catch (ex) {
 		error "runReport failed: " + ex.getMessage()
 	}
@@ -157,21 +143,14 @@ def cleanUpWorkspace() {
 def doAnalysis() {
 	try {
 		if (config_loader.CODE_QUALITY.SONAR.ENABLE_SONAR && config_loader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
-			configureScanner()
 			configureSonarProperties()
 			if (config_loader.CODE_QUALITY.SONAR.ENABLE_VULNERABILITY_SCAN && config_loader.CODE_QUALITY.SONAR.ENABLE_VULNERABILITY_SCAN == "true") {
 				runVulnerabilityScan()
 			}
 			runReport()
 		}
-
 	} catch (ex) {
 		error "Sonar analysis failed: " + ex.getMessage()
-	}
-	finally {
-		if (config_loader.CODE_QUALITY.SONAR.ENABLE_SONAR && config_loader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
-			resetConfig() //**reset the credentials if there is a failure
-		}
 	}
 }
 
@@ -210,20 +189,6 @@ def runVulnerabilityScan() {
 	sh dependency_check_cl
 }
 
-/**
- * Reset the configuration file
- *
- */
-def resetConfig() {
-	try {
-		sh "echo '' > /opt/sonar-scanner-3.0.3.778-linux/conf/sonar-scanner.properties"
-		sh "echo '' > ./sonar-project.properties"
-	} catch (ex) {
-		error "resetConfig failed: " + ex.getMessage()
-	}
-}
-
-
 def cleanupCodeQualityReports(){
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.CODE_QUALITY.SONAR.ADMIN_SONAR_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 		try {
@@ -246,7 +211,6 @@ def cleanupCodeQualityReports(){
 			}
 		} catch (ex) {
 			echo "error occured while deleting code quality reports: " + ex.getMessage()
-			error ex.getMessage()
 		}
 	}
 }
@@ -273,7 +237,6 @@ def getSonarProject(){
 			return filtered
 		} catch (ex) {
 			echo "error occured While fetching code quality reports from sonar : " + ex.getMessage()
-			error ex.getMessage()
 		}
 	}
 }
