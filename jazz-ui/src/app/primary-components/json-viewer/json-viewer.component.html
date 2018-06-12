@@ -1,0 +1,36 @@
+<div *ngFor="let key of getKeys(json); let i = index"
+     [class.json-viewer-root]="root"
+     class="json-viewer-row">
+
+
+  <div *ngIf="!rowTracker[i].children"
+       class="json-viewer-element primitive">
+    <span class="json-header">{{key + ':'}}</span>
+    <span class="json-value">{{rowTracker[i].value}}</span>
+  </div>
+
+
+
+  <div *ngIf="rowTracker[i].children" class="json-viewer-element">
+    <div>
+      <div class="pointer arrow collapse-arrow"
+           [ngClass]="rowTracker[i].collapsed ? 'right' : 'down'"
+           (click)="rowTracker[i].collapsed = !rowTracker[i].collapsed"></div>
+
+      <div class="json-header">{{key}}</div>
+      <div class="json-collapsed" *ngIf="rowTracker[i].collapsed">{{rowTracker[i].collapsedSymbol}}</div>
+    </div>
+    <div class="json-viewer-list"
+      [class.collapsed]="rowTracker[i].collapsed">
+
+      <json-viewer #jsonChild
+                   (reportSize)="childReportSize($event)"
+                   [root]="false"
+                   [parent]="json"
+                   [json]="json[key]"></json-viewer>
+    </div>
+  </div>
+
+
+
+</div>
