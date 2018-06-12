@@ -25,7 +25,6 @@ const responseObj = require("./components/response.js"); //Import the response m
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
 const validateARN = require("./components/validate-arn.js");
-const validateJSON = require("./components/validate-json.js");
 const aws = require('aws-sdk');
 var handler = (event, context, cb) => {
 
@@ -33,7 +32,7 @@ var handler = (event, context, cb) => {
   var errorHandler = errorHandlerModule();
   var config = configObj(event);
   logger.init(event, context);
-  var AWS_REGION = config.AWS_REGION;
+  var AWS_REGION;
   try {
     var testResponse = {
       "StatusCode": 200,
@@ -48,10 +47,6 @@ var handler = (event, context, cb) => {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is not defined")));
       } else {
         var functionARN = event.body.functionARN;
-
-        if (event.body.inputJSON) {
-          return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is not a valid JSON")));
-        }
         var arnvalues = functionARN.split(":");
         AWS_REGION =  arnvalues[3];//["arn","aws","lambda","us-east-1","000000""] spliting FunctionARN to get the aws-region 
         var inputJSON = JSON.parse(event.body.inputJSON);
