@@ -1,0 +1,97 @@
+{
+  "AWS_CREDENTIAL_ID": "password",
+  "INSTANCE_PREFIX": "",
+  "AWS": {
+    "SECURITY_GROUP_IDS": "",
+    "SUBNET_IDS": "",
+    "LAMBDA_EXECUTION_ROLE": "",
+    "CLOUDFRONT_ORIGIN_ID": "",
+    "ACCOUNTID": "",
+    "REGION": "",
+    "ROLEID": "",
+    "ES_HOSTNAME": "",
+    "COGNITO": {
+      "USER_POOL_ID": "",
+      "CLIENT_ID": ""
+    },
+    "API": {
+      "PROD": {
+        "*": "{AWS_PROD_API_ID_DEFAULT}",
+        "jazz_*": "{AWS_PROD_API_ID_JAZZ}"
+      },
+      "STG": {
+        "*": "{AWS_STG_API_ID_DEFAULT}",
+        "jazz_*": "{AWS_STG_API_ID_JAZZ}"
+      },
+      "DEV": {
+        "*": "{AWS_DEV_API_ID_DEFAULT}"
+      }
+    },
+    "S3": {
+      "API_DOC": "",
+      "DEV_BUCKET": "",
+      "STG_BUCKET": "",
+      "PROD_BUCKET": ""
+    }
+  },
+  "REPOSITORY": {
+    "BASE_URL": "",
+    "CREDENTIAL_ID": "jenkinspassword",
+    "REPO_BASE_SERVICES": "cas",
+    "REPO_BASE_PLATFORM" : "slf"
+  },
+  "API": {
+    "API_BUILD_URI": "some/uri"
+  },
+  "LAMBDA": {
+    "LAMBDA_BUILD_URI": "some/uri"
+  },
+  "WEBSITE": {
+    "WEBSITE_BUILD_URI": "some/uri"
+  },
+  "JAZZ": {
+    "ADMIN": "",
+    "PASSWD": "",
+    "S3_BUCKET_NAME_SUFFIX": "_BUCKET",
+    "S3_BUCKET_WEB": "",
+    "BUCKET_PER_SERVICE": "false",
+    "S3": {
+      "WEBSITE_DEV_BUCKET": "",
+      "WEBSITE_STG_BUCKET": "",
+      "WEBSITE_PROD_BUCKET": ""
+    }
+  },
+  "JENKINS": {
+    "USERNAME": "jenkins_username",
+    "JENKINS_PASSWORD": "",
+    "CREDENTIAL_ID": "jenkins"
+  },
+  "SCM": {
+    "TYPE": "bitbucket",
+    "PRIVATE_TOKEN": "",
+    "CAS_NAMESPACE_ID": "",
+    "USERNAME": "scm_username",
+    "PASSWORD": ""
+  },
+  "UI_CONFIG": {
+    "feature": {
+      "multi_env": true
+    },
+    "service_tabs":
+    {
+      "overview": true,
+      "access_control": false,
+      "metrics": false,
+      "logs": true,
+      "cost": false
+    },
+    "environment_tabs":
+    {
+      "overview": true,
+      "deployments": true,
+      "code_quality": false,
+      "logs": false,
+      "assets": false
+    }
+  }
+}
