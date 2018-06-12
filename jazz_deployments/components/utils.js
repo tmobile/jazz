@@ -34,7 +34,7 @@ function initDocClient() {
     return docClient;
 };
 
-function initDynamodb () {
+function initDynamodb() {
     AWS.config.update({
         region: global.config.ddb_region
     });
@@ -43,7 +43,7 @@ function initDynamodb () {
     return dynamodb;
 };
 
-function isEmpty (obj) {
+function isEmpty(obj) {
     for (var prop in obj) {
         if (obj.hasOwnProperty(prop)) return false;
     }
@@ -51,7 +51,7 @@ function isEmpty (obj) {
 };
 
 // convert object returned from the database, as per schema
-function formatData (data, format) {
+function formatData(data, format) {
     if (!data) {
         return {};
     }
@@ -99,7 +99,7 @@ function formatData (data, format) {
     return deployment_obj;
 };
 
-function getSchemaKeyName (key) {
+function getSchemaKeyName(key) {
     // Convert database key name back, as per schema
 
     if (!key) {
@@ -114,7 +114,7 @@ function getSchemaKeyName (key) {
     return keyName
 };
 
-function ConvertKeysToLowerCase (obj) {
+function ConvertKeysToLowerCase(obj) {
     var output = {};
     for (i in obj) {
         var data = i.toLowerCase();
@@ -131,7 +131,7 @@ function ConvertKeysToLowerCase (obj) {
 };
 
 // function to convert key name in schema to database column name
-function getDeploymentDatabaseKeyName (key) {
+function getDeploymentDatabaseKeyName(key) {
     // Some of the keys in schema may be reserved keywords, so it may need some manipulation
 
     if (!key) {
@@ -148,7 +148,7 @@ function getDeploymentDatabaseKeyName (key) {
     }
 };
 
-function sortUtil (data, sort_key, sort_direction) {
+function sortUtil(data, sort_key, sort_direction) {
     if (sort_key && sort_key === "provider_build_id") {
         data = data.sort((a, b) => {
             var x = parseInt(a[sort_key]);
@@ -180,7 +180,7 @@ function sortUtil (data, sort_key, sort_direction) {
     return data;
 };
 
-function filterUtil (data, filter_value) {
+function filterUtil(data, filter_value) {
     var newArr = [];
     data.map((ele) => {
         for (var key in ele) {
@@ -198,7 +198,7 @@ function filterUtil (data, filter_value) {
     return newArr;
 };
 
-function paginateUtil (data, limit, offset) {
+function paginateUtil(data, limit, offset) {
     var newArr = [];
     if (offset > data.length || offset === data.length || !limit) {
         data = [];

@@ -24,6 +24,7 @@
 
 const logger = require("./logger.js")(); //Import the logging module.
 const _ = require("lodash");
+const crud = require("./crud")();
 
 function validateCreatePayload(config, deployment_data) {
     logger.info("Inside Validate Create Payload: " + JSON.stringify(deployment_data));
@@ -31,7 +32,7 @@ function validateCreatePayload(config, deployment_data) {
         var required_fields_create = config.DEPLOYMENT_CREATION_REQUIRED_FIELDS;
         var service_field_list = required_fields_create.concat(config.OPTIONAL_PARAMS);
         var status_field_list = config.DEPLOYMENT_STATUS;
-    
+
         validateIsEmptyInputData(deployment_data)
             .then(() => validateAllRequiredFields(deployment_data, required_fields_create))
             .then(() => validateStatusFieldValue(deployment_data, status_field_list))
@@ -40,58 +41,63 @@ function validateCreatePayload(config, deployment_data) {
             .then(() => validateRemoveEmptyValues(deployment_data))
             .then((result) => {
                 logger.info("# Validate Create Payload Data:" + JSON.stringify(result));
-                resolve (null);
+                resolve(null);
             })
             .catch((error) => {
                 logger.error("# Validate Create Payload Error:" + JSON.stringify(error));
-                reject (error);
+                reject(error);
             });
     });
 };
 
 function validateListPayload(config, deployment_data) {
     logger.info("Inside Validate get list payload: " + JSON.stringify(deployment_data));
-
-    var required_fields = config.REQUIRED_PARAMS;
-    var service_field_list = required_fields.concat(config.OPTIONAL_PARAMS);
-    var status_field_list = config.DEPLOYMENT_STATUS;
-
-    validateIsEmptyInputData(deployment_data)
-        .then(() => validateAllRequiredFields(deployment_data, required_fields))
-        .then(() => validateStatusFieldValue(deployment_data, status_field_list))
-        .then(() => validateUnAllowedFieldsInInput(deployment_data, service_field_list))
-        .then(() => validateAllRequiredFieldsValue(deployment_data, required_fields))
-        .then(() => validateRemoveEmptyValues(deployment_data))
-        .then((result) => {
-            logger.info("# Validate GetList Payload Data:" + JSON.stringify(result));
-            onComplete(null, null);
-        })
-        .catch((error) => {
-            logger.error("# Validate GetList Payload Error:" + JSON.stringify(error));
-            onComplete(error, null);
-        });
+    return new Promise((resolve, reject) => {
+        var required_fields = config.REQUIRED_PARAMS;
+        var service_field_list = required_fields.concat(config.OPTIONAL_PARAMS);
+        var status_field_list = config.DEPLOYMENT_STATUS;
+        validateIsEmptyInputData(deployment_data)
+            .then(() => validateAllRequiredFields(deployment_data, required_fields))
+            .then(() => {
+                if (deployment_data.status) {
+                    return validateStatusFieldValue(deployment_data, status_field_list)
+                }
+            })
+            .then(() => validateUnAllowedFieldsInInput(deployment_data, service_field_list))
+            .then(() => validateAllRequiredFieldsValue(deployment_data, required_fields))
+            .then(() => validateRemoveEmptyValues(deployment_data))
+            .then((result) => {
+                logger.info("# Validate GetList Payload Data:" + JSON.stringify(result));
+                resolve(result);
+            })
+            .catch((error) => {
+                logger.error("# Validate GetList Payload Error:" + JSON.stringify(error));
+                reject(error);
+            });
+    });
 };
 
 function validateUpdatePayload(config, deployment_data, deploymentTableName, deploymentId) {
     logger.info("Inside Validate get list payload: " + JSON.stringify(deployment_data));
+    return new Promise((resolve, reject) => {
+        var unchangeable_fields = config.REQUIRED_PARAMS;
+        // var service_field_list = required_fields.concat(config.OPTIONAL_PARAMS);
+        var status_field_list = config.DEPLOYMENT_STATUS;
 
-    var unchangeable_fields = config.REQUIRED_PARAMS;
-    // var service_field_list = required_fields.concat(config.OPTIONAL_PARAMS);
-    var status_field_list = config.DEPLOYMENT_STATUS;
-
-    validateIsEmptyInputData(deployment_data)
-        .then(() => validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields))
-        .then(() => validateStatusFieldValue(deployment_data, status_field_list))
-        .then(() => validateRemoveEmptyValues(deployment_data))
-        .then(() => validateDeploymentExist(deploymentTableName, deploymentId, deployment_data))
-        .then((result) => {
-            logger.info("# Validate update Payload Data:" + JSON.stringify(result));
-            onComplete(null, result.input);
-        })
-        .catch((error) => {
-            logger.error("# Validate update Payload Error:" + JSON.stringify(error));
-            onComplete(error, null);
-        });
+        validateIsEmptyInputData(deployment_data)
+            .then(() => validateNotEditableFieldsInUpdate(deployment_data, unchangeable_fields))
+            .then(() => validateStatusFieldValue(deployment_data, status_field_list))
+            .then(() => validateRemoveEmptyValues(deployment_data))
+            .then(() => validateDeploymentExist(deploymentTableName, deploymentId, deployment_data))
+            .then((result) => {
+                logger.info("# Validate update Payload Data:" + JSON.stringify(result));
+                resolve(result.input);
+            })
+            .catch((error) => {
+                logger.error("# Validate update Payload Error:" + JSON.stringify(error));
+                reject(error);
+            });
+    });
 }
 
 function validateIsEmptyInputData(deployment_data) {
@@ -106,11 +112,11 @@ function validateIsEmptyInputData(deployment_data) {
                 result: "success",
                 input: deployment_data
             });
-        } 
+        }
     });
 };
 
-function validateAllRequiredFields (deployment_data, required_fields) {
+function validateAllRequiredFields(deployment_data, required_fields) {
     return new Promise((resolve, reject) => {
         var missing_required_fields = _.difference(_.values(required_fields), _.keys(deployment_data));
         if (missing_required_fields.length > 0) {
@@ -124,11 +130,11 @@ function validateAllRequiredFields (deployment_data, required_fields) {
                 result: "success",
                 input: deployment_data
             });
-        } 
+        }
     });
 };
 
-function validateUnAllowedFieldsInInput (deployment_data, fields_list) {
+function validateUnAllowedFieldsInInput(deployment_data, fields_list) {
     return new Promise((resolve, reject) => {
         var invalid_fields = _.difference(_.keys(deployment_data), _.values(fields_list));
         if (invalid_fields.length > 0) {
@@ -142,11 +148,11 @@ function validateUnAllowedFieldsInInput (deployment_data, fields_list) {
                 result: "success",
                 input: deployment_data
             });
-        } 
+        }
     });
 };
 
-function validateAllRequiredFieldsValue (deployment_data, required_fields) {
+function validateAllRequiredFieldsValue(deployment_data, required_fields) {
     return new Promise((resolve, reject) => {
         var invalid_required_fields = [];
         required_fields.map((value) => {
@@ -170,7 +176,7 @@ function validateAllRequiredFieldsValue (deployment_data, required_fields) {
     });
 };
 
-function validateRemoveEmptyValues (deployment_data) {
+function validateRemoveEmptyValues(deployment_data) {
     return new Promise((resolve, reject) => {
         for (var field in deployment_data) {
             if (!deployment_data[field]) {
@@ -184,24 +190,24 @@ function validateRemoveEmptyValues (deployment_data) {
     });
 };
 
-function validateNotEditableFieldsInUpdate (deployment_data, fields_list) {
+function validateNotEditableFieldsInUpdate(deployment_data, fields_list) {
     return new Promise((resolve, reject) => {
         var invalid_fields = _.intersection(_.keys(deployment_data), _.values(fields_list));
         invalid_fields.map((value) => {
             delete deployment_data[value];
         });
-    
+
         resolve({
             result: "success",
             input: deployment_data
-        }); 
+        });
     });
 };
 
-function validateStatusFieldValue (deployment_data, status_values) {
+function validateStatusFieldValue(deployment_data, status_values) {
     return new Promise((resolve, reject) => {
         var statusFieldKey = "status",
-        has_invalid_status_values = false;
+            has_invalid_status_values = false;
         //check if input contains fields other than allowed fields
         if (deployment_data.hasOwnProperty(statusFieldKey)) {
             //checking "status" field contains the allowed values

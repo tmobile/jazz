@@ -24,14 +24,14 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js")(); //Import the logging module.
-const utils = require("./components/utils");
+const utils = require("./components/utils.js");
 const validateUtils = require("./components/validation.js"); //Import validation module
 const crud = require("./components/crud")(); //Import the crud module.
 const request = require('request');
 const util = require('util');
 
 
-function handler (event, context, cb) {
+function handler(event, context, cb) {
 	//Initializations
 	var errorHandler = errorHandlerModule(),
 		config = configObj(event);
@@ -260,7 +260,7 @@ function processDeploymentsList(config, query, deploymentTableName) {
 			'offset': query.offset,
 			'limit': query.limit
 		};
-		validateUtils.validateDeployment(config, queryParams)
+		validateUtils.validateListPayload(config, queryParams)
 			.then(() => exportable.getDeploymentDetailsByQueryParam(deploymentTableName, queryParams))
 			.then((res) => {
 				resolve(res);
@@ -297,15 +297,6 @@ function processDeploymentsDeletion(deploymentTableName, deploymentId) {
 	});
 }
 
-// function validateDeploymentDetails (config, deployment_details) {
-// 	logger.info("validateDeploymentDetails for creating new deployment");
-// 	return new Promise((resolve, reject) => {
-// 		console.log("hello");
-// 		const test = validateUtils.validateCreatePayload(config, deployment_details);
-// 		console.log(test)
-// 	});
-// }
-
 function addNewDeploymentDetails(deployment_details, deploymentTableName) {
 	logger.debug("Inside addNewDeploymentDetails");
 	return new Promise((resolve, reject) => {
@@ -319,20 +310,6 @@ function addNewDeploymentDetails(deployment_details, deploymentTableName) {
 		});
 	});
 }
-
-// function validateQueryParams (config, params) {
-// 	logger.debug("validateQueryParams for deployments");
-// 	return new Promise((resolve, reject) => {
-// 		validateUtils.validateDeployment(config, params, (error, data) => {
-// 			if (error) {
-// 				logger.error("validateQueryParams error:" + JSON.stringify(error));
-// 				reject(error);
-// 			} else {
-// 				resolve(data);
-// 			}
-// 		});
-// 	});
-// }
 
 function getDeploymentDetailsByQueryParam(deploymentTableName, queryParams) {
 	logger.debug("Inside getDeploymentDetailsByQueryParam" + JSON.stringify(queryParams));
@@ -369,20 +346,6 @@ function getDeploymentDetailsById(deploymentTableName, deploymentId) {
 		});
 	});
 }
-
-// function validateUpdateInput (config, update_data, deploymentTableName, deploymentId) {
-// 	logger.debug("Inside validateUpdateInput");
-// 	return new Promise((resolve, reject) => {
-// 		validateUtils.validateUpdatePayload(config, update_data, deploymentTableName, deploymentId, (error, data) => {
-// 			if (error) {
-// 				logger.error("validateUpdateInput error:" + JSON.stringify(error));
-// 				reject(error);
-// 			} else {
-// 				resolve(data);
-// 			}
-// 		})
-// 	})
-// }
 
 function updateDeploymentDetails(deploymentTableName, update_deployment_data, deploymentId) {
 	logger.debug("Inside updateDeploymentDetails");
@@ -557,12 +520,9 @@ const exportable = {
 	processDeploymentsList,
 	processDeploymentsUpdate,
 	processDeploymentsDeletion,
-	validateDeploymentDetails,
 	addNewDeploymentDetails,
-	validateQueryParams,
 	getDeploymentDetailsByQueryParam,
 	getDeploymentDetailsById,
-	validateUpdateInput,
 	updateDeploymentDetails,
 	deleteServiceByID,
 	reBuildDeployment,
@@ -572,4 +532,3 @@ const exportable = {
 }
 
 module.exports = exportable;
-
