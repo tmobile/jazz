@@ -24,7 +24,7 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const validateARN = require("./components/validate-arn.js");
+const validateARN = require("./utils/validate-arn.js");
 const aws = require('aws-sdk');
 var handler = (event, context, cb) => {
 
