@@ -19,7 +19,7 @@ Nodejs Template Project
 @author:
 @version: 1.0
  **/
-'use strict';
+
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
@@ -27,7 +27,7 @@ const logger = require("./components/logger.js"); //Import the logging module.
 const validateARN = require("./utils/validate-arn.js");
 const aws = require('aws-sdk');
 var handler = (event, context, cb) => {
-
+  'use strict';
   //Initializations
   var errorHandler = errorHandlerModule();
   var config = configObj(event);
@@ -35,8 +35,9 @@ var handler = (event, context, cb) => {
   var AWS_REGION;
   try {
     var testResponse = {
-      "StatusCode": 200,
-      "execStatus": 0
+      "statusCode": 200,
+      "execStatus": null,
+      "payload": null,
     };
     if (event && event.method && event.method === 'POST') {
       if (!event.body) {
@@ -48,20 +49,38 @@ var handler = (event, context, cb) => {
       } else {
         var functionARN = event.body.functionARN;
         var arnvalues = functionARN.split(":");
-        AWS_REGION =  arnvalues[3];//["arn","aws","lambda","us-east-1","000000""] spliting FunctionARN to get the aws-region 
-        var inputJSON = JSON.parse(event.body.inputJSON);
+        AWS_REGION = arnvalues[3]; //["arn","aws","lambda","us-east-1","000000""] spliting FunctionARN to get the aws-region 
+        var inputJSON = event.body.inputJSON;
         invokeLambda(functionARN, inputJSON, AWS_REGION).then((data) => {
           if (data && data.StatusCode === 200) {
-            testResponse.execStatus = 1; // Test Succesfull
-          }
-          return cb(null, responseObj(testResponse, event.body)); // Test Failed 
+            testResponse.payload = data;
+            if (!data.FunctionError) {
+              testResponse.execStatus = 0; //Function Executed Succesfully Without Error 
+            } else {
+              if (data.FunctionError === "Handled") {
+                testResponse.execStatus = 1;
+                testResponse.handled = true;
+              } else if (data.FunctionError === "Unhandled") {
+                testResponse.execStatus = 2; // Function Execution Had Unhandled Error 
+                testResponse.handled = false;
+              }
+            }
+          } else {
+            testResponse.execStatus = 4;
+          } // Function Falied |Cause Unknown|TEST FAILED 
+          testResponse.payload = data;
+          return cb(null, responseObj(testResponse, event.body));   
         }).catch((err) => {
           logger.info(" TEST FAILED  : " + JSON.stringify(err));
-          return cb(null, responseObj(testResponse, event.body)); // Test Failed 
+          testResponse.execStatus = 3; //  Funtion Failed To Be Invoked |TEST FAILED
+          testResponse.payload = err;
+          return cb(null, responseObj(testResponse, event.body)); // TEST FAILED
         });
       }
+    } else {
+      return cb(JSON.stringify(errorHandler.throwNotFoundError("Method not found")));
     }
-    return cb( JSON.stringify(errorHandler.throwNotFoundError("Method not found")))
+
   } catch (err) {
     logger.error("Failed to invoke lambda : " + JSON.stringify(err));
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to invoke lambda")));
@@ -70,6 +89,7 @@ var handler = (event, context, cb) => {
 };
 
 var invokeLambda = (functionARN, inputJSON, AWS_REGION) => {
+  'use strict';
   return new Promise((resolve, reject) => {
     try {  
       var lambda = new aws.Lambda({
@@ -77,19 +97,19 @@ var invokeLambda = (functionARN, inputJSON, AWS_REGION) => {
       });
       lambda.invoke({
         FunctionName: functionARN,
-        Payload: JSON.stringify(inputJSON, null, 2)
+        Payload: JSON.stringify(inputJSON)
       }, function (error, data) {
         if (error) {
-          logger.error(error);
+          logger.error("Error In Lambda Execution:", error);
           reject(error);
         } else if (data.Payload) {
-          logger.info(data);
+          logger.info("Lambda Executed Succesfully:", data);
           resolve(data);
         }
       });
     } catch (e) {
       logger.error(e);
-      reject("Error in invoking Lambda");
+      reject("Error In Invoking Lambda");
 
     }
   });

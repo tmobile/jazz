@@ -212,11 +212,9 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-cognito-authorizer": []
-          }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-cognito-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -299,19 +297,19 @@
     }
   },
   "securityDefinitions": {
-		"{envPrefix}-{domain}-cognito-authorizer": {
-		  "type": "apiKey",
-		  "name": "Authorization",
-		  "in": "header",
-		  "x-amazon-apigateway-authtype": "custom",
-		  "x-amazon-apigateway-authorizer": {
-			"authorizerCredentials": "{conf-role}",
-			"authorizerResultTtlInSeconds": 300,
-			"authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
-			"type": "token"
-		  }
-		}
-	},
+    "{envPrefix}-{domain}-cognito-authorizer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "custom",
+      "x-amazon-apigateway-authorizer": {
+        "authorizerCredentials": "{conf-role}",
+        "authorizerResultTtlInSeconds": 300,
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
+        "type": "token"
+      }
+    }
+  },
   "definitions": {
     "200SuccessResponse": {
       "type": "object",
@@ -401,9 +399,13 @@
     "OutputObj": {
       "type": "object",
       "properties": {
+        "payload": {
+          "type": "object",
+          "description": "Response object from lambda invocation"
+        },
         "execStatus": {
           "type": "number",
-          "description": "Sample key in the output object"
+          "description": "Result of Lambda Invocation/Execution"
         },
         "StatusCode": {
           "type": "number",
