@@ -81,7 +81,6 @@ function validateUpdatePayload(config, deployment_data, deploymentTableName, dep
     logger.info("Inside validate deployment update payload: " + JSON.stringify(deployment_data));
     return new Promise((resolve, reject) => {
         var unchangeable_fields = config.REQUIRED_PARAMS;
-        // var service_field_list = required_fields.concat(config.OPTIONAL_PARAMS);
         var status_field_list = config.DEPLOYMENT_STATUS;
 
         validateIsEmptyInputData(deployment_data)
