@@ -111,7 +111,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
     },
     responsive: false
   };
-  
+
 
   public lineChartLegend: boolean = true;
   public lineChartType: string = 'line';
@@ -161,7 +161,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
 
   displayGraph() {
 
-    this.http.get('/jazz/codeq?domain=jazz&service=codeq&environment=' + this.env + '&from=' + this.startDate + '&to=' + this.endDate + '&').subscribe(
+    this.http.get('/jazz/codeq?domain='+this.service.domain+'&service='+this.service.name+'&environment=' + this.env + '&from=' + this.startDate + '&to=' + this.endDate + '&').subscribe(
       response => {
         var res = response;
         if (res.data == undefined || res.data == null || res.data.length == 0) {
@@ -258,7 +258,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
         this.errorUser = this.authenticationservice.getUserId();
         this.errorResponse = JSON.parse(error._body);
 
-        
+
       })
   };
 
@@ -425,10 +425,10 @@ export class EnvCodequalitySectionComponent implements OnInit {
     this.dataS.currentMessage.subscribe(message => this.message = message)
     this.newMessage();
   }
-  
+
     newMessage() {
       this.dataS.changeMessage("fo")
-      
+
   }
 
   public goToAbout(hash) {
