@@ -55,7 +55,7 @@ function getReport(metrics, sonarMeasures, config) {
 			if (sonarMeasures) {
 				for (let r = sonarMeasures.length - 1; r >= 0; r--) {
 					let record = sonarMeasures[r];
-					let metricName = Object.keys(config.METRIC_MAP).find(key => config.METRIC_MAP[key] === record.metric)[0];
+					let metricName = Object.keys(config.METRIC_MAP).find(key => config.METRIC_MAP[key] === record.metric);
 					output.metrics.push({
 						"name": metricName,
 						"link": config.SERVICE_API_URL + config.HELP_SERVICE + "?metrics=" + metricName,
