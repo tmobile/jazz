@@ -416,11 +416,11 @@ describe('utils', () => {
 		});
 
 		it('should return empty values when only metrics is provided', () => {
-			utils.getReport('metrics', null, config)
+			utils.getReport(['vulnerabilities', 'coverage'], null, config)
 			.then(result => {
-				expect(result.metrics.length).to.eq(7);
-				expect(result.metrics[0].link).to.eq('serviceurl/helpurl?metrics=s');
-				expect(result.metrics[0].name).to.eq('s');
+				expect(result.metrics.length).to.eq(2);
+				expect(result.metrics[0].link).to.eq('serviceurl/helpurl?metrics=coverage');
+				expect(result.metrics[0].name).to.eq('coverage');
 				expect(result.metrics[0].values.length).to.eq(0);
 			});
 		});
