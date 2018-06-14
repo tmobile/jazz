@@ -28,7 +28,7 @@ module.exports = (assets_id, update_data, asset_table, onComplete) => {
     var params = {
         TableName: asset_table,
         Key: {
-            "id": assets_id
+            "ID": assets_id
         }
     };
 
@@ -38,7 +38,7 @@ module.exports = (assets_id, update_data, asset_table, onComplete) => {
     var attributeNames = {};
     var count = 0;
     keys_list.forEach((key) => {
-        var key_name = key;
+        var key_name = utils.getDatabaseKeyName(key);
         if (Object.keys(update_data).indexOf(key) > -1) {
             update_exp = update_exp + '#key' + count + ' = :' + key_name + ", ";
             attributeValues[(":" + key_name)] = update_data[key];
@@ -57,7 +57,7 @@ module.exports = (assets_id, update_data, asset_table, onComplete) => {
                 onComplete(err);
             } else {
                 onComplete(null, {
-                    data: data.Attributes,
+                    data: utils.formatResponse(data.Attributes),
                     input: update_data
                 });
             }
