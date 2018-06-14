@@ -3,15 +3,15 @@
 	"SONAR_PASSWORD": "{sonar_creds}",
 	"SONAR_URL": "{sonar_url}",
 	"SONAR_PROJECT_KEY" : "{sonar_project_key}",
+	"SONAR_PROTOCOL": "http://",
 	"SONAR_ENV_SERVICE": "/api/measures/search_history",
-	"ALLOWED_METRICS": ["security", "code-coverage", "code-smells", "lines-of-code", "files", "vulnerabilities"],
+	"ALLOWED_METRICS": ["security", "code-coverage", "code-smells", "lines-of-code", "files"],
 	"METRIC_MAP": {
 		"security": "vulnerabilities",
 		"code-coverage": "coverage",
 		"code-smells": "code_smells",
 		"lines-of-code": "ncloc",
-		"files": "files",
-		"vulnerabilities": "high_severity_vulns"
+		"files": "files"
 	},
 	"REQUIRED_PARAMS": ["domain", "service", "environment"],
 	"TOKEN_URL": "/dev/jazz/login",
@@ -47,12 +47,6 @@
 		},
 		"files": {
 			"description": "Number of files.",
-			"unit": "count",
-			"minValue": "0",
-			"maxValue": "NA"
-		},
-		"vulnerabilities": {
-			"description": "Number of high-severity security vulnerabilities",
 			"unit": "count",
 			"minValue": "0",
 			"maxValue": "NA"

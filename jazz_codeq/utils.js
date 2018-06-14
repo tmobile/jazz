@@ -211,9 +211,9 @@ function getCodeqReport(metrics, branch, toDate, fromDate, query, config) {
 			metricString = metricString + config.METRIC_MAP[metrics[m]] + ",";
 		}
 
-		const component =  config.SONAR_PROJECT_KEY + "_" + query.domain + "_" + query.service + "_" + branch;
+		const component = config.SONAR_PROJECT_KEY + "_" + query.domain + "_" + query.service + "_" + branch;
 		const svcPayload = {
-			uri: config.SONAR_URL + config.SONAR_ENV_SERVICE + "?metrics=" + metricString + "&from=" + fromDate + "&to=" + toDate + "&component=" + component,
+			uri:  config.SONAR_PROTOCOL + config.SONAR_URL + config.SONAR_ENV_SERVICE + "?metrics=" + metricString + "&from=" + fromDate + "&to=" + toDate + "&component=" + component,
 			method: 'GET',
 			headers: {
 				'Authorization': "Basic " + new Buffer(config.SONAR_USER + ":" + config.SONAR_PASSWORD).toString("base64"),
