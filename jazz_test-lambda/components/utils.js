@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright ©  2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,29 +15,35 @@
 // =========================================================================
 
 /**
-Nodejs Template Project
-/** 
-  @module: validate-arn.js
-  @description: Validates ARN 
-  @author:
-  @version: 1.0
+    Helper functions for Events
+    @module: utils.js
+    @author:
+    @version: 1.0
 **/
 
 var validateARN = (arn) => {
-  if (arn) {
-    var arnvalues = arn.split(":");
-    var isarnvalid = true;
-    //validate if arn is a valid Lambda
-    if (arn.indexOf("arn:aws:lambda") !== 0 || arnvalues[5] !== "function" || arnvalues.length > 8)
-      isarnvalid = false;
-    return isarnvalid;
-  } else {
-    return false;
-  }
+    if (arn) {
+      var arnvalues = arn.split(":");
+      var isarnvalid = true;
+      //validate if arn is a valid Lambda
+      if (arn.indexOf("arn:aws:lambda") !== 0 || arnvalues[5] !== "function" || arnvalues.length > 8)
+        isarnvalid = false;
+      return isarnvalid;
+    } else {
+      return false;
+    }
+  
+  };
+var execStatus = ()=>{ 
+    return {
+    "success" : "Success",
+    "handledError": "HandledError",
+    "unhandledError" : "UnhandledError",
+    "functionInvocationError":"FunctionInvocationError"
+    }
+}
 
-};
-
-module.exports = (arn) => {
-  var isarnvalid = validateARN(arn);
-  return isarnvalid;
+module.exports ={
+        validateARN,
+        execStatus
 };

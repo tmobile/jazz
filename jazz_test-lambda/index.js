@@ -24,8 +24,10 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const validateARN = require("./utils/validate-arn.js");
+const utils = require("./components/utils.js");
 const aws = require('aws-sdk');
+const validateARN = utils.validateARN;
+const execStatus = utils.execStatus();
 var handler = (event, context, cb) => {
   'use strict';
   //Initializations
@@ -35,65 +37,62 @@ var handler = (event, context, cb) => {
   var AWS_REGION;
   try {
     var testResponse = {
-      "statusCode": 200,
       "execStatus": null,
       "payload": null,
     };
-    if (event && event.method && event.method === 'POST') {
-      if (!event.body) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Event Body not Defined")));
-      } else if (!validateARN(event.body.functionARN)) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Function ARN is invalid")));
-      } else if (!event.body.inputJSON) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is not defined")));
-      } else {
-        var functionARN = event.body.functionARN;
-        var arnvalues = functionARN.split(":");
-        AWS_REGION = arnvalues[3]; //["arn","aws","lambda","us-east-1","000000""] spliting FunctionARN to get the aws-region 
-        var inputJSON = event.body.inputJSON;
-        invokeLambda(functionARN, inputJSON, AWS_REGION).then((data) => {
-          if (data && data.StatusCode === 200) {
-            testResponse.payload = data;
-            if (!data.FunctionError) {
-              testResponse.execStatus = 0; //Function Executed Succesfully Without Error 
-            } else {
-              if (data.FunctionError === "Handled") {
-                testResponse.execStatus = 1;
-                testResponse.handled = true;
-              } else if (data.FunctionError === "Unhandled") {
-                testResponse.execStatus = 2; // Function Execution Had Unhandled Error 
-                testResponse.handled = false;
-              }
-            }
-          } else {
-            testResponse.execStatus = 4;
-          } // Function Falied |Cause Unknown|TEST FAILED 
-          testResponse.payload = data;
-          return cb(null, responseObj(testResponse, event.body));   
-        }).catch((err) => {
-          logger.info(" TEST FAILED  : " + JSON.stringify(err));
-          testResponse.execStatus = 3; //  Funtion Failed To Be Invoked |TEST FAILED
-          testResponse.payload = err;
-          return cb(null, responseObj(testResponse, event.body)); // TEST FAILED
-        });
-      }
-    } else {
+    if (!event && !event.method && event.method !== 'POST') {
       return cb(JSON.stringify(errorHandler.throwNotFoundError("Method not found")));
     }
-
+    if (!event.body) {
+      return cb(JSON.stringify(errorHandler.throwInputValidationError("Event Body not Defined")));
+    }
+    if (!validateARN(event.body.functionARN)) {
+      return cb(JSON.stringify(errorHandler.throwInputValidationError("Function ARN is invalid")));
+    }
+    if (!event.body.inputJSON) {
+      return cb(JSON.stringify(errorHandler.throwInputValidationError("Input for function is not defined")));
+    }
+    var functionARN = event.body.functionARN;
+    var arnvalues = functionARN.split(":");
+    AWS_REGION = arnvalues[3]; //["arn","aws","lambda","us-east-1","000000""] spliting FunctionARN to get the aws-region 
+    var inputJSON = event.body.inputJSON;
+    invokeLambda(functionARN, inputJSON, AWS_REGION).then((data) => {
+      if (data && data.StatusCode === 200) {
+        testResponse.payload = data;
+        if (!data.FunctionError) {
+          //Function Executed Succesfully Without Error 
+          testResponse.execStatus = execStatus.success;
+        } else {
+          if (data.FunctionError === "Handled") {
+            testResponse.execStatus = execStatus.handledError;
+          } else if (data.FunctionError === "Unhandled") {
+            // Function Execution Had Unhandled Error 
+            testResponse.execStatus = execStatus.unhandledError;
+          }
+        }
+      } else {
+        // Function Falied |Cause Unknown|TEST FAILED 
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown error occured")));
+      }
+      testResponse.payload = data;
+      return cb(null, responseObj(testResponse, event.body));
+    }).catch((err) => {
+      // Funtion Failed To Be Invoked |TEST FAILED
+      testResponse.execStatus = execStatus.functionInvocationError;
+      testResponse.payload = err;
+      return cb(null, responseObj(testResponse, event.body));
+    });
   } catch (err) {
-    logger.error("Failed to invoke lambda : " + JSON.stringify(err));
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to invoke lambda")));
   }
-
 };
 
 var invokeLambda = (functionARN, inputJSON, AWS_REGION) => {
   'use strict';
   return new Promise((resolve, reject) => {
-    try {  
+    try {
       var lambda = new aws.Lambda({
-        region: AWS_REGION 
+        region: AWS_REGION
       });
       lambda.invoke({
         FunctionName: functionARN,
@@ -102,7 +101,7 @@ var invokeLambda = (functionARN, inputJSON, AWS_REGION) => {
         if (error) {
           logger.error("Error In Lambda Execution:", error);
           reject(error);
-        } else if (data.Payload) {
+        } else {
           logger.info("Lambda Executed Succesfully:", data);
           resolve(data);
         }
@@ -110,7 +109,6 @@ var invokeLambda = (functionARN, inputJSON, AWS_REGION) => {
     } catch (e) {
       logger.error(e);
       reject("Error In Invoking Lambda");
-
     }
   });
 };

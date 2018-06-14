@@ -399,17 +399,19 @@
     "OutputObj": {
       "type": "object",
       "properties": {
+        "execStatus": {
+          "enum": [
+						"Success",
+						"HandledError",
+            "UnhandledError",
+            "FunctionInvocationError"
+					],
+          "type": "string",
+          "description": "Sample key in the output object"
+        },
         "payload": {
           "type": "object",
-          "description": "Response object from lambda invocation"
-        },
-        "execStatus": {
-          "type": "number",
-          "description": "Result of Lambda Invocation/Execution"
-        },
-        "StatusCode": {
-          "type": "number",
-          "description": "Status of Execution"
+          "description": "Sample key in the output object"
         }
       }
     }
