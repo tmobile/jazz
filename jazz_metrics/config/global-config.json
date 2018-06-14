@@ -1,5 +1,5 @@
 {
-    "REQUIRED_FIELDS" : ["service","domain","environment","end_time","start_time","interval","statistics","type","asset_name"],
+    "REQUIRED_FIELDS" : ["service","domain","environment","end_time","start_time","interval","statistics"],
     "ASSET_REQUIRED_FIELDS" : ["type","asset_name","statistics"],
     "STATISTICS_TYPE" : ["sum", "average", "maximum", "minimum", "samplecount"]
 }

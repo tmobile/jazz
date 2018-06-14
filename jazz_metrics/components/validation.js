@@ -58,18 +58,20 @@ var validateAssetFields =function(input){
 };
 
 var validateIsEmptyInputData = (input) => {
-    if (Object.keys(input).length === 0) {
-        reject({
-            result: "inputError",
-            message: "Input payload cannot be empty"
-        });
-    } else {
-        resolve({
-            result: "success",
-            input: input
-        });
-    }
-};
+    return new Promise((resolve, reject) => {
+        if (Object.keys(input).length === 0) {
+            reject({
+                result: "inputError",
+                message: "Input payload cannot be empty"
+            });
+        } else {
+            resolve({
+                result: "success",
+                input: input
+            });
+        } 
+    });
+}
 
 var validateRequiredFields = function(input,required_fields){
     return new Promise((resolve, reject) => {
@@ -164,5 +166,6 @@ function validateMetricsInput (data){
 };
 
 module.exports = {
-    validateGeneralFields
+    validateGeneralFields,
+    validateAssetFields
 }
