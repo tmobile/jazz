@@ -21,13 +21,13 @@
      var params = {
          TableName: asset_table,
          IndexName: global.global_config.ASSETS_DOMAIN_SERVICE_INDEX,
-         KeyConditionExpression: "#d = :service_domain and service = :service_name",
+         KeyConditionExpression: "#d = :service_domain and SERVICE = :service_name",
          ExpressionAttributeValues: {
              ":service_name": query.service,
              ":service_domain": query.domain
          },
          ExpressionAttributeNames: {
-             "#d": "domain"
+             "#d": "DOMAIN"
          }
      };
 
@@ -62,7 +62,8 @@
                      params.ExclusiveStartKey = data.LastEvaluatedKey;
                      queryExecute(onComplete);
                  } else {
-                     onComplete(null, items);
+                     var responseObject = items.map(item => utils.formatResponse(item));
+                     onComplete(null, responseObject);
                  }
              }
          });

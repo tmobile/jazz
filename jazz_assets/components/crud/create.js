@@ -33,15 +33,15 @@ module.exports = (assets_data, asset_table, onComplete) => {
     var timestamp = moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS');
     var params = {
         Item: {
-            "id": assets_id,
-            "timestamp": timestamp
+            "ID": assets_id,
+            "TIMESTAMP": timestamp
         },
         ReturnConsumedCapacity: "TOTAL",
         TableName: asset_table
     };
 
     Object.keys(assets_data).forEach((key) => {
-        var param_key = key;
+        var param_key = utils.getDatabaseKeyName(key);
         var param_value = assets_data[key];
 
         if (!param_value) {
