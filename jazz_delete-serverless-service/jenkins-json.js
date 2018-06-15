@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
+// Copyright Â© 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,14 +20,14 @@
 var request_payload = {
 	url: "",
 	headers: {
-		"Authorization": "", 
+		"Authorization": "",
 		"Content-Type": "application/x-www-form-urlencoded"
 	},
 	method: "POST",
 	verify: false,
 	rejectUnauthorized: false,
 	requestCert: true,
-	async : true,
+	async: true,
 	json: false,
 	qs: {}
 };
@@ -40,15 +40,15 @@ var build_params = {
 };
 
 var response_format = {
-	"message":"Service cleanup workflow triggered successfully",
+	"message": "Service cleanup workflow triggered successfully",
 	"request_id": ""
 };
 
 //JSON.parse(JSON.stringify())
 module.exports = (formats) => {
-  return {
-	  "requestLoad" : request_payload,
-	  "responseLoad" : response_format,
-	  "buildParams" : build_params
-	  };
+	return {
+		"requestLoad": request_payload,
+		"responseLoad": response_format,
+		"buildParams": build_params
+	};
 };

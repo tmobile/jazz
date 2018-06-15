@@ -9,13 +9,12 @@
     "test": "mocha"
   },
   "dependencies": {
-    "request": "*",
     "deasync": "*",
-	"async": "*",
-	"aws-sdk": "*"
+    "async": "*"
   },
   "devDependencies": {
     "chai": "^3.5.0",
-    "mocha": "^v3.0.0"
+    "mocha": "^v3.0.0",
+    "aws-sdk": "*"
   }
 }

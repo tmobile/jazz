@@ -12,15 +12,14 @@
     "jshint": "jshint --exclude ./node_modules ."
   },
   "dependencies": {
-    "deasync": "*",
     "lodash": "*",
-    "request": "*",
     "request-promise-native": "^1.0.5"
   },
   "devDependencies": {
     "mocha": "^v3.0.0",
     "chai": "^3.5.0",
-    "lambda-local": "^1.4.2"
+    "lambda-local": "^1.4.2",
+    "aws-sdk": "*"
   },
   "engines": {
     "node": "6.10"
