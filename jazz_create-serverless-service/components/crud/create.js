@@ -37,9 +37,7 @@ module.exports = (inputs, callback) => {
 		}
 	});
 
-
 	function getServiceData(inputs) {
-
 		var jsonBody = {};
 		if (inputs.SERVICE_NAME) { jsonBody.service = inputs.SERVICE_NAME }
 		if (inputs.DOMAIN) { jsonBody.domain = inputs.DOMAIN }

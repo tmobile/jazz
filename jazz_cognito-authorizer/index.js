@@ -149,8 +149,7 @@ module.exports.handler = function (event, context, cb) {
                     if (err) {
                         logger.error(JSON.stringify(err));
                         return cb("Unauthorized");
-                    }
-                    else {
+                    } else {
                         var emailAddress = _.find(data.UserAttributes, { "Name": "email" });
                         //Get AWS AccountId and API Options
                         var apiOptions = {};
@@ -290,7 +289,7 @@ module.exports.handler = function (event, context, cb) {
          * @return {void}
          */
         var addMethod = function (effect, verb, resource, conditions) {
-            if (verb != "*" && !AuthPolicy.HttpVerb.hasOwnProperty(verb)) {
+            if (verb !== "*" && !AuthPolicy.HttpVerb.hasOwnProperty(verb)) {
                 throw new Error("Invalid HTTP verb " + verb + ". Allowed verbs in AuthPolicy.HttpVerb");
             }
 

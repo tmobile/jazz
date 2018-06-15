@@ -39,7 +39,6 @@ module.exports = (service_id, inputs, callback) => {
 	});
 
 	function getServiceData(inputs) {
-
 		var jsonBody = {};
 		if (inputs.DESCRIPTION) { jsonBody.description = inputs.DESCRIPTION }
 		if (inputs.REGION) {

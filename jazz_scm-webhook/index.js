@@ -57,7 +57,7 @@ var handler = function (event, context, cb) {
 };
 
 var getScmType = function (scmIdentifier, event) {
-	logger.info("scmIdentifier:" + JSON.stringify(scmIdentifier));
+	logger.info("scmIdentifier: " + JSON.stringify(scmIdentifier));
 	return new Promise((resolve, reject) => {
 		for (var key in scmIdentifier) {
 			if (scmIdentifier.hasOwnProperty(key)) {
