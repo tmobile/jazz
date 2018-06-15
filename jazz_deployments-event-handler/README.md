@@ -1,1 +1,1 @@
-Lambda service for handling deployment related events
+Subscriber for handling deployment related events
