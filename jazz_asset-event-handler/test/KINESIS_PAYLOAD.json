@@ -14,12 +14,7 @@
             "eventName": "aws:kinesis:record",
             "invokeIdentityArn": "",
             "awsRegion": "us-east-1",
-            "eventSourceARN": "",
-          "data": {
-            "EVENT_NAME": {
-              "S": ""
-            }
-          }
+            "eventSourceARN": ""
         }
     ]
 }
