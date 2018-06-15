@@ -60,7 +60,7 @@ function validateFromAfterTo(fromDate, toDate) {
     if (fromDate && toDate) {
         if (moment(toDate).isAfter(fromDate)) {
             return true;
-        } 
+        }
     }
 
     return false;

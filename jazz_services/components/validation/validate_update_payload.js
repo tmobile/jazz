@@ -35,7 +35,7 @@ module.exports = (service_id, service_data, onComplete) => {
     var service_field_list = [];
     var non_editable_fields_for_update = [];
     var empty_allowed_fields_for_update = [];
-    _.forEach(global.global_config.SERVICE_FIELDS_METADATA, function(value, key) {
+    _.forEach(global.global_config.SERVICE_FIELDS_METADATA, function (value, key) {
         service_field_list.push(value.key);
         if (!value.editable) {
             non_editable_fields_for_update.push(value.key);
@@ -49,21 +49,21 @@ module.exports = (service_id, service_data, onComplete) => {
     var service_data_from_db = {};
 
     async.series({
-        validateServiceExists: function(onComplete) {
+        validateServiceExists: function (onComplete) {
             crud.get(service_id, function onServiceGet(error, data) {
                 if (error) {
-                    logger.info('crud.get error'+JSON.stringify(error));
-                        onComplete({
-                            service_exists: false,
-                            error: { server_error: "Unknown error occured.  " + error }
-                        });
+                    logger.info('crud.get error' + JSON.stringify(error));
+                    onComplete({
+                        service_exists: false,
+                        error: { server_error: "Unknown error occured.  " + error }
+                    });
                 } else {
                     // logger.info(data)
                     if (Object.keys(data).length === 0 && data.constructor === Object) {
                         logger.error('Cannot find service with id: ' + service_id);
                         onComplete({
-                            result:"notFoundError",
-                            message:"Cannot find service with id: " + service_id
+                            result: "notFoundError",
+                            message: "Cannot find service with id: " + service_id
                         });
                     } else {
                         service_data_from_db = data;
@@ -76,50 +76,50 @@ module.exports = (service_id, service_data, onComplete) => {
             });
         },
 
-        validateIsEmptyInputData: function(onComplete) {
+        validateIsEmptyInputData: function (onComplete) {
             logger.info("Inside validateIsEmptyInputData: ");
             validateUtils.validateIsEmptyInputData(service_data, onComplete);
         },
 
-        validateNotEditableFieldsInUpdate: function(onComplete) {
+        validateNotEditableFieldsInUpdate: function (onComplete) {
             logger.info("Inside validateUnAllowedFieldsInInput: ");
             validateUtils.validateNotEditableFieldsInUpdate(service_data, non_editable_fields_for_update, onComplete);
         },
 
-        validateEditableFieldsValue: function(onComplete) {
+        validateEditableFieldsValue: function (onComplete) {
             logger.info("Inside validateEditableFieldsValue: ");
             validateUtils.validateEditableFieldsValue(service_data, empty_allowed_fields_for_update, onComplete);
         },
 
-        validateInputFieldTypes: function(onComplete) {
+        validateInputFieldTypes: function (onComplete) {
             logger.info("Inside validateInputFieldTypes: ");
             validateUtils.validateInputFieldTypes(service_data, onComplete);
         },
 
-        validateEnumValues: function(onComplete) {
+        validateEnumValues: function (onComplete) {
             logger.info("Inside validateEnumValues: ");
             validateUtils.validateEnumValues(service_data, onComplete);
         },
 
-        validateEmailFieldValue: function(onComplete) {
+        validateEmailFieldValue: function (onComplete) {
             logger.info("Inside validateEmailFieldValue: ");
             validateUtils.validateEmail(service_data, onComplete);
         },
 
-        validateStatusStateChange: function(onComplete) {
+        validateStatusStateChange: function (onComplete) {
             logger.info("Inside validateStatusStateChange: ");
             validateUtils.validateStatusStateChange(service_data, service_data_from_db, onComplete);
         }
     },
-    function(error, data) {
-        if (error) {
-            logger.info('#validate error')
-            logger.error("# Validate Update Payload Error:" + JSON.stringify(error));
-            onComplete(error);
-        } else {
-            logger.info("# Validate Update Payload Data:" + JSON.stringify(data));
-            onComplete(null);
-        }
-    });
-    
+        function (error, data) {
+            if (error) {
+                logger.info('#validate error')
+                logger.error("# Validate Update Payload Error:" + JSON.stringify(error));
+                onComplete(error);
+            } else {
+                logger.info("# Validate Update Payload Data:" + JSON.stringify(data));
+                onComplete(null);
+            }
+        });
+
 }

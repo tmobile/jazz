@@ -16,26 +16,23 @@
 
 "use strict";
 
-const config = require("./components/config.js");
-const logger = require("./components/logger.js");
-const utils = require("./utils/utils.js")();
-const errorHandlerModule = require("./components/error-handler.js");
-var errorHandler = errorHandlerModule(logger);
 const rp = require('request-promise-native');
 
-const AWS = require("aws-sdk");
 const _ = require("lodash");
 const request = require("request");
 const nanoid = require("nanoid/generate");
-const fcodes = require('./utils/failure-codes.js');
-var failureCodes = fcodes();
+
+const config = require("./components/config.js");
+const logger = require("./components/logger.js");
+const errorHandlerModule = require("./components/error-handler.js");
+var errorHandler = errorHandlerModule(logger);
+
 var processedEvents = [];
 var failedEvents = [];
 
 var handler = (event, context, cb) => {
 	var configData = config(context);
-	var authToken;
-
+	
 	rp(getTokenRequest(configData))
 		.then(result => {
 			return getAuthResponse(result);
@@ -339,12 +336,12 @@ var processEventDeleteBranch = function (environmentPayload, configData, authTok
 						"domain": environmentPayload.domain,
 						"version": "LATEST",
 						"environment_id": environmentPayload.logical_id
-				    },
+					},
 					rejectUnauthorized: false
 				};
 
 				request(delSerPayload, function (error, response, body) {
-					if (response.statusCode && response.statusCode === 200 && body && body.data ) {
+					if (response.statusCode && response.statusCode === 200 && body && body.data) {
 						return resolve(body);
 					} else {
 						logger.error("Error triggering the delete environment: " + JSON.stringify(response));
@@ -401,7 +398,7 @@ var processEventUpdateEnvironment = function (environmentPayload, configData, au
 }
 
 var getEnvironmentLogicalId = function (environmentPayload, configData, authToken) {
-	
+
 	return new Promise((resolve, reject) => {
 		var svcPayload = {
 			uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "?domain=" + environmentPayload.domain + "&service=" + environmentPayload.service,

@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
+// Copyright Â© 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ USAGE
 
 */
 
-module.exports = function() {
+module.exports = function () {
     var logLevels = {
         error: 4,
         warn: 3,
@@ -62,12 +62,12 @@ module.exports = function() {
     };
 
     // set logLevel, RequestDetails
-    var init = function(event, context) {
+    var init = function (event, context) {
         setLevel();
     };
 
     // To add request specific details, which will be prepended in all the logs for ease of debugging in CloudWatch logs
-    var setRequestDetails = function(someContextSpecificId) {
+    var setRequestDetails = function (someContextSpecificId) {
         return;
 
         // Timestamp and requestID are prepended in cloudwatch log by default; If any other details are required it can be done here.
@@ -83,7 +83,7 @@ module.exports = function() {
     };
 
     // set current logLevel; Only logs which are above the curLogLevel will be logged;
-    var setLevel = function(level) {
+    var setLevel = function (level) {
         // LOG_LEVEL is 'info' by default
 
         if (level !== undefined && logLevels[level] !== undefined) {
@@ -105,7 +105,7 @@ module.exports = function() {
         return null;
     };
 
-    var log = function(level, message) {
+    var log = function (level, message) {
         /*
             @TODO: format message as per requirement.
             Will it be just a string / json. Should we except error object also?
@@ -131,19 +131,19 @@ module.exports = function() {
         return null;
     };
 
-    var error = function(message) {
+    var error = function (message) {
         log('error', message);
     };
-    var warn = function(message) {
+    var warn = function (message) {
         log('warn', message);
     };
-    var info = function(message) {
+    var info = function (message) {
         log('info', message);
     };
-    var verbose = function(message) {
+    var verbose = function (message) {
         log('verbose', message);
     };
-    var debug = function(message) {
+    var debug = function (message) {
         log('debug', message);
     };
 

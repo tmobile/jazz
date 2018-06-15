@@ -16,13 +16,14 @@
 
 'use strict';
 const request = require('request');
+const uuid = require('uuid');
+
 const errorHandlerModule = require("./components/error-handler.js");
 const eventHandlerModule = require("./components/events-handler.js");
 const responseObj = require("./components/response.js");
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
 const formats = require('./jenkins-json.js');
-const uuid = require('uuid');
 var payloads = formats('apis');
 
 /**
@@ -114,7 +115,7 @@ module.exports.handler = (event, context, cb) => {
         //Send STARTED event for CALL_DELETE_WORKFLOW/CALL_DELETE_ENV_WORKFLOW
         logger.debug("Started sendEventsOptions:" + JSON.stringify(sendEventsOptions));
         sendEventToHandler(sendEventsOptions);
-        request(req, function(error, response, body) {
+        request(req, function (error, response, body) {
             if (error) {
                 logger.error("request errored..: " + JSON.stringify(error));
                 sendEventsOptions.error = "Failed..: " + JSON.stringify(error);
@@ -156,7 +157,7 @@ module.exports.handler = (event, context, cb) => {
 
     function sendEventToHandler(sendEventsOptions) {
         //Send Started/Completed/Failed events for CALL_DELETE_WORKFLOW /CALL_DELETE_ENV_WORKFLOW
-        eventHandler.sendEvent(sendEventsOptions, function(err, data) {
+        eventHandler.sendEvent(sendEventsOptions, function (err, data) {
             if (err) {
                 logger.error(err.message);
             } else {

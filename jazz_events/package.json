@@ -9,9 +9,6 @@
         "test": "mocha"
     },
     "dependencies": {
-        "async": "*",
-        "deasync": "*",
-        "json-query": "*",
         "moment": "*",
         "request": "*",
         "uuid": "*"
