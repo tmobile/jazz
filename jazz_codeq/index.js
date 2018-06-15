@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const request = require('request');
-const moment = require('moment');
 const messages = require("./config/messages");
 const validation = require('./validation');
 const utils = require('./utils');
@@ -35,13 +33,10 @@ function handler(event, context, cb) {
 
 	try {
 		logger.debug(serviceContext.resourcePath);
-
 		utils.getAPIPath(serviceContext.resourcePath)
 		.then(data => {
 			const pathString = data.pathString;
-		
 			logger.debug(pathString);
-			
 			if (serviceContext && serviceContext.method && serviceContext.method === 'GET' && pathString === "codeq") {
 				logger.debug(`code quality service called with pathstring - ${pathString}` );
 
@@ -61,7 +56,7 @@ function handler(event, context, cb) {
 					.then((data) => utils.getProjectBranch(data.auth_token, query, config)
 					).then(data => utils.getCodeqReport(metrics, data.branch, toDate, fromDate, query, config)
 					).then(data => {
-						const output = responseObj(data.get_codeq_report, serviceContext.query);
+						const output = responseObj(data, serviceContext.query);
 						return cb(null, output);
 					}).catch(err => {
 						const output = exportable.getReportOnError(err, metrics, config, serviceContext);
@@ -94,8 +89,7 @@ function handler(event, context, cb) {
 		logger.error(e);
 		return cb(JSON.stringify(errorHandler.throwInternalServerError(e)));
 	}
-};
-
+}
 
 function getResponseForHelpPathString(serviceContext, config) {
 	const query = utils.getQuery(serviceContext);
@@ -201,6 +195,6 @@ function getReportOnError(err, metrics, config, serviceContext) {
 const exportable = {
 	getReportOnError,
 	handler
-}
+};
 
 module.exports = exportable;

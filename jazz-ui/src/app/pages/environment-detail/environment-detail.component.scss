@@ -153,3 +153,22 @@
   color: #fff;
   font-size: 11px;
 }
+
+.tab-component {
+  position: relative;
+}
+
+.refresh-button {
+  position: absolute;
+  cursor: pointer;
+  top: .8rem;
+  right: 12px;
+  font-size: 1rem;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  color: #ed008c;
+  > * + * {
+    margin-left: 5px;
+  }
+}
