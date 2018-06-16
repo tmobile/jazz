@@ -618,7 +618,7 @@ describe('jazz_scm-webhook', function() {
 
   it("should indicate badRequest error if event is undefined", function(){
     event.body = "";
-    var message = '{"errorType":"BadRequest","message":"Unable to find the SCM activity!"}'
+    var message = '{"errorType":"BadRequest","message":"Unable to find SCM activity in event body!"}'
     index.handler(event, context, (err, res) => {
       if(err){
         err.should.be.equal(message)
