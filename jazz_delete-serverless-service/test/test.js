@@ -38,9 +38,9 @@ checkCase = (eventProp, eventProp2, propValue, errMessage, errType) => {
     event[eventProp] = propValue;
   }
   //check if handler returns error notification with expected error type and message
-  var bool = index.handler(event,context,callback).includes(errMessage) &&
-              index.handler(event,context,callback).includes(errType);
-  return bool;
+  var handlerResponse = index.handler(event, context, callback);
+  return handlerResponse.includes(errMessage) &&
+              handlerResponse.includes(errType);
 };
 
 describe('delete-serverless-service', function() {
@@ -57,7 +57,8 @@ describe('delete-serverless-service', function() {
           "domain" : "landOfOOO",
           "id" : "marcyAbadeer",
           "version" : "4.1.4"
-        }
+        },
+        "principalId": "iamuser"
       };
       callback = (err,responseObj) => {
         if(err){
@@ -76,7 +77,7 @@ describe('delete-serverless-service', function() {
     * @returns {string} error notification indicating there was an InternalServerError
     */
     it('should inform user of error if using a config json with no DELETE_SERVICE_JOB_URL', ()=>{
-      var errMessage = "Service configuration missing JOB URL";
+      var errMessage = "Service isn't configured properly, please reach out to Admins for help";
       var errType = "InternalServerError";
       var invalidConfigBool = checkCase("stage", null, "invalidTest", errMessage, errType);
       assert.isTrue(invalidConfigBool);
@@ -89,7 +90,7 @@ describe('delete-serverless-service', function() {
     * @returns {string} error notification indicating there was an InputValidationError
     */
     it("should inform user of missing inputs if given an event with no event.body", () => {
-      var errMessage = "Service inputs not defined";
+      var errMessage = "Missing parameters";
       var errType = "BadRequest";
       var bothCases = checkCase("body", null, null, errMessage, errType) &&
                       checkCase("body", null, undefined, errMessage, errType);
@@ -103,7 +104,7 @@ describe('delete-serverless-service', function() {
     * @returns {string} error notification indicating there was an InputValidationError
     */
     it("should inform user of missing service name if given an event with no body.service_name", ()=>{
-      var errMessage = "Service Name is missing in the input";
+      var errMessage = "Service name is missing in the input";
       var errType = "BadRequest";
       var bothCases = checkCase("body", "service_name", null, errMessage, errType) &&
                       checkCase("body", "service_name", undefined, errMessage, errType);
@@ -118,24 +119,10 @@ describe('delete-serverless-service', function() {
     * @returns {string} error notification indicating there was an InputValidationError
     */
     it("should inform user of missing domain if given an event with no body.domain", () => {
-      var errMessage = "Domain key is missing in the input";
+      var errMessage = "Domain is missing in the input";
       var errType = "BadRequest";
       var bothCases = checkCase("body", "domain", null, errMessage, errType) &&
                       checkCase("body", "domain", undefined, errMessage, errType);
-      assert.isTrue(bothCases);
-    });
-
-    /*
-    * Given an event with no body.id, handler() informs that database id is missing
-    * @param {object} event, containing no body.id
-    * @params {object, function} default aws-context object and callback function
-    * @returns {string} error notification indicating there was an InputValidationError
-    */
-    it("should inform user of missing DB id if given an event with no body.id", () => {
-      var errMessage = "DB ID is missing in the input";
-      var errType = "BadRequest";
-      var bothCases = checkCase("body", "id", null, errMessage, errType) &&
-                      checkCase("body", "id", undefined, errMessage, errType);
       assert.isTrue(bothCases);
     });
 
@@ -189,11 +176,11 @@ describe('delete-serverless-service', function() {
       var loggerStub = sinon.stub(logger, "error", spy);
       //trigger both stubs by calling handler()
       var callFunction = index.handler(event, context, callback);
-      var allChecks = stub.returnValues[0].includes(returnErrType) &&
-                      stub.returnValues[0].includes(returnErrMessage) &&
-                      loggerStub.args[0][0].includes(err.errorType) &&
-                      loggerStub.args[0][0].includes(err.message) &&
-                      loggerStub.args[0][0].includes(loggerErrMessage);
+      var val1 = stub.returnValues.length;
+      var allChecks = stub.returnValues.some(a => { return a && a.includes(returnErrType); }) &&
+                      stub.returnValues.some(a => { return a && a.includes(returnErrMessage); }) &&
+                      loggerStub.args.some(a => { return a && a.length > 0 && a[0].includes(err.message); }) &&
+                      loggerStub.args.some(a => { return a && a.length > 0 && a[0].includes(loggerErrMessage); });
       stub.restore();
       loggerStub.restore();
       assert.isTrue(allChecks);
