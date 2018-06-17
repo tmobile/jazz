@@ -176,7 +176,6 @@ describe('delete-serverless-service', function() {
       var loggerStub = sinon.stub(logger, "error", spy);
       //trigger both stubs by calling handler()
       var callFunction = index.handler(event, context, callback);
-      var val1 = stub.returnValues.length;
       var allChecks = stub.returnValues.some(a => { return a && a.includes(returnErrType); }) &&
                       stub.returnValues.some(a => { return a && a.includes(returnErrMessage); }) &&
                       loggerStub.args.some(a => { return a && a.length > 0 && a[0].includes(err.message); }) &&
@@ -202,7 +201,8 @@ describe('delete-serverless-service', function() {
       var loggerStub = sinon.stub(logger, "info", spy);
       //trigger both stubs by calling handler()
       var callFunction = index.handler(event, context, callback);
-      var bool = loggerStub.args[0][0].includes(loggerMessage);
+
+      var bool = loggerStub.args.some(a => { return a && a.length > 0 && a[0].includes(loggerMessage); });
       stub.restore();
       loggerStub.restore();
       assert.isTrue(bool);
@@ -248,9 +248,10 @@ describe('delete-serverless-service', function() {
       var loggerStub = sinon.stub(logger, "error", spy);
       //trigger both stubs by calling handler()
       var callFunction = index.handler(event, context, callback);
-      var allChecks = loggerStub.args[0][0].includes(loggerMessage) &&
-                      stub.returnValues[0].includes(errType) &&
-                      stub.returnValues[0].includes(errMessage);
+      var allChecks = stub.returnValues.some(a => { return a && a.includes(errType); }) &&
+                      stub.returnValues.some(a => { return a && a.includes(errMessage); }) &&
+                      loggerStub.args.some(a => { return a && a.length > 0 && a[0].includes(loggerMessage); });
+
       stub.restore();
       loggerStub.restore();
       assert.isTrue(allChecks);
@@ -274,9 +275,10 @@ describe('delete-serverless-service', function() {
       var loggerStub = sinon.stub(logger, "error", spy);
       //trigger both stubs by calling handler()
       var callFunction = index.handler(event, context, callback);
-      var allChecks = loggerStub.args[0][0].includes(loggerMessage) &&
-                      stub.returnValues[0].includes(errType) &&
-                      stub.returnValues[0].includes(errMessage);
+      var allChecks = stub.returnValues.some(a => { return a && a.includes(errType); }) &&
+                      stub.returnValues.some(a => { return a && a.includes(errMessage); }) &&
+                      loggerStub.args.some(a => { return a && a.length > 0 && a[0].includes(loggerMessage); });
+
       stub.restore();
       loggerStub.restore();
       assert.isTrue(allChecks);
