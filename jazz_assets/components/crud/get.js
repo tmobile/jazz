@@ -36,7 +36,7 @@ module.exports = (assets_id, asset_table, onComplete) => {
         if (err) {
             onComplete(err);
         } else {
-            var responseData = data.Item || data.Items;
+            var responseData = utils.formatResponse(data.Item) || (data.Items).map(item => utils.formatResponse(item));
             if (Object.keys(responseData).length === 0) {
                 logger.debug('Invalid asset with id: ' + assets_id);
                 onComplete({
@@ -51,7 +51,7 @@ module.exports = (assets_id, asset_table, onComplete) => {
     };
     if (assets_id) {
         params.Key = {
-            "id": assets_id
+            "ID": assets_id
         };
         docClient.get(params, (err, data) => {
             callBack(err, data);
