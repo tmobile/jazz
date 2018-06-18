@@ -91,15 +91,17 @@
       },
       "post": {
         "description": "Post method swagger for Test Lambda",
-        "parameters": [{
-          "name": "param",
-          "in": "body",
-          "description": "post body parameter.",
-          "required": true,
-          "schema": {
-            "$ref": "#/definitions/InputObj"
+        "parameters": [
+          {
+            "name": "param",
+            "in": "body",
+            "description": "post body parameter.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InputObj"
+            }
           }
-        }],
+        ],
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -212,9 +214,11 @@
             }
           }
         },
-        "security": [{
-          "{envPrefix}-{domain}-cognito-authorizer": []
-        }],
+        "security": [
+          {
+            "{envPrefix}-{domain}-cognito-authorizer": []
+          }
+        ],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -388,7 +392,7 @@
       "properties": {
         "functionARN": {
           "type": "string",
-          "description": "ARN For the lambda to be tested"
+          "description": "Function's ARN For the lambda to be tested"
         },
         "inputJSON": {
           "type": "object",
@@ -401,17 +405,17 @@
       "properties": {
         "execStatus": {
           "enum": [
-						"Success",
-						"HandledError",
+            "Success",
+            "HandledError",
             "UnhandledError",
             "FunctionInvocationError"
-					],
+          ],
           "type": "string",
-          "description": "Sample key in the output object"
+          "description": "Execution status of the lambda invocation"
         },
         "payload": {
           "type": "object",
-          "description": "Sample key in the output object"
+          "description": "Response from the the lambda to be tested"
         }
       }
     }

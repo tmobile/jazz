@@ -14,13 +14,26 @@ Provides an API for Testing a lambda function and returns the Execution Status
 ```
 {
     "data": {
-        "StatusCode": 200,
-        "execStatus": 1
+        "payload": {
+            "StatusCode" : 200,
+            "data" :{
+                "foo-value" : "foo"
+            }
+             "input": {
+             "functionARN":"arn:aws:lambda:us-east-1:00000000001:function:jazz20180604-test-lambda-4-test-j4-prod:1",
+             "inputJSON": {
+		                    "name":"apple"
+	                    }
+                    } 
+             }
+        "execStatus": Success
     },
     "input": {
-        "functionARN": "arn:aws:lambda:us-east-1:00000000001:function:jazz20180604-test-lambda-4-test-j4-prod:1",
-        "inputJSON": "{\"name\":\"apple\"}"
-    }
+        "functionARN":"arn:aws:lambda:us-east-1:00000000001:function:jazz20180604-test-lambda-4-test-j4-prod:1",
+        "inputJSON": {
+		"name":"apple"
+	    }
+    } 
 }
 ```
 
