@@ -166,7 +166,7 @@ module.exports.handler = (event, context, cb) => {
         }
       });
     } catch (ex) {
-      logger.error("Failed to send event: " + JSON.stringify(ex));
+      logger.error("Failed to send event: ", ex.message);
     }
   }
 };
