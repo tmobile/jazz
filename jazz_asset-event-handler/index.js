@@ -356,6 +356,5 @@ module.exports = {
     getEventProcessStatus: getEventProcessStatus,
     handler: handler,
     processCreateAsset: processCreateAsset,
-    processUpdateAsset: processUpdateAsset,
-    checkIfAssetExists: checkIfAssetExists
+    processUpdateAsset: processUpdateAsset
 }
