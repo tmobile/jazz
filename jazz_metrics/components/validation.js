@@ -25,7 +25,6 @@
 const global_config = require("../config/global-config.json");
 const _ = require("lodash");
 
-
 var validateGeneralFields = function(input){
     var required_fields = global_config.REQUIRED_FIELDS;
     return new Promise((resolve, reject) => {
@@ -40,22 +39,7 @@ var validateGeneralFields = function(input){
             reject(error);
         })
     });
-};
-
-var validateAssetFields =function(input){
-    var asset_required_fields = global_config.ASSET_REQUIRED_FIELDS;
-    return new Promise((resolve, reject) => {
-        validateIsEmptyInputData(input)
-        .then(() => validateRequiredFields(input, asset_required_fields))
-        .then(() => validateAllRequiredFieldsValue(input, asset_required_fields))
-        .then(res => {
-            resolve(res);
-        })
-        .catch(error => {
-            reject(error);
-        })
-    })
-};
+}
 
 var validateIsEmptyInputData = (input) => {
     return new Promise((resolve, reject) => {
@@ -122,7 +106,6 @@ function validateMetricsInput (data){
         data.statistics = data.statistics.toLowerCase();
 
         if(data.interval % 60 !== 0){
-            // inputErrField = inputErrField + 'interval' + ',';
             reject({
                 result: "inputError",
                 message: "Invalid interval value"
@@ -130,7 +113,6 @@ function validateMetricsInput (data){
         }
         
         if(!(patternUTC.test(data.end_time))){
-            // inputErrField = inputErrField + 'end_time' + ',';
             reject({
                 result: "inputError",
                 message: "Invalid end_time"
@@ -138,7 +120,6 @@ function validateMetricsInput (data){
         }
         
         if(!(patternUTC.test(data.start_time))){
-            // inputErrField = inputErrField + 'start_time' + ',';
             reject({
                 result: "inputError",
                 message: "Invalid start_time"
@@ -146,7 +127,6 @@ function validateMetricsInput (data){
         }
 
         if( data.start_time > data.end_time ){
-            // inputErrField = inputErrField + 'start_time' + ',' + 'end_time' + ' (start_time should be less than end_time)' + ','; 
             reject({
                 result: "inputError",
                 message: "start_time should be less than end_time"
@@ -154,7 +134,6 @@ function validateMetricsInput (data){
         }
 
         if(statistics_type.indexOf(data.statistics) === "-1"){
-            // inputErrField = inputErrField + 'statistics' + ',';
             reject({
                 result: "inputError",
                 message: "Invalid statistics type"
@@ -166,6 +145,5 @@ function validateMetricsInput (data){
 };
 
 module.exports = {
-    validateGeneralFields,
-    validateAssetFields
+    validateGeneralFields
 }

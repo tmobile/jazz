@@ -65,74 +65,7 @@ function assetData (results, assetItem) {
     return asset_obj;
 };
 
-// function validateMetricsInput (data){
-//     var inputErrField = '';
-//     var output_obj = {"isError":false,"message":""};
-//     data.statistics = data.statistics.toLowerCase();
-
-//     if(data.interval % 60 !== 0){
-//         inputErrField = inputErrField + 'interval' + ',';
-//     }
-
-//     var patternUTC = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]{0,3})?Z?$/;
-    
-//     if(!(patternUTC.test(data.end_time))){
-//         inputErrField = inputErrField + 'end_time' + ',';
-//     }
-    
-//     if(!(patternUTC.test(data.start_time))){
-//         inputErrField = inputErrField + 'start_time' + ',';
-//     }
-
-//     if( data.start_time > data.end_time ){
-//         inputErrField = inputErrField + 'start_time' + ',' + 'end_time' + ' (start_time should be less than end_time)' + ','; 
-//     }
-
-//     if(!(data.statistics === "sum" || data.statistics === "average" || data.statistics === "maximum"  || data.statistics === "minimum" || data.statistics === "samplecount")){
-//         inputErrField = inputErrField + 'statistics' + ',';
-//     }
-
-//     if(inputErrField.length > 0){
-//         inputErrField = inputErrField.substring(0, inputErrField.length-1); // removing last comma
-//         output_obj["isError"] = true;
-//         output_obj["message"] = inputErrField;
-//     }
-
-//     return output_obj;
-// };
-// var validateGeneralFields = function(input){
-//         var required_fields = global_config.REQUIRED_FIELDS;
-//         var output_obj = validateRequiredFields(input,required_fields);
-//         return output_obj;
-// };
-
-// var validateAssetFields =function(input){
-//         var asset_required_fields = global_config.ASSET_REQUIRED_FIELDS;
-//         var output_obj = validateRequiredFields(input,asset_required_fields);
-//         return output_obj;
-// };
-
-// var validateRequiredFields = function(input,required_fields){
-//         var output_obj = {"isError":false,"message":""};
-//         var undefined_fields = '';
-//         required_fields.forEach(function(req_field) {
-            
-//             var value = input[req_field];
-            
-//             if( value === undefined || value === null || value === ''){
-//                 undefined_fields = undefined_fields + req_field + ',';
-//             }
-//         });
-//         if(undefined_fields.length > 0){
-//             undefined_fields = undefined_fields.substring(0, undefined_fields.length-1); // removing last comma            
-//             output_obj["isError"] = true;
-//             output_obj["message"] = undefined_fields;
-//         }
-//         return output_obj;
-// }
-
 function getNameSpaceAndMetriDimensons (nameSpaceFrmAsset){
-    var missingAssetNameFields;
     var output_obj = {};
     output_obj["isError"] = false;
     var paramMetrics = [];
@@ -181,22 +114,11 @@ function extractValueFromString (string, keyword){
 };
 
 function getApiName (string){
-
     var value;
-// generalize for open source
-    switch(string){
-        case "6zfek2hkof":
-          value = "dev-cloud-api";
-          break;
-        case "c64paxwj6f":
-          value = "stg-cloud-api";
-          break;
-        case "dww0le4qre":
-          value = "rest";
-          break;
-        default:
-            value = "*"
-
+    if(Object.keys(global_config.APINAME).indexOf(string) > -1){
+        value = global_config.APINAME[string];
+    } else {
+        value = "*"
     }
     return value;
 
@@ -211,18 +133,13 @@ function getAssetsObj (assetsArray,userStatistics){
         var arnString = asset.provider_id;
         var arnParsedObj = parser(arnString);
         var assetEnvironment = asset.environment;
-
-
-        
         var assetType = asset.asset_type; 
-        // var assetType = getAssetType(asset.provider_id);
-
         var metricNamespace = namespaces[assetType];
+
         if(metricNamespace){
             var dimensions = metricNamespace.dimensions;
-        
-
             var dimensionObj = {};
+
             dimensions.forEach(function(dimensionName) {
                 dimensionObj[dimensionName] = "";
             });
@@ -239,17 +156,16 @@ function getAssetsObj (assetsArray,userStatistics){
             var newAssetObj = {"type": assetType, "asset_name": dimensionObj, "statistics":userStatistics};
 
             switch(assetType){
-                case "lambda": // eg:- "arn:aws:lambda:us-west-2:302890901340:function:platform_services-dev"
+                case "lambda":
                     var relativeId = arnParsedObj.relativeId;
                     if( relativeId === 'function' ){
                         var funcValue = extractValueFromString(arnString,relativeId);
                         newAssetObj.asset_name.FunctionName = funcValue;
                     }
                     break;
-                case "apigateway": // "arn:aws:execute-api:us-west-2:302890901340:6zfek2hkof/*/GET/platform/assets";
-                    var relativeId = arnParsedObj.relativeId; // 6zfek2hkof/*/GET/platform/assets
+                case "apigateway":
+                    var relativeId = arnParsedObj.relativeId;
                     var parts = relativeId.split("/");
-
                     var apiId = parts[0];
                     newAssetObj.asset_name.ApiName = getApiName(apiId);
 
@@ -274,8 +190,8 @@ function getAssetsObj (assetsArray,userStatistics){
                     newAssetObj.asset_name.StorageType = "StandardStorage";
                     break;
 
-                case "cloudfront": 
-                    var relativeId = arnParsedObj.relativeId; 
+                case "cloudfront":
+                    var relativeId = arnParsedObj.relativeId;
                     var parts = relativeId.split("/");
                     var distIdVal = parts[1]; 
                     newAssetObj.asset_name.DistributionId = distIdVal;
@@ -303,10 +219,6 @@ function getAssetsObj (assetsArray,userStatistics){
 module.exports = {
     massageData,
     assetData,
-    validateMetricsInput,
-    validateGeneralFields,
-    validateRequiredFields,
-    validateAssetFields,
     getNameSpaceAndMetriDimensons,
     getAssetsObj
 };
