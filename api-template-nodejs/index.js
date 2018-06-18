@@ -42,7 +42,7 @@ module.exports.handler = (event, context, cb) => {
       cb(null, responseObj(sampleResponse, event.query));
     }
 
-		//Your POST method should be handled here
+    //Your POST method should be handled here
     if (event !== undefined && event.method !== undefined && event.method === 'POST') {
       cb(null, responseObj(sampleResponse, event.body));
     }

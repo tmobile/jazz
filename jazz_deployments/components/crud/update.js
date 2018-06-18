@@ -55,9 +55,9 @@ module.exports = (deploymentData, tableName, deploymentId, onComplete) => {
             if (err) {
                 // database error
                 onComplete({
-                        result: "databaseError",
-                        message: "Error Updating Item  " + err.message
-                    },
+                    result: "databaseError",
+                    message: "Error Updating Item  " + err.message
+                },
                     null
                 );
             } else {

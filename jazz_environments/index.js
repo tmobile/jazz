@@ -19,15 +19,13 @@
   @author: 
   @version: 1.0
 **/
+const _ = require("lodash");
 
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const utils = require("./components/utils.js")(); //Import the utils module.
 const crud = require("./components/crud")(); //Import the utils module.
-const request = require("request");
-const _ = require("lodash");
 const validateUtils = require("./components/validation")();
 var errorHandler = errorHandlerModule();
 
@@ -43,8 +41,6 @@ var handler = (event, context, cb) => {
     var indexName = global.config.services_environment_index;
 
     try {
-
-
         genericInputValidation(event)
             .then(function (result) {
                 // 1: GET environment by id and environent (/services/{service_id}/{environment})
@@ -74,9 +70,6 @@ var handler = (event, context, cb) => {
                     event.path.environment_id && event.query && Object.keys(event.query).length > 0 &&
                     event.query.service && event.query.domain
                 ) {
-                    var update_environment_data = {};
-                    var environment_key_id;
-
                     environment_id = event.path.environment_id.toLowerCase();
                     service = event.query.service.toLowerCase();
                     domain = event.query.domain.toLowerCase();

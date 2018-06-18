@@ -47,41 +47,41 @@ module.exports = (query, getAllRecords, onComplete) => {
 
         keys_list.forEach(function (key) {
 
-			var key_name = utils.getDatabaseKeyName(key);
+            var key_name = utils.getDatabaseKeyName(key);
 
-			if (key_name == "SERVICE_TIMESTAMP" && (query.last_updated_after !== undefined || query.last_updated_before !== undefined)) {
-				filter = filter + key_name + " BETWEEN :BEFORE" + " AND :AFTER " + insertAnd;
-				attributeValues[(":BEFORE")] = {
-					'S': query.last_updated_before
-				};
-				attributeValues[(":AFTER")] = {
-					'S': query.last_updated_after
-				};
-			} else if (key_name == "SERVICE_STATUS" && query.status !== undefined){
-				var status = query.status;
-				var array = status.split(',');
-				var obj= {};
+            if (key_name == "SERVICE_TIMESTAMP" && (query.last_updated_after !== undefined || query.last_updated_before !== undefined)) {
+                filter = filter + key_name + " BETWEEN :BEFORE" + " AND :AFTER " + insertAnd;
+                attributeValues[(":BEFORE")] = {
+                    'S': query.last_updated_before
+                };
+                attributeValues[(":AFTER")] = {
+                    'S': query.last_updated_after
+                };
+            } else if (key_name == "SERVICE_STATUS" && query.status !== undefined) {
+                var status = query.status;
+                var array = status.split(',');
+                var obj = {};
 
-				var filterString = "( ";
-				array.forEach(function(value){
-					filterString += " :"+value + " , ";
-				});
-				filterString = filterString.substring(0, filterString.length - 3);
-				filterString += " )";
+                var filterString = "( ";
+                array.forEach(function (value) {
+                    filterString += " :" + value + " , ";
+                });
+                filterString = filterString.substring(0, filterString.length - 3);
+                filterString += " )";
 
-				filter = filter + key_name + " IN " + filterString  + " AND ";
-				array.forEach(function(value){
-					attributeValues[(":"+value)] = {
-						'S': value
-					};
-				});
-			}else if (query[key]) {
+                filter = filter + key_name + " IN " + filterString + " AND ";
+                array.forEach(function (value) {
+                    attributeValues[(":" + value)] = {
+                        'S': value
+                    };
+                });
+            } else if (query[key]) {
                 filter = filter + key_name + " = :" + key_name + insertAnd;
-				attributeValues[(":" + key_name)] = {
-					'S': query[key]
-				};
-			}
-		});
+                attributeValues[(":" + key_name)] = {
+                    'S': query[key]
+                };
+            }
+        });
     }
 
     if (!getAllRecords || (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()))) {
@@ -104,26 +104,26 @@ module.exports = (query, getAllRecords, onComplete) => {
     query.limit = query.limit || 10;
     query.offset = query.offset || 0;
     query.filter = query.filter || "";
-    var scanExecute = function(onComplete) {
-        dynamodb.scan(scanparams, function(err, items) {
+    var scanExecute = function (onComplete) {
+        dynamodb.scan(scanparams, function (err, items) {
             var count;
             if (err) {
                 onComplete(err);
             } else {
                 var items_formatted = [];
-                items.Items.forEach(function(item) {
+                items.Items.forEach(function (item) {
                     items_formatted.push(utils.formatService(item, true));
                 });
                 if (items.LastEvaluatedKey) {
                     scanparams.ExclusiveStartKey = items.LastEvaluatedKey;
                     scanExecute(onComplete);
                 } else {
-                if (items_formatted.length > 0) {
-             
-                    items_formatted = utils.sortUtil(items_formatted, query.sort_by, query.sort_direction);
+                    if (items_formatted.length > 0) {
+
+                        items_formatted = utils.sortUtil(items_formatted, query.sort_by, query.sort_direction);
 
                         if (query.filter) {
-                                items_formatted = utils.filterUtil(items_formatted, query.filter);
+                            items_formatted = utils.filterUtil(items_formatted, query.filter);
                         }
                         count = items_formatted.length;
                         if (query.limit && query.offset) {

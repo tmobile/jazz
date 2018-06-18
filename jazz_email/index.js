@@ -30,36 +30,36 @@ const logger = require("./components/logger.js");
 
 module.exports.handler = (event, context, cb) => {
 
-  	var errorHandler = errorHandlerModule();
-  	logger.init(event, context);
+	var errorHandler = errorHandlerModule();
+	logger.init(event, context);
 
-  	var config = configObj(event);
+	var config = configObj(event);
 
-  	if (!config || config.length) {
-	  	logger.error("Cannot load config object, will stop processing");
+	if (!config || config.length) {
+		logger.error("Cannot load config object, will stop processing");
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Internal error, please reach out to admins")));
-  	}
+	}
 
 	try {
 		logger.info(JSON.stringify(event));
 
 		validateInput(event)
-		.then(() => sendEmail(config, event.body))
-		.then((result) => { return cb(null, responseObj({result: "success", message: result.messageId})); })
-		.catch(function (err) {
-			logger.error("Failed while sending email: " + JSON.stringify(err));
+			.then(() => sendEmail(config, event.body))
+			.then((result) => { return cb(null, responseObj({ result: "success", message: result.messageId })); })
+			.catch(function (err) {
+				logger.error("Failed while sending email: " + JSON.stringify(err));
 
-			if (err.errorType) {
-				// error has already been handled and processed for API gateway
-				return cb(JSON.stringify(err));
-			}else {
-				if (err.code) {
-					return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+				if (err.errorType) {
+					// error has already been handled and processed for API gateway
+					return cb(JSON.stringify(err));
+				} else {
+					if (err.code) {
+						return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+					}
+
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while sending email to: " + event.body.to)));
 				}
-
-				return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while sending email to: " + event.body.to)));
-			}
-		});
+			});
 	} catch (e) {
 		logger.error('Error in sending email : ' + e.message);
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("105", e.message)));
@@ -80,11 +80,11 @@ function validateInput(userInput) {
 			return reject(errorHandler.throwInputValidationError("101", "invalid or missing arguments"));
 		}
 
-		if (!userInput.principalId)  {
+		if (!userInput.principalId) {
 			return reject(errorHandler.throwForbiddenError("102", "You aren't authorized to access this resource"));
 		}
 
-		if (userInput.method !== 'POST' )  {
+		if (userInput.method !== 'POST') {
 			return reject(errorHandler.throwInputValidationError("103", "Service operation not supported"));
 		}
 
@@ -121,7 +121,7 @@ function sendEmail(config, userInput) {
 			if (err) {
 				logger.error('Error in sending email ' + JSON.stringify(err));
 				reject(err);
-			}else {
+			} else {
 				logger.info('Successfully sent email ' + JSON.stringify(info));
 				resolve(info);
 			}

@@ -17,7 +17,6 @@
 
 var https = require('https');
 var zlib = require('zlib');
-var crypto = require('crypto');
 var truncate = require('unicode-byte-truncate');
 const _ = require("lodash");
 

@@ -41,7 +41,7 @@ var handler = (event, context, cb) => {
     logger.init(event, context);
     var service_creation_data = event.body;
     try {
-        var isValidName = function(name) {
+        var isValidName = function (name) {
             return /^[A-Za-z0-9\-]+$/.test(name);
         };
 
@@ -72,7 +72,7 @@ var handler = (event, context, cb) => {
             .then((result) => {
                 cb(null, responseObj(result, service_creation_data));
             })
-            .catch(function(err) {
+            .catch(function (err) {
                 logger.error('Error while creating service : ' + JSON.stringify(err));
                 if (err.jenkins_api_failure) {
                     serviceDataObject.body = {
@@ -124,7 +124,7 @@ var startServiceOnboarding = (service_creation_data, config, service_id) => {
                     "Authorization": base_auth_token
                 },
                 qs: input
-            }, function(err, response, body) {
+            }, function (err, response, body) {
                 if (err) {
                     logger.error('Error while starting service onboarding: ' + err);
                     err.jenkins_api_failure = true;
