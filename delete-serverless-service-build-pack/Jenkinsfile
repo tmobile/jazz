@@ -158,10 +158,8 @@ node {
 							cleanUpApiGatewayResources(_envId, path)
 							cleanUpApiDocs(_envId)
 							unDeployService(_envId)
-							if (configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
-								stage('Cleanup Code Quality Reports') {
-									cleanupCodeQualityReports()
-								}
+							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+								cleanupCodeQualityReports()								
 							}
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
@@ -190,7 +188,7 @@ node {
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 							echo 'undeploying function for environment: ' + _envId
 							unDeployService(_envId)
-							if (configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()								
 							}
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
@@ -248,8 +246,7 @@ def cleanupCodeQualityReports(){
 	try {
 		sonarModule.cleanupCodeQualityReports()
 	} catch (ex) {
-		echo "error occured while deleting code quality reports: " + ex.getMessage()
-		error ex.getMessage()
+		echo "error occured while deleting code quality reports: " + ex.getMessage()	
 	}
 }
 

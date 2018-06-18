@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ function validateFromAfterTo(fromDate, toDate) {
     if (fromDate && toDate) {
         if (moment(toDate).isAfter(fromDate)) {
             return true;
-        } 
+        }
     }
 
     return false;
@@ -71,4 +71,4 @@ module.exports = {
     validateFromDate,
     validateToDate,
     validateFromAfterTo
-}
+};

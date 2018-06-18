@@ -24,20 +24,20 @@
 const _ = require("lodash");
 const request = require("request");
 const rp = require('request-promise-native');
-const Uuid = require("uuid/v4");
-const config = require("./components/config.js"); 
-const logger = require("./components/logger.js"); 
+
+const config = require("./components/config.js");
+const logger = require("./components/logger.js");
 const errorHandlerModule = require("./components/error-handler.js");
 const fcodes = require('./utils/failure-codes.js');
+
 var errorHandler = errorHandlerModule(logger);
 var failureCodes = fcodes();
 var processedEvents = [];
 var failedEvents = [];
 
-function handler(event, context, cb){
+function handler(event, context, cb) {
 	var configData = config(context);
-	var authToken;
-
+	
 	rp(exportable.getTokenRequest(configData))
 		.then(result => {
 			return exportable.getAuthResponse(result);
@@ -57,7 +57,7 @@ function handler(event, context, cb){
 		});
 };
 
-function getTokenRequest(configData){
+function getTokenRequest(configData) {
 	return {
 		uri: configData.BASE_API_URL + configData.TOKEN_URL,
 		method: 'post',
@@ -83,7 +83,7 @@ function getAuthResponse(result) {
 	});
 };
 
-function processEventRecords(event, configData, authToken){
+function processEventRecords(event, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var processEventRecordPromises = [];
 		for (var i = 0; i < event.Records.length; i++) {
@@ -100,7 +100,7 @@ function processEventRecords(event, configData, authToken){
 	});
 };
 
-function processEventRecord (record, configData, authToken){
+function processEventRecord(record, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var sequenceNumber = record.kinesis.sequenceNumber;
 		var encodedPayload = record.kinesis.data;
@@ -128,7 +128,7 @@ function processEventRecord (record, configData, authToken){
 	});
 };
 
-function checkForInterestedEvents(encodedPayload, sequenceNumber, configData)  {
+function checkForInterestedEvents(encodedPayload, sequenceNumber, configData) {
 	return new Promise((resolve, reject) => {
 		var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
@@ -150,7 +150,7 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, configData)  {
 	});
 };
 
-function processEvent (eventPayload, configData, authToken) {
+function processEvent(eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		if (eventPayload.SERVICE_CONTEXT && eventPayload.SERVICE_CONTEXT.S) {
 			if (eventPayload.EVENT_NAME.S === configData.EVENTS.create_event_name) {
@@ -178,14 +178,14 @@ function processEvent (eventPayload, configData, authToken) {
 	});
 };
 
-function handleError(errorType, message){
+function handleError(errorType, message) {
 	var error = {};
 	error.failure_code = errorType;
 	error.failure_message = message;
 	return error;
 };
 
-function getDeploymentPayload(svcContext){
+function getDeploymentPayload(svcContext) {
 	var deploymentPayload = {};
 
 	if (svcContext.domain) {
@@ -219,7 +219,7 @@ function getDeploymentPayload(svcContext){
 	return deploymentPayload;
 };
 
-function  getSvcPayload(method, payload, apiEndpoint, authToken) {
+function getSvcPayload(method, payload, apiEndpoint, authToken) {
 	var svcPayload = {
 		headers: {
 			'content-type': "application/json",
@@ -237,7 +237,7 @@ function  getSvcPayload(method, payload, apiEndpoint, authToken) {
 	return svcPayload;
 };
 
-function processRequest(svcPayload){
+function processRequest(svcPayload) {
 	return new Promise((resolve, reject) => {
 		request(svcPayload, function (error, response, body) {
 			if (response.statusCode === 200 && body) {
@@ -251,7 +251,7 @@ function processRequest(svcPayload){
 	});
 };
 
-function  processCreateEvent(eventPayload, configData, authToken) {
+function processCreateEvent(eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
 		logger.info("svcContext: " + JSON.stringify(svcContext));
@@ -271,7 +271,7 @@ function  processCreateEvent(eventPayload, configData, authToken) {
 	});
 };
 
-function  processUpdateEvent(eventPayload, configData, authToken) {
+function processUpdateEvent(eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
 		logger.info("svcContext: " + JSON.stringify(svcContext));
@@ -312,7 +312,7 @@ function getDeployments(deploymentPayload, configData, authToken) {
 	});
 };
 
-function updateDeployments(res, deploymentPayload, configData, authToken)  {
+function updateDeployments(res, deploymentPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var deploymentResults = JSON.parse(res);
 		if (deploymentResults.data && deploymentResults.data.deployments && deploymentResults.data.deployments.length > 0) {
@@ -353,7 +353,7 @@ function updateDeployments(res, deploymentPayload, configData, authToken)  {
 	});
 };
 
-function  getEventProcessStatus(){
+function getEventProcessStatus() {
 	return {
 		"processed_events": processedEvents.length,
 		"failed_events": failedEvents.length
@@ -367,7 +367,7 @@ function handleProcessedEvents(id, payload) {
 	});
 };
 
-function  handleFailedEvents(id, failure_message, payload, failure_code) {
+function handleFailedEvents(id, failure_message, payload, failure_code) {
 	failedEvents.push({
 		"sequence_id": id,
 		"event": payload,
@@ -376,7 +376,7 @@ function  handleFailedEvents(id, failure_message, payload, failure_code) {
 	});
 };
 
- const exportable= {
+const exportable = {
 	getTokenRequest,
 	getAuthResponse,
 	handleError,

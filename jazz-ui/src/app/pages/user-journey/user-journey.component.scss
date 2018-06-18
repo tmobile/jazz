@@ -82,6 +82,7 @@ $pink: #ed008c;
     opacity: 1;
     transition: opacity 300ms;
     &.hiding {
+      cursor: unset;
       opacity: 0;
     }
   }

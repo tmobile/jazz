@@ -22,7 +22,7 @@
     @version: 1.0
 **/
 
-const utils = require("../utils.js")(); 
+const utils = require("../utils.js")();
 
 module.exports = (service_id, update_data, onComplete) => {
     // initialize docCLient
@@ -41,7 +41,7 @@ module.exports = (service_id, update_data, onComplete) => {
     var attributeValues = {};
 
     // Generate filter string
-    keys_list.forEach(function(key) {
+    keys_list.forEach(function (key) {
         var key_name = utils.getDatabaseKeyName(key);
 
         if (update_data[key] !== undefined) {
@@ -55,7 +55,7 @@ module.exports = (service_id, update_data, onComplete) => {
         params.ExpressionAttributeValues = attributeValues;
         params.ReturnValues = "ALL_NEW";
 
-        docClient.update(params, function(err, data) {
+        docClient.update(params, function (err, data) {
             if (err) {
                 // database error
                 onComplete({

@@ -60,7 +60,7 @@
                     <input name="serviceName" type="text" class="textForm" placeholder="Service Name" id="service-name-search" [(ngModel)]="ServiceName" (ngModelChange)="onServiceNameChange()">
                 </div>
                 <div class="footer-btns" [class.invisible]="isLoading">
-                    <btn-jazz-primary text="DELETE" (click)="deleteServiveInit()" newclass="delete-btn" [disablePrimaryBtn]="disblebtn"></btn-jazz-primary>
+                    <btn-jazz-primary text="DELETE" (click)="deleteServiceInit()" newclass="delete-btn" [disablePrimaryBtn]="disblebtn"></btn-jazz-primary>
                     <a (click)="hideDeletePopup()">CANCEL</a>
                 </div>
             </div>
@@ -80,7 +80,7 @@
                 <h1>CONFIRMATION</h1>
                 <div class="delete-service-popup-content message">
                         <div class='oops'>Oops!</div>
-                        <div class="ctc-us">something went wrong while fetching data<br><a (click)="deleteServiveInit()">REFRESH</a> to give it another try.</div>
+                        <div class="ctc-us">something went wrong while fetching data<br><a (click)="deleteServiceInit()">REFRESH</a> to give it another try.</div>
                         <br><div class='ctc-us'>If the problem persists, <a (click)='goToAbout("about")'> contact us</a>.</div>
                 </div>
                 <div class="footer-btns" [class.invisible]="isLoading">

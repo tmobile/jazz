@@ -11,7 +11,6 @@
         "test": "mocha"
     },
     "dependencies": {
-        "json-query": "*",
         "lodash": "*",
         "moment": "*",
         "request": "*",
@@ -22,7 +21,6 @@
         "aws-sdk": "^2.245.1",
         "aws-sdk-mock": "^2.0.0",
         "chai": "^3.5.0",
-        "chai-as-promised": "^7.1.1",
         "mocha": "^v3.0.0",
         "sinon": "^5.0.7"
     }

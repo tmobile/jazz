@@ -21,7 +21,7 @@
 var request_payload = {
 	url: "",
 	headers: {
-		"kbn-xsrf": "", 
+		"kbn-xsrf": "",
 		"Content-Type": "application/json",
 		'cache-control': 'no-cache'
 	},
@@ -29,56 +29,56 @@ var request_payload = {
 	body: {}
 };
 
-var to_timestamp = function(datetime){
+var to_timestamp = function (datetime) {
 	var formattedDate = new Date(datetime);
 	return Date.parse(formattedDate);
 };
 
-var set_startdate = function (days){
+var set_startdate = function (days) {
 	var currDate = new Date();
-	var strtDate = new Date (currDate);
+	var strtDate = new Date(currDate);
 	strtDate = strtDate.setDate(currDate.getDate() - days);
 	return strtDate;
 };
 
-var set_query = function (type, value){
+var set_query = function (type, value) {
 	var query = {
-		"query_string": { 
+		"query_string": {
 			"query": type + ":" + value
-		} 
+		}
 	};
 	return query;
 };
 
-var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value){
-	var query =  {
-		"query_string": { 
+var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value) {
+	var query = {
+		"query_string": {
 			"query": type + ":" + value
-		} 
+		}
 	};
-	var requestedLogType =  LOG_LEVEL_CONFIG.filter(configObject => configObject.Type === value);
-	if(requestedLogType[0]) {
-		LOG_LEVEL_CONFIG.map(function(configObject) {
+	var requestedLogType = LOG_LEVEL_CONFIG.filter(configObject => configObject.Type === value);
+	if (requestedLogType[0]) {
+		LOG_LEVEL_CONFIG.map(function (configObject) {
 			if (configObject.Level <= parseInt(requestedLogType[0].Level)) {
 				query.query_string.query = query.query_string.query + " OR " + configObject.Type;
 			}
 		});
-	} 
+	}
 	return query;
 };
 
 var response_model = {
-	"count" : "",
-	"logs" : []
+	"count": "",
+	"logs": []
 };
 
 module.exports = (formats) => {
-  return {
-	  "requestLoad" : request_payload,
-	  "setStartDate" : set_startdate,
-	  "setQuery" : set_query,
-	  "setLogLevelQuery" : set_log_level_query,
-	  "toTimestamp" : to_timestamp,
-	  "responseModel" : response_model
+	return {
+		"requestLoad": request_payload,
+		"setStartDate": set_startdate,
+		"setQuery": set_query,
+		"setLogLevelQuery": set_log_level_query,
+		"toTimestamp": to_timestamp,
+		"responseModel": response_model
 	};
 };

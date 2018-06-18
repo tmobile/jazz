@@ -22,7 +22,7 @@
     @version: 1.0
  **/
 
-const utils = require("../utils.js")(); //Import the utils module.
+const utils = require("../utils.js"); //Import the utils module.
 const logger = require("../logger.js")(); //Import the logging module.
 
 module.exports = (tableName, query, onComplete) => {
@@ -88,7 +88,7 @@ module.exports = (tableName, query, onComplete) => {
             if (err) {
                 onComplete(err);
             } else {
-                var items_formatted = (data.Items.map((item) => utils.formatData(item)));
+                var items_formatted = (data.Items.map((item) => utils.formatData(item, true)));
                 if (data.LastEvaluatedKey) {
                     scanparams.ExclusiveStartKey = data.LastEvaluatedKey;
                     scanExecute(onComplete);

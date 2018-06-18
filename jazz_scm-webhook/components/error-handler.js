@@ -30,7 +30,7 @@ module.exports = () => {
                 message: errorMessage.toString()
             };
         },
-        throwForbiddenError: function(errorMessage) { //Raise not found exceptions
+        throwForbiddenError: function (errorMessage) { //Raise not found exceptions
             return {
                 errorType: "Forbidden",
                 message: errorMessage.toString()
