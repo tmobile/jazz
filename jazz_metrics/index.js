@@ -25,7 +25,6 @@ const responseObj = require("./components/response.js"); //Import the response m
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js")(); //Import the logging module.
 const aws = require("aws-sdk"); //Import the secret-handler module.
-const async = require("async");
 const request = require('request');
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
@@ -73,7 +72,7 @@ module.exports.handler = (event, context, cb) => {
             } else{
                 return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics" )));
             }
-        });        
+        });
     } catch (e) {
         return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
     }
@@ -118,10 +117,10 @@ function getAssetsDetails(config, eventBody) {
             json: true,
             body: asset_api_payload,
         };
-    
+
         logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
-    
-        
+
+
         request(asset_api_options, function (error, response, body) {
             if(error) {
                 reject(error);
@@ -181,7 +180,7 @@ function validateAssets(assetsArray, eventBody) {
                     var paramMetrics = [];
                     var missingAssetNameFields;
                     var intervalPeriod = '';
-                    var assetNameObj = assetItem.asset_name;    
+                    var assetNameObj = assetItem.asset_name;
                     var getAssetNameDetails = utils.getNameSpaceAndMetriDimensons(assetItem.type);
 
                     commonParam.Namespace = getAssetNameDetails.awsNameSpace;
@@ -197,7 +196,7 @@ function validateAssets(assetsArray, eventBody) {
                         });
                     }
 
-                    // Forming the Dimension array from assetNameObj 
+                    // Forming the Dimension array from assetNameObj
                     paramMetrics.forEach(function(arrayItem) {
                         var clonedObj = {};
                         for(var key in commonParam){
@@ -218,9 +217,9 @@ function validateAssets(assetsArray, eventBody) {
                                     }
                                     else if(clonedObj.MetricName === "NumberOfObjects"){
                                         obj.Value = "AllStorageTypes";
-                                    } 
+                                    }
                                 }
-                                
+
                                 clonedObj.Dimensions.push(obj);
                                 minCount++;
                             }
@@ -238,7 +237,7 @@ function validateAssets(assetsArray, eventBody) {
                     // Creation of Metric array input for a particular asset
                     newAssetArray.push({"actualParam":actualParam,"userParam":assetItem});
                     resolve(newAssetArray);
-                }           
+                }
             });
         } else {
             reject ({
@@ -288,7 +287,7 @@ function cloudWatchDetails(assetParam, cloudwatch) {
                             "result": "serverError",
                             "message": "Unknown internal error occurred"});
                     }
-                    
+
                 }
                 else {
                     metricsStats.push(data);
@@ -299,6 +298,6 @@ function cloudWatchDetails(assetParam, cloudwatch) {
                 }
             });
         });
-       
+
     });
 }
