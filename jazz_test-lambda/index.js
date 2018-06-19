@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-Nodejs Template Project
+API to test lambda function and send back execution status
 @author:
 @version: 1.0
  **/
@@ -64,18 +64,17 @@ var handler = (event, context, cb) => {
       if (data && data.StatusCode >= 200 && data.StatusCode < 299) {
         testResponse.payload = data;
         if (!data.FunctionError) {
-          //Function Executed Succesfully Without Error
           testResponse.execStatus = execStatus.success;
         } else {
           if (data.FunctionError === "Handled") {
             testResponse.execStatus = execStatus.handledError;
           } else if (data.FunctionError === "Unhandled") {
-            // Function Execution Had Unhandled Error
             testResponse.execStatus = execStatus.unhandledError;
           }
         }
       } else {
         // Function Falied |Cause Unknown|TEST FAILED
+        logger.error("Internal Error :", data);
         return cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown internal error occurred when invoking " + functionARN)));
       }
       testResponse.payload = data;
@@ -103,16 +102,16 @@ var invokeLambda = (functionARN, inputJSON, awsRegion) => {
         Payload: JSON.stringify(inputJSON)
       }, function (error, data) {
         if (error) {
-          logger.error("Error In Lambda Execution:", error);
+          logger.error("Error in lambda execution:", error);
           reject(error);
         } else {
-          logger.debug("Lambda Executed Succesfully:", data);
+          logger.debug("Lambda executed successfully:", data);
           resolve(data);
         }
       });
     } catch (e) {
       logger.error(e);
-      reject("Error In Invoking Lambda");
+      reject("Error in invoking lambda");
     }
   });
 };
