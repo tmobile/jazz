@@ -1,6 +1,5 @@
 {
-  "DELETE_SERVICE_JOB_URL":"",
-  "JOB_TOKEN":"tst-4444-iceKing",
-  "SVC_USER":"{ci_user}",
-  "SVC_PASWD":"{ci_pwd}"
+    "DELETE_SERVICE_JOB_URL": "",
+    "JOB_TOKEN": "tst-4444-iceKing",
+    "SVC_USER": "{ci_user}"
 }

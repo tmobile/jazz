@@ -45,28 +45,32 @@
             Looks like this environment is inactive, related assets might not be available during this time.
     </div>
     <div class="tab-component" [class.oss]='isOSS'>
+      <div class="refresh-button" (click)="refreshTab()">
+        <span class="icon-icon-refresh"></span>
+        <span>Refresh</span>
+      </div>
         <tabs [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
         
         
         <section class="page-content" *ngIf="selectedTab == 0">
-            <env-overview-section #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service"></env-overview-section>
+            <env-overview-section #selectedTabComponent #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service"></env-overview-section>
         </section>
 
         
         <section class="page-content" *ngIf="selectedTab == 1">
-            <env-deployments-section #envdeployments [service]="service"></env-deployments-section>
+            <env-deployments-section #selectedTabComponent #envdeployments [service]="service"></env-deployments-section>
         </section>
 
         <section class="page-content" *ngIf="selectedTab == 2">
-                <env-codequality-section [service]="service"></env-codequality-section>
+                <env-codequality-section #selectedTabComponent [service]="service"></env-codequality-section>
             </section>
 
         <section class="page-content" *ngIf="selectedTab == 3">
-            <env-assets-section [service]="service"></env-assets-section>
+            <env-assets-section #selectedTabComponent [service]="service"></env-assets-section>
         </section>
 
         <section class="page-content" *ngIf="selectedTab == 4">
-            <env-logs-section [service]="service"></env-logs-section>
+            <env-logs-section #selectedTabComponent [service]="service"></env-logs-section>
         </section>
 </div>
 </div>

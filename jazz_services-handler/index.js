@@ -20,14 +20,13 @@
   @version: 1.0
 **/
 
+const _ = require("lodash");
+const rp = require('request-promise-native');
+
 const config = require('./components/config.js'); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const AWS = require('aws-sdk');
-const rp = require('request-promise-native');
 const errorHandlerModule = require("./components/error-handler.js");
-const request = require('request');
-const _ = require("lodash");
-const scEvents = require('./utils/service-creation-events.js');
+
 const fcodes = require('./utils/failure-codes.js');
 const crud = require("./components/crud")(); //Import the utils module.
 
@@ -299,7 +298,6 @@ var getServiceContext = function (svcContext) {
 
 	return json;
 }
-
 
 var handleFailedEvents = function (id, failure_message, payload, failure_code) {
 	failedEvents.push({

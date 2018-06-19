@@ -9,10 +9,6 @@
     "test": "mocha"
   },
   "dependencies": {
-    "request": "*",
-    "deasync": "*",
-    "async": "*",
-    "jsonwebtoken": "*",
     "amazon-cognito-identity-js": "^1.19.0"
   },
   "devDependencies": {

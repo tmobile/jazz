@@ -2,6 +2,7 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import groovy.transform.Field
+import jenkins.security.*
 
 echo "Service configuration module loaded successfully"
 
@@ -76,23 +77,23 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 
-			//TODO: figure out the correct values to enter for sonar
-			sh "sed -i -- 's/{sonar_url}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{sonar_url}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{sonar_url}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{sonar_hostname}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{sonar_hostname}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{sonar_hostname}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/prod-config.json"
 
-			//TODO: figure out the correct values to enter for sonar
-			sh "sed -i -- 's/{sonar_user}/${config_loader.CODE_QUALITY.SONAR.USER}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{sonar_user}/${config_loader.CODE_QUALITY.SONAR.USER}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{sonar_user}/${config_loader.CODE_QUALITY.SONAR.USER}/g' ./config/prod-config.json"
-
-			sh "sed -i -- 's/{sonar_creds}/${config_loader.CODE_QUALITY.SONAR.ADMIN}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{sonar_creds}/${config_loader.CODE_QUALITY.SONAR.ADMIN}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{sonar_creds}/${config_loader.CODE_QUALITY.SONAR.ADMIN}/g' ./config/prod-config.json"
-
-			sh "sed -i -- 's/{sonar_project_key}/${config_loader.CODE_QUALITY.SONAR.PROJECT_KEY}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{sonar_project_key}/${config_loader.CODE_QUALITY.SONAR.PROJECT_KEY}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{sonar_project_key}/${config_loader.CODE_QUALITY.SONAR.PROJECT_KEY}/g' ./config/prod-config.json"
+			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.CODE_QUALITY.SONAR.ADMIN_SONAR_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+			    sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/prod-config.json"
+		
+				sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/prod-config.json"
+			}
+			
+			sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/prod-config.json"
 
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
@@ -262,11 +263,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-			
-			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-			
+						
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
@@ -285,19 +282,22 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
 
+			sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{api_token}/${getApiToken()}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{api_token}/${getApiToken()}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{api_token}/${getApiToken()}/g' ./config/prod-config.json"
+
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 
 			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
-    
 			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/dev-config.json"
 			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/stg-config.json"
 			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/prod-config.json"
-
-			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/dev-config.json"
-			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/stg-config.json"
-			    sh "sed -i -- 's/{ci_pwd}/${PWD}/g' ./config/prod-config.json"
 			}
 		}
 
@@ -429,5 +429,15 @@ def setLogStreamPermission(config){
 		}
 	}
 }
+
+def getApiToken(){    
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "jobexecutor", passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+		User u = User.get(UNAME)  
+		ApiTokenProperty t = u.getProperty(ApiTokenProperty.class)  
+		def token = t.getApiToken()
+		return token
+	}
+}
+
 
 return this

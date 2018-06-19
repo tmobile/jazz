@@ -22,11 +22,9 @@
  */
 
 'use strict';
+
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
-
-const request = require('request');
-
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const utils = require("./components/utils.js")();
@@ -69,7 +67,7 @@ module.exports.handler = (event, context, cb) => {
                 logger.error("Error occured while fetching from service catalog: " + error);
                 return cb(JSON.stringify(errorHandler.throwInternalServerError("104", "Unknown internal error")));
             } else {
-                return cb(null, responseObj({available: !data.isExists}, input));
+                return cb(null, responseObj({ available: !data.isExists }, input));
             }
         });
     } catch (e) {

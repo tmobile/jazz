@@ -35,7 +35,7 @@ USAGE
     logger.log('info', 'message');
 
 */
-module.exports = function() {
+module.exports = function () {
     const logLevels = {
         error: 4,
         warn: 3,
