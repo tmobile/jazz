@@ -1,5 +1,5 @@
 {
-    "ddb_region": "{conf-region}",
-    "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
-    "ASSETS_URL": "/stg/jazz/assets/search"
-  }
+  "ddb_region": "{conf-region}",
+  "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "ASSETS_URL": "/stg/jazz/assets/search"
+}

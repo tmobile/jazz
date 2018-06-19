@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -25,125 +25,125 @@
 const global_config = require("../config/global-config.json");
 const _ = require("lodash");
 
-var validateGeneralFields = function(input){
-    var required_fields = global_config.REQUIRED_FIELDS;
-    return new Promise((resolve, reject) => {
-        validateIsEmptyInputData(input)
-        .then(() => validateRequiredFields(input, required_fields))
-        .then(() => validateAllRequiredFieldsValue(input, required_fields))
-        .then(() => validateMetricsInput(input))
-        .then(res => {
-            resolve(res);
-        })
-        .catch(error => {
-            reject(error);
-        })
-    });
+var validateGeneralFields = function (input) {
+  var required_fields = global_config.REQUIRED_FIELDS;
+  return new Promise((resolve, reject) => {
+    validateIsEmptyInputData(input)
+      .then(() => validateRequiredFields(input, required_fields))
+      .then(() => validateAllRequiredFieldsValue(input, required_fields))
+      .then(() => validateMetricsInput(input))
+      .then(res => {
+        resolve(res);
+      })
+      .catch(error => {
+        reject(error);
+      })
+  });
 }
 
 var validateIsEmptyInputData = (input) => {
-    return new Promise((resolve, reject) => {
-        if (Object.keys(input).length === 0) {
-            reject({
-                result: "inputError",
-                message: "Input payload cannot be empty"
-            });
-        } else {
-            resolve({
-                result: "success",
-                input: input
-            });
-        } 
-    });
+  return new Promise((resolve, reject) => {
+    if (Object.keys(input).length === 0) {
+      reject({
+        result: "inputError",
+        message: "Input payload cannot be empty"
+      });
+    } else {
+      resolve({
+        result: "success",
+        input: input
+      });
+    }
+  });
 }
 
-var validateRequiredFields = function(input,required_fields){
-    return new Promise((resolve, reject) => {
-        var missing_required_fields = _.difference(_.values(required_fields), _.keys(input));
-        if(missing_required_fields.length > 0){
-            var message = "Following field(s) are required - " + missing_required_fields.join(", ");
-            reject({
-                result: "inputError",
-                message: message
-            });
-        } else {
-            resolve({
-                result: "success",
-                input: input
-            });
-        }
-    });
+var validateRequiredFields = function (input, required_fields) {
+  return new Promise((resolve, reject) => {
+    var missing_required_fields = _.difference(_.values(required_fields), _.keys(input));
+    if (missing_required_fields.length > 0) {
+      var message = "Following field(s) are required - " + missing_required_fields.join(", ");
+      reject({
+        result: "inputError",
+        message: message
+      });
+    } else {
+      resolve({
+        result: "success",
+        input: input
+      });
+    }
+  });
 }
 
 var validateAllRequiredFieldsValue = (input, required_fields) => {
-    return new Promise((resolve, reject) => {
-        var invalid_required_fields = [];
-        required_fields.map((value) => {
-            if (!input[value]) {
-                invalid_required_fields.push(value);
-            }
-        });
-
-        if (invalid_required_fields.length > 0) {
-            var message = "Following field(s) value cannot be empty - " + invalid_required_fields.join(", ");
-            reject({
-                result: "inputError",
-                message: message
-            });
-        } else {
-            resolve({
-                result: "success",
-                input: input
-            });
-        }
+  return new Promise((resolve, reject) => {
+    var invalid_required_fields = [];
+    required_fields.map((value) => {
+      if (!input[value]) {
+        invalid_required_fields.push(value);
+      }
     });
+
+    if (invalid_required_fields.length > 0) {
+      var message = "Following field(s) value cannot be empty - " + invalid_required_fields.join(", ");
+      reject({
+        result: "inputError",
+        message: message
+      });
+    } else {
+      resolve({
+        result: "success",
+        input: input
+      });
+    }
+  });
 };
 
-function validateMetricsInput (data){
-    return new Promise((resolve, reject) => {
-        var statistics_type = global_config.STATISTICS_TYPE;
-        var patternUTC = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]{0,3})?Z?$/;
-        data.statistics = data.statistics.toLowerCase();
+function validateMetricsInput(data) {
+  return new Promise((resolve, reject) => {
+    var statistics_type = global_config.STATISTICS_TYPE;
+    var patternUTC = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]{0,3})?Z?$/;
+    data.statistics = data.statistics.toLowerCase();
 
-        if(data.interval % 60 !== 0){
-            reject({
-                result: "inputError",
-                message: "Invalid interval value"
-            });
-        }
-        
-        if(!(patternUTC.test(data.end_time))){
-            reject({
-                result: "inputError",
-                message: "Invalid end_time"
-            });
-        }
-        
-        if(!(patternUTC.test(data.start_time))){
-            reject({
-                result: "inputError",
-                message: "Invalid start_time"
-            });
-        }
+    if (data.interval % 60 !== 0) {
+      reject({
+        result: "inputError",
+        message: "Invalid interval value"
+      });
+    }
 
-        if( data.start_time > data.end_time ){
-            reject({
-                result: "inputError",
-                message: "start_time should be less than end_time"
-            });
-        }
+    if (!(patternUTC.test(data.end_time))) {
+      reject({
+        result: "inputError",
+        message: "Invalid end_time"
+      });
+    }
 
-        if(statistics_type.indexOf(data.statistics) === "-1"){
-            reject({
-                result: "inputError",
-                message: "Invalid statistics type"
-            });
-        }
+    if (!(patternUTC.test(data.start_time))) {
+      reject({
+        result: "inputError",
+        message: "Invalid start_time"
+      });
+    }
 
-        resolve(data);
-    });
+    if (data.start_time > data.end_time) {
+      reject({
+        result: "inputError",
+        message: "start_time should be less than end_time"
+      });
+    }
+
+    if (statistics_type.indexOf(data.statistics) === "-1") {
+      reject({
+        result: "inputError",
+        message: "Invalid statistics type"
+      });
+    }
+
+    resolve(data);
+  });
 };
 
 module.exports = {
-    validateGeneralFields
+  validateGeneralFields
 }
