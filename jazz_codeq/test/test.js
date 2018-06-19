@@ -296,12 +296,12 @@ describe('validation tests', () => {
 		const from = '2018-05-11';
 		let validFrom = validation.validateFromDate(from);
 
-		expect(validFrom).to.eql("2018-05-11T12:00:00-0000");
+		expect(validFrom).to.eql("2018-05-11T00:00:00-0000");
 	});
 	
 	it('should return default date when from is not provided', () => {
 		const validFrom = validation.validateFromDate();
-		const DATE_FORMAT = 'YYYY-MM-DDThh:mm:ss';
+		const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss';
 		const APPEND_ZEROES = '-0000';
 		let expectedResult = moment().subtract(1, 'days').format(DATE_FORMAT) + APPEND_ZEROES;
 
@@ -318,12 +318,12 @@ describe('validation tests', () => {
 		const to = '2018-05-11';
 		let validFrom = validation.validateToDate(to);
 
-		expect(validFrom).to.eql("2018-05-11T12:00:00-0000");
+		expect(validFrom).to.eql("2018-05-11T00:00:00-0000");
 	});
 	
 	it('should return default to date when to date is not provided', () => {
 		const validFrom = validation.validateToDate();
-		const DATE_FORMAT = 'YYYY-MM-DDThh:mm:ss';
+		const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss';
 		const APPEND_ZEROES = '-0000';
 		let expectedResult = moment().format(DATE_FORMAT) + APPEND_ZEROES;
 
