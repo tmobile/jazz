@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,22 +14,16 @@
 // limitations under the License.
 // =========================================================================
 
-/**
-    Validate functions for deployments catalog
-    @module: index.js
-    @description: Validation Utility functions.
-	@author: 
-	@version: 1.0
-**/
 
-var _validateCreatePayload = require("./validate_create_payload");
-var _validateUpdatePayload = require("./validate_update_payload");
-var _validateDeployment = require("./validate_list_payload");
+var failureCodeENUM = {
+  DB_ERROR_1 : {type: "DB_ERROR", code: "DB_WRITE", message: "Error storing data in database"},
+	DB_ERROR_2 : {type: "DB_ERROR", code: "DB_LOOKUP", message: "Error reading database"},
+	PR_ERROR_1 : {type: "PROCESSING_ERROR", code: "SCHEMA_VALIDATION", message: "Unable to process event data"},
+	PR_ERROR_2 : {type: "PROCESSING_ERROR", code: "UNKNOWN", message: "Unknown error"},
+	PR_ERROR_3 : {type: "PROCESSING_ERROR", code: "INTERNAL", message: "Internal Server error"},
+	PR_ERROR_4 : {type: "PROCESSING_ERROR", code: "NOT_FOUND", message: "Not Found error"},
+};
 
 module.exports = () => {
-    return {
-        validateCreatePayload: _validateCreatePayload,
-        validateUpdatePayload: _validateUpdatePayload,
-        validateDeployment: _validateDeployment,
-    };
+    return  failureCodeENUM;
 };

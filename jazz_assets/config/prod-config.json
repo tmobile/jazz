@@ -1,0 +1,4 @@
+{
+    "ASSETS_TABLE": "{conf_stack_prefix}_Assets_Prod",
+    "DDB_REGION": "{conf-region}"
+}

@@ -1,0 +1,25 @@
+{
+    "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+    "ASSETS_API_RESOURCE": "/stg/jazz/assets",
+    "ASSETS_API_SEARCH_RESOURCE": "/stg/jazz/assets/search",
+    "EVENTS": {
+        "EVENT_TYPE": [
+            "SERVICE_DEPLOYMENT",
+            "SERVICE_ONBOARDING",
+            "SERVICE_DELETION"
+        ],
+        "EVENT_NAMES": [
+            "CREATE_ASSET",
+            "UPDATE_ASSET"
+        ],
+        "EVENT_STATUS": {
+            "COMPLETED": "ACTIVE",
+            "DELETED": "DELETED"
+        },
+        "CREATE_ASSET": "CREATE_ASSET",
+        "UPDATE_ASSET": "UPDATE_ASSET"
+    },
+    "TOKEN_URL": "/dev/jazz/login",
+    "SERVICE_USER": "{jazz_admin}",
+    "TOKEN_CREDS": "{jazz_admin_creds}"
+}

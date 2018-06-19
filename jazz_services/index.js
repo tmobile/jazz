@@ -20,6 +20,8 @@
   @version: 1.0
 **/
 
+const async = require('async');
+
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const configObj = require("./components/config.js");
@@ -28,8 +30,6 @@ const utils = require("./components/utils.js")();
 const crud = require("./components/crud")();
 const global_config = require("./config/global-config.json");
 const validateUtils = require("./components/validation")();
-
-const async = require('async');
 
 module.exports.handler = (event, context, cb) => {
 
@@ -40,7 +40,7 @@ module.exports.handler = (event, context, cb) => {
     global.config = config;
     global.global_config = global_config;
 
-    var handleResponse = function(error, data, input) {
+    var handleResponse = function (error, data, input) {
         if (error) {
             logger.error(JSON.stringify(error));
             if (error.result === "inputError") {
@@ -82,11 +82,11 @@ module.exports.handler = (event, context, cb) => {
 
         global.userId = event.principalId;
         var getAllRecords;
-        if(event.query && event.query.isAdmin){
-          getAllRecords = true;
+        if (event.query && event.query.isAdmin) {
+            getAllRecords = true;
         }
-        else{
-          getAllRecords = false;
+        else {
+            getAllRecords = false;
         }
 
         // 1: GET service by id (/services/{service_id})
@@ -95,23 +95,23 @@ module.exports.handler = (event, context, cb) => {
 
             async.series({
                 // Get service by SERVICE_ID
-                getServiceByServiceId: function(onComplete) {
+                getServiceByServiceId: function (onComplete) {
                     validateUtils.validateServiceWithServiceId(service_id, function onValidate(error, data) {
                         onComplete(error, data);
                     });
                 }
-            }, function(error, data) {
+            }, function (error, data) {
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
-                    
+
                 }
-                if(data.getServiceByServiceId){
+                if (data.getServiceByServiceId) {
                     var service_obj = data.getServiceByServiceId;
                     logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
                     return handleResponse(error, data.getServiceByServiceId.data, event.path);
-                } else{
+                } else {
                     return handleResponse(error, data, event.path);
-                }                
+                }
             });
         }
 
@@ -122,19 +122,19 @@ module.exports.handler = (event, context, cb) => {
             // logger.info('GET services');
             async.series({
                 // fetch services list from dynamodb, filter if required
-                fetchServices: function(onComplete) {
+                fetchServices: function (onComplete) {
                     var query = event.query;
                     crud.getList(query, getAllRecords, onComplete);
                 }
-            }, function(error, result) {           
+            }, function (error, result) {
                 // Handle error
                 if (error) {
                     logger.error('Error occured. ' + JSON.stringify(error, null, 2));
                     return handleResponse(error, result.fetchServices, event.query);
-                } else{
+                } else {
                     var data = result.fetchServices;
                     return handleResponse(error, data, event.query);
-                } 
+                }
             });
         }
 
@@ -147,13 +147,13 @@ module.exports.handler = (event, context, cb) => {
             var update_data = event.body;
 
             async.series({
-                validate:  function(callback){
+                validate: function (callback) {
                     validateUtils.validateUpdatePayload(service_id, update_data, function onValidate(error, data) {
                         callback(error, data);
                     });
                 },
                 // Update service by SERVICE_ID
-                updateServiceDataByServiceId: function(onComplete) {
+                updateServiceDataByServiceId: function (onComplete) {
                     var new_update_data = utils.getUpdateData(update_data);
                     if (new_update_data) {
                         crud.update(service_id, new_update_data, function onUpdate(error, data) {
@@ -167,7 +167,7 @@ module.exports.handler = (event, context, cb) => {
                         });
                     }
                 }
-            }, function(error, data) {
+            }, function (error, data) {
                 // Handle error
                 if (error) {
                     logger.error('Error while updating service ' + JSON.stringify(error));
@@ -175,7 +175,7 @@ module.exports.handler = (event, context, cb) => {
                 } else {
                     var updatedService = data.updateServiceDataByServiceId;
                     logger.info('Updated service');
-                    return handleResponse(error,{ 'message': 'Successfully Updated service with id: ' + service_id, 'updatedService': updatedService }, event.body);
+                    return handleResponse(error, { 'message': 'Successfully updated service with id: ' + service_id, 'updatedService': updatedService }, event.body);
                 }
 
             });
@@ -189,23 +189,23 @@ module.exports.handler = (event, context, cb) => {
 
             async.series({
                 // Check if service exists
-                validateServiceExists: function(onComplete) {
+                validateServiceExists: function (onComplete) {
                     validateUtils.validateServiceWithServiceId(service_id, function onValidate(error, data) {
                         onComplete(error, data);
                     });
                 },
                 // Delete service by SERVICE_ID
-                deleteServiceByID: function(onComplete) {
+                deleteServiceByID: function (onComplete) {
                     crud.delete(service_id, onComplete);
                 }
             }, function onComplete(error, data) {
                 // Handle error
-                if(error){
+                if (error) {
                     logger.error('Error in DeleteItem: ' + JSON.stringify(error, null, 2));
                     return handleResponse(error, data, event.path);
-                } else{
+                } else {
                     logger.info("DeleteItem succeeded");
-                    return handleResponse(error, { 'message': 'Service Successfully Deleted' }, event.path);
+                    return handleResponse(error, { 'message': 'Service deleted successfully.' }, event.path);
                 }
             });
         }
@@ -213,30 +213,30 @@ module.exports.handler = (event, context, cb) => {
 
         // Create new service
         // 6: POST a service (/services)
-        if (event.method === 'POST' && !service_id) {            
+        if (event.method === 'POST' && !service_id) {
             var service_data = Object.assign({}, event.body);
             logger.info("Create a new service with the following payload data : " + JSON.stringify(service_data));
 
             async.series({
                 // Validate service_data for adding new service
 
-                validate: function(callback){
-                    validateUtils.validateCreatePayload(service_data,function onValidate(error, data) {
+                validate: function (callback) {
+                    validateUtils.validateCreatePayload(service_data, function onValidate(error, data) {
                         callback(error, data);
                     });
                 },
-                
+
                 // Add new service data to the dynamodb
-                addNewService: function(onComplete) {
+                addNewService: function (onComplete) {
                     crud.create(service_data, onComplete);
                 }
-            }, function(error, data) {
+            }, function (error, data) {
                 // Handle error
                 if (error) {
                     logger.error('error occured while adding new service');
                     logger.error(error.result);
                     return handleResponse(error, data, service_data);
-                } else{
+                } else {
                     // data is now equal to: {validateServiceData: 1, addNewService: 2}
                     var result = data.addNewService;
                     // Add Item success
@@ -249,6 +249,6 @@ module.exports.handler = (event, context, cb) => {
         //Sample Error response for internal server error
         logger.error("Internal server error");
         logger.error(e);
-        return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected Error occured")));
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected error occured")));
     }
 };

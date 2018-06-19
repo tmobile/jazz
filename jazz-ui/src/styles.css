@@ -612,7 +612,7 @@ html.jazz {
 
 .icon-logo-azure .path1:before {
     content: "\e91b";
-     color: rgb(0, 173, 239); 
+     color: rgb(0, 173, 239);
 }
 
 .icon-logo-azure .path2:before {
@@ -2490,28 +2490,67 @@ html.jazz {
 
   .icon-Deployed:before {
     content: "\eaa9";
-    
+
     font-size:2rem;
-    
+
   }
 
   .icon-Failed:before {
     content: "\eaaa";
-    
+
     font-size:2rem;
-    
+
   }
 
   .icon-In-Progress:before {
     content: "\eaab";
     color: #f5a623;
     font-size:2rem;
-    
+
   }
 
   .icon-icon-inactive:before {
     content: "\eaac";
     color: rgb(208, 2, 27);
     /* font-size:2rem; */
-    
+
   }
+
+.user-journey-btn {
+    padding: 6px 12px;
+    outline: none;
+    border: 1px solid #ed008c;
+    border-radius: 30px;
+    height: 40px;
+    width: 150px;
+    color: white;
+    background-color: #ed008c;
+    transition: background-color 200ms, color 200ms, transform 500ms;
+}
+
+.user-journey-btn:hover, .user-journey-btn:active {
+    background-color: white;
+    border: 1px solid white;
+    color: #ed008c;
+    outline: none;
+}
+
+.user-journey-btn.secondary {
+    color: #ed008c;
+    background-color: white;
+    border: 1px solid #ed008c;
+}
+
+.user-journey-btn.secondary:hover, .user-journey-btn.secondary:active {
+    color: white;
+    background-color: #ed008c;
+}
+
+.user-journey-btn.message-button {
+    height: initial;
+    width: initial;
+    margin: 0 10px;
+    font-size: 10px;
+    padding: 3px 6px;
+    transform: translateY(-4px);
+}

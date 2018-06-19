@@ -1,16 +1,30 @@
-const config = require('./components/config.js'); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
+// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
 const async = require("async");
 const AWS = require('aws-sdk');
-const errorHandlerModule = require("./components/error-handler.js");
-const fcodes = require('./utils/failure-codes.js');
 
+const config = require('./components/config.js'); 
+const logger = require("./components/logger.js"); 
+const fcodes = require('./utils/failure-codes.js');
 
 module.exports.handler = (event, context, cb) => {
 
 	//Initializations
 	var configData = config(context);
-	var errorHandler = errorHandlerModule(logger);
 	const dynamodb = new AWS.DynamoDB();
 	var processedEvents = [];
 	var failedEvents = [];
@@ -18,7 +32,7 @@ module.exports.handler = (event, context, cb) => {
 	var docClient = new AWS.DynamoDB.DocumentClient();
 	var interestedEvents = [];
 	var failureCodes = fcodes();
-	
+
 	async.series({
 		getEvents: function (callback) {
 			var params = {
@@ -39,7 +53,7 @@ module.exports.handler = (event, context, cb) => {
 						for (i = 0; i < result.Items.length; i++) {
 							interestedEvents.push(result.Items[i].EVENT_NAME);
 						}
-						
+
 						if (result.LastEvaluatedKey) {
 							params.ExclusiveStartKey = result.LastEvaluatedKey;
 							scanExecute(callback);
@@ -55,9 +69,9 @@ module.exports.handler = (event, context, cb) => {
 		processRecords: function (callback) {
 			async.each(event.Records, function (record, innerCallback) {
 				var sequenceNumber = record.kinesis.sequenceNumber;
-				var encodedPayload = record.kinesis.data;					
+				var encodedPayload = record.kinesis.data;
 				var payload = new Buffer(encodedPayload, 'base64').toString('ascii');
-				
+
 				if (interestedEvents.indexOf(record.kinesis.partitionKey) !== -1) {
 					var params = JSON.parse(payload);
 					params.ReturnConsumedCapacity = "TOTAL";
@@ -67,9 +81,9 @@ module.exports.handler = (event, context, cb) => {
 						if (err) {
 							logger.error('Unable to store event in events table, message: ' + JSON.stringify(err));
 							failedEvents.push({
-								"sequence_id" : sequenceNumber,
+								"sequence_id": sequenceNumber,
 								"event": payload,
-								"failure_code" : failureCodes.DB_ERROR_1.code,
+								"failure_code": failureCodes.DB_ERROR_1.code,
 								"failure_message": failureCodes.DB_ERROR_1.message
 							});
 							innerCallback({
@@ -81,7 +95,7 @@ module.exports.handler = (event, context, cb) => {
 							processedEvents.push({
 								"sequence_id": sequenceNumber,
 								"event": payload,
-								"failure_code" : null,
+								"failure_code": null,
 								"failure_message": null
 							});
 							innerCallback(null, {
@@ -94,7 +108,7 @@ module.exports.handler = (event, context, cb) => {
 					processedEvents.push({
 						"sequence_id": sequenceNumber,
 						"event": payload,
-						"failure_code" : null,
+						"failure_code": null,
 						"failure_message": null
 					});
 					logger.info('Skipping storage of un-interested event');
@@ -110,6 +124,10 @@ module.exports.handler = (event, context, cb) => {
 		}
 
 	}, function (err, results) {
+		if (err) {
+			return logger.error('Error inside events handler ' + JSON.stringify(err));
+		}
+		
 		cb(null, {
 			"processed_events": processedEvents.length,
 			"failed_events": failedEvents.length

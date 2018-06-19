@@ -132,6 +132,13 @@ export class EnvAssetsSectionComponent implements OnInit {
 		},5000);
    }
 
+  refresh() {
+    this.envResponseEmpty = false;
+    this.envResponseError = false;
+    this.envResponseTrue = false;
+    this.callServiceEnvAssets();
+  }
+
 
 	 getFilter(filterServ){
 	
@@ -213,7 +220,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 					this.assetsList = response.data;
 					
 					for(var i=0; i < this.length ; i++){
-						this.type[i] = response.data[i].type;
+						this.type[i] = response.data[i].asset_type;
 						
 						this.slNumber[i] = (i+1);
 						if( response.data[i].provider == undefined ){
@@ -464,5 +471,15 @@ public goToAbout(hash){
 	this.cache.set('scroll_flag',true);
 	this.cache.set('scroll_id',hash);
 }
+
+  public assetTypeToLabel(type) {
+    switch(type) {
+      case 'swagger_url':
+      case 'endpoint_url':
+        return 'URL';
+      default:
+        return 'ARN';
+    }
+  }
 
 }

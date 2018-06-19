@@ -31,22 +31,15 @@ node {
   }
 
   stage('Triggering the Jenkins build') {
-    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
-    echo "Build triggered via branch::${env.BRANCH_NAME}"
-
-    def build_job = config_loader.API.API_BUILD_URI
-    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
-
-    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name={service_name}&domain={domain}&scm_branch=${env.BRANCH_NAME}\""
-    }
+    build job: "${config_loader.JENKINS.BUILD_URI.API}", parameters: [string(name: 'service_name', value: '{service_name}'), string(name: 'domain', value: '{domain}'), string(name: 'scm_branch', value: "${env.BRANCH_NAME}")], wait: false
   }
 }
 
 def getBuildModuleUrl() {
-    if (scm_type && scm_type != "bitbucket") {
-      // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
-    }else {
-      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    } 
-} 
+  if (scm_type && scm_type != "bitbucket") {
+    // right now only bitbucket has this additional tag scm in its git clone path
+    return "http://${repo_base}/${repo_core}/jazz-build-module.git"
+  } else {
+    return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+  }
+}

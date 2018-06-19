@@ -22,7 +22,6 @@ Jazz User Management service
 
 const _ = require("lodash");
 
-const request = require('request');
 const AWS = require('aws-sdk');
 const rp = require('request-promise-native');
 
@@ -35,18 +34,18 @@ const scmFactory = require("./scm/scmFactory.js");
 
 module.exports.handler = (event, context, cb) => {
 
-  	var errorHandler = errorHandlerModule();
-  	logger.init(event, context);
-  
-  	var config = configObj(event);
+	var errorHandler = errorHandlerModule();
+	logger.init(event, context);
 
-  	if (!config || config.length) {
-	  	logger.error("Cannot load config object, will stop processing");
+	var config = configObj(event);
+
+	if (!config || config.length) {
+		logger.error("Cannot load config object, will stop processing");
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Internal error, please reach out to admins")));
-  	}
+	}
 
 	global.config = config;
-	  
+
 	try {
 		logger.info(JSON.stringify(event));
 
@@ -54,83 +53,85 @@ module.exports.handler = (event, context, cb) => {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "invalid or missing arguments")));
 		}
 
-		if (event.method !== 'POST' )  {
+		if (event.method !== 'POST') {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Service operation not supported")));
 		}
 
 		var service_data = event.body;
-		
+
 		var subPath = getSubPath(event.resourcePath);
 		const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
-		
+
 		if (subPath.indexOf('reset') > -1) {
 			logger.info('User password reset Request::' + JSON.stringify(service_data));
 
 			validateResetParams(service_data)
-			.then(() => forgotPassword(cognito, config, service_data))
-			.then(() => function(result){
+				.then(() => forgotPassword(cognito, config, service_data))
+				.then(() => function (result) {
 					logger.info("Password reset was successful for user: " + service_data.email);
-					return cb(null, responseObj({result: "success",errorCode: "0",message: "Password reset was successful for user: " + service_data.email}));
+					return cb(null, responseObj({ result: "success", errorCode: "0", message: "Password reset was successful for user: " + service_data.email }));
 				})
-			.catch(function (err) {
-				logger.error("Failed while resetting user password: " + JSON.stringify(err));
+				.catch(function (err) {
+					logger.error("Failed while resetting user password: " + JSON.stringify(err));
 
-				if (err.errorType) {
-					// error has already been handled and processed for API gateway
-					return cb(JSON.stringify(err));
-				}else {
-					if (err.code) {
-						return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+					if (err.errorType) {
+						// error has already been handled and processed for API gateway
+						return cb(JSON.stringify(err));
+					} else {
+						if (err.code) {
+							return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+						}
+
+						return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while resetting user password for: " + service_data.email)));
 					}
-
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while resetting user password for: " + service_data.email)));
-				}
-			});
-		}else if (subPath.indexOf('updatepwd') > -1) {
+				});
+		} else if (subPath.indexOf('updatepwd') > -1) {
 			logger.info('User password update Request::' + JSON.stringify(service_data));
 
 			validateUpdatePasswordParams(service_data)
-			.then(() => updatePassword(cognito, config, service_data))
-			.then(() => function(result){
-				logger.info("Successfully updated password for user: " + service_data.email);
-				return cb(null, responseObj({result: "success",errorCode: "0",message: "Successfully updated password for user: " + service_data.email}));})
-			.catch(function (err) {
-				logger.error("Failed while updating user password: " + JSON.stringify(err));
+				.then(() => updatePassword(cognito, config, service_data))
+				.then(() => function (result) {
+					logger.info("Successfully updated password for user: " + service_data.email);
+					return cb(null, responseObj({ result: "success", errorCode: "0", message: "Successfully updated password for user: " + service_data.email }));
+				})
+				.catch(function (err) {
+					logger.error("Failed while updating user password: " + JSON.stringify(err));
 
-				if (err.errorType) {
-					// error has already been handled and processed for API gateway
-					return cb(JSON.stringify(err));
-				}else {
-					if (err.code) {
-						return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+					if (err.errorType) {
+						// error has already been handled and processed for API gateway
+						return cb(JSON.stringify(err));
+					} else {
+						if (err.code) {
+							return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+						}
+
+						return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while updating user password for: " + service_data.email)));
 					}
-
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while updating user password for: " + service_data.email)));
-				}
-			});
-		}else {
+				});
+		} else {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
-			
+
 			validateCreaterUserParams(config, service_data)
-			.then((s) => createUser(cognito, config, s))
-			.then((s) => rp(getRequestToCreateSCMUser(config, service_data)))
-			.then(() => function(result){
-				logger.info("User: " + service_data.userid + " registered successfully!");
-				return cb(null, responseObj({result: "success",errorCode: "0",message: "User registered successfully!"}));})
-			.catch(function (err) {
-				logger.error("Failed while registering user: " + JSON.stringify(err, Object.getOwnPropertyNames(err)));
-				
-				if (err.errorType) {
-					// error has already been handled and processed for API gateway
-					return cb(JSON.stringify(err));
-				}else {
-					if (err.code) {
-						return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+				.then((s) => createUser(cognito, config, s))
+				.then((s) => rp(getRequestToCreateSCMUser(config, service_data)))
+				.then(() => function (result) {
+					logger.info("User: " + service_data.userid + " registered successfully!");
+					return cb(null, responseObj({ result: "success", errorCode: "0", message: "User registered successfully!" }));
+				})
+				.catch(function (err) {
+					logger.error("Failed while registering user: " + JSON.stringify(err, Object.getOwnPropertyNames(err)));
+
+					if (err.errorType) {
+						// error has already been handled and processed for API gateway
+						return cb(JSON.stringify(err));
+					} else {
+						if (err.code) {
+							return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+						}
+
+						return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Failed while registering user: " + service_data.userid)));
 					}
-					
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Failed while registering user: " + service_data.userid)));
-				}
-			});
+				});
 		}
 	} catch (e) {
 		logger.error('Error in user registration : ' + e.message);
@@ -162,11 +163,11 @@ function validateResetParams(userInput) {
 	return new Promise((resolve, reject) => {
 
 		var errorHandler = errorHandlerModule();
-	
+
 		if (!userInput.email) {
 			logger.info("no email address provided for password reset");
 			reject(errorHandler.throwInputValidationError("102", "email is required field"));
-		}else{
+		} else {
 			resolve();
 		}
 	});
@@ -176,22 +177,22 @@ function validateUpdatePasswordParams(userInput) {
 	return new Promise((resolve, reject) => {
 
 		var errorHandler = errorHandlerModule();
-	
+
 		if (!userInput.email) {
 			logger.warn("no email address provided for password update");
 			return reject(errorHandler.throwInputValidationError("102", "Email is required field"));
 		}
-		
+
 		if (!userInput.verificationCode) {
 			logger.warn("no verification code provided for password update");
 			return reject(errorHandler.throwInputValidationError("102", "Verification code is required"));
 		}
-		
+
 		if (!userInput.password) {
 			logger.warn("no password provided for password update");
 			return reject(errorHandler.throwInputValidationError("102", "Password is required"));
 		}
-		else{
+		else {
 			resolve();
 		}
 	});
@@ -206,9 +207,9 @@ function validateCreaterUserParams(config, userInput) {
 	var errorHandler = errorHandlerModule();
 
 	return new Promise((resolve, reject) => {
-		
+
 		var missing_required_fields = _.difference(_.values(config.required_fields), _.keys(userInput));
-		
+
 		if (missing_required_fields.length > 0) {
 			logger.error("Following field(s) are required - " + missing_required_fields.join(", "));
 			return reject(errorHandler.throwInputValidationError("102", "Following field(s) are required - " + missing_required_fields.join(", ")));
@@ -233,15 +234,15 @@ function validateCreaterUserParams(config, userInput) {
 
 function createUser(cognitoClient, config, userData) {
 	return new Promise((resolve, reject) => {
-		
+
 		var cognitoParams = {
 			ClientId: config.USER_CLIENT_ID,
 			Username: userData.userid.toLowerCase(),
 			Password: userData.userpassword,
-			UserAttributes: [{Name: "custom:reg-code", "Value": userData.usercode}],
+			UserAttributes: [{ Name: "custom:reg-code", "Value": userData.usercode }],
 			ValidationData: []
 		};
-		
+
 		cognitoClient.signUp(cognitoParams, (err, result) => {
 			if (err)
 				reject(err);
