@@ -52,14 +52,11 @@ function assetData(results, assetItem) {
     "metrics": []
   };
 
-  var metricsArr = [];
-
-  results.forEach(function (key) {
-    var metricsObj = {
+  var metricsArr = results.map(key => {
+      return {
       "metric_name": key.Label,
       "datapoints": key.Datapoints
     }
-    metricsArr.push(metricsObj);
   });
   asset_obj.metrics = metricsArr;
   return asset_obj;
@@ -68,34 +65,36 @@ function assetData(results, assetItem) {
 function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset) {
   var output_obj = {};
   output_obj["isError"] = false;
-  var paramMetrics = [];
-  var nameSpace = nameSpaceFrmAsset.toLowerCase();
+  if(nameSpaceFrmAsset) {
+    var paramMetrics = [];
+    var nameSpace = nameSpaceFrmAsset.toLowerCase();
+    var namespacesList = metricConfig.namespaces;
+    var supportedNamespace = namespacesList[nameSpace];
+    paramMetrics = supportedNamespace["metrics"];
+    var awsAddedNameSpace = nameSpace.indexOf('aws/') === -1 ? 'aws/' + nameSpace : nameSpace;
+    awsAddedNameSpace = awsAddedNameSpace.replace(/ /g, "");
+    var nameSpaceList = {
+      'aws/apigateway': 'AWS/ApiGateway',
+      'aws/lambda': 'AWS/Lambda',
+      'aws/cloudfront': 'AWS/CloudFront',
+      'aws/s3': 'AWS/S3'
+    }
 
-  var namespacesList = metricConfig.namespaces;
+    if (Object.keys(nameSpaceList).indexOf(awsAddedNameSpace) > -1) {
+      awsNameSpace = nameSpaceList[awsAddedNameSpace];
+    } else {
+      output_obj["isError"] = true;
+      output_obj["awsNameSpace"] = "Invalid";
+    }
 
-  var supportedNamespace = namespacesList[nameSpace];
-
-  paramMetrics = supportedNamespace["metrics"];
-
-  var awsAddedNameSpace = nameSpace.indexOf('aws/') === -1 ? 'aws/' + nameSpace : nameSpace;
-  awsAddedNameSpace = awsAddedNameSpace.replace(/ /g, "");
-  var nameSpaceList = {
-    'aws/apigateway': 'AWS/ApiGateway',
-    'aws/lambda': 'AWS/Lambda',
-    'aws/cloudfront': 'AWS/CloudFront',
-    'aws/s3': 'AWS/S3'
-  }
-
-  if (Object.keys(nameSpaceList).indexOf(awsAddedNameSpace) > -1) {
-    awsNameSpace = nameSpaceList[awsAddedNameSpace];
+    output_obj["paramMetrics"] = paramMetrics;
+    output_obj["awsNameSpace"] = awsNameSpace;
+    return output_obj;
   } else {
     output_obj["isError"] = true;
     output_obj["awsNameSpace"] = "Invalid";
+    return output_obj;
   }
-
-  output_obj["paramMetrics"] = paramMetrics;
-  output_obj["awsNameSpace"] = awsNameSpace;
-  return output_obj;
 };
 
 function extractValueFromString(string, keyword) {
@@ -123,19 +122,16 @@ function getAssetsObj(assetsArray, userStatistics) {
   var newAssetArr = [];
   var namespaces = metricConfig.namespaces;
 
-  assetsArray.forEach(function (asset) {
+  assetsArray.forEach((asset) => {
 
-    var arnString = asset.provider_id;
-    var arnParsedObj = parser(arnString);
-    var assetEnvironment = asset.environment;
     var assetType = asset.asset_type;
     var metricNamespace = namespaces[assetType];
 
     if (metricNamespace) {
       var dimensions = metricNamespace.dimensions;
       var dimensionObj = {};
-
-      dimensions.forEach(function (dimensionName) {
+      var assetObj = {};
+      dimensions.forEach((dimensionName) => {
         dimensionObj[dimensionName] = "";
       });
       // dimensionObj - contains dimension names and values got by parsing provider_id.
@@ -144,7 +140,7 @@ function getAssetsObj(assetsArray, userStatistics) {
       if (userStatistics === "samplecount") {
         userStatistics = "SampleCount";
       } else {
-        userStatistics = (userStatistics).replace(/\w\S*/g, function (txt) {
+        userStatistics = (userStatistics).replace(/\w\S*/g, (txt) => {
           return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
         });
       }
@@ -154,20 +150,41 @@ function getAssetsObj(assetsArray, userStatistics) {
         "asset_name": dimensionObj,
         "statistics": userStatistics
       };
+      assetObj = updateNewAssetObj(newAssetObj, asset);
+      newAssetArr.push(assetObj);
+    } else if (assetType) {
+      // type not supported
+      newAssetArr.push({
+        "isError": "Metric not supported for asset type " + assetType
+      });
+    } else {
+      // type not found
+      newAssetArr.push({
+        "isError": "Asset type not found "
+      });
+    }
 
-      switch (assetType) {
-        case "lambda":
-          var relativeId = arnParsedObj.relativeId;
-          if (relativeId === 'function') {
-            var funcValue = extractValueFromString(arnString, relativeId);
-            newAssetObj.asset_name.FunctionName = funcValue;
-          }
-          break;
-        case "apigateway":
-          var relativeId = arnParsedObj.relativeId;
-          var parts = relativeId.split("/");
-          var apiId = parts[0];
-          newAssetObj.asset_name.ApiName = getApiName(apiId);
+  });
+  return newAssetArr;
+};
+
+function updateNewAssetObj(newAssetObj, asset) {
+  var arnString = asset.provider_id, assetType = asset.asset_type, assetEnvironment = asset.environment;
+  var arnParsedObj = parser(arnString);
+  var relativeId = arnParsedObj.relativeId;
+
+  switch (assetType) {
+    case "lambda":
+      if (relativeId === 'function') {
+        var funcValue = extractValueFromString(arnString, relativeId);
+        newAssetObj.asset_name.FunctionName = funcValue;
+      }
+      break;
+    case "apigateway":
+      var parts = relativeId.split("/");
+
+      var apiId = parts[0];
+      newAssetObj.asset_name.ApiName = getApiName(apiId);
 
           var stgValue = parts[1] === '*' ? assetEnvironment : parts[1];
           newAssetObj.asset_name.Stage = stgValue || "*";
@@ -183,7 +200,6 @@ function getAssetsObj(assetsArray, userStatistics) {
 
           break;
         case "s3":
-          var relativeId = arnParsedObj.relativeId;
           var parts = relativeId.split("/");
           var bucketValue = parts[0];
           newAssetObj.asset_name.BucketName = bucketValue;
@@ -191,35 +207,20 @@ function getAssetsObj(assetsArray, userStatistics) {
           break;
 
         case "cloudfront":
-          var relativeId = arnParsedObj.relativeId;
           var parts = relativeId.split("/");
           var distIdVal = parts[1];
           newAssetObj.asset_name.DistributionId = distIdVal;
           newAssetObj.asset_name.Region = "Global";
           break;
 
-        default:
-          newAssetObj = {
-            "isError": "Metric not supported for asset type " + assetType
-          }
-      }
-      newAssetArr.push(newAssetObj);
-    } else if (assetType) {
-      // type not supported
-      newAssetArr.push({
+    default:
+      newAssetObj = {
         "isError": "Metric not supported for asset type " + assetType
-      });
-    } else {
-      // type not found
-      newAssetArr.push({
-        "isError": "Asset type not found "
-      });
-    }
+      }
+  }
+  return newAssetObj;
+}
 
-  });
-  return newAssetArr;
-
-};
 module.exports = {
   massageData,
   assetData,

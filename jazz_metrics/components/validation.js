@@ -25,7 +25,7 @@
 const global_config = require("../config/global-config.json");
 const _ = require("lodash");
 
-var validateGeneralFields = function (input) {
+var validateGeneralFields = (input) => {
   var required_fields = global_config.REQUIRED_FIELDS;
   return new Promise((resolve, reject) => {
     validateIsEmptyInputData(input)
@@ -57,7 +57,7 @@ var validateIsEmptyInputData = (input) => {
   });
 }
 
-var validateRequiredFields = function (input, required_fields) {
+var validateRequiredFields = (input, required_fields) => {
   return new Promise((resolve, reject) => {
     var missing_required_fields = _.difference(_.values(required_fields), _.keys(input));
     if (missing_required_fields.length > 0) {
@@ -99,7 +99,7 @@ var validateAllRequiredFieldsValue = (input, required_fields) => {
   });
 };
 
-function validateMetricsInput(data) {
+var validateMetricsInput = (data) => {
   return new Promise((resolve, reject) => {
     var statistics_type = global_config.STATISTICS_TYPE;
     var patternUTC = /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(.[0-9]{0,3})?Z?$/;

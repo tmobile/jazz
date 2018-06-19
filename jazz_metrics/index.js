@@ -123,7 +123,7 @@ function getAssetsDetails(config, eventBody) {
     logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
 
 
-    request(asset_api_options, function (error, response, body) {
+    request(asset_api_options, (error, response, body) => {
       if (error) {
         reject(error);
       } else {
@@ -149,7 +149,7 @@ function validateAssets(assetsArray, eventBody) {
       var newAssetArray = [];
       var invalidTypeCount = 0;
 
-      assetsArray.forEach(function (assetItem) {
+      assetsArray.forEach((assetItem) => {
         if (assetItem.isError) {
           logger.error(assetItem.isError);
           invalidTypeCount++;
@@ -198,7 +198,7 @@ function validateAssets(assetsArray, eventBody) {
           }
 
           // Forming the Dimension array from assetNameObj
-          paramMetrics.forEach(function (arrayItem) {
+          paramMetrics.forEach((arrayItem) => {
             var clonedObj = {};
             for (var key in commonParam) {
               clonedObj[key] = commonParam[key];
@@ -208,9 +208,9 @@ function validateAssets(assetsArray, eventBody) {
             var dimensionsArray = arrayItem.Dimensions;
             clonedObj.Dimensions = [];
             var minCount = 0;
-            dimensionsArray.forEach(function (dimensionArr, i) {
+            dimensionsArray.forEach((dimensionArr, i) => {
               var obj = {};
-              if (assetNameObj[dimensionArr] !== undefined && assetNameObj[dimensionArr] !== null && assetNameObj[dimensionArr] !== '') {
+              if (assetNameObj[dimensionArr]) {
                 obj = {
                   "Name": dimensionArr,
                   "Value": assetNameObj[dimensionArr]
@@ -283,7 +283,7 @@ function cloudWatchDetails(assetParam, cloudwatch) {
           region: global_config.CF_REGION
         });
       }
-      cloudwatch.getMetricStatistics(param, function (err, data) {
+      cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
           logger.error("error while getting metics from cloudwatch. " + JSON.stringify(err));
           if (err.code === "InvalidParameterCombination") {
