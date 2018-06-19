@@ -80,7 +80,7 @@ describe('jazz_assets', function () {
       AWS.mock("DynamoDB.DocumentClient", "query", (params, cb) => {
         return cb(null, dataObj);
       });
-      var validateCreatePayload = validateutils.validateCreatePayload(event.body, assetTable)
+      validateutils.validateCreatePayload(event.body, assetTable)
         .then(res => {
           expect(res).to.include({
             result: 'success',
@@ -91,7 +91,7 @@ describe('jazz_assets', function () {
     });
 
     it("should indicate empty input error while validating create payload", () => {
-      var validateCreatePayload = validateutils.validateCreatePayload({}, assetTable)
+      validateutils.validateCreatePayload({}, assetTable)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
@@ -103,7 +103,7 @@ describe('jazz_assets', function () {
     it("should indicate invalid input error while validating create payload", () => {
       var payload = Object.assign({}, event.body);
       payload.invalidKey = "invalid";
-      var validateCreatePayload = validateutils.validateCreatePayload(payload, assetTable)
+      validateutils.validateCreatePayload(payload, assetTable)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
@@ -118,7 +118,7 @@ describe('jazz_assets', function () {
         const payload = Object.assign({}, event.body);
         const deleted_field = key;
         delete payload[key]
-        var validateCreatePayload = validateutils.validateCreatePayload(payload, assetTable)
+        validateutils.validateCreatePayload(payload, assetTable)
           .catch(error => {
             expect(error).to.include({
               result: 'inputError',
@@ -132,7 +132,7 @@ describe('jazz_assets', function () {
       var payload = Object.assign({}, event.body);
       payload.tags = "invalid";
       payload.asset_type = ["invalidArray"]
-      var validateCreatePayload = validateutils.validateCreatePayload(payload, assetTable)
+      validateutils.validateCreatePayload(payload, assetTable)
         .catch(error => {
           expect(error).to.include({result: 'inputError', message: 'The following field\'s value/type is not valid - tags, asset_type'});
         });
@@ -142,7 +142,7 @@ describe('jazz_assets', function () {
       var payload = Object.assign({}, event.body);
       payload.status = "invalidStatus";
       payload.asset_type = "invalidType"
-      var validateCreatePayload = validateutils.validateCreatePayload(payload, assetTable)
+      validateutils.validateCreatePayload(payload, assetTable)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
@@ -158,7 +158,7 @@ describe('jazz_assets', function () {
       AWS.mock("DynamoDB.DocumentClient", "query", (params, cb) => {
         return cb(null, dataObj);
       });
-      var validateCreatePayload = validateutils.validateCreatePayload(event.body, assetTable)
+      validateutils.validateCreatePayload(event.body, assetTable)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
@@ -172,7 +172,7 @@ describe('jazz_assets', function () {
       AWS.mock("DynamoDB.DocumentClient", "query", (params, cb) => {
         return cb(err, null);
       });
-      var validateCreatePayload = validateutils.validateCreatePayload(event.body, assetTable)
+      validateutils.validateCreatePayload(event.body, assetTable)
         .catch(error => {
           expect(error).to.include(err);
           AWS.restore("DynamoDB.DocumentClient");
@@ -190,7 +190,7 @@ describe('jazz_assets', function () {
       AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
         return cb(null, dataObj);
       });
-      var validateUpdatePayload = validateutils.validateUpdatePayload(event.path.id, update_data, assetTable)
+      validateutils.validateUpdatePayload(event.path.id, update_data, assetTable)
         .then(res => {
           expect(res).to.include({
             result: 'success'
@@ -207,7 +207,7 @@ describe('jazz_assets', function () {
       AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
         return cb(err, null);
       });
-      var validateUpdatePayload = validateutils.validateUpdatePayload(event.path.id, update_data, assetTable)
+      validateutils.validateUpdatePayload(event.path.id, update_data, assetTable)
         .catch(error => {
           expect(error).to.include(err);
           AWS.restore("DynamoDB.DocumentClient");
@@ -215,7 +215,11 @@ describe('jazz_assets', function () {
     });
 
     it("should validate search payload", () => {
-      var validateSearchPayload = validateutils.validateSearchPayload(event.body)
+      var update_data = {
+        service : event.body.service,
+        domain : event.body.domain
+      }
+      validateutils.validateSearchPayload(update_data)
         .then(res => {
           expect(res).to.include({
             result: 'success'
@@ -226,7 +230,7 @@ describe('jazz_assets', function () {
     it("should indicate empty field error value while validating create payload", () => {
       var payload = Object.assign({}, event.body);
       payload.provider = "";
-      var validateSearchPayload = validateutils.validateSearchPayload(payload, assetTable)
+      validateutils.validateSearchPayload(payload, assetTable)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
@@ -394,15 +398,23 @@ describe('jazz_assets', function () {
 
   describe('postSearch', () => {
     it("should successfully search provided asset", () => {
+      var search_data = {
+        service: event.body.service,
+        domain: event.body.domain
+      }
+      var dbRes = Object.assign({}, event.body);
+      dbRes.id = event.path.id;
+      dbRes.timestamp =  "2018-06-18T13:08:55.711Z";
+
       dataObj = {
-        Items: [event.body]
+        Items: [dbRes]
       }
       AWS.mock("DynamoDB.DocumentClient", "query", (params, cb) => {
         return cb(null, dataObj);
       });
-      index.postSearch(event.body, assetTable)
+      index.postSearch(search_data, assetTable)
         .then(res => {
-          expect(res).to.include(event.body)
+          expect(res).to.include(dbRes)
           AWS.restore("DynamoDB.DocumentClient")
         });
     });
@@ -642,7 +654,7 @@ describe('jazz_assets', function () {
             processAssetData.restore();
           });
         });
-  
+
         it("should indicate internal server error while fetching asset by id", () => {
           var resObj = '{"errorType":"InternalServerError","message":"unexpected error occured"}'
           const processAssetData = sinon.stub(index, "processAssetData").rejects(err)
@@ -667,7 +679,7 @@ describe('jazz_assets', function () {
             processAssetData.restore();
           });
         });
-  
+
       });
 
       describe('create new asset using POST method', () => {
@@ -785,7 +797,7 @@ describe('jazz_assets', function () {
 
       })
     });
-    
+
   })
 
 });

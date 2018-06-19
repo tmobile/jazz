@@ -178,7 +178,7 @@ function genericInputValidation(event) {
             });
         }
 
-        if(!event.principalId) {
+        if (!event.principalId) {
             reject({
                 result: "unauthorized",
                 message: "Unauthorized"
