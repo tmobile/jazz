@@ -15,5 +15,5 @@ indent_style = space
 charset = utf-8
 
 # 4 space indentation
-[*.{py}]
+[*.py]
 indent_size = 4
