@@ -16,13 +16,13 @@
 
 const getStageConfig = (event) => {
   let stage;
-  
+
   if (event && event.awslogs && event.awslogs.data) {
-      // cw events default to dev
-      stage = 'dev';
+    // cw events default to dev
+    stage = 'dev';
   } else {
-      stage = event.stage
-  } 
+    stage = event.stage;
+  }
 
   let configObj = require(`../config/${stage}-config.json`);
 

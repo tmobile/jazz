@@ -26,11 +26,12 @@ import { EnvDeploymentsSectionComponent} from './../environment-deployment/env-d
 export class EnvironmentDetailComponent implements OnInit {
 @ViewChild('envoverview') envoverview:EnvOverviewSectionComponent;
 @ViewChild('envdeployments') envdeployments:EnvDeploymentsSectionComponent;
+@ViewChild('selectedTabComponent') selectedTabComponent;
 
 isFunction:boolean = false;
 breadcrumbs = [];
 api_doc_name:string='';
-  selectedTab = 0; 
+  selectedTab = 0;
   service: any= {};
   friendly_name: any;
   status_val:number;
@@ -67,24 +68,27 @@ api_doc_name:string='';
     private data: DataService
   ) {}
 
-  
+  refreshTab() {
+    this.selectedTabComponent.refresh();
+  }
+
   onSelectedDr(selected){
     this.selectedTab = selected;
   }
 
   onTabSelected (i) {
-    
+
     this.selectedTab = i;
   };
 
   EnvLoad(event){
     this.environment_obj=event.environment[0];
-    this.status_val = parseInt(status[this.environment_obj.status]); 
+    this.status_val = parseInt(status[this.environment_obj.status]);
     if((this.status_val < 2) || (this.status_val == 4) )
     {
       this.disablingApiButton=false;
     }
-  
+
     this.status_inactive=true;
   }
 
@@ -153,7 +157,7 @@ api_doc_name:string='';
 
 
   fetchService(id: string){
-      
+
       this.isLoadingService = true;
 
       let cachedData = this.cache.get(id);
@@ -184,57 +188,48 @@ api_doc_name:string='';
                       this.isFunction=true;
 
                   this.cache.set(id, this.service);
-                  this.onDataFetched(this.service);                  
-                  this.envoverview.notify(this.service);                  
+                  this.onDataFetched(this.service);
+                  this.envoverview.notify(this.service);
               },
               err => {
                   this.isLoadingService = false;
                   let errorMessage = this.messageservice.errorMessage(err,"serviceDetail");
                   this.toast_pop('error', 'Oops!', errorMessage)
-                  
+
               }
           )
       }
 
   };
 
-    testApi(type){
-        switch(type){
-            case 'api': 
-            if(environment.envName == "oss"){
-              var SwaggerUrl="http://editor.swagger.io/?url="+this.api_doc_name+"/"+this.service.domain +"/"+ this.service.name +"/"+this.envSelected+"/swagger.json"
-              window.open(SwaggerUrl);
-            } 
-            else{
-              window.open('/test-api?service=' + this.service.name + '&domain='+ this.service.domain + '&env=' +this.envSelected);
-
-            }        
-            
-            break;
-
-            case 'website' :
-            if(this.endpoint_env!=(undefined||'')){
-              window.open(this.endpoint_env);    
-            }
-            break;
-            case 'function' :
-            if(this.endpoint_env!=(undefined||'')){
-              window.open('/404');    
-            }
-            break;
-            case 'lambda' :
-            if(this.endpoint_env!=(undefined||'')){
-              window.open('/404');    
-            }
-            break;
-        }
-    }
+  testApi(type){
+      switch(type){
+          case 'api':
+            let swaggerFile = '/' + this.service.domain + '/' + this.service.name + '/' + this.envSelected + '/swagger.json';
+            return window.open(environment.urls['swagger_editor'] + '/?url=' + environment['api_doc_name'] + swaggerFile);
+          case 'website' :
+          if(this.endpoint_env!=(undefined||'')){
+            window.open(this.endpoint_env);
+          }
+          break;
+          case 'function' :
+          if(this.endpoint_env!=(undefined||'')){
+            window.open('/404');
+          }
+          break;
+          case 'lambda' :
+          if(this.endpoint_env!=(undefined||'')){
+            window.open('/404');
+          }
+          break;
+      }
+  }
 
  toast_pop(error,oops,errorMessage)
   {
      var tst = document.getElementById('toast-container');
-         tst.classList.add('toaster-anim');                            
-        this.toasterService.pop(error,oops,errorMessage);        
+         tst.classList.add('toaster-anim');
+        this.toasterService.pop(error,oops,errorMessage);
         setTimeout(() => {
             tst.classList.remove('toaster-anim');
           }, 3000);
@@ -259,7 +254,7 @@ isOSS:boolean=false;
         this.envSelected = params['env'];
         this.fetchService(id);
         this.friendly_name = this.envSelected;
-          
+
       });
       this. breadcrumbs = [
         {
@@ -271,8 +266,9 @@ isOSS:boolean=false;
           'link' : ''
         }
       ];
-  
+
   }
+
 
   ngOnChanges(x:any){
     this.fetchService(this.serviceId);

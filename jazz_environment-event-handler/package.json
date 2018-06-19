@@ -10,11 +10,8 @@
     },
     "dependencies": {
         "string-template": "*",
-        "guid": "0.0.12",
         "nanoid": "*",
-        "json-query": "*",
         "lodash": "*",
-        "moment": "*",
         "request": "*",
         "request-promise-native": "^1.0.5"
       },

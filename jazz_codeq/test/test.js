@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -117,10 +117,10 @@ describe('index', () => {
 			const getMetricsStub = sinon.stub(utils, "getMetrics").returns({metrics: ['code-coverage']});
 			const jazzTokenStub = sinon.stub(utils, 'getJazzToken').resolves({auth_token: 'auth_token'});
 			const projectBranchStub = sinon.stub(utils, 'getProjectBranch').resolves({branch: 'testBranch'});
-			const codeqReportStub = sinon.stub(utils, 'getCodeqReport').resolves({get_codeq_report: 'codeQReport'});
+			const codeqReportStub = sinon.stub(utils, 'getCodeqReport').resolves({data: 'codeQReport'});
 			
 			index.handler(event, {}, (err, res) => {
-				expect(res.data).to.equal("codeQReport");
+				expect(res.data).to.deep.eq({data: 'codeQReport'});
 
 				sinon.assert.calledOnce(getQueryStub);
 				sinon.assert.calledOnce(getMetricsStub);
@@ -148,7 +148,7 @@ describe('index', () => {
 
 		it('should call get report on error when getCodeqInputsUsingQuery is called with an error in promise chain', () => {
 			const query = {};
-			event.resourcePath = 'codeq';
+			event.resourcePath = 'jazz/codeq';
 			const getQueryStub = sinon.stub(utils, "getQuery").returns(query);
 			const missingFieldsStub = sinon.stub(validation, "validateMissingFields");
 			const fromDateStub = sinon.stub(validation, "validateFromDate").returns('fromdate');
@@ -416,11 +416,11 @@ describe('utils', () => {
 		});
 
 		it('should return empty values when only metrics is provided', () => {
-			utils.getReport('metrics', null, config)
+			utils.getReport(['vulnerabilities', 'coverage'], null, config)
 			.then(result => {
-				expect(result.metrics.length).to.eq(7);
-				expect(result.metrics[0].link).to.eq('serviceurl/helpurl?metrics=s');
-				expect(result.metrics[0].name).to.eq('s');
+				expect(result.metrics.length).to.eq(2);
+				expect(result.metrics[0].link).to.eq('serviceurl/helpurl?metrics=coverage');
+				expect(result.metrics[0].name).to.eq('coverage');
 				expect(result.metrics[0].values.length).to.eq(0);
 			});
 		});

@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const request = require('request');
-const moment = require('moment');
 const messages = require("./config/messages");
 const validation = require('./validation');
 const utils = require('./utils');
@@ -30,72 +28,68 @@ function handler(event, context, cb) {
 	let serviceContext = event;
 	let errorHandler = errorHandlerModule();
 	let config = configObj(serviceContext);
-	
+
 	logger.init(serviceContext, context);
 
 	try {
 		logger.debug(serviceContext.resourcePath);
-
 		utils.getAPIPath(serviceContext.resourcePath)
-		.then(data => {
-			const pathString = data.pathString;
-		
-			logger.debug(pathString);
-			
-			if (serviceContext && serviceContext.method && serviceContext.method === 'GET' && pathString === "codeq") {
-				logger.debug(`code quality service called with pathstring - ${pathString}` );
+			.then(data => {
+				const pathString = data.pathString;
+				logger.debug(pathString);
+				if (serviceContext && serviceContext.method && serviceContext.method === 'GET' && pathString === "codeq") {
+					logger.debug(`code quality service called with pathstring - ${pathString}`);
 
-				const result = getCodeqInputsUsingQuery(serviceContext, config);
+					const result = getCodeqInputsUsingQuery(serviceContext, config);
 
-				if (result.error) {
-					const errorMessage = (typeof result.error === 'object') ? JSON.stringify(errorHandler.throwInputValidationError(result.error)) : result.error;
-					logger.error(errorMessage);
-					return cb(errorMessage);
+					if (result.error) {
+						const errorMessage = (typeof result.error === 'object') ? JSON.stringify(errorHandler.throwInputValidationError(result.error)) : result.error;
+						logger.error(errorMessage);
+						return cb(errorMessage);
+					} else {
+						const metrics = result.metrics;
+						const toDate = result.toDate;
+						const fromDate = result.fromDate;
+						const query = result.query;
+
+						return utils.getJazzToken(config)
+							.then((data) => utils.getProjectBranch(data.auth_token, query, config)
+							).then(data => utils.getCodeqReport(metrics, data.branch, toDate, fromDate, query, config)
+							).then(data => {
+								const output = responseObj(data, serviceContext.query);
+								return cb(null, output);
+							}).catch(err => {
+								const output = exportable.getReportOnError(err, metrics, config, serviceContext);
+								if (output.error) {
+									logger.error(output.error);
+									return cb(JSON.stringify(errorHandler.throwInputValidationError(output.error)));
+								} else {
+									return cb(null, output);
+								}
+							});
+					}
+					//pathstring == 'help'
+				} else if (serviceContext && serviceContext.method && serviceContext.method === 'GET' && pathString === "help") {
+					logger.debug(`code quality service called with path - ${pathString}`);
+					const result = getResponseForHelpPathString(serviceContext, config);
+					if (result.error) {
+						logger.error(result.error);
+						return cb(JSON.stringify(errorHandler.throwInputValidationError(result.error)));
+					} else {
+						return cb(null, result);
+					}
 				} else {
-					const metrics = result.metrics;
-					const toDate = result.toDate;
-					const fromDate = result.fromDate;
-					const query = result.query;
-
-					return utils.getJazzToken(config)
-					.then((data) => utils.getProjectBranch(data.auth_token, query, config)
-					).then(data => utils.getCodeqReport(metrics, data.branch, toDate, fromDate, query, config)
-					).then(data => {
-						const output = responseObj(data.get_codeq_report, serviceContext.query);
-						return cb(null, output);
-					}).catch(err => {
-						const output = exportable.getReportOnError(err, metrics, config, serviceContext);
-						if(output.error) {
-							logger.error(output.error);
-							return cb(JSON.stringify(errorHandler.throwInputValidationError(output.error)));
-						} else {
-							return cb(null, output);
-						}
-					});
+					return cb(JSON.stringify(errorHandler.throwInputValidationError(messages.SERVICE_INPUT_ERROR)));
 				}
-			//pathstring == 'help'
-			} else if (serviceContext && serviceContext.method && serviceContext.method === 'GET' && pathString === "help") {
-				logger.debug(`code quality service called with path - ${pathString}`);
-				const result = getResponseForHelpPathString(serviceContext, config);
-				if (result.error) {
-					logger.error(result.error);
-					return cb(JSON.stringify(errorHandler.throwInputValidationError(result.error)));
-				} else {
-					return cb(null, result);
-				}
-			} else {
-				return cb(JSON.stringify(errorHandler.throwInputValidationError(messages.SERVICE_INPUT_ERROR)));
-			}
-		}).catch(err => {
-			logger.error(err.errorMessage);
-			return cb(JSON.stringify(errorHandler.throwInputValidationError(err.errorMessage)));
-		});
+			}).catch(err => {
+				logger.error(err.errorMessage);
+				return cb(JSON.stringify(errorHandler.throwInputValidationError(err.errorMessage)));
+			});
 	} catch (e) {
 		logger.error(e);
 		return cb(JSON.stringify(errorHandler.throwInternalServerError(e)));
 	}
-};
-
+}
 
 function getResponseForHelpPathString(serviceContext, config) {
 	const query = utils.getQuery(serviceContext);
@@ -105,13 +99,13 @@ function getResponseForHelpPathString(serviceContext, config) {
 		logger.error(result.error);
 		return result;
 	}
-	
+
 	const metrics = result.metrics;
-	let output = { metrics: []};
+	let output = { metrics: [] };
 
 	for (let q = metrics.length - 1; q >= 0; q--) {
 		const metricsHelp = config.METRICS_HELP[metrics[q]];
-		
+
 		output.metrics.push({
 			"name": metrics[q],
 			"description": metricsHelp.description,
@@ -134,36 +128,36 @@ function getCodeqInputsUsingQuery(serviceContext, config) {
 		result.error = message;
 		return result;
 	}
-	
+
 	//validate from
 	const fromDate = validation.validateFromDate(query.from);
 	if (!fromDate) {
 		result.error = messages.INVALID_FROM_DATE;
 		return result;
 	}
-	
+
 	// validate to
 	const toDate = validation.validateToDate(query.to);
 	if (!toDate) {
 		result.error = messages.INVALID_TO_DATE;
 		return result;
 	}
-	
+
 	//validate to is after from
 	const toDateAfterFromDate = validation.validateFromAfterTo(fromDate, toDate);
 	if (!toDateAfterFromDate) {
 		result.error = messages.TO_EARLIER_THAN_FROM;
 		return result;
 	}
-	
+
 	const metricsResult = utils.getMetrics(query, config, messages);
-	
+
 	if (metricsResult.error) {
 		logger.error(metricsResult.error);
 		result.error = metricsResult.error;
 		return result;
 	}
-	
+
 	result = {
 		query: query,
 		metrics: metricsResult.metrics,
@@ -177,16 +171,16 @@ function getCodeqInputsUsingQuery(serviceContext, config) {
 
 function getReportOnError(err, metrics, config, serviceContext) {
 	let result = {};
-	if (err && err.report_error ) {
+	if (err && err.report_error) {
 		if (err.code === 404) {
 			return utils.getReport(metrics, null, config)
-			.then(output => {
-				result = responseObj(output, serviceContext.query);
-				return result;
-			}).catch(err => {
-				result.error = err.report_error;
-				return result;
-			});
+				.then(output => {
+					result = responseObj(output, serviceContext.query);
+					return result;
+				}).catch(err => {
+					result.error = err.report_error;
+					return result;
+				});
 		} else {
 			result.error = messages.REPORT_METRICS_ERROR;
 			return result;
@@ -201,6 +195,6 @@ function getReportOnError(err, metrics, config, serviceContext) {
 const exportable = {
 	getReportOnError,
 	handler
-}
+};
 
 module.exports = exportable;

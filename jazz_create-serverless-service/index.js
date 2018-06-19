@@ -104,7 +104,7 @@ var handler = (event, context, cb) => {
 var startServiceOnboarding = (service_creation_data, config, service_id) => {
     return new Promise((resolve, reject) => {
         try {
-            var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.SVC_PASWD)).toString("base64");
+            var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.API_TOKEN)).toString("base64");
             var userlist = "";
             var approvers = service_creation_data.approvers;
 
@@ -113,7 +113,7 @@ var startServiceOnboarding = (service_creation_data, config, service_id) => {
             }, "");
 
             var input = {
-                token: config.BUILD_TOKEN,
+                token: config.JOB_TOKEN,
                 admin_group: userlist,
                 service_id: service_id
             };
@@ -251,7 +251,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
         }
         // Add rate expression to the propertiesObject;
         if (service_creation_data.service_type === "function") {
-            if (service_creation_data.rateExpression ) {
+            if (service_creation_data.rateExpression) {
                 var cronExpValidator = CronParser.validateCronExpression(service_creation_data.rateExpression);
                 if (cronExpValidator.result === 'valid') {
                     var rate_expression = service_creation_data.rateExpression;

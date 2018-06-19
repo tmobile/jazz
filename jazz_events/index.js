@@ -21,12 +21,11 @@ Service to handle events
  **/
 
 const errorHandlerModule = require("./components/error-handler.js");
-const validateUtils = require("./components/validation")(); 
-const responseObj = require("./components/response.js"); 
-const configObj = require("./components/config.js"); 
-const logger = require("./components/logger.js"); 
-const utils = require("./components/utils.js")(); 
-const crud = require("./components/crud")(); 
+const validateUtils = require("./components/validation")();
+const responseObj = require("./components/response.js");
+const configObj = require("./components/config.js");
+const logger = require("./components/logger.js");
+const crud = require("./components/crud")();
 
 var handler = (event, context, cb) => {
 	var errorHandler = errorHandlerModule();
