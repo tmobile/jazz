@@ -22,28 +22,28 @@
 **/
 
 var validateARN = (arn) => {
-    if (arn) {
-      var arnvalues = arn.split(":");
-      var isarnvalid = true;
-      //validate if arn is a valid Lambda
-      if (arn.indexOf("arn:aws:lambda") !== 0 || arnvalues[5] !== "function" || arnvalues.length > 8)
-        isarnvalid = false;
-      return isarnvalid;
-    } else {
-      return false;
-    }
-  
-  };
-var execStatus = ()=>{ 
-    return {
-    "success" : "Success",
+  if (arn) {
+    var arnvalues = arn.split(":");
+    var isarnvalid = true;
+    //validate if arn is a valid Lambda
+    if (arn.indexOf("arn:aws:lambda") !== 0 || arnvalues[5] !== "function" || arnvalues.length > 8)
+      isarnvalid = false;
+    return isarnvalid;
+  } else {
+    return false;
+  }
+
+};
+var execStatus = () => {
+  return {
+    "success": "Success",
     "handledError": "HandledError",
-    "unhandledError" : "UnhandledError",
-    "functionInvocationError":"FunctionInvocationError"
-    }
+    "unhandledError": "UnhandledError",
+    "functionInvocationError": "FunctionInvocationError"
+  }
 }
 
-module.exports ={
-        validateARN,
-        execStatus
+module.exports = {
+  validateARN,
+  execStatus
 };

@@ -56,26 +56,26 @@ var handler = (event, context, cb) => {
     }
     var functionARN = event.body.functionARN;
     var arnvalues = functionARN.split(":");
-    awsRegion = arnvalues[3]; //["arn","aws","lambda","us-east-1","000000""] spliting FunctionARN to get the aws-region 
+    awsRegion = arnvalues[3]; //["arn","aws","lambda","us-east-1","000000""] spliting FunctionARN to get the aws-region
     var inputJSON = event.body.inputJSON;
 
     invokeLambda(functionARN, inputJSON, awsRegion).then((data) => {
 
-      if (data && data.StatusCode >=200 && data.StatusCode<299) {
+      if (data && data.StatusCode >= 200 && data.StatusCode < 299) {
         testResponse.payload = data;
         if (!data.FunctionError) {
-          //Function Executed Succesfully Without Error 
+          //Function Executed Succesfully Without Error
           testResponse.execStatus = execStatus.success;
         } else {
           if (data.FunctionError === "Handled") {
             testResponse.execStatus = execStatus.handledError;
           } else if (data.FunctionError === "Unhandled") {
-            // Function Execution Had Unhandled Error 
+            // Function Execution Had Unhandled Error
             testResponse.execStatus = execStatus.unhandledError;
           }
         }
       } else {
-        // Function Falied |Cause Unknown|TEST FAILED 
+        // Function Falied |Cause Unknown|TEST FAILED
         return cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown internal error occurred when invoking " + functionARN)));
       }
       testResponse.payload = data;
