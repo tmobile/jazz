@@ -74,7 +74,10 @@ module.exports.handler = (event, context, callback) => {
 			cognitoUser.authenticateUser(authenticationDetails, {
 				onSuccess: function (result) {
 					logger.info("successfully authenticated");
-					return callback(null, responseObj({"token": result.getAccessToken().getJwtToken()}, {"username": event.body.username}));
+					if(userData.Username === config.ADMIN_ID.toLowerCase()){
+						return callback(null, responseObj({"token": result.getAccessToken().getJwtToken(),"globaladmin": true}, {"username": event.body.username}));	
+					}
+					return callback(null, responseObj({"token": result.getAccessToken().getJwtToken(),"globaladmin": false}, {"username": event.body.username}));	
 				},
 				onFailure: function(err) {
 					logger.error("Error while authenticating: " + JSON.stringify(err));
