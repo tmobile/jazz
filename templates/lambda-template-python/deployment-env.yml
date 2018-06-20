@@ -1,0 +1,3 @@
+providerRuntime : python2.7
+providerMemorySize : 256
+providerTimeout : 160
