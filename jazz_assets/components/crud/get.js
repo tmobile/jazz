@@ -36,7 +36,7 @@ module.exports = (assets_id, asset_table, onComplete) => {
         if (err) {
             onComplete(err);
         } else {
-            var responseData = utils.formatResponse(data.Item) || (data.Items).map(item => utils.formatResponse(item));
+            var responseData = (data.Item) ? utils.formatResponse(data.Item) : (data.Items).map(item => utils.formatResponse(item));
             if (Object.keys(responseData).length === 0) {
                 logger.debug('Invalid asset with id: ' + assets_id);
                 onComplete({
