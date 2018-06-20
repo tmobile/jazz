@@ -467,6 +467,15 @@ describe('utils', () => {
 				expect(expectedResult.metrics.length).to.eq(6);
 			});
 
+			it('should return metrics from query if valid metrics are provided', () => {
+				const query = {
+					metrics: 'files,security'
+				};
+
+				const expectedResult = utils.getMetrics(query, config);
+				expect(expectedResult.metrics.length).to.eq(2);
+			});
+
 			it('should return error message when wrong metrics are provided', () => {
 				const query = {
 					metrics: 'random,security'
