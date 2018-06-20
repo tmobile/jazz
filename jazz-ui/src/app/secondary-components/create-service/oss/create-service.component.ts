@@ -15,7 +15,7 @@ import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
- 
+
 @Component({
   selector: 'create-service',
   templateUrl: './create-service.component.html',
@@ -79,7 +79,8 @@ docs_link = env_oss.urls.docs_link;
   errMessage: any;
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
-  
+  public apiDeployment = 'aws_apigateway';
+
 
   constructor (
     private toasterService: ToasterService,
@@ -167,7 +168,7 @@ docs_link = env_oss.urls.docs_link;
   public getData() {
     let currentUserId = this.authenticationservice.getUserId();
 
-  
+
   }
 
   // function to validate slack channel
@@ -283,12 +284,15 @@ docs_link = env_oss.urls.docs_link;
                 "service_name": this.model.serviceName,
                 "approvers": approversPayload,
                 "domain": this.model.domainName,
-                "description":this.model.serviceDescription
+                "description":this.model.serviceDescription,
             };
 
     if (this.typeOfService == 'api') {
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["deployment_targets"] = {
+        "api": this.apiDeployment
+      }
     }
     else if(this.typeOfService == 'function'){
       payload["runtime"] = this.runtime;
@@ -428,7 +432,7 @@ docs_link = env_oss.urls.docs_link;
   validateName(event) {
     if(this.model.serviceName != null &&(this.model.serviceName[0] === '-' || this.model.serviceName[this.model.serviceName.length - 1] === '-')){
       this.invalidServiceName = true;
-    } 
+    }
     if(this.model.domainName != null && (this.model.domainName[0] === '-' || this.model.domainName[this.model.domainName.length -1] === '-')){
       this.invalidDomainName = true;
     }
