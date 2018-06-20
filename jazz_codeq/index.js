@@ -14,10 +14,10 @@
 // limitations under the License.
 // =========================================================================
 
-const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
-const responseObj = require("./components/response.js"); //Import the response module.
-const configObj = require("./components/config.js"); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
+const errorHandlerModule = require("./components/error-handler.js");
+const responseObj = require("./components/response.js"); 
+const configModule = require("./components/config.js"); 
+const logger = require("./components/logger.js");
 const messages = require("./config/messages");
 const validation = require('./validation');
 const utils = require('./utils');
@@ -27,7 +27,7 @@ function handler(event, context, cb) {
 	//Initializations
 	let serviceContext = event;
 	let errorHandler = errorHandlerModule();
-	let config = configObj(serviceContext);
+	let config = configModule.getConfig(event, context);
 
 	logger.init(serviceContext, context);
 
