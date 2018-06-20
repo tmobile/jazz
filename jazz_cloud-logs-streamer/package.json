@@ -9,11 +9,11 @@
         "test": "mocha"
     },
     "dependencies": {
-        "request": "^2.75.0",
         "unicode-byte-truncate": "*",
         "lodash": "*"
 	},
     "devDependencies": {
+        "chai": "^3.5.0",
         "mocha": "^v3.0.0"		
     }
 }

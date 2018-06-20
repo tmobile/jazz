@@ -25,7 +25,7 @@
 const _ = require("lodash");
 const logger = require("../logger.js"); //Import the logging module.
 
-var validateIsEmptyInputData = function(service_data, onComplete) {
+var validateIsEmptyInputData = function (service_data, onComplete) {
     if (_.isEmpty(service_data)) {
         onComplete({
             result: "inputError",
@@ -39,7 +39,7 @@ var validateIsEmptyInputData = function(service_data, onComplete) {
     }
 };
 
-var validateAllRequiredFields = function(service_data, required_fields, onComplete) {
+var validateAllRequiredFields = function (service_data, required_fields, onComplete) {
     // logger.info(required_fields)
     var missing_required_fields = _.difference(_.values(required_fields), _.keys(service_data));
     // logger.info(missing_required_fields)
@@ -57,7 +57,7 @@ var validateAllRequiredFields = function(service_data, required_fields, onComple
     }
 };
 
-var validateUnAllowedFieldsInInput = function(service_data, fields_list, onComplete) {
+var validateUnAllowedFieldsInInput = function (service_data, fields_list, onComplete) {
     var invalid_fields = _.difference(_.keys(service_data), _.values(fields_list));
     if (invalid_fields.length > 0) {
         var message = "Following fields are invalid :  " + invalid_fields.join(", ") + ". ";
@@ -73,11 +73,11 @@ var validateUnAllowedFieldsInInput = function(service_data, fields_list, onCompl
     }
 };
 
-var validateInputFieldTypes = function(service_data, onComplete) {
+var validateInputFieldTypes = function (service_data, onComplete) {
     var invalid_fields = [];
 
     var fields_type = {};
-    _.forEach(global.global_config.SERVICE_FIELDS_METADATA, function(value, key) {
+    _.forEach(global.global_config.SERVICE_FIELDS_METADATA, function (value, key) {
         fields_type[value.key] = value.type;
     });
 
@@ -102,7 +102,7 @@ var validateInputFieldTypes = function(service_data, onComplete) {
     }
 };
 
-var validateDataTypes = function(field, prop_value, fields_type) {
+var validateDataTypes = function (field, prop_value, fields_type) {
     var field_status = false;
     for (var type in fields_type) {
         if (field === type) {
@@ -128,7 +128,7 @@ var validateDataTypes = function(field, prop_value, fields_type) {
     return field_status;
 };
 
-var validateEnumValues = function(service_data, onComplete) {
+var validateEnumValues = function (service_data, onComplete) {
     var invalid_fields = [];
     for (var field in service_data) {
         if (service_data[field]) {
@@ -146,7 +146,7 @@ var validateEnumValues = function(service_data, onComplete) {
                     break;
                 case "type":
                     if (
-                        !_.find(global.global_config.SERVICE_INTER_DEPENDENT_FIELDS_MAP, function(obj) {
+                        !_.find(global.global_config.SERVICE_INTER_DEPENDENT_FIELDS_MAP, function (obj) {
                             return obj.type === value;
                         })
                     ) {
@@ -171,9 +171,9 @@ var validateEnumValues = function(service_data, onComplete) {
     }
 };
 
-var validateAllRequiredFieldsValue = function(service_data, required_fields, onComplete) {
+var validateAllRequiredFieldsValue = function (service_data, required_fields, onComplete) {
     var invalid_required_fields = [];
-    _.forEach(required_fields, function(value, key) {
+    _.forEach(required_fields, function (value, key) {
         if (_.isEmpty(service_data[value])) {
             invalid_required_fields.push(value);
         }
@@ -193,7 +193,7 @@ var validateAllRequiredFieldsValue = function(service_data, required_fields, onC
     }
 };
 
-var validateEmail = function(service_data, onComplete) {
+var validateEmail = function (service_data, onComplete) {
     if (_.includes(_.keys(service_data), global.global_config.EMAIL_FIELD_KEY)) {
         var email = service_data[global.global_config.EMAIL_FIELD_KEY];
         var message;
@@ -226,8 +226,8 @@ var validateEmail = function(service_data, onComplete) {
     }
 };
 
-var validateServiceTypeAndRuntimeRelation = function(service_data, onComplete) {
-    var relation_obj = _.find(global.global_config.SERVICE_INTER_DEPENDENT_FIELDS_MAP, function(obj) {
+var validateServiceTypeAndRuntimeRelation = function (service_data, onComplete) {
+    var relation_obj = _.find(global.global_config.SERVICE_INTER_DEPENDENT_FIELDS_MAP, function (obj) {
         return obj.type === service_data[global.global_config.TYPE_FIELD_KEY];
     });
     var required_field_key;
@@ -238,7 +238,7 @@ var validateServiceTypeAndRuntimeRelation = function(service_data, onComplete) {
             input: "Input value is valid"
         });
     } else {
-        _.forEach(relation_obj.fields, function(value, key) {
+        _.forEach(relation_obj.fields, function (value, key) {
             required_field_key = value.key;
             if (_.includes(_.keys(service_data), required_field_key)) {
                 onComplete(null, {
@@ -257,7 +257,7 @@ var validateServiceTypeAndRuntimeRelation = function(service_data, onComplete) {
     }
 };
 
-var validateRemoveEmptyValues = function(service_data, onComplete) {
+var validateRemoveEmptyValues = function (service_data, onComplete) {
     for (var field in service_data) {
         if (service_data[field] === undefined || service_data[field] === "") {
             delete service_data[field];
@@ -269,23 +269,23 @@ var validateRemoveEmptyValues = function(service_data, onComplete) {
     });
 };
 
-var validateNotEditableFieldsInUpdate = function(service_data, fields_list, onComplete) {
+var validateNotEditableFieldsInUpdate = function (service_data, fields_list, onComplete) {
     var invalid_fields = _.intersection(_.keys(service_data), _.values(fields_list));
-    _.forEach(invalid_fields, function(value, key) {
+    _.forEach(invalid_fields, function (value, key) {
         delete service_data[value];
     });
-    
+
     onComplete(null, {
         result: "success",
         input: service_data
     });
 };
 
-var validateEditableFieldsValue = function(service_data, fields_list, onComplete) {
+var validateEditableFieldsValue = function (service_data, fields_list, onComplete) {
     var editable_fields = _.intersection(_.keys(service_data), _.values(fields_list));
 
     var invalid_required_fields = [];
-    _.forEach(editable_fields, function(value, key) {
+    _.forEach(editable_fields, function (value, key) {
         if (_.isEmpty(service_data[value]) && !_.isBoolean(service_data[value])) {
             invalid_required_fields.push(value);
         }
@@ -305,7 +305,7 @@ var validateEditableFieldsValue = function(service_data, fields_list, onComplete
     }
 };
 
-var validateStatusStateChange = function(update_data, service_data_from_db, onComplete) {
+var validateStatusStateChange = function (update_data, service_data_from_db, onComplete) {
     var message;
     switch (service_data_from_db.status) {
         case "creation_completed":

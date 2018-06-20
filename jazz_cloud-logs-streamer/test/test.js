@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
+// Copyright Â© 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,8 @@
 const assert = require('chai').assert;
 const index = require('../index');
 
-describe('Sample', function() {
-    it('tests handler', function(done) {
+describe('Sample', function () {
+    it('tests handler', function (done) {
 
         //Test cases to be added here.
         assert(true);

@@ -413,7 +413,9 @@ export class EnvLogsSectionComponent implements OnInit {
 		},10);
 	}
 
-
+  refresh() {
+    this.callLogsFunc();
+  }
 
 	callLogsFunc() {
 		this.loadingState = 'loading';

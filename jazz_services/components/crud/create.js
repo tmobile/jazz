@@ -46,7 +46,7 @@ module.exports = (service_data, onComplete) => {
     // Required parameters
     // var required_params = ['service', 'domain', 'type', 'created_by', 'runtime'];
     var required_params = global.config.service_required_fields;
-    required_params.forEach(function(key) {
+    required_params.forEach(function (key) {
         var param_key = utils.getDatabaseKeyName(key);
         params.Item[param_key] = service_data[key];
     });
@@ -55,7 +55,7 @@ module.exports = (service_data, onComplete) => {
     // var other_params = ['description', 'region', 'repository', 'email', 'slack_channel', 'tags'];
     var other_params = global.config.service_optional_fields;
 
-    other_params.forEach(function(key) {
+    other_params.forEach(function (key) {
         var param_key = utils.getDatabaseKeyName(key);
         var param_value = service_data[key];
 
@@ -67,7 +67,7 @@ module.exports = (service_data, onComplete) => {
     });
 
     // Add new item to database
-    docClient.put(params, function(err, data) {
+    docClient.put(params, function (err, data) {
         if (err) {
 
             // database error
