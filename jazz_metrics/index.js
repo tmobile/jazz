@@ -144,6 +144,7 @@ function getAssetsDetails(config, eventBody) {
 }
 
 function validateAssets(assetsArray, eventBody) {
+  'use strict';
   return new Promise((resolve, reject) => {
     if (assetsArray.length > 0) {
       var newAssetArray = [];
@@ -160,35 +161,22 @@ function validateAssets(assetsArray, eventBody) {
             });
           }
         } else {
-          // Forming object with parameters required by cloudwatch getMetricStatistics api.
-          var commonParam = {
-
-            Namespace: assetItem.type,
-            MetricName: "",
-            Period: eventBody.interval,
-            EndTime: eventBody.end_time,
-            StartTime: eventBody.start_time,
-            Dimensions: [{
-              Name: '',
-              Value: assetItem.asset_name
-            }, ],
-            Statistics: [
-              assetItem.statistics,
-            ],
-            Unit: ""
-          };
-
-          var actualParam = [];
           var paramMetrics = [];
-          var missingAssetNameFields;
-          var intervalPeriod = '';
-          var assetNameObj = assetItem.asset_name;
           var getAssetNameDetails = utils.getNameSpaceAndMetricDimensons(assetItem.type);
-
-          commonParam.Namespace = getAssetNameDetails.awsNameSpace;
 
           if (!getAssetNameDetails.isError) {
             paramMetrics = getAssetNameDetails.paramMetrics;
+            getActualParam(paramMetrics, getAssetNameDetails.awsNameSpace, assetItem, eventBody)
+              .then(res => {
+                newAssetArray.push({
+                  "actualParam": res,
+                  "userParam": assetItem
+                });
+                resolve(newAssetArray);
+              })
+              .catch(error => {
+                reject(error);
+              });
           } else {
             logger.error("Unsupported metric type. ");
             reject({
@@ -196,53 +184,6 @@ function validateAssets(assetsArray, eventBody) {
               message: "Unsupported metric type."
             });
           }
-
-          // Forming the Dimension array from assetNameObj
-          paramMetrics.forEach((arrayItem) => {
-            var clonedObj = {};
-            for (var key in commonParam) {
-              clonedObj[key] = commonParam[key];
-            }
-            clonedObj.MetricName = arrayItem.MetricName;
-            clonedObj.Unit = arrayItem.Unit;
-            var dimensionsArray = arrayItem.Dimensions;
-            clonedObj.Dimensions = [];
-            var minCount = 0;
-            dimensionsArray.forEach((dimensionArr, i) => {
-              var obj = {};
-              if (assetNameObj[dimensionArr]) {
-                obj = {
-                  "Name": dimensionArr,
-                  "Value": assetNameObj[dimensionArr]
-                };
-                if (obj.Name === "StorageType") {
-                  if (clonedObj.MetricName === "BucketSizeBytes") {
-                    obj.Value = "StandardStorage";
-                  } else if (clonedObj.MetricName === "NumberOfObjects") {
-                    obj.Value = "AllStorageTypes";
-                  }
-                }
-
-                clonedObj.Dimensions.push(obj);
-                minCount++;
-              }
-
-            });
-            if (minCount === 0) {
-              logger.error("Invalid asset_name inputs.");
-              reject({
-                result: "inputError",
-                message: "Invalid asset_name inputs."
-              });
-            }
-            actualParam.push(clonedObj);
-          });
-          // Creation of Metric array input for a particular asset
-          newAssetArray.push({
-            "actualParam": actualParam,
-            "userParam": assetItem
-          });
-          resolve(newAssetArray);
         }
       });
     } else {
@@ -251,6 +192,73 @@ function validateAssets(assetsArray, eventBody) {
         message: "Metric not found for requested asset"
       });
     }
+  });
+}
+
+function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
+  'use strict';
+  return new Promise((resolve, reject) => {
+    // Forming object with parameters required by cloudwatch getMetricStatistics api.
+    var commonParam = {
+
+      Namespace: assetItem.type,
+      MetricName: "",
+      Period: eventBody.interval,
+      EndTime: eventBody.end_time,
+      StartTime: eventBody.start_time,
+      Dimensions: [{
+        Name: '',
+        Value: assetItem.asset_name
+      }, ],
+      Statistics: [
+        assetItem.statistics,
+      ],
+      Unit: ""
+    };
+    var actualParam = [];
+    var assetNameObj = assetItem.asset_name;
+
+    commonParam.Namespace = awsNameSpace;
+    paramMetrics.forEach((arrayItem) => {
+      var clonedObj = {};
+      for (let key in commonParam) {
+        clonedObj[key] = commonParam[key];
+      }
+      clonedObj.MetricName = arrayItem.MetricName;
+      clonedObj.Unit = arrayItem.Unit;
+      var dimensionsArray = arrayItem.Dimensions;
+      clonedObj.Dimensions = [];
+      var minCount = 0;
+      dimensionsArray.forEach((dimensionArr, i) => {
+        var obj = {};
+        if (assetNameObj[dimensionArr]) {
+          obj = {
+            "Name": dimensionArr,
+            "Value": assetNameObj[dimensionArr]
+          };
+          if (obj.Name === "StorageType") {
+            if (clonedObj.MetricName === "BucketSizeBytes") {
+              obj.Value = "StandardStorage";
+            } else if (clonedObj.MetricName === "NumberOfObjects") {
+              obj.Value = "AllStorageTypes";
+            }
+          }
+
+          clonedObj.Dimensions.push(obj);
+          minCount++;
+        }
+
+      });
+      if (minCount === 0) {
+        logger.error("Invalid asset_name inputs.");
+        reject({
+          result: "inputError",
+          message: "Invalid asset_name inputs."
+        });
+      }
+      actualParam.push(clonedObj);
+      resolve(actualParam);
+    });
   });
 }
 

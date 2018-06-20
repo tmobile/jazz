@@ -175,49 +175,68 @@ function updateNewAssetObj(newAssetObj, asset) {
 
   switch (assetType) {
     case "lambda":
-      if (relativeId === 'function') {
-        var funcValue = extractValueFromString(arnString, relativeId);
-        newAssetObj.asset_name.FunctionName = funcValue;
-      }
+      newAssetObj = updateLambdaAsset(newAssetObj, relativeId, arnString);
       break;
     case "apigateway":
-      var parts = relativeId.split("/");
+      newAssetObj = updateApigatewayAsset(newAssetObj, relativeId, assetEnvironment);
+      break;
+    case "s3":
+      newAssetObj = updateS3Asset(newAssetObj, relativeId);
+      break;
 
-      var apiId = parts[0];
-      newAssetObj.asset_name.ApiName = getApiName(apiId);
-
-          var stgValue = parts[1] === '*' ? assetEnvironment : parts[1];
-          newAssetObj.asset_name.Stage = stgValue || "*";
-
-          var methodValue = parts[2];
-          newAssetObj.asset_name.Method = methodValue;
-
-          var resourceValue = "/" + parts[3];
-          if (parts[4]) {
-            resourceValue += "/" + parts[4];
-          }
-          newAssetObj.asset_name.Resource = resourceValue;
-
-          break;
-        case "s3":
-          var parts = relativeId.split("/");
-          var bucketValue = parts[0];
-          newAssetObj.asset_name.BucketName = bucketValue;
-          newAssetObj.asset_name.StorageType = "StandardStorage";
-          break;
-
-        case "cloudfront":
-          var parts = relativeId.split("/");
-          var distIdVal = parts[1];
-          newAssetObj.asset_name.DistributionId = distIdVal;
-          newAssetObj.asset_name.Region = "Global";
-          break;
+    case "cloudfront":
+      newAssetObj = updateCloudfrontAsset(newAssetObj, relativeId);
+      break;
 
     default:
       newAssetObj = {
         "isError": "Metric not supported for asset type " + assetType
       }
   }
+  return newAssetObj;
+}
+
+function updateLambdaAsset(newAssetObj, relativeId, arnString) {
+  if (relativeId === 'function') {
+    var funcValue = extractValueFromString(arnString, relativeId);
+    newAssetObj.asset_name.FunctionName = funcValue;
+  }
+  return newAssetObj;
+}
+
+function updateApigatewayAsset(newAssetObj, relativeId, assetEnvironment) {
+  var parts = relativeId.split("/");
+
+  var apiId = parts[0];
+  newAssetObj.asset_name.ApiName = getApiName(apiId);
+
+  var stgValue = parts[1] === '*' ? assetEnvironment : parts[1];
+  newAssetObj.asset_name.Stage = stgValue || "*";
+
+  var methodValue = parts[2];
+  newAssetObj.asset_name.Method = methodValue;
+
+  var resourceValue = "/" + parts[3];
+  if (parts[4]) {
+    resourceValue += "/" + parts[4];
+  }
+  newAssetObj.asset_name.Resource = resourceValue;
+  return newAssetObj;
+}
+
+function updateS3Asset(newAssetObj, relativeId) {
+  var parts = relativeId.split("/");
+  var bucketValue = parts[0];
+  newAssetObj.asset_name.BucketName = bucketValue;
+  newAssetObj.asset_name.StorageType = "StandardStorage";
+  return newAssetObj;
+}
+
+function updateCloudfrontAsset(newAssetObj, relativeId) {
+  var parts = relativeId.split("/");
+  var distIdVal = parts[1];
+  newAssetObj.asset_name.DistributionId = distIdVal;
+  newAssetObj.asset_name.Region = "Global";
   return newAssetObj;
 }
 
