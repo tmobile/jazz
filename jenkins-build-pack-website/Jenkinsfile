@@ -172,16 +172,20 @@ node()  {
 					asset_event = 'CREATE_ASSET'
 					asset_event_message = 'create'
 				}
-				events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", context_map)
+				events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", utilModule.generateAssetMap("aws", asset_info, "s3", service_config))
 				try {
 					sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
 					sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
-
+					events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", asset_info, "s3", service_config), environment);
 					def url
 					if (create_cloudfront_url == true) {
 						updateOrCreateCF()
-						def cloudFrontDistribution = getCloudFrontDetails()
-						url = 'https://' + cloudFrontDistribution['Distribution']
+						def cloudFrontDistribution = getCloudFrontARN()
+						cfArn = cloudFrontDistribution.ARN
+						events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", cfArn, "cloudfront", service_config), environment);
+
+						def cloudFrontDistributionDetails = getCloudFrontDetails()
+						url = 'https://' + cloudFrontDistributionDetails['Distribution']
 
 						invalidateCloudFrontCache()
 						generateBucketPolicy(true)
@@ -201,7 +205,8 @@ node()  {
 					echo svc_status
 					environmentDeploymentMetadata.setEnvironmentEndpoint(url)
 					send_status_email('COMPLETED', svc_status)
-					events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", context_map)
+
+					events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("aws", url, "endpoint_url", service_config),environment)
 					events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
 					events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment), environment)
 					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
@@ -353,6 +358,29 @@ def listDistribution(){
 	} catch (ex) {
 		return outputStr
 	}
+}
+
+/**
+ * Get CloudFront ARN
+ */
+def getCloudFrontARN() {
+	def cfInfo = [:]
+	try {
+		def cloudFrontId = "";
+		def cloudFrontDetailsArray = getCloudFrontDetails();
+		cloudFrontId = cloudFrontDetailsArray.Id;
+
+		def cloudFrontDistributionDetails = sh(returnStdout: true, script: "aws  cloudfront get-distribution --output json  --id $cloudFrontId")
+		echo "cloudFrontDistributionDetails... $cloudFrontDistributionDetails"
+		def _map = jsonParse(cloudFrontDistributionDetails)
+		if(_map) {
+			cfInfo << [ARN: _map.Distribution.ARN]
+			cfInfo << [DomainName: _map.Distribution.DomainName]
+		} 
+	} catch(error) {
+		echo "error $error"
+	}
+	return cfInfo;
 }
 
 /**

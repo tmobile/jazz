@@ -138,8 +138,6 @@ node() {
 			}
 		}
 
-
-
 		def requestId = utilModule.generateRequestId()
 		if (requestId != null) {
 			events.setRequestId(requestId)
@@ -225,6 +223,9 @@ node() {
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
+					def lambdaARN = getLambdaARN(stackName);
+					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+
 					if (fileExists('swagger/swagger.json')) {
 						echo "Generating swagger file for environment: ${env_key}"
 
@@ -250,6 +251,12 @@ node() {
 							endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
 						}
 
+						def apiArns = getAPIGatewayResourceARNs(configLoader.AWS.REGION, api_id, environment_logical_id)
+						if(apiArns) {
+							for (arn in apiArns) {
+								events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
+							}
+						}
 
 						if (domain != "jazz") {
 							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
@@ -282,6 +289,51 @@ node() {
 		}//stage to prod ends here
 
 	}//dir ends here
+}
+
+def getLambdaARN(String stackName) {
+	def ARN = "";
+
+	try {
+		def cloudformation_resources = "";
+		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+
+		def parsedObject = parseJson(cloudformation_resources);
+		def outputs = parsedObject.Stacks[0].Outputs;
+
+		for (output in outputs) {
+			if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
+				ARN = output.OutputValue
+			}
+		}
+	} catch (ex) {
+		error ex.getMessage();
+	}
+
+	return ARN;
+}
+
+/**
+ * Get API Resource Arns
+ *
+ */
+def getAPIGatewayResourceARNs(apiId, deployStg){
+	def basePath = getBasePath()
+	basePath = basePath.replaceAll("^api/", "/");
+	if(!basePath.startsWith("/")) {
+		basePath = "/"+basePath
+	}
+	def resourceArns = []
+	def resourcesMap = createPathMethodList() //Returns a list maps of path and methods
+	if(resourcesMap) {
+		for (_map in resourcesMap){
+			for (path in _map) {
+				def arn = createApiGatewayResourceArn(apiId, deployStg, path.value, path.key, basePath)
+				resourceArns.add(arn)
+			}
+		}
+	}
+	return resourceArns;
 }
 
 /**
