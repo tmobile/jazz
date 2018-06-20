@@ -31,7 +31,7 @@ node {
   }
 
   stage('Triggering the Jenkins build') {
-    build job: "${config_loader.JENKINS.BUILD_URI.API}", parameters: [string(name: 'service_name', value: 'cloud-logs-streamer'), string(name: 'domain', value: 'jazz'), string(name: 'scm_branch', value: "${env.BRANCH_NAME}")], wait: false
+    build job: "${config_loader.JENKINS.BUILD_URI.LAMBDA}", parameters: [string(name: 'service_name', value: 'cloud-logs-streamer'), string(name: 'domain', value: 'jazz'), string(name: 'scm_branch', value: "${env.BRANCH_NAME}")], wait: false
   }
 }
 
