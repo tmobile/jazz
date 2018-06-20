@@ -42,6 +42,7 @@ export class ServiceDetailComponent implements OnInit {
     message;
 
     @Output() deleteServiceStatus:EventEmitter<boolean> = new EventEmitter<boolean>();
+    @ViewChild('selectedTabComponent') selectedTabComponent;
 
 
     disblebtn:boolean = true;
@@ -69,6 +70,8 @@ export class ServiceDetailComponent implements OnInit {
     errorMessage: string = "";
     test:any="delete testing";
     disabled_tab:boolean=false;
+    refreshTabClicked:boolean=false;
+
 
 
     private sub: any;
@@ -144,7 +147,7 @@ export class ServiceDetailComponent implements OnInit {
         this.isLoadingService = true;
 
         let cachedData = this.cache.get(id);
-        if (cachedData) {
+        if (cachedData && !this.refreshTabClicked) {
             this.isGraphLoading=false;
             this.onDataFetched(cachedData)
              if(this.service.serviceType == "website")
@@ -253,6 +256,16 @@ export class ServiceDetailComponent implements OnInit {
         this.deleteServiceInit()
     }
 
+    refreshTab(){
+        this.refreshTabClicked=true;
+        if(this.selectedTab == 0){
+            this.refreshServ();
+        }
+        else{
+            this.selectedTabComponent.refresh();
+        }
+
+    }
 
     deleteServiceInit(){
 

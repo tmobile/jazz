@@ -140,10 +140,7 @@
              <div class="det-label">Description</div>
              <div class="det-value wrap" [ngClass]="{PlaceHolder:description_empty}">{{service.description || 'Give me the details for your service'}}</div>
           </li>
-          <li *ngIf='internal_build'>
-             <div class="det-label decap">Approver(s)</div>
-             <div class="det-value" [ngClass]="{PlaceHolder:approvers_empty}"  >{{service.approvers || 'NA'}}</div>
-          </li>
+          
           <li>
              <div class="det-label">Namespace</div>
              <div class="det-value">{{service.domain || 'Link a domain'}}</div>
@@ -174,10 +171,7 @@
             </li>
         </ul>
     <ul class="section-right col-md-6 col-sm-12">
-       <li>
-          <div class="det-label">Email</div>
-          <div class="det-value" [class.link]='!email_empty' [ngClass]="{PlaceHolder:email_empty}" >{{service.email || 'Stay connected with an email'}}</div>
-        </li>
+       
         <li *ngIf='internal_build'>
         <div class="det-label">Slack Channel</div>
         <div class="det-value" [class.link]='!slackChannel_empty' [ngClass]="{PlaceHolder:slackChannel_empty}"  (click)="slack_link()">{{service.slackChannel || 'Feeling collaborative? Add it to slack'}}</div>
@@ -213,10 +207,7 @@
        <div class="det-label">Description</div>
        <textarea [(ngModel)]="desc_temp" (ngModelChange)='update_payload.description=desc_temp' class="det-value-input-txtarea" placeholder="Give me the details for your service"></textarea>
     </li>
-    <li>
-       <div class="det-label decap">Approver(s)</div>
-       <div class="det-value">{{service.approvers || 'NA'}}</div>
-    </li>
+    
     <li>
        <div class="det-label">Namespace</div>
        <div class="det-value">{{service.domain || 'Link a domain'}}</div>
@@ -269,10 +260,7 @@
     </li>
  </ul>
  <ul class="section-right col-md-6 col-sm-12">
-    <li>
-       <div class="det-label">Email</div>
-       <input [(ngModel)]="email_temp" type='text' class="det-value-input" placeholder="Stay connected with an email" (ngModelChange)='update_payload.email=email_temp' (blur)="check_email_valid()">
-    </li>
+    
     <p class='email-err-msg' [class.hide]="hide_email_error">Please enter a valid email Id</p>
     <li class='relative'>
        <div class="det-label">Slack Channel</div>

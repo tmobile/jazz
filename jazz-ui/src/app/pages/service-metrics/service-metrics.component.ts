@@ -1006,7 +1006,9 @@ export class ServiceMetricsComponent implements OnInit {
   }
 
 
-
+refresh(){
+  this.callMetricsFunc();
+}
 
   leftArrowClick(){
     var mainEle = document.getElementsByClassName('scroll-cards-wrap');

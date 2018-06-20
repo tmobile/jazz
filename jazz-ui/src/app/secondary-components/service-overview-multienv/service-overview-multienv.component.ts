@@ -442,10 +442,7 @@ export class ServiceOverviewMultienvComponent implements OnInit {
 
     this.prodEnv = {};
     this.stgEnv = {};
-    if ((this.service.domain != undefined)) {
-      this.getenvData();
-
-    }
+    
 
   }
   ngOnDestroy() {
