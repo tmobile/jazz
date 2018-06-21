@@ -372,7 +372,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
-	catch (e) {
+	} catch (e) {
 		echo "error occured while loading service configuration: " + e.getMessage()
 		error "error occured while loading service configuration: " + e.getMessage()
 	}
