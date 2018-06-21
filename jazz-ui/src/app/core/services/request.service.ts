@@ -1,9 +1,3 @@
-/**
-  * @type Service
-  * @desc Request Service - wrapper around angular2's Http service
-  * @author Sunil Fernandes
-*/
-
 import { Injectable } from '@angular/core';
 import { Http, Headers, Response, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
