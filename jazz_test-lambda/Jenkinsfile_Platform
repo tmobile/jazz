@@ -4,9 +4,10 @@ import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" except for config_loader
 @Field def repo_credential_id
-@Field def repo_base
-@Field def repo_core
-@Field def scm_type
+@Field def repo_base 
+@Field def repo_core 
+@Field def scm_type 
+
 @Field def config_loader
 
 /*
@@ -30,16 +31,15 @@ node {
   }
 
   stage('Triggering the Jenkins build') {
-    echo "Build triggered via branch::${env.BRANCH_NAME}"
-    build job: "${config_loader.JENKINS.BUILD_URI.API}", parameters: [string(name: 'service_name', value: 'assets'), string(name: 'domain', value: 'jazz'), string(name: 'scm_branch', value: "${env.BRANCH_NAME}")], wait: false
+  build job: "${config_loader.JENKINS.BUILD_URI.API}", parameters: [string(name: 'service_name', value: '{service_name}'), string(name: 'domain', value: '{domain}'), string(name: 'scm_branch', value: "${env.BRANCH_NAME}")], wait: false
   }
 }
 
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
       // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git"
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
     }else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    }
-}
+    } 
+} 

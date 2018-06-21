@@ -15,7 +15,7 @@
 // =========================================================================
 
 const moment = require('moment');
-const DATE_FORMAT = 'YYYY-MM-DDThh:mm:ss';
+const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss';
 const APPEND_ZEROES = '-0000';
 
 function validateMissingFields(requiredFields, query) {

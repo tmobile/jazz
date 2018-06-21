@@ -228,6 +228,14 @@ node() {
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain"
 
+					if(isScheduleEnabled) {
+						def eventsArns = getEventsArn(config, current_environment)
+						for (def i = 0; i < eventsArns.size(); i++) {
+							def arn = eventsArns[i]
+							events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "cloudwatch_event", config), environment_logical_id);
+						}
+					}
+
 					writeServerlessFile(config, current_environment)
 
 					echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
@@ -237,7 +245,8 @@ node() {
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
 					lambdaARN = getLambdaARN(stackName)
-					events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", lambdaARN, config["type"], config['created_by']), environment_logical_id);
+					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+					
 					echo "lambdaARN: ${lambdaARN}"
 					// reset Credentials
 					resetCredentials()
@@ -687,14 +696,11 @@ def send_status_email(config, build_status, email_content) {
  *  Function to get arns of the triggers/events configured for the Lambda.
  *
  */
-def getEventsArn(domain, service, env) {
-	echo "in getEventsArn - if domain, lambdaFnName: ${domain}-${service}-${env}"
+def getEventsArn(config, env) {
 	def eventsArn = []
 	try {
-		def lambdaFnName = service + "-" + env
-		if (domain) {
-			lambdaFnName = domain + "-" + lambdaFnName
-		}
+		def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
+		
 		def lambdaPolicyTxt = sh(script: "aws lambda get-policy --function-name $lambdaFnName --output json", returnStdout: true)
 		def policyLists = null
 		if (lambdaPolicyTxt) {
@@ -752,19 +758,6 @@ def runValidation(String runtime) {
 	} else if (runtime.indexOf("python") > -1) {
 		echo "running validations for $runtime"
 	}
-}
-
-@NonCPS
-def generateAssetMap(provider, providerId, type, created_by) {
-
-	def serviceCtxMap = [
-		provider: provider,
-		provider_id: providerId,
-		type: type,
-		created_by: created_by
-	]
-
-	return serviceCtxMap;
 }
 
 @NonCPS

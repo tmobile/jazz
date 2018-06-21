@@ -138,8 +138,6 @@ node() {
 			}
 		}
 
-
-
 		def requestId = utilModule.generateRequestId()
 		if (requestId != null) {
 			events.setRequestId(requestId)
@@ -225,6 +223,9 @@ node() {
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
+					def lambdaARN = getLambdaARN(stackName);
+					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+
 					if (fileExists('swagger/swagger.json')) {
 						echo "Generating swagger file for environment: ${env_key}"
 
@@ -250,6 +251,12 @@ node() {
 							endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
 						}
 
+						def apiArns = getAPIGatewayResourceARNs(api_id, environment_logical_id)
+						if(apiArns) {
+							for (arn in apiArns) {
+								events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
+							}
+						}
 
 						if (domain != "jazz") {
 							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
@@ -259,9 +266,12 @@ node() {
 						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
 						echo "completed deployment........."
 
-						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
+						def swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
+						events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
 
+						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${swaggerDocUrl}"
 						send_status_email(config, 'COMPLETED', svc_status)
+						
 					}
 
 					if (domain && domain == "jazz") {
@@ -276,6 +286,8 @@ node() {
 			}
 			environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
 			def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
+			
+			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
 			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
 			events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
 			events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
@@ -284,6 +296,113 @@ node() {
 	}//dir ends here
 }
 
+def getLambdaARN(String stackName) {
+	def ARN = "";
+
+	try {
+		def cloudformation_resources = "";
+		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+
+		def parsedObject = parseJson(cloudformation_resources);
+		def outputs = parsedObject.Stacks[0].Outputs;
+
+		for (output in outputs) {
+			if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
+				ARN = output.OutputValue
+			}
+		}
+	} catch (ex) {
+		error ex.getMessage();
+	}
+
+	return ARN;
+}
+
+/**
+ * Get API Resource Arns
+ *
+ */
+def getAPIGatewayResourceARNs(apiId, deployStg){
+	def basePath = getBasePath()
+	echo "basePath : $basePath"
+	basePath = basePath.replaceAll("^api/", "/");
+	if(!basePath.startsWith("/")) {
+		basePath = "/"+basePath
+	}
+	def resourceArns = []
+	def resourcesMap = createPathMethodList() //Returns a list maps of path and methods
+	if(resourcesMap) {
+		for (_map in resourcesMap){
+			for (path in _map) {
+				def arn = createApiGatewayResourceArn(apiId, deployStg, path.value, path.key, basePath)
+				resourceArns.add(arn)
+			}
+		}
+	}
+	echo "resourceArns : $resourceArns"
+	return resourceArns;
+}
+
+def getBasePath() {
+
+    def propValue = "/"
+
+    if (fileExists('swagger/swagger.json')) {
+        def swaggerFile = readFile('swagger/swagger.json').trim()
+        def slurper = new groovy.json.JsonSlurper()
+        def result = slurper.parseText(swaggerFile)
+
+        propValue = result.basePath
+    }
+    def propVal = propValue.replace( /{domain}/, '' ).trim()
+    if (propVal.startsWith('/')) {
+        propVal = propVal.substring(1)
+    }
+    echo "getBasePath : $propValue -> $propVal"
+    return propVal
+}
+
+//Creates a list consisting of all path-method combination from the swagger which is serializable.
+def createPathMethodList() { //Creates a list consisting of all path-method combination from the swagger
+    def swaggerFile = readFile('swagger/swagger.json').trim()
+    def lazyMap = new groovy.json.JsonSlurper().parseText(swaggerFile)
+    def jsonMap = [:]
+    jsonMap.putAll(lazyMap.paths)
+    def composedList = []
+
+    for (path in jsonMap){
+        def pathKey = path.key
+        def pathVal = [:]
+        pathVal.putAll(path.value)
+
+        //loop through all methods in path
+        for (method in pathVal){
+            def methodVal = method.key.toUpperCase()
+            def pathMap = [:]
+            pathMap[pathKey] = methodVal
+            composedList.add(pathMap)
+        }
+    }
+	echo "composedList :  $composedList"
+    return composedList;
+}
+
+/**
+ * create apigateway arns pattern
+ */
+def createApiGatewayResourceArn(apiId, deployStg, method, path, basePath) {
+	def apiResourceArn = ""
+	def _region = configLoader.AWS.REGION
+	def _account = configLoader.AWS.ACCOUNTID
+	def _apiId = apiId
+	def _stgName = deployStg
+	def _method = method
+	def _path = path
+	def _basePath = basePath
+	apiResourceArn = "arn:aws:execute-api:"+_region+":"+_account+":"+_apiId+"/"+_stgName+"/"+_method+_basePath+_path
+	echo "apiResourceArn : $apiResourceArn"
+	return apiResourceArn;
+}
 /**
 	Update context stage to use the dev properties file.
 */
