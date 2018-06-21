@@ -19,6 +19,7 @@
         "prefix": "",
         "styles": [
             "styles.css",
+            "styles/smacss/main.scss",
             "../node_modules/bootstrap/dist/css/bootstrap.min.css",
             "../node_modules/ion-rangeslider/css/ion.rangeSlider.css",
             "../node_modules/ion-rangeslider/css/ion.rangeSlider.skinFlat.css"
@@ -26,7 +27,7 @@
         "scripts": [
             "../node_modules/jquery/dist/jquery.min.js",
             "../node_modules/bootstrap/dist/js/bootstrap.min.js",
-            
+
             "../node_modules/ion-rangeslider/js/ion.rangeSlider.min.js"
         ],
         "environmentSource": "environments/environment.ts",
@@ -34,7 +35,7 @@
             "dev": "environments/environment.ts",
             "internal": "environments/environment.internal.ts",
             "oss": "environments/environment.oss.ts"
-           
+
         }
     }],
     "e2e": {
@@ -55,7 +56,7 @@
         }
     },
     "defaults": {
-        "styleExt": "css",
+        "styleExt": "scss",
         "prefixInterfaces": false,
         "inline": {
             "style": false,
