@@ -105,7 +105,7 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
       return moment(tick).format(graphOptions.xAxisFormat);
     };
     options.scales.yAxes[0].ticks.min = graphOptions.yMin || 0;
-    options.scales.yAxes[0].ticks.max = graphOptions.yMin || 100;
+    options.scales.yAxes[0].ticks.max = graphOptions.yMax || 100;
     return options;
   }
 
