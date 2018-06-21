@@ -1,0 +1,1 @@
+Asset Event Handler to handle events related to jazz assets catalog updates

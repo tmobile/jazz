@@ -82,7 +82,7 @@ node ()  {
       if(config_loader.UI_CONFIG.service_tabs.logs)       sh "sed -i 's/{logs}/logs/g' ./src/environments/environment.oss.ts";
       if(config_loader.UI_CONFIG.environment_tabs.overview) sh "sed -i 's/{env_overview}/overview/g' ./src/environments/environment.oss.ts";
       if(config_loader.UI_CONFIG.environment_tabs.deployments)  sh "sed -i 's/{deployments}/deployments/g' ./src/environments/environment.oss.ts";
-      if(config_loader.UI_CONFIG.environment_tabs.code_quality)  sh "sed -i 's/{code quality}/code quality/g' ./src/environments/environment.oss.ts";
+      if( config_loader.UI_CONFIG.environment_tabs.code_quality == "true" )  sh "sed -i 's/{code quality}/code quality/g' ./src/environments/environment.oss.ts";
       if(config_loader.UI_CONFIG.environment_tabs.assets)  sh "sed -i 's/{assets}/assets/g' ./src/environments/environment.oss.ts";
       if(config_loader.UI_CONFIG.environment_tabs.logs)  sh "sed -i 's/{env_logs}/logs/g' ./src/environments/environment.oss.ts";
 

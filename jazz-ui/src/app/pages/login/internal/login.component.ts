@@ -69,8 +69,7 @@ export class LoginComponent implements OnInit {
 
         //to add animation class 
         this.tst = document.getElementById('toast-container');
-        
-        
+
     }
 
     public goToService () {

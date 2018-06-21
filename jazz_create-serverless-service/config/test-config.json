@@ -1,9 +1,6 @@
 {
-  "JOB_BUILD_URL":"{conf-jenkins-host}/job/create-service/buildWithParameters",
-  "BUILD_TOKEN":"tst-testing-@T-Mo",
-  "SVC_USER":"{ci_user}",
-  "SVC_PASWD":"{ci_pwd}",
-  "USER_POOL_ID":"ap-northeast-1_2x3yztest",
-  "REGION": "us-east-testing",
-  "CLIENT_ID":"conf-client-id"
+    "JOB_BUILD_URL": "{conf-jenkins-host}/job/create-service/buildWithParameters",
+    "JOB_TOKEN": "{job_token}",
+    "API_TOKEN": "{api_token}",
+    "SVC_USER": "{ci_user}"
 }

@@ -25,8 +25,8 @@ public class EnvironmentConfig {
 	
 	static final Logger logger = Logger.getLogger(EnvironmentConfig.class);
 	
-	private static Properties props = new Properties();
-	private static String stage = null; 
+	private Properties props = new Properties();
+	private String stage = null; 
 
 	public EnvironmentConfig(Request input) throws Exception {
 		super();

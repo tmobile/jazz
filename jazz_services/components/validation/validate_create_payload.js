@@ -28,63 +28,63 @@ var validateUtils = require("./common.js")();
 const async = require("async");
 const crud = require("../crud")(); //Import the utils module.
 
-module.exports = (service_data, onComplete)=>{
+module.exports = (service_data, onComplete) => {
     logger.info("Inside Validate Create Payload: " + JSON.stringify(service_data));
     var service_field_list = [];
     var required_fields_create = [];
-    _.forEach(global.global_config.SERVICE_FIELDS_METADATA, function(value, key) {
+    _.forEach(global.global_config.SERVICE_FIELDS_METADATA, function (value, key) {
         service_field_list.push(value.key);
         if (value.required) {
             required_fields_create.push(value.key);
         }
     });
     async.series({
-        validateIsEmptyInputData: function(onComplete){
+        validateIsEmptyInputData: function (onComplete) {
             logger.info("Inside validateIsEmptyInputData: ");
             validateUtils.validateIsEmptyInputData(service_data, onComplete)
         },
 
-        validateAllRequiredFields: function(onComplete){
+        validateAllRequiredFields: function (onComplete) {
             logger.info("Inside validateAllRequiredFields: ");
             validateUtils.validateAllRequiredFields(service_data, required_fields_create, onComplete);
         },
 
-        validateUnAllowedFieldsInInput: function(onComplete) {
+        validateUnAllowedFieldsInInput: function (onComplete) {
             logger.info("Inside validateUnAllowedFieldsInInput: ");
             validateUtils.validateUnAllowedFieldsInInput(service_data, service_field_list, onComplete);
         },
-        
-        validateInputFieldTypes: function(onComplete) {
+
+        validateInputFieldTypes: function (onComplete) {
             logger.info("Inside validateInputFieldTypes: ");
             validateUtils.validateInputFieldTypes(service_data, onComplete);
         },
 
-        validateEnumValues: function(onComplete) {
+        validateEnumValues: function (onComplete) {
             logger.info("Inside validateEnumValues: ");
             validateUtils.validateEnumValues(service_data, onComplete);
         },
 
-        validateAllRequiredFieldsValue: function(onComplete) {
+        validateAllRequiredFieldsValue: function (onComplete) {
             logger.info("Inside validateAllRequiredFieldsValue: ");
             validateUtils.validateAllRequiredFieldsValue(service_data, required_fields_create, onComplete);
         },
 
-        validateEmailFieldValue: function(onComplete) {
+        validateEmailFieldValue: function (onComplete) {
             logger.info("Inside validateEmailFieldValue: ");
             validateUtils.validateEmail(service_data, onComplete);
         },
 
-        validateServiceTypeAndRuntimeRelation: function(onComplete) {
+        validateServiceTypeAndRuntimeRelation: function (onComplete) {
             logger.info("Inside validateServiceTypeAndRuntimeRelation: ");
             validateUtils.validateServiceTypeAndRuntimeRelation(service_data, onComplete);
         },
 
-        validateRemoveEmptyValues: function(onComplete) {
+        validateRemoveEmptyValues: function (onComplete) {
             logger.info("Inside validateRemoveEmptyValues: ");
             validateUtils.validateRemoveEmptyValues(service_data, onComplete);
         },
         // Check if a service with same domain and service_name combination exists
-        validateServiceExists: function(onComplete) {
+        validateServiceExists: function (onComplete) {
             getAllRecords = "true";
             var query = { service: service_data.service.toLowerCase(), domain: service_data.domain.toLowerCase() };
             crud.getList(query, getAllRecords, function onServiceGet(error, data) {
@@ -108,13 +108,13 @@ module.exports = (service_data, onComplete)=>{
             });
         }
     },
-    function(error, data){
-        if (error) {
-            logger.error("# Validate Create Payload Error:" + JSON.stringify(error));
-            onComplete(error);
-        } else {
-            logger.info("# Validate Create Payload Data:" + JSON.stringify(data));
-            onComplete(null);
-        }
-    })
+        function (error, data) {
+            if (error) {
+                logger.error("# Validate Create Payload Error:" + JSON.stringify(error));
+                onComplete(error);
+            } else {
+                logger.info("# Validate Create Payload Data:" + JSON.stringify(data));
+                onComplete(null);
+            }
+        })
 }

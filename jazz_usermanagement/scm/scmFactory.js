@@ -28,10 +28,10 @@
  * @param {*} userId - userId that needs to be created in gitlab
  * @param {*} password - password that needs to be set in gitlab
  */
-var createUserInGitlabRequest = function(config, userId, password) {
+var createUserInGitlabRequest = function (config, userId, password) {
     var encodedUserId = encodeURIComponent(userId);
     var encodedPwd = encodeURIComponent(password);
-    
+
     //gitlabs username is restricted to alphanumeric and . _ - characters, 
     // so using email all email characters (except -, _) replaced with -
     var username = userId.replace(/[^a-zA-Z0-9_-]/g, '-');
@@ -46,7 +46,7 @@ var createUserInGitlabRequest = function(config, userId, password) {
         headers: {
             'Accept': 'application/json',
             'Accept-Charset': 'utf-8',
-            'Private-Token' : config.PRIVATE_TOKEN
+            'Private-Token': config.PRIVATE_TOKEN
         },
         qs: {}
     };
@@ -58,26 +58,26 @@ var createUserInGitlabRequest = function(config, userId, password) {
  * @param {*} userId - userId that needs to be created in bitbucket
  * @param {*} password - password that needs to be set in gitlab
  */
-var createUserInBitbucketRequest = function(config, userId, password) {
+var createUserInBitbucketRequest = function (config, userId, password) {
     var encodedUserId = encodeURIComponent(userId);
-	var encodedPwd = encodeURIComponent(password);
-	var url = config.HOSTNAME + config.API_USER_ADD + '?name=' + encodedUserId + '&password=' + encodedPwd + '&displayName=' + encodedUserId + '&emailAddress=' + encodedUserId + '&addToDefualtGroup=false&notify=false';
+    var encodedPwd = encodeURIComponent(password);
+    var url = config.HOSTNAME + config.API_USER_ADD + '?name=' + encodedUserId + '&password=' + encodedPwd + '&displayName=' + encodedUserId + '&emailAddress=' + encodedUserId + '&addToDefualtGroup=false&notify=false';
 
-	return {
-		url: url,
-		auth: {
-			user: config.USERNAME,
-			password: config.PASSWORD
-		},
-		method: 'POST',
-		rejectUnauthorized: false,
-		headers: {
-			'Accept': 'application/json',
-			'Accept-Charset': 'utf-8',
-			'X-Atlassian-Token': 'no-check'
-		},
-		qs: {}
-	};
+    return {
+        url: url,
+        auth: {
+            user: config.USERNAME,
+            password: config.PASSWORD
+        },
+        method: 'POST',
+        rejectUnauthorized: false,
+        headers: {
+            'Accept': 'application/json',
+            'Accept-Charset': 'utf-8',
+            'X-Atlassian-Token': 'no-check'
+        },
+        qs: {}
+    };
 };
 
 /**
@@ -85,7 +85,7 @@ var createUserInBitbucketRequest = function(config, userId, password) {
  */
 module.exports = class ScmFactory {
 
-    constructor(config){
+    constructor(config) {
         this.config = config;
         this.addUserMap = {
             "gitlab": createUserInGitlabRequest,
@@ -93,7 +93,7 @@ module.exports = class ScmFactory {
         }
     }
 
-    addUserRequest(userId, password){
+    addUserRequest(userId, password) {
         if (this.config && this.config.SCM_TYPE && this.addUserMap[this.config.SCM_TYPE]) {
             var scmConfig = this.config.SCM_CONFIG[this.config.SCM_TYPE];
             return this.addUserMap[this.config.SCM_TYPE](scmConfig, userId, password);

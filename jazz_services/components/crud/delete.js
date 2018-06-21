@@ -22,7 +22,7 @@
 	@version: 1.0
 **/
 
-const utils = require("../utils.js")(); 
+const utils = require("../utils.js")();
 
 module.exports = (service_id, onComplete) => {
     var docClient = utils.initDocClient();
@@ -34,7 +34,7 @@ module.exports = (service_id, onComplete) => {
         }
     };
 
-    docClient.delete(params, function(err, data) {
+    docClient.delete(params, function (err, data) {
         if (err) {
             onComplete(err);
         } else {

@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,25 +24,25 @@
 
 module.exports = () => {
     var errorObj = {
-        throwInputValidationError: function(errorMessage) { //Raise a  bad requests exception
+        throwInputValidationError: function (errorMessage) { //Raise a  bad requests exception
             return {
                 errorType: "BadRequest",
                 message: errorMessage.toString()
             };
         },
-        throwNotFoundError: function(errorMessage) { //Raise not found exceptions
+        throwNotFoundError: function (errorMessage) { //Raise not found exceptions
             return {
                 errorType: "NotFound",
                 message: errorMessage.toString()
             };
         },
-        throwInternalServerError: function(errorMessage) { //Raise internal server exceptions
+        throwInternalServerError: function (errorMessage) { //Raise internal server exceptions
             return {
                 errorType: "InternalServerError",
                 message: errorMessage.toString()
             };
         },
-        throwUnAuthorizedError: function(errorMessage) { //Raise 403: Forbidden
+        throwUnAuthorizedError: function (errorMessage) { //Raise 403: Forbidden
             return {
                 errorType: "Forbidden",
                 message: errorMessage.toString()

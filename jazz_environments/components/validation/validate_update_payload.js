@@ -23,9 +23,7 @@
 **/
 
 const logger = require("../logger"); //Import the logging module.
-const utils = require("../utils.js")(); //Import the utils module.
 const validateUtils = require("./common.js")();
-const crud = require("../crud")(); //Import the utils module.
 
 module.exports = (environment_data, environment_id, onComplete) => {
     logger.info("Inside Validate Update Payload: " + JSON.stringify(environment_data));
@@ -33,8 +31,7 @@ module.exports = (environment_data, environment_id, onComplete) => {
     var non_editable_fields_for_update = global.config.service_environment_unchangeable_fields;
     var editable_fields_for_update = global.config.service_environment_changeable_fields;
     var status_field_list = global.config.service_environment_status
-    var service_data_from_db = {};
-
+    
     validateIsEmptyInputData(environment_data)
         .then(() => validateFriendlyName(environment_data, environment_id))
         .then(() => validateNotEditableFieldsInUpdate(environment_data, non_editable_fields_for_update))

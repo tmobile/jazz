@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,14 +16,14 @@
 
 var getStageConfig = (event) => {
     var stage;
-    
+
     if (event && event.awslogs && event.awslogs.data) {
         // cw events default to dev
         stage = 'dev';
-    }else {
+    } else {
         stage = event.stage
-    } 
-    
+    }
+
     var configObj = {};
     // Loads the config files based on the env.
     // Please edit the JSON files.
@@ -31,7 +31,7 @@ var getStageConfig = (event) => {
         configObj = require('../config/dev-config.json');
     } else if (stage === 'stg') {
         configObj = require('../config/stg-config.json');
-    } else if (stage === 'prod'){
+    } else if (stage === 'prod') {
         configObj = require('../config/prod-config.json');
     }
     return configObj;

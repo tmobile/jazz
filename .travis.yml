@@ -2,12 +2,20 @@ language: node_js
 node_js:
  - "node"
 env:
- - PLATFORM_SERVICE=jazz_login
- - PLATFORM_SERVICE=jazz_logout
- - PLATFORM_SERVICE=jazz_is-service-available
- - PLATFORM_SERVICE=jazz_events
+ - PLATFORM_SERVICE=jazz_codeq
+ - PLATFORM_SERVICE=jazz_create-serverless-service
+ - PLATFORM_SERVICE=jazz_delete-serverless-service
+ - PLATFORM_SERVICE=jazz_deployments
+ - PLATFORM_SERVICE=jazz_deployments-event-handler
  - PLATFORM_SERVICE=jazz_environments
  - PLATFORM_SERVICE=jazz_environment-event-handler
+ - PLATFORM_SERVICE=jazz_events
+ - PLATFORM_SERVICE=jazz_is-service-available
+ - PLATFORM_SERVICE=jazz_login
+ - PLATFORM_SERVICE=jazz_logout 
+ - PLATFORM_SERVICE=jazz_scm-webhook
+ - PLATFORM_SERVICE=jazz_services
+ - PLATFORM_SERVICE=jazz_services-handler
 
 before_script:
   - npm prune
