@@ -170,9 +170,17 @@ export class EnvCodequalitySectionComponent implements OnInit {
           y: parseInt(dataPoint.value)
         };
       });
+
+    filterData.yMax = 1.1 * (data.values.reduce((pointA, pointB) => {
+      return Math.max(pointA.y, pointB.y);
+    }));
+    filterData.yMin = .9 * (data.values.reduce((pointA, pointB) => {
+      return Math.min(pointA.y, pointB.y);
+    }));
+
     return {
       datasets: [data],
-      options: filterData
+      options: filterData,
     };
   }
 
