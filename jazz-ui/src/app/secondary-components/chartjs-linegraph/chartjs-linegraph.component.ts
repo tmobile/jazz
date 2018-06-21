@@ -15,7 +15,8 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
   public type = 'scatter';
   public options = {};
 
-  constructor(private utils: UtilsService) {}
+  constructor() {
+  }
 
   ngOnInit() {
     this.sizeCanvas();
@@ -44,10 +45,30 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
   }
 
   getOptions(graphOptions) {
+
     const options = {
       responsive: false,
       legend: false,
-      tooltips: false,
+      tooltips: {
+        enabled: true,
+        displayColors: false,
+        titleFontSize: 16,
+        borderWidth: 1,
+        titleFontColor: '#ed008c',
+        backgroundColor: '#ffffff',
+        borderColor: '#9b9b9b',
+        callbacks: {
+          title: (tooltipItem, chart) => {
+            return tooltipItem[0].yLabel;
+          },
+          label: (tooltipItem, chart) => {
+            return moment(tooltipItem.xLabel).format('MMM D, YYYY');
+          },
+          labelTextColor: () => {
+            return '#9b9b9b';
+          }
+        }
+      },
       scales: {
         xAxes: [
           {

@@ -13,7 +13,7 @@ export class UtilsService {
       const args = arguments;
       const later = function () {
         timeout = null;
-        if (!immediate){
+        if (!immediate) {
           func.apply(context, args);
         }
       };
@@ -25,4 +25,12 @@ export class UtilsService {
       }
     };
   };
+
+  hyphenToSpace(input) {
+    return input.replace(/-/g, ' ');
+  }
+
+  queryString(params) {
+    return '?' + Object.keys(params).map(key => key + '=' + params[key]).join('&');
+  }
 }

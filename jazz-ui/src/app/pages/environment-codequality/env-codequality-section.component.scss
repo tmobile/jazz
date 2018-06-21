@@ -1,53 +1,55 @@
 .arrow_box {
-	position: relative;
-	background: #dddddd;
-    border: solid 1px #dddddd;
+  position: relative;
+  background: #dddddd;
+  border: solid 1px #dddddd;
 }
+
 .arrow_box:after, .arrow_box:before {
-	bottom: 100%;
-	left: 50%;
-	border: solid transparent;
-	content: " ";
-	height: 0;
-	width: 0;
-	position: absolute;
-	pointer-events: none;
+  bottom: 100%;
+  left: 50%;
+  border: solid transparent;
+  content: " ";
+  height: 0;
+  width: 0;
+  position: absolute;
+  pointer-events: none;
 }
 
 .arrow_box:after {
-	border-color: rgba(213, 213, 213, 0);
-	border-bottom-color: #fdfdfd;
-	border-width: 12px;
-    margin-left: -12px;
-    bottom:calc(100% - 1px);
+  border-color: rgba(213, 213, 213, 0);
+  border-bottom-color: #fdfdfd;
+  border-width: 12px;
+  margin-left: -12px;
+  bottom: calc(100% - 1px);
 }
+
 .arrow_box:before {
-	border-color: rgba(194, 225, 245, 0);
-	border-bottom-color: #9b9b9b;
-	border-width: 12.75px;
-	margin-left: -12.5px;
+  border-color: rgba(194, 225, 245, 0);
+  border-bottom-color: #9b9b9b;
+  border-width: 12.75px;
+  margin-left: -12.5px;
 }
 
-.active{
-    border-radius: 3px;
-    background-color: #f9f9f9;
-    border: solid 1px #9b9b9b!important;
+.active {
+  border-radius: 3px;
+  background-color: #f9f9f9;
+  border: solid 1px #9b9b9b !important;
 }
 
-.graphtitle{
-    font-size: 16px;
-    font-weight: bold;
-   text-align: center;
-    text-transform: uppercase;
-    color: #ed008c;
-    margin: 0;
+.graphtitle {
+  font-size: 16px;
+  font-weight: bold;
+  text-align: center;
+  text-transform: uppercase;
+  color: #ed008c;
+  margin: 0;
 }
 
-.graphtitlefilter{
-    font-size: 12px;
-    font-weight: bold;
-   text-align: center;
-    color: #ed008c;
+.graphtitlefilter {
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+  color: #ed008c;
 }
 
 .sonar-link {
@@ -74,7 +76,7 @@
 .section-content {
   flex: 1;
   position: relative;
-  display:flex;
+  display: flex;
   flex-direction: column;
 }
 
@@ -84,7 +86,7 @@
   background-color: #f9f9f9;
   border: solid 1px #9b9b9b;
   padding: .5rem;
-  height: calc(100% - (120rem/12));
+  height: calc(100% - (120rem / 12));
 }
 
 .chart-content {
@@ -108,40 +110,41 @@
   width: 30%;
 }
 
-.metrics-cards-wrap{
+.metrics-cards-wrap {
   padding: 15px 0;
   display: block;
   line-height: 1.5;
   overflow: hidden;
   white-space: nowrap;
   width: 100%;
-  height: calc(120rem/12);
-  .metrics-card{
+  height: calc(120rem / 12);
+  position: relative;
+  .metrics-card {
     border-radius: 3px;
     background-color: #fdfdfd;
     border: solid 1px #dddddd;
-    width:135px;
+    width: 135px;
     display: inline-block;
-    padding:0.5rem;
-    margin:-1px 0.5rem;
+    padding: 0.5rem;
+    margin: -1px 0.5rem;
     text-align: center;
     font-size: 1rem;
-    color:#000;
+    color: #000;
     white-space: normal;
     vertical-align: top;
-    height: calc(93rem/12);
-    @media(min-width: 1280px){
+    height: calc(93rem / 12);
+    @media(min-width: 1280px) {
       min-width: 135px;
     }
     cursor: pointer;
 
-    &:first-child{
+    &:first-child {
       margin-left: 0;
     }
-    &:last-child{
-      margin-right:0;
+    &:last-child {
+      margin-right: 0;
     }
-    .metrics-name{
+    .metrics-name {
       font-size: 1.2rem;
       font-weight: bold;
       text-align: center;
@@ -151,7 +154,7 @@
       text-transform: capitalize;
     }
 
-    .metrics-date{
+    .metrics-date {
       font-size: 12px;
       text-align: center;
       color: #666;
@@ -159,15 +162,43 @@
       margin: 0.75rem 0 0.5rem;
     }
 
-    .metrics-data{
+    .metrics-data {
       font-size: 36px;
       text-align: center;
       color: #333;
     }
   }
-  .scroll-cards-wrap{
-    position: absolute;
-    transition-duration: 1s;
+  .scroll-cards-wrap {
+    height: 100%;
+    display: inline-flex;
+    align-items: flex-end;
+    transition: 600ms ease-in-out;
+    padding-bottom: 2px;
   }
+}
+
+.metrics-arrows {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: calc(120rem/12 - 15px);
+  width: 100%;
+}
+
+.left-arrow {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 5px);
+  transform: translateY(-50%);
+}
+
+.right-arrow {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 5px);
+  transform: translateY(-50%);
+
 }
 

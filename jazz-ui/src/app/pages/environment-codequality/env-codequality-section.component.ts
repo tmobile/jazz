@@ -1,8 +1,8 @@
-import {Component, OnInit, ElementRef, Inject, Input, ViewChild, AfterViewInit} from '@angular/core';
+import {Component, OnInit, Input, ViewChild, AfterViewInit} from '@angular/core';
 import {ToasterService} from 'angular2-toaster';
 import {RequestService, MessageService} from '../../core/services/index';
-import {DataCacheService, AuthenticationService} from '../../core/services/index';
-import {Router, ActivatedRoute} from '@angular/router';
+import {DataCacheService} from '../../core/services/index';
+import {ActivatedRoute} from '@angular/router';
 import {DataService} from '../data-service/data.service';
 import * as moment from 'moment';
 import {UtilsService} from '../../core/services/utils.service';
@@ -15,8 +15,24 @@ import {UtilsService} from '../../core/services/utils.service';
   providers: [RequestService, MessageService, DataService],
 })
 export class EnvCodequalitySectionComponent implements OnInit {
-  @ViewChild('metricCards') metricCards;
-  @ViewChild('metricCardsScroller') metricCardsScroller;
+  public metricCards;
+
+  @ViewChild('metricCards') set _metricCards(input) {
+    this.metricCards = input;
+  }
+
+  public metricCardsScroller;
+
+  @ViewChild('metricCardsScroller') set _metricCardsScoller(input) {
+    this.metricCardsScroller = input;
+    if (this.metricCards && this.metricCardsScroller) {
+      setTimeout(() => {
+        this.metricCardsOversized = this.metricCardsScroller.nativeElement.scrollWidth >
+          this.metricCards.nativeElement.getBoundingClientRect().width;
+      });
+    }
+  };
+
   @Input() service: any = {};
   public renderGraph = true;
   public filters: any = ['DAILY', 'WEEKLY', 'MONTHLY'];
@@ -30,6 +46,12 @@ export class EnvCodequalitySectionComponent implements OnInit {
   public metricsIndex = 0;
   public resizeDebounced;
   public errorData;
+  public dayValue = 86400000;
+  public weekValue = 604800000;
+  public monthValue = 2592000000;
+  public metricCardSize = 135 + 12;
+  public metricCardsOversized;
+  public metricCardOffset = 0;
 
   constructor(
     private toasterService: ToasterService,
@@ -37,7 +59,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
     private route: ActivatedRoute,
     private http: RequestService,
     private cache: DataCacheService,
-    private utils: UtilsService) {
+    public utils: UtilsService) {
     this.resizeDebounced = this.utils.debounce(this.resize, 200, false);
   }
 
@@ -65,21 +87,21 @@ export class EnvCodequalitySectionComponent implements OnInit {
           fromDateISO: moment().subtract(7, 'day').toISOString(),
           headerMessage: '( past 7 days )',
           xAxisFormat: 'dd',
-          stepSize: 86400000
+          stepSize: this.dayValue
         };
         break;
       case 'WEEKLY':
         filterData = {
           fromDateISO: moment().subtract(4, 'week').toISOString(),
           headerMessage: '( past 4 weeks)',
-          xAxisFormat: 'MMM DD',
-          stepSize: 604800000
+          xAxisFormat: 'M/D',
+          stepSize: this.dayValue * 2
         };
         break;
       case 'MONTHLY':
         filterData = {
-          fromDateISO: moment().subtract(3, 'month').toISOString(),
-          headerMessage: '( past 4 months )',
+          fromDateISO: moment().subtract(6, 'month').toISOString(),
+          headerMessage: '( past 6 months )',
           xAxisFormat: 'MMM',
           stepSize: 2592000000
         };
@@ -158,15 +180,23 @@ export class EnvCodequalitySectionComponent implements OnInit {
     window.open(this.selectedMetric.link, '_blank');
   }
 
-  hyphenToSpace(input) {
-    return input.replace(/-/g, ' ');
-  }
-
   resize() {
     this.renderGraph = false;
     setTimeout(() => {
       this.renderGraph = true;
     }, 200);
+  }
+
+  offsetLeft() {
+    if (this.metricCardsScroller.nativeElement.getBoundingClientRect().right > this.metricCards.nativeElement.getBoundingClientRect().right) {
+      this.metricCardOffset -= 1;
+    }
+  }
+
+  offsetRight() {
+    if (this.metricCardOffset < 0) {
+      this.metricCardOffset += 1;
+    }
   }
 
 }
