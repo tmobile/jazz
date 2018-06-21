@@ -73,7 +73,7 @@ export class RequestService {
                 }
             })
              .catch((error: any) => {
-                return this.handleError(error, router);
+                return this.handleError(error, this.router);
             })
     }
 
