@@ -122,7 +122,6 @@ function getAssetsDetails(config, eventBody) {
 
     logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
 
-
     request(asset_api_options, (error, response, body) => {
       if (error) {
         reject(error);
