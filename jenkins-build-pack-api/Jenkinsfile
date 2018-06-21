@@ -251,7 +251,7 @@ node() {
 							endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
 						}
 
-						def apiArns = getAPIGatewayResourceARNs(configLoader.AWS.REGION, api_id, environment_logical_id)
+						def apiArns = getAPIGatewayResourceARNs(api_id, environment_logical_id)
 						if(apiArns) {
 							for (arn in apiArns) {
 								events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
@@ -266,9 +266,12 @@ node() {
 						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
 						echo "completed deployment........."
 
-						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
+						def swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
+						events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
 
+						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${swaggerDocUrl}"
 						send_status_email(config, 'COMPLETED', svc_status)
+						
 					}
 
 					if (domain && domain == "jazz") {
@@ -283,6 +286,8 @@ node() {
 			}
 			environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
 			def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
+			
+			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
 			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
 			events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
 			events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
@@ -319,6 +324,7 @@ def getLambdaARN(String stackName) {
  */
 def getAPIGatewayResourceARNs(apiId, deployStg){
 	def basePath = getBasePath()
+	echo "basePath : $basePath"
 	basePath = basePath.replaceAll("^api/", "/");
 	if(!basePath.startsWith("/")) {
 		basePath = "/"+basePath
@@ -333,9 +339,70 @@ def getAPIGatewayResourceARNs(apiId, deployStg){
 			}
 		}
 	}
+	echo "resourceArns : $resourceArns"
 	return resourceArns;
 }
 
+def getBasePath() {
+
+    def propValue = "/"
+
+    if (fileExists('swagger/swagger.json')) {
+        def swaggerFile = readFile('swagger/swagger.json').trim()
+        def slurper = new groovy.json.JsonSlurper()
+        def result = slurper.parseText(swaggerFile)
+
+        propValue = result.basePath
+    }
+    def propVal = propValue.replace( /{domain}/, '' ).trim()
+    if (propVal.startsWith('/')) {
+        propVal = propVal.substring(1)
+    }
+    echo "getBasePath : $propValue -> $propVal"
+    return propVal
+}
+
+//Creates a list consisting of all path-method combination from the swagger which is serializable.
+def createPathMethodList() { //Creates a list consisting of all path-method combination from the swagger
+    def swaggerFile = readFile('swagger/swagger.json').trim()
+    def lazyMap = new groovy.json.JsonSlurper().parseText(swaggerFile)
+    def jsonMap = [:]
+    jsonMap.putAll(lazyMap.paths)
+    def composedList = []
+
+    for (path in jsonMap){
+        def pathKey = path.key
+        def pathVal = [:]
+        pathVal.putAll(path.value)
+
+        //loop through all methods in path
+        for (method in pathVal){
+            def methodVal = method.key.toUpperCase()
+            def pathMap = [:]
+            pathMap[pathKey] = methodVal
+            composedList.add(pathMap)
+        }
+    }
+	echo "composedList :  $composedList"
+    return composedList;
+}
+
+/**
+ * create apigateway arns pattern
+ */
+def createApiGatewayResourceArn(apiId, deployStg, method, path, basePath) {
+	def apiResourceArn = ""
+	def _region = configLoader.AWS.REGION
+	def _account = configLoader.AWS.ACCOUNTID
+	def _apiId = apiId
+	def _stgName = deployStg
+	def _method = method
+	def _path = path
+	def _basePath = basePath
+	apiResourceArn = "arn:aws:execute-api:"+_region+":"+_account+":"+_apiId+"/"+_stgName+"/"+_method+_basePath+_path
+	echo "apiResourceArn : $apiResourceArn"
+	return apiResourceArn;
+}
 /**
 	Update context stage to use the dev properties file.
 */
