@@ -414,7 +414,7 @@ def setLogStreamPermission(config){
 }
 
 def getApiToken(){    
-	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: "jobexecutor", passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
 		User u = User.get(UNAME)  
 		ApiTokenProperty t = u.getProperty(ApiTokenProperty.class)  
 		def token = t.getApiToken()
