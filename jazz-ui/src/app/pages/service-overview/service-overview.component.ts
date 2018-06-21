@@ -880,7 +880,6 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   refresh_env(){
-    alert('ss')
     this.envComponent.refresh();
   }
 
@@ -895,10 +894,7 @@ export class ServiceOverviewComponent implements OnInit {
 
     this.prodEnv = {};
     this.stgEnv = {};
-    if ((this.service.domain != undefined) && (this.internal_build == true)) {
-      this.getenvData();
-
-    }
+    
 
 
 
