@@ -434,6 +434,12 @@ export class ServiceOverviewMultienvComponent implements OnInit {
     arrEnv[0].status.replace("_", " ");
   }
 
+  refresh(){
+    if((this.service.domain!=undefined) && (this.internal_build == true)){
+        this.getenvData();
+    }
+  }
+
   internal_build: boolean = true;
   ngOnChanges(x: any) {
     if (environment.multi_env) this.is_multi_env = true;

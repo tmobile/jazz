@@ -40,6 +40,8 @@ api_doc_name:string='';
   environment_obj:any;
   isLoadingService: boolean = true;
   status_inactive:boolean = false;
+  swagger_error:boolean = false;
+
   tabData = ['overview','deployments','code quality','assets','logs'];
   envSelected:string='';
   endpoint_env:string='';

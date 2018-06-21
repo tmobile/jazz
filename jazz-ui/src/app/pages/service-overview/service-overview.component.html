@@ -320,5 +320,5 @@
     <div class="loading-row" [class.show]="isenvLoading">
         <div class="loading-circle"></div>
     </div> -->
- <service-overview-multienv *ngIf='multiENV' [service]='service'></service-overview-multienv>
+ <service-overview-multienv #env *ngIf='multiENV' [service]='service'></service-overview-multienv>
  <service-overview-non-multienv *ngIf='!multiENV' [service]='service'></service-overview-non-multienv>
