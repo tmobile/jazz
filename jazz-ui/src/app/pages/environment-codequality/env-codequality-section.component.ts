@@ -171,11 +171,15 @@ export class EnvCodequalitySectionComponent implements OnInit {
         };
       });
 
-    filterData.yMax = 1.1 * (data.values.reduce((pointA, pointB) => {
-      return Math.max(pointA.y, pointB.y);
+    filterData.yMax = 1.1 * (data.values
+      .map((point) => {return point.y})
+      .reduce((a, b) => {
+      return Math.max(a, b);
     }));
-    filterData.yMin = .9 * (data.values.reduce((pointA, pointB) => {
-      return Math.min(pointA.y, pointB.y);
+    filterData.yMin = .9 * (data.values
+      .map((point) => {return point.y})
+      .reduce((a, b) => {
+      return Math.min(a, b);
     }));
 
     return {
