@@ -32,8 +32,6 @@ const validateARN = utils.validateARN;
 const execStatus = utils.execStatus();
 
 var handler = (event, context, cb) => {
-
-
   //Initializations
   var errorHandler = errorHandlerModule();
   var config = configObj(event);
@@ -90,7 +88,6 @@ var handler = (event, context, cb) => {
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown internal error occurred when invoking the function")));
   }
 };
-
 var invokeLambda = (functionARN, inputJSON, awsRegion) => {
 
   return new Promise((resolve, reject) => {
@@ -116,6 +113,7 @@ var invokeLambda = (functionARN, inputJSON, awsRegion) => {
     }
   });
 };
+
 module.exports = {
   handler: handler,
   invokeLambda: invokeLambda
