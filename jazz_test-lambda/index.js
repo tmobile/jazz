@@ -20,6 +20,8 @@ API to test lambda function and send back execution status
 @version: 1.0
  **/
 
+'use strict';
+
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
@@ -31,7 +33,7 @@ const execStatus = utils.execStatus();
 
 var handler = (event, context, cb) => {
 
-  'use strict';
+
   //Initializations
   var errorHandler = errorHandlerModule();
   var config = configObj(event);
@@ -90,7 +92,7 @@ var handler = (event, context, cb) => {
 };
 
 var invokeLambda = (functionARN, inputJSON, awsRegion) => {
-  'use strict';
+
   return new Promise((resolve, reject) => {
     try {
       var lambda = new aws.Lambda({
