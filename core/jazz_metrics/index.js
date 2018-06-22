@@ -57,7 +57,8 @@ module.exports.handler = (event, context, cb) => {
     var eventBody = event.body;
     genericValidation(event)
       .then(() => validateUtils.validateGeneralFields(eventBody))
-      .then(() => getAssetsDetails(config, eventBody))
+      .then(() => getToken(config))
+      .then((authToken) => getAssetsDetails(config, eventBody, authToken))
       .then(res => validateAssets(res, eventBody))
       .then(res => getMetricsDetails(res, cloudwatch, config))
       .then(res => {
@@ -100,7 +101,39 @@ function genericValidation(event) {
   });
 }
 
-function getAssetsDetails(config, eventBody) {
+function getToken(config) {
+	logger.debug("Inside getToken");
+	return new Promise((resolve, reject) => {
+		var svcPayload = {
+			uri: config.SERVICE_API_URL + config.TOKEN_URL,
+			method: 'post',
+			json: {
+				"username": config.SERVICE_USER,
+				"password": config.TOKEN_CREDS
+			},
+			rejectUnauthorized: false
+		};
+		request(svcPayload, (error, response, body) => {
+			if (response && response.statusCode === 200 && body && body.data) {
+				var authToken = body.data.token;
+				resolve(authToken);
+			} else {
+				var message = "";
+				if (error) {
+					message = error.message
+				} else {
+					message = response.body.message
+				}
+				reject({
+					"error": "Could not get authentication token for updating service catalog.",
+					"message": message
+				});
+			}
+		});
+	});
+}
+
+function getAssetsDetails(config, eventBody, authToken) {
   return new Promise((resolve, reject) => {
     var asset_api_payload = {
       "service": eventBody.service,
@@ -111,6 +144,7 @@ function getAssetsDetails(config, eventBody) {
       url: config.SERVICE_API_URL + config.ASSETS_URL,
       headers: {
         "Content-Type": "application/json",
+        "Authorization": authToken
       },
       method: "POST",
       rejectUnauthorized: false,
