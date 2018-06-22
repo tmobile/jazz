@@ -1,0 +1,6 @@
+{
+    "JOB_BUILD_URL": "{conf-jenkins-host}/job/create-service/buildWithParameters",
+    "JOB_TOKEN": "{job_token}",
+    "API_TOKEN": "{api_token}",
+    "SVC_USER": "{ci_user}"
+}

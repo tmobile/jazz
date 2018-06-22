@@ -1,0 +1,98 @@
+<jazz-mob-header [icon]="'notification'" [headText]="service.name" [status]="'green'"></jazz-mob-header>
+<section class="page-container service-detail-page">
+    <navigation-bar [links]="breadcrumbs"></navigation-bar>
+    
+    <div class="content relative" [class.non-clickable] = 'service.status == "deletion started" || service.status == "deletion completed"'>
+                        <span  class="reduxC" *ngIf='service.status == "deletion completed"'></span>
+                        <span  class="reduxS" *ngIf='service.status == "deletion started"'></span>
+            
+        <div class="page-title-wrap hide-for-mobile">
+            <h1 class="page-hdr bold-title">{{service.name}}</h1>
+            <span class="page-sub-title"><span class="service-type">{{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
+            <btn-jazz-secondary class="delete-service-btn" text="DELETE SERVICE" [disablebtn]="!canDelete" (click)="deleteService(true)"></btn-jazz-secondary>
+        </div>
+        
+        <tabs [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+       
+        <div *ngIf='!err_flag'> 
+            <section class="page-content" *ngIf="selectedTab == 0">
+                <service-overview (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isLoadingService]="isLoadingService"></service-overview>
+            </section>
+            <section class="page-content" *ngIf="selectedTab == 1">
+                <service-access-control></service-access-control>
+            </section>
+            <section class="page-content" *ngIf="selectedTab == 2">
+                <service-metrics  [service]="service" #metric></service-metrics>
+            </section>
+            <section class="page-content" *ngIf="selectedTab == 3">
+                <service-logs #logs [service]="service"></service-logs>
+            </section>
+            <section class="page-content" *ngIf="selectedTab == 4">
+                <service-cost #cost [service]="service"></service-cost>
+            </section>
+        </div>
+        <div *ngIf='err_flag' class='err-wrp'>
+                
+                <div class="empty-row with-refresh relative">
+                        <div class="loading-row" [class.show]="isLoadingService">
+                                <div class="loading-circle"></div>
+                        </div>
+                        <img src="assets/images/refresh.png" alt="errorimg" width="100">
+                        <div class='oops'>Oops!</div>
+                        <div>{{errMessage}}<br><a (click)="refreshServ()">REFRESH</a> to give it another try.</div>
+                        <br><div class='ctc-us'>If the problem persists, <a (click)='goToAbout("about")'> contact us</a>.</div>
+                </div>
+        </div>
+    </div>
+</section>
+
+<sidebar [show]="showPopUp" (onClose)="hideDeletePopup(false)" class="delete-ser">
+    <div class="delete-service-pop">
+
+        <div class="step-1" *ngIf="!success">
+            <h1>CONFIRMATION</h1>
+            <div class="delete-service-popup-content">
+                <p [class.invisible]="isLoading"> Are you sure you want to permanently delete <span>{{service.name}}</span>? Please confirm</p>
+                <div class="loading-row" [class.show]="isLoading">
+                    <div class="loading-circle"></div>
+                </div>
+                <div class="input-wrapper" [class.invisible]="isLoading">
+                    <input name="serviceName" type="text" class="textForm" placeholder="Service Name" id="service-name-search" [(ngModel)]="ServiceName" (ngModelChange)="onServiceNameChange()">
+                </div>
+                <div class="footer-btns" [class.invisible]="isLoading">
+                    <btn-jazz-primary text="DELETE" (click)="deleteServiceInit()" newclass="delete-btn" [disablePrimaryBtn]="disblebtn"></btn-jazz-primary>
+                    <a (click)="hideDeletePopup()">CANCEL</a>
+                </div>
+            </div>
+        </div>
+        <div class="step-1" *ngIf="serviceDeleted">
+                <h1>CONFIRMATION</h1>
+                <div class="delete-service-popup-content message">
+                    <div class='oops'>Success!</div><br>
+                    <div class="ctc-us">"{{service.name}}" {{successMessage}}</div>
+                </div>
+                <div class="footer-btns" [class.invisible]="isLoading">
+                        <btn-jazz-primary text="DONE" (click)="backtoservice()" newclass="delete-btn"></btn-jazz-primary>
+                       
+                </div>
+        </div>
+        <div class="step-1" *ngIf="serviceDeleteFailed">
+                <h1>CONFIRMATION</h1>
+                <div class="delete-service-popup-content message">
+                        <div class='oops'>Oops!</div>
+                        <div class="ctc-us">something went wrong while fetching data<br><a (click)="deleteServiceInit()">REFRESH</a> to give it another try.</div>
+                        <br><div class='ctc-us'>If the problem persists, <a (click)='goToAbout("about")'> contact us</a>.</div>
+                </div>
+                <div class="footer-btns" [class.invisible]="isLoading">
+                        <btn-jazz-primary text=" DONE" (click)="backtoservice()" newclass="delete-btn"></btn-jazz-primary>
+                       
+                </div>
+        </div>
+    </div>
+</sidebar>
+<section class='overview-sidebar'>
+    <sidebar [show]="close" (onClose)="closeSidebar($event)">
+            <overview-sidebar (onClose)="closeSidebar($event)"></overview-sidebar>
+    </sidebar>
+</section>
+<footer></footer>

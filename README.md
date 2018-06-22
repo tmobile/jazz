@@ -1,4 +1,4 @@
-![Jazz Logo](logo.png)
+![Jazz Logo](misc/logo.png)
 # Jazz Serverless Platform
 [![Build Status](https://travis-ci.org/tmobile/jazz.svg?branch=master)](https://travis-ci.org/tmobile/jazz)
 
