@@ -24,7 +24,6 @@ API to test lambda function and send back execution status
 
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
-const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
 const utils = require("./components/utils.js");
 const aws = require('aws-sdk');
@@ -34,7 +33,6 @@ const execStatus = utils.execStatus();
 var handler = (event, context, cb) => {
   //Initializations
   var errorHandler = errorHandlerModule();
-  var config = configObj(event);
   logger.init(event, context);
   var awsRegion;
   try {
