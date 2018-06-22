@@ -19,7 +19,7 @@
         "CREATE_ASSET": "CREATE_ASSET",
         "UPDATE_ASSET": "UPDATE_ASSET"
     },
-    "TOKEN_URL": "/dev/jazz/login",
+    "TOKEN_URL": "/prod/jazz/login",
     "SERVICE_USER": "{jazz_admin}",
     "TOKEN_CREDS": "{jazz_admin_creds}"
 }
