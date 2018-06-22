@@ -25,7 +25,7 @@ echo "Service configuration module loaded successfully"
  * Initialize the module
  */
 def initialize(config, role_arn, region, role_id, jenkins_url, current_environment, service_name, utilModule) {
-	
+
 	config_loader = config
 	setRoleARN(role_arn)
 	setRegion(region)
@@ -55,16 +55,24 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-		
+
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-			
+
 			sh "sed -i -- 's/{conf-apikey-dev}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/global-config.json"
 			sh "sed -i -- 's/{conf-apikey-stg}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/global-config.json"
 			sh "sed -i -- 's/{conf-apikey-prod}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/global-config.json"
-			
+
 			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
+
+      sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 		}
 
 
@@ -85,12 +93,12 @@ def loadServiceConfigurationData() {
 			    sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/dev-config.json"
 				sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/stg-config.json"
 				sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/prod-config.json"
-		
+
 				sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/dev-config.json"
 				sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/stg-config.json"
 				sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/prod-config.json"
 			}
-			
+
 			sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/prod-config.json"
@@ -112,7 +120,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
-		
+
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
@@ -122,7 +130,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
-		
+
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
@@ -156,7 +164,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
-		
+
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
@@ -174,7 +182,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-			
+
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
@@ -192,7 +200,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-			
+
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
@@ -210,7 +218,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-			
+
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
@@ -237,30 +245,30 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-						
+
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-						
+
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-			
+
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
-			
+
 		}
 
 		if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer")) {
 			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-		  
+
 			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-		  
+
 			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
 			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
@@ -281,11 +289,11 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-						
+
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-			
+
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
@@ -362,7 +370,7 @@ def loadServiceConfigurationData() {
 				sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
 				sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
 				sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
-			
+
 				sh "sed -i -- 's/{bb_username}/${config_loader.SCM.USERNAME}/g' ./config/dev-config.json"
 				sh "sed -i -- 's/{bb_username}/${config_loader.SCM.USERNAME}/g' ./config/stg-config.json"
 				sh "sed -i -- 's/{bb_username}/${config_loader.SCM.USERNAME}/g' ./config/prod-config.json"
@@ -376,7 +384,7 @@ def loadServiceConfigurationData() {
 				sh "sed -i -- 's,{gitlab_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
 				sh "sed -i -- 's,{gitlab_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
 				sh "sed -i -- 's,{gitlab_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
-			
+
 				sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/dev-config.json"
 				sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/stg-config.json"
 				sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
@@ -417,7 +425,7 @@ def setUtilModule(util){
 	utilModule = util
 }
 def setKinesisStream(config){
-	if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") || 
+	if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ||
 	(config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler" )  || (config['service'] == "asset-event-handler")) {
 		def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
 		def event_source_list = sh(
@@ -446,10 +454,10 @@ def setLogStreamPermission(config){
 	}
 }
 
-def getApiToken(){    
+def getApiToken(){
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
-		User u = User.get(UNAME)  
-		ApiTokenProperty t = u.getProperty(ApiTokenProperty.class)  
+		User u = User.get(UNAME)
+		ApiTokenProperty t = u.getProperty(ApiTokenProperty.class)
 		def token = t.getApiToken()
 		return token
 	}
