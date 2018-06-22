@@ -1,9 +1,3 @@
-/** 
-  * @type Service 
-  * @desc Request Service - wrapper around angular2's Http service
-  * @author Sunil Fernandes
-*/
-
 import { Injectable } from '@angular/core';
 import { Http, Headers, Response, RequestOptions } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
@@ -11,8 +5,8 @@ import { AuthenticationService } from '../../core/services/authentication.servic
 import 'rxjs/add/operator/map';
 import { ConfigService } from '../../app.config';
 import { Router } from '@angular/router';
-import {ServiceCostComponent} from '../../pages/service-cost/service-cost.component';
 import { environment } from '../../../environments/environment';
+import {UtilsService} from './utils.service';
 
 @Injectable()
 export class RequestService {
@@ -20,7 +14,11 @@ export class RequestService {
     public baseurl: string;
     private _config: any;
 
-    constructor(private http: Http, private authenticationService: AuthenticationService, private config: ConfigService, private router: Router) {
+    constructor(private http: Http,
+                private authenticationService: AuthenticationService,
+                private config: ConfigService,
+                private utils: UtilsService,
+                private router: Router) {
         // set token if saved in local storage
         let currentUser;
         currentUser = JSON.parse(localStorage.getItem("currentUser"));
@@ -45,24 +43,20 @@ export class RequestService {
         }
     }
 
-    get(url: string, query: any = {}): Observable<any> {
-        // Make a GET request to url
+    get(url: string, params?): Observable<any> {
+      url = this.constructUrl(url);
+      this.token = this.authenticationService.getToken();
 
-        url = this.constructUrl(url);
+      let options = new RequestOptions({
+        headers: new Headers({
+          'Authorization': this.token,
+          'Content-Type': 'application/json',
+          'accept': 'application/json'
+        }),
+        search: null
+      });
 
-        // Get Authentication token
-        this.token = this.authenticationService.getToken();
-
-        // Add Authentication token to headers
-        let headerObj = {
-            'Authorization': this.token,
-            'Content-Type': 'application/json',
-            'accept':'application/json'
-        };
-        let headers = new Headers(headerObj);
-        let options = new RequestOptions({ headers: headers });
-        let router = this.router;
-
+      url = params ? (url + this.utils.queryString(params)) : url;
         return this.http.get(url, options )
             .map((response: Response) => {
                 let responseBody;
@@ -79,13 +73,13 @@ export class RequestService {
                 }
             })
              .catch((error: any) => {
-                return this.handleError(error, router);
+                return this.handleError(error, this.router);
             })
     }
 
     post(url: string, body: any): Observable<any> {
         // Make a POST request to url
-        
+
         // Construct url
         url = this.constructUrl(url);
 
@@ -121,7 +115,7 @@ export class RequestService {
 
     put(url: string, body: any): Observable<any> {
         // Make a PUT request to url
-        
+
         // Construct url
         url = this.constructUrl(url);
 
@@ -153,7 +147,7 @@ export class RequestService {
              .catch((error: any) => {
                 return this.handleError(error, router);
             })
-           
+
     }
     private handleError(error: any, router:any) {
         console.log(error);
@@ -163,7 +157,7 @@ export class RequestService {
                this.authenticationService.logout();
             }
        }
-        
+
         return Observable.throw(error);
     }
 }

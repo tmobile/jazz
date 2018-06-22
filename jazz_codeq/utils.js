@@ -109,6 +109,8 @@ function getMetrics(query, config, messages) {
 				let message = messages.MISSING_METRICS + invalid_metrics.join(", ");
 				result = { "error": message, "metrics": [] };
 				return result;
+			} else {
+				result = { "metrics": metrics };
 			}
 		} catch (ex) {
 			logger.error(ex.message);
