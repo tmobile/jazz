@@ -112,6 +112,19 @@ def getAPIId(apiIdMapping, namespace, service) {
 	}
 }
 
+@NonCPS
+def generateAssetMap(provider, providerId, type, service_config) {
+
+	def serviceCtxMap = [
+		service_type: service_config['type'],
+		provider: provider,
+		provider_id: providerId,
+		type: type,
+		created_by: service_config['created_by']
+	]
+	return serviceCtxMap;
+}
+
 /**
 getAPIIdForCore is a helper method to get apiId for jazz core services
 */
