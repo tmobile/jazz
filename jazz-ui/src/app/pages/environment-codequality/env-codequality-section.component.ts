@@ -117,6 +117,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
     this.metricsIndex = index;
     this.selectedMetric = this.metrics[index];
     this.graph = this.formatGraphData(this.selectedMetric, this.filterData);
+    this.resize();
   }
 
   queryGraphData(filterData, metricIndex) {
@@ -171,12 +172,12 @@ export class EnvCodequalitySectionComponent implements OnInit {
         };
       });
 
-    filterData.yMax = 1.1 * (data.values
+    filterData.yMax = 1.1 * (data
       .map((point) => {return point.y})
       .reduce((a, b) => {
       return Math.max(a, b);
     }));
-    filterData.yMin = .9 * (data.values
+    filterData.yMin = .9 * (data
       .map((point) => {return point.y})
       .reduce((a, b) => {
       return Math.min(a, b);
@@ -194,8 +195,10 @@ export class EnvCodequalitySectionComponent implements OnInit {
 
   resize() {
     this.renderGraph = false;
+    this.sectionStatus = 'loading';
     setTimeout(() => {
       this.renderGraph = true;
+      this.sectionStatus = 'resolved';
     }, 200);
   }
 
