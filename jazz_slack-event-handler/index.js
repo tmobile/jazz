@@ -216,13 +216,6 @@ var notifySlackChannel = (result, payload, configData, authToken) => {
     }
 
     var attachments = [];
-    var eventName = results.checkInterest.event_name,
-        bitbucketUrl = serviceContxt.repository,
-        serviceUrl = configData.SERVICE_LINK + serviceDetails.id,
-        jenkinsUrl = serviceContxt.provider_build_url,
-        endpointUrl = serviceContxt.endpoint_url;
-    logger.info("serviceUrl: " + serviceUrl + ", bitbucketUrl: " + bitbucketUrl + ", jenkinsUrl: " + jenkinsUrl + ", endpointUrl: " + endpointUrl);
-
     var notification = utils.getNotificationMessage(serviceDetails, payload, configData);
 
     if (notification) {
@@ -232,6 +225,24 @@ var notifySlackChannel = (result, payload, configData, authToken) => {
             notification.color
         ));
     }
+
+    var slackNotifierUserName = configData.SLACK_NOTIFIER_USER_NAME;
+    var slackToken = "Basic " + new Buffer(util.format("%s:%s", configData.SERVICE_USER, configData.TOKEN_CREDS)).toString("base64");
+
+    var slackNotificationSvcPayload = {
+        "method": "POST",
+        "uri": configData.SLACK_BASIC_NOTIFICATION_URL + "?token=" + slackToken + "&channel=" + slackChannel + "&username=" + slackNotifierUserName,
+        "rejectUnauthorized": false,
+        "headers": {    "Content-Type": "application/x-www-form-urlencoded" },
+        "form": { "attachments" : JSON.stringify(attachments)}
+    };
+
+    procesRequest(slackNotificationSvcPayload)
+        .then(result => { return resolve(result); })
+        .catch(err => {
+            logger.error("Slack notification error occured for service:: " + JSON.stringify(err));
+            return reject(err);
+        });
 }
 
 var handleError = (errorType, message) => {

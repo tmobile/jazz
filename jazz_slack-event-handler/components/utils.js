@@ -1,22 +1,22 @@
 const format = require("string-template");
 
-var getNotificationMessage = function(service, domain, environment, eventType, eventName, eventStatus,
-    bitbucketUrl, serviceUrl, jenkinsUrl, endpointUrl, notifications, error_msg){
-    
+var getNotificationMessage = function(serviceDetails, payload, configData){
+   
+    var serviceContxt = JSON.parse(payload.Item.SERVICE_CONTEXT.S);
     var params = {
-        'service_name' : service,
-        'domain_name' : domain,
-        'environment_name' : environment,
-        'event_type' : eventType,
-        'event_name' : (eventName).toLowerCase(),
+        'service_name' : serviceDetails.service,
+        'domain_name' : serviceDetails.domain,
+        'environment_name' : serviceContxt.environment,
+        'event_type' : payload.EVENT_TYPE.S,
+        'event_name' : (payload.EVENT_NAME.S).toLowerCase(),
         'build_status' : '',
-        'event_status' : eventStatus,
-        'bitbucket_url' : bitbucketUrl,
-        'overview_url' : serviceUrl,
-        'jenkins_url' : jenkinsUrl,
-        'endpoint_url' : endpointUrl,
-        'notifications' : notifications,
-        'error' : error_msg
+        'event_status' : payload.EVENT_STATUS.S,
+        'bitbucket_url' : serviceContxt.repository,
+        'overview_url' : configData.SERVICE_LINK + serviceDetails.id,
+        'jenkins_url' : serviceContxt.provider_build_url,
+        'endpoint_url' : serviceContxt.endpoint_url,
+        'notifications' : configData.NOTIFICATION_MESSAGE,
+        'error' : serviceContxt.error
     };
 	
 	var slackNotification = {
@@ -36,10 +36,10 @@ var getNotificationMessage = function(service, domain, environment, eventType, e
         } else if (params.event_status === 'COMPLETED'){ 
             slackNotification.color =  "#5cae01";
             text = params.notifications.EVENT_NAME.COMPLETED;
-        } else {
+        } else if (params.event_status === 'FAILED'){
             text = params.notifications.EVENT_NAME.FAILED_REASON;
             slackNotification.color =  "#d0011b";
-            if (params.error === "" || params.error === undefined){
+            if (params.error){
                 text = params.notifications.EVENT_NAME.FAILED;
             }
         }
