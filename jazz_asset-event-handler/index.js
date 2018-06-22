@@ -201,7 +201,7 @@ var processCreateAsset = function (eventPayload, configData, authToken) {
             "provider_id": svcContext.provider_id,
             "tags": svcContext.tags,
             "domain": svcContext.domain,
-            "asset_type ": svcContext.type
+            "asset_type": svcContext.type
         };
         if (_.includes(Object.keys(configData.EVENTS.EVENT_STATUS), eventPayload.EVENT_STATUS.S)) {
             assetApiPayload["status"] = configData.EVENTS.EVENT_STATUS[eventPayload.EVENT_STATUS.S]
@@ -243,7 +243,7 @@ var processUpdateAsset = function (record, eventPayload, configData, authToken) 
         logger.debug("svcContext: " + JSON.stringify(svcContext));
         var assetApiPayload = {
             "tags": svcContext.tags,
-            "asset_type ": svcContext.type
+            "asset_type": svcContext.type
         };
         if (_.includes(Object.keys(configData.EVENTS.EVENT_STATUS), eventPayload.EVENT_STATUS.S)) {
             assetApiPayload["status"] = configData.EVENTS.EVENT_STATUS[eventPayload.EVENT_STATUS.S]
@@ -285,7 +285,7 @@ var checkIfAssetExists = function (eventPayload, configData, authToken) {
         var searchAssetPayload = {
             "service": eventPayload.SERVICE_NAME.S,
             "provider_id": svcContext.provider_id,
-            "asset_type ": svcContext.type,
+            "asset_type": svcContext.type,
             "domain": svcContext.domain
         };
 
