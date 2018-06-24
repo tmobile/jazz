@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -18,8 +18,8 @@
 	Nodejs Template Project
   @module: config.js
   @description: Defines variables/functions to retrieve environment related data
-	@author:
-	@version: 1.0
+  @author:
+  @version: 1.0
 **/
 
 const fs = require('fs');
@@ -27,22 +27,22 @@ const path = require('path');
 
 var getStageConfig = (event, context) => {
   var stage, configObj;
-  
+
   if (event && event.stage) {
-    stage = event.stage; 
+    stage = event.stage;
   } else if (context && context.functionName && context.functionName.length > 0) {
     var functionName = context.functionName;
 
     var fnName = functionName.substr(functionName.lastIndexOf('-') + 1, functionName.length);
-    
+
     if (fnName.endsWith('dev')) {
       stage = 'dev';
     } else if (fnName.endsWith('stg')) {
       stage = 'stg';
     } else if (fnName.endsWith('prod')) {
       stage = 'prod';
-    }  
-  } 
+    }
+  }
 
   if (stage) {
     var configFile = path.join(__dirname, `../config/${stage}-config.json`);
@@ -56,5 +56,5 @@ var getStageConfig = (event, context) => {
 };
 
 module.exports = {
-	getConfig: getStageConfig
+  getConfig: getStageConfig
 }
