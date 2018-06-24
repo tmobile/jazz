@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-  Nodejs Template Project
+	Nodejs Template Project
   @module: config.js
   @description: Defines variables/functions to retrieve environment related data
   @author:
