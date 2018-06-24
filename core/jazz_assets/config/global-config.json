@@ -1,0 +1,66 @@
+{
+	"ASSETS_FIELDS": [
+		"service",
+		"domain",
+		"environment",
+		"asset_type",
+		"provider",
+		"provider_id",
+		"created_by",
+		"status",
+		"tags"
+	],
+	"ASSETS_CREATION_REQUIRED_FIELDS": [
+		"service",
+		"domain",
+		"environment",
+		"asset_type",
+		"provider",
+		"provider_id"
+	],
+	"ASSETS_EDITABLE_FIELDS": [
+		"tags",
+		"status"
+	],
+	"ASSET_TYPES": [
+		"lambda",
+		"apigateway",
+		"cloudfront",
+		"s3",
+		"dynamodb",
+		"cloudwatch_event",
+		"swagger_url",
+		"endpoint_url"
+	],
+	"ASSET_STATUS": [
+		"active",
+		"deleted"
+	],
+	"CASE_SENSITIVE_FIELDS": [
+		"environment",
+		"status",
+		"asset_type"
+	],
+	"FIELD_DATA_TYPES": {
+		"service": "String",
+		"domain": "String",
+		"environment": "String",
+		"asset_type": "String",
+		"provider": "String",
+		"provider_id": "String",
+		"created_by": "String",
+		"status": "String",
+		"tags": "Array"
+	},
+	"ASSET_SEARCH_OPTIONAL_FILTER_PARAMS": [
+		"environment",
+		"asset_type",
+		"provider",
+		"provider_id"
+	],
+	"ASSET_SEARCH_REQUIRED_FILTER_PARAMS": [
+		"service",
+		"domain"
+	],
+	"ASSETS_DOMAIN_SERVICE_INDEX": "AssetsDomainServiceIndex"
+}
