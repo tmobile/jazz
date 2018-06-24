@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,7 +22,7 @@ const _ = require("lodash");
 const request = require("request");
 const nanoid = require("nanoid/generate");
 
-const config = require("./components/config.js");
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const errorHandlerModule = require("./components/error-handler.js");
 var errorHandler = errorHandlerModule(logger);
@@ -31,14 +31,14 @@ var processedEvents = [];
 var failedEvents = [];
 
 var handler = (event, context, cb) => {
-	var configData = config(context);
-	
-	rp(getTokenRequest(configData))
+	var config = configModule.getConfig(event, context);
+
+	rp(getTokenRequest(config))
 		.then(result => {
 			return getAuthResponse(result);
 		})
 		.then(authToken => {
-			return processEvents(event, configData, authToken);
+			return processEvents(event, config, authToken);
 		})
 		.then(result => {
 			var records = getEventProcessStatus();
