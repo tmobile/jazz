@@ -1,0 +1,98 @@
+{
+	"SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+	"SERVICE_API_RESOURCE": "/dev/jazz/services",
+	"TOKEN_URL": "/dev/jazz/login",
+	"SERVICE_USER": "{jazz_admin}",
+	"TOKEN_CREDS": "{jazz_admin_creds}",
+	"SLACK_BASIC_NOTIFICATION_URL": "https://slack.com/api/chat.postMessage",
+	"SLACK_NOTIFIER_USER_NAME": "{slack_notifier_name}",
+	"SLACK_TOKEN": "{slack_token}",
+	"EVENTS": {
+		"EVENT_TYPE": [
+			"SERVICE_DEPLOYMENT",
+			"SERVICE_CREATION",
+			"SERVICE_DELETION"
+		],
+		"EVENT_NAME": [
+			"VALIDATE_INPUT",
+			"MODIFY_TEMPLATE",
+			"ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO",
+			"BUILD_MASTER_BRANCH",
+			"COMMIT_CODE",
+			"CREATE_SERVICE_REPO",
+			"LOCK_MASTER_BRANCH",
+			"PUSH_TEMPLATE_TO_SERVICE_REPO",
+			"CLONE_TEMPLATE",
+			"ADD_WEBHOOK",
+			"UNDEPLOY_LAMBDA",
+			"GET_SERVICE_CODE",
+			"GET_SERVERLESS_CONF",
+			"UPDATE_DEPLOYMENT_CONF",
+			"UPDATE_SWAGGER",
+			"GET_DEPLOYMENT_CONF",
+			"VALIDATE_PRE_BUILD_CONF",
+			"DELETE_PROJECT",
+			"DELETE_API_RESOURCE",
+			"DELETE_CLOUDFRONT",
+			"DISABLE_CLOUDFRONT",
+			"BUILD",
+			"DEPLOY_TO_AWS",
+			"CREATE_ASSET",
+			"UPDATE_ASSET",
+			"CALL_DELETE_WORKFLOW",
+			"CREATE_DEPLOYMENT",
+			"UPDATE_DEPLOYMENT",
+			"UPDATE_ENVIRONMENT",
+			"DELETE_ENVIRONMENT"
+		],
+		"SERVICE_CREATION_EVENT": "SERVICE_CREATION",
+		"SERVICE_DELETION_EVENT": "SERVICE_DELETION",
+		"SERVICE_DEPLOYMENT_EVENT": "SERVICE_DEPLOYMENT",
+		"SERVICE_CREATION": {
+			"EVENT_STARTS": "VALIDATE_INPUT",
+			"EVENT_STARTS_STATUS": "STARTED",
+			"EVENT_COMPLETE": "MODIFY_TEMPLATE",
+			"EVENT_COMPLETE_STATUS": "COMPLETED"
+		},
+		"SERVICE_DEPLOYMENT": {
+			"EVENT_STARTS": "VALIDATE_PRE_BUILD_CONF",
+			"EVENT_STARTS_STATUS": "STARTED",
+			"EVENT_COMPLETE": "DEPLOY_TO_AWS",
+			"EVENT_COMPLETE_STATUS": "COMPLETED"
+		},
+		"SERVICE_DELETION": {
+			"EVENT_STARTS": "CALL_DELETE_WORKFLOW",
+			"EVENT_STARTS_STATUS": "STARTED",
+			"EVENT_COMPLETE": "DELETE_PROJECT",
+			"EVENT_COMPLETE_STATUS": "COMPLETED"
+		}
+	},
+	"NOTIFICATION_MESSAGE": {
+		"EVENT_TYPE": {
+			"SERVICE_CREATION": "Service creation notification for service: *{service_name}*, domain: *{domain_name}*",
+			"SERVICE_DEPLOYMENT": "Service deployment notification for service: *{service_name}*, domain: *{domain_name}*",
+			"SERVICE_DELETION": "Service deletion notification for service: *{service_name}*, domain: *{domain_name}*"
+		},
+		"EVENT_NAME": {
+			"STARTED": "Stage: *{event_name}* started.",
+			"COMPLETED": "Stage: *{event_name}* completed.",
+			"FAILED": "Stage: *{event_name}* failed.",
+			"FAILED_REASON": "Stage: *{event_name}* failed with error: {error}"
+		},
+		"EVENT_STARTED": {
+			"SERVICE_CREATION": "*Service creation* *started*.",
+			"SERVICE_DEPLOYMENT": "*Service deployment* *started*.",
+			"SERVICE_DELETION": "*Service deletion* *started*."
+		},
+		"EVENT_COMPLETED": {
+			"SERVICE_CREATION": "*Service creation* *completed*.\n",
+			"SERVICE_DEPLOYMENT": "*Service deployment* *completed*.\n",
+			"SERVICE_DELETION": "*Service deletion* *completed*.\n"
+		},
+		"ENVIRONMENT": ", environment: *{environment_name}*",
+		"BITBUCKET_URL": "Bitbucket URL: {bitbucket_url} \n",
+		"SERVICE_URL": "Service Overview Page: {overview_url} \n",
+		"JENKINS_URL": "Jenkins URL: {jenkins_url} \n",
+		"ENDPOINT_URL": "Endpoint URL: {endpoint_url} \n"
+	}
+}

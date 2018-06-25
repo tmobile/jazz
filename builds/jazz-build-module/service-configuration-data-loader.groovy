@@ -111,10 +111,6 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 		}
 
-		if ((service_name.trim() == "jazz_delete-serverless-service")) {
-			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./index.js"
-		}
-
 		if ( (service_name.trim() == "jazz_assets") ) {
 			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
@@ -221,6 +217,33 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_slack-event-handler")) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
+					
 		}
 
 		if ((service_name.trim() == "jazz_events")) {
@@ -431,7 +454,8 @@ def setUtilModule(util){
 }
 def setKinesisStream(config){
 	if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ||
-	(config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler" )  || (config['service'] == "asset-event-handler")) {
+	(config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler" )  ||
+	 (config['service'] == "asset-event-handler") || (config['service'] == "slack-event-handler")) {
 		def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
 		def event_source_list = sh(
 			script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"",
