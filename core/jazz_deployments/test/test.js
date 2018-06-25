@@ -5,7 +5,7 @@ const request = require('request');
 const sinon = require('sinon');
 
 const index = require('../index');
-const configObj = require('../components/config.js');
+const configModule = require("./components/config.js");
 const validateUtils = require("../components/validation.js");
 
 describe('jazz_deployments', function () {
@@ -57,7 +57,7 @@ describe('jazz_deployments', function () {
     callbackObj = {
       "callback": callback
     };
-    config = configObj(event);
+    config = configModule.getConfig(event, context);
     tableName = config.DEPLOYMENT_TABLE;
     global = {
       authorization: event.headers.Authorization
