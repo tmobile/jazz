@@ -16,7 +16,7 @@
 
 /**
   Nodejs Template Project
-  @author: 
+  @author:
   @version: 1.0
 **/
 
@@ -24,19 +24,20 @@ const request = require('request');
 const util = require('util');
 
 const errorHandlerModule = require("./components/error-handler.js");
-const responseObj = require("./components/response.js"); 
-const configModule = require("./components/config.js"); 
-const logger = require("./components/logger.js")(); 
+const responseObj = require("./components/response.js");
+const configModule = require("./components/config.js");
+const logger = require("./components/logger.js")();
 const utils = require("./components/utils.js");
-const validateUtils = require("./components/validation.js"); 
-const crud = require("./components/crud")(); 
+const validateUtils = require("./components/validation.js");
+const crud = require("./components/crud")();
 
 function handler(event, context, cb) {
 	//Initializations
-	var errorHandler = errorHandlerModule(),
-	var config = configModule.getConfig(event, context);
-	global.config = config;
-	logger.init(event, context);
+  var errorHandler = errorHandlerModule(),
+      config = configModule.getConfig(event, context);
+
+  global.config = config;
+  logger.init(event, context);
 
 	//validate inputs
 	exportable.genericInputValidation(event)
