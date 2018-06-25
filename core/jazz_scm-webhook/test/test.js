@@ -14,7 +14,9 @@
 // limitations under the License.
 // =========================================================================
 const chai = require('chai');
+const assert = require('chai').assert;
 const expect = require('chai').expect;
+const should = require('chai').should();
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const awsContext = require('aws-lambda-mock-context');
