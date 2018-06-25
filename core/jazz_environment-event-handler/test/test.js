@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,19 +16,15 @@
 'use strict';
 
 const chai = require('chai');
-const assert = require('chai').assert;
 const expect = require('chai').expect;
-const should = require('chai').should();
 const chaiAsPromised = require('chai-as-promised'); chai.use(chaiAsPromised);
 const request = require('request');
-const AWS = require('aws-sdk-mock');
 const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon');
 require('sinon-as-promised');
 const rp = require('request-promise-native');
 const index = require('../index');
-const logger = require('../components/logger');
-const config = require('../components/config');
+const configModule = require("./components/config.js");
 const testPayloads = require('./response_payloads.js')();
 const kinesisPayload = require('./KINESIS_PAYLOAD');
 
@@ -40,7 +36,7 @@ describe('jazz environment handler tests: ', () => {
 		sandbox = sinon.sandbox.create();
 		context = awsContext();
 		context.functionName = context.functionName + "-test";
-		configData = config(context);
+		configData = configModule.getConfig(event, context);
 		authToken = testPayloads.tokenResponseObj200.body.data.token;
 	});
 
@@ -77,7 +73,7 @@ describe('jazz environment handler tests: ', () => {
 	it('Verify getTokenRequest returns a json response ', () => {
 		let getTokenRequest = index.getTokenRequest(configData);
 		let expectedOutput = '{"uri":"https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/login","method":"post","json":{"username":"{jazz_admin}","password":"{jazz_admin_creds}"},"rejectUnauthorized":false}';
-		
+
 		expect(JSON.stringify(getTokenRequest)).to.eql(expectedOutput);
 	});
 
@@ -116,7 +112,7 @@ describe('jazz environment handler tests: ', () => {
 		index.processEachEvent(kinesisPayload.Records[0], configData, authToken)
 		.then((res) => {
 			sinon.assert.calledTwice(requestPromiseStub);
-			requestPromiseStub.restore();	
+			requestPromiseStub.restore();
 			expect(res.message).to.include(resMsg);
 		});
 	});
@@ -132,7 +128,7 @@ describe('jazz environment handler tests: ', () => {
 		index.processItem(event.Item, configData, authToken)
 		.catch((res) => {
 			sinon.assert.calledTwice(requestPromiseStub);
-			requestPromiseStub.restore();	
+			requestPromiseStub.restore();
 			expect(res.error).to.include('Error creating');
 			testPayloads.apiResponse.statusCode = statusCode;
 		});
@@ -172,7 +168,7 @@ describe('jazz environment handler tests: ', () => {
 		let event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
 		kinesisPayload.Records[0].kinesis.data = event_BASE64;
 		let resMsg = "Successfully Updated environment for service";
-		
+
 		testPayloads.apiResponse.body.data.environment = [{'physical_id': 'master'}];
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
@@ -214,7 +210,7 @@ describe('jazz environment handler tests: ', () => {
 		index.processEachEvent(kinesisPayload.Records[0], configData, authToken)
 		.then((res) => {
 			sinon.assert.calledOnce(requestPromiseStub);
-			requestPromiseStub.restore();			
+			requestPromiseStub.restore();
 			expect(res.data.message).to.include(resMsg);
 		});
 	});
@@ -222,7 +218,7 @@ describe('jazz environment handler tests: ', () => {
 	it('Verify processEachEvent for DELETE_ENVIRONMENT event whith event status as FAILED', () => {
 		let event = require('./DELETE_ENVIRONMENT');
 		event.Item.EVENT_STATUS.S = 'FAILED';
-	
+
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
 		});
@@ -238,7 +234,7 @@ describe('jazz environment handler tests: ', () => {
 	it('Verify processEachEvent for DELETE_ENVIRONMENT event whith event status as STARTED', () => {
 		let event = require('./DELETE_ENVIRONMENT');
 		event.Item.EVENT_STATUS.S = 'STARTED';
-	
+
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
 		});
@@ -253,7 +249,7 @@ describe('jazz environment handler tests: ', () => {
 
 	it('Verify processEachEvent for DELETE_ENVIRONMENT event whith event status as STARTED', () => {
 		let event = require('./DELETE_BRANCH');
-		
+
 		testPayloads.apiResponse.body.data.environment = [{'physical_id': 'master'}];
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
@@ -295,7 +291,7 @@ describe('jazz environment handler tests: ', () => {
 		index.processItem(event.Item, configData, authToken)
 		.catch((res) => {
 			sinon.assert.calledOnce(requestPromiseStub);
-			requestPromiseStub.restore();	
+			requestPromiseStub.restore();
 			expect(res.details).to.include('error');
 		});
 	});
@@ -384,7 +380,7 @@ describe('jazz environment handler tests: ', () => {
 	it('Verify processEventInitialCommit rejects when physical id is different', () => {
 		let environmentPayload = testPayloads.environmentPayload;
 		environmentPayload.physical_id = "physicalId";
-		
+
 		index.processEventInitialCommit(environmentPayload, configData, authToken)
 		.catch(res => {
 			expect(res).to.eql(`INITIAL_COMMIT event should be triggered by a master commit. physical_id is ${environmentPayload.physical_id}`);
@@ -431,7 +427,7 @@ describe('jazz environment handler tests: ', () => {
 
 	it('Verify processEvents is able to create enviroments', () => {
 		let event = {"Records": [testPayloads.eventPayload]}
-		
+
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.processEventInitialCommitSuccess, testPayloads.processEventInitialCommitSuccess.body);
 		});
