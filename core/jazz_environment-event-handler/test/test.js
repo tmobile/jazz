@@ -36,7 +36,6 @@ describe('jazz environment handler tests: ', () => {
 		sandbox = sinon.sandbox.create();
 		context = awsContext();
 		context.functionName = context.functionName + "-test";
-		configData = configModule.getConfig(event, context);
 		authToken = testPayloads.tokenResponseObj200.body.data.token;
 	});
 
@@ -45,6 +44,7 @@ describe('jazz environment handler tests: ', () => {
 	});
 
 	it('Verify getToken returns a valid 200 response ', () => {
+    configData = configModule.getConfig(event, context);
 		let requestPromiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(testPayloads.tokenResponseObj200));
 		let getTokenRequest = index.getTokenRequest(configData);
 
@@ -58,7 +58,7 @@ describe('jazz environment handler tests: ', () => {
 	});
 
 	it('Verify getToken returns an unauthorized 401 response ', () => {
-		let requestPromiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(testPayloads.tokenResponseObj401));
+    let requestPromiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(testPayloads.tokenResponseObj401));
 		let getTokenRequest = index.getTokenRequest(configData);
 
 		rp(getTokenRequest)
@@ -71,6 +71,7 @@ describe('jazz environment handler tests: ', () => {
 	});
 
 	it('Verify getTokenRequest returns a json response ', () => {
+    configData = configModule.getConfig(event, context);
 		let getTokenRequest = index.getTokenRequest(configData);
 		let expectedOutput = '{"uri":"https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/login","method":"post","json":{"username":"{jazz_admin}","password":"{jazz_admin_creds}"},"rejectUnauthorized":false}';
 
@@ -101,7 +102,8 @@ describe('jazz environment handler tests: ', () => {
 	});
 
 	it('Verify processEachEvent for COMMIT_TEMPLATE event', () => {
-		let event = require('./COMMIT_TEMPLATE');
+    let event = require('./COMMIT_TEMPLATE');
+    configData = configModule.getConfig(event, context);
 		let event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
 		kinesisPayload.Records[0].kinesis.data = event_BASE64;
 		let resMsg = "Stage and Prod environments are created successfully";
@@ -118,7 +120,9 @@ describe('jazz environment handler tests: ', () => {
 	});
 
 	it('Verify processEachEvent for COMMIT_TEMPLATE event failed', () => {
-		let event = require('./COMMIT_TEMPLATE');
+    let event = require('./COMMIT_TEMPLATE');
+    configData = configModule.getConfig(event, context);
+
 		const statusCode = testPayloads.apiResponse.statusCode;
 		testPayloads.apiResponse.statusCode = 400;
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
@@ -135,7 +139,9 @@ describe('jazz environment handler tests: ', () => {
 	});
 
 	it('Verify processEachEvent for INVALID EVENT event', () => {
-		let event = require('./INVALID_EVENT');
+    let event = require('./INVALID_EVENT');
+    configData = configModule.getConfig(event, context);
+
 		let event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
 		kinesisPayload.Records[0].kinesis.data = event_BASE64;
 
@@ -146,7 +152,9 @@ describe('jazz environment handler tests: ', () => {
 	});
 
 	it('Verify processEachEvent for UPDATE_ENVIRONMENT event', () => {
-		let event = require('./UPDATE_ENVIRONMENT');
+    let event = require('./UPDATE_ENVIRONMENT');
+    configData = configModule.getConfig(event, context);
+
 		let event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
 		kinesisPayload.Records[0].kinesis.data = event_BASE64;
 		let resMsg = "Successfully Updated environment for service";
@@ -164,7 +172,9 @@ describe('jazz environment handler tests: ', () => {
 	});
 
 	it('Verify processEachEvent for UPDATE_ENVIRONMENT event without logical id', () => {
-		let event = require('./UPDATE_ENVIRONMENT_NOLOGICAL_ID');
+    let event = require('./UPDATE_ENVIRONMENT_NOLOGICAL_ID');
+    configData = configModule.getConfig(event, context);
+
 		let event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
 		kinesisPayload.Records[0].kinesis.data = event_BASE64;
 		let resMsg = "Successfully Updated environment for service";
@@ -188,7 +198,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
 		});
-
+    configData = configModule.getConfig(event, context);
 		index.processEventUpdateEnvironment(environmentPayload, configData, authToken)
 		.then((res) => {
 			sinon.assert.calledOnce(requestPromiseStub);
@@ -206,7 +216,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
 		});
-
+    configData = configModule.getConfig(event, context);
 		index.processEachEvent(kinesisPayload.Records[0], configData, authToken)
 		.then((res) => {
 			sinon.assert.calledOnce(requestPromiseStub);
@@ -222,7 +232,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
 		});
-
+    configData = configModule.getConfig(event, context);
 		index.processItem(event.Item, configData, authToken)
 		.then((res) => {
 			sinon.assert.calledOnce(requestPromiseStub);
@@ -238,7 +248,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
 		});
-
+    configData = configModule.getConfig(event, context);
 		index.processItem(event.Item, configData, authToken)
 		.then((res) => {
 			sinon.assert.calledOnce(requestPromiseStub);
@@ -254,7 +264,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
 		});
-
+    configData = configModule.getConfig(event, context);
 		index.processItem(event.Item, configData, authToken)
 		.then((res) => {
 			sinon.assert.calledTwice(requestPromiseStub);
@@ -273,7 +283,9 @@ describe('jazz environment handler tests: ', () => {
 			return obj.callback(null, testPayloads.createBranchSuccess, testPayloads.createBranchSuccess.body);
 		});
 
-		index.processEachEvent(kinesisPayload.Records[0], configData, authToken)
+    configData = configModule.getConfig(event, context);
+
+    index.processEachEvent(kinesisPayload.Records[0], configData, authToken)
 		.then((res) => {
 			sinon.assert.calledOnce(requestPromiseStub);
 			requestPromiseStub.restore();
@@ -287,6 +299,8 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.createBranchError, testPayloads.createBranchError.body);
 		});
+
+    configData = configModule.getConfig(event, context);
 
 		index.processItem(event.Item, configData, authToken)
 		.catch((res) => {
@@ -304,6 +318,8 @@ describe('jazz environment handler tests: ', () => {
 			return obj.callback(null, testPayloads.getEnvironmentLogicalId, JSON.stringify(testPayloads.getEnvironmentLogicalId.body));
 		});
 
+    configData = configModule.getConfig(event, context);
+
 		index.getEnvironmentLogicalId(environmentPayload, configData, authToken)
 		.then((res) => {
 			sinon.assert.calledOnce(requestPromiseStub);
@@ -319,6 +335,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.getEnvironmentLogicalId, JSON.stringify(testPayloads.getEnvironmentLogicalId.body));
 		});
+    configData = configModule.getConfig(event, context);
 
 		index.getEnvironmentLogicalId(environmentPayload, configData, authToken)
 		.catch((res) => {
@@ -337,6 +354,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.processEventUpdateEnvironmentError, JSON.stringify(testPayloads.processEventUpdateEnvironmentError.body));
 		});
+    configData = configModule.getConfig(event, context);
 
 		index.processEventUpdateEnvironment(environmentPayload, configData, authToken)
 		.catch(res => {
@@ -353,6 +371,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.createBranchError, JSON.stringify(testPayloads.createBranchError.body));
 		});
+    configData = configModule.getConfig(event, context);
 
 		index.processEventCreateBranch(environmentPayload, configData, authToken)
 		.catch(res => {
@@ -368,6 +387,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.processEventInitialCommitError, JSON.stringify(testPayloads.processEventInitialCommitError.body));
 		});
+    configData = configModule.getConfig(event, context);
 
 		index.processEventInitialCommit(environmentPayload, configData, authToken)
 		.catch(res => {
@@ -380,6 +400,7 @@ describe('jazz environment handler tests: ', () => {
 	it('Verify processEventInitialCommit rejects when physical id is different', () => {
 		let environmentPayload = testPayloads.environmentPayload;
 		environmentPayload.physical_id = "physicalId";
+    configData = configModule.getConfig(event, context);
 
 		index.processEventInitialCommit(environmentPayload, configData, authToken)
 		.catch(res => {
@@ -393,6 +414,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.processEventInitialCommitSuccess, testPayloads.processEventInitialCommitSuccess.body);
 		});
+    configData = configModule.getConfig(event, context);
 
 		index.processEventInitialCommit(environmentPayload, configData, authToken)
 		.then(res => {
@@ -409,6 +431,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.getEnvironmentLogicalId, testPayloads.getEnvironmentLogicalId.body);
 		});
+    configData = configModule.getConfig(event, context);
 
 		index.processEventDeleteBranch(environmentPayload, configData, authToken)
 		.catch(res => {
@@ -431,6 +454,7 @@ describe('jazz environment handler tests: ', () => {
 		let requestPromiseStub = sinon.stub(request, "Request", (obj) => {
 			return obj.callback(null, testPayloads.processEventInitialCommitSuccess, testPayloads.processEventInitialCommitSuccess.body);
 		});
+    configData = configModule.getConfig(event, context);
 
 		index.processEvents(event, configData, authToken)
 		.then(res => {
