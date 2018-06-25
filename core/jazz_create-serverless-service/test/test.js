@@ -22,7 +22,7 @@ const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon');
 const logger = require("../components/logger.js");
 const CronParser = require("../components/cron-parser.js");
-const configObj = require("../components/config.js");
+const configModule = require("./components/config.js");
 
 let event, context, callback, spy, stub, checkCase, authStub,service_creation_data;
 
@@ -96,7 +96,7 @@ describe('create-serverless-service', function () {
           "create_cloudfront_url": false
         }
       };
-      
+
       context = awsContext();
       callback = (err, responseObj) => {
         if (err) {
@@ -249,8 +249,8 @@ describe('create-serverless-service', function () {
         }
       };
       event.stage = "dev";
-      let config = configObj(event);
-      // wrapping requests 
+      let config = configModule.getConfig(event, context);
+      // wrapping requests
       reqStub = sinon.stub(request, "Request", (obj) => {
         // Matching response Object to the corresponding Request call
         if (obj.uri === (config.SERVICE_API_URL + config.TOKEN_URL)) {
@@ -268,7 +268,7 @@ describe('create-serverless-service', function () {
       //trigger the spy wrapping the logger by calling handler() with valid params
       let callFunction = index.handler(event, context, (err, res) => {
         reqStub.restore()
-          expect(res.data).to.be.equal("Successfully created your service."); 
+          expect(res.data).to.be.equal("Successfully created your service.");
       })
     });
 
@@ -303,10 +303,10 @@ describe('create-serverless-service', function () {
         }
       };
       event.stage = "dev";
-      let config = configObj(event);
-// wrapping requests 
+      let config = configModule.getConfig(event, context);
+      // wrapping requests
       reqStub = sinon.stub(request, "Request", (obj) => {
- // Matching response Object to the corresponding Request call
+        // Matching response Object to the corresponding Request call
         if (obj.uri === (config.SERVICE_API_URL + config.TOKEN_URL)) {
           return obj.callback(null, responseObject_getToken, responseObject_getToken.body);
         } else if (obj.uri === "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services") {
@@ -351,7 +351,7 @@ describe('create-serverless-service', function () {
           "create_cloudfront_url": false
         }
       };
-      config = configObj(event);
+      config = configModule.getConfig(event, context);
     })
 
     it("Should Return authToken when called with valid paramenters", () => {
@@ -422,7 +422,7 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-          "create_cloudfront_url": false 
+          "create_cloudfront_url": false
         }
       };
       service_creation_data = event.body;
@@ -439,7 +439,7 @@ describe('create-serverless-service', function () {
     it("should should return error when passed an invalid rateExpression", () => {
       let cronValues = [null, "", "P!nk!e_P!e"];
       let authToken = "temp-auth-token";
-      let config = configObj(event);
+      let config = configModule.getConfig(event, context);
       let bool = false;
       for (let cron in cronValues) {
         service_creation_data.rateExpression = cron
@@ -461,7 +461,7 @@ describe('create-serverless-service', function () {
       service_creation_data.event_source_ec2 = "temp-url";
       service_creation_data.event_action_ec2 = "temp-url";
       service_creation_data.event_source_ec2 = "sample-test-data"
-      let config = configObj(event);
+      let config = configModule.getConfig(event, context);
       index.getServiceData(service_creation_data, authToken, config).then((input) => {
         if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
           if (input.METADATA.event_action_ec2 && input.METADATA.event_action_ec2 != null) {
@@ -478,7 +478,7 @@ describe('create-serverless-service', function () {
       service_creation_data["enableEventSchedule"] = true;
       service_creation_data.event_action_s3 = "temp-url";
       service_creation_data.event_source_s3 = "sample-test-data"
-      let config = configObj(event);
+      let config = configModule.getConfig(event, context);
       index.getServiceData(service_creation_data, authToken, config).then((input) => {
         if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
           if (input.METADATA.event_action_s3 && input.METADATA.event_action_s3 != null) {
@@ -496,7 +496,7 @@ describe('create-serverless-service', function () {
       service_creation_data.event_source_dynamodb = "temp-url";
       service_creation_data.event_action_dynamodb = "temp-url";
       service_creation_data.event_source_dynamodb = "sample-test-data"
-      let config = configObj(event);
+      let config = configModule.getConfig(event, context);
       index.getServiceData(service_creation_data, authToken, config).then((input) => {
         if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
           if (input.METADATA.event_action_dynamodb && input.METADATA.event_action_dynamodb != null) {
@@ -514,7 +514,7 @@ describe('create-serverless-service', function () {
       service_creation_data.event_source_stream = "temp-url";
       service_creation_data.event_action_stream = "temp-url";
       service_creation_data.event_source_stream = "sample-test-data"
-      let config = configObj(event);
+      let config = configModule.getConfig(event, context);
       index.getServiceData(service_creation_data, authToken, config).then((input) => {
         if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
           if (input.METADATA.event_action_stream && input.METADATA.event_action_stream != null) {
@@ -626,11 +626,11 @@ describe('create-serverless-service', function () {
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
           "create_cloudfront_url": false
-         
+
         }
       };
       service_creation_data =  event.body;
-      config = configObj(event);
+      config = configModule.getConfig(event, context);
       service_id = "ghd93-3240-2343";
     })
 
