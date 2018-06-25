@@ -1,0 +1,10 @@
+{
+    "services_table": "{inst_stack_prefix}_services_prod",
+    "service_required_fields": ["service", "domain", "type", "created_by", "runtime", "status"],
+    "service_update_fields": ["description", "email", "slack_channel", "tags", "repository", "status","metadata","is_public_endpoint"],
+    "service_filter_params": ["service", "domain", "region", "type", "runtime", "created_by", "status"],
+    "service_optional_fields": ["description", "region", "repository", "email", "slack_channel", "tags", "status","metadata","is_public_endpoint"],
+    "service_return_fields": ["service", "domain", "type", "created_by", "runtime", "description", "region", "repository", "email", "slack_channel", "tags", "status","metadata","is_public_endpoint"],
+    "service_status_values": ["active", "inactive", "creation_started", "creation_failed", "creation_completed", "deletion_started", "deletion_failed", "deletion_completed"],
+    "admin_users": "{jazz_admin}"
+}

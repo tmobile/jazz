@@ -1,0 +1,23 @@
+{
+    "name": "login",
+    "version": "0.0.1",
+    "description": "Login service for Jazz",
+    "main": "index.js",
+    "private": true,
+    "author": [],
+    "scripts": {
+        "test": "mocha"
+    },
+    "dependencies": {
+        "amazon-cognito-identity-js": "^1.19.0"
+    },
+    "devDependencies": {
+        "aws-lambda-mock-context": "^3.1.1",
+        "aws-sdk": "*",
+        "chai": "^3.5.0",
+        "mocha": "^3.5.3",
+        "lambda-local": "^1.4.2",
+        "sinon": "1.17.7",
+        "nyc": "^11.3.0"
+    }
+}

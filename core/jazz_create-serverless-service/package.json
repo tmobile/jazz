@@ -1,0 +1,23 @@
+{
+  "name": "create-serverless-service",
+  "version": "0.0.1",
+  "description": "API for creating jazz service",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "^2.75.0"
+  },
+  "devDependencies": {
+    "aws-lambda-mock-context": "^3.1.1",
+    "chai": "^3.5.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^v3.0.0",
+    "nock": "^9.0.2",
+    "sinon": "1.17.7",
+    "lambda-local": "^1.4.2"
+  }
+}

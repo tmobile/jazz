@@ -1,0 +1,28 @@
+{
+  "name": "jazz_services",
+  "version": "0.0.1",
+  "description": "CRUD APIs for Service Catalog",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "guid": "0.0.12",
+    "async": "*",
+    "deasync": "*",
+    "moment": "*",
+    "lodash": "*"
+  },
+  "devDependencies": {
+    "aws-lambda-mock-context": "^3.1.1",
+    "aws-sdk": "*",
+    "aws-sdk-mock": "^1.7.0",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^7.1.1",
+    "lambda-local": "^1.4.2",
+    "mocha": "^v3.0.0",
+    "sinon": "^1.17.7"
+  }
+}

@@ -1,0 +1,34 @@
+.jz-spinner{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  &:before,
+  &:after {
+    content: "";
+    position: absolute;
+    left: calc(50% - 1.5rem);
+    height: 3rem;
+    width: 3rem;
+    border-radius: 50%;
+    border: 3px solid rgba(237, 0, 133, 0.1);
+  }
+  &:after {
+    content: "";
+    position: absolute;
+    border-left-color: #ed0085;
+    animation-name: rotate;
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

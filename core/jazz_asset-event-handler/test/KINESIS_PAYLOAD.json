@@ -1,0 +1,20 @@
+{
+    "Records": [
+        {
+            "kinesis": {
+                "kinesisSchemaVersion": "1.0",
+                "partitionKey": "SERVICE_DEPLOYMENT",
+                "sequenceNumber": "49582744145785831874147508989126673490865670161183014914",
+                "data": "",
+                "approximateArrivalTimestamp": 1521632408.682
+            },
+            "eventSource": "aws:kinesis",
+            "eventVersion": "1.0",
+            "eventID": "shardId-000000000000:49582744145785831874147508989126673490865670161183014914",
+            "eventName": "aws:kinesis:record",
+            "invokeIdentityArn": "",
+            "awsRegion": "us-east-1",
+            "eventSourceARN": ""
+        }
+    ]
+}
