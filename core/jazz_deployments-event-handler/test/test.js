@@ -21,7 +21,7 @@ const request = require('request');
 const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon');
 const logger = require("../components/logger.js");
-const configModule = require("./components/config.js");
+const configModule = require("../components/config.js");
 const rp = require('request-promise-native');
 
 var reqStub;

@@ -22,7 +22,7 @@ const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon');
 const logger = require("../components/logger.js");
 const CronParser = require("../components/cron-parser.js");
-const configModule = require("./components/config.js");
+const configModule = require("../components/config.js");
 
 let event, context, callback, spy, stub, checkCase, authStub,service_creation_data;
 

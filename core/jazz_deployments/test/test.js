@@ -5,7 +5,7 @@ const request = require('request');
 const sinon = require('sinon');
 
 const index = require('../index');
-const configModule = require("./components/config.js");
+const configModule = require("../components/config.js");
 const validateUtils = require("../components/validation.js");
 
 describe('jazz_deployments', function () {

@@ -24,7 +24,7 @@ const sinon = require('sinon');
 require('sinon-as-promised');
 const rp = require('request-promise-native');
 const index = require('../index');
-const configModule = require("./components/config.js");
+const configModule = require("../components/config.js");
 const testPayloads = require('./response_payloads.js')();
 const kinesisPayload = require('./KINESIS_PAYLOAD');
 
