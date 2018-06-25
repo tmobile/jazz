@@ -22,7 +22,7 @@ const _ = require("lodash");
 const request = require("request");
 const nanoid = require("nanoid/generate");
 
-const configModule = require("./components/config.js");
+const config = require("./components/config.js");
 const logger = require("./components/logger.js");
 const errorHandlerModule = require("./components/error-handler.js");
 var errorHandler = errorHandlerModule(logger);
@@ -31,14 +31,14 @@ var processedEvents = [];
 var failedEvents = [];
 
 var handler = (event, context, cb) => {
-	var config = configModule.getConfig(event, context);
+	var configData = config(context);
 
-	rp(getTokenRequest(config))
+	rp(getTokenRequest(configData))
 		.then(result => {
 			return getAuthResponse(result);
 		})
 		.then(authToken => {
-			return processEvents(event, config, authToken);
+			return processEvents(event, configData, authToken);
 		})
 		.then(result => {
 			var records = getEventProcessStatus();
