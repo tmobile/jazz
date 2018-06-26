@@ -1,5 +1,5 @@
 /**
-Nodejs Template Project
+Nodejs Admin-API
 @author:
 @version: 1.0
  **/
@@ -17,16 +17,8 @@ function handler(event, context, cb) {
   logger.init(event, context);
 
   try {
-    logger.info("BASE URL:",config.BASE_URL);
-    logger.info("SCM_TYPE:",config.SCM_TYPE);
-    logger.info("PRIVATE_TOKEN_GITLAB",config.PRIVATE_TOKEN_GITLAB);
-    temp = {
-      "BASE URL": config.BASE_URL,
-      "SCM_TYPE": config.SCM_TYPE,
-      "PRIVATE_TOKEN_GITLAB": config.PRIVATE_TOKEN_GITLAB,
-    };
-
-    if (event !== undefined && event.method !== undefined && event.method === 'POST') {
+    responseObj = {};
+    if (event !== undefined && event.method !== undefined && event.method === 'GET') {
       if (!event && !event.method && event.method !== 'POST') {
         return cb(JSON.stringify(errorHandler.throwNotFoundError("Method not found")));
       }
@@ -36,26 +28,26 @@ function handler(event, context, cb) {
 
       if (!event.principalId) {
         logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
-        return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service")));
+        return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service|Authorization Incomplete")));
       }
       if (event.principalId != config.ADMIN_ID) {
-        return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service")));
+        return cb(JSON.stringify(errorHandler.throwUnauthorizedError("This User does not have the privilages to  access this service")));
       }
       getInstallerVarsJSON(config).then((data) => {
         temp.INSTALLERVARSJSON = data;
         return cb(null, responseObj(temp, event.body));
       }).catch((error) => {
-        logger.error("Failed to load instalervarsJSON file :",error);
-        cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load installerVarsJSON.json")));
+        logger.error("Failed to load installer-vars.json file:", error);
+        cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load installer-vars.json file")));
       });
     }
   } catch (e) {
-    cb(JSON.stringify(errorHandler.throwInternalServerError("Sample message")));
+    cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown Error")));
   }
 
 }
-function buildRequestOption(config){
-  if(config.SCM_TYPE=="gitlab"){
+function buildRequestOption(config) {
+  if (config.SCM_TYPE == "gitlab") {
     return {
       uri: config.BASE_URL + config.PATH_GIT,
       method: 'get',
@@ -64,7 +56,7 @@ function buildRequestOption(config){
       },
       rejectUnauthorized: false
     };
-  }else{
+  } else {
     return {
       uri: config.BASE_URL + config.PATH_BITBUCKET,
       method: 'get',
@@ -77,19 +69,18 @@ function buildRequestOption(config){
 }
 function getInstallerVarsJSON(config) {
   return new Promise((resolve, reject) => {
-    try{
+    try {
       var params = buildRequestOption(config);
-      logger.info("optionsObject",JSON.stringify(params));
       request(params, (error, response, body) => {
         if (error) {
           reject(error);
         } else {
-            var data = JSON.parse(response.body);
-            resolve(data);
+          var data = JSON.parse(response.body);
+          resolve(data);
         }
       });
     }
-    catch(error){
+    catch (error) {
       reject(error);
     }
   });

@@ -1,5 +1,5 @@
 /**
-	Nodejs Template Project
+	Nodejs Admin-API
   @module: response.js
   @description: Defines reponse object
 	@author:
