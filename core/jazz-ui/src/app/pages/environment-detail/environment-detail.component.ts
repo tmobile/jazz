@@ -53,7 +53,7 @@ api_doc_name:string='';
   disablingApiButton:boolean=true;
   nonClickable:boolean=false;
   message:string;
-
+  public assets;
 
   private sub: any;
   private subscription:any;
@@ -164,12 +164,9 @@ api_doc_name:string='';
 
       if (cachedData) {
           this.onDataFetched(cachedData);
-          if(this.service.serviceType === "website")
-          {
-              this.tabData = ['overview','deployments','code quality','assets'];
-          }
-          else if(this.service.serviceType == "function")
-            this.isFunction=true;
+          this.getAssets();
+          this.setTabs();
+          this.isFunction= this.service.type === "function";
       } else{
          if ( this.subscription ) {
             this.subscription.unsubscribe();
@@ -180,13 +177,9 @@ api_doc_name:string='';
                     this.service.regions=env_internal.urls.regions;
                   this.service=response.data.data;
                   if(environment.envName=='oss')this.service=response.data;
-                  if(this.service.type === "website")
-                  {
-                      this.tabData = ['overview','deployments','code quality','assets'];
-                  }
-                  else if(this.service.type == "function")
-                      this.isFunction=true;
-
+                  this.isFunction= this.service.type === "function";
+                  this.getAssets();
+                  this.setTabs();
                   this.cache.set(id, this.service);
                   this.onDataFetched(this.service);
                   this.envoverview.notify(this.service);
@@ -199,14 +192,43 @@ api_doc_name:string='';
               }
           )
       }
-
   };
+
+  setTabs() {
+    if (this.service.serviceType === 'api' || this.service.type === 'api') {
+      this.tabData = ['overview', 'deployments', 'assets', 'code quality', 'logs'];
+    } else if (this.service.serviceType === 'function' || this.service.type === 'function') {
+      this.tabData = ['overview', 'deployments', 'assets', 'code quality', 'logs'];
+    } else if (this.service.serviceType === 'website' || this.service.type === 'website') {
+      this.tabData = ['overview', 'deployments', 'assets'];
+    }
+  }
+
+  getAssets() {
+    this.http.post('/jazz/assets/search', {
+      service: this.service.service || this.service.name,
+      domain: this.service.domain,
+      environment: this.envSelected,
+      limit: undefined
+    }).subscribe((assetsResponse) => {
+      this.assets = assetsResponse.data;
+      this.service.assets = this.assets;
+    }, (err) => {
+      this.toast_pop('error', 'Oops!', 'Swagger File Not Found.');
+    });
+  }
 
   testApi(type){
       switch(type){
           case 'api':
-            let swaggerFile = '/' + this.service.domain + '/' + this.service.name + '/' + this.envSelected + '/swagger.json';
-            return window.open(environment.urls['swagger_editor'] + '/?url=' + environment['api_doc_name'] + swaggerFile);
+            let foundAsset = this.assets.find((asset) => {
+              return asset.type === 'swagger_url';
+            });
+            if (foundAsset) {
+              return window.open(environment.urls['swagger_editor'] + '/?url=' + foundAsset.provider_id);
+            } else {
+              return window.open('/404');
+            }
           case 'website' :
           if(this.endpoint_env!=(undefined||'')){
             window.open(this.endpoint_env);
