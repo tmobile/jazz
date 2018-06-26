@@ -5,7 +5,6 @@ var SlackChannelInfoErrorHandler = function(error) {
     };
 }
 
-
 var SlackChannelNotificationErrorHandler = function(error) {
     return {
         name: "SlackChannelNotificationError",
@@ -19,9 +18,6 @@ var ServiceGetErrorHandler = function(error) {
         error: error
     };
 }
-
-
-
 
 module.exports = () => {
     return {
