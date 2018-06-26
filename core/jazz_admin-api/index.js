@@ -18,14 +18,10 @@ function handler(event, context, cb) {
 
   try {
     apiResponseObj = {};
-    if (event !== undefined && event.method !== undefined && event.method === 'GET') {
-      if (!event && !event.method && event.method !== 'POST') {
-        return cb(JSON.stringify(errorHandler.throwNotFoundError("Method not found")));
-      }
+    if (event&& event.method && event.method === 'GET') {
       if (!event.body) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Event Body not Defined")));
       }
-
       if (!event.principalId) {
         logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
         return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service|Authorization Incomplete")));

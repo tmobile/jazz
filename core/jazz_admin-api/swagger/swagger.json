@@ -97,20 +97,7 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [
-          {
-            "name": "a",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          },
-          {
-            "name": "b",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
+        "parameters": [],
         "responses": {
           "200": {
             "description": "Successful Execution",
@@ -217,7 +204,7 @@
         },
         "security": [
           {
-            "{envPrefix}-jazz-cognito-authorizer": []
+            "{envPrefix}-{domain}-cognito-authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -304,7 +291,7 @@
     }
   },
   "securityDefinitions": {
-    "{envPrefix}-jazz-cognito-authorizer": {
+    "{envPrefix}-{domain}-cognito-authorizer": {
       "type": "apiKey",
       "name": "Authorization",
       "in": "header",
@@ -312,7 +299,7 @@
       "x-amazon-apigateway-authorizer": {
         "authorizerCredentials": "{conf-role}",
         "authorizerResultTtlInSeconds": 300,
-        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-jazz-cognito-authorizer-{envmnt}/invocations",
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
         "type": "token"
       }
     }

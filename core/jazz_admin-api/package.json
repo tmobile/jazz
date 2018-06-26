@@ -1,5 +1,5 @@
 {
-  "name": "api-nodejs-template",
+  "name": "admin-api",
   "version": "0.0.1",
   "description": "Admin-API -api to retrive installer-vars.json for admin user",
   "main": "index.js",
@@ -9,8 +9,7 @@
     "test": "mocha"
   },
   "dependencies": {
-    "request": "*",
-    "deasync": "*"
+    "request": "*"
   },
   "devDependencies": {
     "mocha": "^v3.0.0",
