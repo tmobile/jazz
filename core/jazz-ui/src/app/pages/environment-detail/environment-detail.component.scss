@@ -37,8 +37,8 @@
     /deep/ .tabs-wrap {
       ul li {
         &:last-child {
-          pointer-events: none;
-          opacity: 0.6;
+          // pointer-events: none;
+          // opacity: 0.6;
         }
       }
     }
