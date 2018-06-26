@@ -26,7 +26,7 @@
 const AWS = require('aws-sdk');
 
 // function to convert key name in schema to database column name
-var getDatabaseKeyName = function(key) {
+var getDatabaseKeyName = function (key) {
     // Some of the keys in schema may be reserved keywords, so it may need some manipulation
 
     if (key === undefined || key === null) {
@@ -40,7 +40,7 @@ var getDatabaseKeyName = function(key) {
     }
 };
 
-var getSchemaKeyName = function(key) {
+var getSchemaKeyName = function (key) {
     // Convert database key name back, as per schema
 
     if (key === undefined || key === null) {
@@ -59,7 +59,7 @@ var getSchemaKeyName = function(key) {
 };
 
 // convert object returned from the database, as per schema
-var formatService = function(service, format) {
+var formatService = function (service, format) {
     if (service === undefined || service === null) {
         return {};
     }
@@ -77,7 +77,7 @@ var formatService = function(service, format) {
         };
     }
 
-    var parseValue = function(value) {
+    var parseValue = function (value) {
         var type = Object.keys(value)[0];
         var parsed_value = value[type];
         if (type === 'NULL') {
@@ -93,10 +93,10 @@ var formatService = function(service, format) {
         } else if (type === 'M') {
             var parsed_value_map = {};
             try {
-                Object.keys(parsed_value).forEach(function(key) {
-                    parsed_value_map[key] =  parseValue(parsed_value[key]);
+                Object.keys(parsed_value).forEach(function (key) {
+                    parsed_value_map[key] = parseValue(parsed_value[key]);
                 });
-            } catch (e) {}
+            } catch (e) { }
             return parsed_value_map;
         } else if (type === 'L') {
             var parsed_value_list = [];
@@ -104,7 +104,7 @@ var formatService = function(service, format) {
                 for (var i = 0; i < parsed_value.length; i++) {
                     parsed_value_list.push(parseValue(parsed_value[i]));
                 }
-            } catch (e) {}
+            } catch (e) { }
             return parsed_value_list;
         } else {
             // probably should be error
@@ -112,7 +112,7 @@ var formatService = function(service, format) {
         }
     };
     // "service_required_fields": ["service", "domain", "type", "created_by", "runtime", "status"]
-    Object.keys(service).forEach(function(key) {
+    Object.keys(service).forEach(function (key) {
         var key_name = getSchemaKeyName(key);
         var value = service[key];
         if (value !== null && value !== undefined) {
@@ -128,14 +128,14 @@ var formatService = function(service, format) {
 };
 
 // initialize document CLient for dynamodb
-var initDocClient = function() {
+var initDocClient = function () {
     AWS.config.update({ region: global.config.ddb_region });
     var docClient = new AWS.DynamoDB.DocumentClient();
 
     return docClient;
 };
 
-var initDynamodb = function() {
+var initDynamodb = function () {
     AWS.config.update({ region: global.config.ddb_region });
     var dynamodb = new AWS.DynamoDB();
 
@@ -144,7 +144,7 @@ var initDynamodb = function() {
 
 //Assigning null to empty string as DynamoDB doesnot allow empty string.
 //But our usecase needs empty string for updation
-var getUpdateData = function(update_data) {
+var getUpdateData = function (update_data) {
     var input_data = {};
     for (var field in update_data) {
         if (update_data[field] === "" || update_data[field] === undefined) {
@@ -169,7 +169,7 @@ var getUpdateData = function(update_data) {
     return input_data;
 };
 
-var paginateUtil = function(data, limit, offset) {
+var paginateUtil = function (data, limit, offset) {
     var newArr = [];
     if (offset > data.length || offset == data.length || limit === 0) {
         data = [];
@@ -181,9 +181,9 @@ var paginateUtil = function(data, limit, offset) {
     return data;
 };
 
-var sortUtil = function(data, sort_key, sort_direction) {
+var sortUtil = function (data, sort_key, sort_direction) {
     if (sort_key !== undefined && sort_key !== "timestamp") {
-        data = data.sort(function(a, b) {
+        data = data.sort(function (a, b) {
             var x = a[sort_key];
             var y = b[sort_key];
             if (sort_direction === "asc") return x < y ? -1 : x > y ? 1 : 0;
@@ -192,7 +192,7 @@ var sortUtil = function(data, sort_key, sort_direction) {
             }
         });
     } else {
-        data = data.sort(function(a, b) {
+        data = data.sort(function (a, b) {
             var val1 = a.timestamp.replace("T", " ");
             var val2 = b.timestamp.replace("T", " ");
             var x = new Date(val1).getTime();
@@ -204,9 +204,9 @@ var sortUtil = function(data, sort_key, sort_direction) {
     return data;
 };
 
-var filterUtil = function(data, filter_value) {
+var filterUtil = function (data, filter_value) {
     var newArr = [];
-    data.forEach(function(ele) {
+    data.forEach(function (ele) {
         for (var key in ele) {
             var value = "";
             if (typeof ele[key] == "string") value = ele[key].toLowerCase();

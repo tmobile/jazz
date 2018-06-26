@@ -112,7 +112,7 @@ var debug = (message) => {
 };
 
 module.exports = () => {
-    return{
+    return {
         init: init,
         setLevel: setLevel,
         log: log,

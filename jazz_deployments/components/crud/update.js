@@ -21,7 +21,7 @@
     @version: 1.0
 **/
 
-const utils = require("../utils.js")(); //Import the utils module.
+const utils = require("../utils.js"); //Import the utils module.
 
 module.exports = (deploymentData, tableName, deploymentId, onComplete) => {
 
@@ -55,9 +55,9 @@ module.exports = (deploymentData, tableName, deploymentId, onComplete) => {
             if (err) {
                 // database error
                 onComplete({
-                        result: "databaseError",
-                        message: "Error Updating Item  " + err.message
-                    },
+                    result: "databaseError",
+                    message: "Error Updating Item  " + err.message
+                },
                     null
                 );
             } else {

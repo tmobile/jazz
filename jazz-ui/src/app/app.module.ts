@@ -24,11 +24,13 @@ import { TestApiComponent } from './pages/testapi/test-api.component';
 import { Error404Component } from './pages/error404/error404.component';
 import { SharedModule } from './shared-module/shared.module';
 import { routes } from './app.route';
+import {UserJourneyComponent} from "./pages/user-journey/user-journey.component";
+import {UtilsService} from './core/services/utils.service';
 let environmentval = environment.envName;
 let loadedModule;
 if (environmentval == "oss") {
   loadedModule = require('./pages/login/oss/login.component')
-} 
+}
 else{
   loadedModule = require('./pages/login/internal/login.component')
 }
@@ -38,6 +40,7 @@ else{
     LandingComponent,
     Error404Component,
     TestApiComponent,
+    UserJourneyComponent
   ],
   imports: [
     RouterModule.forRoot(routes),
@@ -58,6 +61,7 @@ else{
     RequestService,
     MessageService,
     ConfigService,
+    UtilsService,
     {
       provide: APP_INITIALIZER,
       useFactory: ConfigLoader,

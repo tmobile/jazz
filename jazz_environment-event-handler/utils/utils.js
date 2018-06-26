@@ -20,8 +20,6 @@ const format = require("string-template");
 var getNotificationMessage = function(event_name, event_status, service_name, error, notification_message) {
     var message;
 	
-	
-	
     switch (event_status) {
         case "STARTED":
             message = format(notification_message.EVENT_NAME.STARTED, {

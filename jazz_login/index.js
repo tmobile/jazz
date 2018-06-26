@@ -15,15 +15,13 @@
 // =========================================================================
 
 'use strict';
+
+const AWSCognito = require('amazon-cognito-identity-js');
+
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const configObj = require("./components/config.js");
 const logger = require("./components/logger.js");
-const async = require("async");
-const jwt = require("jsonwebtoken");
-const AWS = require('aws-sdk');
-const moment = require('moment');
-const AWSCognito = require('amazon-cognito-identity-js');
 
 /**
  * API Auth Service
@@ -35,8 +33,8 @@ const AWSCognito = require('amazon-cognito-identity-js');
 module.exports.handler = (event, context, callback) => {
 
 	var config = configObj(event);
-  	logger.init(event, context);
-    var errorHandler = errorHandlerModule(logger);
+	logger.init(event, context);
+	var errorHandler = errorHandlerModule(logger);
 
 	try {
 		if (event && event.method && event.method === 'POST') {
@@ -47,41 +45,41 @@ module.exports.handler = (event, context, callback) => {
 			}
 
 			if (!event.body.password) {
-				logger.warn("No password provided for user: " + event.body.username); 
+				logger.warn("No password provided for user: " + event.body.username);
 				return callback(JSON.stringify(errorHandler.throwInputValidationError("102", "No password provided for user: " + event.body.username + ".")));
 			}
 
 			var authenticationData = {
-				Username : event.body.username.toLowerCase(),
-				Password : event.body.password
+				Username: event.body.username.toLowerCase(),
+				Password: event.body.password
 			};
 
 			var poolData = {
-					UserPoolId : config.USER_POOL_ID,
-					ClientId : config.CLIENT_ID
-				};
+				UserPoolId: config.USER_POOL_ID,
+				ClientId: config.CLIENT_ID
+			};
 
 			var authenticationDetails = new AWSCognito.AuthenticationDetails(authenticationData);
 			var userPool = new AWSCognito.CognitoUserPool(poolData);
 			var userData = {
-				Username : event.body.username.toLowerCase(),
-				Pool : userPool
+				Username: event.body.username.toLowerCase(),
+				Pool: userPool
 			};
-			
+
 			logger.info("Authenticate against cognito for " + event.body.username);
 
 			var cognitoUser = new AWSCognito.CognitoUser(userData);
 			cognitoUser.authenticateUser(authenticationDetails, {
 				onSuccess: function (result) {
 					logger.info("successfully authenticated");
-					return callback(null, responseObj({"token": result.getAccessToken().getJwtToken()}, {"username": event.body.username}));
+					return callback(null, responseObj({ "token": result.getAccessToken().getJwtToken() }, { "username": event.body.username }));
 				},
-				onFailure: function(err) {
+				onFailure: function (err) {
 					logger.error("Error while authenticating: " + JSON.stringify(err));
 					return callback(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
-          		}
+				}
 			});
-		}else {
+		} else {
 			logger.warn("Invalid request object " + JSON.stringify(event));
 			return callback(JSON.stringify(errorHandler.throwInputValidationError("100", "Bad Request")));
 		}

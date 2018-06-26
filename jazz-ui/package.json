@@ -31,7 +31,7 @@
     "angular2-number-picker": "^0.8.8",
     "angular2-toaster": "^2.0.0",
     "bootstrap": "^3.3.7",
-    "chart.js": "^2.7.0",
+    "chart.js": "^2.7.2",
     "core-js": "^2.4.1",
     "d3": "^4.9.1",
     "d3-tip": "^0.7.1",
@@ -39,13 +39,8 @@
     "ng2-charts": "^1.6.0",
     "ng2-dropdown": "0.0.21",
     "ng2-ion-range-slider": "^1.0.3",
-    "ng2-nouislider": "^1.7.0",
     "ng2-popover": "0.0.14",
-    "ngx-bootstrap": "^1.7.1",
-    "nouislider": "^10.1.0",
-    "rxjs": "^5.4.1",
-    "slick-carousel": "^1.6.0",
-    "ts-helpers": "^1.1.1"
+    "rxjs": "^5.4.1"
   },
   "devDependencies": {
     "@angular/cli": "^1.7.3",

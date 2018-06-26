@@ -9,12 +9,9 @@
     "test": "mocha"
   },
   "dependencies": {
-    "guid": "0.0.12",
-    "json-query": "*",
-    "moment": "*",
-    "request": "*",
     "lodash": "*",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "request": "^2.75.0"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",

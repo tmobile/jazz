@@ -29,7 +29,7 @@ import {FormsModule} from '@angular/forms';
 import {DropdownModule} from 'ng2-dropdown';
 import {PopoverModule} from 'ng2-popover';
 import {ChartsModule} from 'ng2-charts';
-import {BrowserModule} from '@angular/platform-browser'; 
+import {BrowserModule} from '@angular/platform-browser';
 // import {ToasterModule} from 'angular2-toaster';
 import {DatePickerModule} from '../primary-components/daterange-picker/ng2-datepicker';
 import {MomentModule} from 'angular2-moment';
@@ -50,6 +50,10 @@ import { OverviewSidebarComponent } from './../secondary-components/overview-sid
 import {AdvancedFiltersComponentOSS} from '../secondary-components/advanced-filters/OSS/advanced-filters.component';
 import {AdvancedFiltersComponent} from '../secondary-components/advanced-filters/internal/advanced-filters.component';
 import { AdvFilters }            from '../adv-filter.directive';
+import {SafeHtmlPipe} from "../core/pipes/safe-html.pipe";
+import {SafeUrlPipe} from "../core/pipes/safe-url.pipe";
+import {ReportIssueComponent} from '../primary-components/report-issue/report-issue.component';
+import {ChartjsLinegraphComponent} from '../secondary-components/chartjs-linegraph/chartjs-linegraph.component';
 let specificComponents:any
 let specificModules: any;
 if(environment.envName == 'oss'){
@@ -68,7 +72,7 @@ for(let i in specificComponents){
  declarationsArray.push(specificComponents[i]);
 }
 
-// 
+//
 @NgModule({
   imports: [
     CommonModule,
@@ -99,7 +103,7 @@ for(let i in specificComponents){
     ClickOutsideDirective,
     FiltersComponent,
     FilterTagsServicesComponent,
-    FilterTagsComponent,    
+    FilterTagsComponent,
     TableTemplateComponent,
     SearchBoxComponent,
     MobileSecondaryTabComponent,
@@ -114,9 +118,13 @@ for(let i in specificComponents){
     AdvancedFiltersComponentOSS,
     AdvancedFiltersComponent,
     AdvFilters,
+    SafeHtmlPipe,
+    SafeUrlPipe,
+    ReportIssueComponent,
+    ChartjsLinegraphComponent,
     ...declarationsArray,
-   
-   
+
+
   ],
   exports: [
     BtnJazzPrimaryComponent,
@@ -144,13 +152,17 @@ for(let i in specificComponents){
     JenkinsStatusComponent,
     LineGraphComponent,
     FilterTagsServicesComponent,
-    FilterTagsComponent,    
+    FilterTagsComponent,
     SideTileFixedComponent,
     FooterComponent,
     OverviewSidebarComponent,
     AdvancedFiltersComponentOSS,
     AdvancedFiltersComponent,
     AdvFilters,
+    SafeHtmlPipe,
+    SafeUrlPipe,
+    ReportIssueComponent,
+    ChartjsLinegraphComponent,
     ...declarationsArray
 
   ],
