@@ -49,7 +49,7 @@ function handler(event, context, cb) {
 function buildRequestOption(config) {
   if (config.SCM_TYPE == "gitlab") {
     return {
-      uri: config.BASE_URL + config.PATH_GIT,
+      uri: config.BASE_URL + config.GITLAB_PATH,
       method: 'get',
       headers: {
         "Private-Token": config.PRIVATE_TOKEN_GITLAB

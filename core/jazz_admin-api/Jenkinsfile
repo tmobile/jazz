@@ -3,10 +3,10 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" except for config_loader
-@Field def repo_credential_id = "jenkins1cred"
-@Field def repo_base = "34.200.250.59"
-@Field def repo_core = "slf"
-@Field def scm_type = "gitlab"
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
+@Field def scm_type
 
 @Field def config_loader
 
@@ -31,14 +31,7 @@ node {
   }
 
   stage('Triggering the Jenkins build') {
-    withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
-    echo "Build triggered via branch::${env.BRANCH_NAME}"
-
-    def build_job = config_loader.API.API_BUILD_URI
-    def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
-
-    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=admin-api&domain=jazz&scm_branch=${env.BRANCH_NAME}\""
-    }
+  build job: "${config_loader.JENKINS.BUILD_URI.API}", parameters: [string(name: 'service_name', value: 'admin-api'), string(name: 'domain', value: 'jazz'), string(name: 'scm_branch', value: "${env.BRANCH_NAME}")], wait: false
   }
 }
 

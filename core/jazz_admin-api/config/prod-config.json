@@ -5,7 +5,6 @@
   "BB_PASSWORD":"{bb_password}",
   "BASE_URL":"{base-url}",
   "SCM_TYPE": "{scm-type}",
-
-  "PATH_GIT": "/slf/jazz-build-module/raw/master/jazz-installer-vars.json",
-  "PATH_BITBUCKET":"/projects/SLF/repos/jazz-build-module/raw/jazz-installer-vars.json"
+  "GITLAB_PATH": "/slf/jazz-build-module/raw/master/jazz-installer-vars.json",
+  "BITBUCKET_PATH":"/projects/SLF/repos/jazz-build-module/raw/jazz-installer-vars.json"
 }

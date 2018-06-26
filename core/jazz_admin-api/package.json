@@ -1,7 +1,7 @@
 {
   "name": "api-nodejs-template",
   "version": "0.0.1",
-  "description": "Nodejs Template project",
+  "description": "Admin-API -api to retrive installer-vars.json for admin user",
   "main": "index.js",
   "private": true,
   "author": [],
