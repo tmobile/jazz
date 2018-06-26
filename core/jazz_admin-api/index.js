@@ -1,5 +1,5 @@
 /**
-Nodejs Admin-API
+Nodejs Template Project
 @author:
 @version: 1.0
  **/
@@ -17,7 +17,7 @@ function handler(event, context, cb) {
   logger.init(event, context);
 
   try {
-    responseObj = {};
+    apiResponseObj = {};
     if (event !== undefined && event.method !== undefined && event.method === 'GET') {
       if (!event && !event.method && event.method !== 'POST') {
         return cb(JSON.stringify(errorHandler.throwNotFoundError("Method not found")));
@@ -34,8 +34,8 @@ function handler(event, context, cb) {
         return cb(JSON.stringify(errorHandler.throwUnauthorizedError("This User does not have the privilages to  access this service")));
       }
       getInstallerVarsJSON(config).then((data) => {
-        temp.INSTALLERVARSJSON = data;
-        return cb(null, responseObj(temp, event.body));
+        apiResponseObj.installerVars= data;
+        return cb(null, responseObj(apiResponseObj, event.body));
       }).catch((error) => {
         logger.error("Failed to load installer-vars.json file:", error);
         cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load installer-vars.json file")));

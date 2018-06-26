@@ -1,1 +1,2 @@
-This is a sample NodeJs template project
+## Platform API for Retriving Installer JSON.
+Provides an API for adimin  user to retirive the installer vars JSON file
