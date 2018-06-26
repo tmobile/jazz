@@ -1,9 +1,24 @@
+// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
 "use strict";
 
-const config = require("./components/config.js"); //Import the environment data.
+const configModule = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
 const utils = require("./components/utils.js")(); //Import the utils module.
-const _ = require("lodash");
 const errorHandlerModule = require("./components/error-handler.js");
 const failureErrorCodes = require("./utils/failure-codes.js");
 const customErrorHandlerModule = require("./components/custom-error-handler.js"); //Import the custom error codes module.
@@ -19,32 +34,36 @@ var retryErrorHandler = customErrorHandlerModule();
 var processedEvents = [];
 var failedEvents = [];
 
-var handler = (event, context, cb) => {
-    var configData = config(context);
+function handler(event, context, cb) {
+    var configData = configModule.getConfig(event, context);
 
+	if (!configData || configData.length) {
+		logger.error("Cannot load config object, will stop processing");
+		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Internal error, please reach out to admins")));
+	}
     logger.init(event, context);
     logger.info("Event :" + JSON.stringify(event));
 
     rp(getTokenRequest(configData))
         .then(result => {
-            return getAuthResponse(result);
+            return exportable.getAuthResponse(result);
         })
         .then(authToken => {
-            return processRecords(event, configData, authToken);
+            return exportable.processRecords(event, configData, authToken);
         })
         .then(result => {
-            var records = getEventProcessStatus();
+            var records = exportable.getEventProcessStatus();
             logger.info("Successfully processed events: " + JSON.stringify(records));
             return cb(null, records);
         })
         .catch(err => {
-            var records = getEventProcessStatus();
+            var records = exportable.getEventProcessStatus();
             logger.error("Error processing events: " + JSON.stringify(err));
             return cb(null, records);
         });
 }
 
-var getTokenRequest = (configData) => {
+function getTokenRequest(configData) {
     return {
         uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
         method: 'post',
@@ -59,7 +78,7 @@ var getTokenRequest = (configData) => {
     };
 };
 
-var getAuthResponse = (result) => {
+function getAuthResponse(result) {
     return new Promise((resolve, reject) => {
         if (result.statusCode === 200 && result.body && result.body.data) {
             return resolve(result.body.data.token);
@@ -70,11 +89,11 @@ var getAuthResponse = (result) => {
     });
 }
 
-var processRecords = (event, configData, authToken) => {
+function processRecords(event, configData, authToken) {
     return new Promise((resolve, reject) => {
         var processRecordPromises = [];
-        for (var i = 0; i < event.Records.length; i++) {
-            processRecordPromises.push(processRecord(event.Records[i], configData, authToken));
+        for (let i = 0; i < event.Records.length; i++) {
+            processRecordPromises.push(exportable.processRecord(event.Records[i], configData, authToken));
         }
         Promise.all(processRecordPromises)
             .then((result) => { return resolve(result); })
@@ -82,36 +101,38 @@ var processRecords = (event, configData, authToken) => {
     });
 }
 
-var processRecord = (record, configData, authToken) => {
+function processRecord(record, configData, authToken) {
     return new Promise((resolve, reject) => {
         var sequenceNumber = record.kinesis.sequenceNumber;
         var encodedPayload = record.kinesis.data;
         var payload;
-        return checkInterest(encodedPayload, sequenceNumber, configData)
+        return exportable.checkInterest(encodedPayload, sequenceNumber, configData)
             .then(result => {
                 payload = result.payload;
                 if (result.interested_event) {
-                    return processEvent(payload, configData, authToken);
-                }
+                    return exportable.processEvent(payload, configData, authToken);
+                }else {					
+					resolve({ "message": "Not an interesting event" });					
+				}
             })
             .then(result => {
-                handleProcessedEvents(sequenceNumber, payload);
+                exportable.handleProcessedEvents(sequenceNumber, payload);
                 return resolve(result);
             })
             .catch(err => {
-                handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
-                return resolve();
+                exportable.handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
+                return reject(err);
             });
     });
 }
 
-var checkInterest = (encodedPayload, sequenceNumber, configData) => {
+function checkInterest(encodedPayload, sequenceNumber, configData) {
     return new Promise((resolve, reject) => {
         var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
         logger.info("kinesisPayload :" + JSON.stringify(kinesisPayload));
         if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
-            if (_.includes(configData.EVENTS.EVENT_TYPE , kinesisPayload.Item.EVENT_TYPE.S) &&
-            _.includes(configData.EVENTS.EVENT_NAME , kinesisPayload.Item.EVENT_NAME.S)) {
+            if (configData.EVENTS.EVENT_TYPE.includes(kinesisPayload.Item.EVENT_TYPE.S) &&
+                configData.EVENTS.EVENT_NAME.includes(kinesisPayload.Item.EVENT_NAME.S)) {
                 logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
                 return resolve({
                     "interested_event": true,
@@ -128,23 +149,23 @@ var checkInterest = (encodedPayload, sequenceNumber, configData) => {
     });
 }
 
-var processEvent = (payload, configData, authToken) => {
+function processEvent(payload, configData, authToken) {
     return new Promise((resolve, reject) => {
         if (!payload.EVENT_NAME.S || !payload.EVENT_STATUS.S) {
             logger.error("validation error. Either event name or event status is not properly defined.");
-            var err = handleError(failureCodes.PR_ERROR_1.code, "Validation error while processing event for service");
+            var err = exportable.handleError(failureCodes.PR_ERROR_1.code, "Validation error while processing event for service");
             return reject(err);
         }
-        getServiceDetails(payload, configData, authToken)
-            .then(result => { notifySlackChannel(result, payload, configData, authToken) })
+        exportable.getServiceDetails(payload, configData, authToken)
+            .then(result => { return notifySlackChannel(result, payload, configData, authToken) })
             .then(result => { resolve(result) })
-            .catch(err => {
+            .catch(error => {
                 return reject(error);
             });
     });
 }
 
-var getSvcPayload = (method, payload, apiEndpoint, authToken) => {
+function getSvcPayload(method, payload, apiEndpoint, authToken) {
     var svcPayload = {
         headers: {
             'content-type': "application/json",
@@ -162,89 +183,92 @@ var getSvcPayload = (method, payload, apiEndpoint, authToken) => {
     return svcPayload;
 };
 
-var procesRequest = (svcPayload) => {
+function processRequest(svcPayload) {
     return new Promise((resolve, reject) => {
         request(svcPayload, function (error, response, body) {
             if (response.statusCode === 200 && body) {
                 return resolve(body);
             } else {
-                logger.error("Error processing request: " + JSON.stringify(response));
-                var error = handleError(failureCodes.PR_ERROR_3.code, response.body.message);
+                logger.error("Error processing request: " + JSON.stringify(response));                
                 return reject(error);
             }
         });
     });
 };
 
-var getServiceDetails = (eventPayload, configData, authToken) => {
-    return new Promise((resolve, reject) => {   
+function getServiceDetails(eventPayload, configData, authToken) {
+    return new Promise((resolve, reject) => {
         var service_id = eventPayload.SERVICE_ID.S;
         var apiEndpoint = configData.SERVICE_API_URL + configData.SERVICE_API_RESOURCE + "/" + service_id;
-        var svcPayload = getSvcPayload("GET", null, apiEndpoint, authToken);
+        var svcPayload = exportable.getSvcPayload("GET", null, apiEndpoint, authToken);
 
-        procesRequest(svcPayload)
+        exportable.processRequest(svcPayload)
             .then(result => { return resolve(result); })
             .catch(err => {
                 logger.error("getServiceDetails failed: " + JSON.stringify(err));
-                return reject(err);
+                var error = exportable.handleError(failureCodes.PR_ERROR_1.code, failureCodes.PR_ERROR_1.message);
+                return reject(error);
             });
     });
 };
 
-var notifySlackChannel = (result, payload, configData, authToken) => {
-    var output = JSON.parse(result);
-    if (!output.data) {
-        logger.error("Service details not foound in service catalog");
-        var error = handleError(failureCodes.PR_ERROR_1.code, failureCodes.PR_ERROR_1.message);
-        return reject(error);
-    }
-    var serviceDetails = output.data;
-    logger.info("service details : "+JSON.stringify(serviceDetails));
-    var slackChannel = serviceDetails.slack_channel;
-    if (!slackChannel) {
-        logger.error("Slack channel not found");
-        var error = handleError(failureCodes.PR_ERROR_5.code, failureCodes.PR_ERROR_5.message);
-        return reject(error);
-    }
+function notifySlackChannel(result, payload, configData, authToken) {
+    return new Promise((resolve, reject) => {
+        var output = JSON.parse(result);
+        if (!output.data) {
+            logger.error("Service details not foound in service catalog");
+            var error = exportable.handleError(failureCodes.PR_ERROR_1.code, failureCodes.PR_ERROR_1.message);
+            return reject(error);
+        }
+        var serviceDetails = output.data;
+        logger.info("service details : " + JSON.stringify(serviceDetails));
+        var slackChannel = serviceDetails.slack_channel;
+        if (!slackChannel) {
+            logger.error("Slack channel not found");
+            var error = exportable.handleError(failureCodes.PR_ERROR_5.code, failureCodes.PR_ERROR_5.message);
+            return reject(error);
+        }
 
-    var attachments = [];
-    var notification = utils.getNotificationMessage(serviceDetails, payload, configData);
-    logger.info("notification details : "+JSON.stringify(notification));
-    if (notification) {
-        attachments.push(utils.formatSlackTemplate(
-            notification.pretext,
-            notification.text,
-            notification.color
-        ));
-    }
+        var attachments = [];
+        var notification = utils.getNotificationMessage(serviceDetails, payload, configData);
+        logger.info("notification details : " + JSON.stringify(notification));
+        if (notification) {
+            attachments.push(utils.formatSlackTemplate(
+                notification.pretext,
+                notification.text,
+                notification.color
+            ));
+        }
 
-    var slackNotifierUserName = configData.SLACK_NOTIFIER_USER_NAME;
-    var slackToken = configData.SLACK_TOKEN
+        var slackNotifierUserName = configData.SLACK_NOTIFIER_USER_NAME;
+        var slackToken = configData.SLACK_TOKEN
 
-    var slackNotificationSvcPayload = {
-        "method": "POST",
-        "uri": configData.SLACK_BASIC_NOTIFICATION_URL + "?token=" + slackToken + "&channel=" + slackChannel + "&username=" + slackNotifierUserName,
-        "rejectUnauthorized": false,
-        "headers": {    "Content-Type": "application/x-www-form-urlencoded" },
-        "form": { "attachments" : JSON.stringify(attachments)}
-    };
+        var slackNotificationSvcPayload = {
+            "method": "POST",
+            "uri": configData.SLACK_BASIC_NOTIFICATION_URL + "?token=" + slackToken + "&channel=" + slackChannel + "&username=" + slackNotifierUserName,
+            "rejectUnauthorized": false,
+            "headers": { "Content-Type": "application/x-www-form-urlencoded" },
+            "form": { "attachments": JSON.stringify(attachments) }
+        };
 
-    procesRequest(slackNotificationSvcPayload)
-        .then(result => { return resolve(result); })
-        .catch(err => {
-            logger.error("Slack notification error occured for service:: " + JSON.stringify(err));
-            return reject(err);
-        });
+        exportable.processRequest(slackNotificationSvcPayload)
+            .then(result => { return resolve(result); })
+            .catch(err => {
+                logger.error("Slack notification error ocured for service:: " + JSON.stringify(err));
+                var error = exportable.handleError(failureCodes.PR_ERROR_4.code, failureCodes.PR_ERROR_4.message);
+                return reject(error);
+            });
+    });
 }
 
-var handleError = (errorType, message) => {
+function handleError(errorType, message) {
     var error = {};
     error.failure_code = errorType;
     error.failure_message = message;
     return error;
 }
 
-var handleFailedEvents = (id, failure_message, payload, failure_code) => {
+function handleFailedEvents(id, failure_message, payload, failure_code) {
     failedEvents.push({
         "sequence_id": id,
         "event": payload,
@@ -253,34 +277,35 @@ var handleFailedEvents = (id, failure_message, payload, failure_code) => {
     });
 }
 
-var handleProcessedEvents = (id, payload) => {
+function handleProcessedEvents(id, payload) {
     processedEvents.push({
         "sequence_id": id,
         "event": payload
     });
 }
 
-var getEventProcessStatus = () => {
+function getEventProcessStatus() {
     return {
         "processed_events": processedEvents.length,
         "failed_events": failedEvents.length
     };
 }
 
-
-module.exports = {
-    getTokenRequest: getTokenRequest,
-    getAuthResponse: getAuthResponse,
-    processRecords: processRecords,
-    processRecord: processRecord,
-    checkInterest: checkInterest,
-    processEvent: processEvent,
-    handler: handler,
-    getSvcPayload: getSvcPayload,
-    procesRequest: procesRequest,
-    getServiceDetails: getServiceDetails,
-    notifySlackChannel: notifySlackChannel,
-    handleError: handleError,
-    handleFailedEvents: handleFailedEvents,
-    getEventProcessStatus: getEventProcessStatus
-}
+const exportable = {
+    getTokenRequest,
+    getAuthResponse,
+    processRecords,
+    processRecord,
+    checkInterest,
+    processEvent,
+    handler,
+    getSvcPayload,
+    processRequest,
+    getServiceDetails,
+    notifySlackChannel,
+    handleError,
+    handleFailedEvents,
+    handleProcessedEvents,
+    getEventProcessStatus
+};
+module.exports = exportable;

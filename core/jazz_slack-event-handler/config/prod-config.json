@@ -4,7 +4,7 @@
 	"TOKEN_URL": "/prod/jazz/login",
 	"SERVICE_USER": "{jazz_admin}",
 	"TOKEN_CREDS": "{jazz_admin_creds}",
-	"SLACK_BASIC_NOTIFICATION_URL": "https://slack.com/api/chat.postMessage",	
+	"SLACK_BASIC_NOTIFICATION_URL": "https://slack.com/api/chat.postMessage",
 	"SLACK_NOTIFIER_USER_NAME": "{slack_notifier_name}",
 	"SLACK_TOKEN": "{slack_token}",
 	"EVENTS": {

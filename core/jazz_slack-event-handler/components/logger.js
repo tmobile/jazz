@@ -1,3 +1,19 @@
+// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+
 /**
     Jazz slack evevnt handler
     @module: logger.js
@@ -6,7 +22,7 @@
     @version: 1.0
 **/
 
-module.exports = function() {
+module.exports = function () {
     var logLevels = {
         error: 4,
         warn: 3,
@@ -21,17 +37,17 @@ module.exports = function() {
     };
 
     // set logLevel, RequestDetails
-    var init = function(event, context) {
+    var init = (event, context) => {
         setLevel();
     };
 
     // To add request specific details, which will be prepended in all the logs for ease of debugging in CloudWatch logs
-    var setRequestDetails = function(someContextSpecificId) {
+    var setRequestDetails = (someContextSpecificId) => {
         return;
     };
 
     // set current logLevel; Only logs which are above the curLogLevel will be logged;
-    var setLevel = function(level) {
+    var setLevel = (level) => {
         // LOG_LEVEL is 'info' by default
 
         if (level !== undefined && logLevels[level] !== undefined) {
@@ -53,7 +69,7 @@ module.exports = function() {
         return null;
     };
 
-    var log = function(level, message) {
+    var log =  (level, message) => {
         /*
             @TODO: format message as per requirement.
             Will it be just a string / json. Should we except error object also?
@@ -80,19 +96,19 @@ module.exports = function() {
         return null;
     };
 
-    var error = function(message) {
+    const error =  (message) => {
         log('error', message);
     };
-    var warn = function(message) {
+    const warn =  (message) => {
         log('warn', message);
     };
-    var info = function(message) {
+    const info = (message) => {
         log('info', message);
     };
-    var verbose = function(message) {
+    const verbose = (message) => {
         log('verbose', message);
     };
-    var debug = function(message) {
+    const debug = (message) => {
         log('debug', message);
     };
 
