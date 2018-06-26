@@ -37,7 +37,7 @@ node {
     def build_job = config_loader.API.API_BUILD_URI
     def job_url = JenkinsLocationConfiguration.get().getUrl() + build_job
 
-    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=test-admin-api&domain=jazztest&scm_branch=${env.BRANCH_NAME}\""
+    sh "curl -X GET -k -v -u \"$UNAME:$PWD\"  \"" + job_url + "&service_name=test-admin-api&domain=jazz&scm_branch=${env.BRANCH_NAME}\""
     }
   }
 }
@@ -45,8 +45,8 @@ node {
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
       // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git"
     }else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    } 
-} 
+    }
+}

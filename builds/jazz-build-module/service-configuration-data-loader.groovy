@@ -395,7 +395,7 @@ def loadServiceConfigurationData() {
 				sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
 			}
 		}
-           if (service_name.trim() == "jazztest_test-admin-api") {
+           if (service_name.trim() == "jazz_test-admin-api") {
             sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/prod-config.json"
