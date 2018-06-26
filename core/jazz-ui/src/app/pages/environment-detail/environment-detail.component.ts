@@ -40,6 +40,8 @@ api_doc_name:string='';
   environment_obj:any;
   isLoadingService: boolean = true;
   status_inactive:boolean = false;
+  swagger_error:boolean = false;
+
   tabData = ['overview','deployments','code quality','assets','logs'];
   envSelected:string='';
   endpoint_env:string='';
@@ -163,7 +165,7 @@ api_doc_name:string='';
       let cachedData = this.cache.get(id);
 
       if (cachedData) {
-          this.onDataFetched(cachedData);
+          this.onDataFetched(cachedData.data);
           if(this.service.serviceType === "website")
           {
               this.tabData = ['overview','deployments','code quality','assets'];
