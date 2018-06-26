@@ -1,4 +1,4 @@
-export const toastMessage = {
+export const toastMessage = { 
     "error0":"Something went wrong while fetching data",
     "error401":"Invalid credentials",
     "error403":"Unable to recognize user. Please login again",
