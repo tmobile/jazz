@@ -17,7 +17,7 @@
 'use strict';
 /**
 	Deployments event handler function.
-	@Author: 
+	@Author:
 	@version: 1.0
 **/
 
@@ -25,7 +25,7 @@ const _ = require("lodash");
 const request = require("request");
 const rp = require('request-promise-native');
 
-const config = require("./components/config.js");
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const errorHandlerModule = require("./components/error-handler.js");
 const fcodes = require('./utils/failure-codes.js');
@@ -36,14 +36,14 @@ var processedEvents = [];
 var failedEvents = [];
 
 function handler(event, context, cb) {
-	var configData = config(context);
-	
-	rp(exportable.getTokenRequest(configData))
+	var config = configModule.getConfig(event, context);
+
+	rp(exportable.getTokenRequest(config))
 		.then(result => {
 			return exportable.getAuthResponse(result);
 		})
 		.then(authToken => {
-			return exportable.processEventRecords(event, configData, authToken);
+			return exportable.processEventRecords(event, config, authToken);
 		})
 		.then(result => {
 			var records = exportable.getEventProcessStatus();

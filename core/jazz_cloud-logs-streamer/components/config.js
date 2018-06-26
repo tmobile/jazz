@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,30 +14,47 @@
 // limitations under the License.
 // =========================================================================
 
-var getStageConfig = (event) => {
-    var stage;
+/**
+	Nodejs Template Project
+  @module: config.js
+  @description: Defines variables/functions to retrieve environment related data
+  @author:
+  @version: 1.0
+**/
 
-    if (event && event.awslogs && event.awslogs.data) {
-        // cw events default to dev
-        stage = 'dev';
-    } else {
-        stage = event.stage
-    }
+const fs = require('fs');
+const path = require('path');
 
-    var configObj = {};
-    // Loads the config files based on the env.
-    // Please edit the JSON files.
-    if (stage === 'dev') {
-        configObj = require('../config/dev-config.json');
-    } else if (stage === 'stg') {
-        configObj = require('../config/stg-config.json');
-    } else if (stage === 'prod') {
-        configObj = require('../config/prod-config.json');
+var getStageConfig = (event, context) => {
+  var stage, configObj;
+
+  if (event && event.stage) {
+    stage = event.stage;
+  } else if (context && context.functionName && context.functionName.length > 0) {
+    var functionName = context.functionName;
+
+    var fnName = functionName.substr(functionName.lastIndexOf('-') + 1, functionName.length);
+
+    if (fnName.endsWith('dev')) {
+      stage = 'dev';
+    } else if (fnName.endsWith('stg')) {
+      stage = 'stg';
+    } else if (fnName.endsWith('prod')) {
+      stage = 'prod';
     }
-    return configObj;
+  }
+
+  if (stage) {
+    var configFile = path.join(__dirname, `../config/${stage}-config.json`);
+
+    if (fs.existsSync(configFile)) {
+      configObj = JSON.parse(fs.readFileSync(configFile));
+    }
+  }
+
+  return configObj;
 };
 
-module.exports = (event) => {
-    var config = getStageConfig(event);
-    return config;
-};
+module.exports = {
+  getConfig: getStageConfig
+}

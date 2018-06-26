@@ -11,7 +11,7 @@ const sinon = require('sinon');
 
 const index = require('../index');
 const logger = require("../components/logger.js");
-const configObj = require('../components/config.js');
+const configModule = require('../components/config.js');
 const crud = require('../components/crud')();
 const errorHandler = require("../components/error-handler.js")();
 
@@ -59,7 +59,7 @@ describe('jazz_environments', function () {
     callbackObj = {
       "callback": callback
     };
-    config = configObj(event);
+    config = configModule.getConfig(event, context);
     indexName = config.services_environment_index;
     tableName = config.services_environment_table;
     global = {
@@ -479,16 +479,16 @@ describe('jazz_environments', function () {
       }
     });
   });
-  
+
   it("should indicate success for GET method using handler function", function () {
     event.method = "GET";
     var output = event.body;
     event.body = "";
     event.path.environment_id = "";
-    var resObj = { 
-      data: { 
-        count: 1, 
-        environment: [ output ] 
+    var resObj = {
+      data: {
+        count: 1,
+        environment: [ output ]
       },
       input: event.query
     }
@@ -608,7 +608,7 @@ describe('jazz_environments', function () {
         return res
       }
     });
-    
+
   });
 
   it("should indicate error for POST method using handler function",function(){

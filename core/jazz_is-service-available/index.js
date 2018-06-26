@@ -23,7 +23,7 @@
 
 'use strict';
 
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
@@ -48,7 +48,7 @@ module.exports.handler = (event, context, cb) => {
     }
 
     try {
-        var config = configObj(event);
+      var config = configModule.getConfig(event, context);
         global.config = config;
 
         var service = event.query.service.trim().toLowerCase();
