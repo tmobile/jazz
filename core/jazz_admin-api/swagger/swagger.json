@@ -3,7 +3,7 @@
   "info": {
     "version": "2017-01-30T23:30:18Z",
     "title": "{api_deployment_node_title}",
-    "description": "API specification for nodejs template service"
+    "description": "API specification for Admin-Api to retrive installer-vars json file for admin user"
   },
   "host": "{api_host_name}",
   "basePath": "/{domain}",
@@ -90,24 +90,27 @@
         }
       },
       "get": {
-        "description": "Node Js template service Get Method",
+        "description": "Get Method to retrive installer vars json file from build module",
         "consumes": [
           "application/json"
         ],
         "produces": [
           "application/json"
         ],
-        "parameters": [{
-          "name": "a",
-          "in": "query",
-          "required": false,
-          "type": "string"
-        }, {
-          "name": "b",
-          "in": "query",
-          "required": false,
-          "type": "string"
-        }],
+        "parameters": [
+          {
+            "name": "a",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Execution",
@@ -293,325 +296,101 @@
           }
         }
       },
-      "post": {
-        "description": "Post method swagger for Node template",
-        "parameters": [{
-          "name": "param",
-          "in": "body",
-          "description": "post body parameter.",
-          "required": true,
-          "schema": {
-            "$ref": "#/definitions/InputObj"
+      "securityDefinitions": {
+        "{envPrefix}-jazz-cognito-authorizer": {
+          "type": "apiKey",
+          "name": "Authorization",
+          "in": "header",
+          "x-amazon-apigateway-authtype": "custom",
+          "x-amazon-apigateway-authorizer": {
+            "authorizerCredentials": "{conf-role}",
+            "authorizerResultTtlInSeconds": 300,
+            "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-jazz-cognito-authorizer-{envmnt}/invocations",
+            "type": "token"
           }
-        }],
-        "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
-        ],
-        "produces": [
-          "application/json",
-          "application/x-www-form-urlencoded"
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Execution",
-            "schema": {
-              "$ref": "#/definitions/200SuccessResponse"
-            },
-            "headers": {
-              "Access-Control-Allow-Headers": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Methods": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Origin": {
-                "type": "string"
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "schema": {
-              "$ref": "#/definitions/400ErrorResponse"
-            },
-            "headers": {
-              "Access-Control-Allow-Headers": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Methods": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Origin": {
-                "type": "string"
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized",
-            "schema": {
-              "$ref": "#/definitions/401ErrorResponse"
-            },
-            "headers": {
-              "Access-Control-Allow-Headers": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Methods": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Origin": {
-                "type": "string"
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden",
-            "schema": {
-              "$ref": "#/definitions/403ErrorResponse"
-            },
-            "headers": {
-              "Access-Control-Allow-Headers": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Methods": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Origin": {
-                "type": "string"
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "schema": {
-              "$ref": "#/definitions/404ErrorResponse"
-            },
-            "headers": {
-              "Access-Control-Allow-Headers": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Methods": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Origin": {
-                "type": "string"
-              }
-            }
-          },
-          "500": {
-            "description": "Internal Server Error",
-            "schema": {
-              "$ref": "#/definitions/500ErrorResponse"
-            },
-            "headers": {
-              "Access-Control-Allow-Headers": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Methods": {
-                "type": "string"
-              },
-              "Access-Control-Allow-Origin": {
-                "type": "string"
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "{envPrefix}-jazz-cognito-authorizer": []
-          }
-        ],
-        "x-amazon-apigateway-integration": {
-          "type": "aws",
-          "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
-          "httpMethod": "POST",
-          "credentials": "{conf-role}",
-          "requestTemplates": {
-            "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
-            "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
-          },
-          "responses": {
-            ".*\"InternalServerError\".*": {
-              "statusCode": "500",
-              "responseTemplates": {
-                "application/json": "$input.path('$.errorMessage')"
-              },
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            },
-            ".*\"BadRequest\".*": {
-              "statusCode": "400",
-              "responseTemplates": {
-                "application/json": "$input.path('$.errorMessage')"
-              },
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            },
-            "default": {
-              "statusCode": "200",
-              "responseTemplates": {
-                "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
-              },
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            },
-            ".*\"Unauthorized\".*": {
-              "statusCode": "401",
-              "responseTemplates": {
-                "application/json": "$input.path('$.errorMessage')"
-              },
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            },
-            ".*\"Forbidden\".*": {
-              "statusCode": "403",
-              "responseTemplates": {
-                "application/json": "$input.path('$.errorMessage')"
-              },
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            },
-            ".*\"NotFound\".*": {
-              "statusCode": "404",
-              "responseTemplates": {
-                "application/json": "$input.path('$.errorMessage')"
-              },
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "securityDefinitions": {
-    "{envPrefix}-jazz-cognito-authorizer": {
-      "type": "apiKey",
-      "name": "Authorization",
-      "in": "header",
-      "x-amazon-apigateway-authtype": "custom",
-      "x-amazon-apigateway-authorizer": {
-        "authorizerCredentials": "{conf-role}",
-        "authorizerResultTtlInSeconds": 300,
-        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-jazz-cognito-authorizer-{envmnt}/invocations",
-        "type": "token"
-      }
-    }
-  },
-  "definitions": {
-    "200SuccessResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "$ref": "#/definitions/OutputObj"
-        },
-        "input": {
-          "$ref": "#/definitions/InputObj"
         }
       },
-      "title": "Success Response"
-    },
-    "400ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "error_type": {
-          "type": "string",
-          "default": "Bad Request format"
+      "definitions": {
+        "200SuccessResponse": {
+          "type": "object",
+          "properties": {
+            "data": {
+              "$ref": "#/definitions/OutputObj"
+            },
+            "input": {
+              "$ref": "#/definitions/InputObj"
+            }
+          },
+          "title": "Success Response"
         },
-        "message": {
-          "type": "string"
-        }
-      }
-    },
-    "401ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "errorType": {
-          "type": "string",
-          "default": "Unauthorized"
+        "400ErrorResponse": {
+          "type": "object",
+          "properties": {
+            "error_type": {
+              "type": "string",
+              "default": "Bad Request format"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
         },
-        "message": {
-          "type": "string"
-        }
-      }
-    },
-    "403ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "errorType": {
-          "type": "string",
-          "default": "Forbidden"
+        "401ErrorResponse": {
+          "type": "object",
+          "properties": {
+            "errorType": {
+              "type": "string",
+              "default": "Unauthorized"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
         },
-        "message": {
-          "type": "string"
-        }
-      }
-    },
-    "404ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "error_type": {
-          "type": "string",
-          "default": "Resource Not Found"
+        "403ErrorResponse": {
+          "type": "object",
+          "properties": {
+            "errorType": {
+              "type": "string",
+              "default": "Forbidden"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
         },
-        "message": {
-          "type": "string"
-        }
-      }
-    },
-    "500ErrorResponse": {
-      "type": "object",
-      "properties": {
-        "error_type": {
-          "type": "string",
-          "default": "Internal Server Error"
+        "404ErrorResponse": {
+          "type": "object",
+          "properties": {
+            "error_type": {
+              "type": "string",
+              "default": "Resource Not Found"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
         },
-        "message": {
-          "type": "string"
-        }
-      }
-    },
-    "InputObj": {
-      "type": "object",
-      "properties": {
-        "a": {
-          "type": "string",
-          "description": "Sample key in the input object"
+        "500ErrorResponse": {
+          "type": "object",
+          "properties": {
+            "error_type": {
+              "type": "string",
+              "default": "Internal Server Error"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
         },
-        "b": {
-          "type": "string",
-          "description": "Sample key in the input object"
-        }
-      }
-    },
-    "OutputObj": {
-      "type": "object",
-      "properties": {
-        "foo": {
-          "type": "string",
-          "description": "Sample key in the output object"
-        },
-        "bar": {
-          "type": "string",
-          "description": "Sample key in the output object"
+        "OutputObj": {
+          "type": "object",
+          "properties": {
+            "installerVarsJSON": {
+              "type": "object",
+              "description": "JSON Object from installer vars json file in build module"
+            }
+          }
         }
       }
     }

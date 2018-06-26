@@ -74,7 +74,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 		}
-		
+
 		if ( (service_name.trim() == "jazz_codeq") ) {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
@@ -327,7 +327,7 @@ def loadServiceConfigurationData() {
 		}
 
 		if (service_name.trim() == "jazz_services") {
-      
+
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
@@ -395,6 +395,39 @@ def loadServiceConfigurationData() {
 				sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
 			}
 		}
+           if (service_name.trim() == "jazztest_test-admin-api") {
+            sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			if (config_loader.SCM.TYPE == "bitbucket") {
+                sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
+				sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
+				sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
+
+                sh "sed -i -- 's/{bb_username}/${config_loader.SCM.USERNAME}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{bb_username}/${config_loader.SCM.USERNAME}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{bb_username}/${config_loader.SCM.USERNAME}/g' ./config/prod-config.json"
+
+				sh "sed -i -- 's/{bb_password}/${config_loader.SCM.PASSWORD}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{bb_password}/${config_loader.SCM.PASSWORD}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{bb_password}/${config_loader.SCM.PASSWORD}/g' ./config/prod-config.json"
+
+			}
+            if (config_loader.SCM.TYPE == "gitlab") {
+                sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
+				sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
+				sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
+
+				sh "sed -i -- 's/{private-token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{private-token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{private-token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
+            }
+        }
 
 		if (service_name.trim() == "jazz_email") {
 			echo "Updating parameter specific to platform email"
