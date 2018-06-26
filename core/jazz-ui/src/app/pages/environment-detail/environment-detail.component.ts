@@ -165,7 +165,7 @@ api_doc_name:string='';
       let cachedData = this.cache.get(id);
 
       if (cachedData) {
-          this.onDataFetched(cachedData);
+          this.onDataFetched(cachedData.data);
           if(this.service.serviceType === "website")
           {
               this.tabData = ['overview','deployments','code quality','assets'];
