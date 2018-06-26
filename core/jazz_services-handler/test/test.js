@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,7 +17,6 @@
 const chai = require('chai');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
-const should = require('chai').should();
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const sinon = require('sinon')
@@ -25,17 +24,12 @@ const sinonTest = require('sinon-test')(sinon, {useFakeTimers: false});
 require('sinon-as-promised');
 const request = require('request');
 const rp = require('request-promise-native');
-const AWS = require('aws-sdk-mock');
 const awsContext = require('aws-lambda-mock-context');
 
 const index = require('../index');
-const logger = require('../components/logger');
-const config = require('../components/config');
-const crud = require('../components/crud')();
-
+const configModule = require('../components/config');
 
 var  event, context,  configData;
-
 
 describe('jazz_services-handler', function () {
 
@@ -71,10 +65,10 @@ describe('jazz_services-handler', function () {
 				}
 			}
 		};
-		configData = config(context);
+		configData = configModule.getConfig(event, context);
 	});
 
-	
+
 
 	it('getToken should give valid response ', function () {
 		var authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
@@ -131,7 +125,7 @@ describe('jazz_services-handler', function () {
 
 	it('handleError should return error response json for valid input', function () {
 		var errorJson = { "failure_code": 400, "failure_message": "Unauthorized" };
-		var handleError = index.handleError(400, "Unauthorized");		
+		var handleError = index.handleError(400, "Unauthorized");
 		assert(handleError,errorJson);
 	});
 
@@ -381,7 +375,7 @@ describe('jazz_services-handler', function () {
 			return res[0].message;
 		})).to.be.rejected;
 	}));
-	
+
 	it('getUpdateServiceStatus should return status for payload with interested events', function () {
 		var payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME": { "S": "DEPLOY_TO_AWS" }, "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": { "S": "COMPLETED" }, "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
 
@@ -405,7 +399,7 @@ describe('jazz_services-handler', function () {
 		var serviceContext = index.getServiceContext(svcContext);
 		var resp = { "domain": "test",  "region": "abc", "type": "lambda", "metadata": { "name": "sasfds" } };
 		assert(serviceContext, resp);
-	});	
+	});
 
 	it('processRecord should return response for invalid event name event type combination',sinonTest(  function () {
 		var callback = (err, responseObj) => {
@@ -549,7 +543,7 @@ describe('jazz_services-handler', function () {
 		index.handler(event, context, (err, res) => {
 			if (err) {
 				return err;
-			} else {				
+			} else {
 				res.should.have.property('processed_events');
 				return res;
 			}
@@ -579,7 +573,7 @@ describe('jazz_services-handler', function () {
 		index.handler(event, context, (err, res) => {
 			if (err) {
 				return err;
-			} else {				
+			} else {
 				res.should.have.property('failed_events');
 				return res;
 			}
@@ -641,5 +635,5 @@ describe('jazz_services-handler', function () {
 		});
 
 	});
-});  
+});
 

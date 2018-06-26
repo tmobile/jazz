@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-Service to handle events 
+Service to handle events
 @author:
 @version: 1.0
  **/
@@ -23,13 +23,13 @@ Service to handle events
 const errorHandlerModule = require("./components/error-handler.js");
 const validateUtils = require("./components/validation")();
 const responseObj = require("./components/response.js");
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const crud = require("./components/crud")();
 
 var handler = (event, context, cb) => {
 	var errorHandler = errorHandlerModule();
-	var config = configObj(event);
+	var config = configModule.getConfig(event, context);
 	logger.init(event, context);
 	global.config = config;
 

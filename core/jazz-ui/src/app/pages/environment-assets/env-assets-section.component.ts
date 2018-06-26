@@ -22,7 +22,7 @@ import { environment as env_internal } from './../../../environments/environment
 export class EnvAssetsSectionComponent implements OnInit {
 
 	 state: string = 'default';
-   showPaginationtable: boolean = true;
+   showPaginationtable: boolean = false;
    currentlyActive: number = 1;
 	 totalPageNum: number = 12;
 	 offset:number = 0;
@@ -187,7 +187,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 				service: this.service.name,
 				domain: this.service.domain,
 				environment: this.env,
-				limit:10,
+				// limit:10,
 				
 				};
 				if(this.offsetval > 0){

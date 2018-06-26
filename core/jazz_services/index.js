@@ -24,7 +24,7 @@ const async = require('async');
 
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const utils = require("./components/utils.js")();
 const crud = require("./components/crud")();
@@ -36,7 +36,7 @@ module.exports.handler = (event, context, cb) => {
     //Initializations
     var errorHandler = errorHandlerModule();
     logger.init(event, context);
-    var config = configObj(event);
+    var config = configModule.getConfig(event, context);
     global.config = config;
     global.global_config = global_config;
 
