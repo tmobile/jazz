@@ -137,7 +137,7 @@
 					<div class="det-label">Deployment status</div>
 					<div class="det-value " >{{envstatus}}</div>
 				</li>
-				<li>
+				<li class='hide'>
 					<div class="det-label">Description</div>
 					<div class="det-value desc" >{{services.description || 'Give me the details for your services'}}</div>
 				</li>
@@ -205,7 +205,7 @@
 					<div class="det-label">Friendly Name</div>
 					<input (ngModelChange)="friendlyChanged = true" maxlength="20" type='text'[(ngModel)]="tempFriendlyName" class="det-value-input" >
 				</li>
-				<li>
+				<li class='hide'>
 					<div class="det-label">Tags</div>
 					<div class="det-value" >{{services.tags || 'Services are cooler with tags'}}</div>
 				</li>

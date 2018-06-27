@@ -424,8 +424,9 @@ export class EnvLogsSectionComponent implements OnInit {
 		}
 		this.subscription = this.http.post('/jazz/logs', this.payload).subscribe(
 			response => {
-				this.logs = response.data.logs;
-				if (this.logs.length != 0) {
+				this.logs = response.data.logs  || response.data.data.logs;
+				if(this.logs != undefined)
+				if (this.logs && this.logs.length != 0) {
 					var pageCount = response.data.count;
 					if (pageCount) {
 						this.totalPagesTable = Math.ceil(pageCount / this.limitValue);

@@ -17,14 +17,15 @@
 const async = require("async");
 const AWS = require('aws-sdk');
 
-const config = require('./components/config.js'); 
-const logger = require("./components/logger.js"); 
+const configModule = require("./components/config.js");
+const logger = require("./components/logger.js");
 const fcodes = require('./utils/failure-codes.js');
 
 module.exports.handler = (event, context, cb) => {
 
 	//Initializations
-	var configData = config(context);
+	var config = configModule.getConfig(event, context);
+
 	const dynamodb = new AWS.DynamoDB();
 	var processedEvents = [];
 	var failedEvents = [];
@@ -36,7 +37,7 @@ module.exports.handler = (event, context, cb) => {
 	async.series({
 		getEvents: function (callback) {
 			var params = {
-				TableName: configData.EVENT_NAME_TABLE,
+				TableName: config.EVENT_NAME_TABLE,
 				ProjectionExpression: "EVENT_NAME",
 				Limit: 1000,
 				ReturnConsumedCapacity: "TOTAL"
@@ -75,7 +76,7 @@ module.exports.handler = (event, context, cb) => {
 				if (interestedEvents.indexOf(record.kinesis.partitionKey) !== -1) {
 					var params = JSON.parse(payload);
 					params.ReturnConsumedCapacity = "TOTAL";
-					params.TableName = configData.EVENT_TABLE;
+					params.TableName = config.EVENT_TABLE;
 
 					dynamodb.putItem(params, function (err, data) {
 						if (err) {
@@ -127,7 +128,7 @@ module.exports.handler = (event, context, cb) => {
 		if (err) {
 			return logger.error('Error inside events handler ' + JSON.stringify(err));
 		}
-		
+
 		cb(null, {
 			"processed_events": processedEvents.length,
 			"failed_events": failedEvents.length

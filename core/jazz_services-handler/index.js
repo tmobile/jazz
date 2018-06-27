@@ -23,12 +23,12 @@
 const _ = require("lodash");
 const rp = require('request-promise-native');
 
-const config = require('./components/config.js'); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
+const configModule = require("./components/config.js");
+const logger = require("./components/logger.js");
 const errorHandlerModule = require("./components/error-handler.js");
 
 const fcodes = require('./utils/failure-codes.js');
-const crud = require("./components/crud")(); //Import the utils module.
+const crud = require("./components/crud")();
 
 var errorHandler = errorHandlerModule(logger);
 var failureCodes = fcodes();
@@ -37,14 +37,14 @@ var failedEvents = [];
 
 var handler = (event, context, cb) => {
 
-	var configData = config(context);
+	var config = configModule.getConfig(event, context);
 	processedEvents = [];
 	failedEvents = [];
 
 	logger.info("event : " + JSON.stringify(event));
-	rp(getToken(configData))
+	rp(getToken(config))
 		.then(result => { return validateAuthToken(result); })
-		.then(authToken => { return processRecords(event, configData, authToken); })
+		.then(authToken => { return processRecords(event, config, authToken); })
 		.then(result => {
 			var records = getEventProcessStatus();
 			logger.info("Successfully processed events. " + JSON.stringify(records));

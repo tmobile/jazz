@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -17,18 +17,14 @@
 const chai = require('chai');
 const assert = require('chai').assert;
 const expect = require('chai').expect;
-const should = require('chai').should();
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const awsContext = require('aws-lambda-mock-context');
 const AWS = require("aws-sdk-mock");
-const request = require('request');
 const sinon = require('sinon');
 
 const index = require('../index');
-const logger = require("../components/logger.js");
-const errorHandler = require("../components/error-handler.js")();
-const configObj = require("../components/config.js");
+const configModule = require("../components/config.js");
 const responseObj = require("../components/response.js"); //Import the response module.
 
 
@@ -88,7 +84,7 @@ describe('jazz_events', function () {
         callbackObj = {
             "callback": callback
         };
-        config = configObj(event);
+        config = configModule.getConfig(event, context);
 
     });
 
@@ -99,7 +95,7 @@ describe('jazz_events', function () {
     });
 
     it("should get items for provided query from dynamoDB in getEvents function", () => {
-        config = configObj(event);
+        config = configModule.getConfig(event, context);
         AWS.mock("DynamoDB", "scan", (params, callback) => {
             return callback(null, event.body)
         });
@@ -133,7 +129,7 @@ describe('jazz_events', function () {
     });
 
     it("should indicate error if DynamoDB.scan fails during GET request", () => {
-        config = configObj(event);
+        config = configModule.getConfig(event, context);
         AWS.mock("DynamoDB", "scan", (params, callback) => {
             return callback(err, null)
         });
@@ -228,7 +224,7 @@ describe('jazz_events', function () {
     });
 
     it("should indicate success while updating kinesis stream", () => {
-        config = configObj(event);
+        config = configModule.getConfig(event, context);
         var kinesisObj = {
             "event_id": "id"
         }
@@ -244,7 +240,7 @@ describe('jazz_events', function () {
     });
 
     it("should indicate error while updating kinesis stream", () => {
-        config = configObj(event);
+        config = configModule.getConfig(event, context);
         var message = "Error storing event"
         AWS.mock("Kinesis", "putRecord", (params, cb) => {
             return cb(err, null);
@@ -257,7 +253,7 @@ describe('jazz_events', function () {
     });
 
     it("should validate event specific data", () => {
-        config = configObj(event);
+        config = configModule.getConfig(event, context);
         var dataObj = {
             Item: event.body
         };
@@ -272,7 +268,7 @@ describe('jazz_events', function () {
     });
 
     it("should indicate error while validating event specific data if DynamoDB.getItem fails", () => {
-        config = configObj(event);
+        config = configModule.getConfig(event, context);
         var message = "error reading event data from database"
         AWS.mock("DynamoDB", "getItem", (params, callback) => {
             return callback(err, null);
@@ -285,7 +281,7 @@ describe('jazz_events', function () {
     });
 
     it("should indicate error while validating event specific data if event timestamp is invalid", () => {
-        config = configObj(event);
+        config = configModule.getConfig(event, context);
         event.body.event_timestamp = "xyz";
         var message = "Invalid EVENT TIMESTAMP: xyz, expected format is YYYY-MM-DDTHH:mm:ss:SSS"
         var dataObj = {
@@ -342,7 +338,7 @@ describe('jazz_events', function () {
             res.should.have.deep.property('data.events');
             AWS.restore("DynamoDB")
             return res;
-        
+
         });
     });
 
@@ -414,7 +410,7 @@ describe('jazz_events', function () {
             AWS.restore("DynamoDB");
             AWS.restore("Kinesis");
             return err;
-        
+
         })
     });
 

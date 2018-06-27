@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright 2017 T-Mobile USA, Inc.
-// 
+// Copyright © 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,22 +22,39 @@
 	@version: 1.0
 **/
 
-var getStageConfig = (context) => {
-  var functionName = context.functionName;
-  var configObj = {};
-  // Loads the config files based on the env.
-  // Please edit the JSON files.
-  if (functionName.endsWith('dev')) {
-    configObj = require('../config/dev-config.json');
-  } else if (functionName.endsWith('stg')) {
-    configObj = require('../config/stg-config.json');
-  } else if (functionName.endsWith('prod')) {
-    configObj = require('../config/prod-config.json');
+const fs = require('fs');
+const path = require('path');
+
+var getStageConfig = (event, context) => {
+  var stage, configObj;
+
+  if (event && event.stage) {
+    stage = event.stage;
+  } else if (context && context.functionName && context.functionName.length > 0) {
+    var functionName = context.functionName;
+
+    var fnName = functionName.substr(functionName.lastIndexOf('-') + 1, functionName.length);
+
+    if (fnName.endsWith('dev')) {
+      stage = 'dev';
+    } else if (fnName.endsWith('stg')) {
+      stage = 'stg';
+    } else if (fnName.endsWith('prod')) {
+      stage = 'prod';
+    }
   }
+
+  if (stage) {
+    var configFile = path.join(__dirname, `../config/${stage}-config.json`);
+
+    if (fs.existsSync(configFile)) {
+      configObj = JSON.parse(fs.readFileSync(configFile));
+    }
+  }
+
   return configObj;
 };
 
-module.exports = (context) => {
-  var config = getStageConfig(context);
-  return config;
-};
+module.exports = {
+	getConfig: getStageConfig
+}
