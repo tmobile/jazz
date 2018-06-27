@@ -19,9 +19,6 @@ function handler(event, context, cb) {
   try {
     apiResponseObj = {};
     if (event&& event.method && event.method === 'GET') {
-      if (!event.body) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Event Body not Defined")));
-      }
       if (!event.principalId) {
         logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
         return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service|Authorization Incomplete")));
@@ -54,7 +51,7 @@ function buildRequestOption(config) {
     };
   } else {
     return {
-      uri: config.BASE_URL + config.PATH_BITBUCKET,
+      uri: config.BASE_URL + config.BITBUCKET_PATH,
       method: 'get',
       headers: {
         "Authorization": 'Basic ' + new Buffer(config.BB_USERNAME + ':' + config.BB_PASSWORD).toString('base64')
