@@ -576,30 +576,22 @@ describe('jazz_metrics', function () {
       var cloudwatch = new AWS_SDK.CloudWatch({
         apiVersion: '2010-08-01'
       });
-      console.log("newAssetArray.actualParam:" + newAssetArray.actualParam.length);
-      (newAssetArray.actualParam).forEach(param => {
-        console.log(param)
-        cloudwatch.getMetricStatistics(param, (error, data) => {
-          console.log("error",error);
-          console.log("data",data);
-        })
-      })
 
       // AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
       //   return cb(null, dataObj);
       // });
-      // AWS.mock('CloudWatch', "getMetricStatistics", (obj) => {
-      //   console.log("params:", obj);
-      //   // return cb(null, "hello");
-      // })
+      AWS.mock('CloudWatch', "getMetricStatistics", (obj) => {
+        console.log("params:", obj);
+        return cb(null, "hello");
+      })
       // const stubMetrics = sinon.stub(cloudwatch, 'getMetricStatistics').returns("hello");
-      // index.getMetricsDetails(newAssetArray, cloudwatch)
-      // .then(res => {
-      //   console.log(res);
-      // })
-      // .catch(error => {
-      //   console.log(error);
-      // })
+      index.getMetricsDetails(newAssetArray, cloudwatch)
+      .then(res => {
+        console.log(res);
+      })
+      .catch(error => {
+        console.log(error);
+      })
     })
   })
 
