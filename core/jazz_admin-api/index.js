@@ -34,7 +34,7 @@ function handler(event, context, cb) {
         cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load installer-vars.json file")));
       });
     }else{
-      return cb(JSON.stringify(errorHandler.throwInternalServerError("The requested method is not supported")));
+      return cb(JSON.stringify(errorHandler.throwInputValidationError("The requested method is not supported")));
     }
   } catch (e) {
     cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown Error")));
