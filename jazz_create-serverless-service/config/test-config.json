@@ -5,5 +5,10 @@
   "SVC_PASWD":"{ci_pwd}",
   "USER_POOL_ID":"ap-northeast-1_2x3yztest",
   "REGION": "us-east-testing",
-  "CLIENT_ID":"conf-client-id"
+  "CLIENT_ID":"conf-client-id",
+  "DEPLOYMENT_TARGETS": {
+    "api": ["aws_apigateway", "gcp_apigee"],
+    "function": ["aws_lambda"],
+    "website": ["aws_s3", "aws_cloudfront"]
+  } 
 }
