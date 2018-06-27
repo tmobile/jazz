@@ -90,6 +90,11 @@ node ()  {
       sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{multi_env}/${config_loader.UI_CONFIG.feature.multi_env}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{api_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.API_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+
+      sh "sed -i 's/{function_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.FUNCTION_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{website_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.WEBSITE_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+
       
       def envFile = readFile('./src/environments/environment.oss.ts');
       echo "displaying env file :"

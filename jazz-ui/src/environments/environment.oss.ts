@@ -7,6 +7,11 @@ export const environment = {
   multi_env:{multi_env},
   serviceTabs:["{overview}","{access control}","{metrics}","{logs}","{cost}"],
   environmentTabs:["{env_overview}","{deployments}","{code quality}","{assets}","{env_logs}"],
+  createService: {
+    apiDeploymentTargets: {api_deployment_targets},
+    functionDeploymentTargets: {function_deployment_targets},
+    websiteDeploymentTargets: {website_deployment_targets}
+  },
   urls:{
     docs_link:"https://github.com/tmobile/jazz/wiki",
 }
