@@ -30,16 +30,13 @@ const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
 const global_config = require("./config/global-config.json");
 
-module.exports.handler = (event, context, cb) => {
+function handler (event, context, cb) {
 
   var errorHandler = errorHandlerModule();
   var config = configObj(event);
   var cloudwatch = new aws.CloudWatch({
     apiVersion: '2010-08-01'
   });
-  if (!event && !event.body) {
-    return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid Input Error")));
-  }
 
   try {
     /*
@@ -88,6 +85,13 @@ function genericValidation(event) {
       reject({
         result: "inputError",
         message: "Invalid Input Error"
+      });
+    }
+
+    if(!event.method || event.method !== "POST") {
+      reject({
+        result: "inputError",
+        message: "Invalid method"
       });
     }
     if (!event.principalId) {
@@ -162,7 +166,7 @@ function getAssetsDetails(config, eventBody, authToken) {
       } else {
         var apiAssetsArray = body.data;
         if (apiAssetsArray && apiAssetsArray.length === 0) {
-          logger.error("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
+          logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
           resolve([]);
         } else {
           var userStatistics = eventBody.statistics.toLowerCase();
@@ -205,6 +209,7 @@ function validateAssets(assetsArray, eventBody) {
                   "actualParam": res,
                   "userParam": assetItem
                 });
+                logger.info(JSON.stringify(newAssetArray))
                 resolve(newAssetArray);
               })
               .catch(error => {
@@ -297,7 +302,7 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
 
 function getMetricsDetails(newAssetArray, cloudwatch) {
   return new Promise((resolve, reject) => {
-    logger.info("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
+    logger.info("Inside getMetricsDetails");
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
       cloudWatchDetails(assetParam, cloudwatch)
@@ -315,39 +320,63 @@ function getMetricsDetails(newAssetArray, cloudwatch) {
 }
 
 function cloudWatchDetails(assetParam, cloudwatch) {
+  logger.info("inside cloudWatchDetails")
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
+      console.log("Inside foreach");
       if (param.Namespace === "AWS/CloudFront") {
         cloudwatch = new aws.CloudWatch({
           apiVersion: '2010-08-01',
           region: global_config.CF_REGION
         });
       }
-      cloudwatch.getMetricStatistics(param, (err, data) => {
-        if (err) {
-          logger.error("error while getting metics from cloudwatch. " + JSON.stringify(err));
-          if (err.code === "InvalidParameterCombination") {
-            reject({
-              "result": "inputError",
-              "message": err.message
-            });
-          } else {
-            reject({
-              "result": "serverError",
-              "message": "Unknown internal error occurred"
-            });
-          }
+      try {
+        console.log('before CW call');
+        cloudwatch.getMetricStatistics(param, (err, data) => {
+          console.log("Inside cloudwatch.getMetricStatistics")
+          if (err) {
+            logger.error("error while getting metics from cloudwatch. " + JSON.stringify(err));
+            if (err.code === "InvalidParameterCombination") {
+              reject({
+                "result": "inputError",
+                "message": err.message
+              });
+            } else {
+              reject({
+                "result": "serverError",
+                "message": "Unknown internal error occurred"
+              });
+            }
 
-        } else {
-          metricsStats.push(data);
-          if (metricsStats.length === assetParam.actualParam.length) {
-            var assetObj = utils.assetData(metricsStats, assetParam.userParam);
-            resolve(assetObj);
+          } else {
+            console.log("data",data)
+            metricsStats.push(data);
+            if (metricsStats.length === assetParam.actualParam.length) {
+              var assetObj = utils.assetData(metricsStats, assetParam.userParam);
+              resolve(assetObj);
+            }
           }
-        }
-      });
+        });
+
+      } catch(e) {
+        console.log("e:::::::", e);
+      }
+
     });
 
   });
 }
+
+const exportable = {
+  handler,
+  genericValidation,
+  getToken,
+  getAssetsDetails,
+  validateAssets,
+  getActualParam,
+  getMetricsDetails,
+  cloudWatchDetails
+}
+
+module.exports = exportable;

@@ -65,11 +65,11 @@ function assetData(results, assetItem) {
 function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset) {
   var output_obj = {};
   output_obj["isError"] = false;
-  if(nameSpaceFrmAsset) {
-    var paramMetrics = [];
-    var nameSpace = nameSpaceFrmAsset.toLowerCase();
-    var namespacesList = metricConfig.namespaces;
-    var supportedNamespace = namespacesList[nameSpace];
+  var paramMetrics = [];
+  var nameSpace = nameSpaceFrmAsset.toLowerCase();
+  var namespacesList = metricConfig.namespaces;
+  var supportedNamespace = namespacesList[nameSpace];
+  if(nameSpaceFrmAsset && supportedNamespace) {
     paramMetrics = supportedNamespace["metrics"];
     var awsAddedNameSpace = nameSpace.indexOf('aws/') === -1 ? 'aws/' + nameSpace : nameSpace;
     awsAddedNameSpace = awsAddedNameSpace.replace(/ /g, "");
