@@ -20,11 +20,11 @@ const request = require('request');
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const CronParser = require("./components/cron-parser.js");
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js"); 
 const logger = require("./components/logger.js");
 const util = require('util');
 const validateARN = require("./components/validate-arn.js");
-const crud = require("./components/crud")(); //Import the utils module.
+const crud = require("./components/crud")(); 
 
 /**
     Serverless create service
@@ -37,7 +37,7 @@ var serviceDataObject;
 var handler = (event, context, cb) => {
 
     var errorHandler = errorHandlerModule();
-    var config = configObj(event);
+    var config = configModule.getConfig(event, context);
     logger.init(event, context);
     var service_creation_data = event.body;
     try {

@@ -106,6 +106,9 @@ export class ServiceAccessControlComponent implements OnInit {
     } 
   }
   
+  refresh(){
+
+  }
   //function for selecting group from list of groups//
   selectApprovers(group, index , category){
      if(category == 'api'){

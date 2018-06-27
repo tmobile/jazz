@@ -4,23 +4,22 @@ Nodejs Template Project
 @version: 1.0
  **/
 
-const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
-const responseObj = require("./components/response.js"); //Import the response module.
-const configObj = require("./components/config.js"); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
+const errorHandlerModule = require("./components/error-handler.js");
+const responseObj = require("./components/response.js");
+const configModule = require("./components/config.js");
+const logger = require("./components/logger.js");
 
 module.exports.handler = (event, context, cb) => {
 
   //Initializations
   var errorHandler = errorHandlerModule();
-  var config = configObj(event);
+  var config = configModule.getConfig(event, context);
   logger.init(event, context);
 
   try {
 
     //Following is a code snippet to fetch values from config file:
-    //var myVal = config.configKey;
-
+    var myVal = config.configKey;
 
     //Following code snippet describes how to log messages within your code:
     /*
@@ -33,17 +32,18 @@ module.exports.handler = (event, context, cb) => {
 
     var sampleResponse = {
       "foo": "foo-value",
-      "bar": "bar-value"
+      "bar": "bar-value",
+      "configKeys": myVal
     };
 
     //Your GET method should be handled here
-    if (event !== undefined && event.method !== undefined && event.method === 'GET') {
+    if (event && event.method && event.method === 'GET') {
       logger.verbose(sampleResponse);
       cb(null, responseObj(sampleResponse, event.query));
     }
 
     //Your POST method should be handled here
-    if (event !== undefined && event.method !== undefined && event.method === 'POST') {
+    if (event && event.method && event.method === 'POST') {
       cb(null, responseObj(sampleResponse, event.body));
     }
 

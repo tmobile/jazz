@@ -3,6 +3,7 @@
 node_modules
 .DS_Store
 .vscode/
+/.idea
 */.classpath
 */.project
 */.settings
@@ -12,5 +13,6 @@ node_modules
 */target/
 .nyc_output/
 npm-debug.log
-*/package-lock.json
 /.idea
+package-lock.json
+

@@ -20,22 +20,22 @@
 	@version: 1.0
 **/
 
-const config = require('./components/config.js'); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
-const responseObj = require("./components/response.js"); //Import the response module.
-const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
+const configModule = require("./components/config.js");
+const logger = require("./components/logger.js");
+const responseObj = require("./components/response.js");
+const errorHandlerModule = require("./components/error-handler.js");
 
 module.exports.handler = (event, context, cb) => {
 
   //Initializations
-  var configData = config(context);
+  var config = configModule.getConfig(event, context);
   var errorHandler = errorHandlerModule();
   logger.init(event, context);
 
   try {
 
     //Following is a code snippet to fetch values from config file:
-    //var myVal = configData.configKey;
+    var myVal = config.configKey;
 
     //Following code snippet describes how to log messages within your code:
     /*
@@ -48,14 +48,15 @@ module.exports.handler = (event, context, cb) => {
 
     var sampleResponse = {
       "foo": "foo-value",
-      "bar": "bar-value"
+      "bar": "bar-value",
+      "configKeys": myVal
     };
 
-    cb(null, responseObj(sampleResponse, event));
+    return cb(null, responseObj(sampleResponse, event));
 
   } catch (e) {
     //Sample Error response for internal server error
-    cb(JSON.stringify(errorHandler.throwInternalServerError("Sample message")));
+    return cb(JSON.stringify(errorHandler.throwInternalServerError("Sample error message")));
 
     //Sample Error response for Not Found Error
     //cb(JSON.stringify(errorHandler.throwNotFoundError("Sample message")));
