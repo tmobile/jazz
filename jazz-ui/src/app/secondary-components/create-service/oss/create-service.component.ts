@@ -81,6 +81,8 @@ docs_link = env_oss.urls.docs_link;
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
   public apiDeployment = "aws_apigateway";
+  public functionDeployment = "aws_lambda";
+  public websiteDeployment = "aws_cloudfront";
   public buildEnvironment = environment;
   
 
@@ -301,7 +303,7 @@ docs_link = env_oss.urls.docs_link;
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
       payload["deployment_targets"] = {
-        "function": "aws_lambda"
+        "function": this.functionDeployment
       }
       if(this.rateExpression.type != 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
@@ -332,7 +334,7 @@ docs_link = env_oss.urls.docs_link;
     } else if(this.typeOfService == 'website'){
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
       payload["deployment_targets"] = {
-        "website": "aws_cloudfront"
+        "website": this.websiteDeployment
       }
     }
 
