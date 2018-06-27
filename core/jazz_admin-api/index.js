@@ -33,6 +33,8 @@ function handler(event, context, cb) {
         logger.error("Failed to load installer-vars.json file:", error);
         cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load installer-vars.json file")));
       });
+    }else{
+      return cb(JSON.stringify(errorHandler.throwNotFoundError("The method requested doesnot exist")));
     }
   } catch (e) {
     cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown Error")));
