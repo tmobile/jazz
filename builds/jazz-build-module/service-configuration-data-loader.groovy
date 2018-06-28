@@ -51,6 +51,12 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
 		}
 
+        if ( (service_name.trim() == "jazz_is-slack-channel-available") ) {
+          sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
+          sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
+          sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
+        }
+
 		if ( (service_name.trim() == "jazz_metrics") ) {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
@@ -74,7 +80,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 		}
-		
+
 		if ( (service_name.trim() == "jazz_codeq") ) {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
@@ -327,7 +333,7 @@ def loadServiceConfigurationData() {
 		}
 
 		if (service_name.trim() == "jazz_services") {
-      
+
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
