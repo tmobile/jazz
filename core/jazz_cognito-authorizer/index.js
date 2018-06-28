@@ -17,7 +17,7 @@
 'use strict';
 const errorHandlerModule = require("./components/error-handler.js");
 
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js"); 
 const logger = require("./components/logger.js");
 const jwt = require("jsonwebtoken");
 const request = require('request');
@@ -30,7 +30,7 @@ var cognitoUserPoolEndpoint;
 
 module.exports.handler = function (event, context, cb) {
 
-    var config = configObj(event);
+    var config = configModule.getConfig(event, context);
     logger.init(event, context);
     var errorHandler = errorHandlerModule(logger);
 

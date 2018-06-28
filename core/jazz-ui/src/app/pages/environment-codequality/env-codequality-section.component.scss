@@ -31,7 +31,7 @@
 .section {
   position: relative;
   padding: 1rem 3rem;
-  height: calc(100vh - 100px);
+  height: calc(100vh - (13.15rem + 94px));
   background: white;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
   display: flex;
@@ -72,5 +72,105 @@
 
 .chart-thirds {
   width: 30%;
+}
+
+.metrics-cards-wrap {
+  padding: 15px 0;
+  display: block;
+  line-height: 1.5;
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+  height: calc(120rem / 12);
+  position: relative;
+  .metrics-card {
+    border-radius: 3px;
+    background-color: #fdfdfd;
+    border: solid 1px #dddddd;
+    width: 135px;
+    display: inline-flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    margin: -1px 0.5rem;
+    text-align: center;
+    font-size: 1rem;
+    color: #000;
+    white-space: normal;
+    vertical-align: top;
+    height: calc(93rem / 12);
+    @media(min-width: 1280px) {
+      min-width: 135px;
+    }
+    cursor: pointer;
+
+    &:first-child {
+      margin-left: 0;
+    }
+    &:last-child {
+      margin-right: 0;
+    }
+
+    .metrics-card-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+    }
+
+    .metrics-name {
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+      color: #666;
+      height: 2rem;
+      margin: 0.75rem 0 0.5rem;
+      text-transform: capitalize;
+    }
+
+    .metrics-message {
+      font-weight: bold;
+      font-size: 1.2rem;
+      text-align: center;
+      color: #666;
+    }
+
+    .metrics-data {
+      font-size: 30px;
+      text-align: center;
+      color: #333;
+    }
+  }
+  .scroll-cards-wrap {
+    height: 100%;
+    display: inline-flex;
+    align-items: flex-end;
+    transition: 600ms ease-in-out;
+    padding-bottom: 2px;
+  }
+}
+
+.metrics-arrows {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: calc(120rem/12 - 15px);
+  width: 100%;
+}
+
+.left-arrow {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 5px);
+  transform: translateY(-50%);
+}
+
+.right-arrow {
+  cursor: pointer;
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 5px);
+  transform: translateY(-50%);
+
 }
 

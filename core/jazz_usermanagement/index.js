@@ -16,7 +16,7 @@
 
 /**
 Jazz User Management service
-@author: 
+@author:
 @version: 1.0
  **/
 
@@ -27,7 +27,7 @@ const rp = require('request-promise-native');
 
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 
 const scmFactory = require("./scm/scmFactory.js");
@@ -37,7 +37,7 @@ module.exports.handler = (event, context, cb) => {
 	var errorHandler = errorHandlerModule();
 	logger.init(event, context);
 
-	var config = configObj(event);
+	var config = configModule.getConfig(event, context);
 
 	if (!config || config.length) {
 		logger.error("Cannot load config object, will stop processing");
@@ -140,9 +140,9 @@ module.exports.handler = (event, context, cb) => {
 };
 
 /**
- * Returns the subpath for this service 
+ * Returns the subpath for this service
  * @param {String} queryPath
- * @returns {String} subPaths  
+ * @returns {String} subPaths
  */
 function getSubPath(queryPath) {
 	if (queryPath) {
@@ -157,7 +157,7 @@ function getSubPath(queryPath) {
 /**
  * Validates user password reset params
  * @param {object} userInput
- *  
+ *
  */
 function validateResetParams(userInput) {
 	return new Promise((resolve, reject) => {
@@ -199,8 +199,8 @@ function validateUpdatePasswordParams(userInput) {
 }
 
 /**
- * 
- * @param {object} userInput 
+ *
+ * @param {object} userInput
  * @returns promise
  */
 function validateCreaterUserParams(config, userInput) {

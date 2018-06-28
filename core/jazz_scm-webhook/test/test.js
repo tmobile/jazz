@@ -20,14 +20,11 @@ const should = require('chai').should();
 const chaiAsPromised = require('chai-as-promised');
 chai.use(chaiAsPromised);
 const awsContext = require('aws-lambda-mock-context');
-const AWS = require("aws-sdk-mock");
 const request = require('request');
 const sinon = require('sinon');
 
 const index = require('../index');
-const logger = require("../components/logger.js");
-const configObj = require('../components/config.js');
-const errorHandler = require("../components/error-handler.js")();
+const configModule = require("../components/config.js");
 const responseObj = require("../components/response.js")
 
 describe('jazz_scm-webhook', function() {
@@ -54,7 +51,7 @@ describe('jazz_scm-webhook', function() {
     callbackObj = {
       "callback": callback
     };
-    config = configObj(event);
+    config = configModule.getConfig(event, context);
 
     bitbucketEvent = {
       body :{
@@ -136,13 +133,13 @@ describe('jazz_scm-webhook', function() {
     };
 
     eventObj = {
-      servContext: { 
+      servContext: {
         event_type: '',
         branch: '',
         event_name: ''
-      }, 
-      service: "test_test-repo", 
-      userName: "g10$saryck", 
+      },
+      service: "test_test-repo",
+      userName: "g10$saryck",
       repositoryLink: "https://test-link.com"
     }
   });
@@ -185,7 +182,7 @@ describe('jazz_scm-webhook', function() {
      return res;
     })).to.be.rejectedWith('Invalid event key');
   });
-  
+
   it("should provide bitbucket scm context for CREATE_TAG event when eventKey is repo:push and creating new tag", function(){
     bitbucketEvent.headers["X-Event-Key"] = "repo:push";
     var changes = bitbucketEvent.body.push.changes[0],
@@ -209,7 +206,7 @@ describe('jazz_scm-webhook', function() {
       branch: 'master',
       event_name: 'COMMIT_TEMPLATE'
     };
-    changes.new.type = "branch"; changes.new.name = "master"; changes.created = true; 
+    changes.new.type = "branch"; changes.new.name = "master"; changes.created = true;
     changes.closed = false; changes.old = null;
     bitbucketEvent.body.pullrequest = null;
     event = bitbucketEvent;
@@ -226,7 +223,7 @@ describe('jazz_scm-webhook', function() {
       branch: '/new-branch',
       event_name: 'CREATE_BRANCH'
     };
-    changes.new.type = "branch"; changes.new.name = "/new-branch"; changes.created = true; 
+    changes.new.type = "branch"; changes.new.name = "/new-branch"; changes.created = true;
     changes.closed = false; changes.old = null;
     bitbucketEvent.body.pullrequest = null;
     event = bitbucketEvent;
@@ -241,9 +238,9 @@ describe('jazz_scm-webhook', function() {
     var changes = bitbucketEvent.body.push.changes[0],
     resObj = { event_type: 'SERVICE_DEPLOYMENT',
       branch: '/test',
-      event_name: 'DELETE_TAG' 
+      event_name: 'DELETE_TAG'
     };
-    changes.new = null; changes.created = false; 
+    changes.new = null; changes.created = false;
     changes.closed = true; changes.old.type = "tag";
     bitbucketEvent.body.pullrequest = null;
     event = bitbucketEvent;
@@ -259,9 +256,9 @@ describe('jazz_scm-webhook', function() {
     var changes = eventBody.push.changes[0],
     resObj = { event_type: 'SERVICE_DELETION',
       branch: '/test',
-      event_name: 'DELETE_BRANCH' 
+      event_name: 'DELETE_BRANCH'
     };
-    changes.new = null; changes.created = false; 
+    changes.new = null; changes.created = false;
     changes.closed = true; changes.old.type = "branch"; changes.old.name = "/test"
     bitbucketEvent.body.pullrequest = null;
     event = bitbucketEvent;
@@ -277,7 +274,7 @@ describe('jazz_scm-webhook', function() {
     resObj = { event_type: 'SERVICE_DEPLOYMENT',
       branch: '/test',
       hash: '123',
-      event_name: 'COMMIT_CODE' 
+      event_name: 'COMMIT_CODE'
     };
     changes.new.type = "branch"; changes.created = false; changes.new.name = "/test"; changes.new.target.hash = "123";
     changes.closed = false; changes.old.type = "branch"; changes.old.name = "/test";
@@ -297,7 +294,7 @@ describe('jazz_scm-webhook', function() {
       branch: '/test',
       prlink: 'https://test-link.com',
       target: '/test',
-      event_name: 'RAISE_PR' 
+      event_name: 'RAISE_PR'
     };
     event = bitbucketEvent;
     var bitbucketScmContextDetails = index.bitbucketScmContextDetails(bitbucketEvent.headers["X-Event-Key"], event.body, config);
@@ -314,7 +311,7 @@ describe('jazz_scm-webhook', function() {
       branch: '/test',
       prlink: 'https://test-link.com',
       target: '/test',
-      event_name: 'MERGE_PR' 
+      event_name: 'MERGE_PR'
     };
     event = bitbucketEvent;
     var bitbucketScmContextDetails = index.bitbucketScmContextDetails(bitbucketEvent.headers["X-Event-Key"], event.body, config);
@@ -331,7 +328,7 @@ describe('jazz_scm-webhook', function() {
       branch: '/test',
       prlink: 'https://test-link.com',
       target: '/test',
-      event_name: 'DECLINE_PR' 
+      event_name: 'DECLINE_PR'
     };
     event = bitbucketEvent;
     var bitbucketScmContextDetails = index.bitbucketScmContextDetails(bitbucketEvent.headers["X-Event-Key"], event.body, config);
@@ -365,7 +362,7 @@ describe('jazz_scm-webhook', function() {
       branch: '/test',
       prlink: 'https://test-link.com',
       target: '/test',
-      event_name: 'COMMENT_PR' 
+      event_name: 'COMMENT_PR'
     };
     event = bitbucketEvent;
     var bitbucketScmContextDetails = index.bitbucketScmContextDetails(bitbucketEvent.headers["X-Event-Key"], event.body, config);
@@ -381,7 +378,7 @@ describe('jazz_scm-webhook', function() {
     event = gitlabEventPush;
     var resObj = { event_type: 'SERVICE_DEPLOYMENT',
       branch: eventBody.ref,
-      event_name: 'CREATE_TAG' 
+      event_name: 'CREATE_TAG'
     };
     var gitlabScmContextDetails = index.gitlabScmContextDetails(event.body.object_kind, event.body, config);
     expect(gitlabScmContextDetails.then(function(res){
@@ -456,7 +453,7 @@ describe('jazz_scm-webhook', function() {
       return res;
     })).to.eventually.deep.equal(resObj);
   });
-  
+
   it("should provide gitlab scm context for RAISE_PR event when eventKey is merge_request and new PR is created/opened", function(){
     var eventPullReq = gitlabEventMerge.body.object_attributes;
     event = gitlabEventMerge;
@@ -464,7 +461,7 @@ describe('jazz_scm-webhook', function() {
       branch: eventPullReq.source_branch,
       prlink: eventPullReq.url,
       target: eventPullReq.target_branch,
-      event_name: 'RAISE_PR' 
+      event_name: 'RAISE_PR'
     };
     var gitlabScmContextDetails = index.gitlabScmContextDetails(event.body.object_kind, event.body, config);
     expect(gitlabScmContextDetails.then(function(res){
@@ -480,7 +477,7 @@ describe('jazz_scm-webhook', function() {
       branch: eventPullReq.source_branch,
       prlink: eventPullReq.url,
       target: eventPullReq.target_branch,
-      event_name: 'MERGE_PR' 
+      event_name: 'MERGE_PR'
     };
     var gitlabScmContextDetails = index.gitlabScmContextDetails(event.body.object_kind, event.body, config);
     expect(gitlabScmContextDetails.then(function(res){
@@ -496,7 +493,7 @@ describe('jazz_scm-webhook', function() {
       branch: eventPullReq.source_branch,
       prlink: eventPullReq.url,
       target: eventPullReq.target_branch,
-      event_name: 'UPDATE_PR' 
+      event_name: 'UPDATE_PR'
     };
     var gitlabScmContextDetails = index.gitlabScmContextDetails(event.body.object_kind, event.body, config);
     expect(gitlabScmContextDetails.then(function(res){
@@ -512,7 +509,7 @@ describe('jazz_scm-webhook', function() {
       branch: eventPullReq.source_branch,
       prlink: eventPullReq.url,
       target: eventPullReq.target_branch,
-      event_name: 'DECLINE_PR' 
+      event_name: 'DECLINE_PR'
     };
     var gitlabScmContextDetails = index.gitlabScmContextDetails(event.body.object_kind, event.body, config);
     expect(gitlabScmContextDetails.then(function(res){
@@ -533,7 +530,7 @@ describe('jazz_scm-webhook', function() {
       branch: eventPullReq.source_branch,
       prlink: eventPullReq.url,
       target: eventPullReq.target_branch,
-      event_name: 'COMMENT_PR' 
+      event_name: 'COMMENT_PR'
     };
     var gitlabScmContextDetails = index.gitlabScmContextDetails(event.body.object_kind, event.body, config);
     expect(gitlabScmContextDetails.then(function(res){
@@ -550,7 +547,7 @@ describe('jazz_scm-webhook', function() {
   });
 
   it("should indicate error if events API fails", function(){
-    eventObj.servContext= { 
+    eventObj.servContext= {
       event_type: 'SERVICE_DEPLOYMENT',
       branch: '/test',
       event_name: 'COMMIT_TEMPLATE'
@@ -567,7 +564,7 @@ describe('jazz_scm-webhook', function() {
   });
 
   it("should indicate error if events API return with invalid statis code", function(){
-    eventObj.servContext= { 
+    eventObj.servContext= {
       event_type: 'SERVICE_DEPLOYMENT',
       branch: '/test',
       event_name: 'COMMIT_TEMPLATE'
@@ -589,7 +586,7 @@ describe('jazz_scm-webhook', function() {
   });
 
   it("should indicate success for updating SCM events using events API", function(){
-    eventObj.servContext= { 
+    eventObj.servContext= {
       event_type: 'SERVICE_DEPLOYMENT',
       branch: '/test',
       event_name: 'COMMIT_TEMPLATE'
@@ -654,7 +651,7 @@ describe('jazz_scm-webhook', function() {
   it("should successfully update SCM event in handler function", function(){
     event = bitbucketEvent;
     event.stage = "test";
-    eventObj.servContext= { 
+    eventObj.servContext= {
       event_type: 'SERVICE_DEPLOYMENT',
       branch: '/test',
       event_name: 'COMMIT_TEMPLATE'
@@ -683,13 +680,13 @@ describe('jazz_scm-webhook', function() {
         return res
       }
     });
-    
+
   });*/
 
   it("should successfully update SCM event in handler function", function(){
     event = gitlabEventMerge;
     event.stage = "test";
-    eventObj.servContext= { 
+    eventObj.servContext= {
       event_type: 'SERVICE_DEPLOYMENT',
       branch: '/test',
       event_name: 'COMMIT_TEMPLATE'
@@ -714,6 +711,6 @@ describe('jazz_scm-webhook', function() {
         return res
       }
     });
-    
+
   });
 });

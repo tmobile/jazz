@@ -205,6 +205,10 @@ export class AdvancedFiltersComponent implements OnInit {
         this.pathList = ['/'+this.service.domain+'/'+this.service.name];
         this.pathSelected = this.pathList[0];
 
+        if(this.service.ismetrics){
+            this.statisticSelected=this.statisticList[1];
+        }
+
         
     }
     ngOnChanges(x:any){

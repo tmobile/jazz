@@ -25,7 +25,7 @@ const nodemailer = require('nodemailer');
 
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 
 module.exports.handler = (event, context, cb) => {
@@ -33,7 +33,7 @@ module.exports.handler = (event, context, cb) => {
 	var errorHandler = errorHandlerModule();
 	logger.init(event, context);
 
-	var config = configObj(event);
+	var config = configModule.getConfig(event, context);
 
 	if (!config || config.length) {
 		logger.error("Cannot load config object, will stop processing");
