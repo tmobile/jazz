@@ -54,6 +54,7 @@ import {SafeHtmlPipe} from "../core/pipes/safe-html.pipe";
 import {SafeUrlPipe} from "../core/pipes/safe-url.pipe";
 import {ReportIssueComponent} from '../primary-components/report-issue/report-issue.component';
 import {ChartjsLinegraphComponent} from '../secondary-components/chartjs-linegraph/chartjs-linegraph.component';
+import {MetricsCarouselComponent} from "../metrics-carousel/metrics-carousel.component";
 let specificComponents:any
 let specificModules: any;
 if(environment.envName == 'oss'){
@@ -122,6 +123,7 @@ for(let i in specificComponents){
     SafeUrlPipe,
     ReportIssueComponent,
     ChartjsLinegraphComponent,
+    MetricsCarouselComponent,
     ...declarationsArray,
 
 
@@ -163,6 +165,7 @@ for(let i in specificComponents){
     SafeUrlPipe,
     ReportIssueComponent,
     ChartjsLinegraphComponent,
+    MetricsCarouselComponent,
     ...declarationsArray
 
   ],

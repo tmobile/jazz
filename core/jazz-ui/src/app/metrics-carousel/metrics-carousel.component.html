@@ -1,0 +1,25 @@
+<div #metricCards class='metrics-carousel-container'>
+  <div class="jz-absolute-container">
+    <div #metricCardsScroller class='metrics-carousel-scroller'
+         [style.transform]="'translateX('+(metricCardSize * metricCardOffset)+ 'px)'">
+      <div class='metrics-card'
+           *ngFor="let metric of metrics; let i=index"
+           [class.metrics-card-active]="metricsIndex === i"
+           (click)="selectCard(metric)">
+        <div class='metrics-card-title'>{{utils.hyphenToSpace(metric.name)}}</div>
+        <div class='metrics-card-content' *ngIf="metric.values[metric.values.length - 1]?.value">
+          {{metric.values[metric.values.length - 1]?.value}}
+        </div>
+        <div class='metrics-card-message' *ngIf="!metric.values[metric.values.length - 1]?.value">No Data</div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="metrics-arrows" *ngIf="metricCardsOversized">
+  <div class='metrics-arrows-left' (click)='offsetRight()'>
+    <div class='icon-icon-leftArrow'></div>
+  </div>
+  <div class='metrics-arrows-right' (click)='offsetLeft()'>
+    <div class='icon-icon-rightArrow '></div>
+  </div>
+</div>

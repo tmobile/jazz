@@ -6,6 +6,7 @@ import {ActivatedRoute} from '@angular/router';
 import {DataService} from '../data-service/data.service';
 import * as moment from 'moment';
 import {UtilsService} from '../../core/services/utils.service';
+import {Observable} from "rxjs/Observable";
 
 
 @Component({
@@ -15,24 +16,6 @@ import {UtilsService} from '../../core/services/utils.service';
   providers: [RequestService, MessageService, DataService],
 })
 export class EnvCodequalitySectionComponent implements OnInit {
-  public metricCards;
-
-  @ViewChild('metricCards') set _metricCards(input) {
-    this.metricCards = input;
-  }
-
-  public metricCardsScroller;
-
-  @ViewChild('metricCardsScroller') set _metricCardsScoller(input) {
-    this.metricCardsScroller = input;
-    if (this.metricCards && this.metricCardsScroller) {
-      setTimeout(() => {
-        this.metricCardsOversized = this.metricCardsScroller.nativeElement.scrollWidth >
-          this.metricCards.nativeElement.getBoundingClientRect().width;
-      });
-    }
-  };
-
   @Input() service: any = {};
   public renderGraph = true;
   public filters: any = ['DAILY', 'WEEKLY', 'MONTHLY'];
@@ -41,7 +24,18 @@ export class EnvCodequalitySectionComponent implements OnInit {
   public sectionStatus;
   public graph;
   public metrics;
-  public selectedMetric;
+  private _selectedMetric;
+  set selectedMetric(value) {
+    this._selectedMetric = value;
+    if(value) {
+      this.graph = this.formatGraphData(this.selectedMetric, this.filterData);
+      this.resize();
+    }
+  };
+  get selectedMetric() {
+    return this._selectedMetric;
+  }
+
   public filterData;
   public metricsIndex = 0;
   public resizeDebounced;
@@ -49,9 +43,6 @@ export class EnvCodequalitySectionComponent implements OnInit {
   public dayValue = 86400000;
   public weekValue = 604800000;
   public monthValue = 2592000000;
-  public metricCardSize = 135 + 12;
-  public metricCardsOversized;
-  public metricCardOffset = 0;
 
   constructor(
     private toasterService: ToasterService,
@@ -113,13 +104,6 @@ export class EnvCodequalitySectionComponent implements OnInit {
     return filterData;
   }
 
-  selectMetric(index) {
-    this.metricsIndex = index;
-    this.selectedMetric = this.metrics[index];
-    this.graph = this.formatGraphData(this.selectedMetric, this.filterData);
-    this.resize();
-  }
-
   queryGraphData(filterData, metricIndex) {
     this.sectionStatus = 'loading';
     const request = {
@@ -132,7 +116,121 @@ export class EnvCodequalitySectionComponent implements OnInit {
         from: filterData.fromDateISO
       }
     };
-    this.http.get(request.url, request.params)
+    // this.http.get(request.url, request.params)
+    let r = {
+      "data": {
+        "metrics": [
+          {
+            "name": "security",
+            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=security",
+            "values": [
+              {
+                "ts": "2018-06-27T19:16:06+0000",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "name": "lines-of-code",
+            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=lines-of-code",
+            "values": [
+              {
+                "ts": "2018-06-27T19:16:06+0000",
+                "value": "186"
+              }
+            ]
+          },
+          {
+            "name": "vulnerabilities",
+            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=vulnerabilities",
+            "values": [
+              {
+                "ts": "2018-06-27T19:16:06+0000",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "name": "files",
+            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=files",
+            "values": [
+              {
+                "ts": "2018-06-27T19:16:06+0000",
+                "value": "7"
+              }
+            ]
+          },
+          {
+            "name": "code-coverage",
+            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-coverage",
+            "values": [
+              {
+                "ts": "2018-06-27T19:16:06+0000",
+                "value": "0.0"
+              }
+            ]
+          },
+          {
+            "name": "code-smells",
+            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-smells",
+            "values": [
+              {
+                "ts": "2018-06-27T19:16:06+0000",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "name": "code-smells",
+            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-smells",
+            "values": [
+              {
+                "ts": "2018-06-27T19:16:06+0000",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "name": "code-smells",
+            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-smells",
+            "values": [
+              {
+                "ts": "2018-06-27T19:16:06+0000",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "name": "code-smells",
+            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-smells",
+            "values": [
+              {
+                "ts": "2018-06-27T19:16:06+0000",
+                "value": "0"
+              }
+            ]
+          },
+          {
+            "name": "code-smells",
+            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-smells",
+            "values": [
+              {
+                "ts": "2018-06-27T19:16:06+0000",
+                "value": "0"
+              }
+            ]
+          }
+        ]
+      },
+      "input": {
+        "environment": "zdzbvsm58c-dev",
+        "from": "2018-06-20T22:05:29.980Z",
+        "to": "2018-06-27T22:05:29.981Z",
+        "service": "api1",
+        "domain": "michael"
+      }
+    };
+    Observable.of(r)
       .subscribe((response) => {
         this.sectionStatus = 'empty';
         this.metrics = response.data.metrics;
@@ -173,15 +271,19 @@ export class EnvCodequalitySectionComponent implements OnInit {
       });
 
     filterData.yMax = 1.1 * (data
-      .map((point) => {return point.y})
+      .map((point) => {
+        return point.y
+      })
       .reduce((a, b) => {
-      return Math.max(a, b);
-    }));
+        return Math.max(a, b);
+      }));
     filterData.yMin = .9 * (data
-      .map((point) => {return point.y})
+      .map((point) => {
+        return point.y
+      })
       .reduce((a, b) => {
-      return Math.min(a, b);
-    }));
+        return Math.min(a, b);
+      }));
 
     return {
       datasets: [data],
@@ -202,17 +304,6 @@ export class EnvCodequalitySectionComponent implements OnInit {
     }, 200);
   }
 
-  offsetLeft() {
-    if (this.metricCardsScroller.nativeElement.getBoundingClientRect().right > this.metricCards.nativeElement.getBoundingClientRect().right) {
-      this.metricCardOffset -= 1;
-    }
-  }
-
-  offsetRight() {
-    if (this.metricCardOffset < 0) {
-      this.metricCardOffset += 1;
-    }
-  }
 
 }
 

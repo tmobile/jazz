@@ -1,5 +1,5 @@
 <div class="section" [ngSwitch]="sectionStatus" (window:resize)="resizeDebounced()">
-  <div *ngSwitchCase="'loading'" class="absolute-container">
+  <div *ngSwitchCase="'loading'" class="jz-absolute-container">
     <div class="jz-spinner"></div>
   </div>
   <div *ngSwitchCase="'error'" class="section-content">
@@ -36,28 +36,6 @@
         </div>
       </div>
     </div>
-
-    <div #metricCards class='metrics-cards-wrap'>
-      <div class="absolute-container">
-        <div #metricCardsScroller class='scroll-cards-wrap' [style.transform]="'translateX('+(metricCardSize * metricCardOffset)+ 'px)'">
-          <div class='metrics-card' *ngFor="let metric of metrics; let i=index" [class.arrow_box]='metricsIndex==i'
-               [class.active]='metricsIndex===i' (click)="selectMetric(i)">
-            <div class='metrics-name'>{{utils.hyphenToSpace(metric.name)}}</div>
-            <div class='metrics-data' *ngIf="metric.values[metric.values.length - 1]?.value">
-              {{metric.values[metric.values.length - 1]?.value}}
-            </div>
-            <div class='metrics-name' *ngIf="!metric.values[metric.values.length - 1]?.value">No Data</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="metrics-arrows" *ngIf="metricCardsOversized">
-      <div class='left-arrow' (click)='offsetRight()'>
-        <div class='icon-icon-leftArrow'></div>
-      </div>
-      <div class='right-arrow' (click)='offsetLeft()'>
-        <div class='icon-icon-rightArrow '></div>
-      </div>
-    </div>
+    <metrics-carousel [metrics]="metrics" [(selected)]="selectedMetric"></metrics-carousel>
   </div>
 </div>

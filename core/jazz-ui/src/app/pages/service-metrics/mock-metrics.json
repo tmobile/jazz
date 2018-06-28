@@ -1,0 +1,1198 @@
+{
+    "data": {
+        "domain": "jazz",
+        "service": "custom-ad-authorizer",
+        "environment": "prod",
+        "end_time": "2018-06-27T21:35:41.475Z",
+        "start_time": "2018-06-26T21:35:41.475Z",
+        "interval": "900",
+        "statistics": "average",
+        "assets": [
+            {
+                "type": "apigateway",
+                "asset_name": "GET",
+                "statistics": "Average",
+                "metrics": [
+                    {
+                        "metric_name": "Invocations",
+                        "datapoints": [
+                            {
+                                "Timestamp": "2018-06-27T19:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T21:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T04:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T14:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T21:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T04:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T21:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T01:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T07:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T01:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T21:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T07:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            }
+                        ]
+                    },
+                ]
+            },
+            {
+                "type": "lambda",
+                "asset_name": {
+                    "FunctionName": "jazz_custom-ad-authorizer-prod"
+                },
+                "statistics": "Average",
+                "metrics": [
+                    {
+                        "metric_name": "Invocations",
+                        "datapoints": [
+                            {
+                                "Timestamp": "2018-06-27T19:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T21:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T04:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T14:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T21:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T04:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T21:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T01:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T07:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T01:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T21:50:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:05:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:20:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T07:35:00.000Z",
+                                "Average": 1,
+                                "Unit": "Count"
+                            }
+                        ]
+                    },
+                    {
+                        "metric_name": "Errors",
+                        "datapoints": [
+                            {
+                                "Timestamp": "2018-06-27T00:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:35:00.000Z",
+                                "Average": 0.01694915254237288,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T21:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T04:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T14:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:50:00.000Z",
+                                "Average": 0.0072992700729927005,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:05:00.000Z",
+                                "Average": 0.05555555555555555,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T21:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T04:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T01:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T21:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:35:00.000Z",
+                                "Average": 0.02142857142857143,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T07:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T01:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T21:50:00.000Z",
+                                "Average": 0.014423076923076924,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:20:00.000Z",
+                                "Average": 0.010638297872340425,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T07:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            }
+                        ]
+                    },
+                    {
+                        "metric_name": "Dead Letter Error",
+                        "datapoints": [
+                        ]
+                    },
+                    {
+                        "metric_name": "Duration",
+                        "datapoints": [
+                            {
+                                "Timestamp": "2018-06-26T22:35:00.000Z",
+                                "Average": 186.92553398058251,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:20:00.000Z",
+                                "Average": 214.724,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:05:00.000Z",
+                                "Average": 262.1422580645161,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:35:00.000Z",
+                                "Average": 228.5908474576271,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:05:00.000Z",
+                                "Average": 214.02631578947367,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:50:00.000Z",
+                                "Average": 171.24062068965517,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:20:00.000Z",
+                                "Average": 207.85115151515154,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:05:00.000Z",
+                                "Average": 189.76471698113204,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T21:20:00.000Z",
+                                "Average": 242.54705882352937,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T04:50:00.000Z",
+                                "Average": 494.33807692307704,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:35:00.000Z",
+                                "Average": 340.34771604938265,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:05:00.000Z",
+                                "Average": 240.2633333333333,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:35:00.000Z",
+                                "Average": 235.265625,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:50:00.000Z",
+                                "Average": 186.6222627737226,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:35:00.000Z",
+                                "Average": 202.41848484848484,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:20:00.000Z",
+                                "Average": 194.91275862068966,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:50:00.000Z",
+                                "Average": 222.3853333333333,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:20:00.000Z",
+                                "Average": 218.8885465116279,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:05:00.000Z",
+                                "Average": 171.805,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T01:05:00.000Z",
+                                "Average": 232.8970833333333,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:50:00.000Z",
+                                "Average": 212.15795918367346,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T07:35:00.000Z",
+                                "Average": 262.1569696969697,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:20:00.000Z",
+                                "Average": 215.1903191489362,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:05:00.000Z",
+                                "Average": 165.4433333333333,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T21:35:00.000Z",
+                                "Average": 283.7745945945946,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:50:00.000Z",
+                                "Average": 394.0041040462428,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:20:00.000Z",
+                                "Average": 194.79849785407723,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:50:00.000Z",
+                                "Average": 243.28416666666666,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:35:00.000Z",
+                                "Average": 199.69976744186047,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:05:00.000Z",
+                                "Average": 262.31569620253157,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:50:00.000Z",
+                                "Average": 197.9335,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:50:00.000Z",
+                                "Average": 182.11142857142855,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:35:00.000Z",
+                                "Average": 186.671875,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T14:35:00.000Z",
+                                "Average": 372.84800000000007,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:05:00.000Z",
+                                "Average": 177.2927376425855,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:50:00.000Z",
+                                "Average": 244.22416666666663,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T01:20:00.000Z",
+                                "Average": 234.833125,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T21:05:00.000Z",
+                                "Average": 198.4095,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T04:35:00.000Z",
+                                "Average": 255.66133333333332,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:05:00.000Z",
+                                "Average": 828.3,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:35:00.000Z",
+                                "Average": 208.844,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T07:50:00.000Z",
+                                "Average": 257.29208588957056,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:20:00.000Z",
+                                "Average": 202.74458333333334,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T21:50:00.000Z",
+                                "Average": 211.68153846153848,
+                                "Unit": "Milliseconds"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:35:00.000Z",
+                                "Average": 176.4992372881356,
+                                "Unit": "Milliseconds"
+                            }
+                        ]
+                    },
+                    {
+                        "metric_name": "Throttles",
+                        "datapoints": [
+                            {
+                                "Timestamp": "2018-06-27T00:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T21:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T04:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T14:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T21:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T18:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T00:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T05:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T04:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T01:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T21:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T22:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T07:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T16:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T01:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T20:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T17:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T21:50:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-26T23:20:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T19:05:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            },
+                            {
+                                "Timestamp": "2018-06-27T07:35:00.000Z",
+                                "Average": 0,
+                                "Unit": "Count"
+                            }
+                        ]
+                    },
+                    {
+                        "metric_name": "IteratorAge",
+                        "datapoints": [
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    "input": {
+        "service": "custom-ad-authorizer",
+        "domain": "jazz",
+        "environment": "prod",
+        "end_time": "2018-06-27T21:35:41.475Z",
+        "start_time": "2018-06-26T21:35:41.475Z",
+        "interval": "900",
+        "statistics": "average"
+    }
+}
