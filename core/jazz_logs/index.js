@@ -26,7 +26,7 @@ const request = require('request');
 
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const formats = require('./utils.js');
 var utils = formats('apis');
@@ -35,7 +35,7 @@ module.exports.handler = (event, context, cb) => {
 
 	//Initializations
 	var errorHandler = errorHandlerModule();
-	var config = configObj(event);
+	var config = configModule.getConfig(event, context);
 	logger.init(event, context);
 
 	try {

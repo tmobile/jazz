@@ -21,7 +21,7 @@ const request = require('request');
 const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon');
 const logger = require("../components/logger.js");
-const configObj = require("../components/config.js");
+const configModule = require("../components/config.js");
 const rp = require('request-promise-native');
 
 var reqStub;
@@ -54,7 +54,7 @@ var context = {
   "awsRequestId": "00001-test-000001",
   "invokedFunctionArn": "arn:aws:lambda:us-east-1:100000001:function:gitlab001-test-services-handler-prod"
 };
-var configData = configObj(context);
+var configData = configModule.getConfig(event, context);
 describe("getTokenRequest", function () {
   it("should return Request token when called", () => {
     let result = index.getTokenRequest(configData);
@@ -162,7 +162,7 @@ describe("checkforInterestedEvents", () => {
 describe("processEventRecords", () => {
   var  procesEventRecordStub;
   beforeEach(() => {
-    
+
   });
   afterEach(() => {
     if (procesEventRecordStub) {
@@ -285,7 +285,7 @@ describe("processEventRecord", () => {
     })
     var tempAuth = "Auth_token"
     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
-      
+
       expect(obj).to.not.eq(null);
       expect(obj.data.message).to.eq(message)
       reqStub.restore()
@@ -515,7 +515,7 @@ describe("processUpdateEvent", () => {
     }
   })
   it("should call getDeployments for true case scenarios", () => {
-    
+
     var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp);
     var updateDeploymentsStub = sinon.stub(index, "updateDeployments").resolves(temp);
     index.processUpdateEvent(payload.Item, configData, "tempAuth").then(() => {
@@ -525,7 +525,7 @@ describe("processUpdateEvent", () => {
     })
   });
   it("should call updateDeployments when getDeployment resolves the promise and returns result", () => {
-   
+
     var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp);
     var updateDeploymentsStub = sinon.stub(index, "updateDeployments").resolves(temp);
     index.processUpdateEvent(payload.Item, configData, "tempAuth").then(() => {
@@ -535,7 +535,7 @@ describe("processUpdateEvent", () => {
     })
   });
   it("should return error  when updateDeployment resolves the promise and returns result", () => {
-    
+
     var getDeploymentsStub = sinon.stub(index, "getDeployments").resolves(temp)
     var updateDeploymentsStub = sinon.stub(index, "updateDeployments").rejects(temp)
     index.processUpdateEvent(payload.Item, configData, "tempAuth").catch((obj) => {
@@ -578,7 +578,7 @@ describe("getDeployments", () => {
     })
   })
   it("should throw error is enviornment_id is not defined in deploymentpayload passed", () => {
-    
+
     deploymentPayload.environment_logical_id = undefined;
     index.getDeployments(deploymentPayload, configData, "temp_auth").catch((err) => {
       expect(err.failure_message).to.eq("Environment logical id is not defined");
@@ -642,9 +642,9 @@ describe("updateDeployments", () => {
     });
   })
   it("should return error if deployments array is empty", () => {
-    
+
     res.data.deployments = undefined;
-    
+
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").catch((err) => {
       expect(err.failure_message).to.eq('Deployment details not found!');
     });
@@ -734,7 +734,7 @@ describe("processEvent",()=>{
     payload.SERVICE_CONTEXT =  undefined;
     index.processEvent(payload,configData,"temp_auth").catch((err)=>{
     expect(err.failure_message).to.eq("Service context is not defined");
-    
+
   })
 })
 
@@ -780,7 +780,7 @@ describe("handler",()=>{
       sinon.assert.calledOnce(getEventProcessStatusStub)
     })
   })
-   
+
   it("should return the record of processed and falied events ",()=>{
     index.handler(event,context,(error,records)=>{
       expect(records.processed_events).to.eq(3)

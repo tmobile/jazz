@@ -16,23 +16,23 @@
 
 /**
 API to record SCM activity
-@author: 
+@author:
 @version: 1.0
  **/
 
 const request = require("request");
 const moment = require("moment");
 
-const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
-const responseObj = require("./components/response.js"); //Import the response module.
-const configObj = require("./components/config.js"); //Import the environment data.
-const logger = require("./components/logger.js"); //Import the logging module.
+const errorHandlerModule = require("./components/error-handler.js");
+const responseObj = require("./components/response.js");
+const configModule = require("./components/config.js");
+const logger = require("./components/logger.js");
 
 var handler = function (event, context, cb) {
 
 	//Initializations
 	var errorHandler = errorHandlerModule();
-	var config = configObj(event);
+	var config = configModule.getConfig(event, context);
 	logger.init(event, context);
 	logger.info("Webhook-events: " + JSON.stringify(event));
 

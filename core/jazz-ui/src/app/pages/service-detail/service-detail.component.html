@@ -11,24 +11,30 @@
             <span class="page-sub-title"><span class="service-type">{{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
             <btn-jazz-secondary class="delete-service-btn" text="DELETE SERVICE" [disablebtn]="!canDelete" (click)="deleteService(true)"></btn-jazz-secondary>
         </div>
-        
-        <tabs [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+        <div class='tab-component'>
+            <div class="refresh-button" (click)="refreshTab()">
+                <span class="icon-icon-refresh"></span>
+                <span>Refresh</span>
+            </div>
+            <tabs [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+           
+        </div>
        
         <div *ngIf='!err_flag'> 
             <section class="page-content" *ngIf="selectedTab == 0">
-                <service-overview (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isLoadingService]="isLoadingService"></service-overview>
+                <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isLoadingService]="isLoadingService"></service-overview>
             </section>
             <section class="page-content" *ngIf="selectedTab == 1">
-                <service-access-control></service-access-control>
+                <service-access-control #selectedTabComponent ></service-access-control>
             </section>
             <section class="page-content" *ngIf="selectedTab == 2">
-                <service-metrics  [service]="service" #metric></service-metrics>
+                <service-metrics #selectedTabComponent [service]="service" #metric></service-metrics>
             </section>
             <section class="page-content" *ngIf="selectedTab == 3">
-                <service-logs #logs [service]="service"></service-logs>
+                <service-logs #selectedTabComponent #logs [service]="service"></service-logs>
             </section>
             <section class="page-content" *ngIf="selectedTab == 4">
-                <service-cost #cost [service]="service"></service-cost>
+                <service-cost #selectedTabComponent #cost [service]="service"></service-cost>
             </section>
         </div>
         <div *ngIf='err_flag' class='err-wrp'>
