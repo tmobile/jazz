@@ -51,12 +51,13 @@ api_doc_name:string='';
   baseUrl:string='';
   swaggerUrl:string='';
   disablingWebsiteButton:boolean=true;
-  disablingFunctionButton:boolean=true;
+  disablingFunctionButton:boolean=false;
   disablingApiButton:boolean=true;
   nonClickable:boolean=false;
   message:string;
 
 
+  public sidebar: string = '';
   private sub: any;
   private subscription:any;
 
@@ -197,17 +198,16 @@ api_doc_name:string='';
           }
           break;
           case 'function' :
-          if(this.endpoint_env!=(undefined||'')){
-            window.open('/404');
-          }
+          
+          case 'lamda' :
+          this.setSidebar('try-service');
           break;
-          case 'lambda' :
-          if(this.endpoint_env!=(undefined||'')){
-            window.open('/404');
           }
-          break;
       }
-  }
+  
+      setSidebar(sidebarValue?) {
+        this.sidebar = sidebarValue;
+      }
 
  toast_pop(error,oops,errorMessage)
   {
@@ -218,9 +218,9 @@ api_doc_name:string='';
             tst.classList.remove('toaster-anim');
           }, 3000);
   }
-  sidebar(event){
-    this.closeSidebar(true);
-  }
+  // sidebar(event){
+  //   this.closeSidebar(true);
+  // }
   public closeSidebar (eve){
     this.closed = true;
     this.close = eve;
