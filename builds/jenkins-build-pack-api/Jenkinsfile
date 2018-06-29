@@ -253,8 +253,6 @@ node() {
 
             if ("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
               sh "aws apigateway update-stage --rest-api-id ${api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
-            } else {
-              sh "aws apigateway update-stage --rest-api-id ${api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${configLoader.AWS.REGION}"
             }
             if (current_environment == 'prod' || config['domain'] == 'jazz') {
               endpointUrl = "https://${apiHostName}/${current_environment}/${config['domain']}/${config['service']}"
@@ -475,12 +473,14 @@ def buildLambda(runtime) {
     sh "pip install -r requirements.txt -t library"
 
     // create virtual environment and install dev-requirements
-    sh """
+    sh ""
+    "
     pip install virtualenv
     virtualenv venv
-    .venv / bin / activate
+      .venv / bin / activate
     pip install pytest
-    """
+      ""
+    "
   }
 }
 
