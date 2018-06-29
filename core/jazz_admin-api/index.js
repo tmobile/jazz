@@ -89,7 +89,7 @@ function getInstallerVarsJSON(config) {
         } else {
           if (response.statuscode != 200) {
             logger.error("Error processing request: " + JSON.stringify(response));
-            return reject(response.body.messageor);
+            return reject(response.body.message);
           }
           var data = JSON.parse(response.body);
           resolve(data);
