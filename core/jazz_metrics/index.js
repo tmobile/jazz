@@ -329,37 +329,30 @@ function cloudWatchDetails(assetParam, cloudwatch) {
           region: global_config.CF_REGION
         });
       }
-      try {
-        cloudwatch.getMetricStatistics(param, (err, data) => {
-          if (err) {
-            logger.error("error while getting metics from cloudwatch. " + JSON.stringify(err));
-            if (err.code === "InvalidParameterCombination") {
-              reject({
-                "result": "inputError",
-                "message": err.message
-              });
-            } else {
-              reject({
-                "result": "serverError",
-                "message": "Unknown internal error occurred"
-              });
-            }
-
+      cloudwatch.getMetricStatistics(param, (err, data) => {
+        if (err) {
+          logger.error("error while getting metics from cloudwatch. " + JSON.stringify(err));
+          if (err.code === "InvalidParameterCombination") {
+            reject({
+              "result": "inputError",
+              "message": err.message
+            });
           } else {
-            metricsStats.push(data);
-            if (metricsStats.length === assetParam.actualParam.length) {
-              var assetObj = utils.assetData(metricsStats, assetParam.userParam);
-              resolve(assetObj);
-            }
+            reject({
+              "result": "serverError",
+              "message": "Unknown internal error occurred"
+            });
           }
-        });
 
-      } catch(e) {
-        console.log("e:::::::", e);
-      }
-
+        } else {
+          metricsStats.push(data);
+          if (metricsStats.length === assetParam.actualParam.length) {
+            var assetObj = utils.assetData(metricsStats, assetParam.userParam);
+            resolve(assetObj);
+          }
+        }
+      });
     });
-
   });
 }
 
