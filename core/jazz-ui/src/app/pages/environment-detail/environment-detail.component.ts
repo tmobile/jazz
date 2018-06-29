@@ -210,7 +210,7 @@ api_doc_name:string='';
       switch(type){
           case 'api':
             let foundAsset = this.assets.find((asset) => {
-              return asset.type === 'swagger_url';
+              return asset.asset_type === 'swagger_url';
             });
             if (foundAsset) {
               return window.open(environment.urls['swagger_editor'] + '/?url=' + foundAsset.provider_id);
