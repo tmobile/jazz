@@ -23,37 +23,37 @@
 **/
 
 module.exports = () => {
-    var errorObj = {
-        throwInputValidationError: function (errorMessage) { //Raise a  bad requests exception
-            return {
-                errorType: "BadRequest",
-                message: errorMessage.toString()
-            };
-        },
-        throwUnauthorizedError: function (errorMessage) { //Raise not found exceptions
-            return {
-                errorType: "Unauthorized",
-                message: errorMessage.toString()
-            };
-        },
-        throwForbiddenError: function (errorMessage) { //Raise not found exceptions
-            return {
-                errorType: "Forbidden",
-                message: errorMessage.toString()
-            };
-        },
-        throwNotFoundError: function (errorMessage) { //Raise not found exceptions
-            return {
-                errorType: "NotFound",
-                message: errorMessage.toString()
-            };
-        },
-        throwInternalServerError: function (errorMessage) { //Raise internal server exceptions
-            return {
-                errorType: "InternalServerError",
-                message: errorMessage.toString()
-            };
-        }
-    };
-    return errorObj;
+  var errorObj = {
+    throwInputValidationError: function (errorMessage) { //Raise a  bad requests exception
+      return {
+        errorType: "BadRequest",
+        message: errorMessage.toString()
+      };
+    },
+    throwUnauthorizedError: function (errorMessage) { //Raise not found exceptions
+      return {
+        errorType: "Unauthorized",
+        message: errorMessage.toString()
+      };
+    },
+    throwForbiddenError: function (errorMessage) { //Raise not found exceptions
+      return {
+        errorType: "Forbidden",
+        message: errorMessage.toString()
+      };
+    },
+    throwNotFoundError: function (errorMessage) { //Raise not found exceptions
+      return {
+        errorType: "NotFound",
+        message: errorMessage.toString()
+      };
+    },
+    throwInternalServerError: function (errorMessage) { //Raise internal server exceptions
+      return {
+        errorType: "InternalServerError",
+        message: errorMessage.toString()
+      };
+    }
+  };
+  return errorObj;
 };
