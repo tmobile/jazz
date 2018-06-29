@@ -46,8 +46,8 @@ function handler(event, context, cb) {
         apiResponseObj.installerVars = data;
         return cb(null, responseObj(apiResponseObj, event.body));
       }).catch((error) => {
-        logger.error("Failed to load installer-vars.json file:", error);
-        cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load installer-vars.json file")));
+        logger.error("Failed to load admin config file:", error);
+        cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load config file.")));
       });
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("The requested method is not supported")));

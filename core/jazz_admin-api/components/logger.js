@@ -1,5 +1,5 @@
 /**
-    Nodejs Admin-API
+    Nodejs Admin
     @module: logger.js
     @description: a simple logging module for nodejs
     @author:

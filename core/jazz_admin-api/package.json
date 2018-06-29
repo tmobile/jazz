@@ -1,7 +1,7 @@
 {
-  "name": "admin-api",
+  "name": "admin",
   "version": "0.0.1",
-  "description": "Admin-API -api to retrive installer-vars.json for admin user",
+  "description": "Admin -api to retrive installer-vars.json for admin user",
   "main": "index.js",
   "private": true,
   "author": [],

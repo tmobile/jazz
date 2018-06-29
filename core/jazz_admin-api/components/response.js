@@ -1,5 +1,5 @@
 /**
-	Nodejs Admin-API
+	Nodejs Admin
   @module: response.js
   @description: Defines reponse object
 	@author:

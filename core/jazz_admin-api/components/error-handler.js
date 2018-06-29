@@ -1,5 +1,5 @@
 /**
-    Admin-API 
+    Admin
   @module: error-handler.js
   @description: Defines functions raising API Errors in required format for API Gateway integration
 	@author:
