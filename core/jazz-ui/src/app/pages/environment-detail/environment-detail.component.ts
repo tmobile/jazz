@@ -159,20 +159,7 @@ api_doc_name:string='';
 
 
   fetchService(id: string){
-
       this.isLoadingService = true;
-
-      let cachedData = this.cache.get(id);
-
-      if (cachedData) {
-          this.onDataFetched(cachedData);
-          this.getAssets();
-          this.setTabs();
-          this.isFunction= this.service.type === "function";
-      } else{
-         if ( this.subscription ) {
-            this.subscription.unsubscribe();
-          }
           this.subscription = this.http.get('/jazz/services/'+id).subscribe(
             response => {
               this.service.accounts=env_internal.urls.accounts;
@@ -193,7 +180,6 @@ api_doc_name:string='';
 
               }
           )
-      }
   };
 
   setTabs() {

@@ -1,0 +1,20 @@
+{
+  "name": "jazz_slack-event-handler",
+  "version": "0.0.1",
+  "description": "jazz slack event handler",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "string-template": "*",
+    "request": "*",
+    "request-promise-native": "^1.0.5"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0"
+  }
+}
