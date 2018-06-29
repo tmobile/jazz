@@ -75,7 +75,7 @@ function genericInputValidation(event) {
       });
     }
 
-    if (event.method === 'GET' && (!event.query || (!Object.keys(event.query).includes('slack_channel')) || !event.query.slack_channel)) {
+    if (event.method === 'GET' && (!event.query || !Object.keys(event.query).includes('slack_channel') || !event.query.slack_channel)) {
       reject({
         result: "inputError",
         message: "Missing input parameter slack_channel"
@@ -103,6 +103,7 @@ function requestToChannels(config, resObj, channel_name) {
     var urlList = [];
     urlList.push(get_response(public_channel_url, channel_name));
     urlList.push(get_response(priv_channel_url, channel_name));
+
     Promise.all(urlList)
       .then(res => {
         if (res.includes('true')) {
@@ -120,7 +121,6 @@ function requestToChannels(config, resObj, channel_name) {
 }
 
 function get_response(channel_url, channel_name) {
-  'use strict';
   logger.info("Inside get_response:" + channel_url + ",channel_name:" + channel_name);
   return new Promise((resolve, reject) => {
     var params = {
@@ -128,6 +128,7 @@ function get_response(channel_url, channel_name) {
       uri: channel_url,
       rejectUnauthorized: false
     };
+
     request(params, (error, response, body) => {
       if (error) {
         logger.error(error);
