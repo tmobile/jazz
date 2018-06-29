@@ -58,7 +58,6 @@ function getNotificationMessage(serviceDetails, payload, configData) {
 
     switch (params.event_type) {
       case 'SERVICE_CREATION':
-
         pretext = params.notifications.EVENT_TYPE.SERVICE_CREATION;
         if (params.build_status === 'STARTED' && !params.event_name) {
           slackNotification.color = configData.COLORS.BLUE;
@@ -74,8 +73,8 @@ function getNotificationMessage(serviceDetails, payload, configData) {
           }
         }
         break;
-      case 'SERVICE_DEPLOYMENT':
 
+      case 'SERVICE_DEPLOYMENT':
         pretext = params.notifications.EVENT_TYPE.SERVICE_DEPLOYMENT;
         if (params.environment_name) {
           pretext = pretext + params.notifications.ENVIRONMENT;
@@ -100,8 +99,8 @@ function getNotificationMessage(serviceDetails, payload, configData) {
           }
         }
         break;
-      case 'SERVICE_DELETION':
 
+      case 'SERVICE_DELETION':
         pretext = params.notifications.EVENT_TYPE.SERVICE_DELETION;
         if (params.environment_name) {
           pretext = pretext + params.notifications.ENVIRONMENT;
