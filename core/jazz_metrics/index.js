@@ -209,7 +209,6 @@ function validateAssets(assetsArray, eventBody) {
                   "actualParam": res,
                   "userParam": assetItem
                 });
-                logger.info(JSON.stringify(newAssetArray))
                 resolve(newAssetArray);
               })
               .catch(error => {
@@ -302,7 +301,7 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
 
 function getMetricsDetails(newAssetArray, cloudwatch) {
   return new Promise((resolve, reject) => {
-    logger.info("Inside getMetricsDetails");
+    logger.info("Inside getMetricsDetails", newAssetArray);
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
       cloudWatchDetails(assetParam, cloudwatch)
@@ -324,7 +323,6 @@ function cloudWatchDetails(assetParam, cloudwatch) {
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
-      console.log("Inside foreach");
       if (param.Namespace === "AWS/CloudFront") {
         cloudwatch = new aws.CloudWatch({
           apiVersion: '2010-08-01',
@@ -332,9 +330,7 @@ function cloudWatchDetails(assetParam, cloudwatch) {
         });
       }
       try {
-        console.log('before CW call');
         cloudwatch.getMetricStatistics(param, (err, data) => {
-          console.log("Inside cloudwatch.getMetricStatistics")
           if (err) {
             logger.error("error while getting metics from cloudwatch. " + JSON.stringify(err));
             if (err.code === "InvalidParameterCombination") {
@@ -350,7 +346,6 @@ function cloudWatchDetails(assetParam, cloudwatch) {
             }
 
           } else {
-            console.log("data",data)
             metricsStats.push(data);
             if (metricsStats.length === assetParam.actualParam.length) {
               var assetObj = utils.assetData(metricsStats, assetParam.userParam);

@@ -25,9 +25,9 @@ const request = require('request');
 
 const index = require('../index');
 const configObj = require('../components/config.js');
-const validateutils = require("../components/validation.js");
+const validateUtils = require("../components/validation.js");
 const global_config = require("../config/global-config.json");
-const metricConfig = require('../components/metrics.json')
+const metricConfig = require('../components/metrics.json');
 
 describe('jazz_metrics', function () {
 
@@ -103,6 +103,104 @@ describe('jazz_metrics', function () {
           });
         });
     });
+
+  });
+
+  describe('validateUtils', () => {
+    it("should successfully validate input", () => {
+      validateUtils.validateGeneralFields(event.body)
+        .then(res => {
+          expect(res).to.eq(event.body);
+        });
+    });
+
+    it("should indicate empty payload if event.body is empty", () => {
+      validateUtils.validateGeneralFields({})
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: 'Input payload cannot be empty'
+          })
+        });
+    });
+
+    it("should indicate that required fields are missing from input", () => {
+      var required_fields = global_config.REQUIRED_FIELDS;
+      required_fields.forEach(field => {
+        var payload = Object.assign({}, event.body);
+        delete payload[field];
+
+        validateUtils.validateGeneralFields(payload)
+          .catch(error => {
+            expect(error).to.include({
+              result: 'inputError',
+              message: 'Following field(s) are required - ' + field
+            });
+          });
+      });
+    });
+
+    it("should indicate that required field values are missing in input", () => {
+      var required_fields = global_config.REQUIRED_FIELDS;
+      required_fields.forEach(field => {
+        var payload = Object.assign({}, event.body);
+        payload[field] = '';
+
+        validateUtils.validateGeneralFields(payload)
+          .catch(error => {
+            expect(error).to.include({
+              result: 'inputError',
+              message: 'Following field(s) value cannot be empty - ' + field
+            });
+          });
+      });
+    });
+
+    it("should indicate that interval value is invalid", () => {
+      event.body.interval = 200;
+      validateUtils.validateGeneralFields(event.body)
+          .catch(error => {
+            expect(error).to.include({ result: 'inputError', message: 'Invalid interval value' });
+          });
+    });
+
+    it("should indicate that end_time value is invalid", () => {
+      var invalid_time = "Fri, 29 Jun 2018 12:11:30 GMT";
+      var time_list = ["end_time", "start_time"];
+      time_list.forEach(field => {
+        var payload = Object.assign({}, event.body);
+        payload[field] = invalid_time;
+        validateUtils.validateGeneralFields(payload)
+        .catch(error => {
+            expect(error).to.include({ result: 'inputError', message: 'Invalid '+ field });
+          });
+      });
+    });
+
+    it("should indicate input error if start time is greater than end time", () => {
+      var payload = Object.assign({}, event.body);
+      payload.end_time = "2018-06-12T07:48:56.712Z";
+      payload.start_time = "2018-06-27T07:48:56.712Z";
+      validateUtils.validateGeneralFields(payload)
+      .catch(error => {
+        expect(error).to.include({
+          result: "inputError",
+          message: "start_time should be less than end_time"
+        });
+      });
+    });
+
+    it("should indicate that statistics value is invalid", () => {
+      var payload = Object.assign({}, event.body);
+      payload.statistics = "invalid";
+      validateUtils.validateGeneralFields(payload)
+      .catch(error => {
+        expect(error).to.include({
+          result: "inputError",
+          message: "Invalid statistics type"
+        })
+      })
+    })
 
   });
 
@@ -486,8 +584,8 @@ describe('jazz_metrics', function () {
     });
   });
 
-  describe("getMetricsDetails", () => {
-    it.only("should successfully get metrics details from cloudwatch", () => {
+  describe("cloudWatchDetails", () => {
+    it("should successfully get metrics details from cloudwatch", () => {
       var newAssetArray = {
         "actualParam": [{
           "Namespace": "AWS/Lambda",
@@ -577,22 +675,19 @@ describe('jazz_metrics', function () {
         apiVersion: '2010-08-01'
       });
 
-      // AWS.mock("DynamoDB.DocumentClient", "query", (param, cb) => {
-      //   return cb(null, dataObj);
-      // });
-      AWS.mock('CloudWatch', "getMetricStatistics", (obj) => {
-        console.log("params:", obj);
+      AWS.mock('CloudWatch', "getMetricStatistics", (params, cb) => {
+        console.log("params:", params);
         return cb(null, "hello");
       })
-      // const stubMetrics = sinon.stub(cloudwatch, 'getMetricStatistics').returns("hello");
-      index.getMetricsDetails(newAssetArray, cloudwatch)
-      .then(res => {
-        console.log(res);
-      })
-      .catch(error => {
-        console.log(error);
-      })
+
+      index.cloudWatchDetails(newAssetArray, cloudwatch)
+        .then(res => {
+          console.log(res);
+        })
+        .catch(error => {
+          console.log(error);
+        });
     })
-  })
+  });
 
 });
