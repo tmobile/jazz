@@ -1,10 +1,14 @@
 {
   "ADMIN_ID": "{jazz_admin}",
-  "PRIVATE_TOKEN_GITLAB": "{private-token}",
-  "BB_USERNAME":"{bb_username}",
-  "BB_PASSWORD":"{bb_password}",
-  "BASE_URL":"{base-url}",
+  "BASE_URL": "{base-url}",
   "SCM_TYPE": "{scm-type}",
-  "GITLAB_PATH": "/slf/jazz-build-module/raw/master/jazz-installer-vars.json",
-  "BITBUCKET_PATH":"/projects/SLF/repos/jazz-build-module/raw/jazz-installer-vars.json"
+  "BITBUCKET": {
+    "BB_USERNAME": "{bb_username}",
+    "BB_PASSWORD": "{bb_password}",
+    "BITBUCKET_PATH": "/projects/SLF/repos/jazz-build-module/raw/jazz-installer-vars.json"
+  },
+  "GITLAB": {
+    "GITLAB_PATH": "/slf/jazz-build-module/raw/master/jazz-installer-vars.json",
+    "PRIVATE_TOKEN_GITLAB": "{private-token}"
+  }
 }

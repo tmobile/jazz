@@ -60,19 +60,19 @@ function handler(event, context, cb) {
 function buildRequestOption(config) {
   if (config.SCM_TYPE === "gitlab") {
     return {
-      uri: config.BASE_URL + config.GITLAB_PATH,
+      uri: config.BASE_URL + config.GITLAB.GITLAB_PATH,
       method: 'get',
       headers: {
-        "Private-Token": config.PRIVATE_TOKEN_GITLAB
+        "Private-Token": config.GITLAB.PRIVATE_TOKEN_GITLAB
       },
       rejectUnauthorized: false
     };
   } else {
     return {
-      uri: config.BASE_URL + config.BITBUCKET_PATH,
+      uri: config.BASE_URL + config.BITBUCKET.BITBUCKET_PATH,
       method: 'get',
       headers: {
-        "Authorization": 'Basic ' + new Buffer(config.BB_USERNAME + ':' + config.BB_PASSWORD).toString('base64')
+        "Authorization": 'Basic ' + new Buffer(config.BITBUCKET.BB_USERNAME + ':' + config.BITBUCKET.BB_PASSWORD).toString('base64')
       },
       rejectUnauthorized: false
     };

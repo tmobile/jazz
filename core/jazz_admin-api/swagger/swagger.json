@@ -11,7 +11,7 @@
     "https"
   ],
   "paths": {
-    "/{service_name}": {
+    "/{service_name}/config": {
       "options": {
         "description": "CORS Support",
         "consumes": [
