@@ -630,11 +630,7 @@ rebuild(){
       this.toast_pop('success',"",successMessage+this.service.name);      
     },
     (error) => {
-<<<<<<< HEAD
-      let errorMessage = this.toastmessage.errorMessage(error, "updateObj");
-=======
-      let errorMessage = this.toastmessage.errorMessage(error, "retryDeploy"); 
->>>>>>> 40937dea81eac45fa8c5b50f290f8356afdddbec
+      let errorMessage = this.toastmessage.errorMessage(error, "retryDeploy");    
       this.toast_pop('error', 'Oops!', errorMessage)
     })
     this.isLoading = true;
