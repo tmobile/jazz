@@ -17,12 +17,11 @@
 }
 
 .sonar-link {
-  text-align: right;
-  a {
     font-weight: 800;
     color: #ed008c;
-  }
+    cursor: pointer;
 }
+
 
 .icon-icon-nodata {
   font-size: 7rem;
@@ -35,6 +34,7 @@
   background: white;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
   display: flex;
+
 }
 
 .section-content {
@@ -42,26 +42,10 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
-.chart-background {
-  margin-top: .25rem;
-  border-radius: 3px;
-  background-color: #f9f9f9;
-  border: solid 1px #9b9b9b;
-  padding: .5rem;
-  height: calc(100% - (120rem / 12));
-}
 
-.chart-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.chart-flex {
-  flex: 1;
-}
 
 .chart-header {
   margin: 5px;

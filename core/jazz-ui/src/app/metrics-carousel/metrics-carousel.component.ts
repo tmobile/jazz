@@ -27,6 +27,16 @@ export class MetricsCarouselComponent implements OnInit {
   get selected() {
       return this._selected;
   }
+  private _index;
+  @Output() indexChange = new EventEmitter();
+  @Input()
+  set index(value) {
+      this._index = value;
+      this. indexChange.emit(this._index);
+  }
+  get index() {
+      return this._index;
+  }
 
   @ViewChild('metricCards') metricCards;
   public metricCardsScroller;
@@ -40,6 +50,7 @@ export class MetricsCarouselComponent implements OnInit {
     }
   };
   public metricCardsOversized;
+  public metricCardSize = 135 + 12;
   public metricCardOffset = 0;
 
 
@@ -48,8 +59,9 @@ export class MetricsCarouselComponent implements OnInit {
 
   ngOnInit() {}
 
-  selectCard(metric) {
+  selectCard(metric, index) {
     this.selected = metric;
+    this.index = index
   }
 
   offsetLeft() {

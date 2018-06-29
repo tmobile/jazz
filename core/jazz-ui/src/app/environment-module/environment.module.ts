@@ -6,9 +6,7 @@ import { EnvAssetsSectionComponent } from '../pages/environment-assets/env-asset
 import { EnvDeploymentsSectionComponent } from '../pages/environment-deployment/env-deployments-section.component';
 import { EnvCodequalitySectionComponent } from '../pages/environment-codequality/env-codequality-section.component';
 import { EnvOverviewSectionComponent } from '../pages/environment-overview/env-overview-section.component';
-import { BrowserModule } from '@angular/platform-browser';
 import { PopoverModule } from 'ng2-popover';
-import { ChartsModule } from 'ng2-charts';
 import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'ng2-dropdown';
 import { DatePickerModule } from '../primary-components/daterange-picker/ng2-datepicker';
@@ -18,6 +16,7 @@ import { SharedModule } from '../shared-module/shared.module';
 import { RouterModule } from '@angular/router';
 import { routes } from './environment.route';
 import { AdvancedFilterService } from '../advanced-filter.service';
+import {ChartsModule} from "ng2-charts";
 @NgModule({
   imports: [
     CommonModule,

@@ -1,9 +1,7 @@
-<div #container class="chartjs-linegraph">
-  <canvas id="linegraph"
-          #linegraph
-          baseChart
+<div style="height: 100%; width:100%; position:relative" *ngIf="_datasets">
+  <canvas baseChart
           [chartType]="type"
-          [datasets]="datasets"
-          [options]="options"></canvas>
+          [datasets]="_datasets"
+          [options]="_options"></canvas>
 </div>
 

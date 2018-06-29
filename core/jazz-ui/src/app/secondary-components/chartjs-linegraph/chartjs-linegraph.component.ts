@@ -8,23 +8,28 @@ import {UtilsService} from '../../core/services/utils.service';
   styleUrls: ['./chartjs-linegraph.component.scss']
 })
 export class ChartjsLinegraphComponent implements OnInit, OnChanges {
-  @ViewChild('container') container;
-  @ViewChild('linegraph') lineGraph;
-  @Input() datasets: any = [];
-  @Input() graphOptions = {};
+  @ViewChild('chart') chart;
+  @Input() datasets;
+  @Input() options;
+  public _datasets;
+  public _options;
   public type = 'scatter';
-  public options = {};
 
   constructor() {
   }
 
   ngOnInit() {
-    this.sizeCanvas();
+
+    setTimeout(() => {
+      this._options.scales.yAxes[0].ticks.display = false;
+    }, 5000)
   }
 
   ngOnChanges(changes?) {
-    this.datasets = this.datasets.map(this.modifyDataSet);
-    this.options = this.getOptions(this.graphOptions);
+    setTimeout(() => {
+      this._datasets = this.datasets.map(this.modifyDataSet);
+      this._options = this.getOptions(this.options);
+    });
   }
 
   modifyDataSet(data) {
@@ -47,7 +52,8 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
   getOptions(graphOptions) {
 
     const options = {
-      responsive: false,
+      maintainAspectRatio: false,
+      responsive: true,
       legend: false,
       tooltips: {
         enabled: true,
@@ -109,9 +115,4 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
     return options;
   }
 
-  sizeCanvas() {
-    const boundingRect = this.container.nativeElement.getBoundingClientRect();
-    this.lineGraph.nativeElement.height = boundingRect.height;
-    this.lineGraph.nativeElement.width = boundingRect.width;
-  }
 }

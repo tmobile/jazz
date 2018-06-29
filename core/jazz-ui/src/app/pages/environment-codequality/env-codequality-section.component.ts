@@ -7,6 +7,8 @@ import {DataService} from '../data-service/data.service';
 import * as moment from 'moment';
 import {UtilsService} from '../../core/services/utils.service';
 import {Observable} from "rxjs/Observable";
+import 'rxjs/add/operator/toPromise';
+
 
 
 @Component({
@@ -17,56 +19,41 @@ import {Observable} from "rxjs/Observable";
 })
 export class EnvCodequalitySectionComponent implements OnInit {
   @Input() service: any = {};
-  public renderGraph = true;
   public filters: any = ['DAILY', 'WEEKLY', 'MONTHLY'];
   public filterSelected = [this.filters[0]];
   public env;
   public sectionStatus;
   public graph;
   public metrics;
-  private _selectedMetric;
-  set selectedMetric(value) {
-    this._selectedMetric = value;
-    if(value) {
-      this.graph = this.formatGraphData(this.selectedMetric, this.filterData);
-      this.resize();
-    }
-  };
-  get selectedMetric() {
-    return this._selectedMetric;
-  }
-
+  public selectedMetric;
   public filterData;
   public metricsIndex = 0;
-  public resizeDebounced;
   public errorData;
   public dayValue = 86400000;
   public weekValue = 604800000;
   public monthValue = 2592000000;
+  public graphData;
+  public graphDataRaw;
 
   constructor(
     private toasterService: ToasterService,
     private messageservice: MessageService,
     private route: ActivatedRoute,
     private http: RequestService,
-    private cache: DataCacheService,
     public utils: UtilsService) {
-    this.resizeDebounced = this.utils.debounce(this.resize, 200, false);
   }
 
   ngOnInit() {
     this.env = this.route.snapshot.params['env'];
-    this.filterData = this.selectFilter(this.filterSelected[0]);
-    this.queryGraphData(this.filterData, this.metricsIndex);
+    return this.selectFilter(this.filters[0]);
   }
 
   refresh() {
-    this.queryGraphData(this.filterData, this.metricsIndex);
+    // this.queryGraphData(this.filterData, this.metricsIndex);
   }
 
   onFilterSelected(event) {
-    this.filterData = this.selectFilter(event[0]);
-    this.queryGraphData(this.filterData, this.metricsIndex);
+    return this.filterData = this.selectFilter(event[0]);
   }
 
   selectFilter(filterInput) {
@@ -101,10 +88,10 @@ export class EnvCodequalitySectionComponent implements OnInit {
     filterData.toDateISO = moment().toISOString();
     filterData.toDateValue = moment(filterData.toDateISO).valueOf();
     filterData.fromDateValue = moment(filterData.fromDateISO).valueOf();
-    return filterData;
+    return this.queryGraphData(filterData);
   }
 
-  queryGraphData(filterData, metricIndex) {
+  queryGraphData(filterData) {
     this.sectionStatus = 'loading';
     const request = {
       url: '/jazz/codeq',
@@ -126,7 +113,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
             "values": [
               {
                 "ts": "2018-06-27T19:16:06+0000",
-                "value": "0"
+                "value": "30"
               }
             ]
           },
@@ -136,90 +123,10 @@ export class EnvCodequalitySectionComponent implements OnInit {
             "values": [
               {
                 "ts": "2018-06-27T19:16:06+0000",
-                "value": "186"
+                "value": "20"
               }
             ]
           },
-          {
-            "name": "vulnerabilities",
-            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=vulnerabilities",
-            "values": [
-              {
-                "ts": "2018-06-27T19:16:06+0000",
-                "value": "0"
-              }
-            ]
-          },
-          {
-            "name": "files",
-            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=files",
-            "values": [
-              {
-                "ts": "2018-06-27T19:16:06+0000",
-                "value": "7"
-              }
-            ]
-          },
-          {
-            "name": "code-coverage",
-            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-coverage",
-            "values": [
-              {
-                "ts": "2018-06-27T19:16:06+0000",
-                "value": "0.0"
-              }
-            ]
-          },
-          {
-            "name": "code-smells",
-            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-smells",
-            "values": [
-              {
-                "ts": "2018-06-27T19:16:06+0000",
-                "value": "0"
-              }
-            ]
-          },
-          {
-            "name": "code-smells",
-            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-smells",
-            "values": [
-              {
-                "ts": "2018-06-27T19:16:06+0000",
-                "value": "0"
-              }
-            ]
-          },
-          {
-            "name": "code-smells",
-            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-smells",
-            "values": [
-              {
-                "ts": "2018-06-27T19:16:06+0000",
-                "value": "0"
-              }
-            ]
-          },
-          {
-            "name": "code-smells",
-            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-smells",
-            "values": [
-              {
-                "ts": "2018-06-27T19:16:06+0000",
-                "value": "0"
-              }
-            ]
-          },
-          {
-            "name": "code-smells",
-            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=code-smells",
-            "values": [
-              {
-                "ts": "2018-06-27T19:16:06+0000",
-                "value": "0"
-              }
-            ]
-          }
         ]
       },
       "input": {
@@ -230,17 +137,20 @@ export class EnvCodequalitySectionComponent implements OnInit {
         "domain": "michael"
       }
     };
-    Observable.of(r)
-      .subscribe((response) => {
+    return Observable.of(r)
+      .toPromise()
+      .then((response) => {
         if (response && response.data && response.data.metrics && response.data.metrics.length) {
-          this.metrics = response.data.metrics;
-          this.selectedMetric = this.metrics[metricIndex];
           this.sectionStatus = 'resolved';
-          this.graph = this.formatGraphData(this.selectedMetric, filterData);
+          this.graphDataRaw = response.data;
+          this.graphData = response.data.metrics.map((metric) => {
+            return this.formatGraphData(metric, filterData);
+          });
         } else {
           this.sectionStatus = 'empty';
         }
-      }, (error) => {
+      })
+      .catch((error) => {
         this.sectionStatus = 'error';
         this.errorData = {
           request: request,
@@ -270,31 +180,29 @@ export class EnvCodequalitySectionComponent implements OnInit {
       });
 
     filterData.yMax = values.length ? 1.1 * (values
-      .map((point) => {return point.y;})
-      .reduce((a, b) => {return Math.max(a, b);})) : 100;
+      .map((point) => {
+        return point.y;
+      })
+      .reduce((a, b) => {
+        return Math.max(a, b);
+      })) : 100;
     filterData.yMin = values.length ? (.9 * (values
-      .map((point) => {return point.y;})
-      .reduce((a, b) => {return Math.min(a, b);}, 100))) : 0;
+      .map((point) => {
+        return point.y;
+      })
+      .reduce((a, b) => {
+        return Math.min(a, b);
+      }, 100))) : 0;
 
     return {
       datasets: [values],
-      options: filterData,
+      options: Object.assign({}, filterData)
     };
   }
 
   sonarLink() {
     window.open(this.selectedMetric.link, '_blank');
   }
-
-  resize() {
-    this.renderGraph = false;
-    this.sectionStatus = 'loading';
-    setTimeout(() => {
-      this.renderGraph = true;
-      this.sectionStatus = 'resolved';
-    }, 200);
-  }
-
 
 }
 

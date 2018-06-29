@@ -1,4 +1,4 @@
-<div class="section" [ngSwitch]="sectionStatus" (window:resize)="resizeDebounced()">
+<div class="section" [ngSwitch]="sectionStatus">
   <div *ngSwitchCase="'loading'" class="jz-absolute-container">
     <div class="jz-spinner"></div>
   </div>
@@ -10,32 +10,35 @@
     <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
   </div>
   <div *ngSwitchCase="'resolved'" class="section-content">
-    <div class="chart-background">
-      <div class="chart-content">
-        <div class="chart-header">
-          <div class="chart-thirds"></div>
-          <div class="chart-thirds center">
-            <p class="graphtitle">{{utils.hyphenToSpace(selectedMetric.name)}}</p>
-            <p class="graphtitlefilter">{{filterData.headerMessage}}</p>
-          </div>
-          <div class="chart-thirds text-right">
-            <filters [filtersList]="filters"
-                     (onSelected)="onFilterSelected($event)"
-                     [multiple]='false'
-                     [selectedList]="filterSelected"></filters>
-          </div>
+    <div class="jz-chart">
+      <div class="jz-chart-header">
+        <div style="width:30%;"></div>
+        <div style="width:30%;" class="jz-text-center">
+          <p class="graphtitle">{{utils.hyphenToSpace(selectedMetric?.name)}}</p>
+          <p class="graphtitlefilter">{{graphData[metricsIndex].options.headerMessage}}</p>
         </div>
-        <div class="chart-flex">
-          <chartjs-linegraph
-            *ngIf="renderGraph"
-            [datasets]="graph.datasets"
-            [graphOptions]="graph.options"></chartjs-linegraph>
-        </div>
-        <div class="sonar-link">
-          <a (click)="sonarLink()" class="pointer">More Details</a>
+        <div style="width: 30%;" class="jz-text-right">
+          <filters [filtersList]="filters"
+                   (onSelected)="onFilterSelected($event)"
+                   [multiple]='false'
+                   [selectedList]="filterSelected"></filters>
         </div>
       </div>
+      <div class="jz-chart-content">
+        <chartjs-linegraph
+            [datasets]="graphData[metricsIndex].datasets"
+            [options]="graphData[metricsIndex].options"></chartjs-linegraph>
+      </div>
+
+      <div class="jz-chart-footer jz-text-right">
+        <a class="sonar-link"
+           (click)="sonarLink()">More Details</a>
+      </div>
+
     </div>
-    <metrics-carousel [metrics]="metrics" [(selected)]="selectedMetric"></metrics-carousel>
+
+    <metrics-carousel [metrics]="graphDataRaw.metrics"
+                      [(selected)]="selectedMetric"
+                      [(index)]="metricsIndex"></metrics-carousel>
   </div>
 </div>

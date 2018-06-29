@@ -46,31 +46,32 @@ import {environment} from '../../environments/environment';
 import {LineGraphComponent} from '../secondary-components/line-graph/line-graph.component';
 import {SideTileFixedComponent} from '../secondary-components/side-tile-fixed/side-tile-fixed.component';
 import {FooterComponent} from '../secondary-components/footer/footer.component';
-import { OverviewSidebarComponent } from './../secondary-components/overview-sidebar/overview-sidebar.component';
+import {OverviewSidebarComponent} from './../secondary-components/overview-sidebar/overview-sidebar.component';
 import {AdvancedFiltersComponentOSS} from '../secondary-components/advanced-filters/OSS/advanced-filters.component';
 import {AdvancedFiltersComponent} from '../secondary-components/advanced-filters/internal/advanced-filters.component';
-import { AdvFilters }            from '../adv-filter.directive';
+import {AdvFilters} from '../adv-filter.directive';
 import {SafeHtmlPipe} from "../core/pipes/safe-html.pipe";
 import {SafeUrlPipe} from "../core/pipes/safe-url.pipe";
 import {ReportIssueComponent} from '../primary-components/report-issue/report-issue.component';
-import {ChartjsLinegraphComponent} from '../secondary-components/chartjs-linegraph/chartjs-linegraph.component';
 import {MetricsCarouselComponent} from "../metrics-carousel/metrics-carousel.component";
-let specificComponents:any
+import {ChartjsLinegraphComponent} from "../secondary-components/chartjs-linegraph/chartjs-linegraph.component";
+
+let specificComponents: any
 let specificModules: any;
-if(environment.envName == 'oss'){
+if (environment.envName == 'oss') {
   specificComponents = OssComponents;
-}else if(environment.envName == "jazz")  {
+} else if (environment.envName == "jazz") {
   specificComponents = InternalComponents;
 }
 let importsArray = [];
-let declarationsArray=[];
+let declarationsArray = [];
 
 // for(let i in specificModules){
 //  importsArray.push(specificModules[i]);
 // }
 
-for(let i in specificComponents){
- declarationsArray.push(specificComponents[i]);
+for (let i in specificComponents) {
+  declarationsArray.push(specificComponents[i]);
 }
 
 //
@@ -122,8 +123,9 @@ for(let i in specificComponents){
     SafeHtmlPipe,
     SafeUrlPipe,
     ReportIssueComponent,
-    ChartjsLinegraphComponent,
     MetricsCarouselComponent,
+    ChartjsLinegraphComponent,
+
     ...declarationsArray,
 
 
@@ -164,12 +166,15 @@ for(let i in specificComponents){
     SafeHtmlPipe,
     SafeUrlPipe,
     ReportIssueComponent,
-    ChartjsLinegraphComponent,
     MetricsCarouselComponent,
+    ChartjsLinegraphComponent,
     ...declarationsArray
 
   ],
-  entryComponents : [AdvancedFiltersComponentOSS, AdvancedFiltersComponent],
+  entryComponents: [
+    AdvancedFiltersComponentOSS,
+    AdvancedFiltersComponent
+  ],
 
 })
 export class SharedModule {

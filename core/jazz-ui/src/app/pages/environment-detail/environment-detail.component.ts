@@ -159,49 +159,31 @@ api_doc_name:string='';
 
 
   fetchService(id: string){
-
       this.isLoadingService = true;
+    this.subscription = this.http.get('/jazz/services/'+id).subscribe(
+      response => {
+        this.service.accounts=env_internal.urls.accounts;
+        this.service.regions=env_internal.urls.regions;
+        this.service=response.data.data;
+        if(environment.envName=='oss')this.service=response.data;
+        if(this.service.type === "website")
+        {
+          this.tabData = ['overview','deployments','code quality','assets'];
+        }
+        else if(this.service.type == "function")
+          this.isFunction=true;
 
-      let cachedData = this.cache.get(id);
+        this.cache.set(id, this.service);
+        this.onDataFetched(this.service);
+        this.envoverview.notify(this.service);
+      },
+      err => {
+        this.isLoadingService = false;
+        let errorMessage = this.messageservice.errorMessage(err,"serviceDetail");
+        this.toast_pop('error', 'Oops!', errorMessage)
 
-      if (cachedData) {
-          this.onDataFetched(cachedData.data);
-          if(this.service.serviceType === "website")
-          {
-              this.tabData = ['overview','deployments','code quality','assets'];
-          }
-          else if(this.service.serviceType == "function")
-            this.isFunction=true;
-      } else{
-         if ( this.subscription ) {
-            this.subscription.unsubscribe();
-          }
-          this.subscription = this.http.get('/jazz/services/'+id).subscribe(
-            response => {
-              this.service.accounts=env_internal.urls.accounts;
-                    this.service.regions=env_internal.urls.regions;
-                  this.service=response.data.data;
-                  if(environment.envName=='oss')this.service=response.data;
-                  if(this.service.type === "website")
-                  {
-                      this.tabData = ['overview','deployments','code quality','assets'];
-                  }
-                  else if(this.service.type == "function")
-                      this.isFunction=true;
-
-                  this.cache.set(id, this.service);
-                  this.onDataFetched(this.service);
-                  this.envoverview.notify(this.service);
-              },
-              err => {
-                  this.isLoadingService = false;
-                  let errorMessage = this.messageservice.errorMessage(err,"serviceDetail");
-                  this.toast_pop('error', 'Oops!', errorMessage)
-
-              }
-          )
       }
-
+    )
   };
 
   testApi(type){
