@@ -78,7 +78,7 @@ function getAuthResponse(result) {
     if (result.statusCode === 200 && result.body && result.body.data) {
       return resolve(result.body.data.token);
     } else {
-      logger.error("getAuthResponse failed");
+      logger.error("getAuthResponse failed" + JSON.stringify(result));
       return reject(errorHandler.throwInternalServerError("Invalid token response from API"));
     }
   });
@@ -115,6 +115,7 @@ function processRecord(record, configData, authToken) {
         return resolve(result);
       })
       .catch(err => {
+        logger.error("processRecord Failed : "+ JSON.stringify(err));
         exportable.handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
         return reject(err);
       });
@@ -155,6 +156,7 @@ function processEvent(payload, configData, authToken) {
       .then(result => { return notifySlackChannel(result, payload, configData, authToken) })
       .then(result => { resolve(result) })
       .catch(error => {
+        logger.error("processEvent Failed : "+ JSON.stringify(err));
         return reject(error);
       });
   });
@@ -211,7 +213,7 @@ function notifySlackChannel(result, payload, configData, authToken) {
   return new Promise((resolve, reject) => {
     let output = JSON.parse(result);
     if (!output.data) {
-      logger.error("Service details not found in service catalog");
+      logger.error("Service details not found in service catalog"+ JSON.stringify(output));
       let error = exportable.handleError(failureCodes.PR_ERROR_1.code, failureCodes.PR_ERROR_1.message);
       return reject(error);
     }
@@ -237,7 +239,7 @@ function notifySlackChannel(result, payload, configData, authToken) {
 
     let slackNotificationSvcPayload = {
       "method": "POST",
-      "uri": configData.SLACK_BASIC_NOTIFICATION_URL + "?token=" + configData.SLACK_TOKEN + "&channel=" + serviceDetails.slack_channel + "&username=" + configData.SLACK_NOTIFIER_USER_NAME,
+      "uri": `${configData.SLACK_BASIC_NOTIFICATION_URL}?token=${configData.SLACK_TOKEN}&channel=${serviceDetails.slack_channel}&username=${configData.SLACK_NOTIFIER_USER_NAME}`,
       "rejectUnauthorized": false,
       "headers": { "Content-Type": "application/x-www-form-urlencoded" },
       "form": { "attachments": JSON.stringify(attachments) }

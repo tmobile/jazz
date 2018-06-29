@@ -7,6 +7,12 @@
   "SLACK_BASIC_NOTIFICATION_URL": "https://slack.com/api/chat.postMessage",
   "SLACK_NOTIFIER_USER_NAME": "{slack_notifier_name}",
   "SLACK_TOKEN": "{slack_token}",
+  "COLORS":{
+    "GRAY":"#808080",
+    "GREEN":"#5cae01",
+    "RED":"#d0011b",
+    "BLUE":"#4300ff"
+  },
   "EVENTS": {
     "EVENT_TYPE": [
       "SERVICE_DEPLOYMENT",
@@ -90,7 +96,7 @@
       "SERVICE_DELETION": "*Service deletion* *completed*.\n"
     },
     "ENVIRONMENT": ", environment: *{environment_name}*",
-    "BITBUCKET_URL": "Bitbucket URL: {bitbucket_url} \n",
+    "SCM_URL": "Repo URL: {repo_url} \n",
     "SERVICE_URL": "Service Overview Page: {overview_url} \n",
     "JENKINS_URL": "Jenkins URL: {jenkins_url} \n",
     "ENDPOINT_URL": "Endpoint URL: {endpoint_url} \n"
