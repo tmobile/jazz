@@ -30,7 +30,7 @@ module.exports.handler = (event, context, cb) => {
 
   //Initializations
   var errorHandler = errorHandlerModule();
-  var config = configModule(event);
+  var config = configModule.getConfig(event, context);
   logger.init(event, context);
   logger.info(event);
 
@@ -75,17 +75,10 @@ function genericInputValidation(event) {
       });
     }
 
-    if (event.method === 'GET' && (!event.query || Object.keys(event.query).indexOf('slack_channel') === -1)) {
+    if (event.method === 'GET' && (!event.query || (!Object.keys(event.query).includes('slack_channel')) || !event.query.slack_channel)) {
       reject({
         result: "inputError",
         message: "Missing input parameter slack_channel"
-      });
-    }
-
-    if (event.method === 'GET' && !event.query.slack_channel) {
-      reject({
-        result: "inputError",
-        message: "slack_channel value can not be empty/undefined"
       });
     }
 
@@ -112,7 +105,7 @@ function requestToChannels(config, resObj, channel_name) {
     urlList.push(get_response(priv_channel_url, channel_name));
     Promise.all(urlList)
       .then(res => {
-        if (res.indexOf('true') !== -1) {
+        if (res.includes('true')) {
           resObj.is_available = true;
         } else {
           resObj.is_available = false;
@@ -146,10 +139,9 @@ function get_response(channel_url, channel_name) {
           var list = data.channels ? data.channels : data.groups;
           if (list.length) {
             var count = 0;
-            for (var i in list) {
+            for (let i in list) {
               if (list[i].name === channel_name) {
                 resolve('true');
-                break;
               } else {
                 count++;
                 if (count === list.length) {
