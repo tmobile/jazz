@@ -5,7 +5,7 @@ $primary-pink: #fc2f98;
 
 .sidebar-frame {
   min-width: 64rem;
-  min-height: calc(100vh-4rem);
+  min-height: calc(100 vh-4rem);
   width: 60%;
   z-index: 2;
   background: #faf9f9;
@@ -13,7 +13,7 @@ $primary-pink: #fc2f98;
   padding: 2.5rem;
 }
 
-.sidebar-loading{
+.sidebar-loading {
   height: 100%;
   overflow-y: hidden;
 }
@@ -165,14 +165,16 @@ button {
   padding: 1rem 0;
 }
 
-.error{
-  background: #FF8A80;
-}
-
-.success{
-  background: rgba(150,256,50,0.4);
+.error {
+  color: rgb(208, 2, 27);
 
 }
-.column-heading{
+
+.success {
+  color: rgb(92, 174, 1)
+}
+
+.column-heading {
+  height: calc(25rem/12);
   font-size: 1.5rem;
 }
