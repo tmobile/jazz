@@ -74,7 +74,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 		}
-		
+
 		if ( (service_name.trim() == "jazz_codeq") ) {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
@@ -243,7 +243,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
-					
+
 		}
 
 		if ((service_name.trim() == "jazz_events")) {
@@ -350,7 +350,7 @@ def loadServiceConfigurationData() {
 		}
 
 		if (service_name.trim() == "jazz_services") {
-      
+
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
@@ -455,7 +455,7 @@ def setUtilModule(util){
 def setKinesisStream(config){
 	if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ||
 	(config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler" )  ||
-	 (config['service'] == "asset-event-handler") || (config['service'] == "slack-event-handler")) {
+	 (config['service'] == "asset-event-handler") || ((config['service'] == "slack-event-handler") && (config_loader.SLACK.ENABLE_SLACK == "true"))) {
 		def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
 		def event_source_list = sh(
 			script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"",
@@ -465,6 +465,7 @@ def setKinesisStream(config){
 		if (event_source_list == "[]") {
 			sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$role_id:stream/${config_loader.INSTANCE_PREFIX}-events-hub-" + current_environment + " --function-name arn:aws:lambda:$region:$role_id:function:$function_name --starting-position LATEST --region " + region
 		}
+
 	}
 }
 def setLogStreamPermission(config){
