@@ -1,5 +1,5 @@
-## Cloud API to check if a slack channel exists in T-Mobile Slack (t-mo.slack.com).
-Provides an API for determining if a Slack channel exists (available) or not in T-Mobile Slack.
+## JAZZ API to check if a slack channel exists in User's Slack.
+Provides an API for determining if a Slack channel exists (available) or not in User's Slack.
 It utilizes Slack REST API endpoints to communicate with Slack channels. To learn more about the endpoints, refer to this link:
 ```
 https://api.slack.com/methods
@@ -17,7 +17,7 @@ https://api.slack.com/methods
 }
 ```
 
-<br />  
+<br />
 
 #### Response Format as a JSON structure
 'is_available' will be true/false depending on whether 'slack_channel' is available/exists or not

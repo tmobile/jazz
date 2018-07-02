@@ -45,21 +45,23 @@ module.exports.handler = (event, context, cb) => {
         cb(null, responseObj(res, event.query));
       })
       .catch(error => {
+        logger.error(error);
         if (error.result === 'inputError') {
           return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
         } else if (error.result === 'unauthorized') {
           return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
         } else {
-          cb(JSON.stringify(errorHandler.throwInternalServerError("Unhandled error.")));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Unhandled error.")));
         }
       });
   } catch (e) {
-    cb(JSON.stringify(errorHandler.throwInternalServerError("Unhandled error.")));
+    logger.error(e);
+    return cb(JSON.stringify(errorHandler.throwInternalServerError("Unhandled error.")));
   }
 };
 
 function genericInputValidation(event) {
-  logger.info("inside genericInputValidation");
+  logger.debug("inside genericInputValidation");
   return new Promise((resolve, reject) => {
     if (!event || !event.method) {
       reject({
@@ -94,15 +96,15 @@ function genericInputValidation(event) {
 }
 
 function requestToChannels(config, resObj, channel_name) {
-  logger.info("Inside requestToChannels:" + channel_name);
+  logger.debug("Inside requestToChannels:" + channel_name);
   return new Promise((resolve, reject) => {
     var slack_token = "token=" + config.slack_channel_token;
     //Pull endpoints from config file
     var public_channel_url = config.public_channel_endpoint + slack_token;
     var priv_channel_url = config.priv_channel_endpoint + slack_token;
     var urlList = [];
-    urlList.push(get_response(public_channel_url, channel_name));
-    urlList.push(get_response(priv_channel_url, channel_name));
+    urlList.push(getResponse(public_channel_url, channel_name));
+    urlList.push(getResponse(priv_channel_url, channel_name));
 
     Promise.all(urlList)
       .then(res => {
@@ -120,8 +122,8 @@ function requestToChannels(config, resObj, channel_name) {
   });
 }
 
-function get_response(channel_url, channel_name) {
-  logger.info("Inside get_response:" + channel_url + ",channel_name:" + channel_name);
+function getResponse(channel_url, channel_name) {
+  logger.debug("Inside getResponse:" + channel_url + ",channel_name:" + channel_name);
   return new Promise((resolve, reject) => {
     var params = {
       method: 'GET',
@@ -135,13 +137,12 @@ function get_response(channel_url, channel_name) {
         reject(error);
       } else {
         var data = JSON.parse(response.body);
-        logger.info("Channels data: " + JSON.stringify(data));
         if (data.ok) {
           var list = data.channels ? data.channels : data.groups;
           if (list.length) {
             var count = 0;
-            for (let i in list) {
-              if (list[i].name === channel_name) {
+            list.find(each =>{
+              if(each.name === channel_name) {
                 resolve('true');
               } else {
                 count++;
@@ -149,7 +150,7 @@ function get_response(channel_url, channel_name) {
                   resolve('false');
                 }
               }
-            }
+            });
           } else {
             resolve('false');
           }
