@@ -41,9 +41,7 @@ module.exports.handler = (event, context, cb) => {
   try {
     genericInputValidation(event)
       .then((res) => requestToChannels(config, resObj, res))
-      .then((res) => {
-        cb(null, responseObj(res, event.query));
-      })
+      .then((res) => cb(null, responseObj(res, event.query)))
       .catch(error => {
         logger.error(error);
         if (error.result === 'inputError') {
