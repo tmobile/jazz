@@ -40,6 +40,8 @@ api_doc_name:string='';
   environment_obj:any;
   isLoadingService: boolean = true;
   status_inactive:boolean = false;
+  swagger_error:boolean = false;
+
   tabData = ['overview','deployments','code quality','assets','logs'];
   envSelected:string='';
   endpoint_env:string='';
@@ -157,23 +159,7 @@ api_doc_name:string='';
 
 
   fetchService(id: string){
-
       this.isLoadingService = true;
-
-      let cachedData = this.cache.get(id);
-
-      if (cachedData) {
-          this.onDataFetched(cachedData);
-          if(this.service.serviceType === "website")
-          {
-              this.tabData = ['overview','deployments','code quality','assets'];
-          }
-          else if(this.service.serviceType == "function")
-            this.isFunction=true;
-      } else{
-         if ( this.subscription ) {
-            this.subscription.unsubscribe();
-          }
           this.subscription = this.http.get('/jazz/services/'+id).subscribe(
             response => {
               this.service.accounts=env_internal.urls.accounts;
@@ -198,8 +184,6 @@ api_doc_name:string='';
 
               }
           )
-      }
-
   };
 
   testApi(type){

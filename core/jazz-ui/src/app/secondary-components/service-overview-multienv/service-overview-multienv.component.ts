@@ -71,6 +71,7 @@ export class ServiceOverviewMultienvComponent implements OnInit {
   private toastmessage: any = '';
   // mod_status:string;
   private http: any;
+  env_call:boolean = false;
   statusCompleted: boolean = false;
   serviceStatusCompleted: boolean = false;
   serviceStatusPermission: boolean = false;
@@ -401,9 +402,14 @@ export class ServiceOverviewMultienvComponent implements OnInit {
 
     this.prodEnv = {};
     this.stgEnv = {};
-    if ((this.service.domain != undefined)) {
-      this.getenvData();
-    }
+    if(!this.env_call){
+      if((this.service.domain!=undefined)){
+        this.env_call = true;
+
+          this.getenvData();
+          
+      }
+  }
   }
 
   testingStatus() {
@@ -434,6 +440,12 @@ export class ServiceOverviewMultienvComponent implements OnInit {
     arrEnv[0].status.replace("_", " ");
   }
 
+  refresh(){
+    if(this.service.domain!=undefined){
+        this.getenvData();
+    }
+  }
+
   internal_build: boolean = true;
   ngOnChanges(x: any) {
     if (environment.multi_env) this.is_multi_env = true;
@@ -442,10 +454,15 @@ export class ServiceOverviewMultienvComponent implements OnInit {
 
     this.prodEnv = {};
     this.stgEnv = {};
-    if ((this.service.domain != undefined)) {
-      this.getenvData();
+    
+    if(!this.env_call){
 
-    }
+      if((this.service.domain!=undefined)){
+        this.env_call = true;
+          this.getenvData();
+      }
+  }
+
 
   }
   ngOnDestroy() {
