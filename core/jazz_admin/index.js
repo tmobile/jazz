@@ -29,7 +29,7 @@ const request = require('request');
 function handler(event, context, cb) {
   //Initializations
   var errorHandler = errorHandlerModule();
-  var config = configObj(event);
+  var config = configObj(event, context);
   logger.init(event, context);
 
   try {
