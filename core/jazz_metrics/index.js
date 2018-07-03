@@ -24,19 +24,20 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js")(); //Import the logging module.
-const aws = require("aws-sdk"); //Import the secret-handler module.
+// const aws = require("aws-sdk"); //Import the secret-handler module.
 const request = require('request');
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
-const global_config = require("./config/global-config.json");
+// const global_config = require("./config/global-config.json");
 
 function handler (event, context, cb) {
 
   var errorHandler = errorHandlerModule();
   var config = configObj(event);
-  var cloudwatch = new aws.CloudWatch({
-    apiVersion: '2010-08-01'
-  });
+  // var cloudwatch = utils.initCloudWatch();
+  // var cloudwatch = new aws.CloudWatch({
+  //   apiVersion: '2010-08-01'
+  // });
 
   try {
     /*
@@ -57,7 +58,7 @@ function handler (event, context, cb) {
       .then(() => getToken(config))
       .then((authToken) => getAssetsDetails(config, eventBody, authToken))
       .then(res => validateAssets(res, eventBody))
-      .then(res => getMetricsDetails(res, cloudwatch, config))
+      .then(res => getMetricsDetails(res))
       .then(res => {
         var finalObj = utils.massageData(res, eventBody);
         return cb(null, responseObj(finalObj, eventBody));
@@ -299,12 +300,12 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
   });
 }
 
-function getMetricsDetails(newAssetArray, cloudwatch) {
+function getMetricsDetails(newAssetArray) {
   return new Promise((resolve, reject) => {
-    logger.info("Inside getMetricsDetails", newAssetArray);
+    logger.info("Inside getMetricsDetails"+JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
-      cloudWatchDetails(assetParam, cloudwatch)
+      exportable.cloudWatchDetails(assetParam)
         .then(res => {
           metricsStatsArray.push(res);
           if (metricsStatsArray.length === newAssetArray.length) {
@@ -318,16 +319,15 @@ function getMetricsDetails(newAssetArray, cloudwatch) {
   });
 }
 
-function cloudWatchDetails(assetParam, cloudwatch) {
-  logger.info("inside cloudWatchDetails")
+function cloudWatchDetails(assetParam) {
+  logger.info("inside cloudWatchDetails");
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
       if (param.Namespace === "AWS/CloudFront") {
-        cloudwatch = new aws.CloudWatch({
-          apiVersion: '2010-08-01',
-          region: global_config.CF_REGION
-        });
+        var cloudwatch = utils.cfCloudWatch();
+      } else {
+        var cloudwatch = utils.initCloudWatch();
       }
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {

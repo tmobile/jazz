@@ -159,9 +159,12 @@ describe('jazz_metrics', function () {
     it("should indicate that interval value is invalid", () => {
       event.body.interval = 200;
       validateUtils.validateGeneralFields(event.body)
-          .catch(error => {
-            expect(error).to.include({ result: 'inputError', message: 'Invalid interval value' });
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: 'Invalid interval value'
           });
+        });
     });
 
     it("should indicate that end_time value is invalid", () => {
@@ -171,8 +174,11 @@ describe('jazz_metrics', function () {
         var payload = Object.assign({}, event.body);
         payload[field] = invalid_time;
         validateUtils.validateGeneralFields(payload)
-        .catch(error => {
-            expect(error).to.include({ result: 'inputError', message: 'Invalid '+ field });
+          .catch(error => {
+            expect(error).to.include({
+              result: 'inputError',
+              message: 'Invalid ' + field
+            });
           });
       });
     });
@@ -182,24 +188,24 @@ describe('jazz_metrics', function () {
       payload.end_time = "2018-06-12T07:48:56.712Z";
       payload.start_time = "2018-06-27T07:48:56.712Z";
       validateUtils.validateGeneralFields(payload)
-      .catch(error => {
-        expect(error).to.include({
-          result: "inputError",
-          message: "start_time should be less than end_time"
+        .catch(error => {
+          expect(error).to.include({
+            result: "inputError",
+            message: "start_time should be less than end_time"
+          });
         });
-      });
     });
 
     it("should indicate that statistics value is invalid", () => {
       var payload = Object.assign({}, event.body);
       payload.statistics = "invalid";
       validateUtils.validateGeneralFields(payload)
-      .catch(error => {
-        expect(error).to.include({
-          result: "inputError",
-          message: "Invalid statistics type"
+        .catch(error => {
+          expect(error).to.include({
+            result: "inputError",
+            message: "Invalid statistics type"
+          })
         })
-      })
     })
 
   });
@@ -537,6 +543,7 @@ describe('jazz_metrics', function () {
       for (var i in assetsArray) {
         index.validateAssets([assetsArray[i]], event.body)
           .then(res => {
+            console.log(JSON.stringify(res));
             expect(res[0]).to.have.all.deep.keys('actualParam', 'userParam');
             expect(res[0].actualParam).to.not.be.empty;
             expect(res[0].userParam).to.not.be.empty;
@@ -585,45 +592,10 @@ describe('jazz_metrics', function () {
   });
 
   describe("cloudWatchDetails", () => {
-    it("should successfully get metrics details from cloudwatch", () => {
-      var newAssetArray = {
+    var newAssetArray;
+    beforeEach(function() {
+      newAssetArray = {
         "actualParam": [{
-          "Namespace": "AWS/Lambda",
-          "MetricName": "Invocations",
-          "Period": "600",
-          "EndTime": "2018-06-22T07:48:56.000Z",
-          "StartTime": "2018-06-12T07:48:56.712Z",
-          "Dimensions": [{
-            "Name": "FunctionName",
-            "Value": "jazztest_test-service"
-          }],
-          "Statistics": ["Average"],
-          "Unit": "Count"
-        }, {
-          "Namespace": "AWS/Lambda",
-          "MetricName": "Errors",
-          "Period": "600",
-          "EndTime": "2018-06-22T07:48:56.000Z",
-          "StartTime": "2018-06-12T07:48:56.712Z",
-          "Dimensions": [{
-            "Name": "FunctionName",
-            "Value": "jazztest_test-service"
-          }],
-          "Statistics": ["Average"],
-          "Unit": "Count"
-        }, {
-          "Namespace": "AWS/Lambda",
-          "MetricName": "Dead Letter Error",
-          "Period": "600",
-          "EndTime": "2018-06-22T07:48:56.000Z",
-          "StartTime": "2018-06-12T07:48:56.712Z",
-          "Dimensions": [{
-            "Name": "FunctionName",
-            "Value": "jazztest_test-service"
-          }],
-          "Statistics": ["Average"],
-          "Unit": "Count"
-        }, {
           "Namespace": "AWS/Lambda",
           "MetricName": "Duration",
           "Period": "600",
@@ -634,31 +606,7 @@ describe('jazz_metrics', function () {
             "Value": "jazztest_test-service"
           }],
           "Statistics": ["Average"],
-          "Unit": "Milliseconds"
-        }, {
-          "Namespace": "AWS/Lambda",
-          "MetricName": "Throttles",
-          "Period": "600",
-          "EndTime": "2018-06-22T07:48:56.000Z",
-          "StartTime": "2018-06-12T07:48:56.712Z",
-          "Dimensions": [{
-            "Name": "FunctionName",
-            "Value": "jazztest_test-service"
-          }],
-          "Statistics": ["Average"],
           "Unit": "Count"
-        }, {
-          "Namespace": "AWS/Lambda",
-          "MetricName": "IteratorAge",
-          "Period": "600",
-          "EndTime": "2018-06-22T07:48:56.000Z",
-          "StartTime": "2018-06-12T07:48:56.712Z",
-          "Dimensions": [{
-            "Name": "FunctionName",
-            "Value": "jazztest_test-service"
-          }],
-          "Statistics": ["Average"],
-          "Unit": "Milliseconds"
         }],
         "userParam": {
           "type": "lambda",
@@ -668,26 +616,112 @@ describe('jazz_metrics', function () {
           "statistics": "Average"
         }
       };
-      // AWS_SDK.config.update({
-      //   accessKeyId : 'foo', secretAccessKey : 'bar', region : 'baz'
-      // });
-      var cloudwatch = new AWS_SDK.CloudWatch({
-        apiVersion: '2010-08-01'
-      });
-
+    })
+    it("should successfully get metrics details from cloudwatch", () => {
+      var responseObj = {
+        "ResponseMetadata": {
+          "RequestId": "ba9e7fbd-7dcc-11e8-bc2d-395011659ba5"
+        },
+        "Label": "Duration",
+        "Datapoints": [{
+          "Timestamp": "2018-06-28T10:07:00.000Z",
+          "Sum": 29.78,
+          "Unit": "Milliseconds"
+        }]
+      }
       AWS.mock('CloudWatch', "getMetricStatistics", (params, cb) => {
-        console.log("params:", params);
-        return cb(null, "hello");
+        return cb(null, responseObj);
       })
 
-      index.cloudWatchDetails(newAssetArray, cloudwatch)
+      index.cloudWatchDetails(newAssetArray)
         .then(res => {
-          console.log(res);
-        })
+          expect(res).to.have.all.deep.keys('type','asset_name', 'statistics', 'metrics');
+          expect(res).to.have.deep.property('metrics[0].datapoints');
+          AWS.restore('CloudWatch');
+        });
+    });
+
+    it("should indicate error if CloudWatch fails", () => {
+      AWS.mock('CloudWatch', "getMetricStatistics", (params, cb) => {
+        return cb(err, null);
+      })
+      index.cloudWatchDetails(newAssetArray)
         .catch(error => {
-          console.log(error);
+          expect(error).to.include({ result: 'serverError',
+          message: 'Unknown internal error occurred' });
+          AWS.restore('CloudWatch');
+        });
+    });
+
+    it("should indicate InvalidParameterCombination", () => {
+      var errorObj = {
+        code: 'InvalidParameterCombination',
+        message: 'InvalidParameterCombination from cloudwatch.'
+      }
+      AWS.mock('CloudWatch', "getMetricStatistics", (params, cb) => {
+        return cb(errorObj, null);
+      })
+      index.cloudWatchDetails(newAssetArray)
+        .catch(error => {
+          expect(error).to.include({ result: 'inputError',
+          message: errorObj.message });
+          AWS.restore('CloudWatch');
         });
     })
   });
+
+  describe.only('getMetricsDetails', () => {
+    var assetsArray =[];
+    var cloudWatchDetails;
+    beforeEach(function () {
+      assetsArray = [newAssetArray = {
+        "actualParam": [{
+          "Namespace": "AWS/Lambda",
+          "MetricName": "Duration",
+          "Period": "600",
+          "EndTime": "2018-06-22T07:48:56.000Z",
+          "StartTime": "2018-06-12T07:48:56.712Z",
+          "Dimensions": [{
+            "Name": "FunctionName",
+            "Value": "jazztest_test-service"
+          }],
+          "Statistics": ["Average"],
+          "Unit": "Count"
+        }],
+        "userParam": {
+          "type": "lambda",
+          "asset_name": {
+            "FunctionName": "jazztest_test-service"
+          },
+          "statistics": "Average"
+        }
+      }];
+    });
+
+    it("should successfully get datapoints for each metrics", () => {
+      var responseObj = {
+        "ResponseMetadata": {
+          "RequestId": "ba9e7fbd-7dcc-11e8-bc2d-395011659ba5"
+        },
+        "Label": "Duration",
+        "Datapoints": [{
+          "Timestamp": "2018-06-28T10:07:00.000Z",
+          "Sum": 29.78,
+          "Unit": "Milliseconds"
+        }]
+      }
+      const cloudWatchDetails = sinon.stub(index, 'cloudWatchDetails').resolves(responseObj)
+      index.getMetricsDetails(assetsArray)
+      .then(res => {
+        console.log(res)
+        expect(res[0]).to.have.all.deep.keys('ResponseMetadata', 'Label', 'Datapoints');
+        sinon.assert.calledOnce(cloudWatchDetails);
+        cloudWatchDetails.restore();
+      })
+      .catch(error =>{
+        console.log(error);
+      })
+    });
+  })
 
 });

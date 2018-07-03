@@ -24,6 +24,7 @@
 const parser = require('aws-arn-parser');
 const metricConfig = require("./metrics.json");
 const global_config = require("../config/global-config.json");
+const AWS = require("aws-sdk");
 
 function massageData(assetResults, eventBody) {
 
@@ -240,9 +241,26 @@ function updateCloudfrontAsset(newAssetObj, relativeId) {
   return newAssetObj;
 }
 
+function initCloudWatch() {
+  var cloudwatch = new AWS.CloudWatch({
+    apiVersion: '2010-08-01'
+  });
+  return cloudwatch;
+}
+
+function cfCloudWatch() {
+  var cfcloudwatch = new AWS.CloudWatch({
+    apiVersion: '2010-08-01',
+    region: global_config.CF_REGION
+  });
+  return cfcloudwatch;
+}
+
 module.exports = {
   massageData,
   assetData,
   getNameSpaceAndMetricDimensons,
-  getAssetsObj
+  getAssetsObj,
+  initCloudWatch,
+  cfCloudWatch
 };
