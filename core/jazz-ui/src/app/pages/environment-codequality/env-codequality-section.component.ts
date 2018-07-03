@@ -9,6 +9,7 @@ import {UtilsService} from '../../core/services/utils.service';
 import {Observable} from "rxjs/Observable";
 import 'rxjs/add/operator/toPromise';
 
+declare let Object;
 
 
 @Component({
@@ -32,7 +33,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
   public dayValue = 86400000;
   public weekValue = 604800000;
   public monthValue = 2592000000;
-  public graphData;
+  public selectedMetricGraphData;
   public graphDataRaw;
 
   constructor(
@@ -45,18 +46,21 @@ export class EnvCodequalitySectionComponent implements OnInit {
 
   ngOnInit() {
     this.env = this.route.snapshot.params['env'];
-    return this.selectFilter(this.filters[0]);
+    this.filterData = this.getFilterData(this.filters[0]);
+    return this.queryGraphData(this.filterData);
   }
 
   refresh() {
-    // this.queryGraphData(this.filterData, this.metricsIndex);
+    this.queryGraphData(this.filterData);
   }
 
-  onFilterSelected(event) {
-    return this.filterData = this.selectFilter(event[0]);
+  onFilterSelect(event) {
+    this.filterData = this.getFilterData(event[0]);
+    return this.queryGraphData(this.filterData);
+
   }
 
-  selectFilter(filterInput) {
+  getFilterData(filterInput) {
     let filterData;
     this.filterSelected = [filterInput];
     switch (filterInput) {
@@ -88,7 +92,13 @@ export class EnvCodequalitySectionComponent implements OnInit {
     filterData.toDateISO = moment().toISOString();
     filterData.toDateValue = moment(filterData.toDateISO).valueOf();
     filterData.fromDateValue = moment(filterData.fromDateISO).valueOf();
-    return this.queryGraphData(filterData);
+    return filterData;
+  }
+
+  selectMetric(index) {
+    this.metricsIndex = index;
+    this.selectedMetric = this.graphDataRaw.metrics[index];
+    this.selectedMetricGraphData = this.formatGraphData(this.selectedMetric, this.filterData);
   }
 
   queryGraphData(filterData) {
@@ -103,49 +113,13 @@ export class EnvCodequalitySectionComponent implements OnInit {
         from: filterData.fromDateISO
       }
     };
-    // this.http.get(request.url, request.params)
-    let r = {
-      "data": {
-        "metrics": [
-          {
-            "name": "security",
-            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=security",
-            "values": [
-              {
-                "ts": "2018-06-27T19:16:06+0000",
-                "value": "30"
-              }
-            ]
-          },
-          {
-            "name": "lines-of-code",
-            "link": "https://im64mh1007.execute-api.us-east-1.amazonaws.com/prod/jazz/codeq/help?metrics=lines-of-code",
-            "values": [
-              {
-                "ts": "2018-06-27T19:16:06+0000",
-                "value": "20"
-              }
-            ]
-          },
-        ]
-      },
-      "input": {
-        "environment": "zdzbvsm58c-dev",
-        "from": "2018-06-20T22:05:29.980Z",
-        "to": "2018-06-27T22:05:29.981Z",
-        "service": "api1",
-        "domain": "michael"
-      }
-    };
-    return Observable.of(r)
+    this.http.get(request.url, request.params)
       .toPromise()
       .then((response) => {
         if (response && response.data && response.data.metrics && response.data.metrics.length) {
           this.sectionStatus = 'resolved';
           this.graphDataRaw = response.data;
-          this.graphData = response.data.metrics.map((metric) => {
-            return this.formatGraphData(metric, filterData);
-          });
+          this.selectMetric(this.metricsIndex);
         } else {
           this.sectionStatus = 'empty';
         }
@@ -201,7 +175,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
   }
 
   sonarLink() {
-    window.open(this.selectedMetric.link, '_blank');
+    window.open(this.selectedMetric.metric.link, '_blank');
   }
 
 }

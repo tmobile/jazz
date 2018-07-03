@@ -4,7 +4,7 @@
          [style.transform]="'translateX('+(metricCardSize * metricCardOffset)+ 'px)'">
       <div class='metrics-card'
            *ngFor="let metric of metrics; let i=index"
-           [class.metrics-card-active]="metricsIndex === i"
+           [class.metrics-card-active]="index === i"
            (click)="selectCard(metric, i)">
         <div class='metrics-card-title'>{{utils.hyphenToSpace(metric.name)}}</div>
         <div class='metrics-card-content' *ngIf="metric.values[metric.values.length - 1]?.value">

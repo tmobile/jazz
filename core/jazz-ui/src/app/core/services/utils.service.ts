@@ -1,4 +1,5 @@
 import {Injectable} from '@angular/core';
+declare let Promise;
 
 @Injectable()
 export class UtilsService {
@@ -33,5 +34,9 @@ export class UtilsService {
 
   queryString(params) {
     return '?' + Object.keys(params).map(key => key + '=' + params[key]).join('&');
+  }
+
+  setTimeoutPromise(timeout) {
+    return new Promise(resolve => setTimeout(resolve, timeout));
   }
 }

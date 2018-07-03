@@ -1,5 +1,6 @@
 <div style="height: 100%; width:100%; position:relative" *ngIf="_datasets">
   <canvas baseChart
+          *ngIf="isRendered"
           [chartType]="type"
           [datasets]="_datasets"
           [options]="_options"></canvas>

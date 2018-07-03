@@ -18,7 +18,7 @@
   padding-bottom: 2px;
 }
 
-.metrics-card{
+.metrics-card {
   border-radius: 3px;
   background-color: #fdfdfd;
   border: solid 1px #dddddd;
@@ -39,11 +39,34 @@
 }
 
 .metrics-card-active {
-    border-radius: 3px;
-    background-color: #f9f9f9;
-    border: solid 1px #9b9b9b;
+  border-radius: 3px;
+  position: relative;
+  background-color: #f9f9f9;
+  border: solid 1px #9b9b9b;
+  &:after, &:before {
+    bottom: 100%;
+    left: 50%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none;
+  }
+  &:after {
+    border-color: rgba(213, 213, 213, 0);
+    border-bottom-color: #fdfdfd;
+    border-width: 12px;
+    margin-left: -12px;
+    bottom: calc(100% - 1px);
+  }
+  &:before {
+    border-color: rgba(194, 225, 245, 0);
+    border-bottom-color: #9b9b9b;
+    border-width: 12.75px;
+    margin-left: -12.5px;
+  }
 }
-
 
 .metrics-card-title {
   font-size: 1.2rem;

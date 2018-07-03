@@ -55,6 +55,7 @@ import {SafeUrlPipe} from "../core/pipes/safe-url.pipe";
 import {ReportIssueComponent} from '../primary-components/report-issue/report-issue.component';
 import {MetricsCarouselComponent} from "../metrics-carousel/metrics-carousel.component";
 import {ChartjsLinegraphComponent} from "../secondary-components/chartjs-linegraph/chartjs-linegraph.component";
+import {FilterModalComponent} from "../secondary-components/filter-modal/filter-modal.component";
 
 let specificComponents: any
 let specificModules: any;
@@ -125,7 +126,7 @@ for (let i in specificComponents) {
     ReportIssueComponent,
     MetricsCarouselComponent,
     ChartjsLinegraphComponent,
-
+    FilterModalComponent,
     ...declarationsArray,
 
 
@@ -168,6 +169,7 @@ for (let i in specificComponents) {
     ReportIssueComponent,
     MetricsCarouselComponent,
     ChartjsLinegraphComponent,
+    FilterModalComponent,
     ...declarationsArray
 
   ],

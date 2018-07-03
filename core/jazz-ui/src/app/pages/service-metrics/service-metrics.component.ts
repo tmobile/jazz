@@ -7,11 +7,40 @@ import { Component, OnInit, ComponentFactoryResolver, ReflectiveInjector, Elemen
 })
 export class ServiceMetricsComponent implements OnInit {
   @Input() service;
+  public filterData
+  public errorData = {};
+
+
   constructor() {
 
   }
 
   ngOnInit() {
+
+  }
+
+  refresh() {
+
+  }
+
+  applyFilter() {
+
+  }
+
+
+  getFilterData() {
+
+  }
+
+  queryMetricsData() {
+
+  }
+
+  selectMetric() {
+
+  }
+
+  formatGraphData() {
 
   }
 

@@ -1,6 +1,8 @@
 import {Component, Input, OnChanges, OnInit, ViewChild} from '@angular/core';
 import * as moment from 'moment';
 import {UtilsService} from '../../core/services/utils.service';
+declare let Promise;
+
 
 @Component({
   selector: 'chartjs-linegraph',
@@ -14,22 +16,16 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
   public _datasets;
   public _options;
   public type = 'scatter';
+  public isRendered = true;
 
-  constructor() {
-  }
+  constructor(private utils: UtilsService) {}
 
-  ngOnInit() {
-
-    setTimeout(() => {
-      this._options.scales.yAxes[0].ticks.display = false;
-    }, 5000)
-  }
+  ngOnInit() {}
 
   ngOnChanges(changes?) {
-    setTimeout(() => {
+    this.render();
       this._datasets = this.datasets.map(this.modifyDataSet);
       this._options = this.getOptions(this.options);
-    });
   }
 
   modifyDataSet(data) {
@@ -50,7 +46,6 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
   }
 
   getOptions(graphOptions) {
-
     const options = {
       maintainAspectRatio: false,
       responsive: true,
@@ -113,6 +108,12 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
     options.scales.yAxes[0].ticks.min = graphOptions.yMin || 0;
     options.scales.yAxes[0].ticks.max = graphOptions.yMax || 100;
     return options;
+  }
+
+  render() {
+    this.isRendered = false;
+    this.utils.setTimeoutPromise(100)
+      .then(() => {this.isRendered = true;});
   }
 
 }
