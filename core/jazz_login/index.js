@@ -20,7 +20,7 @@ const AWSCognito = require('amazon-cognito-identity-js');
 
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 
 /**
@@ -32,7 +32,7 @@ const logger = require("./components/logger.js");
 
 module.exports.handler = (event, context, callback) => {
 
-	var config = configObj(event);
+	var config = configModule.getConfig(event, context);
 	logger.init(event, context);
 	var errorHandler = errorHandlerModule(logger);
 

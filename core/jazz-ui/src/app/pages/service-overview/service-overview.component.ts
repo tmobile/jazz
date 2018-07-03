@@ -4,7 +4,7 @@
  * @author
  */
 
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter,ViewChild} from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
 import { ToasterService } from 'angular2-toaster';
@@ -26,6 +26,7 @@ declare var $: any;
 })
 
 export class ServiceOverviewComponent implements OnInit {
+  @ViewChild('env') envComponent;
 
   @Output() onload: EventEmitter < any > = new EventEmitter < any > ();
   @Output() onEnvGet: EventEmitter < any > = new EventEmitter < any > ();
@@ -878,6 +879,9 @@ export class ServiceOverviewComponent implements OnInit {
     // arrEnv[0].status.replace("_"," ");
   }
 
+  refresh_env(){
+    this.envComponent.refresh();
+  }
 
 
   internal_build: boolean = true;
@@ -890,10 +894,7 @@ export class ServiceOverviewComponent implements OnInit {
 
     this.prodEnv = {};
     this.stgEnv = {};
-    if ((this.service.domain != undefined) && (this.internal_build == true)) {
-      this.getenvData();
-
-    }
+    
 
 
 

@@ -20,7 +20,7 @@ var zlib = require('zlib');
 var truncate = require('unicode-byte-truncate');
 const _ = require("lodash");
 
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js"); 
 const logger = require("./components/logger.js");
 const utils = require("./components/utils.js")(); //Import the utils module.
 const responseObj = require("./components/response.js");
@@ -35,7 +35,7 @@ const globalConfig = require("./config/global_config.json"); //Import the Global
 module.exports.handler = (input, context, cb) => {
 
     logger.init(input, context);
-    var config = configObj(input);
+    var config = configModule.getConfig(event, context);
 
     // decode input from base64
     var zippedInput = new Buffer(input.awslogs.data, 'base64');

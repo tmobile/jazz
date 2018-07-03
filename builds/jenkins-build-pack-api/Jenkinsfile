@@ -161,7 +161,7 @@ node() {
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
 		}
 
-		if (config['domain'] && config['domain'] != 'jazz') {
+		if (config['domain'] && config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" ) {
 			stage('Code Quality Check'){
 				events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
 				try {
@@ -245,7 +245,13 @@ node() {
 						sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile cloud-api"
 						sh "aws apigateway create-deployment --rest-api-id ${api_id} --stage-name ${current_environment} --profile cloud-api"
 						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
-						if (current_environment == 'prod' || config['domain'] == 'jazz') {
+
+            if("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
+              sh "aws apigateway update-stage --rest-api-id ${api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
+            } else {
+              sh "aws apigateway update-stage --rest-api-id ${api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${configLoader.AWS.REGION}"
+            }
+            if (current_environment == 'prod' || config['domain'] == 'jazz') {
 							endpointUrl = "https://${apiHostName}/${current_environment}/${config['domain']}/${config['service']}"
 						} else {
 							endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
@@ -271,7 +277,7 @@ node() {
 
 						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${swaggerDocUrl}"
 						send_status_email(config, 'COMPLETED', svc_status)
-						
+
 					}
 
 					if (domain && domain == "jazz") {
@@ -286,7 +292,7 @@ node() {
 			}
 			environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
 			def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
-			
+
 			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
 			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
 			events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -804,7 +810,7 @@ def send_status_email(config, build_status, email_content) {
 */
 def runValidation(String runtime) {
 	if (runtime.indexOf("nodejs") > -1) {
-		echo "running validations for $runtime"		
+		echo "running validations for $runtime"
 		sh "jshint *.js"
 	} else if (runtime.indexOf("java") > -1) {
 		echo "running validations for $runtime"

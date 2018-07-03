@@ -21,7 +21,7 @@ const uuid = require('uuid');
 const errorHandlerModule = require("./components/error-handler.js");
 const eventHandlerModule = require("./components/events-handler.js");
 const responseObj = require("./components/response.js");
-const configObj = require("./components/config.js");
+const configModule = require("./components/config.js"); 
 const logger = require("./components/logger.js");
 const formats = require('./jenkins-json.js');
 var payloads = formats('apis');
@@ -37,7 +37,7 @@ module.exports.handler = (event, context, cb) => {
   var tracking_id = uuid.v4();
   var errorHandler = errorHandlerModule();
   var eventHandler = eventHandlerModule(tracking_id);
-  var config = configObj(event);
+  var config = configModule.getConfig(event, context);
   logger.init(event, context);
 
   if (!config.DELETE_SERVICE_JOB_URL) {
