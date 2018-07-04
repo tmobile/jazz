@@ -220,7 +220,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 					this.assetsList = response.data;
 					
 					for(var i=0; i < this.length ; i++){
-						this.type[i] = response.data[i].type;
+						this.type[i] = response.data[i].asset_type;
 						
 						this.slNumber[i] = (i+1);
 						if( response.data[i].provider == undefined ){

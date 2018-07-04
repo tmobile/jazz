@@ -195,6 +195,10 @@ export class ServiceLogsComponent implements OnInit {
 
 	}
 
+	refresh(){
+		this.callLogsFunc();
+	}
+
    onaccSelected(event){
     this.FilterTags.notify('filter-Account',event);
     this.accSelected=event;

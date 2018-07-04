@@ -515,3 +515,19 @@
     }
   }
 }
+
+.tab-component{
+  justify-content: space-between;
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.refresh-button{
+  cursor: pointer;
+  margin: 10px 0 0 0;
+  span{
+      color:#ed008c;  
+      text-transform: uppercase;
+      font-size: 12px;
+  }
+}

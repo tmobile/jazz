@@ -187,6 +187,10 @@ export class AdvancedFiltersComponentOSS implements OnInit {
 
         this.advanced_filter_input = this.data.advanced_filter_input;
         this.service = this.data.service;
+
+        if(this.service.ismetrics){
+            this.statisticSelected=this.statisticList[1];
+        }
     }
     ngOnChanges(x:any){
        this.pathList = ['/'+this.service.domain+'/'+this.service.name];

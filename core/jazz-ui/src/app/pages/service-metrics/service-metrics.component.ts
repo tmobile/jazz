@@ -101,7 +101,7 @@ export class ServiceMetricsComponent implements OnInit {
   envSelected:string = this.envList[0];
 
   statisticList: Array<string> = ['Average', 'Sum', 'Maximum','Minimum'];
-  statisticSelected:string= this.statisticList[0];
+  statisticSelected:string= this.statisticList[1];
   viewBox = "0 0 300 150";
   today = new Date();
   yesterday = this.today.setDate(this.today.getDate()-1);
@@ -1006,7 +1006,9 @@ export class ServiceMetricsComponent implements OnInit {
   }
 
 
-
+refresh(){
+  this.callMetricsFunc();
+}
 
   leftArrowClick(){
     var mainEle = document.getElementsByClassName('scroll-cards-wrap');

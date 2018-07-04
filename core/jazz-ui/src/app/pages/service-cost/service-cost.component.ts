@@ -193,6 +193,9 @@ export class ServiceCostComponent implements OnInit {
 	regSelected:string;
 	//  = this.regList[0];
 	 
+	refresh(){
+		// this.refreshCostData();
+	}
 	instance_yes;
 	getFilter(filterServ){
 	
