@@ -24,20 +24,13 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js")(); //Import the logging module.
-// const aws = require("aws-sdk"); //Import the secret-handler module.
 const request = require('request');
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
-// const global_config = require("./config/global-config.json");
 
 function handler (event, context, cb) {
-
   var errorHandler = errorHandlerModule();
   var config = configObj(event);
-  // var cloudwatch = utils.initCloudWatch();
-  // var cloudwatch = new aws.CloudWatch({
-  //   apiVersion: '2010-08-01'
-  // });
 
   try {
     /*
@@ -53,12 +46,12 @@ function handler (event, context, cb) {
      *    }
      */
     var eventBody = event.body;
-    genericValidation(event)
+    exportable.genericValidation(event)
       .then(() => validateUtils.validateGeneralFields(eventBody))
-      .then(() => getToken(config))
-      .then((authToken) => getAssetsDetails(config, eventBody, authToken))
-      .then(res => validateAssets(res, eventBody))
-      .then(res => getMetricsDetails(res))
+      .then(() => exportable.getToken(config))
+      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
+      .then(res => exportable.validateAssets(res, eventBody))
+      .then(res => exportable.getMetricsDetails(res))
       .then(res => {
         var finalObj = utils.massageData(res, eventBody);
         return cb(null, responseObj(finalObj, eventBody));
@@ -66,8 +59,6 @@ function handler (event, context, cb) {
       .catch(error => {
         if (error.result === "inputError") {
           return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-        } else if (error.result === "notFoundError") {
-          return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
         } else if (error.result === "unauthorized") {
           return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
         } else {
@@ -182,7 +173,6 @@ function getAssetsDetails(config, eventBody, authToken) {
 }
 
 function validateAssets(assetsArray, eventBody) {
-  'use strict';
   return new Promise((resolve, reject) => {
     if (assetsArray.length > 0) {
       var newAssetArray = [];
@@ -204,7 +194,7 @@ function validateAssets(assetsArray, eventBody) {
 
           if (!getAssetNameDetails.isError) {
             paramMetrics = getAssetNameDetails.paramMetrics;
-            getActualParam(paramMetrics, getAssetNameDetails.awsNameSpace, assetItem, eventBody)
+            exportable.getActualParam(paramMetrics, getAssetNameDetails.awsNameSpace, assetItem, eventBody)
               .then(res => {
                 newAssetArray.push({
                   "actualParam": res,
@@ -234,7 +224,6 @@ function validateAssets(assetsArray, eventBody) {
 }
 
 function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
-  'use strict';
   return new Promise((resolve, reject) => {
     // Forming object with parameters required by cloudwatch getMetricStatistics api.
     var commonParam = {
@@ -302,7 +291,7 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
 
 function getMetricsDetails(newAssetArray) {
   return new Promise((resolve, reject) => {
-    logger.info("Inside getMetricsDetails"+JSON.stringify(newAssetArray));
+    logger.debug("Inside getMetricsDetails"+JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
       exportable.cloudWatchDetails(assetParam)
@@ -320,7 +309,7 @@ function getMetricsDetails(newAssetArray) {
 }
 
 function cloudWatchDetails(assetParam) {
-  logger.info("inside cloudWatchDetails");
+  logger.debug("inside cloudWatchDetails");
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {

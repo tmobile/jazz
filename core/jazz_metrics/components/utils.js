@@ -27,7 +27,6 @@ const global_config = require("../config/global-config.json");
 const AWS = require("aws-sdk");
 
 function massageData(assetResults, eventBody) {
-
   var output_obj = {};
   output_obj = {
     "domain": eventBody.domain,
