@@ -15,7 +15,7 @@
 // =========================================================================
 
 /**
-API for the admin user to retrieve the installer vars JSON
+API for the admin user to perform administrative tasks
 @author:
 @version: 1.0
  **/
@@ -40,10 +40,10 @@ function handler(event, context, cb) {
         return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service|Authorization Incomplete")));
       }
       if (event.principalId != config.ADMIN_ID) {
-        return cb(JSON.stringify(errorHandler.throwUnauthorizedError("This User does not have the privileges to  access this service")));
+        return cb(JSON.stringify(errorHandler.throwUnauthorizedError("This user is not authorized to access this service.")));
       }
       getInstallerVarsJSON(config).then((data) => {
-        apiResponseObj.installerVars = data;
+        apiResponseObj.config = data;
         return cb(null, responseObj(apiResponseObj, event.body));
       }).catch((error) => {
         logger.error("Failed to load admin config file:", error);
@@ -60,19 +60,19 @@ function handler(event, context, cb) {
 function buildRequestOption(config) {
   if (config.SCM_TYPE === "gitlab") {
     return {
-      uri: config.BASE_URL + config.GITLAB.GITLAB_PATH,
+      uri: config.BASE_URL + config.GITLAB.CONFIG_FILE_PATH,
       method: 'get',
       headers: {
-        "Private-Token": config.GITLAB.PRIVATE_TOKEN_GITLAB
+        "Private-Token": config.GITLAB.PRIVATE_TOKEN
       },
       rejectUnauthorized: false
     };
   } else {
     return {
-      uri: config.BASE_URL + config.BITBUCKET.BITBUCKET_PATH,
+      uri: config.BASE_URL + config.BITBUCKET.CONFIG_FILE_PATH,
       method: 'get',
       headers: {
-        "Authorization": 'Basic ' + new Buffer(config.BITBUCKET.BB_USERNAME + ':' + config.BITBUCKET.BB_PASSWORD).toString('base64')
+        "Authorization": 'Basic ' + new Buffer(config.BITBUCKET.USERNAME + ':' + config.BITBUCKET.PASSWORD).toString('base64')
       },
       rejectUnauthorized: false
     };

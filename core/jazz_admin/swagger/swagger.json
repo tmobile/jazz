@@ -90,7 +90,7 @@
         }
       },
       "get": {
-        "description": "Get Method to retrive installer vars json file from build module",
+        "description": "Get method to retrieve config file",
         "consumes": [
           "application/json"
         ],

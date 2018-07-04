@@ -3,12 +3,12 @@
   "BASE_URL": "{base-url}",
   "SCM_TYPE": "{scm-type}",
   "BITBUCKET": {
-    "BB_USERNAME": "{bb_username}",
-    "BB_PASSWORD": "{bb_password}",
-    "BITBUCKET_PATH": "/projects/SLF/repos/jazz-build-module/raw/jazz-installer-vars.json"
+    "USERNAME": "{bb_username}",
+    "PASSWORD": "{bb_password}",
+    "CONFIG_FILE_PATH": "/projects/SLF/repos/jazz-build-module/raw/jazz-installer-vars.json"
   },
   "GITLAB": {
-    "GITLAB_PATH": "/slf/jazz-build-module/raw/master/jazz-installer-vars.json",
-    "PRIVATE_TOKEN_GITLAB": "{private-token}"
+    "CONFIG_FILE_PATH": "/slf/jazz-build-module/raw/master/jazz-installer-vars.json",
+    "PRIVATE_TOKEN": "{private-token}"
   }
 }
