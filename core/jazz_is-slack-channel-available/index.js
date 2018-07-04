@@ -106,11 +106,7 @@ function requestToChannels(config, resObj, channel_name) {
 
     Promise.all(urlList)
       .then(res => {
-        if (res.includes('true')) {
-          resObj.is_available = true;
-        } else {
-          resObj.is_available = false;
-        }
+        resObj.is_available = res.includes('true');
         resolve(resObj);
       })
       .catch(error => {
@@ -138,17 +134,11 @@ function getResponse(channel_url, channel_name) {
         if (data.ok) {
           var list = data.channels ? data.channels : data.groups;
           if (list.length) {
-            var count = 0;
-            list.find(each =>{
-              if(each.name === channel_name) {
-                resolve('true');
-              } else {
-                count++;
-                if (count === list.length) {
-                  resolve('false');
-                }
-              }
-            });
+            if (list.find(each => each.name === channel_name)) {
+              return resolve('true');
+            } else {
+              return resolve('false');
+            }
           } else {
             resolve('false');
           }

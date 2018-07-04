@@ -90,7 +90,7 @@
         }
       },
       "get": {
-        "description": "GET method to check if a channel exists in t-mo.slack.com",
+        "description": "GET method to check if a channel exists in User's Slack",
         "consumes": [
           "application/json"
         ],
