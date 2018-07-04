@@ -383,9 +383,9 @@
     "OutputObj": {
       "type": "object",
       "properties": {
-        "jazz-installer-vars": {
+        "config": {
           "type": "object",
-          "description": "JSON Object from installer-vars.json file in jazz_build module"
+          "description": "JSON Object from Jazz config file in jazz_build module"
         }
       }
     }
