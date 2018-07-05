@@ -46,13 +46,14 @@ function handler(event, context, cb) {
         apiResponseObj.config = data;
         return cb(null, responseObj(apiResponseObj, event.body));
       }).catch((error) => {
-        logger.error("Failed to load admin config file:", error);
+        logger.error("Failed to load admin config file:"+ JSON.stringify(error));
         cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load config file.")));
       });
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("The requested method is not supported")));
     }
   } catch (e) {
+    logger.error(JSON.stringify(error));
     cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown Error")));
   }
 
