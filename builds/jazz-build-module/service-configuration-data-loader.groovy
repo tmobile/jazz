@@ -51,6 +51,12 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
 		}
 
+        if ( (service_name.trim() == "jazz_is-slack-channel-available") ) {
+          sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
+          sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
+          sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
+        }
+
 		if ( (service_name.trim() == "jazz_metrics") ) {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"

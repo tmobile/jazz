@@ -1,0 +1,20 @@
+{
+  "name": "jazz_is-slack-channel-available",
+  "version": "0.0.1",
+  "description": "API to check availability of slack channel in User's Slack.",
+  "main": "index.js",
+  "private": true,
+  "author": {
+    "name": "Jazz"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "*"
+  },
+  "devDependencies": {
+    "mocha": "^v3.0.0",
+    "chai": "^3.5.0"
+  }
+}
