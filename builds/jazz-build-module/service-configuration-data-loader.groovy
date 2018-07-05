@@ -89,7 +89,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{sonar_hostname}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/prod-config.json"
 
 			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.CODE_QUALITY.SONAR.ADMIN_SONAR_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
-			  	sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/dev-config.json"
 				sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/stg-config.json"
 				sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/prod-config.json"
 
