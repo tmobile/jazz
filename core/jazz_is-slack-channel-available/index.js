@@ -26,7 +26,7 @@ const configModule = require("./components/config.js");
 const logger = require("./components/logger.js")();
 const request = require('request');
 
-module.exports.handler = (event, context, cb) => {
+function handler(event, context, cb) {
 
   //Initializations
   var errorHandler = errorHandlerModule();
@@ -149,3 +149,12 @@ function getResponse(channel_url, channel_name) {
     });
   });
 }
+
+const exportable = {
+  handler,
+  genericInputValidation,
+  requestToChannels,
+  getResponse
+};
+
+module.exports = exportable;
