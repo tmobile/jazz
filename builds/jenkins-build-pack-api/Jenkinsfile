@@ -275,7 +275,7 @@ node() {
 						def swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
 						events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
 
-						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${swaggerDocUrl}"
+						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_BASE_URL}${swaggerDocUrl}"
 						send_status_email(config, 'COMPLETED', svc_status)
 
 					}
