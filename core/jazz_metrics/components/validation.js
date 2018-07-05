@@ -133,7 +133,7 @@ var validateMetricsInput = (data) => {
       });
     }
 
-    if (statistics_type.indexOf(data.statistics) === "-1") {
+    if (statistics_type.indexOf(data.statistics) === -1) {
       reject({
         result: "inputError",
         message: "Invalid statistics type"
