@@ -33,7 +33,7 @@ node() {
 
 	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
 	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
-	g_base_url_for_swagger = "http://editor.swagger.io/?url=http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
+	g_base_url_for_swagger = "http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
 
 	echo "Build triggered via branch: " + params.scm_branch
 
