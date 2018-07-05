@@ -30,7 +30,7 @@ const validateUtils = require("./components/validation.js");
 
 function handler (event, context, cb) {
   var errorHandler = errorHandlerModule();
-  var config = configObj(event);
+  var config = configObj.getConfig(event, context);
 
   try {
     /*
@@ -314,9 +314,9 @@ function cloudWatchDetails(assetParam) {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
       if (param.Namespace === "AWS/CloudFront") {
-        var cloudwatch = utils.cfCloudWatch();
+        var cloudwatch = utils.getCloudfrontCloudWatch();
       } else {
-        var cloudwatch = utils.initCloudWatch();
+        var cloudwatch = utils.getCloudWatch();
       }
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {

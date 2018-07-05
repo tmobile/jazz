@@ -240,19 +240,19 @@ function updateCloudfrontAsset(newAssetObj, relativeId) {
   return newAssetObj;
 }
 
-function initCloudWatch() {
+function getCloudWatch() {
   var cloudwatch = new AWS.CloudWatch({
     apiVersion: '2010-08-01'
   });
   return cloudwatch;
 }
 
-function cfCloudWatch() {
-  var cfcloudwatch = new AWS.CloudWatch({
+function getCloudfrontCloudWatch() {
+  var cloudwatch = new AWS.CloudWatch({
     apiVersion: '2010-08-01',
     region: global_config.CF_REGION
   });
-  return cfcloudwatch;
+  return cloudwatch;
 }
 
 module.exports = {
@@ -260,6 +260,6 @@ module.exports = {
   assetData,
   getNameSpaceAndMetricDimensons,
   getAssetsObj,
-  initCloudWatch,
-  cfCloudWatch
+  getCloudWatch,
+  getCloudfrontCloudWatch
 };

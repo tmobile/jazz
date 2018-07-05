@@ -61,7 +61,7 @@ describe('jazz_metrics', function () {
     callbackObj = {
       "callback": callback
     };
-    config = configObj(event);
+    config = configObj.getConfig(event, context);
   });
 
   describe('generic validation', () => {
@@ -76,7 +76,7 @@ describe('jazz_metrics', function () {
         });
     });
 
-    it("should indicate method is invalid if empty or invalid metod is provided", () => {
+    it("should indicate method is invalid if empty or invalid method is provided", () => {
       var invalidArray = ["", "GET", "PUT"];
       for (var i in invalidArray) {
         event.method = invalidArray[i];
@@ -270,17 +270,17 @@ describe('jazz_metrics', function () {
     it("Should successfully get assets details", () => {
       var authToken = "zaqwsxcderfv.qawsedrftg.qxderfvbhy";
       var assetsList = {
-          "environment": "test",
-          "service": "test-service",
-          "created_by": "xswdxwscvff@test.com",
-          "timestamp": "2018-04-11T16:27:34:800",
-          "status": "active",
-          "provider": "aws",
-          "provider_id": "arn:aws:lambda:test-region:302890901340:function:jazztest_test-service",
-          "id": "886d901d-fffe-9ac9-becb-a7cfe96fd5dc",
-          "domain": "jazztest",
-          "asset_type": "lambda"
-        }
+        "environment": "test",
+        "service": "test-service",
+        "created_by": "xswdxwscvff@test.com",
+        "timestamp": "2018-04-11T16:27:34:800",
+        "status": "active",
+        "provider": "aws",
+        "provider_id": "arn:aws:lambda:test-region:302890901340:function:jazztest_test-service",
+        "id": "886d901d-fffe-9ac9-becb-a7cfe96fd5dc",
+        "domain": "jazztest",
+        "asset_type": "lambda"
+      }
 
       var responseObj = {
         statusCode: 200,
@@ -519,7 +519,7 @@ describe('jazz_metrics', function () {
         });
     });
 
-    it("should indicate error if there is no assets available", () => {
+    it("should indicate error if there are no assets available", () => {
       index.validateAssets([], event.body)
         .catch(error => {
           expect(error).to.include({
@@ -947,30 +947,6 @@ describe('jazz_metrics', function () {
           "environment": "test",
           "service": "test-service",
           "created_by": "xswdxwscvff@test.com",
-          "timestamp": "2018-04-11T16:30:57:801",
-          "status": "active",
-          "provider": "aws",
-          "provider_id": "http://test-env.com/jazztest_test-service/test/swagger.json",
-          "id": "e0d626c2-f137-ba4b-d096-d7b420ba2744",
-          "domain": "jazztest",
-          "asset_type": "swagger_url"
-        },
-        {
-          "environment": "test",
-          "service": "test-service",
-          "created_by": "xswdxwscvff@test.com",
-          "timestamp": "2018-04-11T16:31:02:187",
-          "status": "active",
-          "provider": "aws",
-          "provider_id": "https://test-env.com/api/jazztest/test-service",
-          "id": "8039b94b-4380-33fa-c3fe-b970840bf1be",
-          "domain": "jazztest",
-          "asset_type": "endpoint_url"
-        },
-        {
-          "environment": "test",
-          "service": "test-service",
-          "created_by": "xswdxwscvff@test.com",
           "timestamp": "2018-04-11T16:30:46:715",
           "status": "active",
           "provider": "aws",
@@ -996,7 +972,6 @@ describe('jazz_metrics', function () {
       var userStatistics = 'average';
       assetsArray.forEach(asset => {
         var resObj = utils.getAssetsObj([asset], userStatistics);
-
         if (asset.asset_type === 's3') {
           expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics')
           expect(resObj[0]).to.have.deep.property('asset_name.BucketName')
@@ -1008,12 +983,44 @@ describe('jazz_metrics', function () {
           expect(resObj[0]).to.include({
             type: asset.asset_type
           })
-        } else {
-          expect(resObj[0]).to.have.all.deep.keys('isError')
-          expect(resObj[0]).to.include({
-            isError: 'Metric not supported for asset type ' + asset.asset_type
-          })
         }
+      });
+    });
+
+    it("should indicate error if provided asset does not support", () => {
+      var assetsArray = [{
+          "environment": "test",
+          "service": "test-service",
+          "created_by": "xswdxwscvff@test.com",
+          "timestamp": "2018-04-11T16:30:57:801",
+          "status": "active",
+          "provider": "aws",
+          "provider_id": "http://test-env.com/jazztest_test-service/test/swagger.json",
+          "id": "e0d626c2-f137-ba4b-d096-d7b420ba2744",
+          "domain": "jazztest",
+          "asset_type": "swagger_url"
+        },
+        {
+          "environment": "test",
+          "service": "test-service",
+          "created_by": "xswdxwscvff@test.com",
+          "timestamp": "2018-04-11T16:31:02:187",
+          "status": "active",
+          "provider": "aws",
+          "provider_id": "https://test-env.com/api/jazztest/test-service",
+          "id": "8039b94b-4380-33fa-c3fe-b970840bf1be",
+          "domain": "jazztest",
+          "asset_type": "endpoint_url"
+        }
+      ];
+
+      var userStatistics = 'average';
+      assetsArray.forEach(asset => {
+        var resObj = utils.getAssetsObj([asset], userStatistics);
+        expect(resObj[0]).to.have.all.deep.keys('isError')
+        expect(resObj[0]).to.include({
+          isError: 'Metric not supported for asset type ' + asset.asset_type
+        })
       });
     });
 
