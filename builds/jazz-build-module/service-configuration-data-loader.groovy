@@ -422,9 +422,9 @@ def loadServiceConfigurationData() {
 			}
 		}
         if (service_name.trim() == "jazz_admin") {
-			sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{scm-type}/${config_loader.SCM.TYPE}/g' ./config/prod-config.json"
 
         	sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
 		    sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
