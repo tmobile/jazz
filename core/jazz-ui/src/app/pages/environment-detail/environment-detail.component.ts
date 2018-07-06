@@ -50,7 +50,6 @@ export class EnvironmentDetailComponent implements OnInit {
   disablingApiButton: boolean = true;
   nonClickable: boolean = false;
   message: string;
-  isOSS: boolean = false;
   public sidebar: string = '';
   private sub: any;
   private subscription: any;
@@ -179,7 +178,7 @@ export class EnvironmentDetailComponent implements OnInit {
     )
   };
 
-  testApi(type) {
+  testService(type) {
     switch (type) {
       case 'api':
         let swaggerFile = '/' + this.service.domain + '/' + this.service.name + '/' + this.envSelected + '/swagger.json';
@@ -211,8 +210,7 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.api_doc_name = env_oss.api_doc_name;
-    if (environment.envName == "oss") this.isOSS = true;
+    this.api_doc_name = env_oss.api_doc_name;  
     this.sub = this.route.params.subscribe(params => {
       let id = params['id'];
       this.serviceId = id;
