@@ -72,7 +72,7 @@ describe('jazz_is-slack-channel-available', function () {
     });
   });
 
-  describe('getResponse', () => {
+  describe.only('getResponse', () => {
     var channel_url ,channel_name;
 
     beforeEach(() => {
@@ -81,10 +81,16 @@ describe('jazz_is-slack-channel-available', function () {
     });
 
     it("should successfully search private slack channel in user's slack list", () => {
+      var list = { ok: true,
+        channels:
+         [ { id: 'A1B2C3D4E', name: 'general', is_channel: true },
+           { id: 'A1B2C3D4F', name: 'jazz', is_channel: true },
+           { id: 'A1B2C3D4G', name: 'test-channel', is_channel: true },
+           { id: 'A1B2C3D4H', name: 'random', is_channel: true },
+           { id: 'A1B2C3D4I', name: 'test', is_channel: true } ] }
       var resObj = {
-        body: "{\"ok\":true,\"channels\":[{\"id\":\"A1B2C3D4E\",\"name\":\"general\",\"is_channel\":true},{\"id\":\"A1B2C3D4F\",\"name\":\"jazz\",\"is_channel\":true},{\"id\":\"A1B2C3D4G\",\"name\":\"test-channel\",\"is_channel\":true},{\"id\":\"A1B2C3D4H\",\"name\":\"random\",\"is_channel\":true},{\"id\":\"A1B2C3D4I\",\"name\":\"test\",\"is_channel\":true}]}"
+        body: JSON.stringify(list)
       }
-
       reqStub = sinon.stub(request, "Request").callsFake(obj => {
         return obj.callback(null, resObj, resObj.body);
       });
@@ -97,10 +103,16 @@ describe('jazz_is-slack-channel-available', function () {
     });
 
     it("should successfully search group slack channel in user's slack list", () => {
+      var list = { ok: true,
+        groups:
+         [ { id: 'A1B2C3D4E', name: 'general', is_channel: true },
+           { id: 'A1B2C3D4F', name: 'jazz', is_channel: true },
+           { id: 'A1B2C3D4G', name: 'test-channel', is_channel: true },
+           { id: 'A1B2C3D4H', name: 'random', is_channel: true },
+           { id: 'A1B2C3D4I', name: 'test', is_channel: true } ] }
       var resObj = {
-        body: "{\"ok\":true,\"groups\":[{\"id\":\"A1B2C3D4E\",\"name\":\"general\",\"is_channel\":true},{\"id\":\"A1B2C3D4F\",\"name\":\"jazz\",\"is_channel\":true},{\"id\":\"A1B2C3D4G\",\"name\":\"test-channel\",\"is_channel\":true},{\"id\":\"A1B2C3D4H\",\"name\":\"random\",\"is_channel\":true},{\"id\":\"A1B2C3D4I\",\"name\":\"test\",\"is_channel\":true}]}"
+        body: JSON.stringify(list)
       }
-
       reqStub = sinon.stub(request, "Request").callsFake(obj => {
         return obj.callback(null, resObj, resObj.body);
       });
@@ -113,10 +125,15 @@ describe('jazz_is-slack-channel-available', function () {
     });
 
     it("should indicate false if slack channel is not available in user's slack list", () => {
+      var list = { ok: true,
+        channels:
+         [ { id: 'A1B2C3D4E', name: 'general', is_channel: true },
+           { id: 'A1B2C3D4F', name: 'jazz', is_channel: true },
+           { id: 'A1B2C3D4H', name: 'random', is_channel: true },
+           { id: 'A1B2C3D4I', name: 'test', is_channel: true } ] }
       var resObj = {
-        body: "{\"ok\":true,\"channels\":[{\"id\":\"A1B2C3D4E\",\"name\":\"general\",\"is_channel\":true},{\"id\":\"A1B2C3D4F\",\"name\":\"jazz\",\"is_channel\":true},{\"id\":\"A1B2C3D4H\",\"name\":\"random\",\"is_channel\":true},{\"id\":\"A1B2C3D4I\",\"name\":\"test\",\"is_channel\":true}]}"
+        body: JSON.stringify(list)
       }
-
       reqStub = sinon.stub(request, "Request").callsFake(obj => {
         return obj.callback(null, resObj, resObj.body);
       });
@@ -129,8 +146,9 @@ describe('jazz_is-slack-channel-available', function () {
     });
 
     it("should indicate false if user's slack list is empty", () => {
+      var list = { ok: true, channels: [] };
       var resObj = {
-        body: "{\"ok\":true,\"channels\":[]}"
+        body: JSON.stringify(list)
       }
       reqStub = sinon.stub(request, "Request").callsFake(obj => {
         return obj.callback(null, resObj, resObj.body);
@@ -144,8 +162,9 @@ describe('jazz_is-slack-channel-available', function () {
     });
 
     it("should indicate false if slack_token is invalid(invalid auth)", () => {
+      var list = { ok: false, error: 'invalid_auth' };
       var resObj = {
-        body: "{\"ok\":false,\"error\":\"invalid_auth\"}"
+        body: JSON.stringify(list)
       }
       reqStub = sinon.stub(request, "Request").callsFake(obj => {
         return obj.callback(null, resObj, resObj.body);
@@ -185,7 +204,7 @@ describe('jazz_is-slack-channel-available', function () {
         });
     });
 
-    it("should indicate that provided slack_channel does not available in the user's list", () => {
+    it("should indicate that provided slack_channel is not available in the user's list", () => {
       const getResponse = sinon.stub(index, "getResponse").resolves('false');
 
       index.requestToChannels(config, event.query.slack_channel)
@@ -225,7 +244,7 @@ describe('jazz_is-slack-channel-available', function () {
       });
     });
 
-    it("should indicate that provided slack does not available", () => {
+    it("should indicate that provided slack is not available", () => {
       const genericInputValidation = sinon.stub(index, "genericInputValidation").resolves(event.query.slack_channel);
       const requestToChannels = sinon.stub(index, "requestToChannels").resolves({is_available: false});
 
