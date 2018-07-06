@@ -164,7 +164,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         domain: this.service.domain,
         service: this.service.name,
         environment: this.filters.getFieldValueOfLabel('ENVIRONMENT'),
-        start_time: this.filters.getFieldValueOfLabel('TIME RANGE'),
+        start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
         end_time: moment().toISOString(),
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
         statistics: this.filters.getFieldValueOfLabel('STATISTICS')
