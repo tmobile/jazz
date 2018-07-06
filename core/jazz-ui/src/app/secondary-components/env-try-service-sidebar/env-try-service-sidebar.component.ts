@@ -63,10 +63,12 @@ export class EnvTryServiceSidebarComponent implements OnInit {
       };
       this.subscription = this.http.post('/jazz/test-lambda', payload).subscribe((response) => {
         this.loading = false;
+        response.data.payload.StatusCode = 200;
         this.outputHeader = {
-          statusCode: response.data.payload.StatusCode,
+          statusCode: response.data.payload.StatusCode|| '',
           statusText: response.data.execStatus
         }
+        if(this.outputHeader.statusCode != '') this.outputHeader.statusCode+=' : ';
         this.outputValue = this.stringToPrettyString(response.data.payload.Payload);
         this.lineNumbers('op');
       }, (error) => {

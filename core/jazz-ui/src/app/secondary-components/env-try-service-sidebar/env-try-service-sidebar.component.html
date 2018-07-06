@@ -62,7 +62,7 @@
         <div class='column-heading'
              *ngIf="!!outputHeader"
              [ngClass]="outputHeader.statusCode === 200 ? 'success' : 'error'">
-          {{outputHeader.statusCode + ': ' + outputHeader.statusText}}
+          {{outputHeader.statusCode}} {{outputHeader.statusText}}
         </div>
         <div class="textbox">
           <div class="line-numbers">
