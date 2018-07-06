@@ -17,6 +17,10 @@ import { RouterModule } from '@angular/router';
 import { routes } from './environment.route';
 import { AdvancedFilterService } from '../advanced-filter.service';
 import {ChartsModule} from "ng2-charts";
+import {EnvTryServiceSidebarComponent} from '../secondary-components/env-try-service-sidebar/env-try-service-sidebar.component';
+import {SessionStorageService} from "../core/helpers/session-storage.service";
+import {RelaxedJsonService} from "../core/helpers/relaxed-json.service";
+
 @NgModule({
   imports: [
     CommonModule,
@@ -37,8 +41,13 @@ import {ChartsModule} from "ng2-charts";
     EnvCodequalitySectionComponent,
     EnvLogsSectionComponent,
     EnvOverviewSectionComponent,
+    EnvTryServiceSidebarComponent
   ],
-  providers: [AdvancedFilterService],
+  providers: [
+    AdvancedFilterService,
+    SessionStorageService,
+    RelaxedJsonService,
+  ]
 })
 
 export class EnvironmentModule {
