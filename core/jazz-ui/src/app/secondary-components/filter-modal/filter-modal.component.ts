@@ -9,6 +9,7 @@ export class FilterModalComponent implements OnInit {
   @Output() formChange = new EventEmitter();
   @Input() form;
   public selectedList = [];
+  public opened = false;
 
   constructor() {
   }
@@ -31,7 +32,10 @@ export class FilterModalComponent implements OnInit {
   changeFilter(filterSelected, filterField) {
     filterField.selected = filterSelected;
     this.updateSelectedList();
-    this.formChange.emit(this.selectedList);
+    this.formChange.emit({
+      list: this.selectedList,
+      changed: filterField
+    });
   }
 
   getField(label) {
@@ -55,6 +59,10 @@ export class FilterModalComponent implements OnInit {
     return this.form.columns.reduce((accumulator, column) => {
       return accumulator.concat(column.fields)
     }, []);
+  }
+
+  toggleModal() {
+    this.opened = !this.opened;
   }
 
 }

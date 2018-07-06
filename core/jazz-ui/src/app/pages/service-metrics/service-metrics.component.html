@@ -1,33 +1,45 @@
-<filter-modal style="display: none" #filters [form]="form" (formChange)="applyFilter($event)"></filter-modal>
-<div class="jz-section" [ngSwitch]="sectionStatus">
-  <div *ngSwitchCase="'loading'" class="jz-section-content">
-    <div class="jz-absolute-container">
-      <div class="jz-spinner"></div>
-    </div>
-  </div>
-  <div *ngSwitchCase="'error'" class="jz-section-content">
-    <report-issue [response]="errorData.response" [request]="errorData.request" (onRefresh)="refresh()"></report-issue>
-  </div>
-  <div *ngSwitchCase="'empty'" class="jz-section-content">
-    <div class="jz-section-icon">
-      <span class="icon-icon-nodata"></span>
-    </div>
-    <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
-  </div>
-  <div *ngSwitchCase="'resolved'" class="jz-section-content">
-    <div class="jz-chart">
-      <div class="jz-chart-header">
-        Head
-      </div>
-      <div class="jz-chart-content">
-        <chartjs-linegraph *ngIf="graphData" [datasets]="graphData.datasets"
-                           [options]="graphData.options"></chartjs-linegraph>
-      </div>
-      <div class="jz-chart-footer">
-        Foot
+<div class="jz-section">
+  <div class="jz-section-content">
+    <div class="jz-row" style="justify-content: flex-end">
+      <button class="jz-btn jz-btn-icon"
+              [class.jz-toggled]="filters.opened"
+              style="z-index: 2;"
+              (click)="filters.toggleModal()">
+        <span class="icon-icon-filter-unselected"></span>
+      </button>
+      <div class="jz-absolute" style="top: 0; right: 0; z-index: 1;">
+        <filter-modal #filters [form]="form" (formChange)="applyFilter($event)"></filter-modal>
       </div>
     </div>
-    <metrics-carousel [metrics]="selectedAsset?.metrics"
-                      [options]="{listProperty: 'datapoints',valueProperty: selectedAsset.statistics}"></metrics-carousel>
+    <div [ngSwitch]="sectionStatus" class="jz-flex-expand" style="z-index: 0">
+      <div *ngSwitchCase="'loading'" class="jz-height-full">
+        <div class="jz-absolute-container">
+          <div class="jz-spinner"></div>
+        </div>
+      </div>
+      <div *ngSwitchCase="'error'" class="jz-height-full">
+        <report-issue [response]="errorData.response" [request]="errorData.request" (onRefresh)="refresh()"></report-issue>
+      </div>
+      <div *ngSwitchCase="'empty'" class="jz-height-full jz-flex-centered">
+        <div class="jz-text-center">
+          <div class="jz-section-icon">
+            <span class="icon-icon-nodata"></span>
+          </div>
+          <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
+        </div>
+      </div>
+      <div *ngSwitchCase="'resolved'" class="jz-height-full">
+        <div class="jz-chart">
+          <div class="jz-chart-content">
+            <chartjs-linegraph *ngIf="graphData" [datasets]="graphData.datasets"
+                               [options]="graphData.options"></chartjs-linegraph>
+          </div>
+        </div>
+        <metrics-carousel [metrics]="selectedAsset?.metrics"
+                          [selected]="selectedMetric"
+                          (selectedChange)="setMetric($event)"
+                          [options]="{listProperty: 'datapoints',valueProperty: selectedAsset.statistics, nameProperty: 'metric_name'}"></metrics-carousel>
+      </div>
+    </div>
   </div>
 </div>

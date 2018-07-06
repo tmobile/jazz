@@ -1,4 +1,5 @@
-import {Component, OnInit, Input, ViewChild, AfterViewInit
+import {
+  Component, OnInit, Input, ViewChild, AfterViewInit
 } from '@angular/core';
 import * as moment from 'moment';
 import {UtilsService} from "../../core/services/utils.service";
@@ -49,10 +50,22 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         type: 'select',
         options: ['Day', 'Week', 'Month', 'Year'],
         values: [
-          moment().subtract(1, 'day').toISOString(),
-          moment().subtract(1, 'week').toISOString(),
-          moment().subtract(1, 'month').toISOString(),
-          moment().subtract(1, 'year').toISOString()],
+          {
+            range: moment().subtract(1, 'day').toISOString(),
+            format: 'h:mm a'
+          },
+          {
+            range: moment().subtract(1, 'week').toISOString(),
+            format: 'MMM Do'
+          },
+          {
+            range: moment().subtract(1, 'month').toISOString(),
+            format: 'M/D'
+          },
+          {
+            range: moment().subtract(1, 'year').toISOString(),
+            format: 'MMMM'
+          }],
         selected: 'Week'
       },
       {
@@ -63,7 +76,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           moment(0).add(1, 'hour').valueOf() / 1000,
           moment(0).add(6, 'hour').valueOf() / 1000,
           moment(0).add(1, 'day').valueOf() / 1000,
-          moment(0).add(7, 'day').valueOf()/ 1000,
+          moment(0).add(7, 'day').valueOf() / 1000,
           moment(0).add(30, 'day').valueOf() / 1000],
         selected: '1 Hour'
       },
@@ -110,7 +123,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       }
     });
 
-    this.applyFilter(filterList);
+    this.applyFilter({
+      list: filterList,
+      changed: null
+    });
   }
 
   ngOnInit() {
@@ -118,12 +134,17 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   refresh() {
-
+    this.ngAfterViewInit();
   }
 
-  applyFilter(filterList) {
-    let updatedFilterList = this.removeDefaultFilters(filterList);
-    this.queryMetricsData(filterList);
+  applyFilter(filterChanges) {
+    if (filterChanges.changed &&
+      (filterChanges.changed.label === 'PATH' ||
+        filterChanges.changed.label === 'METHOD')) {
+      this.setAsset();
+    } else {
+      this.queryMetricsData();
+    }
   }
 
   removeDefaultFilters(filterList) {
@@ -135,227 +156,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     });
   }
 
-  queryMetricsData(filterList) {
-    let r = {
-      "data": {
-        "domain": "jazz",
-        "service": "custom-ad-authorizer",
-        "environment": "prod",
-        "end_time": "2018-06-27T21:35:41.475Z",
-        "start_time": "2018-06-26T21:35:41.475Z",
-        "interval": "900",
-        "statistics": "average",
-        "assets": [
-          {
-            "type": "apigateway",
-            "asset_name": {
-              "ApiName": "dev-cloud-api",
-              "Method": "GET",
-              "Resource": "/nw44bnzuan-dev/example",
-              "Stage": "nw44bnzuan-dev"
-            },
-            "statistics": "Average",
-            "metrics": [
-              {
-                "metric_name": "4XXError",
-                "datapoints": [
-                  {
-                    "Timestamp": moment().subtract(1, 'hour'),
-                    "Average": 23,
-                    "Unit": "Count"
-                  },
-                  {
-                    "Timestamp": moment().subtract(2, 'hour'),
-                    "Average": 30,
-                    "Unit": "Count"
-                  },
-                  {
-                    "Timestamp": moment().subtract(1, 'day'),
-                    "Average": 1,
-                    "Unit": "Count"
-                  },
-                  {
-                    "Timestamp": moment().subtract(3, 'day'),
-                    "Average": 60,
-                    "Unit": "Count"
-                  },
-                  {
-                    "Timestamp": moment().subtract(20, 'day'),
-                    "Average": 40,
-                    "Unit": "Count"
-                  },
-                ]
-              },
-              {
-                "metric_name": "5XXError",
-                "datapoints": []
-              },
-              {
-                "metric_name": "CacheHitCount",
-                "datapoints": []
-              },
-              {
-                "metric_name": "CacheMissCount",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Count",
-                "datapoints": []
-              },
-              {
-                "metric_name": "IntegrationLatency",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Latency",
-                "datapoints": []
-              }
-            ]
-          },
-          {
-            "type": "apigateway",
-            "asset_name": {
-              "ApiName": "dev-cloud-api",
-              "Method": "POST",
-              "Resource": "/nw44bnzuan-dev/example",
-              "Stage": "nw44bnzuan-dev"
-            },
-            "statistics": "Sum",
-            "metrics": [
-              {
-                "metric_name": "4XXError",
-                "datapoints": [
-                  {
-                    "Timestamp": moment().subtract(1, 'day'),
-                    "Average": 1,
-                    "Unit": "Count"
-                  },
-                  {
-                    "Timestamp": moment().subtract(3, 'day'),
-                    "Average": 60,
-                    "Unit": "Count"
-                  },
-                  {
-                    "Timestamp": moment().subtract(2, 'day'),
-                    "Average": 40,
-                    "Unit": "Count"
-                  },
-
-                ]
-              },
-              {
-                "metric_name": "5XXError",
-                "datapoints": []
-              },
-              {
-                "metric_name": "CacheHitCount",
-                "datapoints": []
-              },
-              {
-                "metric_name": "CacheMissCount",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Count",
-                "datapoints": []
-              },
-              {
-                "metric_name": "IntegrationLatency",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Latency",
-                "datapoints": []
-              }
-            ]
-          },
-          {
-            "type": "apigateway",
-            "asset_name": {
-              "ApiName": "dev-cloud-api",
-              "Method": "OPTIONS",
-              "Resource": "/nw44bnzuan-dev/example",
-              "Stage": "nw44bnzuan-dev"
-            },
-            "statistics": "Sum",
-            "metrics": [
-              {
-                "metric_name": "4XXError",
-                "datapoints": []
-              },
-              {
-                "metric_name": "5XXError",
-                "datapoints": []
-              },
-              {
-                "metric_name": "CacheHitCount",
-                "datapoints": []
-              },
-              {
-                "metric_name": "CacheMissCount",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Count",
-                "datapoints": []
-              },
-              {
-                "metric_name": "IntegrationLatency",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Latency",
-                "datapoints": []
-              }
-            ]
-          },
-          {
-            "type": "lambda",
-            "asset_name": {
-              "FunctionName": "example_hello-world-nw44bnzuan-dev"
-            },
-            "statistics": "Sum",
-            "metrics": [
-              {
-                "metric_name": "Invocations",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Errors",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Dead Letter Error",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Duration",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Throttles",
-                "datapoints": []
-              },
-              {
-                "metric_name": "IteratorAge",
-                "datapoints": []
-              }
-            ]
-          }
-        ]
-      },
-      "input": {
-        "service": "custom-ad-authorizer",
-        "domain": "jazz",
-        "environment": "prod",
-        "end_time": "2018-06-27T21:35:41.475Z",
-        "start_time": "2018-06-26T21:35:41.475Z",
-        "interval": "900",
-        "statistics": "average"
-      }
-    };
-
-
+  queryMetricsData() {
     this.sectionStatus = 'loading';
     let request = {
       url: '/jazz/metrics',
@@ -369,8 +170,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         statistics: this.filters.getFieldValueOfLabel('STATISTICS')
       }
     };
-    // this.http.post(request.url, request.body)
-    Observable.of(r)
+    return this.http.post(request.url, request.body)
       .toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
@@ -380,18 +180,13 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           this.setPathFilter();
           this.setMethodFilter();
           this.setAsset();
-          if (this.selectedAsset) {
-            this.setMetric();
-            this.sectionStatus = 'resolved';
-          }
         }
       })
       .catch((error) => {
+        this.sectionStatus = 'error';
         console.log(error);
       })
-
   }
-
 
   filterAssetType(data) {
     return data.assets.filter((asset) => {
@@ -424,7 +219,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     });
     methodsField.options = methods;
     methodsField.values = methods;
-    methodsField.selected = this.selectedAsset && this.selectedAsset.asset_name.Resource || methods[0];
+    methodsField.selected = this.selectedAsset && this.selectedAsset.asset_name.Method || methods[0];
   }
 
   setAsset() {
@@ -433,20 +228,28 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     this.selectedAsset = this.queryDataRaw.assets.find((asset) => {
       return asset.asset_name.Resource === currentPath && asset.asset_name.Method === currentMethod;
     });
+    if (this.selectedAsset) {
+      this.setMetric();
+      this.sectionStatus = 'resolved';
+    } else {
+      this.sectionStatus = 'empty';
+    }
+
   }
 
   setMetric(metric?) {
-    if(metric) {
+    if (metric) {
       this.selectedMetric = metric;
-    } else if(this.selectedMetric) {
-      this.selectedAsset.metrics.find((metric) => {
-        return metric.metric_name === this.selectedMetric
-      })
+    } else if (this.selectedMetric) {
+      let found = this.selectedAsset.metrics.find((metric) => {
+        return metric.metric_name === this.selectedMetric.metric_name
+      });
+      this.selectedMetric = found || this.selectedAsset.metrics[0]
     } else {
       this.selectedMetric = this.selectedAsset.metrics[0]
     }
-    this.selectedMetric.values = this.selectedMetric.datapoints;
-    this.graphData = this.formatGraphData(this.selectedMetric.values)
+
+    this.graphData = this.formatGraphData(this.selectedMetric.datapoints);
   }
 
   formatGraphData(metricData) {
@@ -463,44 +266,33 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         };
       });
 
-
+    let timeRange = this.filters.getFieldValueOfLabel('TIME RANGE');
     let options = {
-      fromDateISO: this.filters.getFieldValueOfLabel('TIME RANGE'),
-      fromDateValue: moment(this.filters.getFieldValueOfLabel('TIME RANGE')).valueOf(),
+      fromDateISO: timeRange.range,
+      fromDateValue: moment(timeRange.range).valueOf(),
       toDateISO: moment().toISOString(),
       toDateValue: moment().valueOf(),
-      xAxisFormat: this.calculateXAxisFormat(),
+      xAxisFormat: timeRange.format,
       stepSize: this.filters.getFieldValueOfLabel('PERIOD') * 1000,
       yMin: values.length ?
-        .9 * (values.map((point) => {return point.y;})
-        .reduce((a, b) => {
-          return Math.min(a, b);
-        }, 100)) : 0,
+        .9 * (values.map((point) => {
+          return point.y;
+        })
+          .reduce((a, b) => {
+            return Math.min(a, b);
+          }, 100)) : 0,
       yMax: values.length ?
-        1.1 * (values.map((point) => {return point.y;})
-        .reduce((a, b) => {
-          return Math.max(a, b);
-        })) : 100
+        1.1 * (values.map((point) => {
+          return point.y;
+        })
+          .reduce((a, b) => {
+            return Math.max(a, b);
+          })) : 100
     };
 
     return {
       datasets: [values],
       options: options
-    }
-  }
-
-  calculateXAxisFormat() {
-    let period = this.filters.getField('PERIOD').selected;
-    let range = this.filters.getFieldValueOfLabel('TIME RANGE');
-    switch(period) {
-      case '15 Minutes':
-        return 'hh:mm a';
-      case '1 Hour':
-        return 'hh:mm a';
-      case '6 Hours':
-        return 'MMM DD hh:mm a';
-      case '1 Day':
-        return 'MMM DD';
     }
   }
 }

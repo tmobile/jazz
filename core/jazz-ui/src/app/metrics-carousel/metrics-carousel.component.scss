@@ -68,7 +68,14 @@
   }
 }
 
-.metrics-card-title {
+.metrics-card-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.metrics-name {
   font-size: 1.2rem;
   font-weight: bold;
   text-align: center;
@@ -78,14 +85,7 @@
   text-transform: capitalize;
 }
 
-.metrics-card-content {
-  font-weight: bold;
-  font-size: 1.2rem;
-  text-align: center;
-  color: #666;
-}
-
-.metrics-card-message {
+.metrics-data {
   font-size: 30px;
   text-align: center;
   color: #333;

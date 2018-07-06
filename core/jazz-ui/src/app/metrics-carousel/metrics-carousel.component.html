@@ -5,12 +5,14 @@
       <div class='metrics-card'
            *ngFor="let metric of metrics; let i=index"
            [class.metrics-card-active]="index === i"
-           (click)="selectCard(metric, i)">
-        <div class='metrics-card-title'>{{utils.hyphenToSpace(metric.name)}}</div>
-        <div class='metrics-card-message' *ngIf="getRecentValue(metric)">
-          {{getRecentValue(metric)}}
+           (click)="selectCard(metric)">
+        <div class='metrics-name'>{{metricName(metric)}}</div>
+        <div class="metrics-card-content">
+          <div class='metrics-data' *ngIf="getRecentValue(metric)">
+            {{getRecentValue(metric)}}
+          </div>
+          <div class="metrics-name" *ngIf="!getRecentValue(metric)">No Data</div>
         </div>
-        <div class='metrics-card-content' *ngIf="!getRecentValue(metric)">No Data</div>
       </div>
     </div>
   </div>

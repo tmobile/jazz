@@ -18,6 +18,7 @@ import {UtilsService} from "../core/services/utils.service";
 export class MetricsCarouselComponent implements OnInit {
   @Input() metrics;
   @Input() options = {
+    nameProperty: 'name',
     listProperty: 'values',
     valueProperty: 'value',
   };
@@ -25,8 +26,12 @@ export class MetricsCarouselComponent implements OnInit {
   private _selected;
   @Output() selectedChange = new EventEmitter();
   @Input()
-  set selected(value) {
-      this._selected = value;
+  set selected(object) {
+      let i = this.metrics.findIndex((metric) => {
+        return object[this.options.nameProperty] === metric[this.options.nameProperty];
+      });
+      this.index = i;
+      this._selected = object;
       this. selectedChange.emit(this._selected);
   }
   get selected() {
@@ -66,14 +71,17 @@ export class MetricsCarouselComponent implements OnInit {
 
   }
 
-  selectCard(metric, index) {
+  selectCard(metric) {
     this.selected = metric;
-    this.index = index
   }
 
   getRecentValue(metric) {
     if(!metric[this.options.listProperty].length) return;
     return metric[this.options.listProperty].slice(-1).pop()[this.options.valueProperty];
+  }
+
+  metricName(metric) {
+    return this.utils.hyphenToSpace(metric[this.options.nameProperty])
   }
 
   offsetLeft() {
