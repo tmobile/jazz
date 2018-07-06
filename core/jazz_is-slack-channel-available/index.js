@@ -26,21 +26,17 @@ const configModule = require("./components/config.js");
 const logger = require("./components/logger.js")();
 const request = require('request');
 
-module.exports.handler = (event, context, cb) => {
+function handler(event, context, cb) {
 
   //Initializations
   var errorHandler = errorHandlerModule();
   var config = configModule.getConfig(event, context);
   logger.init(event, context);
-  logger.info(event);
 
-  var resObj = {
-    'is_available': false
-  };
 
   try {
-    genericInputValidation(event)
-      .then((res) => requestToChannels(config, resObj, res))
+    exportable.genericInputValidation(event)
+      .then((res) => exportable.requestToChannels(config, res))
       .then((res) => cb(null, responseObj(res, event.query)))
       .catch(error => {
         logger.error(error);
@@ -93,16 +89,19 @@ function genericInputValidation(event) {
   });
 }
 
-function requestToChannels(config, resObj, channel_name) {
+function requestToChannels(config, channel_name) {
   logger.debug("Inside requestToChannels:" + channel_name);
   return new Promise((resolve, reject) => {
+    var resObj = {
+      'is_available': false
+    };
     var slack_token = "token=" + config.slack_channel_token;
     //Pull endpoints from config file
     var public_channel_url = config.public_channel_endpoint + slack_token;
     var priv_channel_url = config.priv_channel_endpoint + slack_token;
     var urlList = [];
-    urlList.push(getResponse(public_channel_url, channel_name));
-    urlList.push(getResponse(priv_channel_url, channel_name));
+    urlList.push(exportable.getResponse(public_channel_url, channel_name));
+    urlList.push(exportable.getResponse(priv_channel_url, channel_name));
 
     Promise.all(urlList)
       .then(res => {
@@ -149,3 +148,12 @@ function getResponse(channel_url, channel_name) {
     });
   });
 }
+
+const exportable = {
+  handler,
+  genericInputValidation,
+  requestToChannels,
+  getResponse
+};
+
+module.exports = exportable;
