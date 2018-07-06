@@ -72,7 +72,7 @@ describe('jazz_is-slack-channel-available', function () {
     });
   });
 
-  describe.only('getResponse', () => {
+  describe('getResponse', () => {
     var channel_url ,channel_name;
 
     beforeEach(() => {
