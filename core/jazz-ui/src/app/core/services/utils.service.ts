@@ -1,6 +1,6 @@
 import {Injectable} from '@angular/core';
 declare let Promise;
-
+declare let Object;
 @Injectable()
 export class UtilsService {
 
@@ -31,7 +31,6 @@ export class UtilsService {
     return input ? input.replace(/-/g, ' ') : '';
   }
 
-
   queryString(params) {
     return '?' + Object.keys(params).map(key => key + '=' + params[key]).join('&');
   }
@@ -39,4 +38,17 @@ export class UtilsService {
   setTimeoutPromise(timeout) {
     return new Promise(resolve => setTimeout(resolve, timeout));
   }
+
+  clone(object) {
+    return JSON.parse(JSON.stringify(object));
+  }
+
+  unique(array, callback) {
+    let object = {};
+    array.forEach((element, index, array) => {
+      object[callback(element, index, array)] = element;
+    });
+    return Object.values(object)
+  }
+
 }

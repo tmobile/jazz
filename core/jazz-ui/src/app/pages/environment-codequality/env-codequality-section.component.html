@@ -40,6 +40,7 @@
 
     <metrics-carousel [metrics]="graphDataRaw.metrics"
                       (indexChange)="selectMetric($event)"
-                      [index]="metricsIndex"></metrics-carousel>
+                      [index]="metricsIndex"
+                      [options]="{listProperty: 'values', valuesProperty: 'values'}"></metrics-carousel>
   </div>
 </div>

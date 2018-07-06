@@ -16,7 +16,9 @@
               <div class="jz-formfield-label">
                 {{field.label}}
               </div>
-              <dropdown [dropdwnContent]="field.options" [selected]="field.selected"></dropdown>
+              <dropdown [dropdwnContent]="field.options"
+                        [selected]="field.selected"
+                        (onSelected)="changeFilter($event, field)"></dropdown>
             </div>
           </div>
         </div>

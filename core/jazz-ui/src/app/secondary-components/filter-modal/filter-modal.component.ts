@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 
 @Component({
   selector: 'filter-modal',
@@ -6,41 +6,55 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./filter-modal.component.scss']
 })
 export class FilterModalComponent implements OnInit {
-  public form = {
-    columns: [
-      {
-        label: 'Filter by:',
-        fields: [
-          {
-            label: 'Path',
-            options: ['GET', 'POST'],
-            type: 'select',
-            selected: 'GET'
-          },
-          {
-            label: 'Environment',
-            options: ['prod', 'dev', 'stg'],
-            selected: 'prod'
-          }
-        ]
-      },
-      {
-        label: 'View by',
-        fields: [
-          {
-            label: 'Time Range',
-            type: 'select',
-            options: ['1', '2'],
-            selected: '1'
-          }
-        ]
-      }
-    ]
+  @Output() formChange = new EventEmitter();
+  @Input() form;
+  public selectedList = [];
+
+  constructor() {
   }
 
-  constructor() { }
-
   ngOnInit() {
+
+  }
+
+  updateSelectedList() {
+    let allFields = this.getAllFields();
+    this.selectedList = allFields.map((field) => {
+      return {
+        field: field.label,
+        label: field.selected,
+        value: this.getFieldValue(field)
+      }
+    });
+  }
+
+  changeFilter(filterSelected, filterField) {
+    filterField.selected = filterSelected;
+    this.updateSelectedList();
+    this.formChange.emit(this.selectedList);
+  }
+
+  getField(label) {
+    return this.getAllFields().find((field) => {return field.label === label;});
+  }
+
+  getFieldValueOfLabel(fieldLabel) {
+    let foundField = this.getAllFields().find((field) => {
+      return field.label === fieldLabel
+    });
+    return this.getFieldValue(foundField);
+  }
+
+  getFieldValue(field) {
+    return field.values[field.options.findIndex((option) => {
+      return option === field.selected;
+    })];
+  }
+
+  getAllFields() {
+    return this.form.columns.reduce((accumulator, column) => {
+      return accumulator.concat(column.fields)
+    }, []);
   }
 
 }

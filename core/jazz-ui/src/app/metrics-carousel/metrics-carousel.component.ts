@@ -17,6 +17,11 @@ import {UtilsService} from "../core/services/utils.service";
 })
 export class MetricsCarouselComponent implements OnInit {
   @Input() metrics;
+  @Input() options = {
+    listProperty: 'values',
+    valueProperty: 'value',
+  };
+
   private _selected;
   @Output() selectedChange = new EventEmitter();
   @Input()
@@ -57,11 +62,18 @@ export class MetricsCarouselComponent implements OnInit {
   constructor(public utils: UtilsService) {
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+
+  }
 
   selectCard(metric, index) {
     this.selected = metric;
     this.index = index
+  }
+
+  getRecentValue(metric) {
+    if(!metric[this.options.listProperty].length) return;
+    return metric[this.options.listProperty].slice(-1).pop()[this.options.valueProperty];
   }
 
   offsetLeft() {

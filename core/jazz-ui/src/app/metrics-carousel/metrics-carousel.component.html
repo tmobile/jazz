@@ -7,10 +7,10 @@
            [class.metrics-card-active]="index === i"
            (click)="selectCard(metric, i)">
         <div class='metrics-card-title'>{{utils.hyphenToSpace(metric.name)}}</div>
-        <div class='metrics-card-content' *ngIf="metric.values[metric.values.length - 1]?.value">
-          {{metric.values[metric.values.length - 1]?.value}}
+        <div class='metrics-card-message' *ngIf="getRecentValue(metric)">
+          {{getRecentValue(metric)}}
         </div>
-        <div class='metrics-card-message' *ngIf="!metric.values[metric.values.length - 1]?.value">No Data</div>
+        <div class='metrics-card-content' *ngIf="!getRecentValue(metric)">No Data</div>
       </div>
     </div>
   </div>
