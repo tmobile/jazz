@@ -90,7 +90,11 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
           ticks: {
             min: 0,
             max: 100,
-            padding: 10
+            padding: 10,
+            stepSize: undefined,
+            userCallback: function (tick) {
+              return Math.round(tick);
+            }
           },
           gridLines: {
             color: '#888',
@@ -107,6 +111,10 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
     };
     options.scales.yAxes[0].ticks.min = graphOptions.yMin || 0;
     options.scales.yAxes[0].ticks.max = graphOptions.yMax || 100;
+    if(graphOptions.yMin && graphOptions.yMax) {
+      let difference = graphOptions.yMax - graphOptions.yMin;
+      options.scales.yAxes[0].ticks.stepSize = difference / 5;
+    }
     return options;
   }
 

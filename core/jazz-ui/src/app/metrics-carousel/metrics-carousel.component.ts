@@ -77,7 +77,7 @@ export class MetricsCarouselComponent implements OnInit {
 
   getRecentValue(metric) {
     if(!metric[this.options.listProperty].length) return;
-    return metric[this.options.listProperty].slice(-1).pop()[this.options.valueProperty];
+    return metric[this.options.listProperty].slice(-1).pop()[this.options.valueProperty].toFixed(0).toString();
   }
 
   metricName(metric) {

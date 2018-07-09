@@ -21,24 +21,16 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     label: 'Filter by:',
     fields: [
       {
-        label: 'PATH',
+        label: 'ASSET',
         options: [],
         values: [],
-        type: 'select',
-        selected: null
+        selected: ''
       },
       {
         label: 'ENVIRONMENT',
         options: ['prod', 'dev', 'stg'],
         values: ['prod', 'dev', 'stg'],
         selected: 'prod'
-      },
-      {
-        label: 'METHOD',
-        type: 'select',
-        options: [],
-        values: [],
-        selected: null
       }
     ]
   };
@@ -138,9 +130,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   applyFilter(filterChanges) {
-    if (filterChanges.changed &&
-      (filterChanges.changed.label === 'PATH' ||
-        filterChanges.changed.label === 'METHOD')) {
+    if (filterChanges.changed && filterChanges.changed.label === 'ASSET') {
       this.setAsset();
     } else {
       this.queryMetricsData();
@@ -157,6 +147,147 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   queryMetricsData() {
+    let r = {
+      "data": {
+        "domain": "surya",
+        "service": "test-ws1",
+        "environment": "prod",
+        "end_time": "2018-07-07T01:31:05.689Z",
+        "start_time": "2018-06-30T01:31:05.682Z",
+        "interval": 3600,
+        "statistics": "sum",
+        "assets": [
+          {
+            "type": "s3",
+            "asset_name": {
+              "BucketName": "jazz20180706-prod-web-20180706134840176500000006",
+              "StorageType": "StandardStorage"
+            },
+            "statistics": "Sum",
+            "metrics": [
+              {
+                "metric_name": "NumberOfObjects",
+                "datapoints": []
+              },
+              {
+                "metric_name": "BucketSizeBytes",
+                "datapoints": []
+              }
+            ]
+          },
+          {
+            "type": "cloudfront",
+            "asset_name": {
+              "DistributionId": "E2LI8JCGEHHODQ",
+              "Region": "Global"
+            },
+            "statistics": "Sum",
+            "metrics": [
+              {
+                "metric_name": "5xxErrorRate",
+                "datapoints": [
+                  {
+                    "Timestamp": "2018-07-06T22:31:00.000Z",
+                    "Sum": 0,
+                    "Unit": "Percent"
+                  },
+                  {
+                    "Timestamp": "2018-07-06T23:31:00.000Z",
+                    "Sum": 0,
+                    "Unit": "Percent"
+                  }
+                ]
+              },
+              {
+                "metric_name": "Requests",
+                "datapoints": [
+                  {
+                    "Timestamp": "2018-07-06T22:31:00.000Z",
+                    "Sum": 10,
+                    "Unit": "None"
+                  },
+                  {
+                    "Timestamp": "2018-07-06T23:31:00.000Z",
+                    "Sum": 40,
+                    "Unit": "None"
+                  }
+                ]
+              },
+              {
+                "metric_name": "BytesUploaded",
+                "datapoints": [
+                  {
+                    "Timestamp": "2018-07-06T22:31:00.000Z",
+                    "Sum": 0,
+                    "Unit": "None"
+                  },
+                  {
+                    "Timestamp": "2018-07-06T23:31:00.000Z",
+                    "Sum": 0,
+                    "Unit": "None"
+                  }
+                ]
+              },
+              {
+                "metric_name": "TotalErrorRate",
+                "datapoints": [
+                  {
+                    "Timestamp": "2018-07-06T22:31:00.000Z",
+                    "Sum": 0,
+                    "Unit": "Percent"
+                  },
+                  {
+                    "Timestamp": "2018-07-06T23:31:00.000Z",
+                    "Sum": 0,
+                    "Unit": "Percent"
+                  }
+                ]
+              },
+              {
+                "metric_name": "4xxErrorRate",
+                "datapoints": [
+                  {
+                    "Timestamp": "2018-07-06T22:31:00.000Z",
+                    "Sum": 0,
+                    "Unit": "Percent"
+                  },
+                  {
+                    "Timestamp": "2018-07-06T23:31:00.000Z",
+                    "Sum": 0,
+                    "Unit": "Percent"
+                  }
+                ]
+              },
+              {
+                "metric_name": "BytesDownloaded",
+                "datapoints": [
+                  {
+                    "Timestamp": "2018-07-06T22:31:00.000Z",
+                    "Sum": 181730,
+                    "Unit": "None"
+                  },
+                  {
+                    "Timestamp": "2018-07-06T23:31:00.000Z",
+                    "Sum": 15121,
+                    "Unit": "None"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "input": {
+        "domain": "surya",
+        "service": "test-ws1",
+        "environment": "prod",
+        "start_time": "2018-06-30T01:31:05.682Z",
+        "end_time": "2018-07-07T01:31:05.689Z",
+        "interval": 3600,
+        "statistics": "sum"
+      }
+    }
+
     this.sectionStatus = 'loading';
     let request = {
       url: '/jazz/metrics',
@@ -170,15 +301,14 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         statistics: this.filters.getFieldValueOfLabel('STATISTICS')
       }
     };
-    return this.http.post(request.url, request.body)
-      .toPromise()
+    // return this.http.post(request.url, request.body)
+    Observable.of(r).toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
         if (response && response.data && response.data.assets && response.data.assets.length) {
           this.queryDataRaw = response.data;
           this.queryDataRaw.assets = this.filterAssetType(response.data);
-          this.setPathFilter();
-          this.setMethodFilter();
+          this.setAssetsFilter();
           this.setAsset();
         }
       })
@@ -192,49 +322,64 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     return data.assets.filter((asset) => {
       if (this.serviceType === 'api') {
         return asset.type === 'apigateway';
-      } else if (this.serviceType === 'lambda') {
+      } else if (this.serviceType === 'function') {
         return asset.type === 'lambda'
+      } else if (this.serviceType === 'website') {
+        return (asset.type === 's3') || (asset.type === 'cloudfront');
       }
     })
   }
 
-  setPathFilter() {
-    let paths = this.utils.unique(this.queryDataRaw.assets.map((asset) => {
-      return asset.asset_name.Resource
-    }), (assetResource) => {
-      return assetResource;
-    });
-    let pathsField = this.filters.getField('PATH');
-    pathsField.options = paths;
-    pathsField.values = paths;
-    pathsField.selected = this.selectedAsset && this.selectedAsset.asset_name.Resource || paths[0];
-  }
 
-  setMethodFilter() {
-    let methodsField = this.filters.getField('METHOD');
-    let methods = this.utils.unique(this.queryDataRaw.assets.map((asset) => {
-      return asset.asset_name.Method;
-    }), (assetMethod) => {
-      return assetMethod;
-    });
-    methodsField.options = methods;
-    methodsField.values = methods;
-    methodsField.selected = this.selectedAsset && this.selectedAsset.asset_name.Method || methods[0];
+  setAssetsFilter() {
+    let field = this.filters.getField('ASSET');
+    let assets;
+    if (this.serviceType === 'function') {
+      assets = this.utils.unique(this.queryDataRaw.assets.map((asset) => {
+        return asset.asset_name.FunctionName;
+      }), (asset) => {
+        return asset;
+      });
+    } else if (this.serviceType === 'api') {
+      assets = this.utils.unique(this.queryDataRaw.assets.map((asset) => {
+        return asset.asset_name.Method;
+      }), (asset) => {
+        return asset;
+      });
+    } else if (this.serviceType === 'website') {
+      assets = this.utils.unique(this.queryDataRaw.assets.map((asset) => {
+        return asset.type;
+      }), (asset) => {
+        return asset;
+      });
+    }
+    field.options = assets;
+    field.values = assets;
+    field.selected = field.options[0];
   }
 
   setAsset() {
-    let currentPath = this.filters.getFieldValueOfLabel('PATH');
-    let currentMethod = this.filters.getFieldValueOfLabel('METHOD');
-    this.selectedAsset = this.queryDataRaw.assets.find((asset) => {
-      return asset.asset_name.Resource === currentPath && asset.asset_name.Method === currentMethod;
-    });
+    let currentAsset = this.filters.getFieldValueOfLabel('ASSET');
+    if (this.serviceType === 'function') {
+      this.selectedAsset = this.queryDataRaw.assets.find((asset) => {
+        return asset.asset_name.FunctionName === currentAsset
+      });
+    } else if (this.serviceType === 'api') {
+      this.selectedAsset = this.queryDataRaw.assets.find((asset) => {
+        return asset.asset_name.Method === currentAsset;
+      });
+    } else if (this.serviceType === 'website') {
+      this.selectedAsset = this.queryDataRaw.assets.find((asset) => {
+        return asset.type === currentAsset;
+      });
+    }
+
     if (this.selectedAsset) {
       this.setMetric();
       this.sectionStatus = 'resolved';
     } else {
       this.sectionStatus = 'empty';
     }
-
   }
 
   setMetric(metric?) {
@@ -280,7 +425,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         })
           .reduce((a, b) => {
             return Math.min(a, b);
-          }, 100)) : 0,
+          })) : 0,
       yMax: values.length ?
         1.1 * (values.map((point) => {
           return point.y;
