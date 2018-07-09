@@ -178,3 +178,10 @@
   color:red;
   font-style: italic;
 }
+
+.overview-sidebar{
+  /deep/.sidebar-wrp .sidebar-inr{
+    overflow-y:auto;
+    }
+  
+}

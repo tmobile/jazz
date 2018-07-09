@@ -165,16 +165,20 @@ button {
   padding: 1rem 0;
 }
 
+
+.success {
+  color: rgb(92, 174, 1)
+}
 .error {
   color: rgb(208, 2, 27);
 
 }
 
-.success {
-  color: rgb(92, 174, 1)
-}
-
 .column-heading {
   height: calc(25rem/12);
   font-size: 1.5rem;
+}
+
+.op-box{
+  margin-top:2rem;
 }
