@@ -15,11 +15,11 @@
 // =========================================================================
 
 /**
-	Nodejs Template Project
+  Nodejs Template Project
   @module: config.js
   @description: Defines variables/functions to retrieve environment related data
-	@author:
-	@version: 1.0
+  @author:
+  @version: 1.0
 **/
 
 const fs = require('fs');
@@ -56,5 +56,5 @@ var getStageConfig = (event, context) => {
 };
 
 module.exports = {
-	getConfig: getStageConfig
+  getConfig: getStageConfig
 }
