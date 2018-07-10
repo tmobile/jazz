@@ -208,7 +208,7 @@ export class EnvironmentDetailComponent implements OnInit {
               return asset.asset_type === 'swagger_url';
             });
             if (foundAsset) {
-              return window.open(environment.urls['swagger_editor'] + '/?url=' + foundAsset.provider_id);
+              return window.open(environment.urls['swagger_editor'] + foundAsset.provider_id);
             } else {
               return window.open('/404');
             }
