@@ -6,6 +6,7 @@ import {UtilsService} from "../../core/services/utils.service";
 import {ActivatedRoute} from "@angular/router";
 import {RequestService} from "../../core/services";
 import {Observable} from "rxjs/Observable";
+import * as _ from "lodash";
 
 @Component({
   selector: 'service-metrics',
@@ -17,78 +18,61 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   @ViewChild('filters') filters;
 
   public serviceType;
-  public filterInputs: any = {
-    label: 'Filter by:',
-    fields: [
-      {
-        label: 'ASSET',
-        options: [],
-        values: [],
-        selected: ''
-      },
-      {
-        label: 'ENVIRONMENT',
-        options: ['prod', 'dev', 'stg'],
-        values: ['prod', 'dev', 'stg'],
-        selected: 'prod'
-      }
-    ]
+  public environmentFilter = {
+    column: 'Filter By:',
+    label: 'ENVIRONMENT',
+    options: ['prod', 'dev', 'stg'],
+    values: ['prod', 'dev', 'stg'],
+    selected: 'prod'
   };
-  public viewInputs: any = {
-    label: 'View by',
-    fields: [
-      {
-        label: 'TIME RANGE',
-        type: 'select',
-        options: ['Day', 'Week', 'Month', 'Year'],
-        values: [
-          {
-            range: moment().subtract(1, 'day').toISOString(),
-            format: 'h:mm a'
-          },
-          {
-            range: moment().subtract(1, 'week').toISOString(),
-            format: 'MMM Do'
-          },
-          {
-            range: moment().subtract(1, 'month').toISOString(),
-            format: 'M/D'
-          },
-          {
-            range: moment().subtract(1, 'year').toISOString(),
-            format: 'MMMM'
-          }],
-        selected: 'Week'
-      },
-      {
-        label: 'PERIOD',
-        type: 'select',
-        options: ['15 Minutes', '1 Hour', '6 Hours', '1 Day', '7 Days', '30 Days'],
-        values: [moment(0).add(15, 'minute').valueOf() / 1000,
-          moment(0).add(1, 'hour').valueOf() / 1000,
-          moment(0).add(6, 'hour').valueOf() / 1000,
-          moment(0).add(1, 'day').valueOf() / 1000,
-          moment(0).add(7, 'day').valueOf() / 1000,
-          moment(0).add(30, 'day').valueOf() / 1000],
-        selected: '1 Hour'
-      },
-      {
-        label: 'STATISTICS',
-        type: 'select',
-        options: ['Sum', 'Average'],
-        values: ['sum', 'average'],
-        selected: 'Sum'
-      }
-    ]
-  };
-  public formFields = this.filterInputs.fields.concat(this.viewInputs.fields);
-  public form = {
-    columns: [
-      this.filterInputs,
-      this.viewInputs
-    ]
-  };
-  public formFieldDefaults = this.utils.clone(this.formFields);
+  public formFields: any = [
+    {
+      column: 'View By:',
+      label: 'TIME RANGE',
+      type: 'select',
+      options: ['Day', 'Week', 'Month', 'Year'],
+      values: [
+        {
+          range: moment().subtract(1, 'day').toISOString(),
+          format: 'h:mm a'
+        },
+        {
+          range: moment().subtract(1, 'week').toISOString(),
+          format: 'MMM Do'
+        },
+        {
+          range: moment().subtract(1, 'month').toISOString(),
+          format: 'M/D'
+        },
+        {
+          range: moment().subtract(1, 'year').toISOString(),
+          format: 'MMMM'
+        }],
+      selected: 'Week'
+    },
+    {
+      column: 'View By:',
+      label: 'PERIOD',
+      type: 'select',
+      options: ['15 Minutes', '1 Hour', '6 Hours', '1 Day', '7 Days', '30 Days'],
+      values: [moment(0).add(15, 'minute').valueOf() / 1000,
+        moment(0).add(1, 'hour').valueOf() / 1000,
+        moment(0).add(6, 'hour').valueOf() / 1000,
+        moment(0).add(1, 'day').valueOf() / 1000,
+        moment(0).add(7, 'day').valueOf() / 1000,
+        moment(0).add(30, 'day').valueOf() / 1000],
+      selected: '1 Hour'
+    },
+    {
+      column: 'View By:',
+      label: 'STATISTICS',
+      type: 'select',
+      options: ['Sum', 'Average'],
+      values: ['sum', 'average'],
+      selected: 'Sum'
+    }
+  ];
+  public form;
   public selectedAsset;
   public selectedMetric;
   public queryDataRaw;
@@ -105,48 +89,129 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    let filterList = this.formFieldDefaults.map((field) => {
-      return {
-        field: field.label,
-        label: field.selected,
-        value: field.values[field.options.findIndex((option) => {
-          return option === field.selected;
-        })]
-      }
-    });
-
-    this.applyFilter({
-      list: filterList,
-      changed: null
-    });
+    this.applyFilter()
   }
 
   ngOnInit() {
     this.serviceType = this.service.type || this.service.serviceType;
+    this.formFields.splice(0, 0, this.environmentFilter);
   }
 
   refresh() {
     this.ngAfterViewInit();
   }
 
-  applyFilter(filterChanges) {
-    if (filterChanges.changed && filterChanges.changed.label === 'ASSET') {
+  applyFilter(changedFilter?) {
+    if (changedFilter && (changedFilter.label === 'ASSET' ||
+      changedFilter.label === 'METHOD' ||
+      changedFilter.label === 'PATH')) {
       this.setAsset();
     } else {
       this.queryMetricsData();
     }
   }
 
-  removeDefaultFilters(filterList) {
-    return filterList.filter((filter) => {
-      let defaultField = this.formFieldDefaults.find((field) => {
-        return field.label === filter.field;
-      });
-      return defaultField.selected !== filter.label
-    });
-  }
-
   queryMetricsData() {
+    let r = {
+      "data": {
+        "domain": "surya",
+        "service": "test-l5",
+        "environment": "prod",
+        "end_time": "2018-07-07T01:29:27.006Z",
+        "start_time": "2018-06-30T01:29:27.000Z",
+        "interval": 3600,
+        "statistics": "sum",
+        "assets": [
+          {
+            "type": "lambda",
+            "asset_name": {
+              "FunctionName": "jazz20180706-surya-test-l5-prod"
+            },
+            "statistics": "Sum",
+            "metrics": [
+              {
+                "metric_name": "Invocations",
+                "datapoints": [
+                  {
+                    "Timestamp": "2018-07-06T22:29:00.000Z",
+                    "Sum": 3,
+                    "Unit": "Count"
+                  },
+                  {
+                    "Timestamp": "2018-07-06T23:29:00.000Z",
+                    "Sum": 2,
+                    "Unit": "Count"
+                  }
+                ]
+              },
+              {
+                "metric_name": "Duration",
+                "datapoints": [
+                  {
+                    "Timestamp": "2018-07-06T23:29:00.000Z",
+                    "Sum": 9.15,
+                    "Unit": "Milliseconds"
+                  },
+                  {
+                    "Timestamp": "2018-07-06T22:29:00.000Z",
+                    "Sum": 42.769999999999996,
+                    "Unit": "Milliseconds"
+                  }
+                ]
+              },
+              {
+                "metric_name": "Dead Letter Error",
+                "datapoints": []
+              },
+              {
+                "metric_name": "IteratorAge",
+                "datapoints": []
+              },
+              {
+                "metric_name": "Errors",
+                "datapoints": [
+                  {
+                    "Timestamp": "2018-07-06T22:29:00.000Z",
+                    "Sum": 0,
+                    "Unit": "Count"
+                  },
+                  {
+                    "Timestamp": "2018-07-06T23:29:00.000Z",
+                    "Sum": 0,
+                    "Unit": "Count"
+                  }
+                ]
+              },
+              {
+                "metric_name": "Throttles",
+                "datapoints": [
+                  {
+                    "Timestamp": "2018-07-06T22:29:00.000Z",
+                    "Sum": 0,
+                    "Unit": "Count"
+                  },
+                  {
+                    "Timestamp": "2018-07-06T23:29:00.000Z",
+                    "Sum": 0,
+                    "Unit": "Count"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "input": {
+        "domain": "surya",
+        "service": "test-l5",
+        "environment": "prod",
+        "start_time": "2018-06-30T01:29:27.000Z",
+        "end_time": "2018-07-07T01:29:27.006Z",
+        "interval": 3600,
+        "statistics": "sum"
+      }
+    };
+
     this.sectionStatus = 'loading';
     let request = {
       url: '/jazz/metrics',
@@ -160,9 +225,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         statistics: this.filters.getFieldValueOfLabel('STATISTICS')
       }
     };
-    return this.http.post(request.url, request.body)
-    // Observable.of(r)
-    .toPromise()
+    // return this.http.post(request.url, request.body)
+    Observable.of(r)
+      .toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
         if (response && response.data && response.data.assets && response.data.assets.length) {
@@ -190,48 +255,42 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     })
   }
 
-
   setAssetsFilter() {
-    let field = this.filters.getField('ASSET');
-    let assets;
-    if (this.serviceType === 'function') {
-      assets = this.utils.unique(this.queryDataRaw.assets.map((asset) => {
-        return asset.asset_name.FunctionName;
-      }), (asset) => {
-        return asset;
-      });
-    } else if (this.serviceType === 'api') {
-      assets = this.utils.unique(this.queryDataRaw.assets.map((asset) => {
-        return asset.asset_name.Method;
-      }), (asset) => {
-        return asset;
-      });
-    } else if (this.serviceType === 'website') {
-      assets = this.utils.unique(this.queryDataRaw.assets.map((asset) => {
-        return asset.type;
-      }), (asset) => {
-        return asset;
-      });
+    this.filters.reset();
+    switch (this.serviceType) {
+      case 'api':
+        let methods = _(this.queryDataRaw.assets)
+          .map('asset_name.Method')
+          .uniq().value();
+        let paths = _(this.queryDataRaw.assets)
+          .map('asset_name.Resource')
+          .uniq().value();
+        this.filters.addField('Filter By:', 'METHOD', methods);
+        this.filters.addField('Filter By:', 'PATH', paths);
+        break;
+      case 'website':
+        let websiteAssets = _(this.queryDataRaw.assets).map('type').uniq().value();
+        this.filters.addField('Filter By:', 'ASSET', websiteAssets);
+        break;
     }
-    field.options = assets;
-    field.values = assets;
-    field.selected = field.options[0];
   }
 
   setAsset() {
-    let currentAsset = this.filters.getFieldValueOfLabel('ASSET');
-    if (this.serviceType === 'function') {
-      this.selectedAsset = this.queryDataRaw.assets.find((asset) => {
-        return asset.asset_name.FunctionName === currentAsset
-      });
-    } else if (this.serviceType === 'api') {
-      this.selectedAsset = this.queryDataRaw.assets.find((asset) => {
-        return asset.asset_name.Method === currentAsset;
-      });
-    } else if (this.serviceType === 'website') {
-      this.selectedAsset = this.queryDataRaw.assets.find((asset) => {
-        return asset.type === currentAsset;
-      });
+    switch (this.serviceType) {
+      case 'api':
+        let method = this.filters.getFieldValueOfLabel('METHOD');
+        let path = this.filters.getFieldValueOfLabel('PATH');
+        this.selectedAsset = _.find(this.queryDataRaw.assets, (asset) => {
+          return asset.asset_name.Method === method && asset.asset_name.Resource === path;
+        });
+        break;
+      case 'function':
+        this.selectedAsset = this.queryDataRaw.assets[0];
+        break;
+      case 'website':
+        let assetType = this.filters.getFieldValueOfLabel('ASSET');
+        this.selectedAsset = _.find(this.queryDataRaw.assets, {type: assetType});
+        break;
     }
 
     if (this.selectedAsset) {
@@ -300,4 +359,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       options: options
     }
   }
+
+
 }

@@ -1,4 +1,5 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import * as _ from "lodash";
 
 @Component({
   selector: 'filter-modal',
@@ -7,52 +8,48 @@ import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 })
 export class FilterModalComponent implements OnInit {
   @Output() formChange = new EventEmitter();
-  @Input() form;
-  public selectedList = [];
+  @Input() fields;
+  @Input() options;
+
+  public form = {
+    columns: []
+  };
   public opened = false;
 
   constructor() {
   }
 
   ngOnInit() {
-
+    let columns = _(this.fields)
+      .groupBy('column')
+      .map((column, key, array) => {
+        return {
+          label: key,
+          fields: column
+        }
+      })
+      .value();
+    this.form.columns = columns
   }
 
-  updateSelectedList() {
-    let allFields = this.getAllFields();
-    this.selectedList = allFields.map((field) => {
-      return {
-        field: field.label,
-        label: field.selected,
-        value: this.getFieldValue(field)
-      }
-    });
+  reset() {
+    this.ngOnInit();
   }
 
   changeFilter(filterSelected, filterField) {
     filterField.selected = filterSelected;
-    this.updateSelectedList();
-    this.formChange.emit({
-      list: this.selectedList,
-      changed: filterField
-    });
-  }
-
-  getField(label) {
-    return this.getAllFields().find((field) => {return field.label === label;});
+    this.formChange.emit(filterField);
   }
 
   getFieldValueOfLabel(fieldLabel) {
     let foundField = this.getAllFields().find((field) => {
       return field.label === fieldLabel
     });
-    return this.getFieldValue(foundField);
-  }
-
-  getFieldValue(field) {
-    return field.values[field.options.findIndex((option) => {
-      return option === field.selected;
+    let value = foundField.values[foundField.options.findIndex((option) => {
+      return option === foundField.selected;
     })];
+
+    return value;
   }
 
   getAllFields() {
@@ -65,4 +62,16 @@ export class FilterModalComponent implements OnInit {
     this.opened = !this.opened;
   }
 
+  addField(column, label, options, values?) {
+    let columnIndex = _.findIndex(this.form.columns, {label: column});
+
+    let field = {
+      column: column,
+      label: label,
+      options: options,
+      values: values || options,
+      selected: options[0]
+    };
+    this.form.columns[columnIndex].fields.push(field);
+  }
 }
