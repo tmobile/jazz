@@ -46,7 +46,7 @@ USAGE
     logger.log('info', 'message');
 
 */
-module.exports = function() {
+module.exports = function () {
     const logLevels = {
         error: 4,
         warn: 3,
@@ -99,13 +99,13 @@ module.exports = function() {
                 return level;
             }
         }
-        
+
         return null;
     };
 
     const log = (level, message) => {
         const timestamp = new Date().toISOString();
-        
+
         const logLevelMessageTypes = {
             'error': `${timestamp}, 'ERROR \t', ${config.requestDetails}, ${message}`,
             'warn': `${timestamp}, 'WARN \t', ${config.requestDetails}, ${message}`,
@@ -114,7 +114,7 @@ module.exports = function() {
             'debug': `${timestamp}, 'DEBUG \t', ${config.requestDetails}, ${message}`,
             'log': `${timestamp}, ${level} \t', ${config.requestDetails}, ${message}`
         };
-        
+
         /*
             @TODO: format message as per requirement.
             Will it be just a string / json. Should we except error object also?
@@ -124,7 +124,7 @@ module.exports = function() {
         } catch(ex) {
             console.log(logLevelMessageTypes.log);
         }
-        
+
         return null;
     };
 

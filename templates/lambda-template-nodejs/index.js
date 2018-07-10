@@ -28,14 +28,14 @@ const errorHandlerModule = require("./components/error-handler.js");
 module.exports.handler = (event, context, cb) => {
 
   //Initializations
-  var config = configModule.getConfig(event, context);
-  var errorHandler = errorHandlerModule();
+  const config = configModule.getConfig(event, context);
+  const errorHandler = errorHandlerModule();
   logger.init(event, context);
 
   try {
 
     //Following is a code snippet to fetch values from config file:
-    var myVal = config.configKey;
+    const myVal = config.configKey;
 
     //Following code snippet describes how to log messages within your code:
     /*
@@ -46,7 +46,7 @@ module.exports.handler = (event, context, cb) => {
     logger.debug('Detailed information on the flow through the system.');
     */
 
-    var sampleResponse = {
+    const sampleResponse = {
       "foo": "foo-value",
       "bar": "bar-value",
       "configKeys": myVal

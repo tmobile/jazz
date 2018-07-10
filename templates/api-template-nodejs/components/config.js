@@ -26,7 +26,7 @@ const fs = require('fs');
 const path = require('path');
 
 const getStageConfig = (event, context) => {
-  var stage, configObj;
+  let stage, configObj;
 
   if (event && event.stage) {
     stage = event.stage;
