@@ -29,11 +29,11 @@ const request = require('request');
 function handler(event, context, cb) {
   //Initializations
   var errorHandler = errorHandlerModule();
-  var config = configObj(event, context);
+  var config = configObj.getConfig(event, context);
   logger.init(event, context);
 
   try {
-    apiResponseObj = {};
+    var apiResponseObj = {};
     if (event && event.method && event.method === 'GET') {
       if (!event.principalId) {
         logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
@@ -47,12 +47,12 @@ function handler(event, context, cb) {
         return cb(null, responseObj(apiResponseObj, event.body));
       }).catch((error) => {
         logger.error("Failed to load admin config file:"+ JSON.stringify(error));
-        cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load config file.")));
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load config file.")));
       });
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("The requested method is not supported")));
     }
-  } catch (e) {
+  } catch (error) {
     logger.error(JSON.stringify(error));
     cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown Error")));
   }
@@ -88,7 +88,7 @@ function getInstallerVarsJSON(config) {
         if (error) {
           reject(error);
         } else {
-          if (response.statuscode != 200) {
+          if (response.statusCode != 200) {
             logger.error("Error processing request: " + JSON.stringify(response));
             return reject(response.body.message);
           }
