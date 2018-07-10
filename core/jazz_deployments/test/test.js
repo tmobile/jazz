@@ -32,7 +32,7 @@ describe('jazz_deployments', function () {
         "scm_branch": "feature/test",
         "status": "successful",
         "domain": "k!ngd0m",
-        "provider_build_url": "http://test/job/build_pack_api/211",
+        "provider_build_url": "http://test/job/build-pack-api/211",
         "provider_build_id": "211",
         "scm_commit_hash": "abc123xyz",
         "scm_url": "http://test/k!ngd0m_mag!c.git"
