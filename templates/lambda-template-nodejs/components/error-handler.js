@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,11 +24,11 @@
 
 module.exports = () => {
     const errorObj = {
-        throwInputValidationError: (errorMessage) => ( //Raise a bad requests exception
-          {
+        throwInputValidationError: (errorMessage) => ( //Raise a  bad requests exception
+            {
                 errorType: "BadRequest",
                 message: errorMessage.toString()
-          }
+            }
         ),
         throwForbiddenError: (errorMessage) => ( //Raise not found exceptions
             {
@@ -48,7 +48,7 @@ module.exports = () => {
                 message: errorMessage.toString()
             }
         ),
-        throwInternalServerError: (errorMessage) ( //Raise internal server exceptions
+        throwInternalServerError: (errorMessage) => ( //Raise internal server exceptions
             {
                 errorType: "InternalServerError",
                 message: errorMessage.toString()
