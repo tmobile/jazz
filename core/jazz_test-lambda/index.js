@@ -40,9 +40,10 @@ var handler = (event, context, cb) => {
       "execStatus": null,
       "payload": null,
     };
-    if (!event && !event.method && event.method !== 'POST') {
-      return cb(JSON.stringify(errorHandler.throwNotFoundError("Method not found")));
+    if (!event || !event.method || event.method !== 'POST') {
+      return cb(JSON.stringify(errorHandler.throwInputValidationError("Method not found")));
     }
+    console.log("helo")
     if (!event.body) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("Request payload cannot be empty")));
     }
@@ -83,11 +84,12 @@ var handler = (event, context, cb) => {
       return cb(null, responseObj(responseObject, event.body));
     });
   } catch (err) {
-    return cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown internal error occurred when invoking the function")));
+    console.log("why");
+    return cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown internal error occurred when invoking the hhhhh  function")));
   }
 };
 var invokeLambda = (functionARN, inputJSON, awsRegion) => {
-
+  console.log("why");
   return new Promise((resolve, reject) => {
     try {
       var lambda = new aws.Lambda({
