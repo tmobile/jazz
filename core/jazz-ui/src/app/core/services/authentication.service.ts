@@ -92,7 +92,7 @@ export class AuthenticationService {
             return false;
         }
     }
-    
+
     getUserId(){
         let currentUser;
         if(this.isLoggedIn()){
@@ -100,6 +100,12 @@ export class AuthenticationService {
             this.userid = currentUser.username;
         }
         return this.userid;
+    }
+
+    getAuthenticatedUser() {
+      if(this.isLoggedIn()) {
+        return JSON.parse(localStorage.getItem('currentUser'));
+      }
     }
 }
 
