@@ -172,7 +172,7 @@
         </ul>
     <ul class="section-right col-md-6 col-sm-12">
        
-        <li *ngIf='internal_build'>
+        <li *ngIf='SlackEnabled'>
         <div class="det-label">Slack Channel</div>
         <div class="det-value" [class.link]='!slackChannel_empty' [ngClass]="{PlaceHolder:slackChannel_empty}"  (click)="slack_link()">{{service.slackChannel || 'Feeling collaborative? Add it to slack'}}</div>
         </li>
