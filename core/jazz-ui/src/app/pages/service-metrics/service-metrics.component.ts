@@ -147,147 +147,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   queryMetricsData() {
-    let r = {
-      "data": {
-        "domain": "surya",
-        "service": "test-ws1",
-        "environment": "prod",
-        "end_time": "2018-07-07T01:31:05.689Z",
-        "start_time": "2018-06-30T01:31:05.682Z",
-        "interval": 3600,
-        "statistics": "sum",
-        "assets": [
-          {
-            "type": "s3",
-            "asset_name": {
-              "BucketName": "jazz20180706-prod-web-20180706134840176500000006",
-              "StorageType": "StandardStorage"
-            },
-            "statistics": "Sum",
-            "metrics": [
-              {
-                "metric_name": "NumberOfObjects",
-                "datapoints": []
-              },
-              {
-                "metric_name": "BucketSizeBytes",
-                "datapoints": []
-              }
-            ]
-          },
-          {
-            "type": "cloudfront",
-            "asset_name": {
-              "DistributionId": "E2LI8JCGEHHODQ",
-              "Region": "Global"
-            },
-            "statistics": "Sum",
-            "metrics": [
-              {
-                "metric_name": "5xxErrorRate",
-                "datapoints": [
-                  {
-                    "Timestamp": "2018-07-06T22:31:00.000Z",
-                    "Sum": 0,
-                    "Unit": "Percent"
-                  },
-                  {
-                    "Timestamp": "2018-07-06T23:31:00.000Z",
-                    "Sum": 0,
-                    "Unit": "Percent"
-                  }
-                ]
-              },
-              {
-                "metric_name": "Requests",
-                "datapoints": [
-                  {
-                    "Timestamp": "2018-07-06T22:31:00.000Z",
-                    "Sum": 10,
-                    "Unit": "None"
-                  },
-                  {
-                    "Timestamp": "2018-07-06T23:31:00.000Z",
-                    "Sum": 40,
-                    "Unit": "None"
-                  }
-                ]
-              },
-              {
-                "metric_name": "BytesUploaded",
-                "datapoints": [
-                  {
-                    "Timestamp": "2018-07-06T22:31:00.000Z",
-                    "Sum": 0,
-                    "Unit": "None"
-                  },
-                  {
-                    "Timestamp": "2018-07-06T23:31:00.000Z",
-                    "Sum": 0,
-                    "Unit": "None"
-                  }
-                ]
-              },
-              {
-                "metric_name": "TotalErrorRate",
-                "datapoints": [
-                  {
-                    "Timestamp": "2018-07-06T22:31:00.000Z",
-                    "Sum": 0,
-                    "Unit": "Percent"
-                  },
-                  {
-                    "Timestamp": "2018-07-06T23:31:00.000Z",
-                    "Sum": 0,
-                    "Unit": "Percent"
-                  }
-                ]
-              },
-              {
-                "metric_name": "4xxErrorRate",
-                "datapoints": [
-                  {
-                    "Timestamp": "2018-07-06T22:31:00.000Z",
-                    "Sum": 0,
-                    "Unit": "Percent"
-                  },
-                  {
-                    "Timestamp": "2018-07-06T23:31:00.000Z",
-                    "Sum": 0,
-                    "Unit": "Percent"
-                  }
-                ]
-              },
-              {
-                "metric_name": "BytesDownloaded",
-                "datapoints": [
-                  {
-                    "Timestamp": "2018-07-06T22:31:00.000Z",
-                    "Sum": 181730,
-                    "Unit": "None"
-                  },
-                  {
-                    "Timestamp": "2018-07-06T23:31:00.000Z",
-                    "Sum": 15121,
-                    "Unit": "None"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "input": {
-        "domain": "surya",
-        "service": "test-ws1",
-        "environment": "prod",
-        "start_time": "2018-06-30T01:31:05.682Z",
-        "end_time": "2018-07-07T01:31:05.689Z",
-        "interval": 3600,
-        "statistics": "sum"
-      }
-    }
-
     this.sectionStatus = 'loading';
     let request = {
       url: '/jazz/metrics',
@@ -301,8 +160,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         statistics: this.filters.getFieldValueOfLabel('STATISTICS')
       }
     };
-    // return this.http.post(request.url, request.body)
-    Observable.of(r).toPromise()
+    return this.http.post(request.url, request.body)
+    // Observable.of(r)
+    .toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
         if (response && response.data && response.data.assets && response.data.assets.length) {
