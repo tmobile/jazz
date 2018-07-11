@@ -42,14 +42,18 @@ export class FilterModalComponent implements OnInit {
   }
 
   getFieldValueOfLabel(fieldLabel) {
-    let foundField = this.getAllFields().find((field) => {
-      return field.label === fieldLabel
-    });
-    let value = foundField.values[foundField.options.findIndex((option) => {
-      return option === foundField.selected;
-    })];
+    try {
+      let foundField = this.getAllFields().find((field) => {
+        return field.label === fieldLabel
+      });
+      let value = foundField.values[foundField.options.findIndex((option) => {
+        return option === foundField.selected;
+      })];
 
-    return value;
+      return value;
+    } catch(error) {
+      return null;
+    }
   }
 
   getAllFields() {
@@ -64,6 +68,13 @@ export class FilterModalComponent implements OnInit {
 
   addField(column, label, options, values?) {
     let columnIndex = _.findIndex(this.form.columns, {label: column});
+    if(!~columnIndex) {
+      this.form.columns.push({
+        label: column,
+        fields: []
+      });
+      columnIndex = this.form.columns.length - 1;
+    }
 
     let field = {
       column: column,

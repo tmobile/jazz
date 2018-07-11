@@ -146,13 +146,13 @@ export class ServiceDetailComponent implements OnInit {
     let serviceType = this.service.type || this.service.serviceType;
     switch (serviceType) {
       case 'api':
-        this.tabData = ['overview', 'assess control', 'metrics', 'cost'];
+        this.tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
         break;
       case 'website':
-        this.tabData = ['overview', 'assess control', 'metrics', 'cost'];
+        this.tabData = ['overview', 'access control', 'metrics', 'cost'];
         break;
       case 'function':
-        this.tabData = ['overview', 'assess control', 'metrics', 'cost'];
+        this.tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
         break;
     }
   }
@@ -165,6 +165,7 @@ export class ServiceDetailComponent implements OnInit {
         this.onDataFetched(service);
         this.isGraphLoading = false;
         this.selectedTabComponent.refresh_env();
+        this.setTabs();
       }, (err) => {
         if (err.status == "404") {
           this.router.navigateByUrl('404');

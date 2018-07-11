@@ -18,13 +18,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   @ViewChild('filters') filters;
 
   public serviceType;
-  public environmentFilter = {
-    column: 'Filter By:',
-    label: 'ENVIRONMENT',
-    options: ['prod', 'dev', 'stg'],
-    values: ['prod', 'dev', 'stg'],
-    selected: 'prod'
-  };
+  public environmentFilter;
   public formFields: any = [
     {
       column: 'View By:',
@@ -89,19 +83,48 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.applyFilter()
-  }
+    this.sectionStatus = 'loading';
 
-  ngOnInit() {
-    this.serviceType = this.service.type || this.service.serviceType;
-    if(!this.activatedRoute.snapshot.params['env']) {
-      this.formFields.splice(0, 0, this.environmentFilter);
+    if (!this.activatedRoute.snapshot.params['env']) {
+      return this.getEnvironments()
+        .then(() => {
+            return this.applyFilter();
+        });
+    } else {
+      return this.applyFilter();
     }
 
   }
 
+  ngOnInit() {
+    this.serviceType = this.service.type || this.service.serviceType;
+  }
+
   refresh() {
     this.ngAfterViewInit();
+  }
+
+  getEnvironments() {
+    return this.http.get('/jazz/environments', {
+      domain: this.service.domain,
+      service: this.service.name
+    }).toPromise()
+      .then((response: any) => {
+        if (response && response.data && response.data.environment && response.data.environment.length) {
+          let serviceEnvironments = _(response.data.environment).map('logical_id').uniq().value();
+          this.environmentFilter = {
+            column: 'Filter By:',
+            label: 'ENVIRONMENT',
+            options: serviceEnvironments,
+            values: serviceEnvironments,
+            selected: 'prod'
+          };
+          this.formFields.splice(0, 0, this.environmentFilter);
+        }
+      })
+      .catch((error) => {
+        return Promise.reject(error);
+      })
   }
 
   applyFilter(changedFilter?) {
@@ -110,7 +133,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       changedFilter.label === 'PATH')) {
       this.setAsset();
     } else {
-      this.queryMetricsData();
+      return this.queryMetricsData();
     }
   }
 
@@ -121,7 +144,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       body: {
         domain: this.service.domain,
         service: this.service.name,
-        environment: this.filters.getFieldValueOfLabel('ENVIRONMENT'),
+        environment: this.filters.getFieldValueOfLabel('ENVIRONMENT') || this.activatedRoute.snapshot.params['env'] || 'prod',
         start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
         end_time: moment().toISOString(),
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
