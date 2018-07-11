@@ -56,6 +56,7 @@ import {ReportIssueComponent} from '../primary-components/report-issue/report-is
 import {MetricsCarouselComponent} from "../metrics-carousel/metrics-carousel.component";
 import {ChartjsLinegraphComponent} from "../secondary-components/chartjs-linegraph/chartjs-linegraph.component";
 import {FilterModalComponent} from "../secondary-components/filter-modal/filter-modal.component";
+import {ServiceMetricsComponent} from "../pages/service-metrics/service-metrics.component";
 
 let specificComponents: any
 let specificModules: any;
@@ -127,6 +128,7 @@ for (let i in specificComponents) {
     MetricsCarouselComponent,
     ChartjsLinegraphComponent,
     FilterModalComponent,
+    ServiceMetricsComponent,
     ...declarationsArray,
 
 
@@ -170,6 +172,7 @@ for (let i in specificComponents) {
     MetricsCarouselComponent,
     ChartjsLinegraphComponent,
     FilterModalComponent,
+    ServiceMetricsComponent,
     ...declarationsArray
 
   ],
