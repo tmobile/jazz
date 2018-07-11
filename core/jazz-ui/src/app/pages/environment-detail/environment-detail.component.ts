@@ -153,25 +153,25 @@ export class EnvironmentDetailComponent implements OnInit {
   };
 
 
-  fetchService(id: string){
-      this.isLoadingService = true;
-          this.subscription = this.http.get('/jazz/services/'+id).subscribe(
-            response => {
-              this.service.accounts=env_internal.urls.accounts;
-                    this.service.regions=env_internal.urls.regions;
-                  this.service=response.data.data;
-                  if(environment.envName=='oss')this.service=response.data;
-                  this.isFunction= this.service.type === "function";
-                  this.getAssets();
-                  this.setTabs();
-                  this.cache.set(id, this.service);
-                  this.onDataFetched(this.service);
-                  this.envoverview.notify(this.service);
-              },
-              err => {
-                  this.isLoadingService = false;
-                  let errorMessage = this.messageservice.errorMessage(err,"serviceDetail");
-                  this.toast_pop('error', 'Oops!', errorMessage)
+  fetchService(id: string) {
+    this.isLoadingService = true;
+    this.subscription = this.http.get('/jazz/services/' + id).subscribe(
+      response => {
+        this.service.accounts = env_internal.urls.accounts;
+        this.service.regions = env_internal.urls.regions;
+        this.service = response.data.data;
+        if (environment.envName == 'oss') this.service = response.data;
+        this.isFunction = this.service.type === "function";
+        this.getAssets();
+        this.setTabs();
+        this.cache.set(id, this.service);
+        this.onDataFetched(this.service);
+        this.envoverview.notify(this.service);
+      },
+      err => {
+        this.isLoadingService = false;
+        let errorMessage = this.messageservice.errorMessage(err, "serviceDetail");
+        this.toast_pop('error', 'Oops!', errorMessage)
 
       }
     )
