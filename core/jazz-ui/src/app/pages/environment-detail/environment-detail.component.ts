@@ -197,7 +197,7 @@ export class EnvironmentDetailComponent implements OnInit {
       this.assets = assetsResponse.data;
       this.service.assets = this.assets;
     }, (err) => {
-      this.toast_pop('error', 'Oops!', 'Swagger File Not Found.');
+      this.toast_pop('error', 'Oops!', 'Failed to load swagger file.');
     });
   }
 
