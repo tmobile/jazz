@@ -257,7 +257,7 @@ docs_oss_jazz:string=env_oss.urls.docs_link;
         this.checkUrl();
       this.isLoggedIn = this.authenticationService.isLoggedIn();
       this.loggedinUser =this.isLoggedIn && this.authenticationService.getUserId();
-      this.isAdmin = true;//this.isLoggedIn && this.authenticationService.getAuthenticatedUser().globaladmin
+      this.isAdmin = this.isLoggedIn && this.authenticationService.getAuthenticatedUser().globaladmin
     }
 }
 
