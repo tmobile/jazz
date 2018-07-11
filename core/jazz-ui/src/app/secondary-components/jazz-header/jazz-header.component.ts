@@ -81,14 +81,14 @@ isOSS:boolean=false;
             this.isOSS=true;
             window.open(this.docs_oss_jazz)
         }
-            
+
         else
             window.open(this.docs_int_jazz)
 
     }
     docs_int_jazz:string =  env_internal.urls.docs;
 docs_oss_jazz:string=env_oss.urls.docs_link;
-  
+
     startUserJourney() {
       return this.router.navigate(['/user-journey']);
     }
@@ -137,13 +137,13 @@ docs_oss_jazz:string=env_oss.urls.docs_link;
     toast_pop(error,oops,errorMessage)
     {
         var tst = document.getElementById('toast-container');
-  
-         tst.classList.add('toaster-anim');                            
-        this.toast = this.toasterService.pop(error,oops,errorMessage);        
+
+         tst.classList.add('toaster-anim');
+        this.toast = this.toasterService.pop(error,oops,errorMessage);
         setTimeout(() => {
             tst.classList.remove('toaster-anim');
           }, 3000);
-        
+
     }
 
     preventDefault(e){
@@ -190,7 +190,7 @@ docs_oss_jazz:string=env_oss.urls.docs_link;
                 if(respData != undefined && respData != null && respData != ""){
                     // this.resMessage = this.toastmessage.successMessage(response, 'jiraTicket');
                     this.feedbackMsg = "Thanks for taking the time to give us feedback. We’ll use your feedback to improve Jazz experience for everyone!";
-                } 
+                }
             },
             error => {
                 this.buttonText='DONE';
@@ -211,7 +211,7 @@ docs_oss_jazz:string=env_oss.urls.docs_link;
         this.router.navigateByUrl('');
         window.location.reload();
     }
-    //checks for the override parameters. 
+    //checks for the override parameters.
     checkUrl(){
         if(this.overridingUrl){
             this.overridingUrl = decodeURIComponent(this.overridingUrl);
@@ -257,7 +257,7 @@ docs_oss_jazz:string=env_oss.urls.docs_link;
         this.checkUrl();
       this.isLoggedIn = this.authenticationService.isLoggedIn();
       this.loggedinUser =this.isLoggedIn && this.authenticationService.getUserId();
-      this.isAdmin = this.isLoggedIn && this.authenticationService.getAuthenticatedUser().globaladmin
+      this.isAdmin = true;//this.isLoggedIn && this.authenticationService.getAuthenticatedUser().globaladmin
     }
 }
 

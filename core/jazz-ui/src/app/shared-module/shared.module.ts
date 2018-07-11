@@ -54,6 +54,7 @@ import {SafeHtmlPipe} from "../core/pipes/safe-html.pipe";
 import {SafeUrlPipe} from "../core/pipes/safe-url.pipe";
 import {ReportIssueComponent} from '../primary-components/report-issue/report-issue.component';
 import {ChartjsLinegraphComponent} from '../secondary-components/chartjs-linegraph/chartjs-linegraph.component';
+import {RouterModule} from "@angular/router";
 let specificComponents:any
 let specificModules: any;
 if(environment.envName == 'oss'){
@@ -75,6 +76,7 @@ for(let i in specificComponents){
 //
 @NgModule({
   imports: [
+    RouterModule,
     CommonModule,
     FormsModule,
     DropdownModule,
