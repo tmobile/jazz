@@ -70,13 +70,13 @@ export class EnvAssetsSectionComponent implements OnInit {
 	}
 
 	assetsList: any = [];
-	
+
 	accList=env_internal.urls.accounts;
 		regList=env_internal.urls.regions;
 			accSelected:string = this.accList[0];
 		regSelected:string=this.regList[0];
 	type: any = [];
-	
+
 	length: any;
 	// image: any = [];
 	slNumber: any = [];
@@ -122,7 +122,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 		private cache: DataCacheService,
 		private authenticationservice: AuthenticationService ,
 		@Inject(ComponentFactoryResolver) componentFactoryResolver,private advancedFilters: AdvancedFilterService ,
-		
+
   ) {
 		this.http = request;
 		this.componentFactoryResolver = componentFactoryResolver;
@@ -141,9 +141,9 @@ export class EnvAssetsSectionComponent implements OnInit {
 
 
 	 getFilter(filterServ){
-	
+
 	}
-  
+
    onaccSelected(event){
     this.FilterTags.notify('filter-Account',event);
     this.accSelected=event;
@@ -156,27 +156,27 @@ export class EnvAssetsSectionComponent implements OnInit {
 
    onFilterSelect(event){
 	switch(event.key){
-	  
-	  
+
+
 	  case 'account':{
 		  this.FilterTags.notify('filter-Account',event.value);
 		this.accSelected=event.value;
 		break;
 	  }
-	  case 'region':{ 
+	  case 'region':{
 		this.FilterTags.notify('filter-Region',event.value);
 		this.regSelected=event.value;
 		break;
-			
+
 	  }
 
-   
+
 	}
-	
+
 }
 
    cancelFilter(event){
-		
+
 	}
 	callServiceEnvAssets() {
 		this.isLoading = true;
@@ -186,16 +186,14 @@ export class EnvAssetsSectionComponent implements OnInit {
 				var payload = {
 				service: this.service.name,
 				domain: this.service.domain,
-				environment: this.env,
-				// limit:10,
-				
+				environment: this.env
 				};
 				if(this.offsetval > 0){
 					payload["offset"] = this.offsetval;
 				}
 				this.subscription = this.http.post(this.relativeUrl, payload).subscribe(
         (response) => {
-				
+
 					if((response.data == undefined) || (response.data.length == 0)){
             this.envResponseEmpty = true;
 						this.isLoading = false;
@@ -204,7 +202,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 					{
 						var pageCount = response.data.length;
 
-          
+
           if(pageCount){
             this.totalPageNum = Math.ceil(pageCount/this.limitValue);
           }
@@ -213,15 +211,14 @@ export class EnvAssetsSectionComponent implements OnInit {
           }
 					this.envResponseEmpty = false;
 					this.isLoading = false;
-						
+
 					this.envResponseTrue = true;
 					this.length = response.data.length;
 
 					this.assetsList = response.data;
-					
+
 					for(var i=0; i < this.length ; i++){
 						this.type[i] = response.data[i].asset_type;
-						
 						this.slNumber[i] = (i+1);
 						if( response.data[i].provider == undefined ){
 							this.Provider[i] = "-"
@@ -251,7 +248,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 
 						this.lastCommitted = response.data[i].timestamp;
 						var commit = this.lastCommitted.substring(0,19);
-						var lastCommit = new Date(commit);						
+						var lastCommit = new Date(commit);
 						var now = new Date();
 						var todays = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),  now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
 
@@ -273,9 +270,9 @@ export class EnvAssetsSectionComponent implements OnInit {
 							}
 						  }
 						}
-						
+
 						}
-						
+
 
 					}
         },
@@ -290,16 +287,16 @@ export class EnvAssetsSectionComponent implements OnInit {
 					this.errorRequest = payload;
 					this.errorUser = this.authenticationservice.getUserId();
 					this.errorResponse = JSON.parse(error._body);
-	
-			
+
+
 			})
-		};	
+		};
 		getTime() {
 			var now = new Date();
 			this.errorTime = ((now.getMonth() + 1) + '/' + (now.getDate()) + '/' + now.getFullYear() + " " + now.getHours() + ':'
 			+ ((now.getMinutes() < 10) ? ("0" + now.getMinutes()) : (now.getMinutes())) + ':' + ((now.getSeconds() < 10) ? ("0" + now.getSeconds()) : (now.getSeconds())));
 			}
-	
+
 		feedbackRes:boolean=false;
 		openModal:boolean=false;
 			feedbackMsg:string='';
@@ -325,14 +322,14 @@ export class EnvAssetsSectionComponent implements OnInit {
 						"TIME OF ERROR":this.errorTime,
 						"LOGGED IN USER":this.errorUser
 				}
-				
+
 					this.openModal=true;
 					this.errorChecked=true;
 					this.isLoading=false;
 					this.errorInclude = JSON.stringify(this.djson);
 					this.sjson = JSON.stringify(this.json);
 				}}
-			
+
 				openFeedbackForm(){
 					this.isFeedback=true;
 					this.model.userFeedback='';
@@ -348,9 +345,9 @@ export class EnvAssetsSectionComponent implements OnInit {
 				}
 				errorIncluded(){
 				}
-			 
+
 				submitFeedback(action){
-			
+
 					this.errorChecked = (<HTMLInputElement>document.getElementById("checkbox-slack")).checked;
 					if( this.errorChecked == true ){
 						this.json = {
@@ -366,14 +363,14 @@ export class EnvAssetsSectionComponent implements OnInit {
 						this.json = this.model.userFeedback ;
 					}
 					this.sjson = JSON.stringify(this.json);
-			
+
 					this.isLoading = true;
-			
+
 					if(action == 'DONE'){
 						this.openModal=false;
 						return;
 					}
-			
+
 					var payload={
 						"title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
 						"project_id": env_internal.urls.internal_acronym,
@@ -392,7 +389,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 							this.feedbackResSuccess= true;
 							if(respData != undefined && respData != null && respData != ""){
 								this.feedbackMsg = "Thanks for reporting the issue. We’ll use your input to improve Jazz experience for everyone!";
-							} 
+							}
 						},
 						error => {
 							this.buttonText='DONE';
@@ -407,9 +404,9 @@ export class EnvAssetsSectionComponent implements OnInit {
      redirect(url){
 		 window.open(url , '_blank');
 	 }
-	 
+
 	 ngOnInit() {
-		
+
 	}
 	limitValue : number = 10;
   prevActivePage: number = 0;
@@ -418,10 +415,10 @@ export class EnvAssetsSectionComponent implements OnInit {
     if(this.prevActivePage != currentlyActivePage){
       this.prevActivePage = currentlyActivePage;
       this.assetsList = [];
-     
+
 
 			this.offsetval = (this.limitValue * (currentlyActivePage-1));
-		
+
 			this.callServiceEnvAssets();
 
     }
@@ -463,7 +460,7 @@ export class EnvAssetsSectionComponent implements OnInit {
     this.callServiceEnvAssets();
 }
 
-refreshCostData(event){ 
+refreshCostData(event){
   this.callServiceEnvAssets();
 }
 public goToAbout(hash){
