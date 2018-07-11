@@ -213,17 +213,13 @@ export class EnvironmentDetailComponent implements OnInit {
               return window.open('/404');
             }
           case 'website' :
-          if(this.endpoint_env!=(undefined||'')){
-            window.open(this.endpoint_env);
-          }
+            if(this.endpoint_env){
+              window.open(this.endpoint_env);
+            }
           break;
           case 'function' :
-          if(this.endpoint_env!=(undefined||'')){
-            window.open('/404');
-          }
-          break;
           case 'lambda' :
-          this.setSidebar('try-service');
+            this.setSidebar('try-service');
           break;
       }
   }
