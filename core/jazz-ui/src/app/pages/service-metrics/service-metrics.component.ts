@@ -94,7 +94,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.serviceType = this.service.type || this.service.serviceType;
-    this.formFields.splice(0, 0, this.environmentFilter);
+    if(!this.activatedRoute.snapshot.params['env']) {
+      this.formFields.splice(0, 0, this.environmentFilter);
+    }
+
   }
 
   refresh() {
@@ -112,106 +115,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   queryMetricsData() {
-    let r = {
-      "data": {
-        "domain": "surya",
-        "service": "test-l5",
-        "environment": "prod",
-        "end_time": "2018-07-07T01:29:27.006Z",
-        "start_time": "2018-06-30T01:29:27.000Z",
-        "interval": 3600,
-        "statistics": "sum",
-        "assets": [
-          {
-            "type": "lambda",
-            "asset_name": {
-              "FunctionName": "jazz20180706-surya-test-l5-prod"
-            },
-            "statistics": "Sum",
-            "metrics": [
-              {
-                "metric_name": "Invocations",
-                "datapoints": [
-                  {
-                    "Timestamp": "2018-07-06T22:29:00.000Z",
-                    "Sum": 3,
-                    "Unit": "Count"
-                  },
-                  {
-                    "Timestamp": "2018-07-06T23:29:00.000Z",
-                    "Sum": 2,
-                    "Unit": "Count"
-                  }
-                ]
-              },
-              {
-                "metric_name": "Duration",
-                "datapoints": [
-                  {
-                    "Timestamp": "2018-07-06T23:29:00.000Z",
-                    "Sum": 9.15,
-                    "Unit": "Milliseconds"
-                  },
-                  {
-                    "Timestamp": "2018-07-06T22:29:00.000Z",
-                    "Sum": 42.769999999999996,
-                    "Unit": "Milliseconds"
-                  }
-                ]
-              },
-              {
-                "metric_name": "Dead Letter Error",
-                "datapoints": []
-              },
-              {
-                "metric_name": "IteratorAge",
-                "datapoints": []
-              },
-              {
-                "metric_name": "Errors",
-                "datapoints": [
-                  {
-                    "Timestamp": "2018-07-06T22:29:00.000Z",
-                    "Sum": 0,
-                    "Unit": "Count"
-                  },
-                  {
-                    "Timestamp": "2018-07-06T23:29:00.000Z",
-                    "Sum": 0,
-                    "Unit": "Count"
-                  }
-                ]
-              },
-              {
-                "metric_name": "Throttles",
-                "datapoints": [
-                  {
-                    "Timestamp": "2018-07-06T22:29:00.000Z",
-                    "Sum": 0,
-                    "Unit": "Count"
-                  },
-                  {
-                    "Timestamp": "2018-07-06T23:29:00.000Z",
-                    "Sum": 0,
-                    "Unit": "Count"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "input": {
-        "domain": "surya",
-        "service": "test-l5",
-        "environment": "prod",
-        "start_time": "2018-06-30T01:29:27.000Z",
-        "end_time": "2018-07-07T01:29:27.006Z",
-        "interval": 3600,
-        "statistics": "sum"
-      }
-    };
-
     this.sectionStatus = 'loading';
     let request = {
       url: '/jazz/metrics',
@@ -225,8 +128,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         statistics: this.filters.getFieldValueOfLabel('STATISTICS')
       }
     };
-    // return this.http.post(request.url, request.body)
-    Observable.of(r)
+    return this.http.post(request.url, request.body)
       .toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
