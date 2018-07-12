@@ -3,7 +3,7 @@
     <div class='feedback-hdr relative'>Report an issue</div>
     <div class="separator-row"></div>
     <div [ngSwitch]="feedbackModalStatus">
-      <div *ngSwitchCase="'loading'" class="absolute-container">
+      <div *ngSwitchCase="'loading'" class="jz-absolute-container">
         <div class="jz-spinner"></div>
       </div>
       <div *ngSwitchCase="'ready'" class='feedback-text-wrap'>
