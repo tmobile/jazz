@@ -103,6 +103,10 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
         }]
       }
     };
+
+    options.tooltips.callbacks.label = graphOptions.tooltipXFormat ? function(tooltipItem, chart) {
+      return moment(tooltipItem.xLabel).format(graphOptions.tooltipXFormat);
+    } : options.tooltips.callbacks.label;
     options.scales.xAxes[0].ticks.min = graphOptions.fromDateValue;
     options.scales.xAxes[0].ticks.max = graphOptions.toDateValue;
     options.scales.xAxes[0].ticks.stepSize = graphOptions.stepSize;

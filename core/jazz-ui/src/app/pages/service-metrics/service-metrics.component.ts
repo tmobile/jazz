@@ -260,6 +260,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
     let timeRange = this.filters.getFieldValueOfLabel('TIME RANGE');
     let options = {
+      tooltipXFormat: 'MMM DD YYYY, h:mm a',
       fromDateISO: timeRange.range,
       fromDateValue: moment(timeRange.range).valueOf(),
       toDateISO: moment().toISOString(),
