@@ -179,11 +179,11 @@ export class EnvironmentDetailComponent implements OnInit {
 
   setTabs() {
     if (this.service.serviceType === 'api' || this.service.type === 'api') {
-      this.tabData = ['overview', 'deployments', 'assets', 'code quality', 'logs'];
+      this.tabData = ['overview', 'deployments', 'assets', 'metrics', 'code quality', 'logs'];
     } else if (this.service.serviceType === 'function' || this.service.type === 'function') {
-      this.tabData = ['overview', 'deployments', 'assets', 'code quality', 'logs'];
+      this.tabData = ['overview', 'deployments', 'assets', 'metrics', 'code quality', 'logs'];
     } else if (this.service.serviceType === 'website' || this.service.type === 'website') {
-      this.tabData = ['overview', 'deployments', 'assets'];
+      this.tabData = ['overview', 'deployments', 'assets', 'metrics'];
     }
   }
 
@@ -197,7 +197,7 @@ export class EnvironmentDetailComponent implements OnInit {
       this.assets = assetsResponse.data;
       this.service.assets = this.assets;
     }, (err) => {
-      this.toast_pop('error', 'Oops!', 'Swagger File Not Found.');
+      this.toast_pop('error', 'Oops!', 'Failed to load swagger file.');
     });
   }
 

@@ -1,4 +1,4 @@
-.absolute-container {
+.jz-absolute-container {
   position: absolute;
   top: 0;
   left: 0;
@@ -6,6 +6,54 @@
   width: 100%;
 }
 
-.pointer {
+.jz-absolute {
+  position: absolute;
+}
+
+.jz-relative {
+  position: relative;
+}
+
+.jz-fixed {
+  position: fixed;
+}
+
+.jz-pointer {
   cursor: pointer;
 }
+
+.jz-height-full {
+  height: 100%;
+}
+
+.jz-flex-expand {
+  flex: 1;
+}
+
+.jz-flex-centered {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.jz-relative {
+  position: relative;
+}
+
+.jz-text-center {
+  text-align: center;
+}
+
+.jz-text-left {
+  text-align: left;
+}
+
+.jz-text-right {
+  text-align: right;
+}
+
+.jz-hidden {
+  display: none !important;
+}
+
+

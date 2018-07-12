@@ -64,10 +64,14 @@
         </section>
 
         <section class="page-content" *ngIf="selectedTab == 3">
-          <env-codequality-section #selectedTabComponent [service]="service"></env-codequality-section>
+          <service-metrics [service]="service"></service-metrics>
         </section>
 
         <section class="page-content" *ngIf="selectedTab == 4">
+          <env-codequality-section #selectedTabComponent [service]="service"></env-codequality-section>
+        </section>
+
+        <section class="page-content" *ngIf="selectedTab == 5">
             <env-logs-section #selectedTabComponent [service]="service"></env-logs-section>
         </section>
 </div>
