@@ -19,12 +19,14 @@ export class AdminDashboardComponent implements OnInit{
 
   ngOnInit() {
     this.state = 'loading';
-    this.adminUtils.getExampleVars()
+    this.adminUtils.getJazzInstallerVars()
       .then((data: any) => {
         this.state = 'resolved';
         this.adminData = data;
-      }, (error) => {
-        this.state = 'error'
+      })
+      .catch((error) => {
+        console.log(error);
+        this.state = 'error';
       })
   }
 

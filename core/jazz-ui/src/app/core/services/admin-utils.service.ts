@@ -1,21 +1,22 @@
 import { Injectable } from '@angular/core';
 import {Http} from "@angular/http";
 import {Observable} from "rxjs/Observable";
+import {RequestService} from "./request.service";
 
 @Injectable()
 export class AdminUtilsService {
+  private http;
 
-  constructor(private http: Http) { }
+  constructor(private request: RequestService) {
+    this.http = this.request;
+  }
 
-  getExampleVars() {
-    return Observable.of({
-      'data': [{
-        'first': 'first',
-        'second': 'hi'
-      }]
-    })
-    // return this.http.get('assets/data/jazz-installer-vars.json')
+  getJazzInstallerVars() {
+    return this.http.get('/jazz/admin/config')
       .toPromise()
-      // .then(response => response.json());
+      .then((response) => {
+          console.log(response);
+          return response.data;
+      })
   }
 }
