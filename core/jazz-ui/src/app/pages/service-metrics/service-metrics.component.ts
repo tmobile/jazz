@@ -42,7 +42,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           range: moment().subtract(1, 'year').toISOString(),
           format: 'MMMM'
         }],
-      selected: 'Week'
+      selected: 'Day'
     },
     {
       column: 'View By:',
@@ -55,14 +55,14 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         moment(0).add(1, 'day').valueOf() / 1000,
         moment(0).add(7, 'day').valueOf() / 1000,
         moment(0).add(30, 'day').valueOf() / 1000],
-      selected: '1 Hour'
+      selected: '15 Minutes'
     },
     {
       column: 'View By:',
-      label: 'STATISTICS',
+      label: 'AGGREGATION',
       type: 'select',
       options: ['Sum', 'Average'],
-      values: ['sum', 'average'],
+      values: ['Sum', 'average'],
       selected: 'Sum'
     }
   ];
@@ -119,7 +119,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
             values: serviceEnvironments,
             selected: 'prod'
           };
-          this.formFields.splice(0, 0, this.environmentFilter);
+          let environmentField = this.filters.getFieldValueOfLabel('ENVIRONMENT');
+          if(!environmentField) {
+            this.formFields.splice(0, 0, this.environmentFilter);
+          }
         }
       })
       .catch((error) => {
@@ -148,7 +151,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
         end_time: moment().toISOString(),
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
-        statistics: this.filters.getFieldValueOfLabel('STATISTICS')
+        statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
       }
     };
     return this.http.post(request.url, request.body)
