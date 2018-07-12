@@ -8,7 +8,8 @@ import {
   OnInit, Output,
   ViewChild
 } from '@angular/core';
-import {UtilsService} from "../core/services/utils.service";
+import {UtilsService} from "../../core/services/utils.service";
+
 
 @Component({
   selector: 'metrics-carousel',

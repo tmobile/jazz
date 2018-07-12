@@ -75,10 +75,10 @@ export class FilterModalComponent implements OnInit {
       });
       columnIndex = this.form.columns.length - 1;
     }
-    let selected;
+    let selected = options[0];
     if(defaultOption) {
       let foundDefault = _.find(options, (option) => {return option === defaultOption});
-      selected = foundDefault || options[0];
+      selected = foundDefault;
     }
 
     let field = {
