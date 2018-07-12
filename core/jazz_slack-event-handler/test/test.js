@@ -248,21 +248,21 @@ describe("checkforInterestedEvents", () => {
   });
 
   it('should resolve for valid input', function () {
-		let sequenceNumber = event.Records[0].kinesis.sequenceNumber;
-		let encodedPayload = event.Records[0].kinesis.data;
-		let checkInterest = index.checkInterest(encodedPayload, sequenceNumber,configData);
-		expect(checkInterest.then(function (res) {
-			return res.interested_event;
-		})).to.become(true);
-	});
+    let sequenceNumber = event.Records[0].kinesis.sequenceNumber;
+    let encodedPayload = event.Records[0].kinesis.data;
+    let checkInterest = index.checkInterest(encodedPayload, sequenceNumber, configData);
+    expect(checkInterest.then(function (res) {
+      return res.interested_event;
+    })).to.become(true);
+  });
 
-	it('should resolve with valid response for valid input', function () {
-		let sequenceNumber = event.Records[0].kinesis.sequenceNumber;
-		let encodedPayload = event.Records[0].kinesis.data;
-		let checkInterest = index.checkInterest(encodedPayload, sequenceNumber,configData);
-		expect(checkInterest.then((res) => {
-			return res;
-		})).to.eventually.have.property('payload');
+  it('should resolve with valid response for valid input', function () {
+    let sequenceNumber = event.Records[0].kinesis.sequenceNumber;
+    let encodedPayload = event.Records[0].kinesis.data;
+    let checkInterest = index.checkInterest(encodedPayload, sequenceNumber, configData);
+    expect(checkInterest.then((res) => {
+      return res;
+    })).to.eventually.have.property('payload');
   });
 
 });
@@ -443,95 +443,95 @@ describe("processRecord", () => {
   });
 
   it('processRecords should return response for invalid event name event type combination', () => {
-		let responseObject = {
-			statusCode: 200,
-			body: {
-				data: {
-					"id": "ghd93-3240-2343"
-				}
-			}
-		};
+    let responseObject = {
+      statusCode: 200,
+      body: {
+        data: {
+          "id": "ghd93-3240-2343"
+        }
+      }
+    };
     reqStub.callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
     });
 
-		let processRecords = index.processRecords(event, configData, tokenResponseObj.body.data.token);
-		let message = "Not an interesting event to process";
-		expect(processRecords.then(function (res) {
-			return res;
-		})).to.be.not.null;
-	});
+    let processRecords = index.processRecords(event, configData, tokenResponseObj.body.data.token);
+    let message = "Not an interesting event to process";
+    expect(processRecords.then(function (res) {
+      return res;
+    })).to.be.not.null;
+  });
 
-	it('processRecords should resolve with valid response', () =>{
-		event.Records =  [
-			{
-				"kinesis": {
-					"kinesisSchemaVersion": "1.0",
-					"partitionKey": "CALL_DELETE_WORKFLOW",
-					"sequenceNumber": "abc1234",
-					"data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
-					"approximateArrivalTimestamp": 1521632408.682
-				},
-				"eventSource": "abc",
-				"eventVersion": "1.0",
-				"eventID": "abc",
-				"eventName": "abc",
-				"invokeIdentityArn": "abc",
-				"awsRegion": "abc",
-				"eventSourceARN": "abc"
-			}
-		];
-	let responseObject = {
-			statusCode: 200,
-			body: {
-				data: {
-					"id": "ghd93-3240-2343"
-				}
-			}
-		};
-		reqStub.callsFake((obj) => {
+  it('processRecords should resolve with valid response', () => {
+    event.Records = [
+      {
+        "kinesis": {
+          "kinesisSchemaVersion": "1.0",
+          "partitionKey": "CALL_DELETE_WORKFLOW",
+          "sequenceNumber": "abc1234",
+          "data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
+          "approximateArrivalTimestamp": 1521632408.682
+        },
+        "eventSource": "abc",
+        "eventVersion": "1.0",
+        "eventID": "abc",
+        "eventName": "abc",
+        "invokeIdentityArn": "abc",
+        "awsRegion": "abc",
+        "eventSourceARN": "abc"
+      }
+    ];
+    let responseObject = {
+      statusCode: 200,
+      body: {
+        data: {
+          "id": "ghd93-3240-2343"
+        }
+      }
+    };
+    reqStub.callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
     });
-		let processRecords = index.processRecords(event, configData, tokenResponseObj.body.data.token);
-		let message = "updated service email-event-handler in service catalog.";
-		expect(processRecords.then(function (res) {
-			return res;
-		})).to.be.not.null;
-	});
+    let processRecords = index.processRecords(event, configData, tokenResponseObj.body.data.token);
+    let message = "updated service email-event-handler in service catalog.";
+    expect(processRecords.then(function (res) {
+      return res;
+    })).to.be.not.null;
+  });
 
-	it('processRecords should indicate error if request fails for kinesis data with defined and completed endingEvent', () => {
-		event.Records =  [
-			{
-				"kinesis": {
-					"kinesisSchemaVersion": "1.0",
-					"partitionKey": "CALL_DELETE_WORKFLOW",
-					"sequenceNumber": "abc1234",
-					"data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
-					"approximateArrivalTimestamp": 1521632408.682
-				},
-				"eventSource": "abc",
-				"eventVersion": "1.0",
-				"eventID": "abc",
-				"eventName": "abc",
-				"invokeIdentityArn": "abc",
-				"awsRegion": "abc",
-				"eventSourceARN": "abc"
-			}
-		];
+  it('processRecords should indicate error if request fails for kinesis data with defined and completed endingEvent', () => {
+    event.Records = [
+      {
+        "kinesis": {
+          "kinesisSchemaVersion": "1.0",
+          "partitionKey": "CALL_DELETE_WORKFLOW",
+          "sequenceNumber": "abc1234",
+          "data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
+          "approximateArrivalTimestamp": 1521632408.682
+        },
+        "eventSource": "abc",
+        "eventVersion": "1.0",
+        "eventID": "abc",
+        "eventName": "abc",
+        "invokeIdentityArn": "abc",
+        "awsRegion": "abc",
+        "eventSourceARN": "abc"
+      }
+    ];
 
-		let responseObject = {
-			statusCode: 401
-		};
+    let responseObject = {
+      statusCode: 401
+    };
 
     reqStub.callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject);
     });
 
-		let processRecords = index.processRecords(event, configData, tokenResponseObj.body.data.token);
-		expect(processRecords.then(function (res) {
-			return res;
-		})).to.be.not.null;
-	});
+    let processRecords = index.processRecords(event, configData, tokenResponseObj.body.data.token);
+    expect(processRecords.then(function (res) {
+      return res;
+    })).to.be.not.null;
+  });
 
 });
 
@@ -652,7 +652,7 @@ describe("processEvent", () => {
     notifySlackChannelStub.resolves({
       "message": "Notification send successfully."
     });
-    let payload = {Item: {EVENT_ID: { S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4' },TIMESTAMP: { S: '2018-05-16T12:12:42:821' }, REQUEST_ID: { NULL: true }, EVENT_HANDLER: { S: 'JENKINS' },  EVENT_NAME: { S: 'CREATE_DEPLOYMENT' }, SERVICE_NAME: { S: 'test-02' }, SERVICE_ID: { S: '00001-test-serivice-id-00001' },  EVENT_STATUS: { S: 'STARTED' }, EVENT_TYPE: { S: 'NOT_SERVICE_DEPLOYMENT' },  USERNAME: { S: 'temp@testing.com' },  EVENT_TIMESTAMP: { S: '2018-05-16T12:12:41:083' }, SERVICE_CONTEXT: { S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'  } }};
+    let payload = { Item: { EVENT_ID: { S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4' }, TIMESTAMP: { S: '2018-05-16T12:12:42:821' }, REQUEST_ID: { NULL: true }, EVENT_HANDLER: { S: 'JENKINS' }, EVENT_NAME: { S: 'CREATE_DEPLOYMENT' }, SERVICE_NAME: { S: 'test-02' }, SERVICE_ID: { S: '00001-test-serivice-id-00001' }, EVENT_STATUS: { S: 'STARTED' }, EVENT_TYPE: { S: 'NOT_SERVICE_DEPLOYMENT' }, USERNAME: { S: 'temp@testing.com' }, EVENT_TIMESTAMP: { S: '2018-05-16T12:12:41:083' }, SERVICE_CONTEXT: { S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}' } } };
     index.getServiceDetails(payload.Item, configData, "tempAuth").catch((err) => {
       sinon.assert.calledOnce(processRequestStub);
       processRequestStub.restore();
@@ -675,7 +675,7 @@ describe("processEvent", () => {
     notifySlackChannelStub.resolves({
       "message": "Notification send successfully."
     });
-    let payload = {Item: {EVENT_ID: { S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4' },TIMESTAMP: { S: '2018-05-16T12:12:42:821' }, REQUEST_ID: { NULL: true }, EVENT_HANDLER: { S: 'JENKINS' },  EVENT_NAME: { S: 'CREATE_DEPLOYMENT' }, SERVICE_NAME: { S: 'test-02' }, SERVICE_ID: { S: '00001-test-serivice-id-00001' },  EVENT_STATUS: { S: 'STARTED' }, EVENT_TYPE: { S: 'NOT_SERVICE_DEPLOYMENT' },  USERNAME: { S: 'temp@testing.com' },  EVENT_TIMESTAMP: { S: '2018-05-16T12:12:41:083' }, SERVICE_CONTEXT: { S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'  } }};
+    let payload = { Item: { EVENT_ID: { S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4' }, TIMESTAMP: { S: '2018-05-16T12:12:42:821' }, REQUEST_ID: { NULL: true }, EVENT_HANDLER: { S: 'JENKINS' }, EVENT_NAME: { S: 'CREATE_DEPLOYMENT' }, SERVICE_NAME: { S: 'test-02' }, SERVICE_ID: { S: '00001-test-serivice-id-00001' }, EVENT_STATUS: { S: 'STARTED' }, EVENT_TYPE: { S: 'NOT_SERVICE_DEPLOYMENT' }, USERNAME: { S: 'temp@testing.com' }, EVENT_TIMESTAMP: { S: '2018-05-16T12:12:41:083' }, SERVICE_CONTEXT: { S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}' } } };
     index.processEvent(payload.Item, configData, "temp_auth").catch((err) => {
       expect(err.failure_code).to.eq("SLACK_CHANNEL_INFO");
     });
@@ -689,50 +689,50 @@ describe("processEvent", () => {
     notifySlackChannelStub.resolves({
       "message": "Notification send successfully."
     });
-    let payload = {Item: {EVENT_ID: { S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4' },TIMESTAMP: { S: '2018-05-16T12:12:42:821' }, REQUEST_ID: { NULL: true }, EVENT_HANDLER: { S: 'JENKINS' },  EVENT_NAME: { S: 'CREATE_DEPLOYMENT' }, SERVICE_NAME: { S: 'test-02' }, SERVICE_ID: { S: '00001-test-serivice-id-00001' },  EVENT_STATUS: { S: 'STARTED' }, EVENT_TYPE: { S: 'NOT_SERVICE_DEPLOYMENT' },  USERNAME: { S: 'temp@testing.com' },  EVENT_TIMESTAMP: { S: '2018-05-16T12:12:41:083' }, SERVICE_CONTEXT: { S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'  } }};
+    let payload = { Item: { EVENT_ID: { S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4' }, TIMESTAMP: { S: '2018-05-16T12:12:42:821' }, REQUEST_ID: { NULL: true }, EVENT_HANDLER: { S: 'JENKINS' }, EVENT_NAME: { S: 'CREATE_DEPLOYMENT' }, SERVICE_NAME: { S: 'test-02' }, SERVICE_ID: { S: '00001-test-serivice-id-00001' }, EVENT_STATUS: { S: 'STARTED' }, EVENT_TYPE: { S: 'NOT_SERVICE_DEPLOYMENT' }, USERNAME: { S: 'temp@testing.com' }, EVENT_TIMESTAMP: { S: '2018-05-16T12:12:41:083' }, SERVICE_CONTEXT: { S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}' } } };
     index.processEvent(payload.Item, configData, "tempAuth").then(() => {
       sinon.assert.calledOnce(processRequestStub);
     });
   });
 
   it('processEvent should reject error for empty payload', function () {
-		let payload = {};
-		let message = "Cannot read property \'S\' of undefined";
-		let processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
-		expect(processEvent.then(function (res) {
-			return res;
-		})).to.be.rejectedWith(message);
-	});
+    let payload = {};
+    let message = "Cannot read property \'S\' of undefined";
+    let processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
+    expect(processEvent.then(function (res) {
+      return res;
+    })).to.be.rejectedWith(message);
+  });
 
-	it('processEvent should indicate error if kinesis data does not have proper EVENT_NMAE', function () {
-		let payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME":  "MODIFY_TEMPLATE" , "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": { "S": "COMPLETED" }, "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
-		let processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
-		expect(processEvent.then(function (res) {
-			return res.message;
-		})).to.be.rejected;
-	});
+  it('processEvent should indicate error if kinesis data does not have proper EVENT_NMAE', function () {
+    let payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME": "MODIFY_TEMPLATE", "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": { "S": "COMPLETED" }, "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
+    let processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
+    expect(processEvent.then(function (res) {
+      return res.message;
+    })).to.be.rejected;
+  });
 
-	it('processEvent should indicate error if kinesis data does not have proper EVENT_STATUS', function () {
-		let payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME":  { "S": "MODIFY_TEMPLATE" } , "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": "COMPLETED", "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
-		let processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
-		expect(processEvent.then(function (res) {
-			return res.message;
-		})).to.be.rejected;
-	});
+  it('processEvent should indicate error if kinesis data does not have proper EVENT_STATUS', function () {
+    let payload = { "EVENT_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "abc123" }, "REQUEST_ID": { "S": "sadjasgd12" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME": { "S": "MODIFY_TEMPLATE" }, "SERVICE_ID": { "S": "abc123" }, "SERVICE_NAME": { "S": "test-lambda" }, "EVENT_STATUS": "COMPLETED", "EVENT_TYPE": { "S": "SERVICE_DEPLOYMENT" }, "USERNAME": { "S": "abc@abc.com" }, "EVENT_TIMESTAMP": { "S": "abc123" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"lambda\",\"service_id\":\"abc123\",\"service_name\":\"test-lambda\",\"branch\":\"master\",\"domain\":\"test\",\"environment\":\"NA\",\"region\":\"abc\",\"message\":\"service  creation starts\",\"metadata\":{\"name\":\"sasfds\"},\"created_by\":\"abc@abc.com\"}" } };
+    let processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
+    expect(processEvent.then(function (res) {
+      return res.message;
+    })).to.be.rejected;
+  });
 
-	it('processEvent should indicate error if crud.update fails for kinesis data with defined and completed endingEvent', function () {
-		let responseObject = {
-			statusCode: 400,
-			body: {message : "Error updating service "}
-		};
-		reqStub.callsFake((obj) => {
+  it('processEvent should indicate error if crud.update fails for kinesis data with defined and completed endingEvent', function () {
+    let responseObject = {
+      statusCode: 400,
+      body: { message: "Error updating service " }
+    };
+    reqStub.callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
     });
-		payload = {"EVENT_ID":{"S":"45fe8c82-ff1d-b31d-2aa5-a22d0911b7ec"},"SERVICE_ID": { "S": "abc123" }, "TIMESTAMP":{"S":"2017-06-26T17:54:26:086"},"SERVICE_CONTEXT":{"S":"{\"service_type\":\"api\",\"admin_group\":\"name=d&name=b&name=a&name=b&name=u&\"}"},"EVENT_HANDLER":{"S":"JENKINS"},"EVENT_NAME":{"S":"LOCK_MASTER_BRANCH"},"SERVICE_NAME":{"S":"test8"},"EVENT_STATUS":{"S":"COMPLETED"},"EVENT_TYPE":{"S":"SERVICE_CREATION"},"USERNAME":{"S":"svc_cpt_jnk_auth_prd"},"EVENT_TIMESTAMP":{"S":"2017-05-05T06:06:37:533"},"AAA":{"NULL":true},"BBB":{"S":"val"}};
-		let processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
-		expect(processEvent.then(function (res) {
-			return res;
-		})).to.be.rejected;
+    payload = { "EVENT_ID": { "S": "45fe8c82-ff1d-b31d-2aa5-a22d0911b7ec" }, "SERVICE_ID": { "S": "abc123" }, "TIMESTAMP": { "S": "2017-06-26T17:54:26:086" }, "SERVICE_CONTEXT": { "S": "{\"service_type\":\"api\",\"admin_group\":\"name=d&name=b&name=a&name=b&name=u&\"}" }, "EVENT_HANDLER": { "S": "JENKINS" }, "EVENT_NAME": { "S": "LOCK_MASTER_BRANCH" }, "SERVICE_NAME": { "S": "test8" }, "EVENT_STATUS": { "S": "COMPLETED" }, "EVENT_TYPE": { "S": "SERVICE_CREATION" }, "USERNAME": { "S": "svc_cpt_jnk_auth_prd" }, "EVENT_TIMESTAMP": { "S": "2017-05-05T06:06:37:533" }, "AAA": { "NULL": true }, "BBB": { "S": "val" } };
+    let processEvent = index.processEvent(payload, configData, tokenResponseObj.body.data.token);
+    expect(processEvent.then(function (res) {
+      return res;
+    })).to.be.rejected;
   });
 
 });
@@ -860,6 +860,25 @@ describe("notifySlack", () => {
     index.processEvent(payload.Item, configData, "tempAuth").then(() => {
       sinon.assert.calledOnce(getServiceDetailsStub);
     });
+  });
+
+  it('should indicate error if slack notification sending fails', () => {
+    let responseObject = {
+      statusCode: 400,
+      body: { message: "Error sending message in slack channel." }
+    };
+    reqStub.callsFake((obj) => {
+      return obj.callback(null, responseObject, responseObject.body);
+    });
+    processRequestStub.rejects();
+    getServiceDetailsStub.resolves(responseObject.body);
+    getNotificationMessageStub.returns({ "Service deployment notification for service": "compconsted" });
+    formatSlackTemplateStub.returns({ "Stage": "update_deployment" });
+    notifySlackChannelStub.rejects();
+    let processRecord = index.processRecord(event.Records[0], configData, tokenResponseObj.body.data.token);
+    expect(processRecord.then(function (res) {
+      return res;
+    })).to.be.rejected;
   });
 });
 
@@ -1118,92 +1137,138 @@ describe("slack-handler", () => {
     expect(index.getEventProcessStatus()).to.not.have.property('some_key');
   });
 
-	it('handler should fail for invalid authentication', function () {
-		let responseObject = {
-			statusCode: 400,
-			body: {"message" : "unautho"	}
-		};
+  it('handler should fail for invalid authentication', function () {
+    let responseObject = {
+      statusCode: 400,
+      body: { "message": "unautho" }
+    };
 
-		let authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
-		reqStub.callsFake((obj) => {
-      return obj.callback(null, responseObject, responseObject.body);
-    });
-
-		index.handler(event, context, (err, res) => {
-			if (err) {
-				return err;
-			} else {
-				res.should.have.property('processed_events');
-				return res;
-			}
-		});
-
-		authStub.restore();
-		reqStub.restore();
-	});
-
-	it('handler should resolve for not interested events', function () {
-		tokenResponseObj.statusCode = 400;
-
-		let authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
+    let authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
     reqStub.callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
     });
-		let message = 'User is not authorized to access this service';
-		index.handler(event, context, (err, res) => {
-			if (err) {
-				return err;
-			} else {
-				res.should.have.property('failed_events');
-				return res;
-			}
-		});
 
-		authStub.restore();
-		reqStub.restore();
-	});
+    index.handler(event, context, (err, res) => {
+      if (err) {
+        return err;
+      } else {
+        res.should.have.property('processed_events');
+        return res;
+      }
+    });
 
-	it('handler should resolve with updating', function () {
-		event.Records =  [
-			{
-				"kinesis": {
-					"kinesisSchemaVersion": "1.0",
-					"partitionKey": "CALL_DELETE_WORKFLOW",
-					"sequenceNumber": "abc1234",
-					"data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
-					"approximateArrivalTimestamp": 1521632408.682
-				},
-				"eventSource": "abc",
-				"eventVersion": "1.0",
-				"eventID": "abc",
-				"eventName": "abc",
-				"invokeIdentityArn": "abc",
-				"awsRegion": "abc",
-				"eventSourceARN": "abc"
-			}
-		];
+    authStub.restore();
+    reqStub.restore();
+  });
 
-		let responseObject = {
-			statusCode: 200,
-			body: {
-				data: {
-					"id": "ghd93-3240-2343"
-				}
-			}
-		};
+  it('handler should resolve for not interested events', function () {
+    tokenResponseObj.statusCode = 400;
 
-		let authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
-		reqStub.callsFake((obj) => {
+    let authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
+    reqStub.callsFake((obj) => {
+      return obj.callback(null, responseObject, responseObject.body);
+    });
+    let message = 'User is not authorized to access this service';
+    index.handler(event, context, (err, res) => {
+      if (err) {
+        return err;
+      } else {
+        res.should.have.property('failed_events');
+        return res;
+      }
+    });
+
+    authStub.restore();
+    reqStub.restore();
+  });
+
+  it('handler should resolve with valid response', function () {
+    event.Records = [
+      {
+        "kinesis": {
+          "kinesisSchemaVersion": "1.0",
+          "partitionKey": "CALL_DELETE_WORKFLOW",
+          "sequenceNumber": "abc1234",
+          "data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
+          "approximateArrivalTimestamp": 1521632408.682
+        },
+        "eventSource": "abc",
+        "eventVersion": "1.0",
+        "eventID": "abc",
+        "eventName": "abc",
+        "invokeIdentityArn": "abc",
+        "awsRegion": "abc",
+        "eventSourceARN": "abc"
+      }
+    ];
+
+    let responseObject = {
+      statusCode: 200,
+      body: {
+        data: {
+          "id": "ghd93-3240-2343"
+        }
+      }
+    };
+
+    let authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
+    reqStub.callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
     });
 
-		index.handler(event, context, (err, res) => {
-			if (err) {
-				return err;
-			} else {
-				res.should.have.property('processed_events');
-				return res;
-			}
-		});
-	});
+    index.handler(event, context, (err, res) => {
+      if (err) {
+        return err;
+      } else {
+        res.should.have.property('processed_events');
+        return res;
+      }
+    });
+  });
+
+  it('should indicate error if status code not equal to 200', () => {
+    let responseObject = {
+      statusCode: 400,
+      body: { message: "Error fetching service" }
+    };
+    reqStub.callsFake((obj) => {
+      return obj.callback(null, responseObject, responseObject.body);
+    });
+
+    let processRecord = index.processRecord(event.Records[0], configData, tokenResponseObj.body.data.token);
+    expect(processRecord.then(function (res) {
+      return res;
+    })).to.be.rejected;
+  });
+
+  it('should indicate error if service look up fails', () => {
+    let responseObject = {
+      statusCode: 200,
+      body: {}
+    };
+    reqStub.callsFake((obj) => {
+      return obj.callback(null, responseObject, responseObject.body);
+    });
+
+    let processRecord = index.processRecord(event.Records[0], configData, tokenResponseObj.body.data.token);
+    expect(processRecord.then(function (res) {
+      return res;
+    })).to.be.rejected;
+  });
+
+  it('should return error message if service look up fails ', () => {
+    let responseObject = {
+      statusCode: 200,
+      body: {}
+    };
+    reqStub.callsFake((obj) => {
+      return obj.callback(null, responseObject, responseObject.body);
+    });
+    let message = "Failed to get service metadata from service catalog";
+    let processRecord = index.processRecord(event.Records[0], configData, tokenResponseObj.body.data.token);
+    expect(processRecord.catch(function (err) {
+      return err.failure_message;
+    })).to.be.become(message);
+  });
+
 });
