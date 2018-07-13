@@ -6,6 +6,10 @@ import {ActivatedRoute} from '@angular/router';
 import {DataService} from '../data-service/data.service';
 import * as moment from 'moment';
 import {UtilsService} from '../../core/services/utils.service';
+import {Observable} from "rxjs/Observable";
+import 'rxjs/add/operator/toPromise';
+
+declare let Object;
 
 
 @Component({
@@ -15,26 +19,7 @@ import {UtilsService} from '../../core/services/utils.service';
   providers: [RequestService, MessageService, DataService],
 })
 export class EnvCodequalitySectionComponent implements OnInit {
-  public metricCards;
-
-  @ViewChild('metricCards') set _metricCards(input) {
-    this.metricCards = input;
-  }
-
-  public metricCardsScroller;
-
-  @ViewChild('metricCardsScroller') set _metricCardsScoller(input) {
-    this.metricCardsScroller = input;
-    if (this.metricCards && this.metricCardsScroller) {
-      setTimeout(() => {
-        this.metricCardsOversized = this.metricCardsScroller.nativeElement.scrollWidth >
-          this.metricCards.nativeElement.getBoundingClientRect().width;
-      });
-    }
-  };
-
   @Input() service: any = {};
-  public renderGraph = true;
   public filters: any = ['DAILY', 'WEEKLY', 'MONTHLY'];
   public filterSelected = [this.filters[0]];
   public env;
@@ -44,41 +29,38 @@ export class EnvCodequalitySectionComponent implements OnInit {
   public selectedMetric;
   public filterData;
   public metricsIndex = 0;
-  public resizeDebounced;
   public errorData;
   public dayValue = 86400000;
   public weekValue = 604800000;
   public monthValue = 2592000000;
-  public metricCardSize = 135 + 12;
-  public metricCardsOversized;
-  public metricCardOffset = 0;
+  public selectedMetricGraphData;
+  public graphDataRaw;
 
   constructor(
     private toasterService: ToasterService,
     private messageservice: MessageService,
     private route: ActivatedRoute,
     private http: RequestService,
-    private cache: DataCacheService,
     public utils: UtilsService) {
-    this.resizeDebounced = this.utils.debounce(this.resize, 200, false);
   }
 
   ngOnInit() {
     this.env = this.route.snapshot.params['env'];
-    this.filterData = this.selectFilter(this.filterSelected[0]);
-    this.queryGraphData(this.filterData, this.metricsIndex);
+    this.filterData = this.getFilterData(this.filters[0]);
+    return this.queryGraphData(this.filterData);
   }
 
   refresh() {
-    this.queryGraphData(this.filterData, this.metricsIndex);
+    this.queryGraphData(this.filterData);
   }
 
-  onFilterSelected(event) {
-    this.filterData = this.selectFilter(event[0]);
-    this.queryGraphData(this.filterData, this.metricsIndex);
+  onFilterSelect(event) {
+    this.filterData = this.getFilterData(event[0]);
+    return this.queryGraphData(this.filterData);
+
   }
 
-  selectFilter(filterInput) {
+  getFilterData(filterInput) {
     let filterData;
     this.filterSelected = [filterInput];
     switch (filterInput) {
@@ -115,12 +97,11 @@ export class EnvCodequalitySectionComponent implements OnInit {
 
   selectMetric(index) {
     this.metricsIndex = index;
-    this.selectedMetric = this.metrics[index];
-    this.graph = this.formatGraphData(this.selectedMetric, this.filterData);
-    this.resize();
+    this.selectedMetric = this.graphDataRaw.metrics[index];
+    this.selectedMetricGraphData = this.formatGraphData(this.selectedMetric, this.filterData);
   }
 
-  queryGraphData(filterData, metricIndex) {
+  queryGraphData(filterData) {
     this.sectionStatus = 'loading';
     const request = {
       url: '/jazz/codeq',
@@ -133,16 +114,17 @@ export class EnvCodequalitySectionComponent implements OnInit {
       }
     };
     this.http.get(request.url, request.params)
-      .subscribe((response) => {
+      .toPromise()
+      .then((response) => {
         if (response && response.data && response.data.metrics && response.data.metrics.length) {
-          this.metrics = response.data.metrics;
-          this.selectedMetric = this.metrics[metricIndex];
           this.sectionStatus = 'resolved';
-          this.graph = this.formatGraphData(this.selectedMetric, filterData);
+          this.graphDataRaw = response.data;
+          this.selectMetric(this.metricsIndex);
         } else {
           this.sectionStatus = 'empty';
         }
-      }, (error) => {
+      })
+      .catch((error) => {
         this.sectionStatus = 'error';
         this.errorData = {
           request: request,
@@ -172,41 +154,28 @@ export class EnvCodequalitySectionComponent implements OnInit {
       });
 
     filterData.yMax = values.length ? 1.1 * (values
-      .map((point) => {return point.y;})
-      .reduce((a, b) => {return Math.max(a, b);})) : 100;
+      .map((point) => {
+        return point.y;
+      })
+      .reduce((a, b) => {
+        return Math.max(a, b);
+      })) : 100;
     filterData.yMin = values.length ? (.9 * (values
-      .map((point) => {return point.y;})
-      .reduce((a, b) => {return Math.min(a, b);}, 100))) : 0;
+      .map((point) => {
+        return point.y;
+      })
+      .reduce((a, b) => {
+        return Math.min(a, b);
+      }, 100))) : 0;
 
     return {
       datasets: [values],
-      options: filterData,
+      options: Object.assign({}, filterData)
     };
   }
 
   sonarLink() {
-    window.open(this.selectedMetric.link, '_blank');
-  }
-
-  resize() {
-    this.renderGraph = false;
-    this.sectionStatus = 'loading';
-    setTimeout(() => {
-      this.renderGraph = true;
-      this.sectionStatus = 'resolved';
-    }, 200);
-  }
-
-  offsetLeft() {
-    if (this.metricCardsScroller.nativeElement.getBoundingClientRect().right > this.metricCards.nativeElement.getBoundingClientRect().right) {
-      this.metricCardOffset -= 1;
-    }
-  }
-
-  offsetRight() {
-    if (this.metricCardOffset < 0) {
-      this.metricCardOffset += 1;
-    }
+    window.open(this.selectedMetric.metric.link, '_blank');
   }
 
 }

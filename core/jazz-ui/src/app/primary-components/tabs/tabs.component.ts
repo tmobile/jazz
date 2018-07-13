@@ -58,6 +58,7 @@ export class TabsComponent implements OnInit {
       if(tabs[i] == 'overview') this.disableobj['overview']=false;
       if(tabs[i] == 'deployments') this.disableobj['deployments']=false;
       if(tabs[i] == 'code quality') this.disableobj['code quality']=false;
+      if(tabs[i] == 'metrics') this.disableobj['metrics']=false;
       if(tabs[i] == 'assets') this.disableobj['assets']=false;
       if(tabs[i] == 'logs') this.disableobj['logs']=false;
     }
