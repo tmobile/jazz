@@ -15,6 +15,7 @@
     "mocha": "^v3.0.0",
     "chai": "^3.5.0",
     "aws-sdk": "*",
+    "aws-sdk-mock": "^1.7.0",
     "aws-lambda-mock-context": "^3.1.1",
     "istanbul": "^0.4.5",
     "sinon": "^5.0.7"

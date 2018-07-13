@@ -30,7 +30,7 @@ const aws = require('aws-sdk');
 const validateARN = utils.validateARN;
 const execStatus = utils.execStatus();
 
-var handler = (event, context, cb) => {
+function handler(event, context, cb){
   //Initializations
   var errorHandler = errorHandlerModule();
   logger.init(event, context);
@@ -43,7 +43,6 @@ var handler = (event, context, cb) => {
     if (!event || !event.method || event.method !== 'POST') {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("Method not found")));
     }
-    console.log("helo")
     if (!event.body) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("Request payload cannot be empty")));
     }
@@ -58,7 +57,7 @@ var handler = (event, context, cb) => {
     awsRegion = arnvalues[3]; //["arn","aws","lambda","us-east-1","000000""] spliting FunctionARN to get the aws-region
     var inputJSON = event.body.inputJSON;
 
-    invokeLambda(functionARN, inputJSON, awsRegion).then((data) => {
+    exportable.invokeLambda(functionARN, inputJSON, awsRegion).then((data) => {
 
       if (data && data.StatusCode >= 200 && data.StatusCode < 299) {
         responseObject.payload = data;
@@ -73,7 +72,7 @@ var handler = (event, context, cb) => {
         }
       } else {
         // Function Falied |Cause Unknown|TEST FAILED
-        logger.error("Internal Error :", data);
+        logger.error("Internal Error :"+ JSON.stringify(data));
         return cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown internal error occurred when invoking " + functionARN)));
       }
       responseObject.payload = data;
@@ -84,12 +83,10 @@ var handler = (event, context, cb) => {
       return cb(null, responseObj(responseObject, event.body));
     });
   } catch (err) {
-    console.log("why");
-    return cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown internal error occurred when invoking the hhhhh  function")));
+    return cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown internal error occurred when invoking the function")));
   }
 };
-var invokeLambda = (functionARN, inputJSON, awsRegion) => {
-  console.log("why");
+function invokeLambda(functionARN, inputJSON, awsRegion) {
   return new Promise((resolve, reject) => {
     try {
       var lambda = new aws.Lambda({
@@ -100,10 +97,10 @@ var invokeLambda = (functionARN, inputJSON, awsRegion) => {
         Payload: JSON.stringify(inputJSON)
       }, function (error, data) {
         if (error) {
-          logger.error("Error in lambda execution:", error);
+          logger.error("Error in lambda execution:", JSON.stringify(error));
           reject(error);
         } else {
-          logger.debug("Lambda executed successfully:", data);
+          logger.debug("Lambda executed successfully:", JSON.stringify(data));
           resolve(data);
         }
       });
@@ -114,7 +111,8 @@ var invokeLambda = (functionARN, inputJSON, awsRegion) => {
   });
 };
 
-module.exports = {
-  handler: handler,
-  invokeLambda: invokeLambda
+var exportable = {
+  handler,
+  invokeLambda
 };
+module.exports = exportable;
