@@ -79,6 +79,9 @@ node  {
 						else if (service_config['runtime'] == "java") {
 							service_template = 'api-template-java'
 						}
+
+            def api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], service_config)
+
 						break
 
 					case "lambda":
@@ -168,10 +171,10 @@ node  {
 				// Add service_id  in deployment-env.yml
 
 				sh "echo 'service_id: $service_id' >> ./deployment-env.yml"
-				
+
 				sh "sed -i -- 's/{service_name}/${service_config['service']}/g' ./Jenkinsfile"
 				sh "sed -i -- 's/{domain}/${service_config['domain']}/g' ./Jenkinsfile"
-				
+
 			}
 			events.sendCompletedEvent('MODIFY_TEMPLATE', 'modify template completed', context_map)
 		}
@@ -434,7 +437,7 @@ def loadBuildModules(buildModuleUrl){
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.initialize(resultJsonString)
 		echo "config loader loaded successfully."
-		
+
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
 		echo "SCM module loaded successfully."
@@ -445,7 +448,7 @@ def loadBuildModules(buildModuleUrl){
 		serviceMetadataLoader = load "service-metadata-loader.groovy"
 		serviceMetadataLoader.initialize(configLoader)
 		echo "Service metadata loader module loaded successfully."
-    
+
 		utilModule = load "utility-loader.groovy"
 	}
 }
