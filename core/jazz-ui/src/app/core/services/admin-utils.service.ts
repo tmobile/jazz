@@ -15,8 +15,8 @@ export class AdminUtilsService {
     return this.http.get('/jazz/admin/config')
       .toPromise()
       .then((response) => {
-          console.log(response);
-          return response.data;
+          if(response && response.data && response.data.config)
+          return response.data.config;
       })
   }
 }
