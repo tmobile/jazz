@@ -61,10 +61,14 @@
              *ngIf="!outputHeader"></div>
         <div class='column-heading'
              *ngIf="!!outputHeader"
-             [ngClass]="outputHeader.statusCode === 200 ? 'success' : 'error'">
-          {{outputHeader.statusCode}} {{outputHeader.statusText}}
+             [ngClass]="reponse_code == 200 ? 'success' : 'error'"
+             [class.error]='error'>
+          {{outputHeader.statusCode}} {{outputHeader.statusText}}<br>
+          <span *ngIf='success && !error'>Function got executed successfully </span>
+          <span *ngIf='success && error'>Function execution failed</span>
+          <span *ngIf='!success && error'>Function execution is taking too long. Alternatively, you can check your function logs to verify the functionality</span>
         </div>
-        <div class="textbox">
+        <div class="textbox op-box">
           <div class="line-numbers">
             <div *ngFor="let value of lineNumberCount_op; let i = index">{{i + 1}}</div>
           </div>

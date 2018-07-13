@@ -1,6 +1,8 @@
 import {Component, Input, OnChanges, OnInit, ViewChild} from '@angular/core';
 import * as moment from 'moment';
 import {UtilsService} from '../../core/services/utils.service';
+declare let Promise;
+
 
 @Component({
   selector: 'chartjs-linegraph',
@@ -8,23 +10,22 @@ import {UtilsService} from '../../core/services/utils.service';
   styleUrls: ['./chartjs-linegraph.component.scss']
 })
 export class ChartjsLinegraphComponent implements OnInit, OnChanges {
-  @ViewChild('container') container;
-  @ViewChild('linegraph') lineGraph;
-  @Input() datasets: any = [];
-  @Input() graphOptions = {};
+  @ViewChild('chart') chart;
+  @Input() datasets;
+  @Input() options;
+  public _datasets;
+  public _options;
   public type = 'scatter';
-  public options = {};
+  public isRendered = true;
 
-  constructor() {
-  }
+  constructor(private utils: UtilsService) {}
 
-  ngOnInit() {
-    this.sizeCanvas();
-  }
+  ngOnInit() {}
 
   ngOnChanges(changes?) {
-    this.datasets = this.datasets.map(this.modifyDataSet);
-    this.options = this.getOptions(this.graphOptions);
+    this.render();
+      this._datasets = this.datasets.map(this.modifyDataSet);
+      this._options = this.getOptions(this.options);
   }
 
   modifyDataSet(data) {
@@ -45,9 +46,9 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
   }
 
   getOptions(graphOptions) {
-
     const options = {
-      responsive: false,
+      maintainAspectRatio: false,
+      responsive: true,
       legend: false,
       tooltips: {
         enabled: true,
@@ -89,7 +90,11 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
           ticks: {
             min: 0,
             max: 100,
-            padding: 10
+            padding: 10,
+            stepSize: undefined,
+            userCallback: function (tick) {
+              return Math.round(tick);
+            }
           },
           gridLines: {
             color: '#888',
@@ -98,6 +103,10 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
         }]
       }
     };
+
+    options.tooltips.callbacks.label = graphOptions.tooltipXFormat ? function(tooltipItem, chart) {
+      return moment(tooltipItem.xLabel).format(graphOptions.tooltipXFormat);
+    } : options.tooltips.callbacks.label;
     options.scales.xAxes[0].ticks.min = graphOptions.fromDateValue;
     options.scales.xAxes[0].ticks.max = graphOptions.toDateValue;
     options.scales.xAxes[0].ticks.stepSize = graphOptions.stepSize;
@@ -106,12 +115,17 @@ export class ChartjsLinegraphComponent implements OnInit, OnChanges {
     };
     options.scales.yAxes[0].ticks.min = graphOptions.yMin || 0;
     options.scales.yAxes[0].ticks.max = graphOptions.yMax || 100;
+    if(graphOptions.yMin && graphOptions.yMax) {
+      let difference = graphOptions.yMax - graphOptions.yMin;
+      options.scales.yAxes[0].ticks.stepSize = difference / 5;
+    }
     return options;
   }
 
-  sizeCanvas() {
-    const boundingRect = this.container.nativeElement.getBoundingClientRect();
-    this.lineGraph.nativeElement.height = boundingRect.height;
-    this.lineGraph.nativeElement.width = boundingRect.width;
+  render() {
+    this.isRendered = false;
+    this.utils.setTimeoutPromise(100)
+      .then(() => {this.isRendered = true;});
   }
+
 }

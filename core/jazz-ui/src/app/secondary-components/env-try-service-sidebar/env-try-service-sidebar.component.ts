@@ -21,6 +21,7 @@ export class EnvTryServiceSidebarComponent implements OnInit {
   public lineNumberCount_op: any = new Array(5).fill('');
   public inputValue = '';
   public outputValue = '';
+
   public outputHeader = null;
   public valid = true;
   public validityMessage = '';
@@ -30,6 +31,9 @@ export class EnvTryServiceSidebarComponent implements OnInit {
   private subscription: any;
   private http: any;
   api_status: string = "default";
+  success:boolean = true;
+  error:boolean = false;
+  reponse_code;
 
 
   @Input() service;
@@ -63,12 +67,32 @@ export class EnvTryServiceSidebarComponent implements OnInit {
       };
       this.subscription = this.http.post('/jazz/test-lambda', payload).subscribe((response) => {
         this.loading = false;
-        response.data.payload.StatusCode = 200;
         this.outputHeader = {
           statusCode: response.data.payload.StatusCode|| '',
           statusText: response.data.execStatus
         }
-        if(this.outputHeader.statusCode != '') this.outputHeader.statusCode+=' : ';
+        this.reponse_code = response.data.payload.StatusCode;
+
+        if(response.data.payload.StatusCode == 200){
+          this.success=true;
+          this.error=false;
+        }
+        if(response.data.payload.StatusCode == 200 && response.data.execStatus == 'HandledError'){
+          this.success=true;
+          this.error=true;
+        }
+        if(response.data.execStatus == 'UnhandledError'){
+          this.success=true;
+          this.error=true;
+        }
+        if(response.data.execStatus == 'TimeoutError'){
+          this.success=false;
+          this.error=true;
+        }
+        if(this.outputHeader.statusCode != ''){
+          this.outputHeader.statusCode+=' : ';
+        } 
+
         this.outputValue = this.stringToPrettyString(response.data.payload.Payload);
         this.lineNumbers('op');
       }, (error) => {
