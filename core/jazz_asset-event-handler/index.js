@@ -94,7 +94,7 @@ var processEvents = function (event, configData, authToken) {
         return reject(error);
       });
   });
-}
+} 
 
 var processEachEvent = function (record, configData, authToken) {
   return new Promise((resolve, reject) => {
@@ -299,15 +299,20 @@ var checkIfAssetExists = function (eventPayload, configData, authToken) {
 
     logger.debug("searchAssetPayload" + JSON.stringify(searchAssetPayload));
     request(svcPostSearchPayload, function (error, response, body) {
-      if (response.statusCode && response.statusCode === 200 && body && body.data && body.data.length > 0) {
+      if (response && response.statusCode && response.statusCode === 200 && body && body.data && body.data.length > 0) {
         logger.debug("Asset found: " + JSON.stringify(body));
         return resolve(body.data[0]);
       } else {
-        logger.error("No assets found. " + JSON.stringify(response));
-        return reject({
-          "error": "No assets found. " + JSON.stringify(response),
-          "details": response.body.message
-        });
+        if(error){
+          return reject(error);
+        }
+        else{
+          logger.error("No assets found. " + JSON.stringify(response));
+          return reject({
+            "error": "No assets found. " + JSON.stringify(response),
+            "details": response.body.message
+          });
+        }        
       }
     });
   });
@@ -356,5 +361,6 @@ module.exports = {
   getEventProcessStatus: getEventProcessStatus,
   handler: handler,
   processCreateAsset: processCreateAsset,
-  processUpdateAsset: processUpdateAsset
+  processUpdateAsset: processUpdateAsset,
+  checkIfAssetExists: checkIfAssetExists
 }
