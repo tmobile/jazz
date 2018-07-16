@@ -3,6 +3,7 @@ import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import groovy.transform.Field
 import static java.util.UUID.randomUUID
+import jenkins.security.*
 
 echo "Utility module loaded successfully"
 
@@ -74,8 +75,8 @@ def jazz_quiet_sh(cmd) {
 }
 
 /**
-* Get Request Id 
-* @return   
+* Get Request Id
+* @return
 */
 def generateRequestId() {
 	UUID uuid = UUID.randomUUID()
@@ -134,11 +135,19 @@ def getAPIIdForCore(apiIdMapping) {
 
 /**
  * Set config_loader
- * @return      
+ * @return
  */
 def setConfigLoader(configLoader) {
 	config_loader = configLoader
 }
 
+def getApiToken(){
+	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+		User u = User.get(UNAME)
+		ApiTokenProperty t = u.getProperty(ApiTokenProperty.class)
+		def token = t.getApiToken()
+		return token
+	}
+}
 
 return this

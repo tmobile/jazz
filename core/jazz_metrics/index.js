@@ -24,22 +24,13 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js")(); //Import the logging module.
-const aws = require("aws-sdk"); //Import the secret-handler module.
 const request = require('request');
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
-const global_config = require("./config/global-config.json");
 
-module.exports.handler = (event, context, cb) => {
-
+function handler (event, context, cb) {
   var errorHandler = errorHandlerModule();
-  var config = configObj(event);
-  var cloudwatch = new aws.CloudWatch({
-    apiVersion: '2010-08-01'
-  });
-  if (!event && !event.body) {
-    return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid Input Error")));
-  }
+  var config = configObj.getConfig(event, context);
 
   try {
     /*
@@ -55,12 +46,12 @@ module.exports.handler = (event, context, cb) => {
      *    }
      */
     var eventBody = event.body;
-    genericValidation(event)
+    exportable.genericValidation(event)
       .then(() => validateUtils.validateGeneralFields(eventBody))
-      .then(() => getToken(config))
-      .then((authToken) => getAssetsDetails(config, eventBody, authToken))
-      .then(res => validateAssets(res, eventBody))
-      .then(res => getMetricsDetails(res, cloudwatch, config))
+      .then(() => exportable.getToken(config))
+      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
+      .then(res => exportable.validateAssets(res, eventBody))
+      .then(res => exportable.getMetricsDetails(res))
       .then(res => {
         var finalObj = utils.massageData(res, eventBody);
         return cb(null, responseObj(finalObj, eventBody));
@@ -68,8 +59,6 @@ module.exports.handler = (event, context, cb) => {
       .catch(error => {
         if (error.result === "inputError") {
           return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-        } else if (error.result === "notFoundError") {
-          return cb(JSON.stringify(errorHandler.throwNotFoundError(error.message)));
         } else if (error.result === "unauthorized") {
           return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
         } else {
@@ -88,6 +77,13 @@ function genericValidation(event) {
       reject({
         result: "inputError",
         message: "Invalid Input Error"
+      });
+    }
+
+    if(!event.method || event.method !== "POST") {
+      reject({
+        result: "inputError",
+        message: "Invalid method"
       });
     }
     if (!event.principalId) {
@@ -162,7 +158,7 @@ function getAssetsDetails(config, eventBody, authToken) {
       } else {
         var apiAssetsArray = body.data;
         if (apiAssetsArray && apiAssetsArray.length === 0) {
-          logger.error("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
+          logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
           resolve([]);
         } else {
           var userStatistics = eventBody.statistics.toLowerCase();
@@ -177,7 +173,6 @@ function getAssetsDetails(config, eventBody, authToken) {
 }
 
 function validateAssets(assetsArray, eventBody) {
-  'use strict';
   return new Promise((resolve, reject) => {
     if (assetsArray.length > 0) {
       var newAssetArray = [];
@@ -199,7 +194,7 @@ function validateAssets(assetsArray, eventBody) {
 
           if (!getAssetNameDetails.isError) {
             paramMetrics = getAssetNameDetails.paramMetrics;
-            getActualParam(paramMetrics, getAssetNameDetails.awsNameSpace, assetItem, eventBody)
+            exportable.getActualParam(paramMetrics, getAssetNameDetails.awsNameSpace, assetItem, eventBody)
               .then(res => {
                 newAssetArray.push({
                   "actualParam": res,
@@ -229,7 +224,6 @@ function validateAssets(assetsArray, eventBody) {
 }
 
 function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
-  'use strict';
   return new Promise((resolve, reject) => {
     // Forming object with parameters required by cloudwatch getMetricStatistics api.
     var commonParam = {
@@ -295,12 +289,12 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
   });
 }
 
-function getMetricsDetails(newAssetArray, cloudwatch) {
+function getMetricsDetails(newAssetArray) {
   return new Promise((resolve, reject) => {
-    logger.info("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
+    logger.debug("Inside getMetricsDetails"+JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
-      cloudWatchDetails(assetParam, cloudwatch)
+      exportable.cloudWatchDetails(assetParam)
         .then(res => {
           metricsStatsArray.push(res);
           if (metricsStatsArray.length === newAssetArray.length) {
@@ -314,15 +308,15 @@ function getMetricsDetails(newAssetArray, cloudwatch) {
   });
 }
 
-function cloudWatchDetails(assetParam, cloudwatch) {
+function cloudWatchDetails(assetParam) {
+  logger.debug("inside cloudWatchDetails");
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
       if (param.Namespace === "AWS/CloudFront") {
-        cloudwatch = new aws.CloudWatch({
-          apiVersion: '2010-08-01',
-          region: global_config.CF_REGION
-        });
+        var cloudwatch = utils.getCloudfrontCloudWatch();
+      } else {
+        var cloudwatch = utils.getCloudWatch();
       }
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
@@ -348,6 +342,18 @@ function cloudWatchDetails(assetParam, cloudwatch) {
         }
       });
     });
-
   });
 }
+
+const exportable = {
+  handler,
+  genericValidation,
+  getToken,
+  getAssetsDetails,
+  validateAssets,
+  getActualParam,
+  getMetricsDetails,
+  cloudWatchDetails
+}
+
+module.exports = exportable;

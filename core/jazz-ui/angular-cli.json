@@ -28,13 +28,16 @@
             "../node_modules/jquery/dist/jquery.min.js",
             "../node_modules/bootstrap/dist/js/bootstrap.min.js",
 
-            "../node_modules/ion-rangeslider/js/ion.rangeSlider.min.js"
+            "../node_modules/ion-rangeslider/js/ion.rangeSlider.min.js",
+            "../node_modules/kotlin/kotlin.js/",
+            "../node_modules/really-relaxed-json/src/umd.bundle.js"
         ],
         "environmentSource": "environments/environment.ts",
         "environments": {
             "dev": "environments/environment.ts",
             "internal": "environments/environment.internal.ts",
-            "oss": "environments/environment.oss.ts"
+            "oss": "environments/environment.oss.ts",
+            "local": "environments/environment.local.ts"
 
         }
     }],

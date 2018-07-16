@@ -24,9 +24,9 @@
 const parser = require('aws-arn-parser');
 const metricConfig = require("./metrics.json");
 const global_config = require("../config/global-config.json");
+const AWS = require("aws-sdk");
 
 function massageData(assetResults, eventBody) {
-
   var output_obj = {};
   output_obj = {
     "domain": eventBody.domain,
@@ -65,11 +65,11 @@ function assetData(results, assetItem) {
 function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset) {
   var output_obj = {};
   output_obj["isError"] = false;
-  if(nameSpaceFrmAsset) {
-    var paramMetrics = [];
-    var nameSpace = nameSpaceFrmAsset.toLowerCase();
-    var namespacesList = metricConfig.namespaces;
-    var supportedNamespace = namespacesList[nameSpace];
+  var paramMetrics = [];
+  var nameSpace = nameSpaceFrmAsset.toLowerCase();
+  var namespacesList = metricConfig.namespaces;
+  var supportedNamespace = namespacesList[nameSpace];
+  if(nameSpaceFrmAsset && supportedNamespace) {
     paramMetrics = supportedNamespace["metrics"];
     var awsAddedNameSpace = nameSpace.indexOf('aws/') === -1 ? 'aws/' + nameSpace : nameSpace;
     awsAddedNameSpace = awsAddedNameSpace.replace(/ /g, "");
@@ -240,9 +240,26 @@ function updateCloudfrontAsset(newAssetObj, relativeId) {
   return newAssetObj;
 }
 
+function getCloudWatch() {
+  var cloudwatch = new AWS.CloudWatch({
+    apiVersion: '2010-08-01'
+  });
+  return cloudwatch;
+}
+
+function getCloudfrontCloudWatch() {
+  var cloudwatch = new AWS.CloudWatch({
+    apiVersion: '2010-08-01',
+    region: global_config.CF_REGION
+  });
+  return cloudwatch;
+}
+
 module.exports = {
   massageData,
   assetData,
   getNameSpaceAndMetricDimensons,
-  getAssetsObj
+  getAssetsObj,
+  getCloudWatch,
+  getCloudfrontCloudWatch
 };
