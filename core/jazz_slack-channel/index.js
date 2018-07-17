@@ -134,15 +134,16 @@ function genericInputValidation(event, config) {
 function identifyMembers(members, type, value) {
   let info = null;
 
-  members.forEach(each => {
-    let memberEmailId = (each.profile.email) ? each.profile.email : null;
-    if (memberEmailId && type === 'id' && each.id === value) {
-      info = formatData(each);
-    } else if (memberEmailId && type === 'email' && memberEmailId.toLowerCase() === value.toLowerCase()) {
-      info = formatData(each);
-    }
-  });
-  return info;
+	var out = members.find(each => {
+		var memberEmailId = (each.profile.email) ? each.profile.email : null;
+		if (memberEmailId && type === 'id' && each.id === value) {
+			return each;
+		} else if (memberEmailId && type === 'email' && memberEmailId.toLowerCase() === value.toLowerCase()) {
+			return each;
+		}
+	});
+	info = formatData(out);
+	return info;
 }
 
 function isMemberAlreadyExists(id, list) {
