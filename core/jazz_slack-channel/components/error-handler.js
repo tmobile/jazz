@@ -23,37 +23,28 @@
 **/
 
 module.exports = () => {
-    var errorObj = {
-        throwInputValidationError: (errorMessage) => { //Raise a  bad requests exception
-            return {
-                errorType: "BadRequest",
-                message: errorMessage.toString()
-            };
-        },
-        throwForbiddenError: (errorMessage) => { //Raise not found exceptions
-            return {
-                errorType: "Forbidden",
-                message: errorMessage.toString()
-            };
-        },
-        throwUnauthorizedError: (errorMessage) => { //Raise not found exceptions
-            return {
-                errorType: "Unauthorized",
-                message: errorMessage.toString()
-            };
-        },
-        throwNotFoundError: (errorMessage) => { //Raise not found exceptions
-            return {
-                errorType: "NotFound",
-                message: errorMessage.toString()
-            };
-        },
-        throwInternalServerError: (errorMessage) => { //Raise internal server exceptions
-            return {
-                errorType: "InternalServerError",
-                message: errorMessage.toString()
-            };
-        }
-    };
-    return errorObj;
+  const errorObj = {
+    throwInputValidationError: (errorMessage) => ({
+      errorType: "BadRequest",
+      message: errorMessage.toString()
+    }),
+    throwForbiddenError: (errorMessage) => ({
+      errorType: "Forbidden",
+      message: errorMessage.toString()
+    }),
+    throwUnauthorizedError: (errorMessage) => ({
+      errorType: "Unauthorized",
+      message: errorMessage.toString()
+    }),
+    throwNotFoundError: (errorMessage) => ({
+      errorType: "NotFound",
+      message: errorMessage.toString()
+    }),
+    throwInternalServerError: (errorMessage) => ({
+      errorType: "InternalServerError",
+      message: errorMessage.toString()
+    })
+  };
+
+  return errorObj;
 };

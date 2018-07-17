@@ -235,11 +235,9 @@
             }
           }
         },
-        "security": [
-            {
-                "{envPrefix}-{domain}-cognito-authorizer": []
-            }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-cognito-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -322,18 +320,18 @@
     }
   },
   "securityDefinitions": {
-      "{envPrefix}-{domain}-cognito-authorizer": {
-          "type": "apiKey",
-          "name": "Authorization",
-          "in": "header",
-          "x-amazon-apigateway-authtype": "custom",
-          "x-amazon-apigateway-authorizer": {
-              "authorizerCredentials": "{conf-role}",
-              "authorizerResultTtlInSeconds": 300,
-              "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
-              "type": "token"
-          }
+    "{envPrefix}-{domain}-cognito-authorizer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "custom",
+      "x-amazon-apigateway-authorizer": {
+        "authorizerCredentials": "{conf-role}",
+        "authorizerResultTtlInSeconds": 300,
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
+        "type": "token"
       }
+    }
   },
   "definitions": {
     "200SuccessResponse": {
@@ -430,15 +428,15 @@
         "users": {
           "type": "array",
           "description": "users email address",
-		  "items": {
-			"type": "object",
-			"properties": {
-			  "email_id": {
-			    "type": "string",
-			    "description": "email-Id of the user"
-			  }
-			}
-		  }
+          "items": {
+            "type": "object",
+            "properties": {
+              "email_id": {
+                "type": "string",
+                "description": "email-Id of the user"
+              }
+            }
+          }
         }
       }
     },
@@ -453,49 +451,49 @@
           "type": "string",
           "description": "name of the slack channel"
         },
-		"channel_link": {
+        "channel_link": {
           "type": "string",
           "description": "link to the slack channel"
         },
-		"members": {
+        "members": {
           "type": "array",
           "description": "members of the slack channel",
-		  "items": {
-			"type": "object",
-			"description": "Member details",
-			"$ref": "#/definitions/MemberObj"
-		  }
+          "items": {
+            "type": "object",
+            "description": "Member details",
+            "$ref": "#/definitions/MemberObj"
+          }
         }
       }
     },
-	"MemberObj": {
+    "MemberObj": {
       "type": "object",
-	  "properties": {
-		"id": {
-		  "type": "string",
-		  "description": "Id of the user"
-		},
-		"name": {
-		  "type": "string",
-		  "description": "name of the user"
-		},
-		"team_id": {
-		  "type": "string",
-		  "description": "team Id of the user"
-		},
-		"first_name": {
-		  "type": "string",
-		  "description": "first name of the user"
-		},
-		"last_name": {
-		  "type": "string",
-		  "description": "last name of the user"
-		},
-		"email_id": {
-		  "type": "string",
-		  "description": "email-Id of the user"
-		}
-	  }
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Id of the user"
+        },
+        "name": {
+          "type": "string",
+          "description": "name of the user"
+        },
+        "team_id": {
+          "type": "string",
+          "description": "team Id of the user"
+        },
+        "first_name": {
+          "type": "string",
+          "description": "first name of the user"
+        },
+        "last_name": {
+          "type": "string",
+          "description": "last name of the user"
+        },
+        "email_id": {
+          "type": "string",
+          "description": "email-Id of the user"
+        }
+      }
     }
   }
 }

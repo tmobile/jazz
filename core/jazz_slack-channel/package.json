@@ -5,7 +5,7 @@
   "main": "index.js",
   "private": true,
   "author": {
-      "name": "Jazz"
+    "name": "Jazz"
   },
   "scripts": {
     "test": "mocha"
