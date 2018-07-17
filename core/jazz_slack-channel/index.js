@@ -29,10 +29,10 @@ const request = require("request");
 module.exports.handler = (event, context, cb) => {
 
   //Initializations
-  var errorHandler = errorHandlerModule(),
+  let errorHandler = errorHandlerModule(),
     config = configObj.getConfig(event, context);
   logger.init(event, context);
-  var isServAccRequested = true;
+  let isServAccRequested = true;
 
   genericInputValidation(event, config)
     .then(() => createPublicSlackChannel(config, event.body))
@@ -134,21 +134,21 @@ function genericInputValidation(event, config) {
 function identifyMembers(members, type, value) {
   let info = null;
 
-	var out = members.find(each => {
-		var memberEmailId = (each.profile.email) ? each.profile.email : null;
-		if (memberEmailId && type === 'id' && each.id === value) {
-			return each;
-		} else if (memberEmailId && type === 'email' && memberEmailId.toLowerCase() === value.toLowerCase()) {
-			return each;
-		}
-	});
-	info = formatData(out);
-	return info;
+  let out = members.find(each => {
+    let memberEmailId = (each.profile.email) ? each.profile.email : null;
+    if (memberEmailId && type === 'id' && each.id === value) {
+      return each;
+    } else if (memberEmailId && type === 'email' && memberEmailId.toLowerCase() === value.toLowerCase()) {
+      return each;
+    }
+  });
+  info = formatData(out);
+  return info;
 }
 
 function isMemberAlreadyExists(id, list) {
   if (list.length > 0) {
-    for (var index in list) {
+    for (let index in list) {
       if (list[index].id === id) {
         return true;
       }
