@@ -10,6 +10,7 @@ export class LandingCarouselComponent implements OnInit {
   @ViewChildren('card') cards;
   public carouselItems;
   public translateDistance = 0;
+  public cardWidth;
 
   constructor(private landingService: LandingService) { }
 

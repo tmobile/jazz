@@ -1,10 +1,31 @@
 $arrow-width: calc(84rem/14);
 
+.landing-carousel {
+  background-image: radial-gradient(circle at 97% 3%, #2b343e, #1a222c);
+}
 
-.carousel-scroller {
+.jz-hero-content {
+  height: calc(300rem/14);
+  position: relative;
   display:flex;
-  justify-content: space-between;
-  width: calc(100% - 2* 84rem/14);
+  flex: 1;
+}
+
+
+
+.carousel-scroller-wrapper {
+  position: absolute;
+  border: 1px solid red;
+  left: $arrow-width;
+  right: $arrow-width;
+  height: 100%;
+  overflow: hidden;
+}
+
+.carousel-scroller-floater {
+  height: 100%;
+  width: 100%;
+  border: 1px solid green;
 }
 
 .carousel-arrow {
@@ -19,12 +40,13 @@ $arrow-width: calc(84rem/14);
 .carousel-card-buffer {
   padding-left: 5px;
   padding-right: 5px;
+  display: inline;
 }
 
 .carousel-card {
   text-align: center;
   padding: calc(25rem/14);
-  display: flex;
+  display: inline-flex;
   flex-direction: column;
   width: calc(260rem/14);
   height: calc(300rem/14);
