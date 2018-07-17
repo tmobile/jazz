@@ -432,23 +432,23 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
 
             if (config_loader.SCM.TYPE == "bitbucket") {
-				
+
                 sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
                 sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
                 sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
-																												
-                sh "sed -i -- 's/{bb_username}/${config_loader.SCM.USERNAME}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{bb_username}/${config_loader.SCM.USERNAME}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{bb_username}/${config_loader.SCM.USERNAME}/g' ./config/prod-config.json"
 
-                sh "sed -i -- 's/{bb_password}/${config_loader.SCM.PASSWORD}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{bb_password}/${config_loader.SCM.PASSWORD}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{bb_password}/${config_loader.SCM.PASSWORD}/g' ./config/prod-config.json"
+                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+                 sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/dev-config.json"
+                 sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/stg-config.json"
+                 sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/prod-config.json"
 
-			}
-			
+                 sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/dev-config.json"
+                 sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/stg-config.json"
+                 sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/prod-config.json"
+       			 }
+			  }
             if (config_loader.SCM.TYPE == "gitlab") {
-				
+
                 sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
                 sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
                 sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
