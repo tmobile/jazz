@@ -224,7 +224,7 @@ function addMembersToSlackChannel(slackUrl, token, channelId, userId) {
       } else {
         let rpData = JSON.parse(response.body);
         if (!rpData || !rpData.ok) {
-          if (rpData.error && rpData.error === 'cant_invite_self' || rpData.error === 'already_in_channel') {
+          if (rpData.error && (rpData.error === 'cant_invite_self' || rpData.error === 'already_in_channel')) {
             resolve(true);
           } else {
             reject(false);
