@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import {Injectable} from '@angular/core';
 import {Http} from "@angular/http";
 import {Observable} from "rxjs/Observable";
 import {RequestService} from "./request.service";
@@ -15,7 +15,7 @@ export class AdminUtilsService {
     return this.http.get('/jazz/admin/config')
       .toPromise()
       .then((response) => {
-          if(response && response.data && response.data.config)
+        if (response && response.data && response.data.config)
           return response.data.config;
       })
   }
