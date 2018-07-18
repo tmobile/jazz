@@ -1,27 +1,34 @@
 <div class="jz-hero landing-carousel">
   <div class="jz-hero-header">COMPANIES USING JAZZ</div>
-  <div class="jz-hero-subheader">Look there are so many companies that many companies that many companies that many use jazz</div>
-  <div #scrollContainer class="jz-hero-content">
-    <div #arrow class="carousel-arrow jz-flex-centered">
+  <div class="jz-hero-subheader">Look there are so many companies that many companies that many companies that many use
+    jazz
+  </div>
+  <div class="jz-hero-content">
+    <div #arrow class="carousel-arrow left jz-flex-centered">
       <div class="icon-icon-leftArrow jz-pointer"
-      (click)="scrollLeft()"></div>
+           [ngClass]="{'jz-hidden': !canScrollLeft()}"
+           (click)="scrollLeft()"></div>
     </div>
-    <div class="carousel-scroller-wrapper">
-        <div class="carousel-scroller-floater">
-          <div class="carousel-card-buffer" #card *ngFor="let card of carouselItems; let i = index">
-            <div class="carousel-card" >
-              <div class="carousel-card-header">{{card.title}}</div>
-              <div class="carousel-card-content jz-flex-centered" >
-                <img [src]="card.logo" alt="">
-              </div>
-              <div class="carousel-card-footer">Read More</div>
+    <div #scrollContainer class="carousel-scroller-wrapper" (window:resize)="setShownCards()">
+      <div class="carousel-scroller-floater"
+           [ngStyle]="{'transform': 'translateX(' + getOffset() + ')'}">
+        <div #scrollFloater class="carousel-card-buffer"
+             [ngStyle]="{padding: '0 ' + cardBuffer + 'px'}"
+             *ngFor="let card of carouselItems">
+          <div class="carousel-card">
+            <div class="carousel-card-header">{{card.title}}</div>
+            <div class="carousel-card-content jz-flex-centered">
+              <img [src]="card.logo" alt="">
             </div>
+            <div class="carousel-card-footer">Read More</div>
           </div>
         </div>
       </div>
-    <div #arrow class="carousel-arrow jz-flex-centered">
+    </div>
+    <div #arrow class="carousel-arrow right jz-flex-centered">
       <div class="icon-icon-rightArrow jz-pointer"
-      (click)="scrollRight()"></div>
+           [ngClass]="{'jz-hidden': !canScrollRight()}"
+           (click)="scrollRight()"></div>
     </div>
   </div>
 </div>
