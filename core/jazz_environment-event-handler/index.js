@@ -148,7 +148,6 @@ var checkForInterestedEvents = function (encodedPayload, sequenceNumber, config)
 
 var processItem = function (eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
-    logger.error("event payload : " + JSON.stringify(eventPayload));
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
     logger.info("svcContext: " + JSON.stringify(svcContext));
 
@@ -467,7 +466,6 @@ function getSvcPayload(method, payload, apiEndpoint, authToken) {
   if (payload) {
     svcPayload.json = payload;
   }
-  logger.error("payload :" + JSON.stringify(svcPayload));
   return svcPayload;
 }
 
@@ -501,7 +499,6 @@ function getServiceDetails(eventPayload, configData, authToken) {
 
 var triggerBuildJob = function (result, payload, configData) {
   return new Promise((resolve, reject) => {
-    logger.error("Trigger jenkins job:" + JSON.stringify(result));
     var output = JSON.parse(result);
     if (!output.data && !output.data.services && output.data.services.length > 0) {
       logger.error("Service details not found in service catalog: " + JSON.stringify(output));
@@ -509,7 +506,7 @@ var triggerBuildJob = function (result, payload, configData) {
       return reject(error);
     }
     var serviceDetails = output.data.services[0];
-    logger.error("service details : " + JSON.stringify(serviceDetails));
+    logger.debug("service details : " + JSON.stringify(serviceDetails));
 
     var buildQuery = `/buildWithParameters?token=${configData.JOB_TOKEN}&service_name=${serviceDetails.service}&domain=${serviceDetails.domain}&scm_branch=${payload.physical_id}`;
     var authToken = "Basic " + new Buffer(configData.JENKINS_USER + ":" + configData.API_TOKEN).toString("base64");
@@ -517,7 +514,7 @@ var triggerBuildJob = function (result, payload, configData) {
     var svcPayload = getSvcPayload("POST", null, apiEndpoint, authToken);
 
     processRequest(svcPayload)
-      .then(result => { logger.error("successfully deployment started."); return resolve(result); })
+      .then(result => { logger.debug("Deployment started successfully."); return resolve(result); })
       .catch(err => {
         logger.error("triggerBuildJob failed: " + JSON.stringify(err));
         var error = handleError(failureCodes.PR_ERROR_3.code, failureCodes.PR_ERROR_3.message);
