@@ -30,7 +30,7 @@ module.exports.handler = (event, context, cb) => {
 
   //Initializations
   let errorHandler = errorHandlerModule(),
-    config = configObj.getConfig(event, context);
+  config = configObj.getConfig(event, context);
   logger.init(event, context);
   let isServAccRequested = true;
 
@@ -189,10 +189,11 @@ function defaultChannelMembersDetails(registeredSlackMembers, channelMembers) {
 
 function removeServAccFromMemberList(slackUrl, token, id) {
   let op = {},
-    req = {
-      url: slackUrl + "channels.leave?token=" + token + "&channel=" + id,
-      method: 'GET'
-    };
+  req = {
+    url: slackUrl + "channels.leave?token=" + token + "&channel=" + id,
+    method: 'GET'
+  };
+
   request(req, (error, response, body) => {
     if (error) {
       logger.error("Exception occured while creating slack channel!");
@@ -218,6 +219,7 @@ function addMembersToSlackChannel(slackUrl, token, channelId, userId) {
       url: slackUrl + "channels.invite?token=" + token + '&channel=' + channelId + '&user=' + userId,
       method: 'GET'
     };
+
     request(reqt, (error, response, body) => {
       if (error) {
         reject(false);
@@ -240,19 +242,21 @@ function addMembersToSlackChannel(slackUrl, token, channelId, userId) {
 function getUsersInfo(config, eventBody) {
   return new Promise((resolve, reject) => {
     let unknowUsers = [],
-      channelMembers = [],
-      users = eventBody.users,
-      reqPayload = {
-        url: config.slack_channel_url + "users.list?token=" + config.slack_token,
-        method: 'GET'
-      },
-      memDetails = {};
+    channelMembers = [],
+    users = eventBody.users,
+    reqPayload = {
+      url: config.slack_channel_url + "users.list?token=" + config.slack_token,
+      method: 'GET'
+    },
+    memDetails = {};
+
     request(reqPayload, (error, response, body) => {
       if (error) {
         logger.error("Exception occured while fetching slack channel users!" + JSON.stringify(error));
         reject(error);
       } else {
         let respData = JSON.parse(response.body);
+
         if (!respData || !respData.ok) {
           logger.error('Error occured: ' + JSON.stringify(respData.detail));
           reject({
@@ -265,13 +269,15 @@ function getUsersInfo(config, eventBody) {
 
           users.forEach(user => {
             let usrEmail = user.email_id,
-              usr = identifyMembers(registeredSlackMembers, 'email', usrEmail);
+            usr = identifyMembers(registeredSlackMembers, 'email', usrEmail);
+
             if (usr) {
               channelMembers.push(usr);
             } else {
               unknowUsers.push(usrEmail);
             }
           });
+
           if (unknowUsers.length > 0) {
             let errMsg = "Cannot find user(s) in Slack with email ids: " + unknowUsers.join(", ");
             reject({
@@ -297,10 +303,10 @@ function createPublicSlackChannel(config, eventBody) {
   logger.debug("Inside createPublicSlackChannel");
   return new Promise((resolve, reject) => {
     let channel_name = eventBody.channel_name,
-      options = {
-        url: config.slack_channel_url + "channels.create?token=" + config.slack_token + "&name=" + channel_name + "&validate=true",
-        method: 'GET'
-      };
+    options = {
+      url: config.slack_channel_url + "channels.create?token=" + config.slack_token + "&name=" + channel_name + "&validate=true",
+      method: 'GET'
+    };
 
     request(options, (error, response, body) => {
       if (error) {
@@ -341,8 +347,9 @@ function addMemberToChannel(config, channelInfo, isServAccRequested, eventBody) 
   logger.debug("Inside addMemberToChannel");
   return new Promise((resolve, reject) => {
     let slack_channel_url = config.slack_channel_url,
-      token = config.slack_token,
-      slackChannelMembers = [];
+    token = config.slack_token,
+    slackChannelMembers = [];
+
     getUsersInfo(config, eventBody)
       .then(res => {
         let channelMembers = res.data.channelMembers;
@@ -360,6 +367,7 @@ function addMemberToChannel(config, channelInfo, isServAccRequested, eventBody) 
         let count = 0;
         for (let itm in channelMembers) {
           count++;
+
           addMembersToSlackChannel(slack_channel_url, token, channelInfo.id, channelMembers[itm].id)
             .then(() => {
               if (count === channelMembers.length) {
@@ -400,7 +408,7 @@ function addMemberToChannel(config, channelInfo, isServAccRequested, eventBody) 
 function getSlackChannelMembers(config, channelMembers, isServAccRequested, slackChannelMembers) {
   return new Promise((resolve, reject) => {
     let slack_channel_url = config.slack_channel_url,
-      token = config.slack_token;
+    token = config.slack_token;
 
     if (!isServAccRequested) {
       for (let i in channelMembers) {
