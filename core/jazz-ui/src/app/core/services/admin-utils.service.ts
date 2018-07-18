@@ -11,7 +11,7 @@ export class AdminUtilsService {
     this.http = this.request;
   }
 
-  getJazzInstallerVars() {
+  getJazzConfig() {
     return this.http.get('/jazz/admin/config')
       .toPromise()
       .then((response) => {

@@ -19,7 +19,7 @@ export class AdminDashboardComponent implements OnInit{
 
   ngOnInit() {
     this.state = 'loading';
-    this.adminUtils.getJazzInstallerVars()
+    this.adminUtils.getJazzConfig()
       .then((data: any) => {
         this.state = 'resolved';
         this.adminData = data;
