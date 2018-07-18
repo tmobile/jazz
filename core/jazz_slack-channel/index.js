@@ -32,7 +32,7 @@ module.exports.handler = (event, context, cb) => {
   let errorHandler = errorHandlerModule(),
   config = configObj.getConfig(event, context);
   logger.init(event, context);
-  let isServAccRequested = true;
+  let isServAccRequested = false;
 
   genericInputValidation(event, config)
     .then(() => createPublicSlackChannel(config, event.body))
@@ -132,9 +132,8 @@ function genericInputValidation(event, config) {
 }
 
 function identifyMembers(members, type, value) {
-  let info = null;
-
-  let out = members.find(each => {
+  let info = null,
+  out = members.find(each => {
     let memberEmailId = (each.profile.email) ? each.profile.email : null;
     if (memberEmailId && type === 'id' && each.id === value) {
       return each;
@@ -142,6 +141,7 @@ function identifyMembers(members, type, value) {
       return each;
     }
   });
+
   info = formatData(out);
   return info;
 }
@@ -188,29 +188,34 @@ function defaultChannelMembersDetails(registeredSlackMembers, channelMembers) {
 }
 
 function removeServAccFromMemberList(slackUrl, token, id) {
-  let op = {},
-  req = {
-    url: slackUrl + "channels.leave?token=" + token + "&channel=" + id,
-    method: 'GET'
-  };
+  return new Promise((resolve, reject) => {
+    let req = {
+      url: slackUrl + "channels.leave?token=" + token + "&channel=" + id,
+      method: 'GET'
+    };
 
-  request(req, (error, response, body) => {
-    if (error) {
-      logger.error("Exception occured while creating slack channel!");
-      op = requestResponse;
-    } else {
-      let resBody = JSON.parse(response.body);
-      if (!resBody.ok) {
-        logger.error('Error occured: ' + JSON.stringify(resBody.detail));
-        op.result = "inputError";
-        op.message = resBody.detail;
+    request(req, (error, response, body) => {
+      if (error) {
+        logger.error("Exception occured while creating slack channel!"+JSON.stringify(error));
+        reject(error);
       } else {
-        op.result = "success";
-        op.message = "successfully removed service account from memberlist";
+        let resBody = JSON.parse(response.body);
+        if (!resBody.ok) {
+          logger.error('Error occured: ' + JSON.stringify(resBody.detail));
+          reject({
+            result: 'inputError',
+            message: resBody.detail
+          });
+        } else {
+          logger.info("successfully removed service account from memberlist");
+          resolve({
+            result: "success",
+            message: "successfully removed service account from memberlist"
+          });
+        }
       }
-    }
+    });
   });
-  return op;
 }
 
 function addMembersToSlackChannel(slackUrl, token, channelId, userId) {
@@ -366,10 +371,10 @@ function addMemberToChannel(config, channelInfo, isServAccRequested, eventBody) 
         //Adding requested users to channel member list
         let count = 0;
         for (let itm in channelMembers) {
-          count++;
 
           addMembersToSlackChannel(slack_channel_url, token, channelInfo.id, channelMembers[itm].id)
             .then(() => {
+              count++;
               if (count === channelMembers.length) {
                 getSlackChannelMembers(config, channelMembers, isServAccRequested, slackChannelMembers)
                   .then(res => notifyUser(config, eventBody, res, channelInfo))
@@ -411,16 +416,27 @@ function getSlackChannelMembers(config, channelMembers, isServAccRequested, slac
     token = config.slack_token;
 
     if (!isServAccRequested) {
+      let count = 0;
       for (let i in channelMembers) {
         let memberEmailAddr = channelMembers[i].email_id;
         if (memberEmailAddr.toLowerCase() === (config.service_account_emailId).toLowerCase()) {
-          let rt = removeServAccFromMemberList(slack_channel_url, token, channelInfo.id);
-          if (rt.result === 'success') {
-            break;
-          }
+          count++;
+          removeServAccFromMemberList(slack_channel_url, token, channelInfo.id)
+          .then(res => {
+            if (res.result === 'success') {
+              logger.debug("res.result success");
+              if (count === channelMembers.length) {
+                resolve(slackChannelMembers);
+              }
+            }
+          })
+          .catch(error => {
+            reject(error);
+          });
         } else {
+          count++;
           slackChannelMembers.push(channelMembers[i]);
-          if (slackChannelMembers.length === channelMembers.length) {
+          if (count === channelMembers.length) {
             resolve(slackChannelMembers);
           }
         }
