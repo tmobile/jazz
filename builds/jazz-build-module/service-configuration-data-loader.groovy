@@ -323,7 +323,8 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 		}
 
-		if ((service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service") || (service_name.trim() == "jazz_deployments")) {
+		if ((service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service")
+     || (service_name.trim() == "jazz_deployments") || (service_name.trim() == "jazz_environment-event-handler")) {
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/prod-config.json"
@@ -445,8 +446,9 @@ def loadServiceConfigurationData() {
                  sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/dev-config.json"
                  sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/stg-config.json"
                  sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/prod-config.json"
-       			 }
-			  }
+       			  }
+			      }
+
             if (config_loader.SCM.TYPE == "gitlab") {
 
                 sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
