@@ -3,7 +3,7 @@
   "ENVIRONMENT_API_RESOURCE": "/dev/jazz/environments",
   "DELETE_ENVIRONMENT_API_RESOURCE": "/dev/jazz/delete-serverless-service",
   "TOKEN_URL": "/dev/jazz/login",
-  "SERVICE_API_RESOURCE": "/prod/jazz/services",
+  "SERVICE_API_RESOURCE": "/dev/jazz/services",
   "SERVICE_USER": "{jazz_admin}",
   "TOKEN_CREDS": "{jazz_admin_creds}",
   "EVENTS": {
