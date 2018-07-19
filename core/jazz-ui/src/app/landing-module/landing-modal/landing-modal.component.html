@@ -1,0 +1,15 @@
+<div class="jz-modal-overlay jz-flex-centered"
+     (click)="close()"
+     *ngIf="modalOpen">
+  <div class="jz-modal" (click)="$event.stopPropagation()">
+    <div class="jz-modal-close" (click)="close()">
+      <span class="icon-icon-close"></span>
+    </div>
+    <img [src]="item.logo" alt="">
+    <h1>{{item.title}}</h1>
+    <p>{{item.description}}</p>
+    <div class="landing-modal-link">
+      <button class="jz-btn jz-btn-primary jz-btn-sm">{{'GO TO ' + item.title}}</button>
+    </div>
+  </div>
+</div>

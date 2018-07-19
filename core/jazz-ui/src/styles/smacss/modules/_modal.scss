@@ -5,18 +5,31 @@
   width: 100vw;
   height: 100vh;
   background-color: $color-overlay-dark;
-  z-index: 2000;
+  z-index: 10;
+  overflow: hidden;
 }
 
-.jz-modal-centered {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-}
 
 .jz-modal {
+  position: relative;
   background-color: $color-gray-secondary;
   border-radius: $border-radius-default;
   box-shadow: $box-shadow-default;
+  padding: 2* $gutter;
   display: flex;
+  height: calc(600rem/14);
+  width: calc(400rem/14);
+  max-height: 90%;
+  max-width: 90%;
+}
+
+.jz-modal-close {
+  color: $color-pink-primary;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  cursor: pointer;
+  &:hover {
+    opacity: .75;
+  }
 }

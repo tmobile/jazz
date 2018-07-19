@@ -23,7 +23,6 @@ import { APP_BASE_HREF } from '@angular/common';
 import { APP_INITIALIZER } from '@angular/core';
 import { DropdownModule } from "ng2-dropdown";
 
-import { LandingComponent } from '../../../pages/landing/landing.component';
 import { CronParserService } from '../../../core/helpers';
 import { SharedService } from "../../../SharedService.service";
 import { ConfigService, ConfigLoader } from '../../../app.config';

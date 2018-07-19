@@ -1,11 +1,12 @@
 .jz-btn {
   display: inline;
-  border-radius: $border-radius-default;
   line-height: 1;
   cursor: pointer;
   box-shadow: none;
   border: none;
   outline: none;
+  vertical-align: middle;
+  text-transform: uppercase;
 }
 
 .jz-btn-primary {
@@ -42,4 +43,12 @@
     color: white;
     background-color: $color-pink-primary;
   }
+}
+
+
+.jz-btn-sm {
+  font-size: 16px;
+  font-weight: normal;
+  padding: 10px 20px;
+  border-radius: 24px;
 }

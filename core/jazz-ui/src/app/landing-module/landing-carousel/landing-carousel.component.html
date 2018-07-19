@@ -1,0 +1,37 @@
+<div class="jz-hero landing-carousel">
+  <landing-modal #modal></landing-modal>
+  <div class="jz-hero-header">COMPANIES USING JAZZ</div>
+  <div class="jz-hero-subheader">Look there are so many companies that many companies that many companies that many use
+    jazz
+  </div>
+  <div class="jz-hero-content">
+    <div #arrow class="carousel-arrow left jz-flex-centered">
+      <div class="icon-icon-leftArrow jz-pointer"
+           [ngClass]="{'jz-hidden': !canScrollLeft()}"
+           (click)="scrollable && scrollLeft()"></div>
+    </div>
+    <div #scrollContainer class="carousel-scroller-wrapper" (window:resize)="setShownCards()">
+      <div class="carousel-scroller-floater"
+           [ngStyle]="{'transform': 'translateX(' + getOffset() + ')'}">
+        <div #scrollFloater class="carousel-card-buffer"
+             [ngStyle]="{padding: '0 ' + cardBuffer + 'px'}"
+             *ngFor="let card of carouselItems">
+          <div class="carousel-card">
+            <div class="carousel-card-header">{{card.title}}</div>
+            <div class="carousel-card-content jz-flex-centered">
+              <img [src]="card.logo" alt="">
+            </div>
+            <div class="carousel-card-footer">
+              <a class="jz-anchor" (click)="modal.open(card)">Read More</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div #arrow class="carousel-arrow right jz-flex-centered">
+      <div class="icon-icon-rightArrow jz-pointer"
+           [ngClass]="{'jz-hidden': !canScrollRight()}"
+           (click)="scrollable && scrollRight()"></div>
+    </div>
+  </div>
+</div>
