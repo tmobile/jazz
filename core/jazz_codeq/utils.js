@@ -58,7 +58,7 @@ function getReport(metrics, sonarMeasures, config,branch,serviceContext) {
 					metricName = metricName.charAt(0).toUpperCase() + metricName.substr(1);
 					output.metrics.push({
 						"name": metricName,
-						"link": config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id=jazz_' + serviceContext.query.domain + '_' + serviceContext.query.service + '_' + branch + '&metric='+metricName,
+						"link": config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id='+config.SONAR_PROJECT_KEY+'_' + serviceContext.query.domain + '_' + serviceContext.query.service + '_' + branch + '&metric='+metricName,
 						"values": getHistoryValues(record.history)
 					});
 				}
@@ -68,7 +68,7 @@ function getReport(metrics, sonarMeasures, config,branch,serviceContext) {
 					record = record.charAt(0).toUpperCase() + record.substr(1);
 					output.metrics.push({
 						"name": record,
-						"link": config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id=jazz_' + serviceContext.query.domain + '_' + serviceContext.query.service + '_' + branch + '&metric='+record,
+						"link": config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id='+config.SONAR_PROJECT_KEY+'_' + serviceContext.query.domain + '_' + serviceContext.query.service + '_' + branch + '&metric='+record,
 						"values": []
 					});
 				}
