@@ -111,7 +111,7 @@ function invokeLambda(functionARN, inputJSON, awsRegion) {
   });
 };
 
-var exportable = {
+const exportable = {
   handler,
   invokeLambda
 };

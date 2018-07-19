@@ -190,7 +190,7 @@ describe('invokeLambda', () => {
     }
   })
 
-  it("should return data if lambda is succefully invoked", (done) => {
+  it("should return data if lambda is successfully invoked", (done) => {
     AWS.mock('Lambda', 'invoke', function (params, callback) {
       callback(null, "successfully invoked lambda");
     });
@@ -201,12 +201,12 @@ describe('invokeLambda', () => {
     })
   })
 
-  it("should return error if lambda invokation failed", (done) => {
+  it("should return error if lambda invocation failed", (done) => {
     AWS.mock('Lambda', 'invoke', function (params, callback) {
-      callback("failed to invokelambda",null);
+      callback("failed to invoke lambda",null);
     });
     index.invokeLambda(functionARN, inputJSON, region).catch((data) => {
-      expect(data).to.eq("failed to invokelambda");
+      expect(data).to.eq("failed to invoke lambda");
       done();
     })
   })
