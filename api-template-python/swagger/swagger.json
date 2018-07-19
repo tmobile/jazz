@@ -2,16 +2,16 @@
     "swagger": "2.0",
     "info": {
         "version": "2017-01-30T23:30:18Z",
-        "title": "{api_deployment_node_title}",
+        "title": "{apiDeploymentNodeTitle}",
         "description": "API specification for python template service"
     },
-    "host": "{api_host_name}",
+    "host": "{apiHostName}",
     "basePath": "/{domain}",
     "schemes": [
         "https"
     ],
     "paths": {
-        "/{service_name}": {
+        "/{serviceName}": {
             "options": {
                 "operationId": "{operationId}",
                 "description": "CORS Support",
