@@ -436,7 +436,7 @@ describe('utils', () => {
 			utils.getReport(['vulnerabilities', 'coverage'], null, config,branch,serviceContext)
 			.then(result => {
 				expect(result.metrics.length).to.eq(2);
-				expect(result.metrics[0].link).to.eq('serviceurl/helpurl?metrics=Coverage');
+				expect(result.metrics[0].link).to.eq('serviceurl/helpurl?metrics=coverage');
 				expect(result.metrics[0].name).to.eq('coverage');
 				expect(result.metrics[0].values.length).to.eq(0);
 			});
@@ -675,7 +675,7 @@ describe('utils', () => {
 				const expectedResult = utils.getCodeqReport(metrics, "master", "todate", "fromdate", query, config , serviceContext)
 				.then(result => {
 					expect(result.metrics.length).to.eq(1);
-					expect(result.metrics[0].link).to.eq('NaN/component_measures?id=jazz_test_test_master&metric=Security');
+					expect(result.metrics[0].link).to.eq('NaN/component_measures?id=jazz_test_test_master&metric=security');
 					sinon.assert.calledOnce(requestPromiseStub);
 					requestPromiseStub.restore();
 				});

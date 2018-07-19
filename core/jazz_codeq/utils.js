@@ -55,20 +55,18 @@ function getReport(metrics, sonarMeasures, config,branch,serviceContext) {
 				for (let r = sonarMeasures.length - 1; r >= 0; r--) {
 					let record = sonarMeasures[r];
 					let metricName = Object.keys(config.METRIC_MAP).find(key => config.METRIC_MAP[key] === record.metric);
-					metricName = metricName.charAt(0).toUpperCase() + metricName.substr(1);
 					output.metrics.push({
 						"name": metricName,
-						"link": config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id='+config.SONAR_PROJECT_KEY+'_' + serviceContext.query.domain + '_' + serviceContext.query.service + '_' + branch + '&metric='+metricName,
+						"link": config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id='+config.SONAR_PROJECT_KEY+'_' + serviceContext.query.domain + '_' + serviceContext.query.service + '_' + branch + '&metric='+config.METRIC_MAP[metricName],
 						"values": getHistoryValues(record.history)
 					});
 				}
 			} else {
 				for (let n = metrics.length - 1; n >= 0; n--) {
 					let record = metrics[n];
-					record = record.charAt(0).toUpperCase() + record.substr(1);
 					output.metrics.push({
 						"name": record,
-						"link": config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id='+config.SONAR_PROJECT_KEY+'_' + serviceContext.query.domain + '_' + serviceContext.query.service + '_' + branch + '&metric='+record,
+						"link": config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id='+config.SONAR_PROJECT_KEY+'_' + serviceContext.query.domain + '_' + serviceContext.query.service + '_' + branch + '&metric='+config.METRIC_MAP[record],
 						"values": []
 					});
 				}
