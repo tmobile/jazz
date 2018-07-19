@@ -224,15 +224,23 @@ describe('index', () => {
 	describe('getReportOnError tests', () => {
 		let metrics = [];
 		let serviceContext = {};
+		let branch = '';
+		let config = {};
 
 		beforeEach(() => {
 			metrics = ['code-coverage'];
 			serviceContext = { query: 'codeq'};
+			branch = 'master';
+			config = {
+				"REQUIRED_PARAMS":["domain", "service", "environment"]
+			};
 		});
 
 		afterEach(() => {
 			metrics = [];
 			serviceContext = {};
+			branch = '';
+			config={};
 		})
 
 		it('should return report data when error code is 404 for getReportOnError', () => {
@@ -394,6 +402,8 @@ describe('utils', () => {
 	
 	describe('getReport tests', () => {
 		let config = {};
+		let branch = '';
+		let serviceContext = {};
 
 		beforeEach(() => {
 			config = {
@@ -402,8 +412,15 @@ describe('utils', () => {
 				"METRIC_MAP": {
 					"security": "vulnerabilities",
 					"code-coverage": "coverage",
-				}
+				}				
 			};
+			branch = 'master';
+			serviceContext = {
+				query:{
+					domain:'test',
+					service:'test'
+				}
+			}
 		});
 
 		afterEach(() => {
@@ -416,10 +433,10 @@ describe('utils', () => {
 		});
 
 		it('should return empty values when only metrics is provided', () => {
-			utils.getReport(['vulnerabilities', 'coverage'], null, config)
+			utils.getReport(['vulnerabilities', 'coverage'], null, config,branch,serviceContext)
 			.then(result => {
 				expect(result.metrics.length).to.eq(2);
-				expect(result.metrics[0].link).to.eq('serviceurl/helpurl?metrics=coverage');
+				expect(result.metrics[0].link).to.eq('serviceurl/helpurl?metrics=Coverage');
 				expect(result.metrics[0].name).to.eq('coverage');
 				expect(result.metrics[0].values.length).to.eq(0);
 			});
@@ -436,7 +453,7 @@ describe('utils', () => {
 				}
 			];
 
-			utils.getReport('metrics', sonarMeasures, config)
+			utils.getReport('metrics', sonarMeasures, config,branch,serviceContext)
 			.then(result => {
 				expect(result.metrics.length).to.eq(2);
 				expect(result.metrics[0].values[0].ts).to.eq('date2');
@@ -607,6 +624,12 @@ describe('utils', () => {
 				service: "service"
 			};
 			let metrics = ['security'];
+			let serviceContext = {
+				query:{
+					service:'test',
+					domain:'test'
+				}
+			};
 			
 			beforeEach(() => {
 				sandbox = sinon.createSandbox();
@@ -649,10 +672,10 @@ describe('utils', () => {
 					return obj.callback(null, response, body);
 				});
 
-				const expectedResult = utils.getCodeqReport(metrics, "master", "todate", "fromdate", query, config)
+				const expectedResult = utils.getCodeqReport(metrics, "master", "todate", "fromdate", query, config , serviceContext)
 				.then(result => {
 					expect(result.metrics.length).to.eq(1);
-					expect(result.metrics[0].link).to.eq('serviceurl/helpurl?metrics=security');
+					expect(result.metrics[0].link).to.eq('NaN/component_measures?id=jazz_test_test_master&metric=Security');
 					sinon.assert.calledOnce(requestPromiseStub);
 					requestPromiseStub.restore();
 				});

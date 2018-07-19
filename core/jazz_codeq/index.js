@@ -151,7 +151,6 @@ function getCodeqInputsUsingQuery(serviceContext, config) {
 	}
 
 	const metricsResult = utils.getMetrics(query, config, messages);
-
 	if (metricsResult.error) {
 		logger.error(metricsResult.error);
 		result.error = metricsResult.error;
@@ -173,31 +172,14 @@ function getReportOnError(err, metrics, config, serviceContext) {
 	let result = {};
 	if (err && err.report_error) {
 		if (err.code === 404) {
-			logger.info('404 error'+err)
-		const result_inputs = getCodeqInputsUsingQuery(serviceContext, config);
-		logger.info('result_inputs',result_inputs)
-
-		if (result_inputs.error) {
-			const errorMessage = (typeof result_inputs.error === 'object') ? JSON.stringify(errorHandler.throwInputValidationError(result_inputs.error)) : result_inputs.error;
-			logger.error(errorMessage);
-			return cb(errorMessage);
-		} else {
-			const metrics = result_inputs.metrics;
-			const query = result_inputs.query;
-		}
-
-		return utils.getJazzToken(config)
-		.then((data) => utils.getProjectBranch(data.auth_token, query, config)
-			.then(data => utils.getReport(metrics, null, config, data.branch, serviceContext)
+			return utils.getReport(metrics, null, config)
 				.then(output => {
 					result = responseObj(output, serviceContext.query);
 					return result;
 				}).catch(err => {
 					result.error = err.report_error;
 					return result;
-				})
-			)
-		);
+				});
 		} else {
 			result.error = messages.REPORT_METRICS_ERROR;
 			return result;
