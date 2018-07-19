@@ -2,8 +2,14 @@
      (click)="close()"
      *ngIf="modalOpen">
   <div class="jz-modal" (click)="$event.stopPropagation()">
-    <img class="landing-modal-logo" [src]="item.logo" alt="">
-    <p class="landing-modal-description">{{item.description}}</p>
-    <a class="landing-modal-link jz-anchor">{{item.title}}</a>
+    <div class="jz-modal-close" (click)="close()">
+      <span class="icon-icon-close"></span>
+    </div>
+    <img [src]="item.logo" alt="">
+    <h1>{{item.title}}</h1>
+    <p>{{item.description}}</p>
+    <div class="landing-modal-link">
+      <button class="jz-btn jz-btn-primary jz-btn-sm">{{'GO TO ' + item.title}}</button>
+    </div>
   </div>
 </div>

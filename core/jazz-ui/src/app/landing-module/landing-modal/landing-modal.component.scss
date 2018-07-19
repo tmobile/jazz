@@ -1,20 +1,27 @@
 .jz-modal {
   flex-direction: column;
+  align-items: center;
   justify-content: space-between;
+  padding: calc(60rem/14) calc(100rem/14);
+  background-color: #fff;
+  height: 80%;
+  width: calc(580rem/14);
 }
 
-.landing-modal-logo {
+h1 {
+  font-size: 36px;
+  font-weight: bold;
+}
+
+img {
   width: calc(100% - 2rem);
   height: auto;
   display: block;
-  margin: 2rem 1rem;
 }
 
-.landing-modal-description {
+
+p {
+  text-align: center;
   white-space: normal;
-  font-size: 12px;
-}
-
-.landing-modal-link {
-  align-self: center;
+  font-size: 22px;
 }
