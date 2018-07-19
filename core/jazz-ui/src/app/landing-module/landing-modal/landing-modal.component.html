@@ -1,0 +1,9 @@
+<div class="jz-modal-overlay jz-flex-centered"
+     (click)="close()"
+     *ngIf="modalOpen">
+  <div class="jz-modal" (click)="$event.stopPropagation()">
+    <img class="landing-modal-logo" [src]="item.logo" alt="">
+    <p class="landing-modal-description">{{item.description}}</p>
+    <a class="landing-modal-link jz-anchor">{{item.title}}</a>
+  </div>
+</div>

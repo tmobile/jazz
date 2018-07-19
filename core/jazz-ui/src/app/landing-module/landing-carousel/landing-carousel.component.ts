@@ -10,6 +10,7 @@ import * as _ from "lodash";
 export class LandingCarouselComponent implements OnInit, AfterViewInit {
   @ViewChild('scrollContainer') scrollContainer;
   @ViewChild('scrollFloater') scrollFloater;
+  @ViewChild('modal') modal;
   public carouselItems;
   public scrollable = false;
   public translateIndex = 0;
@@ -33,6 +34,7 @@ export class LandingCarouselComponent implements OnInit, AfterViewInit {
   }
 
   setShownCards() {
+    this.translateIndex = 0;
     let containerWidth = this.scrollContainer.nativeElement.getBoundingClientRect().width;
     this.maxShown = Math.floor(containerWidth / (this.cardWidth + 10));
     if (this.maxShown >= this.carouselItems.length) {
@@ -49,28 +51,23 @@ export class LandingCarouselComponent implements OnInit, AfterViewInit {
     return this.translateIndex * (this.cardWidth + (this.cardBuffer * 2)) + 'px';
   }
 
-  scrollLeft() {
+  scrollRight() {
     this.translateIndex -= 1;
   }
 
-  scrollRight() {
+  scrollLeft() {
     this.translateIndex += 1;
   }
 
-  canScrollLeft() {
+  canScrollRight() {
     if(!this.scrollContainer || !this.scrollFloater) return;
     let flag = this.translateIndex > (this.maxShown - this.carouselItems.length);
     return flag;
   }
 
-  canScrollRight() {
+  canScrollLeft() {
     if(!this.scrollContainer || !this.scrollFloater) return;
     let flag = this.translateIndex < 0;
     return flag;
   }
-
-
-
-
-
 }

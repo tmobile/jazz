@@ -7,6 +7,7 @@ import {LandingCarouselComponent} from "./landing-carousel/landing-carousel.comp
 import {routes} from "./landing.route";
 import {LandingComponent} from "./landing/landing.component";
 import {LandingService} from "./landing.service";
+import { LandingModalComponent } from './landing-modal/landing-modal.component';
 
 @NgModule({
   imports: [
@@ -20,7 +21,8 @@ import {LandingService} from "./landing.service";
   ],
   declarations: [
     LandingComponent,
-    LandingCarouselComponent
+    LandingCarouselComponent,
+    LandingModalComponent
   ]
 })
 export class LandingModule { }

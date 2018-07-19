@@ -5,18 +5,19 @@
   width: 100vw;
   height: 100vh;
   background-color: $color-overlay-dark;
-  z-index: 2000;
+  z-index: 1000;
+  overflow: hidden;
 }
 
-.jz-modal-centered {
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
-}
 
 .jz-modal {
   background-color: $color-gray-secondary;
   border-radius: $border-radius-default;
   box-shadow: $box-shadow-default;
+  padding: 2* $gutter;
   display: flex;
+  height: calc(600rem/14);
+  width: calc(400rem/14);
+  max-height: 90%;
+  max-width: 90%;
 }

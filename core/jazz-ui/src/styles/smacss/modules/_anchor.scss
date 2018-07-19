@@ -1,0 +1,8 @@
+.jz-anchor {
+  color: $color-gray-text;
+  &:hover {
+    text-decoration: underline;
+    cursor: pointer;
+    color: $color-gray-text;
+  }
+}

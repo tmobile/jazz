@@ -1,0 +1,20 @@
+.jz-modal {
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.landing-modal-logo {
+  width: calc(100% - 2rem);
+  height: auto;
+  display: block;
+  margin: 2rem 1rem;
+}
+
+.landing-modal-description {
+  white-space: normal;
+  font-size: 12px;
+}
+
+.landing-modal-link {
+  align-self: center;
+}
