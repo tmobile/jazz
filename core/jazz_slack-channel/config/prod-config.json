@@ -4,8 +4,9 @@
   "slack_url": "{slack-url}",
   "service_api_url": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
   "email_endpoint": "/prod/jazz/email",
-  "email_template_url": "",
+  "token_url": "/prod/jazz/login",
   "slack_channel_name_length": 21,
-  "service_account_emailId": "ServerlessDev@T-Mobile.com",
-  "email_from": "serverless@t-mobile.com"
+  "service_account_emailId": "{svc_acc_id}",
+  "service_user": "{jazz_admin}",
+  "token_creds": "{jazz_admin_creds}"
 }

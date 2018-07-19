@@ -72,19 +72,19 @@ function genericInputValidation(event, config) {
     if (!event.body.channel_name) {
       reject({
         result: "inputError",
-        message: "channel_name is required!."
+        message: "Channel name is required."
       });
     } else {
       let name = event.body.channel_name;
       if (name.length > config.slack_channel_name_length) {
         reject({
           result: "inputError",
-          message: "channel name should not exceed more than 21 characters"
+          message: "Channel name should not exceed more than 21 characters"
         });
       } else if (/[^a-zA-Z0-9\-\_]/.test(name)) {
         reject({
           result: "inputError",
-          message: "channel name should accept letters, numbers, hyphens, and underscores"
+          message: "Channel name can contain letters, numbers, hyphens, and underscores."
         });
       }
     }
@@ -92,7 +92,7 @@ function genericInputValidation(event, config) {
     if (!event.body.users || event.body.users.length < 1) {
       reject({
         result: "inputError",
-        message: "users.email_id is required!."
+        message: "At least one user is required."
       });
     } else {
       let users = event.body.users;
@@ -101,7 +101,7 @@ function genericInputValidation(event, config) {
         if (!validateEmailId(emailAddress)) {
           let msg = 'Not a valid email id!';
           if (emailAddress) {
-            msg = emailAddress + " not a valid email id!.";
+            msg = emailAddress + "is not a valid email address.";
           }
           reject({
             result: "inputError",
@@ -144,17 +144,6 @@ function identifyMembers(members, type, value) {
 
   info = formatData(out);
   return info;
-}
-
-function isMemberAlreadyExists(id, list) {
-  if (list.length > 0) {
-    for (let index in list) {
-      if (list[index].id === id) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 function formatData(memberInfo) {
@@ -362,7 +351,7 @@ function addMemberToChannel(config, channelInfo, isServAccRequested, eventBody) 
         if (defaultMembersDetails.length > 0) {
           for (let index in defaultMembersDetails) {
             let defmember = defaultMembersDetails[index];
-            if (!isMemberAlreadyExists(defmember.id, channelMembers)) {
+            if (!channelMembers.find(each => each.id === defmember.id)) {
               channelMembers.push(defmember);
             }
           }
@@ -377,7 +366,7 @@ function addMemberToChannel(config, channelInfo, isServAccRequested, eventBody) 
               count++;
               if (count === channelMembers.length) {
                 getSlackChannelMembers(config, channelMembers, isServAccRequested, slackChannelMembers)
-                  .then(res => notifyUser(config, eventBody, res, channelInfo))
+                  .then(res => notifyUser(config, res, channelInfo))
                   .then(res => {
                     if (res.result === "success") {
                       resolve({
@@ -448,29 +437,21 @@ function getSlackChannelMembers(config, channelMembers, isServAccRequested, slac
   });
 }
 
-function notifyUser(config, eventBody, slackChannelMembers, channelInfo) {
+function notifyUser(config, slackChannelMembers, channelInfo) {
   return new Promise((resolve, reject) => {
-    let channelLink = config.slack_url + "/" + channelInfo.id + "/details";
+    let txt = "<div><div style='text-align:  center;'><b>Slack Channel Notification</b></div><div><div>Hello,</div><div>The new slack channel "+channelInfo.name+" has been created. Click on <a target='_blank' style='cursor:  pointer;' href="+channelInfo.link+">"+channelInfo.link+"</a> to access channel</div></div></div>";
+    getToken(config)
+    .then((authToken) => {
+      let toAddress = slackChannelMembers.map(eachMember => eachMember.email_id);
 
-    let toAddress = slackChannelMembers.map(eachMember => {
-      let email_content = {
-        "emailID": eachMember.email_id,
-        "name": {
-          "first": eachMember.first_name,
-          "last": eachMember.last_name
-        },
-        "heading": "Slack Channel Notification",
-        "message": "The new slack channel '" + eventBody.channel_name + "' has been created. Click on " + channelLink.link(channelLink) + " to access channel."
-      };
-      return email_content;
-    });
-
-    if (toAddress.length > 0) {
-      let template = {
-          "from": config.email_from,
-          "to": toAddress,
-          "subject": "Jazz Notification",
-          "templateDirUrl": "<div>hello, slack notification</div>"
+      if (toAddress.length > 0) {
+        let template = {
+          "from" : config.service_user,
+          "to" : toAddress,
+          "subject" : "Jazz Notification",
+          "text" : "",
+          "cc" : "",
+          "html" : "<div style=\"color: #000;\"><div>"+txt+"</div></div>"
         },
         emailNotificationSvcPayload = {
           url: config.service_api_url + config.email_endpoint,
@@ -480,25 +461,63 @@ function notifyUser(config, eventBody, slackChannelMembers, channelInfo) {
           rejectUnauthorized: false
         };
 
-      emailNotificationSvcPayload.headers = {
-        "Content-Type": "application/json"
-      };
+        emailNotificationSvcPayload.headers = {
+          "Content-Type": "application/json",
+          'Authorization': authToken
+        };
 
-      request(emailNotificationSvcPayload, (error, response, body) => {
-        if (error) {
-          logger.error("Exception occured while sending notification to user!" + JSON.stringify(error));
-          reject(error);
-        } else {
-          if (response && response.statusCode === 200) {
-            resolve({
-              result: "success",
-              data: "successfully created public slack channel and send email notification to members"
-            });
+        request(emailNotificationSvcPayload, (error, response, body) => {
+          if (error) {
+            logger.error("Exception occured while sending notification to user!" + JSON.stringify(error));
+            reject(error);
           } else {
-            reject(response);
+            if (response && response.statusCode === 200) {
+              resolve({
+                result: "success",
+                data: "successfully created public slack channel and send email notification to members"
+              });
+            } else {
+              reject(response);
+            }
           }
+        });
+      }
+    })
+    .catch(error => {
+      reject(error);
+    })
+  });
+}
+
+function getToken(configData) {
+  logger.debug("Inside getToken");
+  return new Promise((resolve, reject) => {
+    let svcPayload = {
+      uri: configData.service_api_url + configData.token_url,
+      method: 'post',
+      json: {
+        "username": configData.service_user,
+        "password": configData.token_creds
+      },
+      rejectUnauthorized: false
+    };
+
+    request(svcPayload, (error, response, body) => {
+      if (response && response.statusCode === 200 && body && body.data) {
+        let authToken = body.data.token;
+        resolve(authToken);
+      } else {
+        let message = "";
+        if (error) {
+          message = error.message
+        } else {
+          message = response.body.message
         }
-      });
-    }
+        reject({
+          "error": "Could not get authentication token for updating service catalog.",
+          "message": message
+        });
+      }
+    });
   });
 }
