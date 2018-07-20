@@ -433,7 +433,7 @@ describe('utils', () => {
 		});
 
 		it('should return empty values when only metrics is provided', () => {
-			utils.getReport(['vulnerabilities', 'coverage'], null, config,branch,serviceContext)
+			utils.getReport(['vulnerabilities', 'coverage'], null, config, branch, serviceContext)
 			.then(result => {
 				expect(result.metrics.length).to.eq(2);
 				expect(result.metrics[0].link).to.eq('serviceurl/helpurl?metrics=coverage');
@@ -453,7 +453,7 @@ describe('utils', () => {
 				}
 			];
 
-			utils.getReport('metrics', sonarMeasures, config,branch,serviceContext)
+			utils.getReport('metrics', sonarMeasures, config, branch, serviceContext)
 			.then(result => {
 				expect(result.metrics.length).to.eq(2);
 				expect(result.metrics[0].values[0].ts).to.eq('date2');
@@ -636,6 +636,9 @@ describe('utils', () => {
 				config = {
 					"SONAR_PROJECT_KEY": "jazz",
 					"SONAR_URL": "sonarurl",
+					"SONAR_PROTOCOL" : "test",
+					"SONAR_HOSTNAME" : "sonar_host",
+					"SONAR_ENV_SERVICE" : "env",
 					"METRIC_MAP": {
 						"security": "vulnerabilities",
 						"code-coverage": "coverage",
@@ -655,7 +658,7 @@ describe('utils', () => {
 				query: {};
 			});
 	
-			it('should return report name and link when statusCode is 200', () => {
+			it('should return report and url when statusCode is 200', () => {
 				const response = { statusCode: 200 };
 				const body = { 
 					data: {},
@@ -675,11 +678,12 @@ describe('utils', () => {
 				const expectedResult = utils.getCodeqReport(metrics, "master", "todate", "fromdate", query, config , serviceContext)
 				.then(result => {
 					expect(result.metrics.length).to.eq(1);
-					expect(result.metrics[0].link).to.eq('NaN/component_measures?id=jazz_test_test_master&metric=security');
+					expect(result.metrics[0].link).to.eq(config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id=jazz_test_test_master&metric=vulnerabilities');
 					sinon.assert.calledOnce(requestPromiseStub);
 					requestPromiseStub.restore();
 				});
 			});
+			
 
 			it('should return error when response statusCode is not 200', () => {
 				const response = { statusCode: 400, body: { errors: [{ msg: "error" }]} };
