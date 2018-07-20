@@ -22,7 +22,7 @@
     @version: 1.0
 **/
 
-var logLevels = {
+const logLevels = {
   error: 4,
   warn: 3,
   info: 2,
@@ -30,23 +30,23 @@ var logLevels = {
   debug: 0
 };
 
-var config = {
+const config = {
   curLogLevel: 'info',
   requestDetails: ''
 };
 
 // set logLevel, RequestDetails
-var init = (event, context) => {
+const init = (event, context) => {
   setLevel();
 };
 
 // To add request specific details, which will be prepended in all the logs for ease of debugging in CloudWatch logs
-var setRequestDetails = (someContextSpecificId) => {
+const setRequestDetails = (someContextSpecificId) => {
   return;
 };
 
 // set current logLevel; Only logs which are above the curLogLevel will be logged;
-var setLevel = (level) => {
+const setLevel = (level) => {
   // LOG_LEVEL is 'info' by default
 
   if (level && logLevels[level]) {
@@ -68,12 +68,8 @@ var setLevel = (level) => {
   return null;
 };
 
-var log = (level, message) => {
-  /*
-      @TODO: format message as per requirement.
-      Will it be just a string / json. Should we except error object also?
-  */
-  var timestamp = new Date().toISOString();
+const log = (level, message) => {
+  const timestamp = new Date().toISOString();
   if (logLevels[level] >= logLevels[config.curLogLevel]) {
     if (level == 'error') {
       console.error(timestamp, 'ERROR \t', config.requestDetails, message);
@@ -92,24 +88,15 @@ var log = (level, message) => {
       console.log(timestamp, level, '\t', config.requestDetails, message);
     }
   }
+
   return null;
 };
 
-var error = (message) => {
-  log('error', message);
-};
-var warn = (message) => {
-  log('warn', message);
-};
-var info = (message) => {
-  log('info', message);
-};
-var verbose = (message) => {
-  log('verbose', message);
-};
-var debug = (message) => {
-  log('debug', message);
-};
+const error = (message) => log('error', message);
+const warn = (message) => log('warn', message);
+const info = (message) => log('info', message);
+const verbose = (message) => log('verbose', message);
+const debug = (message) => log('debug', message);
 
 module.exports = () => {
   return {

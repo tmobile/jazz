@@ -27,6 +27,10 @@ export const routes: Routes = [
     component: TestApiComponent
   },
   {
+    path: 'admin',
+    loadChildren: 'app/admin-module/admin.module#AdminModule'
+  },
+  {
     path: 'services',
     loadChildren: 'app/service-module/service.module#ServiceModule'
   },

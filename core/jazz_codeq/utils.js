@@ -41,7 +41,7 @@ function getAPIPath(url) {
 	});
 }
 
-function getReport(metrics, sonarMeasures, config) {
+function getReport(metrics, sonarMeasures, config, branch, serviceContext) {
 	return new Promise((resolve, reject) => {
 		if (!metrics) {
 			reject({
@@ -57,7 +57,7 @@ function getReport(metrics, sonarMeasures, config) {
 					let metricName = Object.keys(config.METRIC_MAP).find(key => config.METRIC_MAP[key] === record.metric);
 					output.metrics.push({
 						"name": metricName,
-						"link": config.SERVICE_API_URL + config.HELP_SERVICE + "?metrics=" + metricName,
+						"link": config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id='+config.SONAR_PROJECT_KEY+'_' + serviceContext.query.domain + '_' + serviceContext.query.service + '_' + branch + '&metric='+config.METRIC_MAP[metricName],
 						"values": getHistoryValues(record.history)
 					});
 				}
@@ -66,7 +66,7 @@ function getReport(metrics, sonarMeasures, config) {
 					let record = metrics[n];
 					output.metrics.push({
 						"name": record,
-						"link": config.SERVICE_API_URL + config.HELP_SERVICE + "?metrics=" + record,
+						"link": config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + '/component_measures?id='+config.SONAR_PROJECT_KEY+'_' + serviceContext.query.domain + '_' + serviceContext.query.service + '_' + branch + '&metric='+config.METRIC_MAP[record],
 						"values": []
 					});
 				}
@@ -204,7 +204,7 @@ function getProjectBranch(authToken, query, config) {
 }
 
 //get report
-function getCodeqReport(metrics, branch, toDate, fromDate, query, config) {
+function getCodeqReport(metrics, branch, toDate, fromDate, query, config , serviceContext) {
 	return new Promise((resolve, reject) => {
 
 		let metricString = "";
@@ -214,6 +214,7 @@ function getCodeqReport(metrics, branch, toDate, fromDate, query, config) {
 
 		const component = config.SONAR_PROJECT_KEY + "_" + query.domain + "_" + query.service + "_" + branch;
 		const svcPayload = {
+			
 			uri: config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + config.SONAR_ENV_SERVICE + "?metrics=" + metricString + "&from=" + fromDate + "&to=" + toDate + "&component=" + component,
 			method: 'GET',
 			headers: {
@@ -229,7 +230,7 @@ function getCodeqReport(metrics, branch, toDate, fromDate, query, config) {
 			if (response.statusCode === 200 && body) {
 
 				let parsedBody = (typeof body === 'string') ? JSON.parse(body) : body;
-				getReport(metrics, parsedBody.measures, config)
+				getReport(metrics, parsedBody.measures, config ,branch,serviceContext)
 					.then(results => resolve(results))
 					.catch(err => {
 						logger.error(err);

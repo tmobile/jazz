@@ -1,0 +1,21 @@
+{
+  "name": "jazz_slack-channel",
+  "version": "0.0.1",
+  "description": "API to create a public slack-channel",
+  "main": "index.js",
+  "private": true,
+  "author": {
+    "name": "Jazz"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+  "string-template": "*",
+    "request": "*"
+  },
+  "devDependencies": {
+    "mocha": "^v3.0.0",
+    "chai": "^3.5.0"
+  }
+}
