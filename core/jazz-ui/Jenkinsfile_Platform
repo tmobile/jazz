@@ -74,7 +74,7 @@ node ()  {
     dir('jazz-ui') {
       checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz-ui")]]])
 	    def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
-       
+
       if(config_loader.UI_CONFIG.service_tabs.overview)   sh "sed -i 's/{overview}/overview/g' ./src/environments/environment.oss.ts";
       if(config_loader.UI_CONFIG.service_tabs.access_control)   sh "sed -i 's/{access control}/access control/g' ./src/environments/environment.oss.ts";
       if(config_loader.UI_CONFIG.service_tabs.metrics)   sh "sed -i 's/{metrics}/metrics/g' ./src/environments/environment.oss.ts";
@@ -145,7 +145,7 @@ def loadBuildModules(buildModuleUrl){
 
 			scmModule = load "scm-module.groovy"
 			scmModule.initialize(config_loader)
-            
+
       utilModule = load "utility-loader.groovy"
 		}
 	}catch(ex) {
