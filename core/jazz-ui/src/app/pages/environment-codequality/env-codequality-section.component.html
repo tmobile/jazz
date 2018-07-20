@@ -33,8 +33,7 @@
       </div>
 
       <div class="jz-chart-footer jz-text-right">
-        <a class="sonar-link"
-           (click)="sonarLink()">More Details</a>
+        <a *ngIf='selectedMetric.link' class="sonar-link" href="{{selectedMetric.link}}" target="_blank">More Details</a>
       </div>
     </div>
 
