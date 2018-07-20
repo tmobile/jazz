@@ -41,7 +41,7 @@ function getAPIPath(url) {
 	});
 }
 
-function getReport(metrics, sonarMeasures, config,branch,serviceContext) {
+function getReport(metrics, sonarMeasures, config, branch, serviceContext) {
 	return new Promise((resolve, reject) => {
 		if (!metrics) {
 			reject({
@@ -204,7 +204,7 @@ function getProjectBranch(authToken, query, config) {
 }
 
 //get report
-function getCodeqReport(metrics, branch, toDate, fromDate, query, config ,serviceContext) {
+function getCodeqReport(metrics, branch, toDate, fromDate, query, config , serviceContext) {
 	return new Promise((resolve, reject) => {
 
 		let metricString = "";
