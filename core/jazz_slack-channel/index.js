@@ -25,6 +25,7 @@ const responseObj = require("./components/response.js"); //Import the response m
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js")();
 const request = require("request");
+const format = require("string-template");
 
 module.exports.handler = (event, context, cb) => {
 
@@ -439,7 +440,7 @@ function getSlackChannelMembers(config, channelMembers, isServAccRequested, slac
 
 function notifyUser(config, slackChannelMembers, channelInfo) {
   return new Promise((resolve, reject) => {
-    let txt = "<div><div style='text-align:  center;'><b>Slack Channel Notification</b></div><div><div>Hello,</div><div>The new slack channel "+channelInfo.name+" has been created. Click on <a target='_blank' style='cursor:  pointer;' href="+channelInfo.link+">"+channelInfo.link+"</a> to access channel</div></div></div>";
+    let txt = format(config.notification_txt, channelInfo);
     getToken(config)
     .then((authToken) => {
       let toAddress = slackChannelMembers.map(eachMember => eachMember.email_id);
@@ -448,10 +449,10 @@ function notifyUser(config, slackChannelMembers, channelInfo) {
         let template = {
           "from" : config.service_user,
           "to" : toAddress,
-          "subject" : "Jazz Notification",
+          "subject" : config.email_subject,
           "text" : "",
           "cc" : "",
-          "html" : "<div style=\"color: #000;\"><div>"+txt+"</div></div>"
+          "html" : txt
         },
         emailNotificationSvcPayload = {
           url: config.service_api_url + config.email_endpoint,

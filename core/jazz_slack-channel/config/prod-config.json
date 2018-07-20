@@ -8,5 +8,8 @@
   "slack_channel_name_length": 21,
   "service_account_emailId": "{svc_acc_id}",
   "service_user": "{jazz_admin}",
-  "token_creds": "{jazz_admin_creds}"
+  "token_creds": "{jazz_admin_creds}",
+  "email_subject": "Jazz Notification",
+  "notification_txt": "<div>Your slack channel <a target= '_blank' href='{link}'>{name}</a> has been created for notifications related to your Jazz service.</div>"
 }
+

@@ -11,6 +11,7 @@
     "test": "mocha"
   },
   "dependencies": {
+  "string-template": "*",
     "request": "*"
   },
   "devDependencies": {
