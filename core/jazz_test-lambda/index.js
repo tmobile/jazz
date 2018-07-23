@@ -85,7 +85,7 @@ function handler(event, context, cb){
   } catch (err) {
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown internal error occurred when invoking the function")));
   }
-};
+}
 function invokeLambda(functionARN, inputJSON, awsRegion) {
   return new Promise((resolve, reject) => {
     try {
@@ -109,7 +109,7 @@ function invokeLambda(functionARN, inputJSON, awsRegion) {
       reject("Error in invoking lambda");
     }
   });
-};
+}
 
 const exportable = {
   handler,
