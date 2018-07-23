@@ -472,6 +472,41 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
+
+        if ((service_name.trim() == "jazz_slack-channel")) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{slack-token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{slack-token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{slack-token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{slack-url}/${config_loader.SLACK.SLACK_URL}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{slack-url}/${config_loader.SLACK.SLACK_URL}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{slack-url}/${config_loader.SLACK.SLACK_URL}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{svc_acc_id}/${config_loader.SLACK.SLACK_SVC_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{svc_acc_id}/${config_loader.SLACK.SLACK_SVC_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{svc_acc_id}/${config_loader.SLACK.SLACK_SVC_ID}/g' ./config/prod-config.json"
+
+		}
 	} catch (e) {
 		echo "error occured while loading service configuration: " + e.getMessage()
 		error "error occured while loading service configuration: " + e.getMessage()
