@@ -881,12 +881,8 @@ describe('handler', () => {
     });
 
     index.handler(event, context, (err, res) => {
-      if (err) {
-        return err;
-      } else {
-        res.should.have.property('processed_events');
-        return res;
-      }
+      res.should.have.property('processed_events');
+      return res;
     });
 
     authStub.restore();
@@ -906,12 +902,8 @@ describe('handler', () => {
     });
     let message = 'User is not authorized to access this service';
     index.handler(event, context, (err, res) => {
-      if (err) {
-        return err;
-      } else {
-        res.should.have.property('failed_events');
-        return res;
-      }
+      res.should.have.property('failed_events');
+      return res;
     });
 
     authStub.restore();
@@ -937,12 +929,8 @@ describe('handler', () => {
     });
 
     index.handler(event, context, (err, res) => {
-      if (err) {
-        return err;
-      } else {
-        res.should.have.property('processed_events');
-        return res;
-      }
+      res.should.have.property('processed_events');
+      return res;
       authStub.restore();
     });
   });
@@ -1060,6 +1048,7 @@ describe('handler', () => {
     };
     processRequestStub.resolves(service_responseObject.body);
     getServiceDetailsStub.resolves(service_responseObject.body);
+
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
@@ -1069,6 +1058,7 @@ describe('handler', () => {
         return obj.callback(null, testPayloads.createBranchSuccess, testPayloads.createBranchSuccess.body);
       }
     });
+
     let processEvents = index.processEvents(kinesisPayload, configData, "token");
     expect(processEvents.then(function (res) {
       return res;
