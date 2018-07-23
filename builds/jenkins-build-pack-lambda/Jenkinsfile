@@ -247,7 +247,7 @@ node() {
 
 					lambdaARN = getLambdaARN(stackName)
 					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
-					
+
 					echo "lambdaARN: ${lambdaARN}"
 					// reset Credentials
 					resetCredentials()
@@ -255,12 +255,14 @@ node() {
 						createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
 					}
 
-
 					if (domain && domain == "jazz") {
+            serviceConfigdata.setLogStreamPermission(config)
 						serviceConfigdata.setKinesisStream(config)
 					}
+
 					def svc_response = echoServiceInfo(current_environment)
 					send_status_email(config, 'COMPLETED', svc_response)
+
 				} catch (ex) {
 					send_status_email(config, 'FAILED', '')
 					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id), environment_logical_id)
@@ -381,7 +383,7 @@ def buildLambda(String runtime) {
 		virtualenv venv
 		. venv/bin/activate
 		pip install pytest
-		"""	
+		"""
 	}
 }
 
@@ -701,7 +703,7 @@ def getEventsArn(config, env) {
 	def eventsArn = []
 	try {
 		def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
-		
+
 		def lambdaPolicyTxt = sh(script: "aws lambda get-policy --function-name $lambdaFnName --output json", returnStdout: true)
 		def policyLists = null
 		if (lambdaPolicyTxt) {
