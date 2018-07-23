@@ -8,21 +8,6 @@
   </div>
   <div class="try-service-sections">
     <section>
-      <div class="page-summary">Welcome to the AWS Lamda tester</div>
-    </section>
-    <section>
-      <div class="column-description">
-        <strong>Save Event Parameters</strong>
-        <div class="section-description">Keep this box checked to save your work!</div>
-      </div>
-      <div class="column-input try-service-cb">
-        <div class="custom-cb">
-          <input id="try-service-cb" type="checkbox" [checked]="savingPayload"
-                 (click)="toggleSavePayload(!savingPayload)">
-          <label for="try-service-cb"></label>
-          <div class="cb-status-dets">Click here to save your input data for later!</div>
-        </div>
-      </div>
     </section>
     <section>
       <div class="column-description">
@@ -44,7 +29,18 @@
           <textarea [(ngModel)]="inputValue" (ngModelChange)="lineNumbers('ip')" class="input-textarea"
                     (change)="toggleSavePayload(savingPayload)"></textarea>
         </div>
-        <p class="warning" *ngIf="!valid">{{validityMessage}}</p>
+        <div class='warning-chk-wrp'>
+          <p class="warning" *ngIf="!valid">{{validityMessage}}</p>
+          <div class="column-input try-service-cb">
+            <div class="custom-cb">
+              <input id="try-service-cb" type="checkbox" [checked]="savingPayload"
+                      (click)="toggleSavePayload(!savingPayload)">
+              <label for="try-service-cb"></label>
+              <div class="cb-status-dets">Click here to save your input data for later!</div>
+            </div>
+          </div>
+        </div>
+
         <div class="button-group">
           <button (click)="closeSideMenu()" class="btn-round secondary">CANCEL</button>
           <button (click)="startTest()" class="btn-round primary start-button">TEST</button>
@@ -63,6 +59,10 @@
              *ngIf="!!outputHeader"
              [ngClass]="reponse_code == 200 ? 'success' : 'error'"
              [class.error]='error'>
+             <span *ngIf='reponse_code == 200' class='icon-icon-good inactive-icon succ'>
+              <span class="path1"></span><span class="path2"></span>
+             </span>
+             <span *ngIf='reponse_code != 200' class='icon-icon-inactive inactive-icon'></span>
           {{outputHeader.statusCode}} {{outputHeader.statusText}}<br>
           <span *ngIf='success && !error'>Function got executed successfully </span>
           <span *ngIf='success && error'>Function execution failed</span>
