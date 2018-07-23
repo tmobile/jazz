@@ -4,7 +4,7 @@
   "slack_url": "{slack-url}",
   "service_api_url": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
   "email_endpoint": "/dev/jazz/email",
-  "token_url": "/prod/jazz/login",
+  "token_url": "/dev/jazz/login",
   "slack_channel_name_length": 21,
   "service_account_emailId": "{svc_acc_id}",
   "service_user": "{jazz_admin}",
