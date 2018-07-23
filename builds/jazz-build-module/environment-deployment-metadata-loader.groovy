@@ -39,7 +39,6 @@ def initialize(serviceConfig, configLoader, scmMdule, branch, buildUrl, buildId,
 
 def getEnvironmentLogicalId() {
 	if (g_environment_logical_id == null && g_service_config['domain'] != "jazz") {
-		def API_ENVIRONMENT_QUERY_URL = "${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}"
 		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
 		def environmentOutput
 		def environment_logical_id
@@ -69,7 +68,6 @@ def getEnvironmentLogicalId() {
 
 def getEnvironmentInfo() {
 	if (g_service_config['domain'] != "jazz") {
-		def API_ENVIRONMENT_QUERY_URL = "${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}"
 		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
 		def environmentOutput
 		def environment_logical_id
@@ -138,7 +136,6 @@ def checkIfEnvironmentAvailable(environment_logical_id) {
 	def isAvailable = false
 	try {
 		if (environment_logical_id && g_service_config['domain'] != "jazz") {
-			def API_ENVIRONMENT_QUERY_URL = "${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}"
 			def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=$s{ervice_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
 			def environmentOutput
 			if (getEnvironments) {
