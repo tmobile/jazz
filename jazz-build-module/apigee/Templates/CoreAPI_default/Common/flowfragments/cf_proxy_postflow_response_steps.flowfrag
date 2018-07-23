@@ -1,0 +1,8 @@
+			<Step>
+                <Condition>request.verb != "OPTIONS"</Condition>
+                <Name>cf_getCORSDomainList</Name>
+            </Step>
+            <Step>
+                <Condition>request.verb != "OPTIONS"</Condition>
+                <Name>cf_CORSValidation</Name>
+            </Step>
