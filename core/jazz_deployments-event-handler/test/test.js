@@ -23,7 +23,7 @@ const sinon = require('sinon');
 const logger = require("../components/logger.js");
 const configModule = require("../components/config.js");
 const rp = require('request-promise-native');
-
+const utils = require("../components/utils.js");
 var reqStub;
 var event = {
   "Records": [{
@@ -106,7 +106,7 @@ describe("checkforInterestedEvents", () => {
     var record = event.Records[0];
     var sequenceNumber = record.kinesis.sequenceNumber;
     var encodedPayload = record.kinesis.data;
-    index.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
+    utils.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
       assert.isTrue(res.interested_event);
     });
   });
@@ -154,7 +154,7 @@ describe("checkforInterestedEvents", () => {
     var encoded = Buffer.from(JSON.stringify(payload)).toString('base64');
     var sequenceNumber = "test_sequence01";
     var encodedPayload = encoded;
-    index.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
+    utils.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
       assert.isFalse(res.interested_event);
     });
   });
@@ -254,7 +254,7 @@ describe("processEventRecord", () => {
     reqStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
     });
-    var checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves({
+    var checkForInterestedEventsStub = sinon.stub(utils, "checkForInterestedEvents").resolves({
       "interested_event": true,
       "payload": payload.Item
     });
@@ -279,7 +279,7 @@ describe("processEventRecord", () => {
     reqStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
     })
-    var checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves({
+    var checkForInterestedEventsStub = sinon.stub(utils, "checkForInterestedEvents").resolves({
       "interested_event": true,
       "payload": payload.Item
     })
@@ -294,7 +294,7 @@ describe("processEventRecord", () => {
   })
   it("should return error message for not intrested events", () => {
     var message = "Not an interesting event";
-    var checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves({
+    var checkForInterestedEventsStub = sinon.stub(utils, "checkForInterestedEvents").resolves({
       "interested_event": false,
       "payload": payload.Item
     })

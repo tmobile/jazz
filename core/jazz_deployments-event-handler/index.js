@@ -29,7 +29,7 @@ const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const errorHandlerModule = require("./components/error-handler.js");
 const fcodes = require('./utils/failure-codes.js');
-
+const utils = require("./components/utils.js");
 var errorHandler = errorHandlerModule(logger);
 var failureCodes = fcodes();
 var processedEvents = [];
@@ -105,7 +105,7 @@ function processEventRecord(record, configData, authToken) {
 		var sequenceNumber = record.kinesis.sequenceNumber;
 		var encodedPayload = record.kinesis.data;
 		var payload;
-		return exportable.checkForInterestedEvents(encodedPayload, sequenceNumber, configData)
+		return utils.checkForInterestedEvents(encodedPayload, sequenceNumber, configData)
 			.then(result => {
 				payload = result.payload;
 				if (result.interested_event) {
@@ -128,27 +128,6 @@ function processEventRecord(record, configData, authToken) {
 	});
 };
 
-function checkForInterestedEvents(encodedPayload, sequenceNumber, configData) {
-	return new Promise((resolve, reject) => {
-		var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
-		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
-			if (_.includes(configData.EVENTS.event_type, kinesisPayload.Item.EVENT_TYPE.S) &&
-				_.includes(configData.EVENTS.event_name, kinesisPayload.Item.EVENT_NAME.S)) {
-				logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
-				return resolve({
-					"interested_event": true,
-					"payload": kinesisPayload.Item
-				});
-			} else {
-				logger.error("Not an interested event or event type");
-				return resolve({
-					"interested_event": false,
-					"payload": kinesisPayload.Item
-				});
-			}
-		}
-	});
-};
 
 function processEvent(eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
@@ -380,7 +359,6 @@ const exportable = {
 	getTokenRequest,
 	getAuthResponse,
 	handleError,
-	checkForInterestedEvents,
 	handleProcessedEvents,
 	handleFailedEvents,
 	getEventProcessStatus,
