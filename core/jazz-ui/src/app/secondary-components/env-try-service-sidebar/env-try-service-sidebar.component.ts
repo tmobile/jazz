@@ -108,6 +108,8 @@ export class EnvTryServiceSidebarComponent implements OnInit {
   inputIsValid() {
     try {
       let payload = JSON.parse(this.inputValue);
+      this.validityMessage = '';
+      this.valid = true;
     } catch (error) {
       this.validityMessage = 'Input is invalid JSON';
       this.valid = false;
