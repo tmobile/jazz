@@ -29,7 +29,7 @@ var processedEvents = [];
 var failedEvents = [];
 var errorHandler = errorHandlerModule(logger);
 
-var handler = (event, context, cb) => {
+function handler(event, context, cb){
   var config = configModule.getConfig(event, context);
 
   rp(getTokenRequest(config))
@@ -52,7 +52,7 @@ var handler = (event, context, cb) => {
 
 }
 
-var getTokenRequest = function (configData) {
+function getTokenRequest(configData) {
   return {
     uri: configData.BASE_API_URL + configData.TOKEN_URL,
     method: 'post',
@@ -67,7 +67,7 @@ var getTokenRequest = function (configData) {
   };
 };
 
-var getAuthResponse = function (result) {
+function getAuthResponse(result) {
   logger.info("result.statusCode" + result.statusCode)
   return new Promise((resolve, reject) => {
     if (result.statusCode === 200 && result.body && result.body.data) {
@@ -79,7 +79,7 @@ var getAuthResponse = function (result) {
   })
 }
 
-var processEvents = function (event, configData, authToken) {
+function processEvents(event, configData, authToken) {
   return new Promise((resolve, reject) => {
     var processEachEventPromises = [];
     for (var i = 0; i < event.Records.length; i++) {
@@ -94,9 +94,9 @@ var processEvents = function (event, configData, authToken) {
         return reject(error);
       });
   });
-} 
+}
 
-var processEachEvent = function (record, configData, authToken) {
+function processEachEvent(record, configData, authToken) {
   return new Promise((resolve, reject) => {
     var sequenceNumber = record.kinesis.sequenceNumber;
     var encodedPayload = record.kinesis.data;
@@ -124,7 +124,7 @@ var processEachEvent = function (record, configData, authToken) {
   });
 }
 
-var checkForInterestedEvents = function (encodedPayload, sequenceNumber, config) {
+function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
   return new Promise((resolve, reject) => {
     var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
@@ -146,23 +146,24 @@ var checkForInterestedEvents = function (encodedPayload, sequenceNumber, config)
   });
 }
 
-var processItem = function (eventPayload, configData, authToken) {
+function processItem(eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
 
     if (eventPayload.EVENT_NAME.S === configData.EVENTS.CREATE_ASSET) {
-      checkIfAssetExists(eventPayload, configData, authToken)
+      console.log('event matched');
+      exportable.checkIfAssetExists(eventPayload, configData, authToken)
         .then(record => {
           logger.info("Asset already existing. Updating assets records");
-          processUpdateAsset(record, eventPayload, configData, authToken)
+          exportable.processUpdateAsset(record, eventPayload, configData, authToken)
             .then(result => { return resolve(result) })
             .catch(err => {
-              logger.error("processCreateAsset Failed" + err);
+              logger.error("processUpdateAsset Failed" + err);
               return reject(err)
             })
         })
         .catch(error => {
           logger.info("Creating new asset records");
-          processCreateAsset(eventPayload, configData, authToken)
+          exportable.processCreateAsset(eventPayload, configData, authToken)
             .then(result => { return resolve(result) })
             .catch(err => {
               logger.error("processCreateAsset Failed" + err);
@@ -171,9 +172,10 @@ var processItem = function (eventPayload, configData, authToken) {
         })
 
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.UPDATE_ASSET) {
-      checkIfAssetExists(eventPayload, configData, authToken)
+      console.log('event else')
+      exportable.checkIfAssetExists(eventPayload, configData, authToken)
         .then(record => {
-          processUpdateAsset(record, eventPayload, configData, authToken)
+          exportable.processUpdateAsset(record, eventPayload, configData, authToken)
             .then(result => { return resolve(result) })
             .catch(err => {
               logger.error("processUpdateAsset Failed" + err);
@@ -188,7 +190,7 @@ var processItem = function (eventPayload, configData, authToken) {
   });
 }
 
-var processCreateAsset = function (eventPayload, configData, authToken) {
+function processCreateAsset(eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
     logger.debug("svcContext: " + JSON.stringify(svcContext));
@@ -237,7 +239,7 @@ var processCreateAsset = function (eventPayload, configData, authToken) {
   });
 }
 
-var processUpdateAsset = function (record, eventPayload, configData, authToken) {
+function processUpdateAsset(record, eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
     logger.debug("svcContext: " + JSON.stringify(svcContext));
@@ -279,7 +281,8 @@ var processUpdateAsset = function (record, eventPayload, configData, authToken) 
   });
 }
 
-var checkIfAssetExists = function (eventPayload, configData, authToken) {
+function checkIfAssetExists(eventPayload, configData, authToken) {
+  logger.info('test sring');
   return new Promise((resolve, reject) => {
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
     var searchAssetPayload = {
@@ -312,20 +315,20 @@ var checkIfAssetExists = function (eventPayload, configData, authToken) {
             "error": "No assets found. " + JSON.stringify(response),
             "details": response.body.message
           });
-        }        
+        }
       }
     });
   });
 }
 
-var handleProcessedEvents = function (id, payload) {
+function handleProcessedEvents(id, payload) {
   processedEvents.push({
     "sequence_id": id,
     "event": payload
   });
 }
 
-var handleFailedEvents = function (id, failure_message, payload, failure_code) {
+function handleFailedEvents(id, failure_message, payload, failure_code) {
   failedEvents.push({
     "sequence_id": id,
     "event": payload,
@@ -334,33 +337,35 @@ var handleFailedEvents = function (id, failure_message, payload, failure_code) {
   });
 }
 
-var getEventProcessStatus = function () {
+function getEventProcessStatus() {
   return {
     "processed_events": processedEvents.length,
     "failed_events": failedEvents.length
   };
 }
 
-var handleError = function (errorType, message) {
+function handleError(errorType, message) {
   var error = {};
   error.failure_code = errorType;
   error.failure_message = message;
   return error;
 }
 
-module.exports = {
-  getTokenRequest: getTokenRequest,
-  getAuthResponse: getAuthResponse,
-  handleError: handleError,
-  processEvents: processEvents,
-  processEachEvent: processEachEvent,
-  checkForInterestedEvents: checkForInterestedEvents,
-  processItem: processItem,
-  handleProcessedEvents: handleProcessedEvents,
-  handleFailedEvents: handleFailedEvents,
-  getEventProcessStatus: getEventProcessStatus,
-  handler: handler,
-  processCreateAsset: processCreateAsset,
-  processUpdateAsset: processUpdateAsset,
-  checkIfAssetExists: checkIfAssetExists
-}
+const exportable = {
+  getTokenRequest,
+  getAuthResponse,
+  handleError,
+  processEvents,
+  processEachEvent,
+  checkForInterestedEvents,
+  processItem,
+  handleProcessedEvents,
+  handleFailedEvents,
+  getEventProcessStatus,
+  handler,
+  processCreateAsset,
+  processUpdateAsset,
+  checkIfAssetExists
+};
+
+module.exports = exportable;

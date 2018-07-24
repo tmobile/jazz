@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -132,7 +132,7 @@ describe('jazz asset handler tests: ', function () {
       };
       let result = index.getAuthResponse(test).then(result => {
          expect(result).to.eq(test.body.data.token);
-      });     
+      });
     });
 
     it("should give error message when fails", () => {
@@ -146,24 +146,25 @@ describe('jazz asset handler tests: ', function () {
       };
       let result = index.getAuthResponse(test).catch(error => {
         expect(error.message).to.eq('Invalid token response from API');
-      });   
+      });
     });
   })
 
   describe('check if assets exists',() => {
-    it('assets found',() => {  
+    it('assets found',() => {
       let responseObject = {
         statusCode: 200,
         body: {
-          data: ["test1","test2"]            
+          data: ["test1","test2"]
           }
-      };    
+      };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObject, responseObject.body);
       });
-      
+
       let result = index.checkIfAssetExists(eventPayload, configData, authToken).then(obj =>{
         expect(obj).to.eq(responseObject.body.data[0]);
+        console.log('obj',obj)
       });
     });
 
@@ -172,12 +173,12 @@ describe('jazz asset handler tests: ', function () {
         statusCode: 0,
         body: {
           data: [],
-          message:"No Assets found"           
+          message:"No Assets found"
         }
-      };      
+      };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObject, responseObject.body);
-      });      
+      });
       let result = index.checkIfAssetExists(eventPayload, configData, authToken).catch(obj =>{
         expect(obj.details).to.eq('No Assets found');
       });
@@ -188,10 +189,10 @@ describe('jazz asset handler tests: ', function () {
       let errorObject = {
         message:"",
         type:"200"
-      };    
+      };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(errorObject, null, null);
-      });      
+      });
       let result = index.checkIfAssetExists(eventPayload, configData, authToken).catch(obj =>{
       })
     });
@@ -199,13 +200,13 @@ describe('jazz asset handler tests: ', function () {
 
   describe("processUpdateAsset", function () {
     let responseObject,record;
-    beforeEach(() => {		
+    beforeEach(() => {
 		});
 
-		afterEach(() => {	
-      reqStub.restore();	
+		afterEach(() => {
+      reqStub.restore();
     })
-    
+
     it('process update asset success',() => {
       responseObject = {
         statusCode:200,
@@ -226,14 +227,14 @@ describe('jazz asset handler tests: ', function () {
         expect(result).to.eq(responseObject.body);
         reqStub.restore();
       }).catch(err => console.log('catch'+err))
-      
+
     });
 
     it('process update asset error',() => {
       responseObject = {
         statusCode:0,
         body:{
-          data:{            
+          data:{
           },
         }
       };
@@ -247,36 +248,36 @@ describe('jazz asset handler tests: ', function () {
         expect(err.error).to.eq('Error in updating assets. {"statusCode":0,"body":{"data":{}}}');
         reqStub.restore();
       });
-      
+
     });
 
     it('process update asset error',() => {
       responseObject = {
         statusCode:0,
         body:{
-          data:{            
+          data:{
           },
         }
       };
       record = {
         id:121212
       };
-      eventPayload.EVENT_STATUS.S = 'active';      
+      eventPayload.EVENT_STATUS.S = 'active';
       index.processUpdateAsset(record, eventPayload, configData, authToken).catch(err => {
         expect(err.details).to.eq(eventPayload.EVENT_STATUS.S);
         reqStub.restore();
       });
-      
+
     });
   })
 
-  describe("processCreateAsset",function (){
+  describe("processCreateAsset", function (){
     let responseObject,record;
-    beforeEach(() => {		
+    beforeEach(() => {
 		});
 
-		afterEach(() => {	
-      reqStub.restore();	
+		afterEach(() => {
+      reqStub.restore();
     });
 
     it('process create asset success',() => {
@@ -299,14 +300,14 @@ describe('jazz asset handler tests: ', function () {
         expect(result).to.eq(responseObject.body);
         reqStub.restore();
       }).catch(err => console.log('catch'+err))
-      
+
     });
 
     it('process create asset error',() => {
       responseObject = {
         statusCode:0,
         body:{
-          data:{            
+          data:{
           },
         }
       };
@@ -320,41 +321,149 @@ describe('jazz asset handler tests: ', function () {
         expect(err.error).to.eq('Error in creating assets. {"statusCode":0,"body":{"data":{}}}');
         reqStub.restore();
       });
-      
+
     });
 
     it('process create asset error',() => {
       responseObject = {
         statusCode:0,
         body:{
-          data:{            
+          data:{
           },
         }
       };
       record = {
         id:121212
       };
-      eventPayload.EVENT_STATUS.S = 'active';      
+      eventPayload.EVENT_STATUS.S = 'active';
       index.processCreateAsset(eventPayload, configData, authToken).catch(err => {
         expect(err.details).to.eq(eventPayload.EVENT_STATUS.S);
         reqStub.restore();
       });
-      
+
     });
 
 
 
   })
-  
+
+  describe("processItem", function (){
+    var checkIfAssetExistsStub,processUpdateAssetStub,processCreateAssetStub;
+    beforeEach(() => {
+		});
+
+		afterEach(() => {
+      // reqStub.restore();
+      // checkIfAssetExistsStub.restore();
+      // processUpdateAssetStub.restore();
+    });
+
+    it("Updating assets records success", () => {
+      checkIfAssetExistsStub = sinon.stub(index, "checkIfAssetExists").resolves("test");
+      processUpdateAssetStub = sinon.stub(index, "processUpdateAsset").resolves("test");
+      index.processItem(eventPayload, configData, authToken).then( obj => {
+        sinon.assert.calledOnce(checkIfAssetExistsStub);
+        sinon.assert.calledOnce(processUpdateAssetStub);
+        expect(obj).to.eq("test");
+        checkIfAssetExistsStub.restore();
+        processUpdateAssetStub.restore();
+      });
+    });
+
+    it("Updating assets records error", () => {
+      checkIfAssetExistsStub = sinon.stub(index, "checkIfAssetExists").resolves("test");
+      processUpdateAssetStub = sinon.stub(index, "processUpdateAsset").rejects({"test":"test"});
+      index.processItem(eventPayload, configData, authToken).catch( err => {
+        sinon.assert.calledOnce(checkIfAssetExistsStub);
+        sinon.assert.calledOnce(processUpdateAssetStub);
+        expect(err.test).to.eq("test");
+        checkIfAssetExistsStub.restore();
+        processUpdateAssetStub.restore();
+      });
+    });
+
+    it("Creating new asset record success", () => {
+      checkIfAssetExistsStub = sinon.stub(index, "checkIfAssetExists").rejects("test");
+      processCreateAssetStub = sinon.stub(index, "processCreateAsset").resolves("test");
+      index.processItem(eventPayload, configData, authToken).then( obj => {
+        sinon.assert.calledOnce(checkIfAssetExistsStub);
+        sinon.assert.calledOnce(processCreateAssetStub);
+        expect(obj).to.eq("test");
+        checkIfAssetExistsStub.restore();
+        processCreateAssetStub.restore();
+      });
+    });
+
+    it("Creating new asset record error", () => {
+      checkIfAssetExistsStub = sinon.stub(index, "checkIfAssetExists").rejects("test");
+      processCreateAssetStub = sinon.stub(index, "processCreateAsset").rejects("test");
+      index.processItem(eventPayload, configData, authToken).catch( err => {
+        sinon.assert.calledOnce(checkIfAssetExistsStub);
+        sinon.assert.calledOnce(processCreateAssetStub);
+        // expect(obj).to.eq("test");
+        // console.log('err :',err)
+        checkIfAssetExistsStub.restore();
+        processCreateAssetStub.restore();
+      });
+    });
+
+    it("processUpdateAsset Success", () => {
+      eventPayload.EVENT_NAME.S = "UPDATE_ASSET";
+      checkIfAssetExistsStub = sinon.stub(index, "checkIfAssetExists").resolves("test");
+      processUpdateAssetStub = sinon.stub(index, "processUpdateAsset").resolves("test");
+      index.processItem(eventPayload, configData, authToken).then( obj => {
+        sinon.assert.calledOnce(checkIfAssetExistsStub);
+        sinon.assert.calledOnce(processUpdateAssetStub);
+        expect(obj).to.eq("test");
+        checkIfAssetExistsStub.restore();
+        processUpdateAssetStub.restore();
+      });
+    })
+
+    it("processUpdateAsset error", () => {
+      eventPayload.EVENT_NAME.S = "UPDATE_ASSET";
+      checkIfAssetExistsStub = sinon.stub(index, "checkIfAssetExists").resolves("test");
+      processUpdateAssetStub = sinon.stub(index, "processUpdateAsset").rejects({"test":"test"});
+      index.processItem(eventPayload, configData, authToken).catch( err => {
+        sinon.assert.calledOnce(checkIfAssetExistsStub);
+        sinon.assert.calledOnce(processUpdateAssetStub);
+        expect(err.test).to.eq("test");
+        checkIfAssetExistsStub.restore();
+        processUpdateAssetStub.restore();
+      });
+    })
+
+    it("checkIfAssetExists Error", () => {
+      eventPayload.EVENT_NAME.S = "UPDATE_ASSET";
+      checkIfAssetExistsStub = sinon.stub(index, "checkIfAssetExists").rejects({"test":"test"});
+      index.processItem(eventPayload, configData, authToken).catch( err => {
+        console.log('err:',err)
+        sinon.assert.calledOnce(checkIfAssetExistsStub);
+        expect(err.test).to.eq("test");
+        checkIfAssetExistsStub.restore();
+      });
+    })
+  })
+
+  describe("processeachEvent", function (){
+    beforeEach(() => {
+		});
+
+		afterEach(() => {
+    });
+
+
+  })
+
   // describe("processEvents", function () {
-    
+
   //   it("processEvents success",() => {
   //     let authToken = 'abcdefgh'
   //     let result = index.processEvents(event,configData,authToken).then(res => {
   //       console.log('test results',res)
   //     }).catch(err => {
   //       console.log('test err',err)
-  //     }) 
+  //     })
   //   })
   // })
 
@@ -420,14 +529,14 @@ describe('jazz asset handler tests: ', function () {
   // describe("processEvents", () => {
   //   var  procesEventRecordStub;
   //   beforeEach(() => {
-  
+
   //   });
   //   afterEach(() => {
   //     if (procesEventRecordStub) {
   //       procesEventRecordStub.restore();
   //     }
   //   });
- 
+
   //   it("should resolve all for success scenario from processEvents",()=>{
   //     procesEventRecordStub = sinon.stub(index, "processEachEvent").resolves({
   //       "status":"succesfully processed Event Rcord"
@@ -455,7 +564,7 @@ describe('jazz asset handler tests: ', function () {
 
 
 
-  
+
   // describe("processEventRecord", () => {
   //   var payload;
   //   beforeEach(() => {
@@ -549,7 +658,7 @@ describe('jazz asset handler tests: ', function () {
   //     })
   //     var tempAuth = "Auth_token"
   //     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
-  
+
   //       expect(obj).to.not.eq(null);
   //       expect(obj.data.message).to.eq(message)
   //       reqStub.restore()
@@ -585,6 +694,6 @@ describe('jazz asset handler tests: ', function () {
   //   return verified;
   // });
 
-  // More Test cases to be added. 
+  // More Test cases to be added.
 
 });
