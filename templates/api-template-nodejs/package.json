@@ -8,10 +8,7 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {
-    "request": "*",
-    "deasync": "*"
-  },
+  "dependencies": {},
   "devDependencies": {
     "mocha": "^v3.0.0",
     "chai": "^3.5.0"
