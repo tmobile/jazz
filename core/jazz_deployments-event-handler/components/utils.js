@@ -49,42 +49,14 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, configData) {
 function getDeploymentPayload(svcContext) {
 	let deploymentPayload = {};
   svcContext.domain?deploymentPayload.domain = svcContext.domain:null;
-  svcContext.environment_logical_id?deploymentPayload.environment_logical_id = svcContext.environment_logical_id:null
-  svcContext.provider_build_id?deploymentPayload.provider_build_id = svcContext.provider_build_id:null
-  svcContext.provider_build_url?deploymentPayload.provider_build_url = svcContext.provider_build_url:null
-  svcContext.scm_commit_hash?deploymentPayload.scm_commit_hash = svcContext.scm_commit_hash:null
-  svcContext.scm_url?deploymentPayload.scm_url = svcContext.scm_url:null
-  svcContext.scm_branch?deploymentPayload.scm_branch = svcContext.scm_branch:null
-  svcContext.request_id?deploymentPayload.request_id = svcContext.request_id:null
-  svcContext.status?deploymentPayload.status = svcContext.status:null
-	// if (svcContext.domain) {
-	// 	deploymentPayload.domain = svcContext.domain;
-	// }
-	// if (svcContext.environment_logical_id) {
-	// 	deploymentPayload.environment_logical_id = svcContext.environment_logical_id;
-	// }
-	// if (svcContext.provider_build_id) {
-	// 	deploymentPayload.provider_build_id = svcContext.provider_build_id;
-	// }
-	// if (svcContext.provider_build_url) {
-	// 	deploymentPayload.provider_build_url = svcContext.provider_build_url;
-	// }
-	// if (svcContext.scm_commit_hash) {
-	// 	deploymentPayload.scm_commit_hash = svcContext.scm_commit_hash;
-	// }
-	// if (svcContext.scm_url) {
-	// 	deploymentPayload.scm_url = svcContext.scm_url;
-	// }
-	// if (svcContext.scm_branch) {
-	// 	deploymentPayload.scm_branch = svcContext.scm_branch;
-	// }
-	// if (svcContext.request_id) {
-	// 	deploymentPayload.request_id = svcContext.request_id;
-	// }
-	// if (svcContext.status) {
-	// 	deploymentPayload.status = svcContext.status;
-	// }
-  console.log(deploymentPayload)
+  svcContext.environment_logical_id?deploymentPayload.environment_logical_id = svcContext.environment_logical_id:null;
+  svcContext.provider_build_id?deploymentPayload.provider_build_id = svcContext.provider_build_id:null;
+  svcContext.provider_build_url?deploymentPayload.provider_build_url = svcContext.provider_build_url:null;
+  svcContext.scm_commit_hash?deploymentPayload.scm_commit_hash = svcContext.scm_commit_hash:null;
+  svcContext.scm_url?deploymentPayload.scm_url = svcContext.scm_url:null;
+  svcContext.scm_branch?deploymentPayload.scm_branch = svcContext.scm_branch:null;
+  svcContext.request_id?deploymentPayload.request_id = svcContext.request_id:null;
+  svcContext.status?deploymentPayload.status = svcContext.status:null;
 	return deploymentPayload;
 };
 
