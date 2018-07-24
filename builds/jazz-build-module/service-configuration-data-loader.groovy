@@ -498,7 +498,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{slack-token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{slack-token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
 
-    sh "sed -i -- 's/{slack-workspace}/${config_loader.SLACK.SLACK_WORKSPACE}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{slack-workspace}/${config_loader.SLACK.SLACK_WORKSPACE}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{slack-workspace}/${config_loader.SLACK.SLACK_WORKSPACE}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{slack-workspace}/${config_loader.SLACK.SLACK_WORKSPACE}/g' ./config/prod-config.json"
 
