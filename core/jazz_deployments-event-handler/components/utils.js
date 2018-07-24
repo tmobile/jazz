@@ -25,7 +25,7 @@ const logger = require("../components/logger.js");
 function checkForInterestedEvents(encodedPayload, sequenceNumber, configData) {
 	return new Promise((resolve, reject) => {
 
-    var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
+    let kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
 			if (_.includes(configData.EVENTS.event_type, kinesisPayload.Item.EVENT_TYPE.S) &&
 				_.includes(configData.EVENTS.event_name, kinesisPayload.Item.EVENT_NAME.S)) {
@@ -47,41 +47,49 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, configData) {
 };
 
 function getDeploymentPayload(svcContext) {
-	var deploymentPayload = {};
-
-	if (svcContext.domain) {
-		deploymentPayload.domain = svcContext.domain;
-	}
-	if (svcContext.environment_logical_id) {
-		deploymentPayload.environment_logical_id = svcContext.environment_logical_id;
-	}
-	if (svcContext.provider_build_id) {
-		deploymentPayload.provider_build_id = svcContext.provider_build_id;
-	}
-	if (svcContext.provider_build_url) {
-		deploymentPayload.provider_build_url = svcContext.provider_build_url;
-	}
-	if (svcContext.scm_commit_hash) {
-		deploymentPayload.scm_commit_hash = svcContext.scm_commit_hash;
-	}
-	if (svcContext.scm_url) {
-		deploymentPayload.scm_url = svcContext.scm_url;
-	}
-	if (svcContext.scm_branch) {
-		deploymentPayload.scm_branch = svcContext.scm_branch;
-	}
-	if (svcContext.request_id) {
-		deploymentPayload.request_id = svcContext.request_id;
-	}
-	if (svcContext.status) {
-		deploymentPayload.status = svcContext.status;
-	}
-
+	let deploymentPayload = {};
+  svcContext.domain?deploymentPayload.domain = svcContext.domain:null;
+  svcContext.environment_logical_id?deploymentPayload.environment_logical_id = svcContext.environment_logical_id:null
+  svcContext.provider_build_id?deploymentPayload.provider_build_id = svcContext.provider_build_id:null
+  svcContext.provider_build_url?deploymentPayload.provider_build_url = svcContext.provider_build_url:null
+  svcContext.scm_commit_hash?deploymentPayload.scm_commit_hash = svcContext.scm_commit_hash:null
+  svcContext.scm_url?deploymentPayload.scm_url = svcContext.scm_url:null
+  svcContext.scm_branch?deploymentPayload.scm_branch = svcContext.scm_branch:null
+  svcContext.request_id?deploymentPayload.request_id = svcContext.request_id:null
+  svcContext.status?deploymentPayload.status = svcContext.status:null
+	// if (svcContext.domain) {
+	// 	deploymentPayload.domain = svcContext.domain;
+	// }
+	// if (svcContext.environment_logical_id) {
+	// 	deploymentPayload.environment_logical_id = svcContext.environment_logical_id;
+	// }
+	// if (svcContext.provider_build_id) {
+	// 	deploymentPayload.provider_build_id = svcContext.provider_build_id;
+	// }
+	// if (svcContext.provider_build_url) {
+	// 	deploymentPayload.provider_build_url = svcContext.provider_build_url;
+	// }
+	// if (svcContext.scm_commit_hash) {
+	// 	deploymentPayload.scm_commit_hash = svcContext.scm_commit_hash;
+	// }
+	// if (svcContext.scm_url) {
+	// 	deploymentPayload.scm_url = svcContext.scm_url;
+	// }
+	// if (svcContext.scm_branch) {
+	// 	deploymentPayload.scm_branch = svcContext.scm_branch;
+	// }
+	// if (svcContext.request_id) {
+	// 	deploymentPayload.request_id = svcContext.request_id;
+	// }
+	// if (svcContext.status) {
+	// 	deploymentPayload.status = svcContext.status;
+	// }
+  console.log(deploymentPayload)
 	return deploymentPayload;
 };
 
 function getSvcPayload(method, payload, apiEndpoint, authToken) {
-	var svcPayload = {
+	let svcPayload = {
 		headers: {
 			'content-type': "application/json",
 			'authorization': authToken
@@ -98,7 +106,7 @@ function getSvcPayload(method, payload, apiEndpoint, authToken) {
 	return svcPayload;
 };
 function handleError(errorType, message) {
-	var error = {};
+	let error = {};
 	error.failure_code = errorType;
 	error.failure_message = message;
 	return error;
