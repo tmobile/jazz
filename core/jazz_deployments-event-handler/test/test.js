@@ -57,7 +57,7 @@ var context = {
 var configData = configModule.getConfig(event, context);
 describe("getTokenRequest", function () {
   it("should return Request token when called", () => {
-    let result = index.getTokenRequest(configData);
+    let result = utils.getTokenRequest(configData);
     expect(result.uri).to.eq(configData.BASE_API_URL + configData.TOKEN_URL);
     expect(result.method).to.eq('post');
   })
@@ -329,7 +329,7 @@ describe("getDeploymentPayload", () => {
     }
   })
   it("should return deploymentPayload with values passed by svcContext", () => {
-    var deploymentPayload = index.getDeploymentPayload(svcContext)
+    var deploymentPayload = utils.getDeploymentPayload(svcContext)
     expect(deploymentPayload.domain).to.eq(svcContext.domain);
     expect(deploymentPayload.environment_logical_id).to.eq(svcContext.environment_logical_id);
     expect(deploymentPayload.provider_build_id).to.eq(svcContext.provider_build_id);
@@ -385,7 +385,7 @@ describe("processRequest", () => {
     reqStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, responseObject, responseObject.body);
     });
-    var handleErrorStub = sinon.stub(index, "handleError")
+    var handleErrorStub = sinon.stub(utils, "handleError")
     index.processRequest(svcPayload).catch((err) => {
       sinon.assert.calledOnce(handleErrorStub);
       handleErrorStub.restore()
@@ -753,7 +753,7 @@ describe("handler",()=>{
   var rpStub,getTokenRequestStub,getAuthResponseStub,processEventRecordsStub,getEventProcessStatusStub;
   beforeEach(()=>{
    rpStub =   sinon.stub(rp, 'Request').returns(Promise.resolve(result));
-   getTokenRequestStub =  sinon.stub(index,"getTokenRequest").returns("sample URL");
+   getTokenRequestStub =  sinon.stub(utils,"getTokenRequest").returns("sample URL");
    getAuthResponseStub =  sinon.stub(index,"getAuthResponse").resolves("sampleAuthToken");
    processEventRecordsStub =  sinon.stub(index,"processEventRecords").resolves(result);
    getEventProcessStatusStub =  sinon.stub(index,"getEventProcessStatus").returns(record);
