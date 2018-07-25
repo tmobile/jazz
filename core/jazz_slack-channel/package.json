@@ -11,11 +11,15 @@
     "test": "mocha"
   },
   "dependencies": {
-  "string-template": "*",
+    "string-template": "*",
     "request": "*"
   },
   "devDependencies": {
+    "aws-lambda-mock-context": "^3.1.1",
+    "aws-sdk": "*",
+    "aws-sdk-mock": "^1.7.0",
+    "chai": "^3.5.0",
     "mocha": "^v3.0.0",
-    "chai": "^3.5.0"
+    "sinon": "^5.0.10"
   }
 }
