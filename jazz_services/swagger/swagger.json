@@ -1445,6 +1445,24 @@
                         "type": "string"
                     },
                     "description": "Tags for the service"
+                },
+                "deployment_targets": {
+                    "type": "object",
+                    "description": "Deployment targets list for the service",
+                    "properties": {
+                        "api": {
+                            "type": "string",
+                            "enum": ["aws_apigateway", "gcp_apigee"]
+                        },
+                        "function": {
+                            "type": "string",
+                            "enum": ["aws_lambda", "gcp_knative"]
+                        },
+                        "website": {
+                            "type": "string",
+                            "enum": ["aws_s3", "aws_cloudfront"]
+                        }
+                    }
                 }
             }
         },
