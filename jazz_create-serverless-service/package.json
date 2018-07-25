@@ -9,6 +9,7 @@
     "test": "mocha"
   },
   "dependencies": {
+    "deasync": "*",
     "request": "^2.75.0"
   },
   "devDependencies": {

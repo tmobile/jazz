@@ -36,6 +36,7 @@ var serviceId;
 var serviceDataObject;
 var handler = (event, context, cb) => {
 
+    let deploymentTargets;
     var errorHandler = errorHandlerModule();
     var config = configObj(event);
     logger.init(event, context);
@@ -57,6 +58,25 @@ var handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("Namespace is not appropriate")));
         }
 
+        // validate service types
+        const allowedSvcTypes = Object.keys(config.DEPLOYMENT_TARGETS);
+        if(allowedSvcTypes.indexOf(service_creation_data.service_type) !== -1) {
+            logger.info(`Valid service type provided ${service_creation_data.service_type}`);
+        } else {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError(`Invalid service type provided - ${service_creation_data.service_type}`)));
+        } 
+        
+        // validate deployment targets
+        if (service_creation_data.deployment_targets && typeof service_creation_data.deployment_targets === "object") {
+            const allowedSubServiceType = config.DEPLOYMENT_TARGETS[service_creation_data.service_type];
+            deploymentTargets = validateDeploymentTargets(allowedSubServiceType, service_creation_data.deployment_targets, service_creation_data.service_type);
+            if(deploymentTargets.error) {
+                return cb(JSON.stringify(errorHandler.throwInputValidationError(deploymentTargets.error)));
+            }
+        } else {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError(`Deployment targets is missing or is not in a valid format`)));
+        }
+
         user_id = event.principalId;
         if (!user_id) {
             logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
@@ -66,7 +86,7 @@ var handler = (event, context, cb) => {
         logger.info("Request event: " + JSON.stringify(event));
 
         getToken(config)
-            .then((authToken) => getServiceData(service_creation_data, authToken, config))
+            .then((authToken) => getServiceData(service_creation_data, authToken, config, deploymentTargets))
             .then((inputs) => createService(inputs))
             .then((service_id) => startServiceOnboarding(service_creation_data, config, service_id))
             .then((result) => {
@@ -191,7 +211,7 @@ var createService = (service_data) => {
     });
 }
 
-var getServiceData = (service_creation_data, authToken, configData) => {
+var getServiceData = (service_creation_data, authToken, configData, deploymentTargets) => {
     return new Promise((resolve, reject) => {
         var inputs = {
             "TOKEN": authToken,
@@ -227,6 +247,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
 
         // Pass the flag to enable authentication on API
         if (service_creation_data.service_type === "api") {
+            inputs.DEPLOYMENT_TARGETS = deploymentTargets;
             serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;
             if (service_creation_data.authorizer_arn) {
                 // Validate ARN format - arn:aws:lambda:region:account-id:function:function-name
@@ -245,12 +266,14 @@ var getServiceData = (service_creation_data, authToken, configData) => {
         }
 
         if (service_creation_data.service_type === "website") {
+            inputs.DEPLOYMENT_TARGETS = deploymentTargets;
             var create_cloudfront_url = "true";
             serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
             inputs.RUNTIME = 'n/a';
         }
         // Add rate expression to the propertiesObject;
         if (service_creation_data.service_type === "function") {
+            inputs.DEPLOYMENT_TARGETS = deploymentTargets;
             if (service_creation_data.rateExpression) {
                 var cronExpValidator = CronParser.validateCronExpression(service_creation_data.rateExpression);
                 if (cronExpValidator.result === 'valid') {
@@ -297,6 +320,20 @@ var getServiceData = (service_creation_data, authToken, configData) => {
         resolve(inputs);
     });
 }
+
+function validateDeploymentTargets(allowedSubServiceType, deployment_targets, svcType) {
+    if (deployment_targets.hasOwnProperty(svcType)) {
+        const type = deployment_targets[svcType];
+        if (allowedSubServiceType.indexOf(type) !== -1) {
+            return deployment_targets;
+        } else {
+            return { error: `Invalid deployment_target: ${type} for service type: ${svcType}, valid deployment_targets: ${allowedSubServiceType}` };
+        }
+    } else {
+        return { error: `No deployment_targets are defined for this service type - ${svcType}` };
+    }
+}
+
 module.exports = {
     handler: handler,
     startServiceOnboarding: startServiceOnboarding,
