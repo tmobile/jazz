@@ -74,6 +74,7 @@ module.exports = (inputs, callback) => {
 		if(inputs.TAGS){jsonBody.tags = inputs.TAGS}
 		if(inputs.METADATA){jsonBody.metadata = inputs.METADATA}
 		if(inputs.STATUS){jsonBody.status = inputs.STATUS}
+		if(inputs.DEPLOYMENT_TARGETS){jsonBody.deployment_targets = inputs.DEPLOYMENT_TARGETS}
 		
 		return jsonBody;
 	}
