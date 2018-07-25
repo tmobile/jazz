@@ -20,92 +20,94 @@
     @author:
     @version: 1.0
 **/
-const _ = require("lodash");
+
 const logger = require("../components/logger.js");
+
 function checkForInterestedEvents(encodedPayload, sequenceNumber, configData) {
-	return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
 
     let kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
-		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
-			if (_.includes(configData.EVENTS.event_type, kinesisPayload.Item.EVENT_TYPE.S) &&
-				_.includes(configData.EVENTS.event_name, kinesisPayload.Item.EVENT_NAME.S)) {
+    if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
+      if (configData.EVENTS.event_type.includes(kinesisPayload.Item.EVENT_TYPE.S) &&
+          configData.EVENTS.event_name.includes(kinesisPayload.Item.EVENT_NAME.S)) {
         logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
 
-				return resolve({
-					"interested_event": true,
-					"payload": kinesisPayload.Item
-				});
-			} else {
-				logger.error("Not an interested event or event type");
-				return resolve({
-					"interested_event": false,
-					"payload": kinesisPayload.Item
-				});
-			}
-		}
-	});
+        return resolve({
+          "interested_event": true,
+          "payload": kinesisPayload.Item
+        });
+      } else {
+        logger.error("Not an interested event or event type");
+        return resolve({
+          "interested_event": false,
+          "payload": kinesisPayload.Item
+        });
+      }
+    }
+  });
 };
 
 function getDeploymentPayload(svcContext) {
-	let deploymentPayload = {};
-  svcContext.domain?deploymentPayload.domain = svcContext.domain:null;
-  svcContext.environment_logical_id?deploymentPayload.environment_logical_id = svcContext.environment_logical_id:null;
-  svcContext.provider_build_id?deploymentPayload.provider_build_id = svcContext.provider_build_id:null;
-  svcContext.provider_build_url?deploymentPayload.provider_build_url = svcContext.provider_build_url:null;
-  svcContext.scm_commit_hash?deploymentPayload.scm_commit_hash = svcContext.scm_commit_hash:null;
-  svcContext.scm_url?deploymentPayload.scm_url = svcContext.scm_url:null;
-  svcContext.scm_branch?deploymentPayload.scm_branch = svcContext.scm_branch:null;
-  svcContext.request_id?deploymentPayload.request_id = svcContext.request_id:null;
-  svcContext.status?deploymentPayload.status = svcContext.status:null;
-	return deploymentPayload;
+  let deploymentPayload = {};
+  svcContext.domain ? deploymentPayload.domain = svcContext.domain : null;
+  svcContext.environment_logical_id ? deploymentPayload.environment_logical_id = svcContext.environment_logical_id : null;
+  svcContext.provider_build_id ? deploymentPayload.provider_build_id = svcContext.provider_build_id : null;
+  svcContext.provider_build_url ? deploymentPayload.provider_build_url = svcContext.provider_build_url : null;
+  svcContext.scm_commit_hash ? deploymentPayload.scm_commit_hash = svcContext.scm_commit_hash : null;
+  svcContext.scm_url ? deploymentPayload.scm_url = svcContext.scm_url : null;
+  svcContext.scm_branch ? deploymentPayload.scm_branch = svcContext.scm_branch : null;
+  svcContext.request_id ? deploymentPayload.request_id = svcContext.request_id : null;
+  svcContext.status ? deploymentPayload.status = svcContext.status : null;
+  return deploymentPayload;
 };
 
 function getSvcPayload(method, payload, apiEndpoint, authToken) {
-	let svcPayload = {
-		headers: {
-			'content-type': "application/json",
-			'authorization': authToken
-		},
-		rejectUnauthorized: false
-	}
+  let svcPayload = {
+    headers: {
+      'content-type': "application/json",
+      'authorization': authToken
+    },
+    rejectUnauthorized: false
+  }
 
-	svcPayload.uri = apiEndpoint;
-	svcPayload.method = method;
-	if (payload) {
-		svcPayload.json = payload;
-	}
-	logger.info("Deployment API payload :" + JSON.stringify(svcPayload));
-	return svcPayload;
+  svcPayload.uri = apiEndpoint;
+  svcPayload.method = method;
+  if (payload) {
+    svcPayload.json = payload;
+  }
+  logger.info("Deployment API payload :" + JSON.stringify(svcPayload));
+  return svcPayload;
 };
+
 function handleError(errorType, message) {
-	let error = {};
-	error.failure_code = errorType;
-	error.failure_message = message;
-	return error;
+  let error = {};
+  error.failure_code = errorType;
+  error.failure_message = message;
+  return error;
 };
 
 function getTokenRequest(configData) {
-	return {
-		uri: configData.BASE_API_URL + configData.TOKEN_URL,
-		method: 'post',
-		json: {
-			"username": configData.SERVICE_USER,
-			"password": configData.TOKEN_CREDS
-		},
-		rejectUnauthorized: false,
-		transform: (body, response, resolveWithFullResponse) => {
-			return response;
-		}
-	};
+  return {
+    uri: configData.BASE_API_URL + configData.TOKEN_URL,
+    method: 'post',
+    json: {
+      "username": configData.SERVICE_USER,
+      "password": configData.TOKEN_CREDS
+    },
+    rejectUnauthorized: false,
+    transform: (body, response, resolveWithFullResponse) => {
+      return response;
+    }
+  };
 }
 
 
-const exporatble  = {
+const exportable = {
   checkForInterestedEvents,
   getDeploymentPayload,
   getSvcPayload,
   handleError,
   getTokenRequest
 };
-module.exports =  exporatble;
+module.exports = exportable;
 
