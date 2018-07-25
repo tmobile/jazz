@@ -87,7 +87,6 @@ textarea {
 .button-group {
   display: flex;
   justify-content: flex-end;
-  margin-top: 1rem;
   width: 100%;
   > * + * {
     margin-left: 1rem;
@@ -133,18 +132,24 @@ button {
 }
 
 .warning {
-  position: absolute;
-  left: 0;
-  bottom: 2rem;
+  // position: absolute;
+  // left: 0;
+  // bottom: 2rem;
   padding: 2px;
   font-size: 10px;
   color: #d0021b;
 }
 
+.warning-chk-wrp{
+  display:flex;
+
+}
+
 .try-service-cb {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: flex-end;
+  margin-top: 1rem;
 }
 
 .loading-overlay {

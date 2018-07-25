@@ -493,7 +493,6 @@ describe("processRecord", () => {
       return obj.callback(null, responseObject, responseObject.body);
     });
     let processRecords = index.processRecords(event, configData, tokenResponseObj.body.data.token);
-    let message = "updated service email-event-handler in service catalog.";
     expect(processRecords.then(function (res) {
       return res;
     })).to.be.not.null;
@@ -720,7 +719,7 @@ describe("processEvent", () => {
     })).to.be.rejected;
   });
 
-  it('processEvent should indicate error if crud.update fails for kinesis data with defined and completed endingEvent', function () {
+  it('processEvent should indicate error if slack channel notification fails for kinesis data with defined and completed endingEvent', function () {
     let responseObject = {
       statusCode: 400,
       body: { message: "Error updating service " }

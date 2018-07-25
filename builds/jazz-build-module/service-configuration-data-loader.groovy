@@ -50,7 +50,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
 		}
 
-        if ( (service_name.trim() == "jazz_is-slack-channel-available") ) {
+        if ( (config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_is-slack-channel-available") ) {
           sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
           sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
           sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
@@ -224,7 +224,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 		}
 
-		if ((service_name.trim() == "jazz_slack-event-handler")) {
+		if ((config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_slack-event-handler")) {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
@@ -473,7 +473,7 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 		}
 
-        if ((service_name.trim() == "jazz_slack-channel")) {
+        if ((config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_slack-channel")) {
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
@@ -498,9 +498,9 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{slack-token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{slack-token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{slack-url}/${config_loader.SLACK.SLACK_URL}/g' ./config/dev-config.json"
-			sh "sed -i -- 's/{slack-url}/${config_loader.SLACK.SLACK_URL}/g' ./config/stg-config.json"
-			sh "sed -i -- 's/{slack-url}/${config_loader.SLACK.SLACK_URL}/g' ./config/prod-config.json"
+     sh "sed -i -- 's/{slack-workspace}/${config_loader.SLACK.SLACK_WORKSPACE}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{slack-workspace}/${config_loader.SLACK.SLACK_WORKSPACE}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{slack-workspace}/${config_loader.SLACK.SLACK_WORKSPACE}/g' ./config/prod-config.json"
 
             sh "sed -i -- 's/{svc_acc_id}/${config_loader.SLACK.SLACK_SVC_ID}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{svc_acc_id}/${config_loader.SLACK.SLACK_SVC_ID}/g' ./config/stg-config.json"
