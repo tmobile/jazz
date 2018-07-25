@@ -63,12 +63,19 @@ function handler(event, context, cb) {
 function genericInputValidation(event, config) {
   logger.debug("Inside genericInputValidation");
   return new Promise((resolve, reject) => {
-    if (!event || !event.body || !event.method) {
-      reject({
-        result: "inputError",
-        message: "Service inputs not defined!"
-      });
+    if (!event || !event.method) {
+			reject({
+				result: "inputError",
+				message: "Method cannot be empty/invalid."
+			});
     }
+
+    if (!event.body || Object.keys(event.body).length === 0) {
+			reject({
+				result: "inputError",
+				message: "Slack details are required for creating new slack channel."
+			});
+		}
 
     if (!event.body.channel_name) {
       reject({
@@ -186,7 +193,7 @@ function removeServAccFromMemberList(slackUrl, token, id) {
 
     request(req, (error, response, body) => {
       if (error) {
-        logger.error("Exception occured while creating slack channel!"+JSON.stringify(error));
+        logger.error("Exception occured while creating slack channel!" + JSON.stringify(error));
         reject(error);
       } else {
         let resBody = JSON.parse(response.body);

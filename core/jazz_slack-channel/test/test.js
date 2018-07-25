@@ -26,6 +26,7 @@ const configObj = require('../components/config.js');
 
 describe('jazz_slack-channel', function () {
   var err, event, context, callback, callbackObj, reqStub;
+
   beforeEach(function () {
     event = {
       "stage": "test",
@@ -55,35 +56,24 @@ describe('jazz_slack-channel', function () {
   });
 
   describe('genericInputValidation', () => {
-    it("should indicate input error if service event is not defined/invalid", () => {
-      let invalidArray = ["", null, undefined];
-      invalidArray.forEach(each => {
-        event = each;
-        index.genericInputValidation(event, config)
-        .catch(error => {
-          expect(error).to.include({ result: 'inputError', message: 'Service inputs not defined!' })
-        });
-      });
-    });
-
-    it("should indicate input error if service event.body is not defined/invalid", () => {
-      let invalidArray = ["", null, undefined];
-      invalidArray.forEach(each => {
-        event.body = each;
-        index.genericInputValidation(event, config)
-        .catch(error => {
-          expect(error).to.include({ result: 'inputError', message: 'Service inputs not defined!' })
-        });
-      });
-    });
-
-    it("should indicate input error if service event.method is not defined/invalid", () => {
+    it("should indicate input error if service method is not defined/invalid", () => {
       let invalidArray = ["", null, undefined];
       invalidArray.forEach(each => {
         event.method = each;
         index.genericInputValidation(event, config)
         .catch(error => {
-          expect(error).to.include({ result: 'inputError', message: 'Service inputs not defined!' })
+          expect(error).to.include({ result: 'inputError', message: 'Method cannot be empty/invalid.' })
+        });
+      });
+    });
+
+    it("should indicate input error if service event.body is not defined/invalid", () => {
+      let invalidArray = ["", null, undefined, {}];
+      invalidArray.forEach(each => {
+        event.body = each;
+        index.genericInputValidation(event, config)
+        .catch(error => {
+          expect(error).to.include({ result: 'inputError', message: 'Slack details are required for creating new slack channel.' })
         });
       });
     });
@@ -507,7 +497,7 @@ describe('jazz_slack-channel', function () {
       .catch(error => {
         expect(error).to.include({
           result: 'inputError',
-          message: 'Cannot find user(s) in Slack with email ids: '+event.body.users[0].email_id });
+          message: 'Cannot find user(s) in Slack with email ids: ' + event.body.users[0].email_id });
         sinon.assert.calledOnce(reqStub);
         sinon.assert.calledOnce(identifyMembers);
         reqStub.restore();
@@ -989,7 +979,7 @@ describe('jazz_slack-channel', function () {
       let genericInputValidation = sinon.stub(index, 'genericInputValidation').rejects(inputError);
 
       index.handler(event, context, (err, res) => {
-        expect(err).to.include('{"errorType":"BadRequest","message":"'+inputError.message+'"}');
+        expect(err).to.include('{"errorType":"BadRequest","message":"' + inputError.message + '"}');
         sinon.assert.calledOnce(genericInputValidation);
         genericInputValidation.restore();
       });
@@ -1003,7 +993,7 @@ describe('jazz_slack-channel', function () {
       let genericInputValidation = sinon.stub(index, 'genericInputValidation').rejects(unauthorizedError);
 
       index.handler(event, context, (err, res) => {
-        expect(err).to.include('{"errorType":"Unauthorized","message":"'+unauthorizedError.message+'"}');
+        expect(err).to.include('{"errorType":"Unauthorized","message":"' + unauthorizedError.message + '"}');
         sinon.assert.calledOnce(genericInputValidation);
         genericInputValidation.restore();
       });
