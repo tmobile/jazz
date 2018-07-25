@@ -113,7 +113,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
         from: filterData.fromDateISO
       }
     };
-    this.http.get(request.url, request.params)
+    return this.http.get(request.url, request.params)
       .toPromise()
       .then((response) => {
         if (response && response.data && response.data.metrics && response.data.metrics.length) {
