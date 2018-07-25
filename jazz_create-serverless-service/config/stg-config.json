@@ -7,5 +7,10 @@
     "SERVICE_API_RESOURCE": "/stg/jazz/services",
     "TOKEN_URL": "/stg/jazz/login",
     "SERVICE_USER": "{jazz_admin}",
-    "TOKEN_CREDS": "{jazz_admin_creds}"
+    "TOKEN_CREDS": "{jazz_admin_creds}",
+    "DEPLOYMENT_TARGETS": {
+        "api": ["aws_apigateway", "gcp_apigee"],
+        "function": ["aws_lambda", "gcp_knative"],
+        "website": ["aws_s3", "aws_cloudfront"]
+  }
 }
