@@ -446,254 +446,148 @@ describe('jazz asset handler tests: ', function () {
   })
 
   describe("processeachEvent", function (){
+    var checkForInterestedEventsStub, processItemStub;
     beforeEach(() => {
 		});
 
 		afterEach(() => {
     });
 
+    var payload = {
+      "interested_event": true,
+      "payload": "",
+    }
+
+    it("process each event success", () => {
+      checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves(payload);
+      processItemStub = sinon.stub(index, "processItem").resolves("success");
+      index.processEachEvent(event.Records[0], configData, authToken).then(obj => {
+        expect(obj).to.eq("success");
+        sinon.assert.calledOnce(checkForInterestedEventsStub);
+        sinon.assert.calledOnce(processItemStub);
+        checkForInterestedEventsStub.restore();
+        processItemStub.restore();
+      });
+    });
+
+    it("process each event: not interested event", () => {
+      payload.interested_event=false;
+      checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves(payload);
+      index.processEachEvent(event.Records[0], configData, authToken).then(obj => {
+        expect(obj.message).to.eq("Not an interesting event");
+        sinon.assert.calledOnce(checkForInterestedEventsStub);
+        checkForInterestedEventsStub.restore();
+      });
+    });
+
+    it("process each event error", () => {
+      checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").rejects({
+        "error":"message"
+      });
+      var handleFailedEventsStub = sinon.stub(index, "handleFailedEvents").rejects("error");
+      index.processEachEvent(event.Records[0], configData, authToken).catch(err => {
+        expect(err.error).to.eq("message");
+        sinon.assert.calledOnce(checkForInterestedEventsStub);
+        checkForInterestedEventsStub.restore();
+      });
+    });
+  })
+
+  describe("checkForInterestedEvents", function () {
+    it("checkForInterestedEvents", () => {
+      index.checkForInterestedEvents(event.Records[0].kinesis.data, "0", configData).then(obj =>{
+        expect(obj.interested_event).to.eq(false);
+      });
+    });
+  })
+
+  describe("processEvents", function () {
+    it("processEvents success",() => {
+      let authToken = 'abcdefgh';
+      let result = index.processEvents(event,configData,authToken).then(res => {
+        console.log('test results',res)
+      }).catch(err => {
+        console.log('test err',err)
+      })
+    })
+  });
+
+  describe("handler",()=>{
+    result = {
+      result: "sample Resopnse"
+    };
+    record = {
+  		"processed_events": 3,
+  		"failed_events": 1
+    };
+    error ={
+      message: "sample error message"
+    }
+    var rpStub,getTokenRequestStub,getAuthResponseStub,processEventsStub,getEventProcessStatusStub;
+    beforeEach(()=>{
+
+    })
+    afterEach(()=>{
+
+    })
+
+    it("Should send Request for authtoken ",()=>{
+      rpStub =   sinon.stub(rp, 'Request').returns(Promise.resolve(result));
+      index.handler(event,context,(error,records)=>{
+        sinon.assert.calledOnce(rpStub);
+        rpStub.restore();
+      })
+    });
+
+    it("should call processEvents",()=>{
+      processEventsStub = sinon.stub(index,"processEvents").resolves(result);
+      index.handler(event,context,(error,records)=>{
+        sinon.assert.calledOnce(processEventsStub);
+      })
+    });
+
+    it("should call getEventProcessStatus after processing Events ",()=>{
+      getEventProcessStatusStub =  sinon.stub(index,"getEventProcessStatus").returns(record)
+      index.handler(event,context,(error,records)=>{
+        sinon.assert.calledOnce(getEventProcessStatusStub);
+        getEventProcessStatusStub.restore();
+      })
+    })
+
+    it("should return the record of processed and falied events ",()=>{
+      index.handler(event,context,(error,records)=>{
+        expect(records.processed_events).to.eq(1)
+        expect(records.failed_events).to.eq(1)
+      })
+    })
 
   })
 
-  // describe("processEvents", function () {
+  describe("handleFailedEvents",()=>{
+    it("handleFailedEvents", () => {
+      index.handleFailedEvents(1,"failure_message", {}, 0);
+    })
+  });
 
-  //   it("processEvents success",() => {
-  //     let authToken = 'abcdefgh'
-  //     let result = index.processEvents(event,configData,authToken).then(res => {
-  //       console.log('test results',res)
-  //     }).catch(err => {
-  //       console.log('test err',err)
-  //     })
-  //   })
-  // })
+  describe("handleProcessedEvents",()=>{
+    it("handleProcessedEvents", () => {
+      index.handleProcessedEvents(1,{});
+    })
+  });
 
-  // describe("checkforInterestedEvents", () => {
-  //   it("should return object with paramenter interested_event set to true", () => {
-  //     var record = event.Records[0];
-  //     var sequenceNumber = record.kinesis.sequenceNumber;
-  //     var encodedPayload = record.kinesis.data;
-  //     index.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
-  //       assert.isTrue(res.interested_event);
-  //     });
-  //   });
-  //   it("should reject with paramenter interested_event set to false", () => {
-  //     var payload = {
-  //       Item: {
-  //         EVENT_ID: {
-  //           S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4'
-  //         },
-  //         TIMESTAMP: {
-  //           S: '2018-05-16T12:12:42:821'
-  //         },
-  //         REQUEST_ID: {
-  //           NULL: true
-  //         },
-  //         EVENT_HANDLER: {
-  //           S: 'JENKINS'
-  //         },
-  //         EVENT_NAME: {
-  //           S: 'CREATE_DEPLOYMENT'
-  //         },
-  //         SERVICE_NAME: {
-  //           S: 'test-02'
-  //         },
-  //         SERVICE_ID: {
-  //           S: '00001-test-serivice-id-00001'
-  //         },
-  //         EVENT_STATUS: {
-  //           S: 'STARTED'
-  //         },
-  //         EVENT_TYPE: {
-  //           S: 'NOT_SERVICE_DEPLOYMENT'
-  //         },
-  //         USERNAME: {
-  //           S: 'temp@testing.com'
-  //         },
-  //         EVENT_TIMESTAMP: {
-  //           S: '2018-05-16T12:12:41:083'
-  //         },
-  //         SERVICE_CONTEXT: {
-  //           S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'
-  //         }
-  //       }
-  //     };
-  //     var encoded = Buffer.from(JSON.stringify(payload)).toString('base64');
-  //     var sequenceNumber = "test_sequence01";
-  //     var encodedPayload = encoded;
-  //     index.checkForInterestedEvents(encodedPayload, sequenceNumber, configData).then((res) => {
-  //       assert.isFalse(res.interested_event);
-  //     });
-  //   });
-  // });
+  describe("getEventProcessStatus",()=>{
+    it("getEventProcessStatus", () => {
+      var res = index.getEventProcessStatus();
+      expect(res.processed_events).to.eq(3);
+      expect(res.failed_events).to.eq(1);
+    })
+  });
 
-  // describe("processEvents", () => {
-  //   var  procesEventRecordStub;
-  //   beforeEach(() => {
-
-  //   });
-  //   afterEach(() => {
-  //     if (procesEventRecordStub) {
-  //       procesEventRecordStub.restore();
-  //     }
-  //   });
-
-  //   it("should resolve all for success scenario from processEvents",()=>{
-  //     procesEventRecordStub = sinon.stub(index, "processEachEvent").resolves({
-  //       "status":"succesfully processed Event Rcord"
-  //     });
-  //     index.processEvents(event,configData,"temp_auth").then((obj)=>{
-  //       sinon.assert.calledOnce(procesEventRecordStub)
-  //       for(let i=0;i<obj.length;i++){
-  //         expect(obj[i].status).to.eq("succesfully processed Event Rcord")
-  //       }
-  //       procesEventRecordStub.restore();
-  //     });
-  //   });
-
-  //   it("should reject all for Error case scenario from processEvents",()=>{
-  //     procesEventRecordStub = sinon.stub(index, "processEvents").rejects({
-  //       "status":"Process Event Record failed"
-  //     });
-  //     index.processEvents(event,configData,"temp_auth").catch((err)=>{
-  //       sinon.assert.calledOnce(procesEventRecordStub)
-  //       expect(err.status).to.eq("Process Event Record failed");
-  //       procesEventRecordStub.restore()
-  //     });
-  //   });
-  // });
-
-
-
-
-  // describe("processEventRecord", () => {
-  //   var payload;
-  //   beforeEach(() => {
-  //     payload = {
-  //       Item: {
-  //         EVENT_ID: {
-  //           S: '084f8c38-a01b-4ac9-943e-365f5de8ebe4'
-  //         },
-  //         TIMESTAMP: {
-  //           S: '2018-05-16T12:12:42:821'
-  //         },
-  //         REQUEST_ID: {
-  //           NULL: true
-  //         },
-  //         EVENT_HANDLER: {
-  //           S: 'JENKINS'
-  //         },
-  //         EVENT_NAME: {
-  //           S: 'CREATE_DEPLOYMENT'
-  //         },
-  //         SERVICE_NAME: {
-  //           S: 'test-02'
-  //         },
-  //         SERVICE_ID: {
-  //           S: '00001-test-serivice-id-00001'
-  //         },
-  //         EVENT_STATUS: {
-  //           S: 'STARTED'
-  //         },
-  //         EVENT_TYPE: {
-  //           S: 'NOT_SERVICE_DEPLOYMENT'
-  //         },
-  //         USERNAME: {
-  //           S: 'temp@testing.com'
-  //         },
-  //         EVENT_TIMESTAMP: {
-  //           S: '2018-05-16T12:12:41:083'
-  //         },
-  //         SERVICE_CONTEXT: {
-  //           S: '{"service_type":"api","branch":"","runtime":"nodejs","domain":"jazztest","iam_role":"arn:aws:iam::12345678:role/gitlabtest10001_test01","environment":"","region":"us-east-1","message":"input validation starts","created_by":"temp@testing.com"}'
-  //         }
-  //       }
-  //     };
-  //   });
-  //   afterEach(() => {
-  //     if (reqStub) {
-  //       reqStub.restore();
-  //     }
-  //   });
-  //   it("should call processEvent for intrested events", () => {
-  //     let message = "Succesfully Updated Creation Event"
-  //     let responseObject = {
-  //       statusCode: 200,
-  //       body: {
-  //         data: {
-  //           message: message
-  //         }
-  //       }
-  //     };
-  //     reqStub = sinon.stub(request, "Request").callsFake((obj) => {
-  //       return obj.callback(null, responseObject, responseObject.body);
-  //     });
-  //     var checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves({
-  //       "interested_event": true,
-  //       "payload": payload.Item
-  //     });
-  //     var processEventStub = sinon.stub(index, "processEvent")
-  //     var tempAuth = "Auth_token"
-  //     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
-  //       sinon.assert.calledOnce(processEventStub)
-  //       checkForInterestedEventsStub.restore()
-  //       processEventStub.restore()
-  //     })
-  //   })
-  //   it("should Return success message when called with valid paramenters", () => {
-  //     let message = "Succesfully Updated Creation Event"
-  //     let responseObject = {
-  //       statusCode: 200,
-  //       body: {
-  //         data: {
-  //           message: message
-  //         }
-  //       }
-  //     };
-  //     reqStub = sinon.stub(request, "Request").callsFake((obj) => {
-  //       return obj.callback(null, responseObject, responseObject.body);
-  //     })
-  //     var checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves({
-  //       "interested_event": true,
-  //       "payload": payload.Item
-  //     })
-  //     var tempAuth = "Auth_token"
-  //     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
-
-  //       expect(obj).to.not.eq(null);
-  //       expect(obj.data.message).to.eq(message)
-  //       reqStub.restore()
-  //       checkForInterestedEventsStub.restore()
-  //     })
-  //   })
-  //   it("should return error message for not intrested events", () => {
-  //     var message = "Not an interesting event";
-  //     var checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").resolves({
-  //       "interested_event": false,
-  //       "payload": payload.Item
-  //     })
-  //     var tempAuth = "Auth_token";
-  //     index.processEventRecord(event.Records[0], configData, tempAuth).then((obj) => {
-  //       expect(obj.message).to.eq(message)
-  //       sinon.assert.calledOnce(checkForInterestedEventsStub)
-  //     })
-  //   })
-  // })
-
-
-  // it('Verified getToken returned a valid 200 response ', function () {
-  //   var requestPromoiseStub = sinon.stub(rp, 'Request').returns(Promise.resolve(testPayloads.tokenResponseObj200));
-  //   var getTokenRequest = index.getTokenRequest(configData);
-
-  //   var verified = rp(getTokenRequest)
-  //     .then(res => {
-  //       var status = res.statusCode;
-  //       expect(status, "Invalid status Code from getToken").to.eql(200);
-  //     });
-
-  //   requestPromoiseStub.restore();
-  //   return verified;
-  // });
-
-  // More Test cases to be added.
-
+  describe("handleError",()=>{
+    it("handleError", () => {
+      var res = index.handleError('500','error');
+      expect(res.failure_code).to.eq('500');
+      expect(res.failure_message).to.eq(`error`);
+    })
+  });
 });

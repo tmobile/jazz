@@ -101,11 +101,11 @@ function processEachEvent(record, configData, authToken) {
     var sequenceNumber = record.kinesis.sequenceNumber;
     var encodedPayload = record.kinesis.data;
     var payload;
-    return checkForInterestedEvents(encodedPayload, sequenceNumber, configData)
+    return exportable.checkForInterestedEvents(encodedPayload, sequenceNumber, configData)
       .then(result => {
         payload = result.payload;
         if (result.interested_event) {
-          return processItem(payload, configData, authToken);
+          return exportable.processItem(payload, configData, authToken);
         } else {
           return new Promise((resolve, reject) => {
             resolve({ "message": "Not an interesting event" });
@@ -113,12 +113,12 @@ function processEachEvent(record, configData, authToken) {
         }
       })
       .then(result => {
-        handleProcessedEvents(sequenceNumber, payload);
+        exportable.handleProcessedEvents(sequenceNumber, payload);
         return resolve(result);
       })
       .catch(err => {
         logger.error("processEachEvent failed for " + JSON.stringify(record));
-        handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
+        exportable.handleFailedEvents(sequenceNumber, err.failure_message, payload, err.failure_code);
         return reject(err);
       });
   });
@@ -148,7 +148,6 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
 
 function processItem(eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
-
     if (eventPayload.EVENT_NAME.S === configData.EVENTS.CREATE_ASSET) {
       console.log('event matched');
       exportable.checkIfAssetExists(eventPayload, configData, authToken)
