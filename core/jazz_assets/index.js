@@ -31,7 +31,6 @@ global.global_config = global_config;
 
 function handler(event, context, cb) {
   //Initializations
-  event.stage = "test"
   var errorHandler = errorHandlerModule();
   logger.init(event, context);
   logger.info(event);
