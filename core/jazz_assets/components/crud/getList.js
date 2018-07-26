@@ -9,7 +9,7 @@
  const utils = require("../utils.js"); //Import the utils module.
  const logger = require("../logger.js")(); //Import the logging module.
 
- module.exports = (searchPayload, asset_table, onComplete) => {
+ module.exports = (query, asset_table, onComplete) => {
      // initialize dynamodb
      var docClient = utils.initDocClient();
 
@@ -23,8 +23,8 @@
          IndexName: global.global_config.ASSETS_DOMAIN_SERVICE_INDEX,
          KeyConditionExpression: "#d = :service_domain and SERVICE = :service_name",
          ExpressionAttributeValues: {
-             ":service_name": searchPayload.service,
-             ":service_domain": searchPayload.domain
+             ":service_name": query.service,
+             ":service_domain": query.domain
          },
          ExpressionAttributeNames: {
              "#d": "DOMAIN"
@@ -38,9 +38,9 @@
             if(key != "limit" && key != "offset") { // LIMIT is a reserved keyword
                 var key_name = utils.getDatabaseKeyName(key);
 
-                if (searchPayload[key] && key_name) {
+                if (query[key] && key_name) {
                     filter = filter + key_name + " = :" + key_name + insertAndString;
-                    params.ExpressionAttributeValues[":" + key_name] = searchPayload[key];
+                    params.ExpressionAttributeValues[":" + key_name] = query[key];
                 }
             }
      });
@@ -52,11 +52,11 @@
      }
 
      let pagination = {}
-     pagination.limit = searchPayload.limit ||  global.global_config.PAGINATION_DEFAULTS.limit;
+     pagination.limit = query.limit ||  global.global_config.PAGINATION_DEFAULTS.limit;
      if (pagination.limit > global.global_config.PAGINATION_DEFAULTS.max_limit) {
         pagination.limit = global.global_config.PAGINATION_DEFAULTS.max_limit
      }
-     pagination.offset = searchPayload.offset ||  global.global_config.PAGINATION_DEFAULTS.offset;
+     pagination.offset = query.offset ||  global.global_config.PAGINATION_DEFAULTS.offset;
 
      logger.debug("Query params generated from the seach request: " + JSON.stringify(params));
 

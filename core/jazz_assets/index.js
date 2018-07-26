@@ -31,6 +31,7 @@ global.global_config = global_config;
 
 function handler(event, context, cb) {
   //Initializations
+  event.stage = "test"
   var errorHandler = errorHandlerModule();
   logger.init(event, context);
   logger.info(event);
@@ -79,6 +80,18 @@ function handler(event, context, cb) {
             .catch(error => {
               logger.error("update error:" + JSON.stringify(error));
               handleResponse(error, null, event.path);
+            });
+        } else if (event.method === 'GET' && !assets_id ) { // Call GetList //TODO
+          logger.info('GET assets list by service name and domain');
+          var query = event.query;
+          exportable.processGetList(query, asset_table)
+            .then(res => {
+              logger.info("GET assets list by service name and domain:" + JSON.stringify(res));
+              handleResponse(null, res, event.query);
+            })
+            .catch(error => {
+              logger.error("update error:" + JSON.stringify(error));
+              handleResponse(error, null, event.query);
             });
         }
 
@@ -150,10 +163,17 @@ function genericInputValidation(event) {
       })
     }
 
-    if ((event.method === "GET" || event.method === "PUT") && (Object.keys(event.path).length > 0 && !event.path.id)) {
+    if ((event.method === "GET" || event.method === "PUT") && event.path && (Object.keys(event.path).length > 0 && !event.path.id)) {
       reject({
         result: "inputError",
         message: "Missing input parameter asset id"
+      });
+    }
+
+    if ((event.method === "GET") && (!event.path || !event.path.id) && !event.query.service && !event.query.domain) {
+      reject({
+        result: "inputError",
+        message: "Missing input parameter service name and domain name"
       });
     }
 
@@ -199,6 +219,19 @@ function processAssetData(assets_id, asset_table) {
     });
   })
 }
+
+function processGetList(query, asset_table) {
+  return new Promise((resolve, reject) => {
+    crud.getList(query, asset_table, (error, data) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(data);
+      }
+    });
+  })
+}
+
 
 function processAssetsUpdate(assets_id, update_data, asset_table) {
   return new Promise((resolve, reject) => {
@@ -293,6 +326,7 @@ const exportable = {
   processAssetCreation,
   processAssetSearch,
   updateAssetsData,
+  processGetList,
   createNewAsset,
   postSearch
 }
