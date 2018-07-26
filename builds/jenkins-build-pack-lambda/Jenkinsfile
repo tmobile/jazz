@@ -16,6 +16,7 @@ import groovy.transform.Field
 @Field def scmModule
 @Field def serviceConfigdata
 @Field def events
+@Field def lambdaEvents
 @Field def serviceMetadataLoader
 @Field def utilModule
 @Field def environmentDeploymentMetadata
@@ -81,7 +82,6 @@ node() {
 		} else {
 			error "Service Id is not available."
 		}
-
 	}
 
 	if (!config) {
@@ -129,6 +129,12 @@ node() {
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
 	// @TODO: the below statement will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
+  def s3BucketName
+
+  if(isS3EventEnabled) {
+		s3BucketName = config['event_source_s3'];
+	}
+
 
 	sonarModule.initialize(configLoader, config, branch)
 
@@ -230,7 +236,7 @@ node() {
 					echo "Generate deployment env with domain"
 
 					if(isScheduleEnabled) {
-						def eventsArns = getEventsArn(config, current_environment)
+						def eventsArns = getEventsArn(config, environment_logical_id)
 						for (def i = 0; i < eventsArns.size(); i++) {
 							def arn = eventsArns[i]
 							events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "cloudwatch_event", config), environment_logical_id);
@@ -241,6 +247,11 @@ node() {
 
 					echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
 					setLambdaExecutionRole(configLoader.AWS.ROLEID);
+
+          def isLambdaUpdateRequired
+				  if(isS3EventEnabled) {
+            isLambdaUpdateRequired = lambdaEvents.checkS3AndUpdateServerless(s3BucketName);
+			  	}
 
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
@@ -259,6 +270,10 @@ node() {
             serviceConfigdata.setLogStreamPermission(config)
 						serviceConfigdata.setKinesisStream(config)
 					}
+
+          if(isLambdaUpdateRequired) {
+					  lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
+			  	}
 
 					def svc_response = echoServiceInfo(current_environment)
 					send_status_email(config, 'COMPLETED', svc_response)
@@ -307,6 +322,7 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
 	}
 
 	sh "sed -i -- '$sedCommand' ./serverless.yml"
+
 	echoServerlessFile()
 	echo "------------------------DONE--------------"
 }
@@ -564,6 +580,7 @@ def writeServerlessFile(config, current_environment) {
 	sh "pwd"
 	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
 
+  sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
 	sh "sed -i -- 's/{env-stage}/${current_environment}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
@@ -693,8 +710,6 @@ def send_status_email(config, build_status, email_content) {
 }
 
 
-
-
 /**
  *  Function to get arns of the triggers/events configured for the Lambda.
  *
@@ -702,9 +717,9 @@ def send_status_email(config, build_status, email_content) {
 def getEventsArn(config, env) {
 	def eventsArn = []
 	try {
-		def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
+		def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
 
-		def lambdaPolicyTxt = sh(script: "aws lambda get-policy --function-name $lambdaFnName --output json", returnStdout: true)
+		def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${configLoader.AWS.REGION} --function-name $lambdaFnName --output json", returnStdout: true)
 		def policyLists = null
 		if (lambdaPolicyTxt) {
 			def lambdaPolicyJson = new groovy.json.JsonSlurperClassic()
@@ -802,6 +817,10 @@ def loadBuildModules(buildModuleUrl) {
 
 		events = load "events-module.groovy"
 		echo "Event module loaded successfully."
+
+    lambdaEvents = load "lambda-events-module.groovy"
+    lambdaEvents.initialize(configLoader)
+		echo "Lambda event module loaded successfully."
 
 		serviceMetadataLoader = load "service-metadata-loader.groovy"
 		serviceMetadataLoader.initialize(configLoader)
