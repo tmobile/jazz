@@ -230,7 +230,7 @@ function getCodeqReport(metrics, branch, toDate, fromDate, query, config , servi
 			if (response.statusCode === 200 && body) {
 
 				let parsedBody = (typeof body === 'string') ? JSON.parse(body) : body;
-				getReport(metrics, parsedBody.measures, config ,branch,serviceContext)
+				getReport(metrics, parsedBody.measures, config, branch, serviceContext)
 					.then(results => resolve(results))
 					.catch(err => {
 						logger.error(err);

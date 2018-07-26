@@ -27,7 +27,7 @@ const logger = require("./components/logger.js")();
 const request = require("request");
 const format = require("string-template");
 
-module.exports.handler = (event, context, cb) => {
+function handler(event, context, cb) {
 
   //Initializations
   let errorHandler = errorHandlerModule(),
@@ -35,9 +35,9 @@ module.exports.handler = (event, context, cb) => {
   logger.init(event, context);
   let isServAccRequested = false;
 
-  genericInputValidation(event, config)
-    .then(() => createPublicSlackChannel(config, event.body))
-    .then(res => addMemberToChannel(config, res.data, isServAccRequested, event.body))
+  exportable.genericInputValidation(event, config)
+    .then(() => exportable.createPublicSlackChannel(config, event.body))
+    .then(res => exportable.addMemberToChannel(config, res.data, isServAccRequested, event.body))
     .then(res => {
       logger.info("successfully created public slack channel: " + JSON.stringify(res));
       let result = {
@@ -55,7 +55,7 @@ module.exports.handler = (event, context, cb) => {
       } else if (error.result === "unauthorized") {
         return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
       } else {
-        return cb(JSON.stringify(errorHandler.throwInternalServerError(error.message)));
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("Unhandled error.")));
       }
     });
 };
@@ -63,12 +63,19 @@ module.exports.handler = (event, context, cb) => {
 function genericInputValidation(event, config) {
   logger.debug("Inside genericInputValidation");
   return new Promise((resolve, reject) => {
-    if (!event || !event.body || !event.method) {
-      reject({
-        result: "inputError",
-        message: "Service inputs not defined!"
-      });
+    if (!event || !event.method) {
+			reject({
+				result: "inputError",
+				message: "Method cannot be empty/invalid."
+			});
     }
+
+    if (!event.body || Object.keys(event.body).length === 0) {
+			reject({
+				result: "inputError",
+				message: "Slack details are required for creating new slack channel."
+			});
+		}
 
     if (!event.body.channel_name) {
       reject({
@@ -102,7 +109,7 @@ function genericInputValidation(event, config) {
         if (!validateEmailId(emailAddress)) {
           let msg = 'Not a valid email id!';
           if (emailAddress) {
-            msg = emailAddress + "is not a valid email address.";
+            msg = emailAddress + " is not a valid email address.";
           }
           reject({
             result: "inputError",
@@ -143,7 +150,7 @@ function identifyMembers(members, type, value) {
     }
   });
 
-  info = formatData(out);
+  info = exportable.formatData(out);
   return info;
 }
 
@@ -168,7 +175,7 @@ function defaultChannelMembersDetails(registeredSlackMembers, channelMembers) {
   let membersDetails = [];
   if (registeredSlackMembers.length > 0) {
     for (let i in channelMembers) {
-      let memberDetails = identifyMembers(registeredSlackMembers, 'id', channelMembers[i]);
+      let memberDetails = exportable.identifyMembers(registeredSlackMembers, 'id', channelMembers[i]);
       if (memberDetails) {
         membersDetails.push(memberDetails);
       }
@@ -186,7 +193,7 @@ function removeServAccFromMemberList(slackUrl, token, id) {
 
     request(req, (error, response, body) => {
       if (error) {
-        logger.error("Exception occured while creating slack channel!"+JSON.stringify(error));
+        logger.error("Exception occured while creating slack channel!" + JSON.stringify(error));
         reject(error);
       } else {
         let resBody = JSON.parse(response.body);
@@ -242,8 +249,7 @@ function getUsersInfo(config, eventBody) {
     reqPayload = {
       url: config.slack_channel_url + "users.list?token=" + config.slack_token,
       method: 'GET'
-    },
-    memDetails = {};
+    };
 
     request(reqPayload, (error, response, body) => {
       if (error) {
@@ -256,15 +262,14 @@ function getUsersInfo(config, eventBody) {
           logger.error('Error occured: ' + JSON.stringify(respData.detail));
           reject({
             result: "inputError",
-            message: respData.data.detail
+            message: respData.detail
           });
         } else {
-          memDetails.result = "success";
           let registeredSlackMembers = respData.members;
 
           users.forEach(user => {
             let usrEmail = user.email_id,
-            usr = identifyMembers(registeredSlackMembers, 'email', usrEmail);
+            usr = exportable.identifyMembers(registeredSlackMembers, 'email', usrEmail);
 
             if (usr) {
               channelMembers.push(usr);
@@ -345,10 +350,10 @@ function addMemberToChannel(config, channelInfo, isServAccRequested, eventBody) 
     token = config.slack_token,
     slackChannelMembers = [];
 
-    getUsersInfo(config, eventBody)
+    exportable.getUsersInfo(config, eventBody)
       .then(res => {
         let channelMembers = res.data.channelMembers;
-        let defaultMembersDetails = defaultChannelMembersDetails(res.data.registeredSlackMembers, channelInfo.members);
+        let defaultMembersDetails = exportable.defaultChannelMembersDetails(res.data.registeredSlackMembers, channelInfo.members);
         if (defaultMembersDetails.length > 0) {
           for (let index in defaultMembersDetails) {
             let defmember = defaultMembersDetails[index];
@@ -362,12 +367,12 @@ function addMemberToChannel(config, channelInfo, isServAccRequested, eventBody) 
         let count = 0;
         for (let itm in channelMembers) {
 
-          addMembersToSlackChannel(slack_channel_url, token, channelInfo.id, channelMembers[itm].id)
+          exportable.addMembersToSlackChannel(slack_channel_url, token, channelInfo.id, channelMembers[itm].id)
             .then(() => {
               count++;
               if (count === channelMembers.length) {
-                getSlackChannelMembers(config, channelMembers, isServAccRequested, slackChannelMembers)
-                  .then(res => notifyUser(config, res, channelInfo))
+                exportable.getSlackChannelMembers(config, channelMembers, isServAccRequested, slackChannelMembers)
+                  .then(res => exportable.notifyUser(config, res, channelInfo))
                   .then(res => {
                     if (res.result === "success") {
                       resolve({
@@ -411,7 +416,7 @@ function getSlackChannelMembers(config, channelMembers, isServAccRequested, slac
         let memberEmailAddr = channelMembers[i].email_id;
         if (memberEmailAddr.toLowerCase() === (config.service_account_emailId).toLowerCase()) {
           count++;
-          removeServAccFromMemberList(slack_channel_url, token, channelInfo.id)
+          exportable.removeServAccFromMemberList(slack_channel_url, token, channelInfo.id)
           .then(res => {
             if (res.result === 'success') {
               logger.debug("res.result success");
@@ -441,7 +446,7 @@ function getSlackChannelMembers(config, channelMembers, isServAccRequested, slac
 function notifyUser(config, slackChannelMembers, channelInfo) {
   return new Promise((resolve, reject) => {
     let txt = format(config.notification_txt, channelInfo);
-    getToken(config)
+    exportable.getToken(config)
     .then((authToken) => {
       let toAddress = slackChannelMembers.map(eachMember => eachMember.email_id);
 
@@ -522,3 +527,22 @@ function getToken(configData) {
     });
   });
 }
+
+const exportable = {
+  handler,
+  genericInputValidation,
+  identifyMembers,
+  formatData,
+  validateEmailId,
+  defaultChannelMembersDetails,
+  removeServAccFromMemberList,
+  addMembersToSlackChannel,
+  getUsersInfo,
+  createPublicSlackChannel,
+  addMemberToChannel,
+  getSlackChannelMembers,
+  notifyUser,
+  getToken
+};
+
+module.exports = exportable;

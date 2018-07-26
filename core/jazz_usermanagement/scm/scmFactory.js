@@ -32,7 +32,7 @@ var createUserInGitlabRequest = function (config, userId, password) {
     var encodedUserId = encodeURIComponent(userId);
     var encodedPwd = encodeURIComponent(password);
 
-    //gitlabs username is restricted to alphanumeric and . _ - characters, 
+    //gitlabs username is restricted to alphanumeric and . _ - characters,
     // so using email all email characters (except -, _) replaced with -
     var username = userId.replace(/[^a-zA-Z0-9_-]/g, '-');
     var encodedUsername = encodeURIComponent(username);
@@ -53,7 +53,7 @@ var createUserInGitlabRequest = function (config, userId, password) {
 };
 
 /**
- * 
+ *
  * @param {*} config - config specific to bitbucket
  * @param {*} userId - userId that needs to be created in bitbucket
  * @param {*} password - password that needs to be set in gitlab
