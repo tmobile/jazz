@@ -51,14 +51,11 @@ def checksvc(config) {
 	def ep = ''
 while( true ) {
 	        def knative_svcep = "";
-		   // knative_svcep = sh (returnStdout: true, script: "kubectl get ep ${config['domain']}-${config['service']} -o=json")
 		    knative_svcep = sh (returnStdout: true, script: "kubectl get services.serving.knative.dev ${config['domain']}-${config['service']}-${current_environment}  -o=custom-columns=NAME:.metadata.name,DOMAIN:.status.domain -o=json")
 		    def parsedObject = parseJson(knative_svcep);
             def domain =parsedObject.status.domain;
-			echo "spec:::: $domain"
 			if (domain != null ){
 				def host = parsedObject.status.domain;
-				//def port = parsedObject.subsets[0].ports[0].port ;
 				ep =   host 
 				break
 			}
