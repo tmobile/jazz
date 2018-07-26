@@ -24,7 +24,6 @@ const AWS = require('aws-sdk-mock');
 const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon')
 const sinonTest = require('sinon-test')(sinon, { useFakeTimers: false });
-// require('sinon-as-promised');
 const rp = require('request-promise-native');
 const index = require('../index');
 const logger = require('../components/logger');
@@ -163,8 +162,9 @@ describe('jazz asset handler tests: ', function () {
       });
 
       let result = index.checkIfAssetExists(eventPayload, configData, authToken).then(obj =>{
+        sinon.assert.calledOnce(reqStub);
         expect(obj).to.eq(responseObject.body.data[0]);
-        console.log('obj',obj)
+        reqStub.restore();
       });
     });
 
@@ -180,7 +180,9 @@ describe('jazz asset handler tests: ', function () {
         return obj.callback(null, responseObject, responseObject.body);
       });
       let result = index.checkIfAssetExists(eventPayload, configData, authToken).catch(obj =>{
+        sinon.assert.calledOnce(reqStub);
         expect(obj.details).to.eq('No Assets found');
+        reqStub.restore();
       });
     });
 
@@ -194,6 +196,9 @@ describe('jazz asset handler tests: ', function () {
         return obj.callback(errorObject, null, null);
       });
       let result = index.checkIfAssetExists(eventPayload, configData, authToken).catch(obj =>{
+        sinon.assert.calledOnce(reqStub);
+        expect(obj.type).to.eq('200');
+        reqStub.restore();
       })
     });
   })
@@ -224,10 +229,10 @@ describe('jazz asset handler tests: ', function () {
         return obj.callback(null, responseObject, responseObject.body);
       });
       index.processUpdateAsset(record, eventPayload, configData, authToken).then(result => {
+        sinon.assert.calledOnce(reqStub);
         expect(result).to.eq(responseObject.body);
         reqStub.restore();
-      }).catch(err => console.log('catch'+err))
-
+      });
     });
 
     it('process update asset error',() => {
@@ -245,6 +250,7 @@ describe('jazz asset handler tests: ', function () {
         return obj.callback(null, responseObject, responseObject.body);
       });
       index.processUpdateAsset(record, eventPayload, configData, authToken).catch(err => {
+        sinon.assert.calledOnce(reqStub);
         expect(err.error).to.eq('Error in updating assets. {"statusCode":0,"body":{"data":{}}}');
         reqStub.restore();
       });
@@ -264,6 +270,7 @@ describe('jazz asset handler tests: ', function () {
       };
       eventPayload.EVENT_STATUS.S = 'active';
       index.processUpdateAsset(record, eventPayload, configData, authToken).catch(err => {
+        sinon.assert.calledOnce(reqStub);
         expect(err.details).to.eq(eventPayload.EVENT_STATUS.S);
         reqStub.restore();
       });
@@ -297,10 +304,10 @@ describe('jazz asset handler tests: ', function () {
         return obj.callback(null, responseObject, responseObject.body);
       });
       index.processCreateAsset(eventPayload, configData, authToken).then(result => {
+        sinon.assert.calledOnce(reqStub);
         expect(result).to.eq(responseObject.body);
         reqStub.restore();
-      }).catch(err => console.log('catch'+err))
-
+      });
     });
 
     it('process create asset error',() => {
@@ -318,6 +325,7 @@ describe('jazz asset handler tests: ', function () {
         return obj.callback(null, responseObject, responseObject.body);
       });
       index.processCreateAsset(eventPayload, configData, authToken).catch(err => {
+        sinon.assert.calledOnce(reqStub);
         expect(err.error).to.eq('Error in creating assets. {"statusCode":0,"body":{"data":{}}}');
         reqStub.restore();
       });
@@ -337,14 +345,11 @@ describe('jazz asset handler tests: ', function () {
       };
       eventPayload.EVENT_STATUS.S = 'active';
       index.processCreateAsset(eventPayload, configData, authToken).catch(err => {
+        sinon.assert.calledOnce(reqStub);
         expect(err.details).to.eq(eventPayload.EVENT_STATUS.S);
         reqStub.restore();
       });
-
     });
-
-
-
   })
 
   describe("processItem", function (){
@@ -353,9 +358,6 @@ describe('jazz asset handler tests: ', function () {
 		});
 
 		afterEach(() => {
-      // reqStub.restore();
-      // checkIfAssetExistsStub.restore();
-      // processUpdateAssetStub.restore();
     });
 
     it("Updating assets records success", () => {
@@ -400,8 +402,6 @@ describe('jazz asset handler tests: ', function () {
       index.processItem(eventPayload, configData, authToken).catch( err => {
         sinon.assert.calledOnce(checkIfAssetExistsStub);
         sinon.assert.calledOnce(processCreateAssetStub);
-        // expect(obj).to.eq("test");
-        // console.log('err :',err)
         checkIfAssetExistsStub.restore();
         processCreateAssetStub.restore();
       });
@@ -437,7 +437,6 @@ describe('jazz asset handler tests: ', function () {
       eventPayload.EVENT_NAME.S = "UPDATE_ASSET";
       checkIfAssetExistsStub = sinon.stub(index, "checkIfAssetExists").rejects({"test":"test"});
       index.processItem(eventPayload, configData, authToken).catch( err => {
-        console.log('err:',err)
         sinon.assert.calledOnce(checkIfAssetExistsStub);
         expect(err.test).to.eq("test");
         checkIfAssetExistsStub.restore();
@@ -448,11 +447,11 @@ describe('jazz asset handler tests: ', function () {
   describe("processeachEvent", function (){
     var checkForInterestedEventsStub, processItemStub;
     beforeEach(() => {
-		});
 
-		afterEach(() => {
     });
+    afterEach(() => {
 
+    });
     var payload = {
       "interested_event": true,
       "payload": "",
@@ -505,9 +504,13 @@ describe('jazz asset handler tests: ', function () {
     it("processEvents success",() => {
       let authToken = 'abcdefgh';
       let result = index.processEvents(event,configData,authToken).then(res => {
-        console.log('test results',res)
-      }).catch(err => {
-        console.log('test err',err)
+        expect(res[0].message).to.eq('Not an interesting event');
+      })
+    })
+
+    it("processEvents error",() => {
+      let authToken = '';
+      let result = index.processEvents(event,configData,authToken).catch(err => {
       })
     })
   });
@@ -543,6 +546,7 @@ describe('jazz asset handler tests: ', function () {
       processEventsStub = sinon.stub(index,"processEvents").resolves(result);
       index.handler(event,context,(error,records)=>{
         sinon.assert.calledOnce(processEventsStub);
+        processEventsStub.restore();
       })
     });
 

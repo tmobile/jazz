@@ -149,7 +149,6 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
 function processItem(eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
     if (eventPayload.EVENT_NAME.S === configData.EVENTS.CREATE_ASSET) {
-      console.log('event matched');
       exportable.checkIfAssetExists(eventPayload, configData, authToken)
         .then(record => {
           logger.info("Asset already existing. Updating assets records");
@@ -171,7 +170,6 @@ function processItem(eventPayload, configData, authToken) {
         })
 
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.UPDATE_ASSET) {
-      console.log('event else')
       exportable.checkIfAssetExists(eventPayload, configData, authToken)
         .then(record => {
           exportable.processUpdateAsset(record, eventPayload, configData, authToken)
@@ -281,7 +279,6 @@ function processUpdateAsset(record, eventPayload, configData, authToken) {
 }
 
 function checkIfAssetExists(eventPayload, configData, authToken) {
-  logger.info('test sring');
   return new Promise((resolve, reject) => {
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
     var searchAssetPayload = {
