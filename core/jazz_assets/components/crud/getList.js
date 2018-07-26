@@ -1,6 +1,6 @@
  /**
       Search a Asset-Catalog entry in dynamodb table
-      @module: postSearch.js
+      @module: getList.js
       @description: CRUD functions for asset catalog
       @author:
       @version: 1.0
