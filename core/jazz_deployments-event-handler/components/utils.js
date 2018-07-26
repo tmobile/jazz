@@ -37,7 +37,7 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, configData) {
           "payload": kinesisPayload.Item
         });
       } else {
-        logger.error("Not an interested event or event type");
+        logger.debug("Not an interested event or event type");
         return resolve({
           "interested_event": false,
           "payload": kinesisPayload.Item
@@ -65,24 +65,24 @@ function getSvcPayload(method, payload, apiEndpoint, authToken) {
   let svcPayload = {
     headers: {
       'content-type': "application/json",
-      'authorization': authToken
+      'authorization': authToken,
+      'uri':apiEndpoint,
+      'method':method
     },
     rejectUnauthorized: false
   }
-
-  svcPayload.uri = apiEndpoint;
-  svcPayload.method = method;
   if (payload) {
     svcPayload.json = payload;
   }
-  logger.info("Deployment API payload :" + JSON.stringify(svcPayload));
+  logger.debug("Deployment API payload :" + JSON.stringify(svcPayload));
   return svcPayload;
 };
 
 function handleError(errorType, message) {
-  let error = {};
-  error.failure_code = errorType;
-  error.failure_message = message;
+  let error = {
+    'failure_code':errorType,
+    'failure_message':message
+  };
   return error;
 };
 
