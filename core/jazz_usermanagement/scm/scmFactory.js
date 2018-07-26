@@ -32,12 +32,12 @@ var createUserInGitlabRequest = function (config, userId, password) {
     var encodedUserId = encodeURIComponent(userId);
     var encodedPwd = encodeURIComponent(password);
 
-    //gitlabs username is restricted to alphanumeric and . _ - characters, 
+    //gitlabs username is restricted to alphanumeric and . _ - characters,
     // so using email all email characters (except -, _) replaced with -
     var username = userId.replace(/[^a-zA-Z0-9_-]/g, '-');
     var encodedUsername = encodeURIComponent(username);
 
-    var url = config.HOSTNAME + config.API_USER_ADD + '?&username=' + encodedUsername + '&password=' + encodedPwd + '&name=' + encodedUserId + '&email=' + encodedUserId + '&skip_confirmation=true';
+    var url = config.BASE_URL + config.API_USER_ADD + '?&username=' + encodedUsername + '&password=' + encodedPwd + '&name=' + encodedUserId + '&email=' + encodedUserId + '&skip_confirmation=true';
 
     return {
         url: url,
@@ -53,7 +53,7 @@ var createUserInGitlabRequest = function (config, userId, password) {
 };
 
 /**
- * 
+ *
  * @param {*} config - config specific to bitbucket
  * @param {*} userId - userId that needs to be created in bitbucket
  * @param {*} password - password that needs to be set in gitlab
@@ -61,7 +61,7 @@ var createUserInGitlabRequest = function (config, userId, password) {
 var createUserInBitbucketRequest = function (config, userId, password) {
     var encodedUserId = encodeURIComponent(userId);
     var encodedPwd = encodeURIComponent(password);
-    var url = config.HOSTNAME + config.API_USER_ADD + '?name=' + encodedUserId + '&password=' + encodedPwd + '&displayName=' + encodedUserId + '&emailAddress=' + encodedUserId + '&addToDefualtGroup=false&notify=false';
+    var url = config.BASE_URL + config.API_USER_ADD + '?name=' + encodedUserId + '&password=' + encodedPwd + '&displayName=' + encodedUserId + '&emailAddress=' + encodedUserId + '&addToDefualtGroup=false&notify=false';
 
     return {
         url: url,

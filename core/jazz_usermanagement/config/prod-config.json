@@ -1,23 +1,29 @@
 {
-  "USER_POOL_ID":"{user_pool_id}",
+  "USER_POOL_ID": "{user_pool_id}",
   "REGION": "{region}",
   "USER_CLIENT_ID": "{user_client_id}",
-  "reg_codes": ["JAZZ"],
-  "required_fields": ["userid", "userpassword", "usercode"],
+  "reg_codes": [
+    "JAZZ"
+  ],
+  "required_fields": [
+    "userid",
+    "userpassword",
+    "usercode"
+  ],
   "SCM_TYPE": "{scm_type}",
-  "SCM_CONFIG" : {
-    "bitbucket" : {
-      "HOSTNAME": "{bb_service_host}",
+  "SCM_CONFIG": {
+    "bitbucket": {
+      "BASE_URL": "{base-url}",
       "USERNAME": "{bb_username}",
       "PASSWORD": "{bb_password}",
-      "API_USER_ADD" : "/rest/api/1.0/admin/users",
-      "API_GROUP_ADD" : "/rest/api/1.0/admin/groups/add-users"
+      "API_USER_ADD": "/rest/api/1.0/admin/users",
+      "API_GROUP_ADD": "/rest/api/1.0/admin/groups/add-users"
     },
     "gitlab": {
-      "HOSTNAME": "{gitlab_service_host}",
-      "API_USER_ADD" : "/api/v4/users",
-      "API_GROUP_ADD" : "/api/v4/groups",
-      "PRIVATE_TOKEN": "{gitlab_private_token}"
+      "BASE_URL": "{base-url}",
+      "API_USER_ADD": "/api/v4/users",
+      "API_GROUP_ADD": "/api/v4/groups",
+      "PRIVATE_TOKEN": "{private_token}"
     }
   }
 }
