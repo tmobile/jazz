@@ -37,7 +37,7 @@ var createUserInGitlabRequest = function (config, userId, password) {
     var username = userId.replace(/[^a-zA-Z0-9_-]/g, '-');
     var encodedUsername = encodeURIComponent(username);
 
-    var url = config.BASE_URL + config.API_USER_ADD + '?&username=' + encodedUsername + '&password=' + encodedPwd + '&name=' + encodedUserId + '&email=' + encodedUserId + '&skip_confirmation=true';
+    var url = config.HOSTNAME + config.API_USER_ADD + '?&username=' + encodedUsername + '&password=' + encodedPwd + '&name=' + encodedUserId + '&email=' + encodedUserId + '&skip_confirmation=true';
 
     return {
         url: url,
@@ -61,7 +61,7 @@ var createUserInGitlabRequest = function (config, userId, password) {
 var createUserInBitbucketRequest = function (config, userId, password) {
     var encodedUserId = encodeURIComponent(userId);
     var encodedPwd = encodeURIComponent(password);
-    var url = config.BASE_URL + config.API_USER_ADD + '?name=' + encodedUserId + '&password=' + encodedPwd + '&displayName=' + encodedUserId + '&emailAddress=' + encodedUserId + '&addToDefualtGroup=false&notify=false';
+    var url = config.HOSTNAME + config.API_USER_ADD + '?name=' + encodedUserId + '&password=' + encodedPwd + '&displayName=' + encodedUserId + '&emailAddress=' + encodedUserId + '&addToDefualtGroup=false&notify=false';
 
     return {
         url: url,

@@ -1,6 +1,6 @@
 {
   "ADMIN_ID": "{jazz_admin}",
-  "BASE_URL": "{base-url}",
+  "BASE_URL": "{scm_base_url}",
   "SCM_TYPE": "{scm_type}",
   "BITBUCKET": {
     "USERNAME": "{bb_username}",

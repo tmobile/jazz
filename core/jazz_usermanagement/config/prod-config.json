@@ -13,14 +13,14 @@
   "SCM_TYPE": "{scm_type}",
   "SCM_CONFIG": {
     "bitbucket": {
-      "BASE_URL": "{base-url}",
+      "HOSTNAME": "{scm_base_url}",
       "USERNAME": "{bb_username}",
       "PASSWORD": "{bb_password}",
       "API_USER_ADD": "/rest/api/1.0/admin/users",
       "API_GROUP_ADD": "/rest/api/1.0/admin/groups/add-users"
     },
     "gitlab": {
-      "BASE_URL": "{base-url}",
+      "HOSTNAME": "{scm_base_url}",
       "API_USER_ADD": "/api/v4/users",
       "API_GROUP_ADD": "/api/v4/groups",
       "PRIVATE_TOKEN": "{private_token}"

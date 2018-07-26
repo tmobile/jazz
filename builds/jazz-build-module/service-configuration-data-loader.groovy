@@ -405,9 +405,9 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
-            sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
-            sh "sed -i -- 's,{base-url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
+            sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
+            sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
+            sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
 
             if (config_loader.SCM.TYPE == "bitbucket") {
               withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
