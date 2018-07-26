@@ -10,7 +10,7 @@ import groovy.transform.Field
 @Field def repo_base
 @Field def repo_core
 @Field def scm_type
-
+@Field def knativeModule
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
@@ -25,6 +25,7 @@ import groovy.transform.Field
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def current_environment = ''
+@Field def environment_logical_id = ''
 @Field def stack_name
 node() {
 	def jazzBuildModuleURL = getBuildModuleUrl()
@@ -41,7 +42,7 @@ node() {
 	def gitCommitOwner
 	def gitCommitHash
 	def context_map
-	def environment_logical_id
+	//def environment_logical_id
 
 	if (domain && domain != "") {
 		repo_name = params.domain + "_" + params.service_name
@@ -192,7 +193,7 @@ node() {
 		stage('Build') {
 			events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
 			try {
-				buildLambda(runtime)
+				buildLambda(runtime, config)
 			} catch (ex) {
 				events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -224,33 +225,61 @@ node() {
 					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-					loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
+					def svc_response = '';
+					def function_deployment_target = '';
+					
+					if (config.deployment_targets) {
+					    function_deployment_target = config.deployment_targets.function;
+					}
 
-					// Generate serverless yml file with domain added in function name
-					echo "Generate deployment env with domain"
+					switch (function_deployment_target) {
+						case 'aws_lambda':
+							loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
+							// Generate serverless yml file with domain added in function name
+							echo "Generate deployment env with domain"
+							writeServerlessFile(config, current_environment)
+							echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
+							setLambdaExecutionRole(configLoader.AWS.ROLEID);
+							def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
+							sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+							svcep = getLambdaARN(stackName)
+							events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", svcep, config["type"], config['created_by']), environment_logical_id);
+							echo "lambdaARN: ${svcep}"
+							 svc_response = echoServiceInfo(current_environment)
+							// reset Credentials
+							resetCredentials()
+							break;
 
-					writeServerlessFile(config, current_environment)
+						case 'gcp_knative':
+							echo "Instantiating Knative deployment module.."
+							knativeModule.repo_credential_id = repo_credential_id ;
+							knativeModule.loadKnativeConfig(runtime)
+							knativeModule.writeKnativeFile(config)
+							knativeModule.deploy(config)
+							svcep = knativeModule.checksvc(config)
+							if (svcep){
+								events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", svcep, config["type"], config['created_by']), environment_logical_id);
+								echo "Knative Service Endpoint: ${svcep}"
+								svc_response = "Your service endpoint: " + svcep;
+								svc_response =  svc_response + " \n\nPlease use the following command to access your service: curl -X GET  http://35.230.53.158/  -H \'\'cache-control: no-cache\'\'   -H \'\'host:" + svcep + "\'\'" ;
+								echo "service response:: $svc_response"
+								break;
+							}
+							else {
+								error "Deploment failed as endpoint is not available"
+							}
+						default:
+							error "Deployment targets are not defined"
+					}
 
-					echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
-					setLambdaExecutionRole(configLoader.AWS.ROLEID);
-
-					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
-					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
-
-					lambdaARN = getLambdaARN(stackName)
-					events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("aws", lambdaARN, config["type"], config['created_by']), environment_logical_id);
-					echo "lambdaARN: ${lambdaARN}"
-					// reset Credentials
-					resetCredentials()
 					if (domain != "jazz") {
 						createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
 					}
 
-
 					if (domain && domain == "jazz") {
 						serviceConfigdata.setKinesisStream(config)
 					}
-					def svc_response = echoServiceInfo(current_environment)
+					
 					send_status_email(config, 'COMPLETED', svc_response)
 				} catch (ex) {
 					send_status_email(config, 'FAILED', '')
@@ -259,7 +288,7 @@ node() {
 					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 					error ex.getMessage()
 				}
-				environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
+				environmentDeploymentMetadata.setEnvironmentEndpoint(svcep)
 				def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
 				events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
 				events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -354,7 +383,7 @@ def LoadConfiguration() {
 
 /**	Build project based on runtime
  */
-def buildLambda(String runtime) {
+def buildLambda(runtime, config) {
 	echo "installing dependencies for $runtime"
 	if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
@@ -373,6 +402,20 @@ def buildLambda(String runtime) {
 		. venv/bin/activate
 		pip install pytest
 		"""	
+	}
+	echo  "checking deployment targets"
+	
+	echo "The env logical ID is.....${environment_logical_id}"
+	
+	if (config.deployment_targets) {
+		function_deployment_target = config.deployment_targets.function
+		if(function_deployment_target == "gcp_knative"){
+			echo "initiating docker build............."
+			withDockerRegistry([credentialsId: 'docker_login']) {
+				def knativeImg = docker.build("dbabu/${config['domain']}-${config['service']}-${environment_logical_id}", '.')
+				knativeImg.push();
+			}
+		}
 	}
 }
 
@@ -821,6 +864,10 @@ def loadBuildModules(buildModuleUrl) {
 		environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
 		echo "Environment deployment data loader module loaded successfully."
 
+		knativeModule = load "knative-module.groovy"
+		knativeModule.initialize(configLoader.knative, events)
+		echo "Knative module loaded successfully."
+		
 	}
 }
 

@@ -84,7 +84,11 @@ node  {
 					case "lambda":
 					case "function":
 						if (service_config['runtime'] == "nodejs") {
-							service_template = "lambda-template-nodejs"
+							if(service_config.deployment_targets.function == "gcp_knative"){
+								service_template = "knative-function-template-js"
+							}else{
+								service_template = "lambda-template-nodejs"
+							}
 						}
 						else if (service_config['runtime'] == "python") {
 							service_template = 'lambda-template-python'
