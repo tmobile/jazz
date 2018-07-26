@@ -14,17 +14,20 @@
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title">Choose the type of service you want to create<span>*</span></p>
                 </div>
-                <div class="col-lg-8 col-md-8">
+                <div class="col-lg-8 col-md-8 flex">
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
-                            <div class="icon-icon-api" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>API</p>
+                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
+                            <!-- <div class="icon-icon-function" [ngClass]="{'selected': typeOfService == 'function'}"></div>
+                                -->
+                                <img *ngIf='typeOfService == "function"' src='../../../../assets/images/icons/function-pink.svg'>
+                                <img *ngIf='typeOfService != "function"' src='../../../../assets/images/icons/function.svg'>
+                                <p>FUNCTION</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
-                            <div class="icon-icon-function" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>LAMBDA</p>
+                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
+                            <div class="icon-icon-api" [ngClass]="{'selected': typeOfService == 'api'}"></div>
+                            <p>API</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
@@ -41,30 +44,51 @@
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title">Choose what platform you would like to use<span>*</span></p>
                 </div>
-                <div class="col-lg-8 col-md-8">
+                <div class="col-lg-8 col-md-8 flex" [ngClass]="{'function-selected': typeOfService == 'function'}">
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
-                                <div class="icon-icon-AWS">
+                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api' || typeOfPlatform == 'aws'}"  (click)="changePlatformType('aws')">
+                                <div class="icon-icon-AWS" [class.gray-icon]="typeOfService != 'api' && typeOfPlatform != 'aws'">
                                         <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
                                 </div>
                             <p>AWS</p>
                         </div>
                     </section>
-                    <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                    <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section" [class.disable-event]='typeOfService != "function"'>
+                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService != 'api' && typeOfPlatform == 'knative'}" (click)="changePlatformType('knative')">
+                            <!-- <div class="icon-icon-googlecloud"></div> -->
+                            <img *ngIf="typeOfPlatform == 'knative'" src='../../../../assets/images/icons/knative-logo-color.png'>
+                            <img *ngIf="typeOfPlatform != 'knative'" src='../../../../assets/images/icons/knative-logo-gray.png'>
+                             <p>Knative</p>
+                        </div>
+                    </section>
+                    <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section disable-event">
                         <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
                             <div class="icon-icon-azure"></div>
                             <p>Azure</p>
                         </div>
                     </section>
-                    <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
-                            <div class="icon-icon-googlecloud"></div>
-                            <p>Google Cloud</p>
-                        </div>
-                    </section>
                 </div>
             </div>
         </section>
+        <section class="form-row deployment-targets" *ngIf="typeOfService === 'abcd'">
+          <div class="row">
+            <div class="col-lg-4 col-md-4">
+              <p class="step-title">Choose your API deployment target<span>*</span></p>
+            </div>
+            <div class="col-lg-8 col-md-8 radio-options">
+                <div class="radio-container" (click)="apiDeployment='aws_apigateway'">
+                  <input type="radio" name="target" value="aws_apigateway" [ngModel]="apiDeployment">
+                  <label><span class='outer'></span><span class="background"></span>AWS API Gateway</label>
+                </div>
+                <div class="radio-container" (click)="apiDeployment='gcp_apigee'">
+                  <input type="radio" name="target" value="gcp_apigee" [ngModel]="apiDeployment">
+                  <label><span class='outer'></span><span class="background"></span>APIGEE</label>
+                </div>
+            </div>
+          </div>
+        </section>
+
+
         <section class="each-step-wrap run-time" *ngIf="typeOfService != 'website'">
             <div class="row">
                 <div class="col-lg-4 col-md-4">
@@ -75,7 +99,7 @@
                         <section class="col-lg-3 col-md-3 pad-left0">
                             <div class="radio-container">
                                 <input type="radio" class='test-focus' name="runtime" id="nodejs" [value]="nodejs" [checked]="runtime == 'nodejs'" (click)="onSelectionChange('nodejs')">
-                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (4.3)</label>
+                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (6.10)</label>
                             </div>
                         </section>
                         <section class="col-lg-3 col-md-3 pad-left0">

@@ -15,6 +15,7 @@ import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
+import {environment} from "../../../../environments/environment";
  
 @Component({
   selector: 'create-service',
@@ -29,9 +30,10 @@ export class CreateServiceComponent implements OnInit {
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
 
 docs_link = env_oss.urls.docs_link;
-  typeOfService:string = "api";
-  typeOfPlatform:string = "aws";
-  disablePlatform = true;
+  typeOfService:string = "function";
+  typeOfPlatform:string = "knative";
+  functionDeploymentTargets:string = "gcp_knative";
+  disablePlatform = false;
   selected:string = "Minutes";
   runtime:string = 'nodejs';
   eventSchedule:string = 'fixedRate';
@@ -79,6 +81,10 @@ docs_link = env_oss.urls.docs_link;
   errMessage: any;
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
+  public apiDeployment = "aws_apigateway";
+  public functionDeployment = "gcp_knative";
+  public websiteDeployment = "aws_cloudfront";
+  public buildEnvironment = environment;
   
 
   constructor (
@@ -133,12 +139,27 @@ docs_link = env_oss.urls.docs_link;
   // function for changing service type
   changeServiceType(serviceType){
     this.typeOfService = serviceType;
+    if (this.typeOfService == 'api' || this.typeOfService == 'website') {
+      this.typeOfPlatform = 'aws';
+      this.functionDeploymentTargets = "";
+    }else if (this.typeOfService == 'function') {
+      this.typeOfPlatform = 'knative';
+      this.functionDeploymentTargets = "gcp_knative";
+    }
+
   }
 
   // function for changing platform type
   changePlatformType(platformType){
     if(!this.disablePlatform){
       this.typeOfPlatform = platformType;
+      if (this.typeOfService == 'function' && platformType == 'aws') {
+        this.functionDeploymentTargets = "aws_lambda";
+      } else if (this.typeOfService == 'function' && platformType == 'knative'){
+        this.functionDeploymentTargets = "gcp_knative";
+      } else {
+        this.functionDeploymentTargets = "";
+      }
     }
   }
 
@@ -281,18 +302,26 @@ docs_link = env_oss.urls.docs_link;
     var payload = {
                 "service_type": this.typeOfService,
                 "service_name": this.model.serviceName,
+                //"platform_type":this.typeOfPlatform,
                 "approvers": approversPayload,
                 "domain": this.model.domainName,
-                "description":this.model.serviceDescription
+                "description":this.model.serviceDescription,
+                "deployment_targets": {}
             };
 
     if (this.typeOfService == 'api') {
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["deployment_targets"] = {
+        "api": this.apiDeployment
+      }
     }
     else if(this.typeOfService == 'function'){
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["deployment_targets"] = {
+        "function": this.functionDeploymentTargets
+      }
       if(this.rateExpression.type != 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
@@ -321,6 +350,9 @@ docs_link = env_oss.urls.docs_link;
 
     } else if(this.typeOfService == 'website'){
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
+      payload["deployment_targets"] = {
+        "website": this.websiteDeployment
+      }
     }
 
     if(this.slackSelected){
@@ -375,7 +407,9 @@ docs_link = env_oss.urls.docs_link;
     this.submitted = true;
     this.getData();
     this.createService();
-    this.typeOfService = 'api';
+    this.typeOfService = 'function';
+    this.typeOfPlatform = "knative";
+    this.functionDeploymentTargets = "gcp_knative";
     this.selectedApprovers=[];
   }
 
