@@ -217,7 +217,7 @@ def getEnvironmentBranchName(logical_id) {
 	}
 }
 
-def generateEnvironmentMap(status, environment_logical_id) {
+def generateEnvironmentMap(status, environment_logical_id,env_metadata) {
 	def env_logical_id
 	if (environment_logical_id == null) {
 		env_logical_id = getEnvironmentLogicalId()
