@@ -41,7 +41,7 @@ def createProject(repo_owner, repo_name){
     try {
         if (config_loader.SCM.TYPE == "gitlab") {
 
-            //gitlabs username is restricted to alphanumeric and . _ - characters, 
+            //gitlabs username is restricted to alphanumeric and . _ - characters,
             // so using email all email characters (except -, _) replaced with -
             def gitlab_username = repo_owner.replaceAll("[^a-zA-Z0-9_-]", "-")
 
@@ -62,7 +62,9 @@ def createProject(repo_owner, repo_name){
 
             transferProject(user_services_group_id, repo_id)
         } else if (config_loader.SCM.TYPE == "bitbucket") {
-            sh "curl -X POST -k -v -u \"${config_loader.SCM.USERNAME}:${config_loader.SCM.PASSWORD}\" -H \"Content-Type: application/json\" " + scm_user_services_api_endpoint + " -d \'{\"name\":\"" + repo_name + "\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
+           withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+            sh "curl -X POST -k -v -u \"${UNAME}:${PWD}\" -H \"Content-Type: application/json\" " + scm_user_services_api_endpoint + " -d \'{\"name\":\"" + repo_name + "\", \"scmId\": \"git\", \"forkable\": \"true\"}\'"
+           }
         }
     } catch (ex) {
         echo "createProject failed: " + ex.toString()
@@ -125,7 +127,7 @@ def getGitLabsProjectId(repo_name) {
 
         if (projectObject == null || projectObject.equals("") || projectObject[0] == null || projectObject[0].equals("")
             || projectObject[0].id == null || projectObject[0].id.equals("")) {
-            error "getGitLabsProjectId failed to find project with name $repo_name" 
+            error "getGitLabsProjectId failed to find project with name $repo_name"
         }
 
         return projectObject[0].id
@@ -149,7 +151,9 @@ def setBranchPermissions(repo_name) {
         sh "curl --request POST --header \"PRIVATE-TOKEN: ${config_loader.SCM.PRIVATE_TOKEN}\" \"${scm_protocol}${config_loader.REPOSITORY.BASE_URL}/api/v4/projects/$proj_id/protected_branches?name=master&push_access_level=0\""
     } else if (config_loader.SCM.TYPE == "bitbucket") {
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: serviceonboarding_repo]]])
-        sh "curl -X POST -k -v -u \"${config_loader.SCM.USERNAME}:${config_loader.SCM.PASSWORD}\"  -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" ${scm_branch_permission_api_endpoint}${repo_name}/restrictions -d \"@branch_permissions_payload.json\"  "
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+        sh "curl -X POST -k -v -u \"${UNAME}:${PWD}\"  -H \"Content-Type: application/vnd.atl.bitbucket.bulk+json\" ${scm_branch_permission_api_endpoint}${repo_name}/restrictions -d \"@branch_permissions_payload.json\"  "
+        }
     }
 }
 
@@ -157,12 +161,11 @@ def setRepoPermissions(repo_owner, repo_name, admin_group) {
     if (config_loader.SCM.TYPE == "gitlab") {
 
     } else if (config_loader.SCM.TYPE == "bitbucket") {
-        sh "curl -X PUT -G -k -v -u \"${config_loader.SCM.USERNAME}:${config_loader.SCM.PASSWORD}\" -d \"name=$admin_group\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/groups?permission=REPO_ADMIN&\""
-
-
-        def encoded_creator = URLEncoder.encode(repo_owner, "utf-8")
-
-        sh "curl -X PUT -G -k -v -u \"${config_loader.SCM.USERNAME}:${config_loader.SCM.PASSWORD}\" -d \"name=$encoded_creator\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/users?permission=REPO_ADMIN\""
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+          sh "curl -X PUT -G -k -v -u \"${UNAME}:${PWD}\" -d \"name=$admin_group\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/groups?permission=REPO_ADMIN&\""
+          def encoded_creator = URLEncoder.encode(repo_owner, "utf-8")
+          sh "curl -X PUT -G -k -v -u \"${UNAME}:${PWD}\" -d \"name=$encoded_creator\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/users?permission=REPO_ADMIN\""
+        }
     }
 }
 
@@ -173,7 +176,9 @@ def addWebhook(repo_name, webhookName, scm_webhook_target_url) {
         sh "curl --header \"Private-Token: ${config_loader.SCM.PRIVATE_TOKEN}\" -X POST \"${scm_webhook_api}$scm_webhook_target_url\""
     } else if (config_loader.SCM.TYPE == "bitbucket") {
         def scm_webhook_api = "${scm_protocol}${config_loader.REPOSITORY.BASE_URL}/rest/webhook/1.0/projects/${config_loader.REPOSITORY.REPO_BASE_SERVICES}/repos/"
-        sh "curl -X PUT -k -v -u \"${config_loader.SCM.USERNAME}:${config_loader.SCM.PASSWORD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${scm_webhook_target_url}\" , \"enabled\": true}\'"
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+         sh "curl -X PUT -k -v -u \"${UNAME}:${PWD}\" -H \"Content-Type: application/json\" ${scm_webhook_api}${repo_name}/configurations  -d \'{\"title\": \"${webhookName}\", \"url\": \"${scm_webhook_target_url}\" , \"enabled\": true}\'"
+        }
     }
 }
 
@@ -185,10 +190,12 @@ def deleteProject(repo_name) {
             returnStdout: true
         ).trim()
     } else if (config_loader.SCM.TYPE == "bitbucket") {
-        def outputStr = sh(
-            script: "curl -X DELETE -k -u \"${config_loader.SCM.USERNAME}:${config_loader.SCM.PASSWORD}\" '" + scm_user_services_api_endpoint + repo_name + "'",
-            returnStdout: true
-        ).trim()
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+          def outputStr = sh(
+              script: "curl -X DELETE -k -u \"${UNAME}:${PWD}\" '" + scm_user_services_api_endpoint + repo_name + "'",
+              returnStdout: true
+          ).trim()
+        }
     }
 }
 
@@ -307,7 +314,7 @@ def getRepoCommitterInfo(commitHash) {
             def scm_commit_api = "http://${config_loader.REPOSITORY.BASE_URL}/rest/api/1.0/projects/${repoBase}/repos/${getRepoName()}"
             def repoUrl = "${scm_commit_api}/commits/${commitHash}"
             echo "[Metadata] Repository URL: $repoUrl"
-            def scmCommitResponse 
+            def scmCommitResponse
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
                 scmCommitResponse = sh(script: "curl -k -v -u \"$UNAME:$PWD\" -H \"Content-Type: application/json\"  $repoUrl", returnStdout: true).trim()
             }

@@ -40,6 +40,17 @@
             </div>
           </div>
         </div>
+        <div class='warning-chk-wrp'>
+          <p class="warning" *ngIf="!valid">{{validityMessage}}</p>
+          <div class="column-input try-service-cb">
+            <div class="custom-cb">
+              <input id="try-service-cb" type="checkbox" [checked]="savingPayload"
+                      (click)="toggleSavePayload(!savingPayload)">
+              <label for="try-service-cb"></label>
+              <div class="cb-status-dets">Click here to save your input data for later!</div>
+            </div>
+          </div>
+        </div>
 
         <div class="button-group">
           <button (click)="closeSideMenu()" class="btn-round secondary">CANCEL</button>
