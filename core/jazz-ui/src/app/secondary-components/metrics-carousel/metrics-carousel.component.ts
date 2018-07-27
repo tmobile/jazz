@@ -18,6 +18,9 @@ import {UtilsService} from "../../core/services/utils.service";
 })
 export class MetricsCarouselComponent implements OnInit {
   @Input() metrics;
+  //nameProperty -> refers to name of each metric on this.metrics
+  //listProperty -> refers to list of data points on this.metrics
+  // valueProperty -> refers to the data value (y coordinate) of each datapoint in the this.metrics[listProperty]
   @Input() options = {
     nameProperty: 'name',
     listProperty: 'values',
@@ -26,31 +29,37 @@ export class MetricsCarouselComponent implements OnInit {
 
   private _selected;
   @Output() selectedChange = new EventEmitter();
+
   @Input()
   set selected(object) {
-      let i = this.metrics.findIndex((metric) => {
-        return object[this.options.nameProperty] === metric[this.options.nameProperty];
-      });
-      this.index = i;
-      this._selected = object;
-      this. selectedChange.emit(this._selected);
+    let i = this.metrics.findIndex((metric) => {
+      return object[this.options.nameProperty] === metric[this.options.nameProperty];
+    });
+    this.index = i;
+    this._selected = object;
+    this.selectedChange.emit(this._selected);
   }
+
   get selected() {
-      return this._selected;
+    return this._selected;
   }
+
   private _index;
   @Output() indexChange = new EventEmitter();
+
   @Input()
   set index(value) {
-      this._index = value;
-      this. indexChange.emit(this._index);
+    this._index = value;
+    this.indexChange.emit(this._index);
   }
+
   get index() {
-      return this._index;
+    return this._index;
   }
 
   @ViewChild('metricCards') metricCards;
   public metricCardsScroller;
+
   @ViewChild('metricCardsScroller') set _metricCardsScroller(input) {
     this.metricCardsScroller = input;
     if (this.metricCards && this.metricCardsScroller) {
@@ -60,6 +69,7 @@ export class MetricsCarouselComponent implements OnInit {
       });
     }
   };
+
   public metricCardsOversized;
   public metricCardSize = 135 + 12;
   public metricCardOffset = 0;
@@ -77,8 +87,14 @@ export class MetricsCarouselComponent implements OnInit {
   }
 
   getRecentValue(metric) {
-    if(!metric[this.options.listProperty].length) return;
-    return metric[this.options.listProperty].slice(-1).pop()[this.options.valueProperty].toFixed(0).toString();
+    if (!metric[this.options.listProperty].length) return;
+    let _metric = metric[this.options.listProperty].slice(-1).pop()[this.options.valueProperty];
+    if (_metric && typeof _metric === 'string') {
+      return _metric;
+    } else if (_metric && typeof _metric === 'number') {
+      return _metric.toFixed();
+    }
+
   }
 
   metricName(metric) {
