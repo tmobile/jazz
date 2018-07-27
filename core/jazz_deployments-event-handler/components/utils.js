@@ -29,9 +29,8 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, configData) {
     let kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
       if (configData.EVENTS.event_type.includes(kinesisPayload.Item.EVENT_TYPE.S) &&
-          configData.EVENTS.event_name.includes(kinesisPayload.Item.EVENT_NAME.S)) {
+        configData.EVENTS.event_name.includes(kinesisPayload.Item.EVENT_NAME.S)) {
         logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
-
         return resolve({
           "interested_event": true,
           "payload": kinesisPayload.Item
@@ -66,8 +65,8 @@ function getSvcPayload(method, payload, apiEndpoint, authToken) {
     headers: {
       'content-type': "application/json",
       'authorization': authToken,
-      'uri':apiEndpoint,
-      'method':method
+      'uri': apiEndpoint,
+      'method': method
     },
     rejectUnauthorized: false
   }
@@ -80,8 +79,8 @@ function getSvcPayload(method, payload, apiEndpoint, authToken) {
 
 function handleError(errorType, message) {
   let error = {
-    'failure_code':errorType,
-    'failure_message':message
+    'failure_code': errorType,
+    'failure_message': message
   };
   return error;
 };
