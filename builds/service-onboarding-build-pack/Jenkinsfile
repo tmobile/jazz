@@ -79,9 +79,6 @@ node  {
 						else if (service_config['runtime'] == "java") {
 							service_template = 'api-template-java'
 						}
-
-            def api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], service_config)
-
 						break
 
 					case "lambda":
