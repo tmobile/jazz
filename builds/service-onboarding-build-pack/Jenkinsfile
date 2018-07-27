@@ -140,7 +140,7 @@ node  {
 				for (item in config) {
 					serviceMetadataJson[item.key] = item.value
 				}
-				for (item in config.catalog_metadata) {
+				for (item in service_config.catalog_metadata) {
 					serviceMetadataJson[item.key] = item.value
 				}
 
