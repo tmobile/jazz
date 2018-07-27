@@ -39,7 +39,6 @@ describe('jazz asset handler tests: ', function () {
 
   let sandbox;
   beforeEach(function () {
-
     sandbox = sinon.createSandbox();
     event = {
       "Records": [{
@@ -101,7 +100,6 @@ describe('jazz asset handler tests: ', function () {
           "S": "{\"service_type\":\"website\",\"branch\":\"master\",\"runtime\":\"n/a\",\"domain\":\"ossssssss\",\"iam_role\":\"arn:aws:iam::192006145812:role/jazz20180711_lambda2_basic_execution_1\",\"environment\":\"prod\",\"region\":\"us-east-1\",\"message\":\"create assets starts\",\"provider\":\"aws\",\"provider_id\":\"arn:aws:s3:::jazz20180711-prod-web-20180711112108792000000004/ossssssss-webbbbbb/prod/*\",\"type\":\"s3\",\"created_by\":\"suprita@moonraft.com\"}"
       }
     };
-
   });
 
   afterEach(function () {
@@ -520,8 +518,8 @@ describe('jazz asset handler tests: ', function () {
       result: "sample Resopnse"
     };
     record = {
-  		"processed_events": 3,
-  		"failed_events": 1
+      "processed_events": 3,
+      "failed_events": 1
     };
     error ={
       message: "sample error message"
