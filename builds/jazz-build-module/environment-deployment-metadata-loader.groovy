@@ -217,7 +217,7 @@ def getEnvironmentBranchName(logical_id) {
 	}
 }
 
-def generateEnvironmentMap(status, environment_logical_id,env_metadata) {
+def generateEnvironmentMap(status, environment_logical_id, metadata) {
 	def env_logical_id
 	if (environment_logical_id == null) {
 		env_logical_id = getEnvironmentLogicalId()
@@ -233,6 +233,11 @@ def generateEnvironmentMap(status, environment_logical_id,env_metadata) {
 	if (g_environment_endpoint != null) {
 		serviceCtxMap.endpoint = g_environment_endpoint
 	}
+
+	if (metadata != null) {
+		serviceCtxMap.metadata = metadata
+	}
+
 	return serviceCtxMap;
 }
 
