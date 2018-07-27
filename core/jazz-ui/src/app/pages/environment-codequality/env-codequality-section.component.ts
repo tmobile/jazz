@@ -174,6 +174,9 @@ export class EnvCodequalitySectionComponent implements OnInit {
     };
   }
 
+  sonarLink() {
+    window.open(this.selectedMetric.link, '_blank');
+  }
 
 }
 
