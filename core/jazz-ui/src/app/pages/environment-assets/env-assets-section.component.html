@@ -1,0 +1,198 @@
+<!-- TODO: Remove disclaimer after techtraining -->
+<!-- <div class="disclaimer-static-data"><i>This data is for representational purpose only and is not accurate</i></div> -->
+<div class='feedback-overlay' *ngIf="openModal">
+    <div class='feedback-wrap relative'>
+        <div class='feedback-hdr relative'>Report an issue</div>
+        <div class="separator-row"></div>
+        <div class="loading-row" [class.show]="isLoading">
+            <div class="loading-circle"></div>
+        </div>
+            <div class='feedback-text-wrap' [class.invisible]="isLoading || feedbackRes">
+                <p>Found a problem with the site? Please use the form below to describe the issue and we will fix it soon.</p>
+                <textarea rows="5" cols="50" type="text" name='userFeedback' id="userFeedback" placeholder="Report your issue here" [(ngModel)]="model.userFeedback"  #userFeedback='ngModel'></textarea>
+            </div>
+            <div class="feedback-text-wrap feedbackRes" [class.show]="feedbackRes">
+                <div class="hide feedbackResSuccess" [class.show]="feedbackResSuccess">
+                    <div>{{feedbackMsg}}</div>
+                </div>
+                <div class="hide feedbackResErr" [class.show]="feedbackResErr"> Oops! {{feedbackMsg}}
+                    <span> or <a (click)="mailTo()"> contact us</a> via email.</span>
+                </div>
+            </div>
+            <div class='feedback-btn-wrap'>
+                <!-- <div class="includeError">
+                    <input type="checkbox">
+                    <span></span>
+                </div> -->
+                <div class="slack-checkbox custom-cb includeError" [class.invisible]="isLoading || feedbackRes">
+                        <input type="checkbox" (click)="errorIncluded()"  id="checkbox-slack" [checked]="errorInclude">
+                        <label for="checkbox-slack"></label>
+                        <div class="cb-status-dets">Include error details</div>
+                    </div>
+                <a (click)='openModal = !openModal;isLoading=false'  [class.invisible]="isLoading || feedbackRes">CANCEL</a>
+                <btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading" [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'" (click)='submitFeedback(buttonText)'></btn-jazz-primary>
+            </div> 
+    </div>    
+</div>
+
+<div class='full-page'>
+    <div class="page-section-assets relative" [class.oneasset]='length == 1'>
+            <filter-tags #filtertags (OnCancel)='cancelFilter($event)'></filter-tags>
+
+            <!-- <advanced-filters #adv_filters (onFilterSelect)='onFilterSelect($event)' [assets]='fromassets' [service]='service' [advanced_filter_input]='advanced_filter_input'></advanced-filters> -->
+            <div>
+            <!-- <template adv-filters></template> -->
+            </div>
+
+            <!-- <div class='filtr-wrap ' *ngIf='service.serviceType == "function"'>
+        
+                    <div class="filter-icon relative hide" >
+                            <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; "></span>
+                            <div [class.show]='filterSelected' class="filter-wrap">
+                                <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>                    
+                                <div class="filter-inner-wrap">
+                                    <div class='view-label'>View by:</div>
+                                    <div class="eachFilter" *ngIf='service.serviceType == "function"'>
+                                        <div><div class='hori-line'></div>ACCOUNT</div>
+                                        <dropdown class='dropdown-3'  [dropdwnContent]="accList" title="Select enviroment" [selected]="accSelected" (onSelected)="onaccSelected($event)"></dropdown>
+                                    </div>
+                                    <div class="eachFilter" *ngIf='service.serviceType == "function"'>
+                                        <div><div class='hori-line'></div>REGION</div>
+                                        <dropdown class='dropdown-3'  [dropdwnContent]="regList" title="Select enviroment" [selected]="regSelected" (onSelected)="onregSelected($event)"></dropdown>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+            </div> -->
+        <!-- <div class="mask-wrap"></div> -->
+        <div *ngIf="envResponseTrue">
+        <div class="asset-wrp" *ngFor="let asset of assetsList ; let i = index">
+            
+            <div class="asset-title-row" [ngSwitch]="asset.asset_type">
+                <span *ngSwitchCase='"apigateway"' class="icon-icon-APIGateway">
+                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span>
+                </span>
+                <span *ngSwitchCase='"lambda"' class="icon-icon-AWS-lambda">
+                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
+                </span>
+                <span *ngSwitchCase='"s3"' class="icon-icon-S3">
+                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span>
+                </span>
+                <span *ngSwitchCase='"ec2"' class="icon-icon-EC2">
+                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span>
+                </span>
+                <span *ngSwitchDefault >
+                    <img class='server-icon' src='./../../../assets/images/server.png'>
+                </span>
+                <span class="asset-title">Asset {{slNumber[i]}}</span><span class="asset-subtitle">{{type[i]}}</span>
+            </div>
+            
+            <div class="asset-content-row row">
+                <ul class="section-left col-md-6 col-sm-12">
+                    <!-- <li>
+                        <div class="det-label">Service</div>
+                        <div class="det-value">{{serviceName[i]}}</div>
+                    </li>
+                    <li>
+                        <div class="det-label">Namespace</div>
+                        <div class="det-value">{{domain[i]}}</div>
+                    </li> -->
+    
+                    <li *ngIf='status[i] != "-"'>
+                        <div class="det-label">Status</div>
+                        <div class="det-value">{{status[i]}}</div>
+                    </li>
+    
+                    <li *ngIf='Provider[i] != "-"'>
+                            <div class="det-label">Provider</div>
+                            <div class="det-value">{{Provider[i]}}</div>
+                    </li>
+    
+                   
+                    <li *ngIf='arn[i] != "-"'>
+                            <div class="det-label">{{assetTypeToLabel(asset.type)}}</div>
+                            <div class="det-value arn-value">{{arn[i]}}</div>
+                    </li>
+                    
+                    
+    
+                </ul>
+                <ul class="section-right col-md-6 col-sm-12">
+    
+                    <li *ngIf='endpoint[i] != "-"'>
+                            <div class="det-label">URL</div>
+                            <div class="det-value link">{{endpoint[i]}}</div>
+                    </li>
+    
+                    <li  *ngIf='url[i] != "-"'>
+                            <div class="det-label">Swagger</div>
+                            <div class="det-value link arn-value" (click)='redirect(url[i])'>{{url[i]}}</div>
+                    </li>
+    
+                    <li>
+                        <div class="det-label">Last Updated</div>
+                        <!-- <div class="det-value">{{time[i]}}</div> -->
+                        <div class="det-value" *ngIf="count[i] == 4" >{{commitDiff[i]}} month<span *ngIf='commitDiff[i] > 1'>s</span> ago </div>
+                        <div class="det-value" *ngIf="count[i] == 3" >{{commitDiff[i]}} day<span *ngIf='commitDiff[i] > 1'>s</span> ago</div>
+                        <div class="det-value" *ngIf="count[i] == 2" >{{commitDiff[i]}} hour<span *ngIf='commitDiff[i] > 1'>s</span> ago</div>
+                        <div class="det-value" *ngIf="count[i] == 1" >{{commitDiff[i]}} minute<span *ngIf='commitDiff[i] > 1'>s</span> ago</div>
+                        <div class="det-value" *ngIf="count[i] == 0" >{{commitDiff[i]}}</div>
+                    </li>
+    
+                   
+    
+                </ul>
+            </div>
+    
+        </div>
+        
+    </div>
+
+    <div class='assets-row' *ngIf="envResponseError">
+        <div class="empty-row with-refresh">
+                <div class="icon-icon-server-error">
+                    <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span>
+                </div>
+                <div class='oops'>Oops!</div><br>
+                <div>Something went wrong while fetching your data<br><a (click)="refreshCostData($event)">REFRESH</a> to give it another try.</div>
+                <br><div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
+           </div>
+        </div>
+        <div class="empty-row nodata with-refresh relative" *ngIf="envResponseEmpty">
+            <div class="icon-icon-nodata"></div>
+            <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div> 
+        </div>
+        <div class="loading-row" [class.show]="isLoading">
+            <div class="loading-circle"></div>
+        </div>
+    </div>
+
+    <div *ngIf='!envResponseError && !envResponseEmpty && length > 10' class="table-pagination assets-pag" [class.show]="showPaginationtable && state !='loading' && state != 'empty' && state != 'error' && totalPageNum > 0">
+        <nav class="pagination-nav" aria-label="Page navigation table">
+            <ul class="pagination justify-content-center">
+                <li class="page-item" (click)="paginatePageInTable('prev')" [class.disable]="currentlyActive == 1">
+                <a class="page-link icon" aria-label="Previous">
+                <span title="Previous" class="icon-icon-back"></span>
+                <span class="sr-only">Previous</span>
+                </a>
+                </li>
+                <li class="page-item" (click)="paginatePageInTable('1')" [class.active]="currentlyActive == 1"><a class="page-link">1</a></li>
+                <li class="page-item extended-pages dots" [class.show]="currentlyActive > 3"><a class="page-link">...</a></li>
+                <li class="page-item extended-pages" [class.show]="currentlyActive - 1 > 1 && currentlyActive - 1 < totalPageNum" (click)="paginatePageInTable(currentlyActive-1)"><a class="page-link">{{currentlyActive - 1}} </a></li>
+                <li class="page-item extended-pages" [class.show]="currentlyActive > 1 && currentlyActive < totalPageNum" (click)="paginatePageInTable(currentlyActive)" [class.active]="currentlyActive > 1"><a class="page-link">{{currentlyActive}}</a></li>
+                <li class="page-item extended-pages" [class.show]="currentlyActive + 1 > 1 && currentlyActive + 1 < totalPageNum" (click)="paginatePageInTable(currentlyActive+1)"><a class="page-link">{{currentlyActive + 1}}</a></li>
+                <li class="page-item extended-pages dots" [class.show]="(currentlyActive + 2) < totalPageNum"><a class="page-link">...</a></li>
+                <li class="page-item" (click)="paginatePageInTable(totalPageNum)" [class.hide]="totalPageNum == 1" [class.active]="currentlyActive == totalPageNum"><a class="page-link">{{totalPageNum}}</a></li>
+                <li class="page-item" (click)="paginatePageInTable('next')" [class.disable]="currentlyActive == totalPageNum">
+                <a class="page-link icon right" aria-label="Next">
+                <span title="Next"class="icon-icon-back"></span>
+                <span class="sr-only">Next</span>
+                </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</div>
+
+
+

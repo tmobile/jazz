@@ -1,0 +1,324 @@
+<!-- 404 / no data error message changed for env -->
+<div class='feedback-overlay' *ngIf="openModal">
+    <div class='feedback-wrap relative'>
+       <div class='feedback-hdr relative'>Report an issue</div>
+       <div class="separator-row"></div>
+       <div class="loading-row" [class.show]="isLoading">
+          <div class="loading-circle"></div>
+       </div>
+       <div class='feedback-text-wrap' [class.invisible]="isLoading || feedbackRes">
+          <p>Found a problem with the site? Please use the form below to describe the issue and we will fix it soon.</p>
+          <textarea rows="5" cols="50" type="text" name='userFeedback' id="userFeedback" placeholder="Report your issue here" [(ngModel)]="model.userFeedback"  #userFeedback='ngModel'></textarea>
+       </div>
+       <div class="feedback-text-wrap feedbackRes" [class.show]="feedbackRes">
+          <div class="hide feedbackResSuccess" [class.show]="feedbackResSuccess">
+             <div>{{feedbackMsg}}</div>
+          </div>
+          <div class="hide feedbackResErr" [class.show]="feedbackResErr"> Oops! {{feedbackMsg}}
+             <span> or <a (click)="mailTo()"> contact us</a> via email.</span>
+          </div>
+       </div>
+       <div class='feedback-btn-wrap'>
+          <!-- <div class="includeError">
+             <input type="checkbox">
+             <span></span>
+             </div> -->
+          <div class="slack-checkbox custom-cb includeError" [class.invisible]="isLoading || feedbackRes">
+             <input type="checkbox" (click)="errorIncluded()"  id="checkbox-slack" [checked]="errorInclude">
+             <label for="checkbox-slack"></label>
+             <div class="cb-status-dets">Include error details</div>
+          </div>
+          <a (click)='openModal = !openModal;isLoading=false'  [class.invisible]="isLoading || feedbackRes">CANCEL</a>
+          <btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading" [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'" (click)='submitFeedback(buttonText)'></btn-jazz-primary>
+       </div>
+    </div>
+ </div>
+ <!-- <span  class="reduxC" *ngIf='service.status == "deletion completed"'></span>
+    <span  class="reduxS" *ngIf='service.status == "deletion started"'></span> -->
+ <!-- <span  class="redux" *ngIf='true'></span> -->
+ <!-- <div class='current-status-wrap' *ngIf= " service.status === 'creation started' && service_error " > -->
+ <div class='current-status-wrap' *ngIf= "creating && service_error ">
+    <div class="current-meter-status saving"><b>Current Status:</b> {{statusInfo}}<span> .</span><span> .</span><span> .</span></div>
+    <div class="current-meter-bar">
+       <span id='current-status-val' [ngClass]="statusCompleted || serviceStatusCompleted ? 'completed-bar':'under-progress-bar'" [class.deletion-bar]='statusFailed'></span>
+       <div class='status-result'  [ngClass]="serviceStatusStarted ? 'under-progress-bar':'under-progress'" [class.completed-bar]='statusCompleted' [class.deletion-status]='statusFailed' >
+       <div class='status-icon icon-icon-confirmcheck' *ngIf=' serviceStatusStarted '></div>
+       <div class='status-icon icon-icon-close' *ngIf=' serviceStatusStartedD '></div>
+       <div class='status-lable'>Started</div>
+    </div>
+    <div class='status-result' [ngClass]="serviceStatusValidate ? 'under-progress-bar':'under-progress'"  [class.completed-bar]='statusCompleted' [class.deletion-status]='statusFailed'>
+    <div class='status-icon icon-icon-confirmcheck'  *ngIf='serviceStatusValidate'></div>
+    <div class='status-icon icon-icon-close' *ngIf=' serviceStatusValidateD '></div>
+    <div class='status-lable'>Validation</div>
+ </div>
+ <div class='status-result' [ngClass]="serviceStatusRepo ? 'under-progress-bar':'under-progress'"  [class.completed-bar]='statusCompleted' [class.deletion-status]='statusFailed'>
+ <div class='status-icon icon-icon-confirmcheck'  *ngIf='serviceStatusRepo'></div>
+ <div class='status-icon icon-icon-close' *ngIf=' serviceStatusRepoD '></div>
+ <div class='status-lable repoCreation'>Repository Creation</div>
+ </div>
+ <div class='status-result' [ngClass]="serviceStatusPermission ? 'under-progress-bar':'under-progress'"  [class.completed-bar]='statusCompleted' [class.deletion-status]='statusFailed'>
+ <div class='status-icon icon-icon-confirmcheck'  *ngIf='serviceStatusPermission'></div>
+ <div class='status-icon icon-icon-close' *ngIf=' serviceStatusPermissionD '></div>
+ <div class='status-lable'>Permissions</div>
+ </div>
+ <div class='status-result' [ngClass]="serviceStatusCompleted ? 'under-progress-bar':'under-progress'"  [class.completed-bar]='statusCompleted' [class.deletion-status]='statusFailed'>
+ <div class='status-icon icon-icon-confirmcheck'  *ngIf='serviceStatusCompleted'></div>
+ <div class='status-icon icon-icon-close' *ngIf=' serviceStatusCompletedD '></div>
+ <div class='status-lable'>Completed</div>
+ </div>
+ </div>
+ </div>
+ <div class='current-status-wrap' *ngIf= "deleting && service_error " >
+    <div class="current-meter-status saving"><b>Current Status:</b> {{DelstatusInfo}}<span> .</span><span> .</span><span> .</span></div>
+    <div class="current-meter-bar">
+       <span id='current-status-val' [ngClass]="statusCompleted || serviceStatusCompleted ? 'completed-bar':'under-progress-bar'" [class.deletion-bar]='statusFailed'></span>
+       <div class='status-result-delete'  [ngClass]="serviceStatusStarted ? 'under-progress-bar':'under-progress'" [class.completed-bar]='statusCompleted' [class.deletion-status]='statusFailed' >
+       <div class='status-icon icon-icon-confirmcheck' *ngIf=' serviceStatusStarted '></div>
+       <div class='status-icon icon-icon-close' *ngIf=' serviceStatusStartedD '></div>
+       <div class='status-lable'>Deletion Started</div>
+    </div>
+    <div class='status-result-delete' [ngClass]="serviceStatusValidate ? 'under-progress-bar':'under-progress'"  [class.completed-bar]='statusCompleted' [class.deletion-status]='statusFailed'>
+    <div class='status-icon icon-icon-confirmcheck'  *ngIf='serviceStatusValidate'></div>
+    <div class='status-icon icon-icon-close' *ngIf=' serviceStatusValidateD '></div>
+    <div class='status-lable'>Deleted Assets</div>
+ </div>
+ <div class='status-result-delete' [ngClass]="serviceStatusRepo ? 'under-progress-bar':'under-progress'"  [class.completed-bar]='statusCompleted' [class.deletion-status]='statusFailed'>
+ <div class='status-icon icon-icon-confirmcheck'  *ngIf='serviceStatusRepo'></div>
+ <div class='status-icon icon-icon-close' *ngIf=' serviceStatusRepoD '></div>
+ <div class='status-lable repoCreation'>Backed Up Project</div>
+ </div>
+ <div class='status-result-delete' [ngClass]="serviceStatusCompleted ? 'under-progress-bar':'under-progress'"  [class.completed-bar]='statusCompleted' [class.deletion-status]='statusFailed'>
+ <div class='status-icon icon-icon-confirmcheck'  *ngIf='serviceStatusCompleted'></div>
+ <div class='status-icon icon-icon-close' *ngIf=' serviceStatusCompletedD '></div>
+ <div class='status-lable'>Deletion Completed</div>
+ </div>
+ </div>
+ </div>
+ <!-- <div class='service-details row bottom-10' *ngIf='service.endpoints != undefined && (service.serviceType=="website" || service.serviceType=="api")'>
+    <ul class=" col-md-12 col-sm-12">
+        <li class='det-wrp' *ngIf='service.endpoints.dev != undefined'>
+            <div class=' det-label align-slf'>Dev Endpoint</div>
+            <div class='det-value endpoint-url align-slf'>
+            
+                <span>{{service.endpoints.dev}}</span>
+            </div>
+            <div class='det-value align-slf'>
+                    <btn-jazz-secondary class='testApiBtn' text='Test Dev Api' (click)='testApi("api","dev")' *ngIf='service.serviceType=="api"'></btn-jazz-secondary>
+                    <btn-jazz-secondary class='testApiBtn' text='Go to Website' (click)='testApi("website","dev")'  *ngIf='service.serviceType=="website"'></btn-jazz-secondary>
+            </div>
+    
+        </li>
+        <li class='det-wrp det-wrp-bottom' *ngIf='service.endpoints.prod != undefined'>
+            <div class=' det-label align-slf'>Prod Endpoint</div>
+            <div class='det-value endpoint-url align-slf'>
+            
+                <span>{{service.endpoints.prod}}</span>
+            </div>
+            <div class='det-value align-slf'>
+                    <btn-jazz-secondary class='testApiBtn' text='Test Prod Api' (click)='testApi("api","prod")' *ngIf='service.serviceType=="api"'></btn-jazz-secondary>
+                    <btn-jazz-secondary class='testApiBtn' text='Go to Website' (click)='testApi("website","prod")'  *ngIf='service.serviceType=="website"'></btn-jazz-secondary>
+            </div>
+        </li>
+    </ul>
+     <div class='api-btn-wrp'>
+            
+    </div>
+    </div> -->
+ <div class="service-details row">
+    <div class='edit-service-overview-btn'>
+       <a  *ngIf='showCancel' (click)='onCancelClick()'>CANCEL</a>
+       <btn-jazz-secondary *ngIf='internal_build' class='btn-edit-overview'  text='{{edit_save}}'  [class.diabledbtn]="service.status === 'creation started'" [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditClick()' [disablebtn]='disableSaveBtn() || service.status == "creation started"'></btn-jazz-secondary>
+    </div>
+    <br>
+    <div class='show-service-overview' [class.hide]="disp_show">
+       <ul class="section-left col-md-6 col-sm-12">
+          <li>
+             <div class="det-label">Status</div>
+             <div class="det-value">{{service.status}}</div>
+          </li>
+          <li>
+             <div class="det-label">Description</div>
+             <div class="det-value wrap" [ngClass]="{PlaceHolder:description_empty}">{{service.description || 'Give me the details for your service'}}</div>
+          </li>
+          
+          <li>
+             <div class="det-label">Namespace</div>
+             <div class="det-value">{{service.domain || 'Link a domain'}}</div>
+          </li>
+          <li>
+             <div class="det-label">Service Type</div>
+             <div class="det-value service-type">{{service.serviceType || 'Pick your service type'}}</div>
+          </li>
+          <li class='hide' *ngIf="service.serviceType == 'function'">
+             <div class="det-label">Accounts</div>
+             <div class="det-value">
+                {{selectedAccounts}}
+             </div>
+          </li>
+          <li class='hide' *ngIf="service.serviceType == 'function'">
+             <div class="det-label">Endpoints</div>
+             <div class="det-value">
+                <div class='endp-cover'  (mouseleave)='popup("leave","popup-endp")' (mouseenter)='popup("enter","popup-endp")'>
+                    <div>{{endpList}}</div>
+                    <div (click)='copy_link("input-copy")'>{{copyLink}}</div>
+                    <input id='input-copy' class='input-copy' type='text' value='{{endpList}}'>
+                </div>
+                <span class='view-all' (click)='openSidebar()'> View all</span>
+                <div id='popup-endp' class='popup-endp'>								
+                Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong> 
+                </div>
+             </div>
+            </li>
+        </ul>
+    <ul class="section-right col-md-6 col-sm-12">
+       
+        <li *ngIf='internal_build'>
+        <div class="det-label">Slack Channel</div>
+        <div class="det-value" [class.link]='!slackChannel_empty' [ngClass]="{PlaceHolder:slackChannel_empty}"  (click)="slack_link()">{{service.slackChannel || 'Feeling collaborative? Add it to slack'}}</div>
+        </li>
+        <li>
+        <div class="det-label">Repository</div>
+        <div class="det-value repository-link" [ngClass]="{'link':islink, 'PlaceHolder':repository_empty}" (click)="openLink(repositorylink)">{{bitbucketRepo || 'Stay organized with a repository'}}</div>
+        </li>
+        <li *ngIf="service.serviceType != 'website' ">
+        <div class="det-label">Runtime</div>
+        <div class="det-value" [class.PlaceHolder]="runtime_empty" >{{service.runtime}}</div>
+        </li>
+        <li>
+        <div class="det-label">Tags</div>
+        <div class="det-value" [ngClass]="{PlaceHolder:tags_empty}" >{{service.tags || 'Services are cooler with tags'}}</div>
+        </li>
+        <li class='hide' *ngIf="service.serviceType == 'function'">
+        <div class="det-label">Regions</div>
+        <div class="det-value">
+        {{selectedRegion || 'us-west-2' }}
+        </div>
+        </li>
+    </ul>
+ 
+    </div>
+ <div *ngIf='internal_build' class='edit-service-overview' [class.hide]="disp_edit">
+ <ul class="section-left col-md-6 col-sm-12">
+    <li>
+       <div class="det-label">Status</div>
+       <div class="det-value">{{service.status}}</div>
+    </li>
+    <li>
+       <div class="det-label">Description</div>
+       <textarea [(ngModel)]="desc_temp" (ngModelChange)='update_payload.description=desc_temp' class="det-value-input-txtarea" placeholder="Give me the details for your service"></textarea>
+    </li>
+    
+    <li>
+       <div class="det-label">Namespace</div>
+       <div class="det-value">{{service.domain || 'Link a domain'}}</div>
+    </li>
+    <li>
+       <div class="det-label">Service Type</div>
+       <div class="det-value service-type">{{service.serviceType || 'Pick your service type'}}</div>
+    </li>
+    <li class='hide' *ngIf="service.serviceType == 'function'">
+       <div class="det-label">Accounts</div>
+       <div class="det-value">
+          <div class="det-value-div">
+             <section class="">
+                <div class="input-field-container">
+                   <div class="selected-approvers">
+                      <ul (click)='focusInputAccount($event)'>
+                         <li *ngFor="let selected of selectedAccount;let i=index"   >
+                            {{selected}}
+                            <span (click)="removeAccount(i, selected)" class="icon-icon-close"></span>
+                         </li>
+                         <input (keydown)="keypressAccount($event)"  autocomplete="off" id="AccountInput" name="AccountInput" type="text" class="textForm" [(ngModel)]="AccountInput" (ngModelChange)="onAccountChange($event)">
+                      </ul>
+                   </div>
+                   <div [hidden]="!showAccountList" class="approvers-list-wrap">
+                      <div class="approvers-list typeShow open">
+                         <div class="approvers-dets" *ngFor="let account of accounts | myfilter:AccountInput;let k = index;" (focus)=" k==focusindex " [ngClass]="{pinkfocus : k==focusindex }" [ngStyle]="scrollList" >
+                         <div  (click)="selectAccount(account);$event.stopPropagation();" index="{k}" [attr.account]='account'>{{account}}
+                      </div>
+                   </div>
+                </div>
+          </div>
+       </div>
+       </section>
+       </div>
+       </div>
+    </li>
+    <li class='hide' *ngIf="service.serviceType == 'function'">
+       <div class="det-label">Endpoints</div>
+       <div class="det-value">
+          <div class='endp-cover'  (mouseleave)='popup("leave","popup-endp2")' (mouseenter)='popup("enter","popup-endp2")'>
+          <div>{{endpList}}</div>
+          <div (click)='copy_link("input-copy")'>{{copyLink}}</div>
+          <input id='input-copy' class='input-copy' type='text' value='{{endpList}}'>
+       </div>
+       <span class='view-all' (click)='openSidebar()'> View all</span>
+       <div id='popup-endp2' class='popup-endp'>								
+          Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong> 
+       </div>
+       </div>
+    </li>
+ </ul>
+ <ul class="section-right col-md-6 col-sm-12">
+    
+    <p class='email-err-msg' [class.hide]="hide_email_error">Please enter a valid email Id</p>
+    <li class='relative'>
+       <div class="det-label">Slack Channel</div>
+       <input [(ngModel)]="slackChannel_temp" type='text' (blur)="checkSlackNameAvailability()" (ngModelChange)='update_payload.slack_channel=slackChannel_temp' class="det-value-input" placeholder="Feeling collaborative? Add it to slack">
+       <img *ngIf='show_loader' class="input-loader" src="../assets/images/icons/loading.png">
+    </li>
+    <p class='email-err-msg' [class.hide]='hide_slack_error'>Slack channel is not available. Please provide a valid slack channel.</p>
+    <li>
+       <div class="det-label">Repository</div>
+       <div class="det-value link repository-link" (click)="openLink(service.repository)" placeholder="Stay organized with a repository">{{bitbucketRepo}}</div>
+    </li>
+    <li>
+       <div class="det-label">Runtime</div>
+       <div class="det-value">{{service.runtime}}</div>
+    </li>
+    <li>
+       <div class="det-label">Tags</div>
+       <input [(ngModel)]="tags_temp" (ngModelChange)='updateTags()' type='text' (focus)='flag=true;' (blur)='flag=false;' class="det-value-input" placeholder="Services are cooler with tags">
+    </li>
+    <p class='email-err-msg labelfortags' *ngIf='flag' >Please enter tags seperated by commas</p>
+    <li class='hide' *ngIf="service.serviceType == 'function'">
+       <div class="det-label">Regions</div>
+       <div class="det-value">
+          <div class="det-value-div det-value-div-right">
+             <section class="">
+                <div class="input-field-container">
+                   <div class="selected-approvers">
+                      <ul (click)='focusInputRegion($event)'>
+                         <li *ngFor="let selected of selectedRegion;let i=index"   >
+                            {{selected}}
+                            <span (click)="removeRegion(i, selected)" class="icon-icon-close"></span>
+                         </li>
+                         <input (keydown)="keypressRegion($event)"  autocomplete="off" id="regionInput" name="regionInput" type="text" class="textForm" [(ngModel)]="regionInput" (ngModelChange)="onRegionChange($event)">
+                      </ul>
+                   </div>
+                   <div [hidden]="!showRegionList" class="approvers-list-wrap">
+                      <div class="approvers-list typeShow open">
+                         <div class="approvers-dets" *ngFor="let region of regions | myfilter:regionInput;let k = index;" (focus)=" k==focusindex " [ngClass]="{pinkfocus2 : k==focusindex }" [ngStyle]="scrollList" >
+                         <div  (click)="selectRegion(region);$event.stopPropagation();" index="{k}" [attr.region]='region'>{{region}}
+                      </div>
+                   </div>
+                </div>
+          </div>
+       </div>
+       </section>
+       </div>
+       </div> 
+    </li>
+ </ul>
+ </div>
+ <div class="loading-row-edit" [class.show]="isLoadingService">
+    <div class="loading-circle"></div>
+ </div>
+ </div>
+ <div class="separator-row"></div>
+ <!--  
+    <div class="loading-row" [class.show]="isenvLoading">
+        <div class="loading-circle"></div>
+    </div> -->
+ <service-overview-multienv #env *ngIf='multiENV' [service]='service'></service-overview-multienv>
+ <service-overview-non-multienv *ngIf='!multiENV' [service]='service'></service-overview-non-multienv>

@@ -1,0 +1,22 @@
+.jz-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: $color-overlay-dark;
+  z-index: 2000;
+}
+
+.jz-modal-centered {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.jz-modal {
+  background-color: $color-gray-secondary;
+  border-radius: $border-radius-default;
+  box-shadow: $box-shadow-default;
+  display: flex;
+}
