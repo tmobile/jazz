@@ -95,7 +95,7 @@ module.exports = (query, asset_table, onComplete) => {
                     let paginatedObjList = items.map(item => utils.formatResponse(item));
                     let obj = {
                         count: count,
-                        services: paginatedObjList
+                        assets: paginatedObjList
                     };
                     onComplete(null, obj);
                 }

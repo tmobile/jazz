@@ -1333,7 +1333,7 @@
                 "type": "string",
                 "description": "Total number of services pulled"
               },
-              "services": {
+              "assets": {
                 "type": "array",
                 "description": "The response payload",
                 "items": {
