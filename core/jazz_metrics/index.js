@@ -28,73 +28,73 @@ const request = require('request');
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
 
-function handler (event, context, cb) {
-  var errorHandler = errorHandlerModule();
-  var config = configObj.getConfig(event, context);
+function handler(event, context, cb) {
+	var errorHandler = errorHandlerModule();
+	var config = configObj.getConfig(event, context);
 
-  try {
-    /*
-     * event input format :
-     *   {
-     *        "domain": "jazztest",
-     *        "service": "get-monitoring-data",
-     *        "environment": "prod",
-     *        "end_time": "2017-06-27T06:56:00.000Z",
-     *        "start_time": "2017-06-27T05:55:00.000Z",
-     *        "interval":"300",
-     *        "statistics":"average"
-     *    }
-     */
-    var eventBody = event.body;
-    exportable.genericValidation(event)
-      .then(() => validateUtils.validateGeneralFields(eventBody))
-      .then(() => exportable.getToken(config))
-      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
-      .then(res => exportable.validateAssets(res, eventBody))
-      .then(res => exportable.getMetricsDetails(res))
-      .then(res => {
-        var finalObj = utils.massageData(res, eventBody);
-        return cb(null, responseObj(finalObj, eventBody));
-      })
-      .catch(error => {
-        if (error.result === "inputError") {
-          return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-        } else if (error.result === "unauthorized") {
-          return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
-        } else {
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
-        }
-      });
-  } catch (e) {
-    return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
-  }
+	try {
+		/*
+		 * event input format :
+		 *   {
+		 *        "domain": "jazztest",
+		 *        "service": "get-monitoring-data",
+		 *        "environment": "prod",
+		 *        "end_time": "2017-06-27T06:56:00.000Z",
+		 *        "start_time": "2017-06-27T05:55:00.000Z",
+		 *        "interval":"300",
+		 *        "statistics":"average"
+		 *    }
+		 */
+		var eventBody = event.body;
+		exportable.genericValidation(event)
+			.then(() => validateUtils.validateGeneralFields(eventBody))
+			.then(() => exportable.getToken(config))
+			.then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
+			.then(res => exportable.validateAssets(res, eventBody))
+			.then(res => exportable.getMetricsDetails(res))
+			.then(res => {
+				var finalObj = utils.massageData(res, eventBody);
+				return cb(null, responseObj(finalObj, eventBody));
+			})
+			.catch(error => {
+				if (error.result === "inputError") {
+					return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+				} else if (error.result === "unauthorized") {
+					return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
+				} else {
+					return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
+				}
+			});
+	} catch (e) {
+		return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
+	}
 
 };
 
 function genericValidation(event) {
-  return new Promise((resolve, reject) => {
-    if (!event && !event.body) {
-      reject({
-        result: "inputError",
-        message: "Invalid Input Error"
-      });
-    }
+	return new Promise((resolve, reject) => {
+		if (!event && !event.body) {
+			reject({
+				result: "inputError",
+				message: "Invalid Input Error"
+			});
+		}
 
-    if(!event.method || event.method !== "POST") {
-      reject({
-        result: "inputError",
-        message: "Invalid method"
-      });
-    }
-    if (!event.principalId) {
-      reject({
-        result: "unauthorized",
-        message: "Unauthorized"
-      });
-    }
+		if (!event.method || event.method !== "POST") {
+			reject({
+				result: "inputError",
+				message: "Invalid method"
+			});
+		}
+		if (!event.principalId) {
+			reject({
+				result: "unauthorized",
+				message: "Unauthorized"
+			});
+		}
 
-    resolve();
-  });
+		resolve();
+	});
 }
 
 function getToken(config) {
@@ -130,230 +130,221 @@ function getToken(config) {
 }
 
 function getAssetsDetails(config, eventBody, authToken) {
-  return new Promise((resolve, reject) => {
-    var asset_api_payload = {
-      "service": eventBody.service,
-      "domain": eventBody.domain,
-      "environment": eventBody.environment
-    };
-    var asset_api_options = {
-      url: config.SERVICE_API_URL + config.ASSETS_URL,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": authToken
-      },
-      method: "POST",
-      rejectUnauthorized: false,
-      requestCert: true,
-      async: true,
-      json: true,
-      body: asset_api_payload,
-    };
+	return new Promise((resolve, reject) => {
+		var asset_api_options = {
+			url: config.SERVICE_API_URL + config.ASSETS_URL + "?domain=" + eventBody.domain + "&service=" + eventBody.service + "&environment=" + eventBody.environment,
+			headers: {
+				"Content-Type": "application/json",
+				"Authorization": authToken
+			},
+			method: "GET",
+			rejectUnauthorized: false,
+			requestCert: true,
+			async: true
+		};
 
-    logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
-
-    request(asset_api_options, (error, response, body) => {
-      if (error) {
-        reject(error);
-      } else {
-        var apiAssetsArray = body.data;
-        if (apiAssetsArray && apiAssetsArray.length === 0) {
-          logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
-          resolve([]);
-        } else {
-          var userStatistics = eventBody.statistics.toLowerCase();
-
-          // Massaging data from assets api , to get required list of assets which contains type, asset_name and statistics.
-          var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
-          resolve(assetsArray);
-        }
-      }
-    });
-  });
+		logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
+		request(asset_api_options, (error, response, body) => {
+			if (error) {
+				reject(error);
+			} else {
+				if (response.statusCode && response.statusCode === 200 && body && body.data && body.data.count && body.data.count > 0) {
+					var apiAssetsArray = body.data.assets;
+					var userStatistics = eventBody.statistics.toLowerCase();
+					// Massaging data from assets api , to get required list of assets which contains type, asset_name and statistics.
+					var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
+					resolve(assetsArray);
+				} else {
+					logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
+					resolve([]);
+				}
+			}
+		});
+	});
 }
 
 function validateAssets(assetsArray, eventBody) {
-  return new Promise((resolve, reject) => {
-    if (assetsArray.length > 0) {
-      var newAssetArray = [];
-      var invalidTypeCount = 0;
+	return new Promise((resolve, reject) => {
+		if (assetsArray.length > 0) {
+			var newAssetArray = [];
+			var invalidTypeCount = 0;
 
-      assetsArray.forEach((assetItem) => {
-        if (assetItem.isError) {
-          logger.error(assetItem.isError);
-          invalidTypeCount++;
-          if (invalidTypeCount === assetsArray.length) {
-            reject({
-              result: "inputError",
-              message: "Unsupported metric type."
-            });
-          }
-        } else {
-          var paramMetrics = [];
-          var getAssetNameDetails = utils.getNameSpaceAndMetricDimensons(assetItem.type);
+			assetsArray.forEach((assetItem) => {
+				if (assetItem.isError) {
+					logger.error(assetItem.isError);
+					invalidTypeCount++;
+					if (invalidTypeCount === assetsArray.length) {
+						reject({
+							result: "inputError",
+							message: "Unsupported metric type."
+						});
+					}
+				} else {
+					var paramMetrics = [];
+					var getAssetNameDetails = utils.getNameSpaceAndMetricDimensons(assetItem.type);
 
-          if (!getAssetNameDetails.isError) {
-            paramMetrics = getAssetNameDetails.paramMetrics;
-            exportable.getActualParam(paramMetrics, getAssetNameDetails.awsNameSpace, assetItem, eventBody)
-              .then(res => {
-                newAssetArray.push({
-                  "actualParam": res,
-                  "userParam": assetItem
-                });
-                resolve(newAssetArray);
-              })
-              .catch(error => {
-                reject(error);
-              });
-          } else {
-            logger.error("Unsupported metric type. ");
-            reject({
-              result: "inputError",
-              message: "Unsupported metric type."
-            });
-          }
-        }
-      });
-    } else {
-      reject({
-        result: "inputError",
-        message: "Metric not found for requested asset"
-      });
-    }
-  });
+					if (!getAssetNameDetails.isError) {
+						paramMetrics = getAssetNameDetails.paramMetrics;
+						exportable.getActualParam(paramMetrics, getAssetNameDetails.awsNameSpace, assetItem, eventBody)
+							.then(res => {
+								newAssetArray.push({
+									"actualParam": res,
+									"userParam": assetItem
+								});
+								resolve(newAssetArray);
+							})
+							.catch(error => {
+								reject(error);
+							});
+					} else {
+						logger.error("Unsupported metric type. ");
+						reject({
+							result: "inputError",
+							message: "Unsupported metric type."
+						});
+					}
+				}
+			});
+		} else {
+			reject({
+				result: "inputError",
+				message: "Metric not found for requested asset"
+			});
+		}
+	});
 }
 
 function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
-  return new Promise((resolve, reject) => {
-    // Forming object with parameters required by cloudwatch getMetricStatistics api.
-    var commonParam = {
+	return new Promise((resolve, reject) => {
+		// Forming object with parameters required by cloudwatch getMetricStatistics api.
+		var commonParam = {
 
-      Namespace: assetItem.type,
-      MetricName: "",
-      Period: eventBody.interval,
-      EndTime: eventBody.end_time,
-      StartTime: eventBody.start_time,
-      Dimensions: [{
-        Name: '',
-        Value: assetItem.asset_name
-      }, ],
-      Statistics: [
-        assetItem.statistics,
-      ],
-      Unit: ""
-    };
-    var actualParam = [];
-    var assetNameObj = assetItem.asset_name;
+			Namespace: assetItem.type,
+			MetricName: "",
+			Period: eventBody.interval,
+			EndTime: eventBody.end_time,
+			StartTime: eventBody.start_time,
+			Dimensions: [{
+				Name: '',
+				Value: assetItem.asset_name
+			},],
+			Statistics: [
+				assetItem.statistics,
+			],
+			Unit: ""
+		};
+		var actualParam = [];
+		var assetNameObj = assetItem.asset_name;
 
-    commonParam.Namespace = awsNameSpace;
-    paramMetrics.forEach((arrayItem) => {
-      var clonedObj = {};
-      for (let key in commonParam) {
-        clonedObj[key] = commonParam[key];
-      }
-      clonedObj.MetricName = arrayItem.MetricName;
-      clonedObj.Unit = arrayItem.Unit;
-      var dimensionsArray = arrayItem.Dimensions;
-      clonedObj.Dimensions = [];
-      var minCount = 0;
-      dimensionsArray.forEach((dimensionArr, i) => {
-        var obj = {};
-        if (assetNameObj[dimensionArr]) {
-          obj = {
-            "Name": dimensionArr,
-            "Value": assetNameObj[dimensionArr]
-          };
-          if (obj.Name === "StorageType") {
-            if (clonedObj.MetricName === "BucketSizeBytes") {
-              obj.Value = "StandardStorage";
-            } else if (clonedObj.MetricName === "NumberOfObjects") {
-              obj.Value = "AllStorageTypes";
-            }
-          }
+		commonParam.Namespace = awsNameSpace;
+		paramMetrics.forEach((arrayItem) => {
+			var clonedObj = {};
+			for (let key in commonParam) {
+				clonedObj[key] = commonParam[key];
+			}
+			clonedObj.MetricName = arrayItem.MetricName;
+			clonedObj.Unit = arrayItem.Unit;
+			var dimensionsArray = arrayItem.Dimensions;
+			clonedObj.Dimensions = [];
+			var minCount = 0;
+			dimensionsArray.forEach((dimensionArr, i) => {
+				var obj = {};
+				if (assetNameObj[dimensionArr]) {
+					obj = {
+						"Name": dimensionArr,
+						"Value": assetNameObj[dimensionArr]
+					};
+					if (obj.Name === "StorageType") {
+						if (clonedObj.MetricName === "BucketSizeBytes") {
+							obj.Value = "StandardStorage";
+						} else if (clonedObj.MetricName === "NumberOfObjects") {
+							obj.Value = "AllStorageTypes";
+						}
+					}
 
-          clonedObj.Dimensions.push(obj);
-          minCount++;
-        }
+					clonedObj.Dimensions.push(obj);
+					minCount++;
+				}
 
-      });
-      if (minCount === 0) {
-        logger.error("Invalid asset_name inputs.");
-        reject({
-          result: "inputError",
-          message: "Invalid asset_name inputs."
-        });
-      }
-      actualParam.push(clonedObj);
-      resolve(actualParam);
-    });
-  });
+			});
+			if (minCount === 0) {
+				logger.error("Invalid asset_name inputs.");
+				reject({
+					result: "inputError",
+					message: "Invalid asset_name inputs."
+				});
+			}
+			actualParam.push(clonedObj);
+			resolve(actualParam);
+		});
+	});
 }
 
 function getMetricsDetails(newAssetArray) {
-  return new Promise((resolve, reject) => {
-    logger.debug("Inside getMetricsDetails"+JSON.stringify(newAssetArray));
-    var metricsStatsArray = [];
-    newAssetArray.forEach(assetParam => {
-      exportable.cloudWatchDetails(assetParam)
-        .then(res => {
-          metricsStatsArray.push(res);
-          if (metricsStatsArray.length === newAssetArray.length) {
-            resolve(metricsStatsArray);
-          }
-        })
-        .catch(error => {
-          reject(error);
-        });
-    });
-  });
+	return new Promise((resolve, reject) => {
+		logger.debug("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
+		var metricsStatsArray = [];
+		newAssetArray.forEach(assetParam => {
+			exportable.cloudWatchDetails(assetParam)
+				.then(res => {
+					metricsStatsArray.push(res);
+					if (metricsStatsArray.length === newAssetArray.length) {
+						resolve(metricsStatsArray);
+					}
+				})
+				.catch(error => {
+					reject(error);
+				});
+		});
+	});
 }
 
 function cloudWatchDetails(assetParam) {
-  logger.debug("inside cloudWatchDetails");
-  return new Promise((resolve, reject) => {
-    var metricsStats = [];
-    (assetParam.actualParam).forEach((param) => {
-      if (param.Namespace === "AWS/CloudFront") {
-        var cloudwatch = utils.getCloudfrontCloudWatch();
-      } else {
-        var cloudwatch = utils.getCloudWatch();
-      }
-      cloudwatch.getMetricStatistics(param, (err, data) => {
-        if (err) {
-          logger.error("error while getting metics from cloudwatch. " + JSON.stringify(err));
-          if (err.code === "InvalidParameterCombination") {
-            reject({
-              "result": "inputError",
-              "message": err.message
-            });
-          } else {
-            reject({
-              "result": "serverError",
-              "message": "Unknown internal error occurred"
-            });
-          }
+	logger.debug("inside cloudWatchDetails");
+	return new Promise((resolve, reject) => {
+		var metricsStats = [];
+		(assetParam.actualParam).forEach((param) => {
+			if (param.Namespace === "AWS/CloudFront") {
+				var cloudwatch = utils.getCloudfrontCloudWatch();
+			} else {
+				var cloudwatch = utils.getCloudWatch();
+			}
+			cloudwatch.getMetricStatistics(param, (err, data) => {
+				if (err) {
+					logger.error("error while getting metics from cloudwatch. " + JSON.stringify(err));
+					if (err.code === "InvalidParameterCombination") {
+						reject({
+							"result": "inputError",
+							"message": err.message
+						});
+					} else {
+						reject({
+							"result": "serverError",
+							"message": "Unknown internal error occurred"
+						});
+					}
 
-        } else {
-          metricsStats.push(data);
-          if (metricsStats.length === assetParam.actualParam.length) {
-            var assetObj = utils.assetData(metricsStats, assetParam.userParam);
-            resolve(assetObj);
-          }
-        }
-      });
-    });
-  });
+				} else {
+					metricsStats.push(data);
+					if (metricsStats.length === assetParam.actualParam.length) {
+						var assetObj = utils.assetData(metricsStats, assetParam.userParam);
+						resolve(assetObj);
+					}
+				}
+			});
+		});
+	});
 }
 
 const exportable = {
-  handler,
-  genericValidation,
-  getToken,
-  getAssetsDetails,
-  validateAssets,
-  getActualParam,
-  getMetricsDetails,
-  cloudWatchDetails
+	handler,
+	genericValidation,
+	getToken,
+	getAssetsDetails,
+	validateAssets,
+	getActualParam,
+	getMetricsDetails,
+	cloudWatchDetails
 }
 
 module.exports = exportable;
