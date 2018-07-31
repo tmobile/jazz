@@ -80,7 +80,7 @@ function handler(event, context, cb) {
               logger.error("update error:" + JSON.stringify(error));
               handleResponse(error, null, event.path);
             });
-        } else if (event.method === 'GET' && !assets_id ) { // Call GetList //TODO
+        } else if (event.method === 'GET' && !assets_id) { // Call GetList //TODO
           logger.info('GET assets list by service name and domain');
           var query = event.query;
           exportable.processGetList(query, asset_table)
@@ -124,20 +124,7 @@ function handler(event, context, cb) {
               handleResponse(error, null, assets_data);
             });
         }
-        // 4: POST search assets attributes
-        else if (event.method === 'POST' && assets_id === 'search') {
-          assets_data = event.body;
-          logger.info('POST search assets' + JSON.stringify(assets_data));
-          exportable.processAssetSearch(assets_data, asset_table)
-            .then(res => {
-              logger.info("search asset result:" + JSON.stringify(res));
-              handleResponse(null, res, assets_data);
-            })
-            .catch(error => {
-              logger.error("create asset error:" + JSON.stringify(error));
-              handleResponse(error, null, assets_data);
-            });
-        } else {
+        else {
           logger.error(JSON.stringify(event));
           return cb(JSON.stringify(errorHandler.throwNotFoundError("Requested Asset not found")));
         }
