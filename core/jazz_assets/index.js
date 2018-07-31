@@ -245,19 +245,6 @@ function processAssetCreation(assets_data, asset_table) {
   });
 };
 
-function processAssetSearch(assets_data, asset_table) {
-  return new Promise((resolve, reject) => {
-    validateutils.validateSearchPayload(assets_data)
-      .then(() => exportable.postSearch(assets_data, asset_table))
-      .then(res => {
-        resolve(res);
-      })
-      .catch(error => {
-        reject(error)
-      });
-  });
-};
-
 function updateAssetsData(assets_id, update_data, asset_table) {
   logger.debug("Inside updateAssetsData");
   return new Promise((resolve, reject) => {
@@ -310,7 +297,6 @@ const exportable = {
   processAssetData,
   processAssetsUpdate,
   processAssetCreation,
-  processAssetSearch,
   updateAssetsData,
   processGetList,
   createNewAsset,
