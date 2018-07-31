@@ -360,34 +360,35 @@ describe('platform_services', function() {
   * @returns {string} should return the callback response which is an error message
   */
 
-/*
-disabling test as its failing
-it("should indicate an InternalServerError occured if DynamoDB.scan fails during GET", ()=>{
-    event.method = "GET";
-    event.path.id = undefined;
-    errType = "InternalServerError";
-    errMessage = "Unexpected Error occured";
-    logMessage = "Error occured. ";
-    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-    AWS.mock("DynamoDB", "scan", (params, cb) => {
-      return cb(err);
-    });
-    //wrapping the logger and callback function to check for response messages
-    stub = sinon.stub(callbackObj,"callback",spy);
-    logStub = sinon.stub(logger, "error", spy);
-    //trigger the mocked logic by calling handler()
-    var callFunction = index.handler(event, context, callbackObj.callback);
-    var logResponse = logStub.args[0][0];
-    var cbResponse = stub.args[0][0];
-    var logCheck = logResponse.includes(logMessage) && logResponse.includes(err.errorType) &&
-                    logResponse.includes(err.message);
-    var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
-    AWS.restore("DynamoDB");
-    logStub.restore();
-    stub.restore();
-    assert.isTrue(logCheck && cbCheck);
+
+
+  it("should indicate an InternalServerError occured if DynamoDB.scan fails during GET", ()=>{
+      event.method = "GET";
+      event.path.id = undefined;
+      errType = "InternalServerError";
+      errMessage = "unexpected error occured";
+      logMessage = "Error occured. ";
+      //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+      AWS.mock("DynamoDB", "scan", (params, cb) => {
+        return cb(err);
+      });
+      //wrapping the logger and callback function to check for response messages
+      stub = sinon.stub(callbackObj,"callback",spy);
+      logStub = sinon.stub(logger, "error", spy);
+
+      //trigger the mocked logic by calling handler()
+      var callFunction = index.handler(event, context, callbackObj.callback);
+      var logResponse = logStub.args[0][0];
+      var cbResponse = stub.args[0][0];
+      var logCheck = logResponse.includes(logMessage) && logResponse.includes(err.errorType) &&
+                      logResponse.includes(err.message);
+      var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
+      AWS.restore("DynamoDB");
+      logStub.restore();
+      stub.restore();
+      assert.isTrue(logCheck && cbCheck);
   });
-*/
+
 
   /*
   * Given an event.method = "PUT" and valid service_id, handler() attempts to get item info from DynamoDB
