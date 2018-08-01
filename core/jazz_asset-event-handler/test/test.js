@@ -203,13 +203,9 @@ describe('jazz asset handler tests: ', function () {
 
   describe("processUpdateAsset", function () {
     let responseObject,record;
-    beforeEach(() => {
-		});
-
 		afterEach(() => {
       reqStub.restore();
     })
-
     it('process update asset success',() => {
       responseObject = {
         statusCode:200,
@@ -278,13 +274,6 @@ describe('jazz asset handler tests: ', function () {
 
   describe("processCreateAsset", function (){
     let responseObject,record;
-    beforeEach(() => {
-		});
-
-		afterEach(() => {
-      reqStub.restore();
-    });
-
     it('process create asset success',() => {
       responseObject = {
         statusCode:200,
@@ -352,12 +341,6 @@ describe('jazz asset handler tests: ', function () {
 
   describe("processItem", function (){
     var checkIfAssetExistsStub,processUpdateAssetStub,processCreateAssetStub;
-    beforeEach(() => {
-		});
-
-		afterEach(() => {
-    });
-
     it("Updating assets records success", () => {
       checkIfAssetExistsStub = sinon.stub(index, "checkIfAssetExists").resolves("test");
       processUpdateAssetStub = sinon.stub(index, "processUpdateAsset").resolves("test");
@@ -444,12 +427,6 @@ describe('jazz asset handler tests: ', function () {
 
   describe("processeachEvent", function (){
     var checkForInterestedEventsStub, processItemStub;
-    beforeEach(() => {
-
-    });
-    afterEach(() => {
-
-    });
     var payload = {
       "interested_event": true,
       "payload": "",
@@ -525,13 +502,6 @@ describe('jazz asset handler tests: ', function () {
       message: "sample error message"
     }
     var rpStub,getTokenRequestStub,getAuthResponseStub,processEventsStub,getEventProcessStatusStub;
-    beforeEach(()=>{
-
-    })
-    afterEach(()=>{
-
-    })
-
     it("Should send Request for authtoken ",()=>{
       rpStub =   sinon.stub(rp, 'Request').returns(Promise.resolve(result));
       index.handler(event,context,(error,records)=>{
