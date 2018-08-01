@@ -302,7 +302,7 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
         logger.debug("Asset found: " + JSON.stringify(body));
         return resolve(body.data[0]);
       } else {
-        if(error){
+        if (error){
           return reject(error);
         }
         else{
