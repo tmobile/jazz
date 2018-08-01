@@ -267,7 +267,7 @@ node() {
 					}
 
 					if (domain && domain == "jazz") {
-            serviceConfigdata.setLogStreamPermission(config)
+                        serviceConfigdata.setLogStreamPermission(config)
 						serviceConfigdata.setKinesisStream(config)
 					}
 

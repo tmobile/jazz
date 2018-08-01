@@ -11,7 +11,7 @@ import groovy.transform.Field
 
 
 def initialize(configLoader){
-    config_loader = configLoader
+  config_loader = configLoader
 }
 
 
@@ -45,7 +45,7 @@ def updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {
     def statementId = uuid.toString();
     sh "aws lambda --region ${config_loader.AWS.REGION} add-permission --function-name $lambdaARN --statement-id $statementId --action lambda:InvokeFunction --principal s3.amazonaws.com --source-arn arn:aws:s3:::$s3BucketName --output json"
     def existing_notifications = getbucketNotificationConfiguration(s3BucketName)
-    putbucketNotificationConfiguration(existing_notifications,lambdaARN, s3BucketName, action)
+    putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action)
   } catch (ex) {
     echo "Error while updating permission and lambda configuration"
     error ex.getMessage()
@@ -53,10 +53,10 @@ def updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {
 }
 
 def getbucketNotificationConfiguration(s3BucketName){
-  def existing_notifications = [:]
-  try{
+  def existing_notifications = [: ]
+  try {
     def existing_notificationsObj = sh(returnStdout: true, script: "aws s3api get-bucket-notification-configuration --bucket $s3BucketName --output json")
-	  echo "existing_notificationsObj: $existing_notificationsObj"
+    echo "existing_notificationsObj: $existing_notificationsObj"
     existing_notifications = parseJson(existing_notificationsObj)
     return existing_notifications
   } catch (ex) {
@@ -64,37 +64,112 @@ def getbucketNotificationConfiguration(s3BucketName){
   }
 }
 
-def putbucketNotificationConfiguration(existing_notifications,lambdaARN, s3BucketName, action){
-  def  new_lambda_configuration = [:]
+def putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action){
+  def new_lambda_configuration = [: ]
   def events = action.split(",")
   def lambdaFunctionConfigurations = []
+  def new_events = []
   new_lambda_configuration.LambdaFunctionArn = lambdaARN
-  new_lambda_configuration.Events = events
 
- try{
-   if(existing_notifications.containsKey("LambdaFunctionConfigurations")){
-     for(item in existing_notifications.LambdaFunctionConfigurations ){
-        lambdaFunctionConfigurations.add(item)
-     }
-     lambdaFunctionConfigurations.add(new_lambda_configuration)
-   }else{
-     lambdaFunctionConfigurations.add(new_lambda_configuration)
-   }
-   existing_notifications.LambdaFunctionConfigurations = lambdaFunctionConfigurations
-   def newNotificationJson = JsonOutput.toJson(existing_notifications)
-   sh "aws s3api put-bucket-notification-configuration --bucket $s3BucketName --notification-configuration \'${newNotificationJson}\' --output json"
- }catch(ex){
- }
+  try {
+    if (existing_notifications.containsKey("LambdaFunctionConfigurations")) {
+      def existing_lambda_configs = existing_notifications.LambdaFunctionConfigurations
+      new_events = getLambdaEvents(existing_notifications, events)
+      if (new_events != null && new_events.size() > 0) {
+        for (item in existing_lambda_configs) {
+          lambdaFunctionConfigurations.add(item)
+        }
+        new_lambda_configuration.Events = new_events
+        lambdaFunctionConfigurations.add(new_lambda_configuration)
+      }
+    } else {
+      new_events = checkAndConvertEvents(events)
+      new_lambda_configuration.Events = new_events
+      lambdaFunctionConfigurations.add(new_lambda_configuration)
+    }
+    if (lambdaFunctionConfigurations != null && lambdaFunctionConfigurations.size() > 0) {
+      existing_notifications.LambdaFunctionConfigurations = lambdaFunctionConfigurations
+      def newNotificationJson = JsonOutput.toJson(existing_notifications)
+      def response = sh(returnStdout: true, script: "aws s3api put-bucket-notification-configuration --bucket $s3BucketName --notification-configuration \'${newNotificationJson}\' --output json")
+    }
+  } catch (ex) {
+  }
+}
+
+def getLambdaEvents(existing_notifications, events){
+  def existing_events = []
+  def new_events = []
+  for (item in events) {
+    new_events.add(item)
+  }
+  for (item in existing_notifications.LambdaFunctionConfigurations) {
+    existing_events.addAll(item.Events)
+  }
+  def cleanupIndex = -1
+  echo "events . $events"
+
+  // Removing the existing events from the new event list
+  def event_names
+  for (item in events) {
+    cleanupIndex++
+    if ((item.contains("ObjectCreated") || item.contains("ObjectRemoved")) &&
+      (existing_events.contains("s3:ObjectCreated:*") || existing_events.contains("s3:ObjectRemoved:*"))) {
+      new_events[cleanupIndex] = null
+    } else if (existing_events.contains(item)) {
+      new_events[cleanupIndex] = null
+    }
+  }
+  new_events.removeAll([null])
+  def events_list = []
+  if (new_events.size() > 0 && new_events != null) {
+    events_list = checkAndConvertEvents(new_events)
+  }
+  return events_list
+}
+
+def checkAndConvertEvents(events){
+  def new_events = []
+  // converting the new events to * event
+  def cleanupIndex = -1
+  def isCreationEvent = false
+  def isRemovalEvent = false
+  if (events.size() > 0 && events != null) {
+    for (item in events) {
+      new_events.add(item)
+    }
+
+    for (item in events) {
+      cleanupIndex++
+      if (item.contains("ObjectCreated")) {
+        isCreationEvent = true
+        new_events[cleanupIndex] = null
+      } else if (item.contains("ObjectRemoved")) {
+        isRemovalEvent = true
+        new_events[cleanupIndex] = null
+      }
+    }
+
+    new_events.removeAll([null])
+    if (isCreationEvent == true) {
+      new_events.add("s3:ObjectCreated:*")
+    }
+    if (isRemovalEvent == true) {
+      new_events.add("s3:ObjectRemoved:*")
+    }
+  }
+  echo "new_events : $new_events"
+  return new_events
 }
 
 /**
- * Non-lazy JSON parser
- */
+* Non-lazy JSON parser
+*/
 
 @NonCPS
 def parseJson(jsonString) {
-    def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-    return nonLazyMap
+  def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+  def m = [: ]
+  m.putAll(lazyMap)
+  return m
 }
-
 return this
