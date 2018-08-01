@@ -68,24 +68,23 @@ function handler(event, context, cb) {
 
     exportable.genericInputValidation(event)
       .then(() => {
-
         if (event.method === 'GET' && assets_id) {
-          logger.info('GET assets by ID : ' + assets_id);
+          logger.debug('GET assets by ID : ' + assets_id);
           exportable.processAssetData(assets_id, asset_table)
             .then(res => {
-              logger.info("get asset by Id result:" + JSON.stringify(res));
+              logger.debug("get asset by Id result:" + JSON.stringify(res));
               handleResponse(null, res, event.path);
             })
             .catch(error => {
-              logger.error("update error:" + JSON.stringify(error));
+              logger.debug("update error:" + JSON.stringify(error));
               handleResponse(error, null, event.path);
             });
-        } else if (event.method === 'GET' && !assets_id) { // Call GetList //TODO
-          logger.info('GET assets list by service name and domain');
+        } else if (event.method === 'GET' && !assets_id) {
+          logger.debug('GET assets list by service name and domain');
           var query = event.query;
           exportable.processGetList(query, asset_table)
             .then(res => {
-              logger.info("GET assets list by service name and domain:" + JSON.stringify(res));
+              logger.debug("GET assets list by service name and domain:" + JSON.stringify(res));
               handleResponse(null, res, event.query);
             })
             .catch(error => {
@@ -97,11 +96,11 @@ function handler(event, context, cb) {
         // Update assets
         // 2: PUT assets by id (/assets/{assets_id})
         else if (event.method === 'PUT' && assets_id) {
-          logger.info('Update asset assets_id ' + assets_id);
+          logger.debug('Update asset assets_id ' + assets_id);
           var update_data = event.body;
           exportable.processAssetsUpdate(assets_id, update_data, asset_table)
             .then(res => {
-              logger.info("update result:" + JSON.stringify(res));
+              logger.debug("update result:" + JSON.stringify(res));
               handleResponse(null, res.data, res.input);
             })
             .catch(error => {
@@ -125,7 +124,7 @@ function handler(event, context, cb) {
             });
         }
         else {
-          logger.error(JSON.stringify(event));
+          logger.error("Requested Asset not found"+ JSON.stringify(event));
           return cb(JSON.stringify(errorHandler.throwNotFoundError("Requested Asset not found")));
         }
       })
