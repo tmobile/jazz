@@ -125,7 +125,7 @@
                                     <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && isDomainDefined && !invalidServiceName && !invalidDomainName">Service name in the specified namespace is available!</p>
                                     <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && !isDomainDefined">Service name is not available. Please try another service name</p>
                                     <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && isDomainDefined">Service name in the specified namespace is not available. Please try another combination of namespace & service name.</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && invalidServiceName">Service name should not start or end with hyphens</p>                                                                        
+                                    <p class="termsConditions" *ngIf="serviceName.valid && invalidServiceName">Service name should not start or end with hyphens</p>
                                     <img *ngIf="serviceName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
                                 </div>
                             </div>
@@ -145,8 +145,8 @@
                                 <div class="input-wrapper" [ngClass]="{'unavailable' : !domainName.valid && (domainName.dirty || domainName.touched) || (domainName.valid && invalidDomainName) }">
                                     <input name="domainName" pattern="^[A-Za-z0-9\-]+$" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event)" (ngModelChange)="invalidDomainName=false" required>
                                     <p class="termsConditions" *ngIf="!domainName.valid && (domainName.dirty || domainName.touched)">Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
-                                    <p class="termsConditions" *ngIf="domainName.valid && invalidDomainName">Namespace should not start or end with hyphens</p>                                    
-                                    <img *ngIf="serviceName.valid && domainName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">                                    
+                                    <p class="termsConditions" *ngIf="domainName.valid && invalidDomainName">Namespace should not start or end with hyphens</p>
+                                    <img *ngIf="serviceName.valid && domainName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
                                 </div>
                             </div>
                         </section>
@@ -321,29 +321,35 @@
                     </div>
                     <div class="col-lg-8 col-md-8">
                         <div class="input-field-container event-schedule-radio row zero-margin">
-                            <section class="col-lg-3 col-md-3  pad-left0">
+                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input type="radio" name="AWSEvents" id="awsEventsNone" [value]="awsEventsNone" [checked]="eventExpression.type == 'awsEventsNone'" (click)="onAWSEventChange('awsEventsNone')">
                                     <label for="awsEventsNone"><span></span><span class="background"></span>None</label>
                                 </div>
                             </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
+                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="dynamodb" [value]="dynamodb" [checked]="eventExpression.type == 'dynamodb'" (click)="onAWSEventChange('dynamodb')">
                                     <label for="dynamodb"><span></span><span class="background"></span>DynamoDB</label>
                                 </div>
                             </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
+                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="kinesis" [value]="kinesis" [checked]="eventExpression.type == 'kinesis'" (click)="onAWSEventChange('kinesis')">
                                     <label for="kinesis"><span></span><span class="background"></span>Kinesis</label>
                                 </div>
                             </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
+                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
                                     <label for="s3"><span></span><span class="background"></span>S3</label>
                                 </div>
+                            </section>
+                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
+                              <div class="radio-container">
+                                  <input type="radio" name="AWSEvents" id="sqs" [value]="sqs" [checked]="eventExpression.type == 'sqs'" (click)="onAWSEventChange('sqs')">
+                                  <label for="sqs"><span></span><span class="background"></span>SQS</label>
+                              </div>
                             </section>
                         </div>
                         <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'none'}">
@@ -396,6 +402,18 @@
                                 </div>
                                 <p class="learn-more">Function would be triggered when an object is added or modified inside the bucket</p>
                             </div>
+
+                            <div class="sqs-fields row zero-margin arrow_box" *ngIf="chkSQS()">
+
+                              <div class="col-lg-12">
+                                  <div class="text">Stream ARN</div>
+                                  <div class="label-input slct-bx-selected input-wrapper">
+                                      <input type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="arn:aws:sqs:us-west-2:302890901340:stream/">
+                                      <input id="SQSstreamARN" name="SQSstreamARN" type="text" [(ngModel)]="eventExpression.SQSstreamARN" [focus]="focusKinesis" class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Stream Name" required>
+                                  </div>
+                                </div>
+                                <p class="learn-more">Function would be triggered whenever the Lambda checkpoint has not reached the end of the SQS stream</p>
+                              </div>
 
                         </div>
                     </div>

@@ -15,7 +15,7 @@ import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
- 
+
 @Component({
   selector: 'create-service',
   templateUrl: './create-service.component.html',
@@ -72,7 +72,7 @@ export class CreateServiceComponent implements OnInit {
   model = new ServiceFormData('','','', '','','');
   cronObj = new CronObject('0/5','*','*','*','?','*')
   rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
-  eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined);
+  eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
   private doctors = [];
   private toastmessage:any;
   errBody: any;
@@ -80,7 +80,7 @@ export class CreateServiceComponent implements OnInit {
   errMessage: any;
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
-  
+
 
   constructor (
     private toasterService: ToasterService,
@@ -97,6 +97,7 @@ export class CreateServiceComponent implements OnInit {
   public focusDynamo = new EventEmitter<boolean>();
   public focusKinesis = new EventEmitter<boolean>();
   public focusS3 = new EventEmitter<boolean>();
+  public focusSQS = new EventEmitter<boolean>();
 
   chkDynamodb() {
     this.focusDynamo.emit(true);
@@ -106,6 +107,11 @@ export class CreateServiceComponent implements OnInit {
   chkfrKinesis() {
     this.focusKinesis.emit(true);
     return this.eventExpression.type === 'kinesis';
+  }
+
+  chkSQS() {
+    this.focusSQS.emit(true);
+    return this.eventExpression.type === 'sqs';
   }
 
   chkS3() {
@@ -168,7 +174,7 @@ export class CreateServiceComponent implements OnInit {
   public getData() {
     let currentUserId = this.authenticationservice.getUserId();
 
-  
+
   }
 
   // function to validate slack channel
@@ -315,6 +321,8 @@ export class CreateServiceComponent implements OnInit {
         } else if(this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;
           event["action"] = "S3:" + this.eventExpression.S3BucketName + ":*";
+        } else if (this.eventExpression.type === "sqs") {
+          event["source"] = "arn:aws:sqs:us-west-2:302890901340:stream/" + this.eventExpression.SQSstreamARN;
         }
         payload["events"] = [];
         payload["events"].push(event);
@@ -429,7 +437,7 @@ export class CreateServiceComponent implements OnInit {
   validateName(event) {
     if(this.model.serviceName != null &&(this.model.serviceName[0] === '-' || this.model.serviceName[this.model.serviceName.length - 1] === '-')){
       this.invalidServiceName = true;
-    } 
+    }
     if(this.model.domainName != null && (this.model.domainName[0] === '-' || this.model.domainName[this.model.domainName.length -1] === '-')){
       this.invalidDomainName = true;
     }
