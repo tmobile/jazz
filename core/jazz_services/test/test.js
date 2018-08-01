@@ -387,6 +387,8 @@ describe('platform_services', function() {
       logStub.restore();
       stub.restore();
       assert.isTrue(logCheck && cbCheck);
+      sinon.assert.calledOnce(stub)
+      sinon.assert.calledOnce(logStub);
   });
 
 
@@ -570,7 +572,7 @@ describe('platform_services', function() {
     event.body.description = undefined;
     event.body.email = null;
     event.body.metadata = null;
-    
+
     //mocking DocumentClient from DynamoDB, get is expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
       return cb(null, dataObj);
