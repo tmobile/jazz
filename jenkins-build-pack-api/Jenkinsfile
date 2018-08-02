@@ -809,9 +809,11 @@ def loadBuildModules(buildModuleUrl){
 		environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
 		echo "Environment deployment data loader module loaded successfully."
 
-		apigeeModule = load "apigee-module.groovy"
-		apigeeModule.initialize(configLoader.APIGEE, events)
-		echo "Apigee module loaded successfully."
+		if (configLoader.APIGEE) {
+			apigeeModule = load "apigee-module.groovy"
+			apigeeModule.initialize(configLoader.APIGEE, events)
+			echo "Apigee module loaded successfully."
+		}
 	}
 }
 
