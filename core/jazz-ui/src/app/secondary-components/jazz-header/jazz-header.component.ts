@@ -93,6 +93,10 @@ docs_oss_jazz:string=env_oss.urls.docs_link;
       return this.router.navigate(['/user-journey']);
     }
 
+    openDocs() {
+      window.open(environment.urls['docs_link'], '_blank');
+    }
+
     goToLanding(){
         this.router.navigateByUrl('');// Route to landing page
     }
