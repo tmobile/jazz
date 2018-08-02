@@ -46,7 +46,7 @@ export class EnvironmentDetailComponent implements OnInit {
   baseUrl: string = '';
   swaggerUrl: string = '';
   disablingWebsiteButton: boolean = true;
-  disablingFunctionButton: boolean = false;
+  disablingFunctionButton: boolean = true;
   disablingApiButton: boolean = true;
   nonClickable: boolean = false;
   message: string;
@@ -81,9 +81,12 @@ export class EnvironmentDetailComponent implements OnInit {
 
   EnvLoad(event) {
     this.environment_obj = event.environment[0];
+    this.envStatus = this.environment_obj.status;
+    this.envStatus = this.envStatus.replace("_"," ");
     this.status_val = parseInt(status[this.environment_obj.status]);
     if ((this.status_val < 2) || (this.status_val == 4)) {
       this.disablingApiButton = false;
+      this.disablingFunctionButton = false;
     }
 
     this.status_inactive = true;
@@ -238,7 +241,7 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.api_doc_name = env_oss.api_doc_name;  
+    this.api_doc_name = env_oss.api_doc_name;
     this.sub = this.route.params.subscribe(params => {
       let id = params['id'];
       this.serviceId = id;
