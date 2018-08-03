@@ -291,7 +291,7 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
 
 function getMetricsDetails(newAssetArray) {
   return new Promise((resolve, reject) => {
-    logger.debug("Inside getMetricsDetails"+JSON.stringify(newAssetArray));
+    logger.debug("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
       exportable.cloudWatchDetails(assetParam)
@@ -309,18 +309,15 @@ function getMetricsDetails(newAssetArray) {
 }
 
 function cloudWatchDetails(assetParam) {
-  logger.debug("inside cloudWatchDetails");
+  logger.debug("Inside cloudWatchDetails");
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
-      if (param.Namespace === "AWS/CloudFront") {
-        var cloudwatch = utils.getCloudfrontCloudWatch();
-      } else {
-        var cloudwatch = utils.getCloudWatch();
-      }
+      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch() : utils.getCloudWatch();
+
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
-          logger.error("error while getting metics from cloudwatch. " + JSON.stringify(err));
+          logger.error("Error while getting metrics from cloudwatch: " + JSON.stringify(err));
           if (err.code === "InvalidParameterCombination") {
             reject({
               "result": "inputError",
@@ -332,12 +329,10 @@ function cloudWatchDetails(assetParam) {
               "message": "Unknown internal error occurred"
             });
           }
-
         } else {
           metricsStats.push(data);
           if (metricsStats.length === assetParam.actualParam.length) {
-            var assetObj = utils.assetData(metricsStats, assetParam.userParam);
-            resolve(assetObj);
+            resolve(utils.assetData(metricsStats, assetParam.userParam));
           }
         }
       });
