@@ -484,7 +484,7 @@ def buildLambda(runtime) {
 	} else if (runtime.indexOf("python") > -1) {
 		// install requirements.txt in library folder, these python modules
 		// will be a part of deployment package
-		sh "pip install -r requirements.txt -t library --system"
+		sh "pip install -r requirements.txt -t library"
 
 		// create virtual environment and install dev-requirements
 		sh """
