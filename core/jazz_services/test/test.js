@@ -105,11 +105,6 @@ describe('platform_services', function() {
     };
   });
 
-  // afterEach(function(){
-  //   sinon.assert.called(stub);
-  //   sinon.assert.called(logStub);
-  // });
-
   /*
   * Given an event with no event.method, handler() informs of missing input error
   * @params{object} event -> event.method is null, undefined, or empty
