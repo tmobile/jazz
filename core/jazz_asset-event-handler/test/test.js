@@ -128,7 +128,7 @@ describe('jazz asset handler tests: ', function () {
         }
       };
       let result = index.getAuthResponse(test).then(result => {
-         expect(result).to.eq(test.body.data.token);
+        expect(result).to.eq(test.body.data.token);
       });
     });
 
@@ -153,7 +153,7 @@ describe('jazz asset handler tests: ', function () {
         statusCode: 200,
         body: {
           data: ["test1","test2"]
-          }
+        }
       };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObject, responseObject.body);
@@ -202,10 +202,10 @@ describe('jazz asset handler tests: ', function () {
   })
 
   describe("processUpdateAsset", function () {
-    let responseObject,record;
-		afterEach(() => {
+    let responseObject, record;
+    afterEach(() => {
       reqStub.restore();
-    })
+    });
     it('process update asset success',() => {
       responseObject = {
         statusCode:200,
@@ -255,8 +255,7 @@ describe('jazz asset handler tests: ', function () {
       responseObject = {
         statusCode:0,
         body:{
-          data:{
-          },
+          data:{},
         }
       };
       record = {
@@ -273,7 +272,7 @@ describe('jazz asset handler tests: ', function () {
   })
 
   describe("processCreateAsset", function (){
-    let responseObject,record;
+    let responseObject, record;
     it('process create asset success',() => {
       responseObject = {
         statusCode:200,
@@ -296,13 +295,12 @@ describe('jazz asset handler tests: ', function () {
         reqStub.restore();
       });
     });
-
+{}
     it('process create asset error',() => {
       responseObject = {
         statusCode:0,
         body:{
-          data:{
-          },
+          data:{},
         }
       };
       record = {
@@ -478,14 +476,14 @@ describe('jazz asset handler tests: ', function () {
   describe("processEvents", function () {
     it("processEvents success",() => {
       let authToken = 'abcdefgh';
-      let result = index.processEvents(event,configData,authToken).then(res => {
+      let result = index.processEvents(event, configData, authToken).then(res => {
         expect(res[0].message).to.eq('Not an interesting event');
       })
     })
 
     it("processEvents error",() => {
       let authToken = '';
-      let result = index.processEvents(event,configData,authToken).catch(err => {
+      let result = index.processEvents(event, configData, authToken).catch(err => {
       })
     })
   });
@@ -501,18 +499,18 @@ describe('jazz asset handler tests: ', function () {
     error ={
       message: "sample error message"
     }
-    var rpStub,getTokenRequestStub,getAuthResponseStub,processEventsStub,getEventProcessStatusStub;
+    var rpStub, getTokenRequestStub, getAuthResponseStub, processEventsStub, getEventProcessStatusStub;
     it("Should send Request for authtoken ",()=>{
-      rpStub =   sinon.stub(rp, 'Request').returns(Promise.resolve(result));
-      index.handler(event,context,(error,records)=>{
+      rpStub = sinon.stub(rp, 'Request').returns(Promise.resolve(result));
+      index.handler(event, context, (error, records)=>{
         sinon.assert.calledOnce(rpStub);
         rpStub.restore();
       })
     });
 
     it("should call processEvents",()=>{
-      processEventsStub = sinon.stub(index,"processEvents").resolves(result);
-      index.handler(event,context,(error,records)=>{
+      processEventsStub = sinon.stub(index, "processEvents").resolves(result);
+      index.handler(event, context, (error, records)=>{
         sinon.assert.calledOnce(processEventsStub);
         processEventsStub.restore();
       })
@@ -520,14 +518,14 @@ describe('jazz asset handler tests: ', function () {
 
     it("should call getEventProcessStatus after processing Events ",()=>{
       getEventProcessStatusStub =  sinon.stub(index,"getEventProcessStatus").returns(record)
-      index.handler(event,context,(error,records)=>{
+      index.handler(event, context, (error, records)=>{
         sinon.assert.calledOnce(getEventProcessStatusStub);
         getEventProcessStatusStub.restore();
       })
     })
 
     it("should return the record of processed and falied events ",()=>{
-      index.handler(event,context,(error,records)=>{
+      index.handler(event, context, (error, records)=>{
         expect(records.processed_events).to.eq(1)
         expect(records.failed_events).to.eq(1)
       })
@@ -537,13 +535,13 @@ describe('jazz asset handler tests: ', function () {
 
   describe("handleFailedEvents",()=>{
     it("handleFailedEvents", () => {
-      index.handleFailedEvents(1,"failure_message", {}, 0);
+      index.handleFailedEvents(1, "failure_message", {}, 0);
     })
   });
 
   describe("handleProcessedEvents",()=>{
     it("handleProcessedEvents", () => {
-      index.handleProcessedEvents(1,{});
+      index.handleProcessedEvents(1, {});
     })
   });
 
