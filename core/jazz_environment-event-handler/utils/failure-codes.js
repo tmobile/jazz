@@ -21,7 +21,8 @@ var failureCodeENUM = {
 	PR_ERROR_1 : {type: "PROCESSING_ERROR", code: "SCHEMA_VALIDATION", message: "Unable to process event data"},
 	PR_ERROR_2 : {type: "PROCESSING_ERROR", code: "UNKNOWN", message: "Unknown error"},
 	PR_ERROR_3 : {type: "PROCESSING_ERROR", code: "INTERNAL", message: "Internal Server error"},
-	PR_ERROR_4 : {type: "PROCESSING_ERROR", code: "NOT_FOUND", message: "Not Found error"},
+  PR_ERROR_4 : {type: "PROCESSING_ERROR", code: "NOT_FOUND", message: "Not Found error"},
+  PR_ERROR_5: { type: "PROCESSING_ERROR", code: "SERVICE_CATALOG", message: "Failed to get service metadata from service catalog" },
 };
 
 module.exports = () => {

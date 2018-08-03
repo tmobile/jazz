@@ -31,11 +31,12 @@
                 <service-metrics #selectedTabComponent [service]="service" #metric></service-metrics>
             </section>
             <section class="page-content" *ngIf="selectedTab == 3">
-                <service-logs #selectedTabComponent #logs [service]="service"></service-logs>
-            </section>
-            <section class="page-content" *ngIf="selectedTab == 4">
                 <service-cost #selectedTabComponent #cost [service]="service"></service-cost>
             </section>
+
+          <section class="page-content" *ngIf="selectedTab == 4">
+            <service-logs #selectedTabComponent #logs [service]="service"></service-logs>
+          </section>
         </div>
         <div *ngIf='err_flag' class='err-wrp'>
                 

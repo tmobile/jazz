@@ -33,6 +33,7 @@ export class EnvTryServiceSidebarComponent implements OnInit {
   api_status: string = "default";
   success:boolean = true;
   error:boolean = false;
+  FunctionInvocationError:boolean = false;
   reponse_code;
 
 
@@ -72,27 +73,33 @@ export class EnvTryServiceSidebarComponent implements OnInit {
           statusText: response.data.execStatus
         }
         this.reponse_code = response.data.payload.StatusCode;
-
-        if(response.data.payload.StatusCode == 200){
+        if(response.data.payload.StatusCode === 200){
           this.success=true;
           this.error=false;
         }
-        if(response.data.payload.StatusCode == 200 && response.data.execStatus == 'HandledError'){
+        if(response.data.execStatus === 'HandledError'){
           this.success=true;
           this.error=true;
         }
-        if(response.data.execStatus == 'UnhandledError'){
+        if(response.data.execStatus === 'UnhandledError'){
           this.success=true;
           this.error=true;
         }
-        if(response.data.execStatus == 'TimeoutError'){
+        if(response.data.execStatus === 'TimeoutError'){
+          this.success=false;
+          this.error=true;
+        }
+        if(response.data.execStatus === 'FunctionInvocationError'){
+          this.FunctionInvocationError = true;
           this.success=false;
           this.error=true;
         }
         if(this.outputHeader.statusCode != ''){
           this.outputHeader.statusCode+=' : ';
-        } 
-
+        }
+        if(this.FunctionInvocationError){
+          this.outputValue = response.data.payload.message;
+        }
         this.outputValue = this.stringToPrettyString(response.data.payload.Payload);
         this.lineNumbers('op');
       }, (error) => {
@@ -109,6 +116,8 @@ export class EnvTryServiceSidebarComponent implements OnInit {
   inputIsValid() {
     try {
       let payload = JSON.parse(this.inputValue);
+      this.validityMessage = '';
+      this.valid = true;
     } catch (error) {
       this.validityMessage = 'Input is invalid JSON';
       this.valid = false;

@@ -1,63 +1,45 @@
-<div class="section" [ngSwitch]="sectionStatus" (window:resize)="resizeDebounced()">
-  <div *ngSwitchCase="'loading'" class="absolute-container">
+<div class="jz-section" [ngSwitch]="sectionStatus">
+  <div *ngSwitchCase="'loading'" class="jz-absolute-container">
     <div class="jz-spinner"></div>
   </div>
-  <div *ngSwitchCase="'error'" class="section-content">
+  <div *ngSwitchCase="'error'" class="jz-section-content">
     <report-issue [request]="errorData.request" [response]="errorData.response" (onRefresh)="refresh()"></report-issue>
   </div>
-  <div *ngSwitchCase="'empty'" class="section-content empty-row nodata with-refresh relative">
-    <div class="icon-icon-nodata"></div>
+  <div *ngSwitchCase="'empty'" class="jz-section-content">
+    <div class="jz-section-icon">
+      <span class="icon-icon-nodata"></span>
+    </div>
     <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
   </div>
-  <div *ngSwitchCase="'resolved'" class="section-content">
-    <div class="chart-background">
-      <div class="chart-content">
-        <div class="chart-header">
-          <div class="chart-thirds"></div>
-          <div class="chart-thirds center">
-            <p class="graphtitle">{{utils.hyphenToSpace(selectedMetric.name)}}</p>
-            <p class="graphtitlefilter">{{filterData.headerMessage}}</p>
-          </div>
-          <div class="chart-thirds text-right">
-            <filters [filtersList]="filters"
-                     (onSelected)="onFilterSelected($event)"
-                     [multiple]='false'
-                     [selectedList]="filterSelected"></filters>
-          </div>
+  <div *ngSwitchCase="'resolved'" class="jz-section-content">
+    <div class="jz-chart">
+      <div class="jz-chart-header">
+        <div style="width:30%;"></div>
+        <div style="width:30%;" class="jz-text-center">
+          <p class="graphtitle">{{utils.hyphenToSpace(selectedMetric?.name)}}</p>
+          <p class="graphtitlefilter">{{selectedMetricGraphData?.options.headerMessage}}</p>
         </div>
-        <div class="chart-flex">
-          <chartjs-linegraph
-            *ngIf="renderGraph"
-            [datasets]="graph.datasets"
-            [graphOptions]="graph.options"></chartjs-linegraph>
+        <div style="width: 30%;" class="jz-text-right">
+          <filters [filtersList]="filters"
+                   (onSelected)="onFilterSelect($event)"
+                   [multiple]='false'
+                   [selectedList]="filterSelected"></filters>
         </div>
-        <div class="sonar-link">
-          <a (click)="sonarLink()" class="pointer">More Details</a>
-        </div>
+      </div>
+      <div class="jz-chart-content">
+        <chartjs-linegraph
+            [datasets]="selectedMetricGraphData.datasets"
+            [options]="selectedMetricGraphData.options"></chartjs-linegraph>
+      </div>
+
+      <div class="jz-chart-footer jz-text-right">
+        <a *ngIf='selectedMetric.link' class="sonar-link" href="{{selectedMetric.link}}" target="_blank">More Details</a>
       </div>
     </div>
 
-    <div #metricCards class='metrics-cards-wrap'>
-      <div class="absolute-container">
-        <div #metricCardsScroller class='scroll-cards-wrap' [style.transform]="'translateX('+(metricCardSize * metricCardOffset)+ 'px)'">
-          <div class='metrics-card' *ngFor="let metric of metrics; let i=index" [class.arrow_box]='metricsIndex==i'
-               [class.active]='metricsIndex===i' (click)="selectMetric(i)">
-            <div class='metrics-name'>{{utils.hyphenToSpace(metric.name)}}</div>
-            <div class='metrics-data' *ngIf="metric.values[metric.values.length - 1]?.value">
-              {{metric.values[metric.values.length - 1]?.value}}
-            </div>
-            <div class='metrics-name' *ngIf="!metric.values[metric.values.length - 1]?.value">No Data</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="metrics-arrows" *ngIf="metricCardsOversized">
-      <div class='left-arrow' (click)='offsetRight()'>
-        <div class='icon-icon-leftArrow'></div>
-      </div>
-      <div class='right-arrow' (click)='offsetLeft()'>
-        <div class='icon-icon-rightArrow '></div>
-      </div>
-    </div>
+    <metrics-carousel [metrics]="graphDataRaw.metrics"
+                      (indexChange)="selectMetric($event)"
+                      [index]="metricsIndex"
+                      [options]="{listProperty: 'values', valueProperty: 'value', nameProperty: 'name'}"></metrics-carousel>
   </div>
 </div>

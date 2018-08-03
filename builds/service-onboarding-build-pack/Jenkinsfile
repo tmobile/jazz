@@ -140,7 +140,7 @@ node  {
 				for (item in config) {
 					serviceMetadataJson[item.key] = item.value
 				}
-				for (item in config.catalog_metadata) {
+				for (item in service_config.catalog_metadata) {
 					serviceMetadataJson[item.key] = item.value
 				}
 
@@ -163,15 +163,11 @@ node  {
 			dir(service_template)
 			{
 				events.sendStartedEvent("MODIFY_TEMPLATE", 'modify template starts', context_map)
-				//Clearing depoyment-env.yml
+
+        //Clearing depoyment-env.yml
 				sh "echo -n > ./deployment-env.yml"
 				// Add service_id  in deployment-env.yml
-
 				sh "echo 'service_id: $service_id' >> ./deployment-env.yml"
-
-				sh "sed -i -- 's/{service_name}/${service_config['service']}/g' ./Jenkinsfile"
-				sh "sed -i -- 's/{domain}/${service_config['domain']}/g' ./Jenkinsfile"
-
 			}
 			events.sendCompletedEvent('MODIFY_TEMPLATE', 'modify template completed', context_map)
 		}
@@ -224,15 +220,6 @@ node  {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 				try {
 					events.sendStartedEvent("ADD_WEBHOOK", 'service repo creation starts', context_map)
-					def scm_webhook_target_url
-					if (configLoader.SCM.TYPE == "gitlab") {
-            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: configLoader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
-              scm_webhook_target_url = "http://${UNAME}:${utilModule.getApiToken()}@${JenkinsLocationConfiguration.get().getUrl().split('/')[2]}/project/Gitlab-Trigger-Job?token=${configLoader.JENKINS.JOB_AUTH_TOKEN}"
-            }
-					} else if (configLoader.SCM.TYPE == "bitbucket") {
-						scm_webhook_target_url = JenkinsLocationConfiguration.get().getUrl() + "/bitbucket-scmsource-hook/notify"
-					}
-					scmModule.addWebhook(repo_name, "notify-jenkins", scm_webhook_target_url)
 					scmModule.addWebhook(repo_name, "notify-events", "${g_base_url}/jazz/scm-webhook")
 					events.sendCompletedEvent('ADD_WEBHOOK', 'modify template completed', context_map)
 				}

@@ -289,18 +289,17 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
     };
 
     var svcPostSearchPayload = {
-      uri: configData.BASE_API_URL + configData.ASSETS_API_SEARCH_RESOURCE,
-      method: "POST",
+      uri: configData.BASE_API_URL + configData.ASSETS_API_SEARCH_RESOURCE+ "?domain=" + searchAssetPayload.domain + "&service=" + searchAssetPayload.service + "&provider_id=" +searchAssetPayload.provider_id + "&asset_type=" +searchAssetPayload.asset_type,
+      method: "GET",
       headers: { Authorization: authToken },
-      json: searchAssetPayload,
       rejectUnauthorized: false
     };
 
-    logger.debug("searchAssetPayload" + JSON.stringify(searchAssetPayload));
+    logger.debug("svcPostSearchPayload" + JSON.stringify(svcPostSearchPayload));
     request(svcPostSearchPayload, function (error, response, body) {
-      if (response && response.statusCode && response.statusCode === 200 && body && body.data && body.data.length > 0) {
+      if (response && response.statusCode && response.statusCode === 200 && body && body.data && body.data.count && body.data.count > 0) {
         logger.debug("Asset found: " + JSON.stringify(body));
-        return resolve(body.data[0]);
+        return resolve(body.data.assets[0]);
       } else {
         if (error){
           return reject(error);

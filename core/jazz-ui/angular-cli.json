@@ -36,7 +36,8 @@
         "environments": {
             "dev": "environments/environment.ts",
             "internal": "environments/environment.internal.ts",
-            "oss": "environments/environment.oss.ts"
+            "oss": "environments/environment.oss.ts",
+            "local": "environments/environment.local.ts"
 
         }
     }],
