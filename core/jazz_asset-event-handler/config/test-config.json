@@ -1,7 +1,7 @@
 {
     "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
     "ASSETS_API_RESOURCE": "/test/jazz/assets",
-    "ASSETS_API_SEARCH_RESOURCE": "/test/jazz/assets/search",
+    "ASSETS_API_SEARCH_RESOURCE": "/test/jazz/assets",
     "EVENTS": {
         "EVENT_TYPE": [
             "SERVICE_DEPLOYMENT",

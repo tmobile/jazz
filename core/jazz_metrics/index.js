@@ -28,23 +28,23 @@ const request = require('request');
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
 
-function handler (event, context, cb) {
+function handler(event, context, cb) {
   var errorHandler = errorHandlerModule();
   var config = configObj.getConfig(event, context);
 
   try {
-    /*
-     * event input format :
-     *   {
-     *        "domain": "jazztest",
-     *        "service": "get-monitoring-data",
-     *        "environment": "prod",
-     *        "end_time": "2017-06-27T06:56:00.000Z",
-     *        "start_time": "2017-06-27T05:55:00.000Z",
-     *        "interval":"300",
-     *        "statistics":"average"
-     *    }
-     */
+		/*
+		 * event input format :
+		 *   {
+		 *        "domain": "jazztest",
+		 *        "service": "get-monitoring-data",
+		 *        "environment": "prod",
+		 *        "end_time": "2017-06-27T06:56:00.000Z",
+		 *        "start_time": "2017-06-27T05:55:00.000Z",
+		 *        "interval":"300",
+		 *        "statistics":"average"
+		 *    }
+		 */
     var eventBody = event.body;
     exportable.genericValidation(event)
       .then(() => validateUtils.validateGeneralFields(eventBody))
@@ -80,7 +80,7 @@ function genericValidation(event) {
       });
     }
 
-    if(!event.method || event.method !== "POST") {
+    if (!event.method || event.method !== "POST") {
       reject({
         result: "inputError",
         message: "Invalid method"
@@ -98,74 +98,65 @@ function genericValidation(event) {
 }
 
 function getToken(config) {
-	logger.debug("Inside getToken");
-	return new Promise((resolve, reject) => {
-		var svcPayload = {
-			uri: config.SERVICE_API_URL + config.TOKEN_URL,
-			method: 'post',
-			json: {
-				"username": config.SERVICE_USER,
-				"password": config.TOKEN_CREDS
-			},
-			rejectUnauthorized: false
-		};
-		request(svcPayload, (error, response, body) => {
-			if (response && response.statusCode === 200 && body && body.data) {
-				var authToken = body.data.token;
-				resolve(authToken);
-			} else {
-				var message = "";
-				if (error) {
-					message = error.message
-				} else {
-					message = response.body.message
-				}
-				reject({
-					"error": "Could not get authentication token for updating service catalog.",
-					"message": message
-				});
-			}
-		});
-	});
+  logger.debug("Inside getToken");
+  return new Promise((resolve, reject) => {
+    var svcPayload = {
+      uri: config.SERVICE_API_URL + config.TOKEN_URL,
+      method: 'post',
+      json: {
+        "username": config.SERVICE_USER,
+        "password": config.TOKEN_CREDS
+      },
+      rejectUnauthorized: false
+    };
+    request(svcPayload, (error, response, body) => {
+      if (response && response.statusCode === 200 && body && body.data) {
+        var authToken = body.data.token;
+        resolve(authToken);
+      } else {
+        var message = "";
+        if (error) {
+          message = error.message
+        } else {
+          message = response.body.message
+        }
+        reject({
+          "error": "Could not get authentication token for updating service catalog.",
+          "message": message
+        });
+      }
+    });
+  });
 }
 
 function getAssetsDetails(config, eventBody, authToken) {
   return new Promise((resolve, reject) => {
-    var asset_api_payload = {
-      "service": eventBody.service,
-      "domain": eventBody.domain,
-      "environment": eventBody.environment
-    };
     var asset_api_options = {
-      url: config.SERVICE_API_URL + config.ASSETS_URL,
+      url: config.SERVICE_API_URL + config.ASSETS_URL + "?domain=" + eventBody.domain + "&service=" + eventBody.service + "&environment=" + eventBody.environment,
       headers: {
         "Content-Type": "application/json",
         "Authorization": authToken
       },
-      method: "POST",
+      method: "GET",
       rejectUnauthorized: false,
       requestCert: true,
-      async: true,
-      json: true,
-      body: asset_api_payload,
+      async: true
     };
 
     logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
-
     request(asset_api_options, (error, response, body) => {
       if (error) {
         reject(error);
       } else {
-        var apiAssetsArray = body.data;
-        if (apiAssetsArray && apiAssetsArray.length === 0) {
-          logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
-          resolve([]);
-        } else {
+        if (response.statusCode && response.statusCode === 200 && body && body.data && body.data.count && body.data.count > 0) {
+          var apiAssetsArray = body.data.assets;
           var userStatistics = eventBody.statistics.toLowerCase();
-
           // Massaging data from assets api , to get required list of assets which contains type, asset_name and statistics.
           var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
           resolve(assetsArray);
+        } else {
+          logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
+          resolve([]);
         }
       }
     });
@@ -236,7 +227,7 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
       Dimensions: [{
         Name: '',
         Value: assetItem.asset_name
-      }, ],
+      },],
       Statistics: [
         assetItem.statistics,
       ],
