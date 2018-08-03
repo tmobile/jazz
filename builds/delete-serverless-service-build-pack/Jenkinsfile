@@ -428,10 +428,11 @@ def cleanUpApiGatewayResources(stage, path) {
 				current_environment = 'prod'
 			}
 			echo "Resource search key for ApiGateway : $resource_search_key"
+			def aws_api_id = getApiId(stage)
 
 			try {
 				def outputStr = sh(
-					script: "aws apigateway get-resources --rest-api-id ${getApiId(stage)} --region ${configLoader.AWS.REGION} --output json",
+					script: "aws apigateway get-resources --rest-api-id ${aws_api_id} --region ${configLoader.AWS.REGION} --output json",
 					returnStdout: true
 				).trim()
 
@@ -446,12 +447,12 @@ def cleanUpApiGatewayResources(stage, path) {
 			}
 			if (resource_id != null && resource_id != "") {
 				def status_json = sh(
-					script: "aws apigateway delete-resource --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --resource-id ${resource_id} --output json",
+					script: "aws apigateway delete-resource --rest-api-id ${aws_api_id}  --region ${configLoader.AWS.REGION} --resource-id ${resource_id} --output json",
 					returnStdout: true
 				).trim()
 				try {
 					def deployment_status_json = sh(
-						script: "aws apigateway create-deployment --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --stage-name ${current_environment} --description 'API deployment after resource clean up' --output json",
+						script: "aws apigateway create-deployment --rest-api-id ${aws_api_id}  --region ${configLoader.AWS.REGION} --stage-name ${current_environment} --description 'API deployment after resource clean up' --output json",
 						returnStdout: true
 					).trim()
 				} catch (ex) {
