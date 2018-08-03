@@ -12,15 +12,15 @@ version=$8
 function importanddeploy()  {
         pwd
         cp ./Deployable/$application-$apiversion.zip ./
-		chmod 755 $application-$apiversion.zip
-		ls -l
+        chmod 755 $application-$apiversion.zip
+        ls -l
 
         echo "=================================================="
-		echo "Getting the current deployed version"
+        echo "Getting the current deployed version"
 
-		echo curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/environments/$mgmt_env/deployments"
-		apis=`curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/environments/$mgmt_env/deployments" 2>/dev/null`
-		echo $apis > temp.xml
+        echo curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/environments/$mgmt_env/deployments"
+        apis=`curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/environments/$mgmt_env/deployments" 2>/dev/null`
+        echo $apis > temp.xml
 
         deployedVersion=$(xpath -e "//APIProxy[@name='$application']/Revision/@name" temp.xml 2> /dev/null)
        	deployedVersion=${deployedVersion//name=/}
@@ -28,14 +28,14 @@ function importanddeploy()  {
         deployedVersion=${deployedVersion//\ /}
 
        	echo "Deployed version="$deployedVersion
-		echo "==================================================="
+       	echo "==================================================="
 
-		echo "***************************************************"
-		echo "Importing new revision"
+       	echo "***************************************************"
+       	echo "Importing new revision"
 
-		echo curl -k -s -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/apis?action=import&name=$application" -F "file=@$application-$apiversion.zip" -H "Accept: application/xml" -H "Content-Type: multipart/form-data" -X POST
-		imprt=`curl -k -s -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/apis?action=import&name=$application" -F "file=@$application-$apiversion.zip" -H "Accept: application/xml" -H "Content-Type: multipart/form-data" -X POST 2>/dev/null`
-		echo $imprt > dep.xml
+       	echo curl -k -s -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/apis?action=import&name=$application" -F "file=@$application-$apiversion.zip" -H "Accept: application/xml" -H "Content-Type: multipart/form-data" -X POST
+       	imprt=`curl -k -s -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/apis?action=import&name=$application" -F "file=@$application-$apiversion.zip" -H "Accept: application/xml" -H "Content-Type: multipart/form-data" -X POST 2>/dev/null`
+       	echo $imprt > dep.xml
 
         revision=$(xpath -e '//APIProxy/@revision' dep.xml 2> /dev/null)
         revision=${revision/revision=/}
@@ -65,26 +65,24 @@ function importanddeploy()  {
         echo $deploy
 
         rm -fr dep.xml
-		rm -fr temp.xml
-		rm -fr $application-$apiversion.zip
-		
+        rm -fr temp.xml
+        rm -fr $application-$apiversion.zip
 }
 
 importanddeploy
-		content=`curl -k -siI -X GET "$mgmt_host/v1/o/$mgmt_org/e/$mgmt_env/apis/$application/revisions/$revision/deployments" -H 'Content-type:application/xml' -u $credentials`
-                        httpStatus=$(echo "${content}" | grep '^HTTP/1' | awk {'print $2'} |tail -1)
-                        echo $httpStatus
-                        if [[ httpStatus -eq 200 ]]
-                        then
-                        echo --------------------------------------------------------
-                        echo $application deployed successfully
-                        echo --------------------------------------------------------
-                        exit 0
-                        else
-                        echo --------------------------------------------------------
-                        echo $application NOT deployed successfully
-                        echo --------------------------------------------------------
-                        exit 1
-                        fi
-
+        content=`curl -k -siI -X GET "$mgmt_host/v1/o/$mgmt_org/e/$mgmt_env/apis/$application/revisions/$revision/deployments" -H 'Content-type:application/xml' -u $credentials`
+        httpStatus=$(echo "${content}" | grep '^HTTP/1' | awk {'print $2'} |tail -1)
+        echo $httpStatus
+        if [[ httpStatus -eq 200 ]]
+        then
+        echo --------------------------------------------------------
+        echo $application deployed successfully
+        echo --------------------------------------------------------
+        exit 0
+        else
+        echo --------------------------------------------------------
+        echo $application NOT deployed successfully
+        echo --------------------------------------------------------
+        exit 1
+        fi
 exit

@@ -44,15 +44,14 @@ Build(){
 	
 	cd $basepathdir/$proxyName/$version
 	export targetserver=($(grep -oP '(?<=TargetEndpoint>)[^<]+' $proxyName'Proxy.xml'))
-	#echo $targetserver
 	
 	for i in ${!targetserver[*]}
 	do
-	  #echo "$i" "${targetserver[$i]}"
-	  echo "${targetserver[$i]}"
-	  	   count=$((count + 1))
-		  cd $autopath
-		  mvn -e install -f prepareTargetPom.xml -DtargetService=${targetserver[$i]} -Dversion=$version
+	#echo "$i" "${targetserver[$i]}"
+    echo "${targetserver[$i]}"
+    count=$((count + 1))
+    cd $autopath
+    mvn -e install -f prepareTargetPom.xml -DtargetService=${targetserver[$i]} -Dversion=$version
 	done
 
 	mvn -e install -f resolveDependency.xml -DproxyName=$proxyName 
@@ -62,47 +61,43 @@ Build(){
 	rm cf_AWSLambdaFunctionName.xml
 	mv tempFunctionName.xml cf_AWSLambdaFunctionName.xml
 
-    cd $basepathdir/Deployable
-#    export PATH=/usr/bin/zip:$PATH
+	cd $basepathdir/Deployable
 	zip -r -m -q $proxyName-$apiversion.zip apiproxy
 	echo $proxyName-$apiversion bundled in Deployable folder
-
 	exit
 }
 
-
 Usage(){
-echo "============================================================================"
-echo "Please check the parameters passed, seems like some param(s) are missing --"
-echo "============================================================================"
-echo "Below is the usage and the params are required by the script"
-echo "                                           "
-echo "./bundle.sh proxyName version functionName apiversion teamEmail"
-echo "==============================================================="
-exit 1
-}
+    echo "============================================================================"
+    echo "Please check the parameters passed, seems like some param(s) are missing --"
+    echo "============================================================================"
+    echo "Below is the usage and the params are required by the script"
+    echo "                                           "
+    echo "./bundle.sh proxyName version functionName apiversion teamEmail"
+    echo "==============================================================="
+    exit 1
+    }
 
 if [[ $proxyName == "" ]]
-	then
-	    echo "**************************************************"
-	    echo "proxyName, version & functionName param not passed"
-	    echo "**************************************************"
-		Usage
+    then
+    echo "**************************************************"
+    echo "proxyName, version & functionName param not passed"
+    echo "**************************************************"
+    Usage
 elif [[ $version == "" ]]
-		then
-		echo "***************************************"
-	    echo "version & functionName params not passed"
-	    echo "***************************************"
-		Usage
+    then
+    echo "***************************************"
+    echo "version & functionName params not passed"
+    echo "***************************************"
+    Usage
 elif [[ $functionName == "" ]]
-		then
-		echo "*****************************"
-	    echo "functionName param not passed"
-	    echo "*****************************"
-		Usage
+    then
+    echo "*****************************"
+    echo "functionName param not passed"
+    echo "*****************************"
+    Usage
 else
 	Build
-	
 fi
 
 

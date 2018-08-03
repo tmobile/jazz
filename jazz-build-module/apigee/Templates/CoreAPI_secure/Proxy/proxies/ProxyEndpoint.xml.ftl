@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <ProxyEndpoint name="${proxy.name}ProxyEndpoint">
-    <Description>${proxy.description}(generated using ProxyGen_v1.0.1)</Description>
+    <Description>${proxy.description}_(Generated using ProxyGen v1.1.1)</Description>
 	#cf_proxy_post_client_flow#     
 	<FaultRules>
 		#cf_proxy_faultrules_steps#

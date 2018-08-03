@@ -8,13 +8,12 @@ password=$6
 credentials=$username:$password
 
 function delete()  {
-
         echo "=================================================="
-		echo "Getting the current deployed version"
+        echo "Getting the current deployed version"
 
-		echo curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/environments/$mgmt_env/deployments"
-		apis=`curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/environments/$mgmt_env/deployments" 2>/dev/null`
-		echo $apis > temp.xml
+        echo curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/environments/$mgmt_env/deployments"
+        apis=`curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/environments/$mgmt_env/deployments" 2>/dev/null`
+        echo $apis > temp.xml
 
         deployedVersion=$(xpath -e "//APIProxy[@name='$application']/Revision/@name" temp.xml 2> /dev/null)
        	deployedVersion=${deployedVersion//name=/}
@@ -22,10 +21,10 @@ function delete()  {
         deployedVersion=${deployedVersion//\ /}
 
        	echo "Deployed version="$deployedVersion
-		echo "==================================================="
+       	echo "==================================================="
 
         echo "---------------------------------------------------"
-		echo "Undeploy this $deployedVersion  revision"
+        echo "Undeploy this $deployedVersion  revision"
 
         undeploy=`curl -k -s -X POST -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/apis/$application/deployments?action=undeploy&env=$mgmt_env&revision=$deployedVersion" 2>/dev/null`
         echo $undeploy
@@ -46,20 +45,19 @@ function delete()  {
         echo "==================================================="
 }
 delete
-		content=`curl -k -siI -X GET "$mgmt_host/v1/o/$mgmt_org/apis/$application" -H 'Content-type:application/xml' -u $credentials`
-                        httpStatus=$(echo "${content}" | grep '^HTTP/1' | awk {'print $2'} |tail -1)
-                        echo $httpStatus
-                        if [[ httpStatus -eq 404 ]]
-                        then
-                        echo --------------------------------------------------------
-                        echo $application deleted successfully
-                        echo --------------------------------------------------------
-                        exit 0
-                        else
-                        echo --------------------------------------------------------
-                        echo $application NOT deleted successfully
-                        echo --------------------------------------------------------
-                        exit 1
-                        fi
-
+        content=`curl -k -siI -X GET "$mgmt_host/v1/o/$mgmt_org/apis/$application" -H 'Content-type:application/xml' -u $credentials`
+        httpStatus=$(echo "${content}" | grep '^HTTP/1' | awk {'print $2'} |tail -1)
+        echo $httpStatus
+        if [[ httpStatus -eq 404 ]]
+        then
+        echo --------------------------------------------------------
+        echo $application deleted successfully
+        echo --------------------------------------------------------
+        exit 0
+        else
+        echo --------------------------------------------------------
+        echo $application NOT deleted successfully
+        echo --------------------------------------------------------
+        exit 1
+        fi
 exit

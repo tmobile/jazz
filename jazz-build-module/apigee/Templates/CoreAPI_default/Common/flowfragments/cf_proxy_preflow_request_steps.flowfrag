@@ -21,3 +21,6 @@
             <Step>
                 <Name>cf_AWSLambdaFunctionName</Name>
             </Step>
+            <Step>
+                <Name>cf_LoggerProxyFlowReq</Name>
+            </Step>
