@@ -8,10 +8,10 @@
            (click)="selectCard(metric)">
         <div class='metrics-name'>{{metricName(metric)}}</div>
         <div class="metrics-card-content">
-          <div class='metrics-data' *ngIf="getRecentValue(metric)">
-            {{getRecentValue(metric)}}
-          </div>
-          <div class="metrics-name" *ngIf="!getRecentValue(metric)">No Data</div>
+          {{getRecentValue(metric) || '-'}}
+        </div>
+        <div class="metrics-footer" *ngIf="getRecentValue(metric) && options.footerProperty">
+          {{metric[options.listProperty][0][options.footerProperty]}}
         </div>
       </div>
     </div>

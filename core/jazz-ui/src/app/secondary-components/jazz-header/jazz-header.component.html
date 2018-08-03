@@ -11,6 +11,7 @@
             <li (click)="goToAbout('features')" [class.hide] = 'noLink'> Features</li>            
             <li (click)="goToAbout('about')" [class.hide] = 'noLink'>About Us</li>
             <li (click)="startUserJourney()" [class.hide] = 'noLink'>Tutorial</li>
+            <li (click)="openDocs()">DOCUMENTATION</li>
             <li [class.hide]="isLoggedIn">
                 <div class="login">
                     <btn-jazz-primary newclass="login" text="LOGIN" (click)="toggleLoginPanel()"></btn-jazz-primary>
@@ -26,15 +27,8 @@
                             <div class="icon-icon-profile" (click)="profileClick()" title="Logged in as user"></div>
                             <div class="profile-options" [ngClass]="{'fade': profileClicked , 'fade-out': !profileClicked}">
                                 <ul>
-                                    <li class="hide" (click)="profileClicked = !profileClicked">
-                                        <div class="profile-list"><span class="icon-icon-settings"></span> Settings
-                                        </div>
-                                    </li>
                                     <li *ngIf='!isOSS' class="" (click)="profileClicked = !profileClicked">
                                         <div class="profile-list" (click)='openFeedbackForm()'><span class="icon-icon-feedback"></span>Feedback</div>
-                                    </li>
-                                    <li (click)="profileClicked = !profileClicked">
-                                        <div class="profile-list" (click)='onNavigate($event)'><span class="icon-icon-help"></span>Help</div>
                                     </li>
                                     <li (click)="profileClicked = !profileClicked;logout()">
                                         <div class="profile-list"><span class="icon-icon-logout"></span>Logout</div>
@@ -70,32 +64,37 @@
         </div>
       </div>
         <div class="header-section right">
-            <div class="header-profile-section">
-                <div class="notification hide" [ngClass]="{'active': notificationsAvailable}">
-                    <span class="icon-icon-notifcation"></span>
+          <ul class="dashboardLinks">
+            <li (click)="openDocs()" class="logged-in-docs">DOCUMENTATION</li>
+            <li>
+              <div class="header-profile-section">
+              <div class="profile" (clickOutside)="profileClicked = false">
+                <div class="icon-icon-profile" (click)="profileClick()" title="Logged in as {{loggedinUser}}"></div>
+                <div class="profile-options" [ngClass]="{'fade': profileClicked , 'fade-out': !profileClicked}">
+                  <ul>
+                    <li class="hide" (click)="profileClicked = !profileClicked">
+                      <div class="profile-list"><span class="icon-icon-settings"></span> Settings
+                      </div>
+                    </li>
+                    <li *ngIf='!isOSS' class="" (click)="profileClicked = !profileClicked">
+                      <div class="profile-list" (click)='openFeedbackForm()'><span class="icon-icon-feedback"></span>Feedback</div>
+                    </li>
+                    <li (click)="profileClicked = !profileClicked;startUserJourney()">
+                      <div class="profile-list">
+                        <span class="icon-icon-help"></span>Tutorial
+                      </div>
+                    </li>
+                    <li (click)="profileClicked = !profileClicked;logout()">
+                      <div class="profile-list"><span class="icon-icon-logout"></span>Logout</div>
+                    </li>
+                  </ul>
+                  <div class="white-triangle"></div>
                 </div>
-                <div class="profile" (clickOutside)="profileClicked = false">
-                    <div class="icon-icon-profile" (click)="profileClick()" title="Logged in as {{loggedinUser}}"></div>
-                    <div class="profile-options" [ngClass]="{'fade': profileClicked , 'fade-out': !profileClicked}">
-                        <ul>
-                            <li class="hide" (click)="profileClicked = !profileClicked">
-                                <div class="profile-list"><span class="icon-icon-settings"></span> Settings
-                                </div>
-                            </li>
-                            <li *ngIf='!isOSS' class="" (click)="profileClicked = !profileClicked">
-                                <div class="profile-list" (click)='openFeedbackForm()'><span class="icon-icon-feedback"></span>Feedback</div>
-                            </li>
-                            <li (click)="profileClicked = !profileClicked">
-                                <div class="profile-list" (click)='onNavigate($event)'><span class="icon-icon-help"></span>Help</div>
-                            </li>
-                            <li (click)="profileClicked = !profileClicked;logout()">
-                                <div class="profile-list"><span class="icon-icon-logout"></span>Logout</div>
-                            </li>
-                        </ul>
-                        <div class="white-triangle"></div>
-                    </div>
-                </div>
+              </div>
             </div>
+            </li>
+          </ul>
+
         </div>
     </div>
 </header>
