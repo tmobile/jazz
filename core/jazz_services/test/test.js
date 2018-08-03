@@ -105,6 +105,11 @@ describe('platform_services', function() {
     };
   });
 
+  // afterEach(function(){
+  //   sinon.assert.called(stub);
+  //   sinon.assert.called(logStub);
+  // });
+
   /*
   * Given an event with no event.method, handler() informs of missing input error
   * @params{object} event -> event.method is null, undefined, or empty
@@ -160,7 +165,7 @@ describe('platform_services', function() {
   */
   it("should attempt to get item data from dynamoDB by id if 'GET' method and id are defined", function(){
     event.method = "GET";
-    var attemptBool = dynamoCheck("get",spy);
+    var attemptBool = dynamoCheck("get", spy);
     assert.isTrue(attemptBool);
   });
 
@@ -180,7 +185,7 @@ describe('platform_services', function() {
       return cb(err, null);
     });
     //wrapping the logger and callback function to check for response messages
-    stub = sinon.stub(callbackObj,"callback",spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
@@ -190,6 +195,8 @@ describe('platform_services', function() {
                     logResponse.includes(err.message);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
@@ -215,7 +222,7 @@ describe('platform_services', function() {
       return cb(null, dataObj);
     });
     //wrapping the logger and callback function to check for response messages
-    stub = sinon.stub(callbackObj,"callback",spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
@@ -224,6 +231,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
@@ -249,6 +258,7 @@ describe('platform_services', function() {
     var logResponse = logStub.args[0][0];
     var logCheck = logResponse.includes(logMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(logStub);
     logStub.restore();
     assert.isTrue(logCheck);
   });
@@ -261,7 +271,7 @@ describe('platform_services', function() {
   it("should attempt to get all/filtered items from dynamoDB if 'GET' method and no id are defined", function(){
     event.method = "GET";
     event.path.id = undefined;
-    var attemptBool = dynamoCheck("scan",spy);
+    var attemptBool = dynamoCheck("scan", spy);
     assert.isTrue(attemptBool);
   });
 
@@ -373,9 +383,8 @@ describe('platform_services', function() {
         return cb(err);
       });
       //wrapping the logger and callback function to check for response messages
-      stub = sinon.stub(callbackObj,"callback",spy);
+      stub = sinon.stub(callbackObj, "callback", spy);
       logStub = sinon.stub(logger, "error", spy);
-
       //trigger the mocked logic by calling handler()
       var callFunction = index.handler(event, context, callbackObj.callback);
       var logResponse = logStub.args[0][0];
@@ -384,11 +393,11 @@ describe('platform_services', function() {
                       logResponse.includes(err.message);
       var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
       AWS.restore("DynamoDB");
+      sinon.assert.called(stub);
+      sinon.assert.called(logStub);
       logStub.restore();
       stub.restore();
       assert.isTrue(logCheck && cbCheck);
-      sinon.assert.calledOnce(stub)
-      sinon.assert.calledOnce(logStub);
   });
 
 
@@ -399,7 +408,7 @@ describe('platform_services', function() {
   */
   it("should attempt to get item data from dynamoDB by id if 'PUT' method and id are defined", function(){
     event.method = "PUT";
-    var attemptBool = dynamoCheck("get",spy);
+    var attemptBool = dynamoCheck("get", spy);
     assert.isTrue(attemptBool);
   });
 
@@ -428,6 +437,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(cbCheck && logCheck);
@@ -462,6 +473,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
@@ -480,13 +493,14 @@ describe('platform_services', function() {
       return cb(null, dataObj);
     });
     //wrapping the logger to check for response messages
-    logStub = sinon.stub(logger,"info",spy);
+    logStub = sinon.stub(logger, "info", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
     var logResponse = logStub.args;
     //should indicate function is validating info in event.body for the update in log notifications
     var logCheck = logResponse[8][0].includes(event.body.description) && logResponse[8][0].includes(event.body.email)
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(logStub);
     logStub.restore();
     assert.isTrue(logCheck);
   });
@@ -507,7 +521,7 @@ describe('platform_services', function() {
       return cb(null, dataObj);
     });
     //wrapping the logger and callback function to check for response messages
-    stub = sinon.stub(callbackObj,"callback",spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     logStub = sinon.stub(logger, "error", spy);
     var allCases = true;
     //check if expected response occurs for every invalid event.body scenario, if not, have allCases be false
@@ -523,6 +537,8 @@ describe('platform_services', function() {
       }
     }
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(allCases);
@@ -554,6 +570,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
@@ -587,6 +605,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
@@ -625,7 +645,7 @@ describe('platform_services', function() {
       return cb(err);
     });
     //wrapping the logger and callback function to check for response messages
-    stub = sinon.stub(callbackObj,"callback",spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
@@ -634,6 +654,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(cbCheck && logCheck);
@@ -662,6 +684,8 @@ describe('platform_services', function() {
     var logResponse = logStub.args[9][0];
     var logCheck = logResponse.includes(logMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     assert.isTrue(logCheck);
   });
@@ -673,7 +697,7 @@ describe('platform_services', function() {
   */
   it("should attempt to get item data from dynamoDB by id if 'DELETE' method and id are defined", function(){
     event.method = "DELETE";
-    var attemptBool = dynamoCheck("get",spy);
+    var attemptBool = dynamoCheck("get", spy);
     assert.isTrue(attemptBool);
   });
 
@@ -693,7 +717,7 @@ describe('platform_services', function() {
       return cb(err, null);
     });
     //wrapping the logger and callback function to check for response messages
-    stub = sinon.stub(callbackObj,"callback",spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
@@ -702,6 +726,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType); //&& cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
@@ -727,7 +753,7 @@ describe('platform_services', function() {
       return cb(null, dataObj);
     });
     //wrapping the logger and callback function to check for response messages
-    stub = sinon.stub(callbackObj,"callback",spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
@@ -736,6 +762,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
@@ -752,7 +780,7 @@ describe('platform_services', function() {
     AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
       return cb(null, dataObj);
     });
-    var attemptBool = dynamoCheck("delete",spy);
+    var attemptBool = dynamoCheck("delete", spy);
     assert.isTrue(attemptBool);
   });
 
@@ -774,7 +802,7 @@ describe('platform_services', function() {
       return cb(err);
     });
     //wrapping the logger and callback function to check for response messages
-    stub = sinon.stub(callbackObj,"callback",spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
@@ -783,6 +811,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(cbCheck && logCheck);
@@ -805,12 +835,14 @@ describe('platform_services', function() {
       return cb(null, dataObj);
     });
     //wrapping the logger to check for response messages
-    logStub = sinon.stub(logger,"info",spy);
+    logStub = sinon.stub(logger, "info", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
     var logResponse = logStub.args[2][0];
     var logCheck = logResponse.includes(logMessage);
     AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     assert.isTrue(logCheck);
   });
@@ -836,6 +868,7 @@ describe('platform_services', function() {
       //trigger stub/spy by calling handler
       var callfunction = index.handler(event, context, callback);
       var cbMessage = JSON.stringify(stub.args[0][0]);
+      sinon.assert.called(stub);
       stub.restore();
       if(!cbMessage.includes(errType) || !cbMessage.includes(errMessage)){
         bool = false;
@@ -865,6 +898,7 @@ describe('platform_services', function() {
       //trigger stub/spy by calling handler
       var callfunction = index.handler(event, context, callback);
       var cbMessage = JSON.stringify(spy.args[0][0]);
+      sinon.assert.called(stub);
       stub.restore();
       if(!cbMessage.includes(errType) || !cbMessage.includes(errMessage)){
         bool = false;
@@ -893,6 +927,7 @@ describe('platform_services', function() {
     var callfunction = index.handler(event, context, callback);
     var cbMessage = JSON.stringify(spy.args[0][0]);
     var cbCheck = cbMessage.includes(errType) && cbMessage.includes(errMessage);
+    sinon.assert.called(stub);
     stub.restore();
     assert.isTrue(cbCheck);
   });
@@ -932,7 +967,7 @@ describe('platform_services', function() {
       return cb(err);
     });
     //wrapping the logger and callback function to check for response messages
-    stub = sinon.stub(callbackObj,"callback",spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
@@ -941,6 +976,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(logCheck && cbCheck);
@@ -978,6 +1015,8 @@ describe('platform_services', function() {
     var logCheck = logResponse.includes(logMessage);
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(cbCheck && logCheck);
@@ -1027,7 +1066,7 @@ describe('platform_services', function() {
       return cb(err);
     });
     //wrapping the logger and callback function to check for response messages
-    stub = sinon.stub(callbackObj,"callback",spy);
+    stub = sinon.stub(callbackObj, "callback", spy);
     logStub = sinon.stub(logger, "error", spy);
     //trigger the mocked logic by calling handler()
     var callFunction = index.handler(event, context, callbackObj.callback);
@@ -1037,6 +1076,8 @@ describe('platform_services', function() {
     var cbCheck = cbResponse.includes(errType) && cbResponse.includes(errMessage);
     AWS.restore("DynamoDB.DocumentClient");
     AWS.restore("DynamoDB");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
     logStub.restore();
     stub.restore();
     assert.isTrue(cbCheck && logCheck);
