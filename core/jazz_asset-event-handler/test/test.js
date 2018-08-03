@@ -517,7 +517,7 @@ describe('jazz asset handler tests: ', function () {
     });
 
     it("should call getEventProcessStatus after processing Events ",()=>{
-      getEventProcessStatusStub =  sinon.stub(index,"getEventProcessStatus").returns(record)
+      getEventProcessStatusStub =  sinon.stub(index, "getEventProcessStatus").returns(record)
       index.handler(event, context, (error, records)=>{
         sinon.assert.calledOnce(getEventProcessStatusStub);
         getEventProcessStatusStub.restore();
