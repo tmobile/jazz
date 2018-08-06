@@ -27,7 +27,7 @@ import { environment as env_oss } from './../../../../environments/environment.o
 export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
-
+  sqsStreamString:string = "arn:aws:sqs:us-west-2:" + env_oss.aws.account_number + ":stream/";
   SlackEnabled:boolean = false;
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
@@ -313,16 +313,16 @@ export class CreateServiceComponent implements OnInit {
         var event = {};
         event["type"] = this.eventExpression.type;
         if(this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:us-west-2:302890901340:table/" + this.eventExpression.dynamoTable;
+          event["source"] = "arn:aws:dynamodb:us-west-2:"+env_oss.aws.account_number+":table/" + this.eventExpression.dynamoTable;
           event["action"] = "PutItem";
         } else if(this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:us-west-2:302890901340:stream/" + this.eventExpression.streamARN;
+          event["source"] = "arn:aws:kinesis:us-west-2:"+env_oss.aws.account_number+":stream/" + this.eventExpression.streamARN;
           event["action"] = "PutRecord";
         } else if(this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;
           event["action"] = "S3:" + this.eventExpression.S3BucketName + ":*";
         } else if (this.eventExpression.type === "sqs") {
-          event["source"] = "arn:aws:sqs:us-west-2:302890901340:stream/" + this.eventExpression.SQSstreamARN;
+          event["source"] = "arn:aws:sqs:us-west-2:"+env_oss.aws.account_number+":stream/" + this.eventExpression.SQSstreamARN;
         }
         payload["events"] = [];
         payload["events"].push(event);

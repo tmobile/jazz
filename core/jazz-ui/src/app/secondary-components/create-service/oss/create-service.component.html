@@ -408,7 +408,7 @@
                               <div class="col-lg-12">
                                   <div class="text">Stream ARN</div>
                                   <div class="label-input slct-bx-selected input-wrapper">
-                                      <input type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="arn:aws:sqs:us-west-2:302890901340:stream/">
+                                      <input type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="{{sqsStreamString}}">
                                       <input id="SQSstreamARN" name="SQSstreamARN" type="text" [(ngModel)]="eventExpression.SQSstreamARN" [focus]="focusKinesis" class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Stream Name" required>
                                   </div>
                                 </div>
