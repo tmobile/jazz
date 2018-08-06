@@ -112,8 +112,7 @@ def getLambdaEvents(existing_notifications, events){
   def event_names
   for (item in events) {
     cleanupIndex++
-    if ((item.contains("ObjectCreated") || item.contains("ObjectRemoved")) &&
-      (existing_events.contains("s3:ObjectCreated:*") || existing_events.contains("s3:ObjectRemoved:*"))) {
+    if (item.contains("ObjectCreated") && existing_events.contains("s3:ObjectCreated:*")) {
       new_events[cleanupIndex] = null
     } else if (existing_events.contains(item)) {
       new_events[cleanupIndex] = null
@@ -132,7 +131,6 @@ def checkAndConvertEvents(events){
   // converting the new events to * event
   def cleanupIndex = -1
   def isCreationEvent = false
-  def isRemovalEvent = false
   if (events.size() > 0 && events != null) {
     for (item in events) {
       new_events.add(item)
@@ -143,18 +141,11 @@ def checkAndConvertEvents(events){
       if (item.contains("ObjectCreated")) {
         isCreationEvent = true
         new_events[cleanupIndex] = null
-      } else if (item.contains("ObjectRemoved")) {
-        isRemovalEvent = true
-        new_events[cleanupIndex] = null
       }
     }
-
     new_events.removeAll([null])
     if (isCreationEvent == true) {
       new_events.add("s3:ObjectCreated:*")
-    }
-    if (isRemovalEvent == true) {
-      new_events.add("s3:ObjectRemoved:*")
     }
   }
   echo "new_events : $new_events"
