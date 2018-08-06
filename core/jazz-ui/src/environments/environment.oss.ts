@@ -15,5 +15,8 @@ export const environment = {
   },
   userJourney: {
     registrationMessage: 'Please contact your Jazz Admin(s) to get a registration code.'
+  },
+  aws:{
+    account_number:"{account_number}"
   }
 };

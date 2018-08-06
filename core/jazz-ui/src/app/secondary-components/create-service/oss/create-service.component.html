@@ -363,7 +363,7 @@
                                 <div class="col-lg-9">
                                     <div class="text">Table ARN</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
-                                        <input type="text" disabled="disabled" class="inline-input input-label aws-events-left-block" value="arn:aws:dynamodb:us-west-2:302890901340:table/">
+                                        <input type="text" disabled="disabled" class="inline-input input-label aws-events-left-block" value="{{dynamoStreamString}}">
                                         <input id="dynamoTable" name="dynamoTable" type="text" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" required>
                                   </div>
                                 </div>
@@ -380,7 +380,7 @@
                                 <div class="col-lg-9">
                                     <div class="text">Stream ARN</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
-                                        <input type="text" disabled="disabled" class="inline-input input-label stream aws-events-left-block" value="arn:aws:kinesis:us-west-2:302890901340:stream/">
+                                        <input type="text" disabled="disabled" class="inline-input input-label stream aws-events-left-block" value="{{kinesisStreamString}}">
                                         <input id="streamARN" name="streamARN" type="text" [(ngModel)]="eventExpression.streamARN" [focus]="focusKinesis" class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Stream Name" required>
                                   </div>
                                 </div>

@@ -28,6 +28,8 @@ export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
   sqsStreamString:string = "arn:aws:sqs:us-west-2:" + env_oss.aws.account_number + ":stream/";
+  kinesisStreamString:string = "arn:aws:kinesis:us-west-2:" + env_oss.aws.account_number + ":stream/";
+  dynamoStreamString:string = "arn:aws:dynamo:us-west-2:" + env_oss.aws.account_number + ":stream/";
   SlackEnabled:boolean = false;
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
