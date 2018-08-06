@@ -92,10 +92,8 @@ module.exports.handler = (event, context, callback) => {
             callback(JSON.stringify(errorHandler.throwNotFoundError(errorMessage)));
             break;
           case 'InternalServerError':
-            callback(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
-            break;
           default:
-            callback(JSON.stringify(errorHandler.throwUnknownError(errorMessage)));
+            callback(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
         }
       }
     }

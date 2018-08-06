@@ -51,13 +51,6 @@ module.exports = () => {
         message: errorMessage
       }
     ),
-    throwUnknownError: (errorMessage) => (
-      {
-          errorType: "Service Unavailable",
-          errorCode: 503,
-          message: errorMessage
-      }
-    ),
     throwInternalServerError: (errorMessage) => (
       {
         errorType: "InternalServerError",
