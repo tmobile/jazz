@@ -1,0 +1,25 @@
+{
+  "name": "jazz_slack-channel",
+  "version": "0.0.1",
+  "description": "API to create a public slack-channel",
+  "main": "index.js",
+  "private": true,
+  "author": {
+    "name": "Jazz"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "string-template": "*",
+    "request": "*"
+  },
+  "devDependencies": {
+    "aws-lambda-mock-context": "^3.1.1",
+    "aws-sdk": "*",
+    "aws-sdk-mock": "^1.7.0",
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0",
+    "sinon": "^5.0.10"
+  }
+}

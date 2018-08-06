@@ -187,6 +187,10 @@ $break-small: 840px;
   @media screen and (max-width: $break-small) {
     display: none;
   }
+  li {
+    font-family: Lato;
+    font-size: 13px;
+  }
   .header-profile-section {
     margin-top: 0;
   }

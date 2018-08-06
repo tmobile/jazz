@@ -195,11 +195,24 @@ var toLowercase = (input_data) => {
 	return asset_data;
 };
 
+var paginateUtil = (data, limit, offset) => {
+    var newArr = [];
+    if (offset > data.length || offset == data.length || limit === 0) {
+        data = [];
+    } else if (data.length > limit + offset || data.length === limit + offset) {
+        data = data.slice(offset, offset + limit);
+    } else if (limit + offset > data.length) {
+        data = data.slice(offset, data.length);
+    }
+    return data;
+};
+
 module.exports = {
 	initDynamodb,
 	initDocClient,
 	createFilterExpression,
 	toLowercase,
 	getDatabaseKeyName,
-	formatResponse
+	formatResponse,
+	paginateUtil
 };

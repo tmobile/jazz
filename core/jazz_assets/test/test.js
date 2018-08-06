@@ -214,31 +214,6 @@ describe('jazz_assets', function () {
         });
     });
 
-    it("should validate search payload", () => {
-      var update_data = {
-        service : event.body.service,
-        domain : event.body.domain
-      }
-      validateutils.validateSearchPayload(update_data)
-        .then(res => {
-          expect(res).to.include({
-            result: 'success'
-          });
-        });
-    });
-
-    it("should indicate empty field error value while validating create payload", () => {
-      var payload = Object.assign({}, event.body);
-      payload.provider = "";
-      validateutils.validateSearchPayload(payload, assetTable)
-        .catch(error => {
-          expect(error).to.include({
-            result: 'inputError',
-            message: 'Following fields do not have a valid value - provider'
-          });
-        });
-    });
-
   });
 
   describe('genericInputValidation', () => {
@@ -284,18 +259,6 @@ describe('jazz_assets', function () {
       errMessage = "Asset details are required for creating an asset";
       event.method = "POST";
       event.path = {};
-      event.body = {};
-      index.genericInputValidation(event)
-        .catch(error => expect(error).to.include({
-          result: "inputError",
-          message: errMessage
-        }))
-    });
-
-    it('should indicate search is not supported for POST if search path is missing', () => {
-      errMessage = "Parameters are not supported for asset search";
-      event.method = "POST";
-      event.path.id = "";
       event.body = {};
       index.genericInputValidation(event)
         .catch(error => expect(error).to.include({
@@ -392,42 +355,6 @@ describe('jazz_assets', function () {
           })
           AWS.restore("DynamoDB.DocumentClient")
         });
-    });
-
-  });
-
-  describe('postSearch', () => {
-    it("should successfully search provided asset", () => {
-      var search_data = {
-        service: event.body.service,
-        domain: event.body.domain
-      }
-      var dbRes = Object.assign({}, event.body);
-      dbRes.id = event.path.id;
-      dbRes.timestamp =  "2018-06-18T13:08:55.711Z";
-
-      dataObj = {
-        Items: [dbRes]
-      }
-      AWS.mock("DynamoDB.DocumentClient", "query", (params, cb) => {
-        return cb(null, dataObj);
-      });
-      index.postSearch(search_data, assetTable)
-        .then(res => {
-          expect(res).to.include(dbRes)
-          AWS.restore("DynamoDB.DocumentClient")
-        });
-    });
-
-    it("should indicate error if pDynamoDB.DocumentClient.query fails", () => {
-      AWS.mock("DynamoDB.DocumentClient", "query", (params, cb) => {
-        return cb(err, null);
-      });
-      index.postSearch(event.body, assetTable)
-        .catch(error => {
-          expect(error).to.include(err)
-          AWS.restore("DynamoDB.DocumentClient")
-        })
     });
 
   });
@@ -544,44 +471,6 @@ describe('jazz_assets', function () {
           createNewAsset.restore();
         });
     });
-  });
-
-  describe('processAssetSearch', () => {
-    it("should successfuly process asset serach", () => {
-      var input_data = {
-        service: event.body.service,
-        domain: event.body.domain,
-        environment: event.body.environment
-      }
-      var resObj = {
-        data: event.body,
-        input: input_data
-      };
-      const validateSearchPayload = sinon.stub(validateutils, "validateSearchPayload").resolves(event.body);
-      const postSearch = sinon.stub(index, "postSearch").resolves(resObj);
-      index.processAssetSearch(event.query, assetTable)
-        .then(res => {
-          expect(res).to.include(resObj);
-          sinon.assert.calledOnce(validateSearchPayload);
-          sinon.assert.calledOnce(postSearch);
-          validateSearchPayload.restore();
-          postSearch.restore();
-        });
-    });
-
-    it("should indicate error while processing asset serach", () => {
-      const validateSearchPayload = sinon.stub(validateutils, "validateSearchPayload").resolves(event.body);
-      const postSearch = sinon.stub(index, "postSearch").rejects(err);
-      index.processAssetSearch(event.query, assetTable)
-        .catch(error => {
-          expect(error).to.include(err);
-          sinon.assert.calledOnce(validateSearchPayload);
-          sinon.assert.calledOnce(postSearch);
-          validateSearchPayload.restore();
-          postSearch.restore();
-        });
-    });
-
   });
 
   describe('handler', () => {
@@ -732,33 +621,6 @@ describe('jazz_assets', function () {
             expect(error).to.be.eq(resObj);
             sinon.assert.calledOnce(processAssetCreation);
             processAssetCreation.restore();
-          });
-        });
-
-      });
-
-      describe('asset search using POST method', () => {
-        beforeEach(() => {
-          event.method = "POST";
-          event.path.id = "search"
-        });
-
-        it("should successfully search provided asset", () => {
-          const processAssetSearch = sinon.stub(index, "processAssetSearch").resolves(event.body);
-          index.handler(event, context, (error, data) => {
-            expect(data).to.have.property("data");
-            sinon.assert.calledOnce(processAssetSearch);
-            processAssetSearch.restore();
-          });
-        });
-
-        it("should indicate internal server error while searching for provided asset", () => {
-          var resObj = '{"errorType":"InternalServerError","message":"unexpected error occured"}';
-          const processAssetSearch = sinon.stub(index, "processAssetSearch").rejects(err);
-          index.handler(event, context, (error, data) => {
-            expect(error).to.be.eq(resObj);
-            sinon.assert.calledOnce(processAssetSearch);
-            processAssetSearch.restore();
           });
         });
 

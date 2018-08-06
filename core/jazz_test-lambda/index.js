@@ -94,7 +94,7 @@ function invokeLambda(functionARN, inputJSON, awsRegion) {
       });
       lambda.invoke({
         FunctionName: functionARN,
-        Payload: JSON.stringify(inputJSON)
+        Payload: inputJSON
       }, function (error, data) {
         if (error) {
           logger.error("Error in lambda execution:", JSON.stringify(error));
