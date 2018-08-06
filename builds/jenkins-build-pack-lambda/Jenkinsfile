@@ -818,7 +818,7 @@ def loadBuildModules(buildModuleUrl) {
 		events = load "events-module.groovy"
 		echo "Event module loaded successfully."
 
-    lambdaEvents = load "lambda-events-module.groovy"
+    lambdaEvents = load "aws-lambda-events-module.groovy"
     lambdaEvents.initialize(configLoader)
 		echo "Lambda event module loaded successfully."
 
