@@ -65,10 +65,9 @@
             <span class="path1"></span><span class="path2"></span>
           </span>
           <span *ngIf='reponse_code != 200' class='icon-icon-inactive inactive-icon'></span>
-          {{outputHeader.statusCode}} {{outputHeader.statusText}}<br>
-          <span *ngIf='success && !error'>Function got executed successfully </span>
-          <span *ngIf='success && error'>Function execution failed</span>
-          <span *ngIf='!success && error && !FunctionInvocationError'>Function execution is taking too long. Alternatively, you can check your function logs to verify the functionality</span>
+          {{outputHeader.statusCode}}
+          <span *ngIf='success'>Function got invocated successfully</span>
+          <span *ngIf='!success'>Function invocation failed</span>
         </div>
       </div>
     </section>
