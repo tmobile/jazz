@@ -42,7 +42,7 @@
             <a (click)="formatJSON()" class="pointer">FORMAT</a>
           </div>
           <div>
-              <button (click)="clearInputbox()" class="btn-round secondary">CLEAR</button>
+              <a (click)="clearInputbox()" class="btn-round pointer clear-icon-padding">CLEAR</a>
               <button (click)="startTest()" class="btn-round primary start-button">TEST</button>
           </div>
         </div>
@@ -60,14 +60,13 @@
           </div>
           <textarea [class.success]='api_status == "success"' [class.error]='api_status == "error"' readonly [ngModel]="outputValue" class="output-textarea"></textarea>
         </div>
-        <div class='column-heading' *ngIf="!!outputHeader" [ngClass]="reponse_code == 200 ? 'success' : 'error'" [class.error]='error'>
+        <div class='column-heading' *ngIf="!!outputHeader" [ngClass]="reponse_code == 200 ? 'success' : 'error'" [class.error]='!success'>
           <span *ngIf='reponse_code == 200' class='icon-icon-good inactive-icon succ'>
             <span class="path1"></span><span class="path2"></span>
           </span>
           <span *ngIf='reponse_code != 200' class='icon-icon-inactive inactive-icon'></span>
-          {{outputHeader.statusCode}}
-          <span *ngIf='success'>Function got invocated successfully</span>
-          <span *ngIf='!success'>Function invocation failed</span>
+          <span *ngIf='success' >Function got triggered successfully</span>
+          <span *ngIf='!success'>Failed to trigger the function</span>
         </div>
       </div>
     </section>
