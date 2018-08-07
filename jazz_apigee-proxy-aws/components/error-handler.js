@@ -60,7 +60,7 @@ module.exports = () => {
     ),
     throwMissingParamsError: (errorMessage) => (
       {
-        errorType: "Missing Required Params",
+        errorType: "MissingRequiredParams",
         errorCode: 400,
         message: errorMessage
       }
