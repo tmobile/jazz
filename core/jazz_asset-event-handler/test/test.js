@@ -23,7 +23,6 @@ const request = require('request');
 const AWS = require('aws-sdk-mock');
 const awsContext = require('aws-lambda-mock-context');
 const sinon = require('sinon');
-const sinonTest = require('sinon-test')(sinon, { useFakeTimers: false });
 const rp = require('request-promise-native');
 const index = require('../index');
 const logger = require('../components/logger');
