@@ -463,12 +463,8 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-<<<<<<< HEAD:core/jazz_create-serverless-service/test/test.js
-          "create_cloudfront_url": false
-=======
           "create_cloudfront_url": false,
           "deployment_targets": {"api": "apigee"}
->>>>>>> apigee-plugin:jazz_create-serverless-service/test/test.js
         }
       };
       service_creation_data = event.body;
@@ -717,13 +713,8 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-<<<<<<< HEAD:core/jazz_create-serverless-service/test/test.js
-          "create_cloudfront_url": false
-
-=======
           "create_cloudfront_url": false,
           "deployment_targets": {"api": "apigee"}
->>>>>>> apigee-plugin:jazz_create-serverless-service/test/test.js
         }
       };
       service_creation_data =  event.body;
