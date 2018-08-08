@@ -18,7 +18,8 @@ import groovy.transform.Field
 @Field def events
 @Field def serviceMetadataLoader
 @Field def utilModule
-@Field def awsModule
+@Field def awsAPIGatewayModule
+@Field def awsLambdaModule
 @Field def environmentDeploymentMetadata
 
 @Field def auth_token = ''
@@ -228,7 +229,7 @@ node() {
 								def api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
 								echo "API ID: $api_id"
 								apiHostName ="${api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com"
-								awsModule.addApigatewayLambdaIntegration('swagger/swagger.json');
+								awsAPIGatewayModule.addApigatewayLambdaIntegration('swagger/swagger.json');
 								updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
 
 								sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+ " --profile cloud-api"
@@ -244,7 +245,7 @@ node() {
 
 							case 'gcp_apigee':
 								events.sendStartedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment started for APIGEE', context_map, environment_logical_id)
-								def arn = getLambdaARN(stackName)
+								def arn = awsLambdaModule.getLambdaARN(stackName)
 								apiHostName ="${configLoader.APIGEE.API_ENDPOINTS[env_key].service_hostname}"
 								updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
 								endpointUrl = apigeeModule.deploy("${pwd()}/swagger/swagger.json", arn, env_key, environment_logical_id, config, context_map)
@@ -785,9 +786,12 @@ def loadBuildModules(buildModuleUrl){
 		configLoader = configModule.initialize(resultJsonString)
 		echo "config loader loaded successfully."
 
-		awsModule = load "aws-apigateway-module.groovy"
-		awsModule.initialize()
+		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
+		awsAPIGatewayModule.initialize()
 		echo "AWS APIGateway module loaded successfully."
+
+		awsLambdaModule = load "aws-lambda-module.groovy"
+		echo "AWS Lambda module loaded successfully."
 
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
@@ -809,49 +813,10 @@ def loadBuildModules(buildModuleUrl){
 		environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
 		echo "Environment deployment data loader module loaded successfully."
 
-		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {
+		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {			
 			apigeeModule = load "apigee-module.groovy"
 			apigeeModule.initialize(configLoader.APIGEE, events)
 			echo "Apigee module loaded successfully."
 		}
 	}
-}
-
-/**
- * Query AWS for the ARN of a lambda
- *
- * @param stackName Stack name used to query for the lamba ARN.
- * @return object with the ARN for the lambda.
- */
-def getLambdaARN (stackName) {
-	def arn = "";
-
-	try {
-		def cloudformation_resources = "";
-		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
-
-	    def parsedObject = parseJson(cloudformation_resources);
-		def outputs = parsedObject.Stacks[0].Outputs;
-
-		for (output in outputs) {
-			if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
-				arn = output.OutputValue
-			}
-		}
-	} catch (ex) {
-		error ex.getMessage();
-	}
-
-    def tokens = arn.split(':')
-    def version
-    def alias
-    if (tokens[7].substring(0,1).isNumber()) {
-        version = tokens[7]
-        alias = ""
-    } else {
-        version = ""
-        alias = tokens[7]
-    }
-
-    return [ arn: arn, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias ]
 }
