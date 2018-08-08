@@ -798,3 +798,18 @@ p.learn-more {
   border-color: #ddd !important;
   opacity: 0.5 !important;
 }
+
+.form-row {
+  padding: 20px 0;
+  border-bottom: solid 1px #ccc;
+}
+
+.radio-options {
+  display:flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: row;
+  .radio-container {
+    margin-right: 15px;
+  }
+}

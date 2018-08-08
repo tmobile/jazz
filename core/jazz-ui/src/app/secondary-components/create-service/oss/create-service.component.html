@@ -65,6 +65,25 @@
                 </div>
             </div>
         </section>
+        <section class="form-row deployment-targets" *ngIf="typeOfService === 'api' && buildEnvironment.createService.apiDeploymentTargets">
+          <div class="row">
+            <div class="col-lg-4 col-md-4">
+              <p class="step-title">Choose your API deployment target<span>*</span></p>
+            </div>
+            <div class="col-lg-8 col-md-8 radio-options">
+                <div class="radio-container" (click)="apiDeployment='aws_apigateway'">
+                  <input type="radio" name="target" value="aws_apigateway" [ngModel]="apiDeployment">
+                  <label><span class='outer'></span><span class="background"></span>AWS API Gateway</label>
+                </div>
+                <div class="radio-container" (click)="apiDeployment='gcp_apigee'">
+                  <input type="radio" name="target" value="gcp_apigee" [ngModel]="apiDeployment">
+                  <label><span class='outer'></span><span class="background"></span>APIGEE</label>
+                </div>
+            </div>
+          </div>
+        </section>
+
+
         <section class="each-step-wrap run-time" *ngIf="typeOfService != 'website'">
             <div class="row">
                 <div class="col-lg-4 col-md-4">

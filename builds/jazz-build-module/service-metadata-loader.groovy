@@ -38,12 +38,17 @@ def loadServiceMetadata(service_id){
 		if(service_Object){
 			def service_data = parseJson(service_Object)
 			def data = service_data.Item.SERVICE_METADATA.M
+			def deployment_targets = service_data.Item.SERVICE_DEPLOYMENT_TARGETS.M
 			def metadata = [:]
 			def catalog_metadata = [:]
+			def deployment_targets_metadata = [:]
 			
 			for(item in data){
 				metadata[item.key] = item.value.S
 				catalog_metadata[item.key] = item.value.S				
+			}
+			for (target in deployment_targets) {
+				deployment_targets_metadata[target.key] = target.value.S
 			}
 			metadata['service_id'] = service_data.Item.SERVICE_ID.S
 			metadata['service'] = service_data.Item.SERVICE_NAME.S
@@ -53,6 +58,7 @@ def loadServiceMetadata(service_id){
 			metadata['runtime'] = service_data.Item.SERVICE_RUNTIME.S
 			metadata['region'] = configLoader.AWS.REGION
 			metadata['catalog_metadata'] = catalog_metadata
+			metadata['deployment_targets'] = deployment_targets_metadata
 			if(service_data.Item.SERVICE_SLACK_CHANNEL)
 				metadata['slack_channel'] = service_data.Item.SERVICE_SLACK_CHANNEL.S			
 			
