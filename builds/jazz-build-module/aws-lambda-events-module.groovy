@@ -15,26 +15,42 @@ def initialize(configLoader){
 }
 
 
-def checkS3AndUpdateServerless(s3BucketName) {
-  try {
+def checkS3AndUpdateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {
+  def isExists = checkS3BucketExists(s3BucketName)
+  if(isExists){
+    updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action)
+  }else{
+    createBucket(s3BucketName)
+    updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action)
+  }
+}
+
+def checkS3BucketExists(s3BucketName){
+   try {
     sh "aws s3api head-bucket --bucket $s3BucketName --output json"
     echo "Bucket exists and have access"
-    def sedCommand = "s/events/eventsDisabled/g";
-    sedCommand = sedCommand + "; /#Start:isS3EventEnabled/,/#End:isS3EventEnabled/d"
-    sh "sed -i -- '$sedCommand' ./serverless.yml"
     return true
   } catch (ex) {//bucket exists but with no access
     def res
     try {
       res = sh(script: "aws s3api head-bucket --bucket $s3BucketName --output json 2<&1 | grep -c 'Forbidden'", returnStdout: true).trim()
     } catch (e) {
-      echo "Bucket does not exist"
-      return false;
+      echo "Bucket does not exist "
+      return false
     }
     if (res) {
       echo "Bucket exists and don't have access"
       error ex.getMessage()
     }
+  }
+}
+
+def createBucket(s3BucketName){
+  try{
+    def res = sh(script: "aws s3api create-bucket --bucket $s3BucketName --profile cloud-api", returnStdout: true).trim()
+  }catch(ex){
+    echo "Failed to create the bucket"
+    error ex.getMessage()
   }
 }
 
@@ -53,7 +69,7 @@ def updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {
 }
 
 def getbucketNotificationConfiguration(s3BucketName){
-  def existing_notifications = [: ]
+  def existing_notifications = [:]
   try {
     def existing_notificationsObj = sh(returnStdout: true, script: "aws s3api get-bucket-notification-configuration --bucket $s3BucketName --output json")
     echo "existing_notificationsObj: $existing_notificationsObj"
@@ -65,7 +81,7 @@ def getbucketNotificationConfiguration(s3BucketName){
 }
 
 def putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action){
-  def new_lambda_configuration = [: ]
+  def new_lambda_configuration = [:]
   def events = action.split(",")
   def lambdaFunctionConfigurations = []
   def new_events = []
@@ -109,12 +125,10 @@ def getLambdaEvents(existing_notifications, events){
   echo "events . $events"
 
   // Removing the existing events from the new event list
-  def event_names
   for (item in events) {
     cleanupIndex++
-    if (item.contains("ObjectCreated") && existing_events.contains("s3:ObjectCreated:*")) {
-      new_events[cleanupIndex] = null
-    } else if (existing_events.contains(item)) {
+    if (((item.contains("ObjectCreated") || item.contains("ObjectRemoved")) &&
+      (existing_events.contains("s3:ObjectCreated:*") || existing_events.contains("s3:ObjectRemoved:*"))) || (existing_events.contains(item))) {
       new_events[cleanupIndex] = null
     }
   }
@@ -131,9 +145,15 @@ def checkAndConvertEvents(events){
   // converting the new events to * event
   def cleanupIndex = -1
   def isCreationEvent = false
+  def isRemovalEvent = false
+
   if (events.size() > 0 && events != null) {
     for (item in events) {
       new_events.add(item)
+    }
+
+    if(new_events.contains("s3:ObjectRemoved:*")){
+      isRemovalEvent = true
     }
 
     for (item in events) {
@@ -142,10 +162,16 @@ def checkAndConvertEvents(events){
         isCreationEvent = true
         new_events[cleanupIndex] = null
       }
+      if(isRemovalEvent == true && item.contains("ObjectRemoved")){
+        new_events[cleanupIndex] = null
+      }
     }
     new_events.removeAll([null])
     if (isCreationEvent == true) {
       new_events.add("s3:ObjectCreated:*")
+    }
+    if (isRemovalEvent == true) {
+      new_events.add("s3:ObjectRemoved:*")
     }
   }
   echo "new_events : $new_events"
@@ -159,7 +185,7 @@ def checkAndConvertEvents(events){
 @NonCPS
 def parseJson(jsonString) {
   def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-  def m = [: ]
+  def m = [:]
   m.putAll(lazyMap)
   return m
 }
