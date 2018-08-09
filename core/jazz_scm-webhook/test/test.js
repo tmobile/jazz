@@ -159,7 +159,7 @@ describe('jazz_scm-webhook', function() {
     var scmSource = "testScm";
     var getScmDetails = index.getScmDetails(scmSource, event, config);
     expect(getScmDetails.then(function(res){
-     return res;
+      return res;
     })).to.be.rejectedWith('Unsupported scmSource');
   })
 
@@ -169,7 +169,7 @@ describe('jazz_scm-webhook', function() {
     event = bitbucketEvent;
     var getScmDetails = index.getScmDetails(scmSource, event, config);
     expect(getScmDetails.then(function(res){
-     return res;
+      return res;
     })).to.be.rejectedWith('Invalid event key');
   });
 
@@ -179,7 +179,7 @@ describe('jazz_scm-webhook', function() {
     event = gitlabEventPush;
     var getScmDetails = index.getScmDetails(scmSource, event, config);
     expect(getScmDetails.then(function(res){
-     return res;
+      return res;
     })).to.be.rejectedWith('Invalid event key');
   });
 
@@ -629,7 +629,7 @@ describe('jazz_scm-webhook', function() {
   it("should indicate error if update SCM event fails in handler function", function(){
     event = bitbucketEvent;
     event.stage = "test";
-    var message = '{"errorType":"InternalServerError","message":"Eventkey is null or undefined! so unable to find event name."}'
+    var message = '{"errorType":"InternalServerError","message":"Unable to find event name as event key is null."}'
     var reqStub = sinon.stub(request, "Request", (obj) => {
       return obj.callback(err, null, null);
     })
@@ -639,14 +639,11 @@ describe('jazz_scm-webhook', function() {
         reqStub.restore();
         return err
       } else {
+        reqStub.restore();
         return res
       }
     });
   })
-
-  /*
-  Disabling test as its failing with the following error:
-  TypeError: Attempted to wrap Request which is already wrapped
 
   it("should successfully update SCM event in handler function", function(){
     event = bitbucketEvent;
@@ -681,7 +678,7 @@ describe('jazz_scm-webhook', function() {
       }
     });
 
-  });*/
+  });
 
   it("should successfully update SCM event in handler function", function(){
     event = gitlabEventMerge;

@@ -119,6 +119,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
         if (response && response.data && response.data.metrics && response.data.metrics.length) {
           this.sectionStatus = 'resolved';
           this.graphDataRaw = response.data;
+          this.sortAllMetricData(this.graphDataRaw);
           this.selectMetric(this.metricsIndex);
         } else {
           this.sectionStatus = 'empty';
@@ -176,6 +177,16 @@ export class EnvCodequalitySectionComponent implements OnInit {
 
   sonarLink() {
     window.open(this.selectedMetric.link, '_blank');
+  }
+
+  sortAllMetricData(graphData) {
+    graphData.metrics.forEach((metric) => {
+      let datapoints = metric.values
+        .sort((pointA, pointB) => {
+          return moment(pointA.ts).diff(moment(pointB.ts));
+        });
+      metric.values = datapoints;
+    })
   }
 
 }

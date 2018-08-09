@@ -56,25 +56,5 @@ module.exports = (assets_id, asset_table, onComplete) => {
         docClient.get(params, (err, data) => {
             callBack(err, data);
         });
-    } else {
-        var items = [];
-        var scanExecute = (callBack) => {
-            docClient.scan(params, (err, data) => {
-                if (err) {
-                    callBack(err, null);
-                } else {
-                    items = items.concat(data.Items);
-                    if (data.LastEvaluatedKey) {
-                        params.ExclusiveStartKey = data.LastEvaluatedKey;
-                        scanExecute(callBack);
-                    } else {
-                        var assets = {};
-                        assets.Items = items;
-                        callBack(null, assets);
-                    }
-                }
-            });
-        };
-        scanExecute(callBack);
-    }
+    } 
 };

@@ -14,6 +14,7 @@ import { Subscription } from 'rxjs/Subscription';
 import { ServiceDetailComponent } from '../service-detail/service-detail.component'
 import { environment } from './../../../environments/environment';
 import {  environment as env_internal } from './../../../environments/environment.internal';
+import { environment as env_oss } from './../../../environments/environment.oss';
 
 
 declare var $: any;
@@ -817,7 +818,9 @@ export class ServiceOverviewComponent implements OnInit {
   }
   frndload(event) {}
   is_multi_env: boolean = false;
+  SlackEnabled:boolean = false;
   ngOnInit() {
+    if(env_oss.slack_support) this.SlackEnabled=true;
     if (environment.envName == 'oss')
       if (!environment.multi_env)
         this.multiENV = false;
