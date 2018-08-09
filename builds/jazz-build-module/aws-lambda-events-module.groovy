@@ -25,14 +25,14 @@ def checkSQSAndAddLambdaTrigger(queueName, lambdaARN) {
 }
 
 def addLambdaTriggerToSqsQueue(isExists, queue_name, lambdaARN){
-    if(isExists){
-      def isDefined = listEventSourceMapping(queue_name, lambdaARN)
-      if(!isDefined){
-        createEventSourceMapping(queue_name, lambdaARN)
-      }
-    }else{
-      createSqsQueue(queue_name, lambdaARN)
+  if(isExists){
+    def isDefined = listEventSourceMapping(queue_name, lambdaARN)
+    if(!isDefined){
+      createEventSourceMapping(queue_name, lambdaARN)
     }
+  }else{
+    createSqsQueue(queue_name, lambdaARN)
+  }
 }
 
 def createSqsQueue(queue_name, lambdaARN){
