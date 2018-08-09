@@ -28,7 +28,8 @@ export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
 
-docs_link = env_oss.urls.docs_link;
+  SlackEnabled:boolean = false;
+  docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
   typeOfPlatform:string = "aws";
   disablePlatform = true;
@@ -549,6 +550,7 @@ docs_link = env_oss.urls.docs_link;
 
   ngOnInit() {
     this.getData();
+    if(env_oss.slack_support) this.SlackEnabled=true;
   };
     // cron validation related functions //
 

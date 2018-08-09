@@ -28,6 +28,7 @@ import groovy.transform.Field
 @Field def current_environment = ''
 @Field def stack_name
 node() {
+
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 

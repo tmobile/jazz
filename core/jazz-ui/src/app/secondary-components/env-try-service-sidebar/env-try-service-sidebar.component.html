@@ -27,7 +27,7 @@
             <div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
           </div>
           <textarea [(ngModel)]="inputValue" (ngModelChange)="lineNumbers('ip')" class="input-textarea"
-                    (change)="toggleSavePayload(savingPayload)"></textarea>
+                    (change)="toggleSavePayload(savingPayload)" (blur)="inputIsValid()"></textarea>
         </div>
         <div class='warning-chk-wrp'>
           <p class="warning" *ngIf="!valid">{{validityMessage}}</p>
@@ -40,7 +40,6 @@
             </div>
           </div>
         </div>
-
         <div class="button-group">
           <button (click)="closeSideMenu()" class="btn-round secondary">CANCEL</button>
           <button (click)="startTest()" class="btn-round primary start-button">TEST</button>
@@ -66,7 +65,7 @@
           {{outputHeader.statusCode}} {{outputHeader.statusText}}<br>
           <span *ngIf='success && !error'>Function got executed successfully </span>
           <span *ngIf='success && error'>Function execution failed</span>
-          <span *ngIf='!success && error'>Function execution is taking too long. Alternatively, you can check your function logs to verify the functionality</span>
+          <span *ngIf='!success && error && !FunctionInvocationError'>Function execution is taking too long. Alternatively, you can check your function logs to verify the functionality</span>
         </div>
         <div class="textbox op-box">
           <div class="line-numbers">

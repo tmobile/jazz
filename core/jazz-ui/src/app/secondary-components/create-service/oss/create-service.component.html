@@ -75,7 +75,7 @@
                         <section class="col-lg-3 col-md-3 pad-left0">
                             <div class="radio-container">
                                 <input type="radio" class='test-focus' name="runtime" id="nodejs" [value]="nodejs" [checked]="runtime == 'nodejs'" (click)="onSelectionChange('nodejs')">
-                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (4.3)</label>
+                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (6.10)</label>
                             </div>
                         </section>
                         <section class="col-lg-3 col-md-3 pad-left0">
@@ -178,9 +178,9 @@
                     <div class="col-lg-8 col-md-8">
                         <section class="col-lg-12  pad-left0">
                             <div class="input-field-container">
-                                <div class="slack-checkbox custom-cb disable-event">
-                                    <input type="checkbox" id="checkbox-slack" class="ng-untouched ng-valid ng-dirty ng-valid-parse" disabled aria-invalid="false" [checked]="slackSelected" (change)="slackSelected = !slackSelected">
-                                    <label for="checkbox-slack" class="disble"></label>
+                                <div class="slack-checkbox custom-cb" [class.disable-event]='!SlackEnabled'>
+                                    <input type="checkbox" id="checkbox-slack" class="ng-untouched ng-valid ng-dirty ng-valid-parse" [disabled]='!SlackEnabled' aria-invalid="false" [checked]="slackSelected" (change)="slackSelected = !slackSelected">
+                                    <label for="checkbox-slack" [class.disble]='!SlackEnabled'></label>
                                     <div class="cb-status-dets"> Do you want us to notify you through #Slack?</div>
                                 </div>
                                 <div *ngIf="slackSelected == true">
@@ -322,26 +322,26 @@
                     <div class="col-lg-8 col-md-8">
                         <div class="input-field-container event-schedule-radio row zero-margin">
                             <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container disable-event">
+                                <div class="radio-container ">
                                     <input type="radio" name="AWSEvents" id="awsEventsNone" [value]="awsEventsNone" [checked]="eventExpression.type == 'awsEventsNone'" (click)="onAWSEventChange('awsEventsNone')">
                                     <label for="awsEventsNone"><span></span><span class="background"></span>None</label>
                                 </div>
                             </section>
                             <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container disable-event">
-                                    <input disabled type="radio" name="AWSEvents" id="dynamodb" [value]="dynamodb" [checked]="eventExpression.type == 'dynamodb'" (click)="onAWSEventChange('dynamodb')">
+                                <div class="radio-container ">
+                                    <input  type="radio" name="AWSEvents" id="dynamodb" [value]="dynamodb" [checked]="eventExpression.type == 'dynamodb'" (click)="onAWSEventChange('dynamodb')">
                                     <label for="dynamodb"><span></span><span class="background"></span>DynamoDB</label>
                                 </div>
                             </section>
                             <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container disable-event">
-                                    <input disabled type="radio" name="AWSEvents" id="kinesis" [value]="kinesis" [checked]="eventExpression.type == 'kinesis'" (click)="onAWSEventChange('kinesis')">
+                                <div class="radio-container ">
+                                    <input  type="radio" name="AWSEvents" id="kinesis" [value]="kinesis" [checked]="eventExpression.type == 'kinesis'" (click)="onAWSEventChange('kinesis')">
                                     <label for="kinesis"><span></span><span class="background"></span>Kinesis</label>
                                 </div>
                             </section>
                             <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container disable-event">
-                                    <input disabled type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
+                                <div class="radio-container ">
+                                    <input  type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
                                     <label for="s3"><span></span><span class="background"></span>S3</label>
                                 </div>
                             </section>
