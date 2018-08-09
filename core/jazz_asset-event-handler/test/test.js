@@ -455,7 +455,6 @@ describe('jazz asset handler tests: ', function () {
       checkForInterestedEventsStub = sinon.stub(index, "checkForInterestedEvents").rejects({
         "error":"message"
       });
-      var handleFailedEventsStub = sinon.stub(index, "handleFailedEvents").rejects("error");
       index.processEachEvent(event.Records[0], configData, authToken).catch(err => {
         expect(err.error).to.eq("message");
         sinon.assert.calledOnce(checkForInterestedEventsStub);
@@ -497,7 +496,15 @@ describe('jazz asset handler tests: ', function () {
     };
     error ={
       message: "sample error message"
-    }
+    };
+    var tokenResponseObj = {
+      statusCode: 200,
+      body: {
+        data: {
+          token: "abc"
+        }
+      }
+    };
     var rpStub, getTokenRequestStub, getAuthResponseStub, processEventsStub, getEventProcessStatusStub;
     it("Should send Request for authtoken ",()=>{
       rpStub = sinon.stub(rp, 'Request').returns(Promise.resolve(result));
@@ -507,29 +514,86 @@ describe('jazz asset handler tests: ', function () {
       })
     });
 
-    it("should call processEvents",()=>{
-      processEventsStub = sinon.stub(index, "processEvents").resolves(result);
-      index.handler(event, context, (error, records)=>{
-        sinon.assert.calledOnce(processEventsStub);
-        processEventsStub.restore();
-      })
+    it('index should resolve for not interested events', function () {
+      var callback = (err, responseObj) => {
+        if (err) {
+          return err;
+        }
+        else {
+          return JSON.stringify(responseObj);
+        }
+      };
+
+      tokenResponseObj.statusCode = 400;
+
+      var authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
+      var reqStub = sinon.stub(request, "Request").callsFake(obj => {
+        return obj.callback(null, responseObject, responseObject.body);
+      });
+      var message = 'User is not authorized to access this service';
+      index.handler(event, context, (err, res) => {
+        if (err) {
+          return err;
+        } else {
+          res.should.have.property('failed_events');
+          return res;
+        }
+      });
+      authStub.restore();
+      reqStub.restore();
     });
 
-    it("should call getEventProcessStatus after processing Events ",()=>{
-      getEventProcessStatusStub =  sinon.stub(index, "getEventProcessStatus").returns(record)
-      index.handler(event, context, (error, records)=>{
-        sinon.assert.calledOnce(getEventProcessStatusStub);
-        getEventProcessStatusStub.restore();
-      })
-    })
+    it('index should resolve with updating', function () {
+      event.Records =  [
+        {
+          "kinesis": {
+            "kinesisSchemaVersion": "1.0",
+            "partitionKey": "CALL_DELETE_WORKFLOW",
+            "sequenceNumber": "abc1234",
+            "data": "eyJJdGVtIjp7IkVWRU5UX0lEIjp7IlMiOiJhMjFhNmIxNy02MDM1LTRiY2QtOTBlYi0xNGM3Nzg4NDMzYTUtMDA3In0sIlRJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xM1QwMToxODozNTo1NTYifSwiU0VSVklDRV9DT05URVhUIjp7IlMiOiJ7XCJzZXJ2aWNlX3R5cGVcIjpcIm5vZGVqc1wiLFwiYnJhbmNoXCI6XCJtYXN0ZXJcIixcInJ1bnRpbWVcIjpcIm5vZGVqczQuM1wiLFwiZG9tYWluXCI6XCJqYXp6XCIsXCJpYW1fcm9sZVwiOlwiYXJuOmE6aWFtOjozMDI4OTA5MDEzNDA6cm9sZS9qYXp6X3BsYXRmb3JtX3NlcnZpY2VzXCIsXCJlbnZpcm9ubWVudFwiOlwiTkFcIixcInJlZ2lvblwiOlwidXMtd2VzdC0yXCIsXCJzZXJ2aWNlX2lkXCI6XCI1ZTU4ZDEwMS0yZTYyLWYzOWMtNjFjYS04M2QxZTRiNWU4MDlcIn0ifSwiVVNFUk5BTUUiOnsiUyI6InNpbmkud2lsc29uQHVzdC1nbG9iYWwuY29tIn0sIkVWRU5UX1RJTUVTVEFNUCI6eyJTIjoiMjAxNy0wNy0xOFQxMzoxODozMjo2MDAifSwiRVZFTlRfU1RBVFVTIjp7IlMiOiJTVEFSVEVEIn0sIkVWRU5UX05BTUUiOnsiUyI6IkNBTExfREVMRVRFX1dPUktGTE9XIn0sIkVWRU5UX1RZUEUiOnsiUyI6IlNFUlZJQ0VfREVMRVRJT04ifSwiU0VSVklDRV9OQU1FIjp7IlMiOiJlbWFpbC1ldmVudC1oYW5kbGVyIn0sIkVWRU5UX0hBTkRMRVIiOnsiUyI6IkpFTktJTlMifSwiU0VSVklDRV9JRCI6eyJTIjoiNWU1OGQxMDEtMmU2Mi1mMzljLTYxY2EtODNkMWU0YjVlODA5In19fQ==",
+            "approximateArrivalTimestamp": 1521632408.682
+          },
+          "eventSource": "abc",
+          "eventVersion": "1.0",
+          "eventID": "abc",
+          "eventName": "abc",
+          "invokeIdentityArn": "abc",
+          "awsRegion": "abc",
+          "eventSourceARN": "abc"
+        }
+      ];
+      var callback = (err, responseObj) => {
+        if (err) {
+          return err;
+        }
+        else {
+          return JSON.stringify(responseObj);
+        }
+      };
 
-    it("should return the record of processed and falied events ",()=>{
-      index.handler(event, context, (error, records)=>{
-        expect(records.processed_events).to.eq(1)
-        expect(records.failed_events).to.eq(1)
-      })
-    })
+      var responseObject = {
+        statusCode: 200,
+        body: {
+          data: {
+            "id": "ghd93-3240-2343"
+          }
+        }
+      };
 
+      var authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
+      var reqStub = sinon.stub(request, "Request").callsFake(obj => {
+        return obj.callback(null, responseObject, responseObject.body);
+      });
+
+      index.handler(event, context, (err, res) => {
+        if (err) {
+          return err;
+        } else {
+          res.should.have.property('processed_events');
+          return res;
+        }
+      });
+    });
   })
 
   describe("handleFailedEvents",()=>{
@@ -547,8 +611,8 @@ describe('jazz asset handler tests: ', function () {
   describe("getEventProcessStatus",()=>{
     it("getEventProcessStatus", () => {
       var res = index.getEventProcessStatus();
-      expect(res.processed_events).to.eq(3);
-      expect(res.failed_events).to.eq(1);
+      expect(res.processed_events).to.eq(5);
+      expect(res.failed_events).to.eq(2);
     })
   });
 
