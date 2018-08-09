@@ -42,15 +42,15 @@ String deploy(swaggerFile, arn, env_key, environment_logical_id, config, context
     apigeeContextMap.putAll(context_map)
     apigeeContextMap.putAll(deployEnv)
     def hostUrl = getHostUrl(deployEnv, swaggerFile)
+    def templateValues = getTemplateValues(swaggerFile, environment_logical_id)
 
     dir (apigeeModuleRoot) {
-        def templateValues = getTemplateValues(swaggerFile, environment_logical_id)
         def functionName = arn.functionName
         
         try {
             events.sendStartedEvent('APIGEE_API_PROXY_GEN', 'Creating Apigee API proxy configuration', apigeeContextMap)
             proxygen(templateValues)
-	        events.sendCompletedEvent('APIGEE_API_PROXY_GEN', 'Completed Apigee API proxy configuration', apigeeContextMap)
+            events.sendCompletedEvent('APIGEE_API_PROXY_GEN', 'Completed Apigee API proxy configuration', apigeeContextMap)
         } catch(e) {
             echo "Failure during proxy generation: ${e}"
             currentBuild.result = "FAILED"

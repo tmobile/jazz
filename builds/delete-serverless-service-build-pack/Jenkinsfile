@@ -163,7 +163,7 @@ node {
 									break
 								case 'gcp_apigee':
 									def env_key = _envId.endsWith("-dev") ? "DEV" : "PROD"
-									apigeeModule.delete("${pwd()}/swagger/swagger.json", env_key, _envId, service_config)
+									apigeeModule.delete("swagger/swagger.json", env_key, _envId, service_config)
 									break
 								default:
 									error "Deployment platform not recognized."
@@ -1105,9 +1105,11 @@ def loadBuildModules(buildModuleUrl){
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
 		
-		apigeeModule = load "apigee-module.groovy"
-		apigeeModule.initialize(configLoader.APIGEE, events)
-		echo "Apigee module loaded successfully."
+		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {			
+			apigeeModule = load "apigee-module.groovy"
+			apigeeModule.initialize(configLoader.APIGEE, events)
+			echo "Apigee module loaded successfully."
+		}
 	}
 }
 

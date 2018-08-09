@@ -278,7 +278,7 @@ node() {
 								def arn = awsLambdaModule.getLambdaARN(stackName)
 								apiHostName ="${configLoader.APIGEE.API_ENDPOINTS[env_key].service_hostname}"
 								updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
-								endpointUrl = apigeeModule.deploy("${pwd()}/swagger/swagger.json", arn, env_key, environment_logical_id, config, context_map)
+								endpointUrl = apigeeModule.deploy("swagger/swagger.json", arn, env_key, environment_logical_id, config, context_map)
 								echo "API Proxy created at: ${endpointUrl}"
 								events.sendCompletedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment complete for APIGEE', context_map, environment_logical_id)
 								break;

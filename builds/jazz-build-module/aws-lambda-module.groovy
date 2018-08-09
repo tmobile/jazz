@@ -5,23 +5,23 @@
  * @return object with the ARN for the lambda.
  */
 def getLambdaARN (stackName) {
-	def arn = "";
+    def arn = "";
 
-	try {
-		def cloudformation_resources = "";
-		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+    try {
+        def cloudformation_resources = "";
+        cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
 
-	    def parsedObject = parseJson(cloudformation_resources);
-		def outputs = parsedObject.Stacks[0].Outputs;
+        def parsedObject = parseJson(cloudformation_resources);
+        def outputs = parsedObject.Stacks[0].Outputs;
 
-		for (output in outputs) {
-			if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
-				arn = output.OutputValue
-			}
-		}
-	} catch (ex) {
-		error ex.getMessage();
-	}
+        for (output in outputs) {
+            if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
+                arn = output.OutputValue
+            }
+        }
+    } catch (ex) {
+        error ex.getMessage();
+    }
 
     def tokens = arn.split(':')
     def version
