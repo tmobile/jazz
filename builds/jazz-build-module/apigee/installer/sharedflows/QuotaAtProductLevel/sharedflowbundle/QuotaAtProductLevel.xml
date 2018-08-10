@@ -2,11 +2,11 @@
 <SharedFlowBundle revision="1" name="QuotaAtProductLevel">
     <ConfigurationVersion majorVersion="4" minorVersion="0"/>
     <CreatedAt>1495140711261</CreatedAt>
-    <CreatedBy>darshan.shivashankar@t-mobile.com</CreatedBy>
+    <CreatedBy></CreatedBy>
     <Description>Jazz-1.0.b-001</Description>
     <DisplayName>QuotaAtProductLevel</DisplayName>
     <LastModifiedAt>1495140711261</LastModifiedAt>
-    <LastModifiedBy>darshan.shivashankar@t-mobile.com</LastModifiedBy>
+    <LastModifiedBy></LastModifiedBy>
     <Policies>
         <Policy>QuotaAtProductLevel</Policy>
     </Policies>

@@ -2,11 +2,11 @@
 <SharedFlowBundle revision="1" name="JavaCalloutFaultHandling">
     <ConfigurationVersion majorVersion="4" minorVersion="0"/>
     <CreatedAt>1502052059817</CreatedAt>
-    <CreatedBy>darshan.shivashankar@t-mobile.com</CreatedBy>
+    <CreatedBy></CreatedBy>
     <Description>Jazz-1.0.b-001</Description>
     <DisplayName>JavaCalloutFaultHandling</DisplayName>
     <LastModifiedAt>1502052374074</LastModifiedAt>
-    <LastModifiedBy>darshan.shivashankar@t-mobile.com</LastModifiedBy>
+    <LastModifiedBy></LastModifiedBy>
     <Policies>
         <Policy>JavaFaultHandling</Policy>
     </Policies>

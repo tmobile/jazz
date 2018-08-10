@@ -2,11 +2,11 @@
 <SharedFlowBundle revision="1" name="LoggerTargetRequest">
     <ConfigurationVersion majorVersion="4" minorVersion="0"/>
     <CreatedAt>1508259425381</CreatedAt>
-    <CreatedBy>muthurajan.ramakrishnan1@t-mobile.com</CreatedBy>
+    <CreatedBy></CreatedBy>
     <Description>Jazz-1.0.b-001</Description>
     <DisplayName>Shared-Flow</DisplayName>
     <LastModifiedAt>1508259425381</LastModifiedAt>
-    <LastModifiedBy>muthurajan.ramakrishnan1@t-mobile.com</LastModifiedBy>
+    <LastModifiedBy></LastModifiedBy>
     <Policies>
         <Policy>cf_elf_AssignTargetPreFlowReq</Policy>
     </Policies>

@@ -2,11 +2,11 @@
 <SharedFlowBundle revision="2" name="LoggerProxyRequest">
     <ConfigurationVersion majorVersion="4" minorVersion="0"/>
     <CreatedAt>1510787270904</CreatedAt>
-    <CreatedBy>ApigeeCM@gmail.com</CreatedBy>
+    <CreatedBy></CreatedBy>
     <Description>Jazz-1.0.b-001</Description>
     <DisplayName>Logger_FlowOperation</DisplayName>
     <LastModifiedAt>1517593460444</LastModifiedAt>
-    <LastModifiedBy>ApigeeCM@gmail.com</LastModifiedBy>
+    <LastModifiedBy></LastModifiedBy>
     <Policies>
         <Policy>HostNameKVM</Policy>
         <Policy>cf_elf_AssignProxyReq</Policy>

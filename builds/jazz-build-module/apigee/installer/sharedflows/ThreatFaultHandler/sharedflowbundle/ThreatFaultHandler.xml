@@ -2,11 +2,11 @@
 <SharedFlowBundle revision="1" name="ThreatFaultHandler">
     <ConfigurationVersion majorVersion="4" minorVersion="0"/>
     <CreatedAt>1495140664823</CreatedAt>
-    <CreatedBy>darshan.shivashankar@t-mobile.com</CreatedBy>
+    <CreatedBy></CreatedBy>
     <Description>Jazz-1.0.b-001</Description>
     <DisplayName>ThreatFaultHandler</DisplayName>
     <LastModifiedAt>1495140664823</LastModifiedAt>
-    <LastModifiedBy>darshan.shivashankar@t-mobile.com</LastModifiedBy>
+    <LastModifiedBy></LastModifiedBy>
     <Policies>
         <Policy>ThreatFaultHandler</Policy>
     </Policies>

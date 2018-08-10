@@ -2,11 +2,11 @@
 <SharedFlowBundle revision="1" name="PostFlowELFLogMessage">
     <ConfigurationVersion majorVersion="4" minorVersion="0"/>
     <CreatedAt>1495143840759</CreatedAt>
-    <CreatedBy>darshan.shivashankar@t-mobile.com</CreatedBy>
+    <CreatedBy></CreatedBy>
     <Description>Jazz-1.0.b-001</Description>
     <DisplayName>PostFlowELFLogMessage</DisplayName>
     <LastModifiedAt>1495144217185</LastModifiedAt>
-    <LastModifiedBy>darshan.shivashankar@t-mobile.com</LastModifiedBy>
+    <LastModifiedBy></LastModifiedBy>
     <Policies>
         <Policy>cf_CleanupELFLog</Policy>
         <Policy>cf_elf_AssignProxyPostFlowResp</Policy>

@@ -2,11 +2,11 @@
 <SharedFlowBundle revision="1" name="LoggerProxyFaultHandling">
     <ConfigurationVersion majorVersion="4" minorVersion="0"/>
     <CreatedAt>1508259565657</CreatedAt>
-    <CreatedBy>muthurajan.ramakrishnan1@t-mobile.com</CreatedBy>
+    <CreatedBy></CreatedBy>
     <Description>Jazz-1.0.b-001</Description>
     <DisplayName>cf_log_error_handling</DisplayName>
     <LastModifiedAt>1509561185407</LastModifiedAt>
-    <LastModifiedBy>muthurajan.ramakrishnan1@t-mobile.com</LastModifiedBy>
+    <LastModifiedBy></LastModifiedBy>
     <Policies>
         <Policy>cf_ELFLog</Policy>
         <Policy>cf_elf_AssignProxyError</Policy>

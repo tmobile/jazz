@@ -2,11 +2,11 @@
 <SharedFlowBundle revision="2" name="Shared-Encryption">
     <ConfigurationVersion majorVersion="4" minorVersion="0"/>
     <CreatedAt>1504284103857</CreatedAt>
-    <CreatedBy>muthurajan.ramakrishnan1@t-mobile.com</CreatedBy>
+    <CreatedBy></CreatedBy>
     <Description>Jazz-1.0.b-001</Description>
     <DisplayName>DataEncryption</DisplayName>
     <LastModifiedAt>1504284418617</LastModifiedAt>
-    <LastModifiedBy>muthurajan.ramakrishnan1@t-mobile.com</LastModifiedBy>
+    <LastModifiedBy></LastModifiedBy>
     <Policies>
         <Policy>cf_EncryptValue</Policy>
     </Policies>

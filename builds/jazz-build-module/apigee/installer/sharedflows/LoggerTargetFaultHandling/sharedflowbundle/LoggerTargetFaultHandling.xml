@@ -2,11 +2,11 @@
 <SharedFlowBundle revision="1" name="LoggerTargetFaultHandling">
     <ConfigurationVersion majorVersion="4" minorVersion="0"/>
     <CreatedAt>1508259382678</CreatedAt>
-    <CreatedBy>muthurajan.ramakrishnan1@t-mobile.com</CreatedBy>
+    <CreatedBy></CreatedBy>
     <Description>Jazz-1.0.b-001</Description>
     <DisplayName>Logger_TargetFaultHandling</DisplayName>
     <LastModifiedAt>1509561080223</LastModifiedAt>
-    <LastModifiedBy>muthurajan.ramakrishnan1@t-mobile.com</LastModifiedBy>
+    <LastModifiedBy></LastModifiedBy>
     <Policies>
         <Policy>cf_ELFLog</Policy>
         <Policy>cf_elf_AssignTargetError</Policy>
