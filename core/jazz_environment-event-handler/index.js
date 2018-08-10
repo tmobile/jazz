@@ -136,7 +136,7 @@ var checkForInterestedEvents = function (encodedPayload, sequenceNumber, config)
           "payload": kinesisPayload.Item
         });
       } else {
-        logger.error("Not an interested event or event type");
+        logger.debug("Not an interested event or event type");
         return resolve({
           "interested_event": false,
           "payload": kinesisPayload.Item
@@ -181,6 +181,10 @@ var processItem = function (eventPayload, configData, authToken) {
       environmentApiPayload.status = svcContext.status;
       environmentApiPayload.endpoint = svcContext.endpoint;
       environmentApiPayload.friendly_name = svcContext.friendly_name;
+
+      if (svcContext.metadata) {
+        environmentApiPayload.metadata = svcContext.metadata;
+      }
 
       if (!svcContext.logical_id) {
         getEnvironmentLogicalId(environmentApiPayload, configData, authToken)
@@ -377,12 +381,13 @@ var processEventUpdateEnvironment = function (environmentPayload, configData, au
     updatePayload.endpoint = environmentPayload.endpoint;
     updatePayload.friendly_name = environmentPayload.friendly_name;
 
+    if (environmentPayload.metadata) {
+      updatePayload.metadata = environmentPayload.metadata;
+    }
+
     var svcPayload = {
-      uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "/" + environmentPayload.logical_id +
-        "?domain=" +
-        environmentPayload.domain +
-        "&service=" +
-        environmentPayload.service,
+      uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "/" + environmentPayload.logical_id 
+        + `?domain=${environmentPayload.domain}&service=${environmentPayload.service}`,
       method: "PUT",
       headers: { Authorization: authToken },
       json: updatePayload,
