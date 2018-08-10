@@ -572,7 +572,7 @@ describe('create-serverless-service', function () {
       let bool = false;
       service_creation_data["service_type"] = "api";
       service_creation_data["deployment_targets"] = {"api": "gcp_apigee"};
-      const config = configObj(event);
+      const config = configModule.getConfig(event, context);
       index.getServiceData(service_creation_data, authToken, config, {"api": "gcp_apigee"})
       .then(input => {
         if (input.DEPLOYMENT_TARGETS["api"] === "gcp_apigee") {
@@ -587,7 +587,7 @@ describe('create-serverless-service', function () {
       let bool = false;
       service_creation_data["service_type"] = "function";
       service_creation_data["deployment_targets"] = {"function": "aws_lambda"};
-      const config = configObj(event);
+      const config = configModule.getConfig(event, context);
       index.getServiceData(service_creation_data, authToken, config, {"function": "aws_lambda"})
       .then(input => {
         if (input.DEPLOYMENT_TARGETS["function"] === "aws_lambda") {
@@ -602,7 +602,7 @@ describe('create-serverless-service', function () {
       let bool = false;
       service_creation_data["service_type"] = "website";
       service_creation_data["deployment_targets"] = {"website": "aws_cloudfront"};
-      const config = configObj(event);
+      const config = configModule.getConfig(event, context);
       index.getServiceData(service_creation_data, authToken, config, {"website": "aws_cloudfront"})
       .then(input => {
         if (input.DEPLOYMENT_TARGETS["website"] === "aws_cloudfront") {
