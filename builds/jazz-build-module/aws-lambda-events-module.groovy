@@ -20,7 +20,18 @@ def checkSQSAndAddLambdaTrigger(queueName, lambdaARN) {
     echo "Queue exists and have access"
     addLambdaTriggerToSqsQueue(true, queueName, lambdaARN)
   } catch (ex) {
-    addLambdaTriggerToSqsQueue(false, queueName, lambdaARN)
+    def response
+    try {
+      response = sh(
+        script: "aws sqs get-queue-url --queue-name $queueName --profile cloud-api --output json 2<&1 | grep -c 'NonExistentQueue'",
+        returnStdout: true
+      ).trim()
+    } catch (e) {
+    }
+    if (response) {
+      echo "Queue does not exists"
+      addLambdaTriggerToSqsQueue(false, queueName, lambdaARN)
+    }
   }
 }
 
