@@ -298,16 +298,33 @@ var checkIfAssetExists = function (eventPayload, configData, authToken) {
 
     logger.debug("svcPostSearchPayload" + JSON.stringify(svcPostSearchPayload));
     request(svcPostSearchPayload, function (error, response, body) {
-      if (response.statusCode && response.statusCode === 200 && body && body.data && body.data.count && body.data.count > 0) {
-        logger.debug("Asset found: " + JSON.stringify(body));
-        return resolve(body.data.assets[0]);
+      logger.debug("response" + JSON.stringify(response));
+      if (response && response.statusCode && response.statusCode === 200) {
+        var responseBody = JSON.parse(body);
+        if(responseBody && responseBody.data && responseBody.data.count > 0) {
+           logger.debug("Asset found: " + JSON.stringify(body));
+           return resolve(responseBody.data.assets[0]);
+        } else {
+          logger.error("No assets found. " + JSON.stringify(response));
+          return reject({
+            "error": "No assets found. " + JSON.stringify(response),
+            "details": response.body.message
+          });
+        }
+
       } else {
-        logger.error("No assets found. " + JSON.stringify(response));
-        return reject({
-          "error": "No assets found. " + JSON.stringify(response),
-          "details": response.body.message
-        });
+        if (error){
+          return reject(error);
+        }
+        else{
+          logger.error("No assets found. " + JSON.stringify(response));
+          return reject({
+            "error": "No assets found. " + JSON.stringify(response),
+            "details": response.body.message
+          });
+        }
       }
+
     });
   });
 }
