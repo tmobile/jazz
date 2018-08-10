@@ -18,6 +18,9 @@ section {
   text-align: center; // margin:0 30%;
   margin: 1rem auto;
   padding: 0;
+  > * + * {
+    border-left:2px solid #acacac;
+  }
 }
 
 .ft-links li {

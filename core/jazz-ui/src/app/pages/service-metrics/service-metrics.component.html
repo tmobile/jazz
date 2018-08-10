@@ -38,7 +38,10 @@
         <metrics-carousel [metrics]="selectedAsset?.metrics"
                           [selected]="selectedMetric"
                           (selectedChange)="setMetric($event)"
-                          [options]="{listProperty: 'datapoints',valueProperty: selectedAsset.statistics, nameProperty: 'metric_name'}"></metrics-carousel>
+                          [options]="{listProperty: 'datapoints',
+                          valueProperty: selectedAsset.statistics,
+                           nameProperty: 'metric_name',
+                           footerProperty: 'Unit'}"></metrics-carousel>
       </div>
     </div>
   </div>

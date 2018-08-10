@@ -21,10 +21,12 @@ export class MetricsCarouselComponent implements OnInit {
   //nameProperty -> refers to name of each metric on this.metrics
   //listProperty -> refers to list of data points on this.metrics
   // valueProperty -> refers to the data value (y coordinate) of each datapoint in the this.metrics[listProperty]
+  // footerProperty -> refers to value shown below valueProperty data
   @Input() options = {
     nameProperty: 'name',
     listProperty: 'values',
     valueProperty: 'value',
+    footerProperty: null
   };
 
   private _selected;
