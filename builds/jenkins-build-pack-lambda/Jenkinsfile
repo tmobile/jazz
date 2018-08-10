@@ -28,6 +28,7 @@ import groovy.transform.Field
 @Field def current_environment = ''
 @Field def stack_name
 node() {
+
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 
@@ -82,7 +83,6 @@ node() {
     } else {
       error "Service Id is not available."
     }
-
   }
 
   if (!config) {
@@ -131,11 +131,16 @@ node() {
   // @TODO: the below statement will be replaced with regular expression in very near future;
   def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
+  def s3BucketName
+  
+  if (isS3EventEnabled) {
+    s3BucketName = config['event_source_s3'];
+  }
+  
   sonarModule.initialize(configLoader, config, branch)
-
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-
-  if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled ) {
+  
+  if (isScheduleEnabled || isEc2EventEnabled || isStreamEnabled || isDynamoDbEnabled) {
     isEventSchdld = true
   }
 
@@ -211,11 +216,13 @@ node() {
     stage("Deployment to ${env_key} environment") {
       events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
+
       echo "starts Deployment to ${env_key} Env"
       def lambdaARN = null
       environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
 
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
+
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
@@ -243,7 +250,6 @@ node() {
           echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
           setLambdaExecutionRole(configLoader.AWS.ROLEID);
 
-          echoServerlessFile()
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
@@ -254,6 +260,9 @@ node() {
 
           if (isSQSEventEnabled) {
             lambdaEvents.checkSQSAndAddLambdaTrigger(config['event_source_sqs'], lambdaARN);
+          }
+          if (isS3EventEnabled) {
+            lambdaEvents.checkS3AndUpdateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
           }
 
           // reset Credentials
@@ -266,12 +275,12 @@ node() {
             serviceConfigdata.setLogStreamPermission(config)
             serviceConfigdata.setKinesisStream(config)
           }
-
           def svc_response = echoServiceInfo(environment_logical_id)
           send_status_email(config, 'COMPLETED', svc_response)
 
         } catch (ex) {
           send_status_email(config, 'FAILED', '')
+          
           events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
           events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
           events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
@@ -279,6 +288,7 @@ node() {
         }
         environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
         def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
+
         events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null), environment_logical_id)
         events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
         events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
@@ -292,7 +302,6 @@ def echoServerlessFile() {
   def serverlessyml = readFile('serverless.yml').trim()
   echo "serverless file data $serverlessyml"
 }
-
 
 def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
   echo "addEvents to serverless.yml file"
@@ -315,7 +324,7 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
   if (!isDynamoDbEnabled) {
     sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
   }
-
+  
   sh "sed -i -- '$sedCommand' ./serverless.yml"
   echoServerlessFile()
   echo "------------------------DONE--------------"
@@ -396,9 +405,6 @@ def buildLambda(String runtime) {
     """
   }
 }
-
-
-
 
 /** Reset credentials
  */
@@ -508,7 +514,6 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
   if (isEventSchdld == true) {
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
-
   echoServerlessFile()
 }
 
@@ -570,10 +575,10 @@ def createSubscriptionFilters(stackName, region, roleId) {
   }
 }
 
+
 def writeServerlessFile(config, env) {
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
-
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
   sh "sed -i -- 's/{env-stage}/${env}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
@@ -584,7 +589,7 @@ def writeServerlessFile(config, env) {
   sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
   sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${config['eventScheduleRate']}|g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
+  sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
 
@@ -704,8 +709,6 @@ def send_status_email(config, build_status, email_content) {
 }
 
 
-
-
 /**
  *  Function to get arns of the triggers/events configured for the Lambda.
  *
@@ -713,9 +716,9 @@ def send_status_email(config, build_status, email_content) {
 def getEventsArn(config, env) {
   def eventsArn = []
   try {
-    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
+    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
+    def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${configLoader.AWS.REGION} --function-name $lambdaFnName --output json", returnStdout: true)
 
-    def lambdaPolicyTxt = sh(script: "aws lambda get-policy --function-name $lambdaFnName --output json", returnStdout: true)
     def policyLists = null
     if (lambdaPolicyTxt) {
       def lambdaPolicyJson = new groovy.json.JsonSlurperClassic()
@@ -830,7 +833,6 @@ def loadBuildModules(buildModuleUrl) {
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
     echo "Environment deployment data loader module loaded successfully."
-
   }
 }
 
