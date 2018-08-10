@@ -2,6 +2,14 @@
 set +v
 set -e
 
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# Following *nix utilities are required before executing this script
+#     * jo - sudo apt-get install jo
+#     * xpath - Install via perl's module XML::XPath, xpath1
+#     * curl - sudo apt-get install curl
+#     * sed - sudo apt-get install sed
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 autopath=`pwd`
 basepathdir="${autopath%/*}"
 
