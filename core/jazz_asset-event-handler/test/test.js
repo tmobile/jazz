@@ -506,6 +506,7 @@ describe('jazz asset handler tests: ', function () {
       }
     };
     var rpStub, getTokenRequestStub, getAuthResponseStub, processEventsStub, getEventProcessStatusStub;
+
     it("Should send Request for authtoken ",()=>{
       rpStub = sinon.stub(rp, 'Request').returns(Promise.resolve(result));
       index.handler(event, context, (error, records)=>{
@@ -526,21 +527,13 @@ describe('jazz asset handler tests: ', function () {
 
       tokenResponseObj.statusCode = 400;
 
-      var authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
-      var reqStub = sinon.stub(request, "Request").callsFake(obj => {
-        return obj.callback(null, responseObject, responseObject.body);
-      });
       var message = 'User is not authorized to access this service';
+
       index.handler(event, context, (err, res) => {
-        if (err) {
-          return err;
-        } else {
           res.should.have.property('failed_events');
           return res;
-        }
       });
-      authStub.restore();
-      reqStub.restore();
+
     });
 
     it('index should resolve with updating', function () {
@@ -580,18 +573,8 @@ describe('jazz asset handler tests: ', function () {
         }
       };
 
-      var authStub = sinon.stub(rp, 'Request').returns(Promise.resolve(tokenResponseObj));
-      var reqStub = sinon.stub(request, "Request").callsFake(obj => {
-        return obj.callback(null, responseObject, responseObject.body);
-      });
-
       index.handler(event, context, (err, res) => {
-        if (err) {
-          return err;
-        } else {
-          res.should.have.property('processed_events');
-          return res;
-        }
+        res.should.have.property('processed_events');
       });
     });
   })
