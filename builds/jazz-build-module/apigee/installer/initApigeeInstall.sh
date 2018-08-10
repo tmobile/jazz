@@ -55,28 +55,28 @@ function deploySharedFlows() {
         echo "**************************************"
         for i in ${autopath}/sharedflows/* ;
 		do
-  		if [ -d "$i" ]; then
-    	shdflw=$(basename "$i")
-    	cd ${autopath}/sharedflows/"$shdflw"/sharedflowbundle
-    	sed "/Description/s/>[^<]*</>$build</" "$shdflw".xml > tempbuildnumber.xml
-    	rm "$shdflw".xml
-    	mv tempbuildnumber.xml "$shdflw".xml
-    	echo "build number stamped:" "$build"
-    	cd ..
- 		zip -r "$shdflw"-"$build".zip sharedflowbundle/
- 		#==========================================
- 		echo "Getting the current deployed version"
-		apis=`curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/sharedflows/$shdflw/deployments" 2>/dev/null`
-		echo $apis > temp.xml
-		deployedVersion=$(xidel --xpath="//Environment[@name='$mgmt_env']/Revision/@name" temp.xml 2> /dev/null)
-		#deployedVersion=$(xpath temp.xml "//Environment[@name='$mgmt_env']/Revision/@name" 2> /dev/null)
+        if [ -d "$i" ]; then
+        shdflw=$(basename "$i")
+        cd ${autopath}/sharedflows/"$shdflw"/sharedflowbundle
+        sed "/Description/s/>[^<]*</>$build</" "$shdflw".xml > tempbuildnumber.xml
+        rm "$shdflw".xml
+        mv tempbuildnumber.xml "$shdflw".xml
+        echo "build number stamped:" "$build"
+        cd ..
+        zip -r "$shdflw"-"$build".zip sharedflowbundle/
+ 		    #==========================================
+        echo "Getting the current deployed version"
+        apis=`curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/sharedflows/$shdflw/deployments" 2>/dev/null`
+        echo $apis > temp.xml
+        deployedVersion=$(xidel --xpath="//Environment[@name='$mgmt_env']/Revision/@name" temp.xml 2> /dev/null)
+        #deployedVersion=$(xpath temp.xml "//Environment[@name='$mgmt_env']/Revision/@name" 2> /dev/null)
        	deployedVersion=${deployedVersion//name=/}
         deployedVersion=${deployedVersion//\"/}
         deployedVersion=${deployedVersion//\ /}
        	echo "dep version="$deployedVersion
- 		#=============================
- 		imprt=`curl -k -s -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/sharedflows?action=import&name=$shdflw" -F "file=@$shdflw-$build.zip" -H "Accept: application/xml" -H "Content-Type: multipart/form-data" -X POST 2>/dev/null`
-		echo $imprt > dep.xml
+        #=============================
+        imprt=`curl -k -s -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/sharedflows?action=import&name=$shdflw" -F "file=@$shdflw-$build.zip" -H "Accept: application/xml" -H "Content-Type: multipart/form-data" -X POST 2>/dev/null`
+        echo $imprt > dep.xml
         revision=$(xidel --xpath="//SharedFlowBundle/@revision" dep.xml 2>/dev/null)
       	#revision=$(xpath dep.xml "//SharedFlowBundle/@revision" 2>/dev/null)
         revision=${revision/revision=/}
@@ -87,21 +87,20 @@ function deploySharedFlows() {
        	echo "undeploy this $deployedVersion  revision"
         undeploy=`curl -k -s -X DELETE -u $credentials "$mgmt_host/v1/o/$mgmt_org/e/$mgmt_env/sharedflows/$shdflw/revisions/$deployedVersion/deployments" 2>/dev/null`
         echo $undeploy
-		echo "Waiting for undeploying"
+		    echo "Waiting for undeploying"
        	#=============================
-		echo "deploy this $revision revision"
-    	deploy=`curl -k -s -X POST -u $credentials "$mgmt_host/v1/o/$mgmt_org/e/$mgmt_env/sharedflows/$shdflw/revisions/$revision/deployments?override=true" 2>/dev/null`
-    	echo $deploy
-    	rm -fr dep.xml
-		rm -fr temp.xml
-		rm -fr $shdflw-$build.zip
-		fi
-		done
-		echo "==================================================="
-		echo "Sharedflows deployment Complete"
-		echo "==================================================="
+		    echo "deploy this $revision revision"
+        deploy=`curl -k -s -X POST -u $credentials "$mgmt_host/v1/o/$mgmt_org/e/$mgmt_env/sharedflows/$shdflw/revisions/$revision/deployments?override=true" 2>/dev/null`
+        echo $deploy
+        rm -fr dep.xml
+        rm -fr temp.xml
+        rm -fr $shdflw-$build.zip
+        fi
+        done
+        echo "==================================================="
+        echo "Sharedflows deployment Complete"
+        echo "==================================================="
 		}
-
 function deployCommon()  {
         cd ${autopath}
         chmod 755 ${autopath}/Common-Jazz.zip
