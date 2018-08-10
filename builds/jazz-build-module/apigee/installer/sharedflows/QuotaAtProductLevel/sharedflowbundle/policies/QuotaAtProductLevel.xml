@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Quota async="false" continueOnError="false" enabled="true" name="QuotaAtProductLevel">
+    <DisplayName>QuotaAtProductLevel</DisplayName>
+    <Properties/>
+    <Allow count="200000" countRef="apiproduct.developer.quota.limit"/>
+    <Interval ref="apiproduct.developer.quota.interval">1</Interval>
+    <Distributed>true</Distributed>
+    <Synchronous>false</Synchronous>
+    <TimeUnit ref="apiproduct.developer.quota.timeunit">minute</TimeUnit>
+    <AsynchronousConfiguration>
+        <SyncIntervalInSeconds>20</SyncIntervalInSeconds>
+        <SyncMessageCount>5</SyncMessageCount>
+    </AsynchronousConfiguration>
+</Quota>

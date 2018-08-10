@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<MessageLogging async="false" continueOnError="true" enabled="true" name="cf_ELFLog_SaaS_Prod">
+    <Syslog>
+        <Message>{elf.logMsg}||proxyRespStart={client.sent.start.timestamp}||proxyRespEnd={client.sent.end.timestamp}</Message>
+        <Host>spksys.t-mobile.com</Host>
+        <Port>1999</Port>
+        <Protocol>TCP</Protocol>
+        <SSLInfo>
+            <Enabled>true</Enabled>
+        </SSLInfo>
+    </Syslog>
+</MessageLogging>

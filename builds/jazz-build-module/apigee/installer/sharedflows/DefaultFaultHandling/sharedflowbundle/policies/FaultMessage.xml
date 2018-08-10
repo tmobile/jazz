@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RaiseFault async="false" continueOnError="false" enabled="true" name="FaultMessage">
+    <DisplayName>FaultMessage</DisplayName>
+    <Properties/>
+    <FaultResponse>
+        <Set>
+            <Headers>
+                <Header name="Accept">application/json</Header>
+                <Header name="Access-Control-Allow-Origin">{AccessControlAllowOrigin}</Header>
+                <Header name="Access-Control-Allow-Headers">{corsAllowHeaders}</Header>
+                <Header name="Access-Control-Max-Age">{corsMaxAge}</Header>
+                <Header name="Access-Control-Allow-Methods">{corsAllowMethods}</Header>
+            </Headers>
+            <Payload contentType="application/json" variablePrefix="@" variableSuffix="#">{"errors":[{"code":"@flow.api.error.code#","userMessage":"@flow.api.error.message#","systemMessage":"@flow.api.error.message#"}]}</Payload>
+            <StatusCode>{flow.api.error.status}</StatusCode>
+            <ReasonPhrase>{flow.api.error.reason}</ReasonPhrase>
+        </Set>
+    </FaultResponse>
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+</RaiseFault>

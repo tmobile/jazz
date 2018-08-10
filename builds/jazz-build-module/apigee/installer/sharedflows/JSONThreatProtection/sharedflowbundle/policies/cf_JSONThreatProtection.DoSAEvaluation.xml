@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<JSONThreatProtection name="cf_JSONThreatProtection.DoSAEvaluation">
+    <Source>request</Source>
+    <ContainerDepth>15</ContainerDepth>
+    <ObjectEntryCount>60</ObjectEntryCount>
+    <ArrayElementCount>2000</ArrayElementCount>
+    <ObjectEntryNameLength>60</ObjectEntryNameLength>
+</JSONThreatProtection>

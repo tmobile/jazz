@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Javascript continueOnError="false" async="false" enabled="true" name="cf_CleanupELFLog">
+    <IncludeURL>jsc://cf_SetMaskConfigData.js</IncludeURL>
+    <IncludeURL>jsc://cf_MaskingOfElements.js</IncludeURL>
+    <ResourceURL>jsc://cf_CleanupELFLog.js</ResourceURL>
+</Javascript>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<JavaCallout name="cf_ThreatProtectionJavaCallout">
+    <Properties>
+        <!-- JS injection patterns -->
+        <Property name="pattern_1">(?i)(&lt;\s*script\b[^&gt;]*&gt;[^&lt;]+&lt;\s*.+\s*[s][c][r][i][p][t]\s*&gt;)</Property>
+        <Property name="pattern_2">n\s*\\\\\s*slash</Property>
+        <Property name="pattern_3">n\s*\/\s*slash</Property>
+        <Property name="pattern_4">n\s*\\"\s*quotes</Property>
+        <Property name="pattern_5">n\s*\\b\s*space</Property>
+        <Property name="pattern_6">n\s*\\f\s*forwardfeed</Property>
+        <Property name="pattern_7">n\s*\\n\s*newline</Property>
+        <Property name="pattern_8">n\s*\\r\s*carria</Property>
+        <Property name="pattern_9">n\s*\\t\s*tab</Property>
+        <Property name="pattern_10">n\s*\\uFFFF\s*hex</Property>
+        <!-- sql injection patterns -->
+        <Property name="pattern_11">(?i)';\b(alter|create|delete|(drop\s*table)|(truncate\s*table)|exec(ute)?|(insert\s*into)|merge|select|update|union( +all)?)\b</Property>
+        <Property name="pattern_12">(?i)\b\d+\b\s*;\s*(\b(alter|create|delete|(drop\s*table)|(truncate\s*table)|exec(ute)?|(insert\s*into)|merge|select|update|union( +all)?)\b)\s*\w+</Property>
+        <Property name="pattern_13">(?i)"\s*\bor\b\s*"\s*"="</Property>
+        <!-- xpath injection patterns -->
+        <Property name="pattern_14">(?i)\b(ancestor|ancestor-or-self|attribute|child|descendant|descendant-or-self|following|following-sibling|namespace|parent|preceding|preceding-sibling|self)\b[\s]*::.*=</Property>
+        <Property name="pattern_15">(?i)(/([\w]+))(.*\b(or)\b)(.*(\=))</Property>
+        <!-- server side include patterns -->
+        <Property name="pattern_16">(?i)(&lt;!--\s*#\s*(include|exec|echo|config|printenv|fsize).*--&gt;)</Property>
+        <!-- threats -->
+        <Property name="threat_js">pattern_1,pattern_2,pattern_3,pattern_4,pattern_5,pattern_6,pattern_7,pattern_8,pattern_9,pattern_10</Property>
+        <Property name="threat_sql">pattern_11,pattern_12,pattern_13</Property>
+        <Property name="threat_xpath">pattern_14,pattern_15</Property>
+        <Property name="threat_serverside">pattern_16</Property>
+        <Property name="match">{request.content}</Property>
+        <Property name="matchQueryParams">true</Property>
+        <Property name="matchHeaders">true</Property>
+    </Properties>
+    <ClassName>com.tmobile.security.threatcheck.ThreatCallout</ClassName>
+    <ResourceURL>java://threatprotection-callout.jar</ResourceURL>
+</JavaCallout>

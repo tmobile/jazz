@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<KeyValueMapOperations async="false" continueOnError="false" enabled="true" name="getSpikeArrestrateFromKeyValueMap" mapIdentifier="SpikeArrest">
+    <DisplayName>getSpikeArrestrateFromKeyValueMap</DisplayName>
+    <Scope>environment</Scope>
+    <Get assignTo="spikearrest.rate" index="1">
+        <Key>
+            <Parameter ref="environment.name"/>
+        </Key>
+    </Get>
+</KeyValueMapOperations>

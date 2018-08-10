@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SharedFlow name="default">
+    <Step>
+        <Name>cf_elf_AssignTargetError</Name>
+    </Step>
+    <Step>
+        <Name>cf_ELFLog</Name>
+    </Step>
+</SharedFlow>
