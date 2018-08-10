@@ -43,8 +43,7 @@ export class ServiceDetailComponent implements OnInit {
 
   @Output() deleteServiceStatus: EventEmitter<boolean> = new EventEmitter<boolean>();
   @ViewChild('selectedTabComponent') selectedTabComponent;
-
-
+  isENVavailable:boolean = true;
   disblebtn: boolean = true;
   ServiceName: string;
   deleteServiceVal: boolean;
