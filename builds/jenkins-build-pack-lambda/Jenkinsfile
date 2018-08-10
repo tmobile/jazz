@@ -132,15 +132,15 @@ node() {
   def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
   def s3BucketName
-  
+
   if (isS3EventEnabled) {
     s3BucketName = config['event_source_s3'];
   }
-  
+
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-  
-  if (isScheduleEnabled || isEc2EventEnabled || isStreamEnabled || isDynamoDbEnabled) {
+
+  if (isScheduleEnabled || isEc2EventEnabled || isDynamoDbEnabled) {
     isEventSchdld = true
   }
 
@@ -253,7 +253,8 @@ node() {
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
-          lambdaARN = getLambdaARN(stackName)
+          def function_arn = getLambdaARN(stackName) ;
+          lambdaARN = function_arn.split(":(?!.*:.*)")[0]
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
           echo "lambdaARN: ${lambdaARN}"
@@ -263,6 +264,9 @@ node() {
           }
           if (isS3EventEnabled) {
             lambdaEvents.checkS3AndUpdateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
+          }
+          if (isStreamEnabled) {
+            lambdaEvents.checkKinesisAndAddLambdaTrigger(config['event_source_stream'], lambdaARN);
           }
 
           // reset Credentials
@@ -280,7 +284,7 @@ node() {
 
         } catch (ex) {
           send_status_email(config, 'FAILED', '')
-          
+
           events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
           events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
           events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
@@ -324,7 +328,7 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
   if (!isDynamoDbEnabled) {
     sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
   }
-  
+
   sh "sed -i -- '$sedCommand' ./serverless.yml"
   echoServerlessFile()
   echo "------------------------DONE--------------"
