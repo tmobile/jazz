@@ -9,20 +9,20 @@ var message;
 var code;
 
 if("ExecutionError".equalsIgnoreCase(faultName)){
-    
+
      httpCode = '500';
      reason = "Internal Server Error";
-     info = "https://developers.tmobile.com/errors/#General-1011";
+     info = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500";
      message = "Invalid Access Token";
      code = "General-1011";
-    
+
 }else {
      httpCode = '500';
      reason = "Internal Server Error";
-     info = "https://developers.tmobile.com/errors/#General-1011";
+     info = "https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/500";
      message = "Invalid Access Token";
      code = "General-1011";
-    
+
 }
 
     context.setVariable ("flow.api.error.code",code);
