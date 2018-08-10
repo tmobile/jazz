@@ -520,7 +520,8 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
 
 def writeServerlessFile(config, environment_logical_id){
 	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
-	sh "sed -i -- 's/{env-stage}/${environment_logical_id}/g' serverless.yml"
+	sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
+  sh "sed -i -- 's/{env-stage}/${environment_logical_id}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
@@ -528,8 +529,6 @@ def writeServerlessFile(config, environment_logical_id){
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
-	sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${config['eventScheduleRate']}|g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
 

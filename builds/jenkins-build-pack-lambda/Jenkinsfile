@@ -116,13 +116,13 @@ node() {
   def eventsApi = "${g_base_url}/jazz/events"
   events.initialize(configLoader, config, "SERVICE_DEPLOYMENT", branch, environment_logical_id, eventsApi)
 
-
   def runtime = config['providerRuntime']
   def service = config['service']
   def isScheduleEnabled = isEnabled(config, "eventScheduleRate")
   def isStreamEnabled = isEnabled(config, "event_source_stream")
   def isDynamoDbEnabled = isEnabled(config, "event_source_dynamodb")
   def isS3EventEnabled = isEnabled(config, "event_source_s3")
+  def isSQSEventEnabled = isEnabled(config, "event_source_sqs")
   def isEc2EventEnabled = isEnabled(config, "event_source_ec2")
   def isEventSchdld = false
   def internalAccess = config['require_internal_access']
@@ -130,17 +130,16 @@ node() {
   def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
   // @TODO: the below statement will be replaced with regular expression in very near future;
   def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
-  def s3BucketName
 
+  def s3BucketName
+  
   if (isS3EventEnabled) {
     s3BucketName = config['event_source_s3'];
   }
-
-
+  
   sonarModule.initialize(configLoader, config, branch)
-
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-
+  
   if (isScheduleEnabled || isEc2EventEnabled || isStreamEnabled || isDynamoDbEnabled) {
     isEventSchdld = true
   }
@@ -156,7 +155,7 @@ node() {
   events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
   dir(repo_name) {
-    loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
+    loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
     if (domain && domain == "jazz") {
       stage('Update Service Template') {
         echo "Inside Update service template"
@@ -216,12 +215,14 @@ node() {
     }
     stage("Deployment to ${env_key} environment") {
       events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
-      events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
+      events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
+
       echo "starts Deployment to ${env_key} Env"
       def lambdaARN = null
       environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
 
-      events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
+      events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
+
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
@@ -231,7 +232,7 @@ node() {
           sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-          loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
+          loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
 
           // Generate serverless yml file with domain added in function name
           echo "Generate deployment env with domain"
@@ -244,7 +245,7 @@ node() {
             }
           }
 
-          writeServerlessFile(config, current_environment)
+          writeServerlessFile(config, environment_logical_id)
 
           echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
           setLambdaExecutionRole(configLoader.AWS.ROLEID);
@@ -256,6 +257,14 @@ node() {
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
           echo "lambdaARN: ${lambdaARN}"
+
+          if (isSQSEventEnabled) {
+            lambdaEvents.checkSQSAndAddLambdaTrigger(config['event_source_sqs'], lambdaARN);
+          }
+          if (isS3EventEnabled) {
+            lambdaEvents.checkS3AndUpdateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
+          }
+
           // reset Credentials
           resetCredentials()
           if (domain != "jazz") {
@@ -266,29 +275,26 @@ node() {
             serviceConfigdata.setLogStreamPermission(config)
             serviceConfigdata.setKinesisStream(config)
           }
-
-          if (isS3EventEnabled) {
-            lambdaEvents.checkS3AndUpdateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
-          }
-
           def svc_response = echoServiceInfo(environment_logical_id)
           send_status_email(config, 'COMPLETED', svc_response)
 
         } catch (ex) {
           send_status_email(config, 'FAILED', '')
-          events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id), environment_logical_id)
+          
+          events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
           events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
           events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
           error ex.getMessage()
         }
         environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
         def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
-        events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
-        events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
-        events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
+
+        events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null), environment_logical_id)
+        events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
+        events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
 
       } //end of withCredentials
-    } //end of stage to production
+    } //end of deployment to an environment
   }
 }
 
@@ -297,8 +303,7 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-
-def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
+def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
   echo "addEvents to serverless.yml file"
   def sedCommand = "s/eventsDisabled/events/g";
   if (!isScheduleEnabled) {
@@ -310,15 +315,17 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
   if (!isS3EventEnabled) {
     sedCommand = sedCommand + "; /#Start:isS3EventEnabled/,/#End:isS3EventEnabled/d"
   }
+  if (!isSQSEventEnabled) {
+    sedCommand = sedCommand + "; /#Start:isSQSEventEnabled/,/#End:isSQSEventEnabled/d"
+  }
   if (!isStreamEnabled) {
     sedCommand = sedCommand + "; /#Start:isStreamEnabled/,/#End:isStreamEnabled/d"
   }
   if (!isDynamoDbEnabled) {
     sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
   }
-
+  
   sh "sed -i -- '$sedCommand' ./serverless.yml"
-
   echoServerlessFile()
   echo "------------------------DONE--------------"
 }
@@ -482,7 +489,7 @@ def validateDeploymentConfigurations(def prop) {
 }
 
 
-def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
+def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
 
   def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
 
@@ -505,9 +512,8 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
   }
 
   if (isEventSchdld == true) {
-    addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
+    addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
-
   echoServerlessFile()
 }
 
@@ -569,12 +575,12 @@ def createSubscriptionFilters(stackName, region, roleId) {
   }
 }
 
-def writeServerlessFile(config, current_environment) {
+
+def writeServerlessFile(config, env) {
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
-
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
-  sh "sed -i -- 's/{env-stage}/${current_environment}/g' serverless.yml"
+  sh "sed -i -- 's/{env-stage}/${env}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
@@ -711,8 +717,8 @@ def getEventsArn(config, env) {
   def eventsArn = []
   try {
     def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
-
     def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${configLoader.AWS.REGION} --function-name $lambdaFnName --output json", returnStdout: true)
+
     def policyLists = null
     if (lambdaPolicyTxt) {
       def lambdaPolicyJson = new groovy.json.JsonSlurperClassic()
@@ -827,7 +833,6 @@ def loadBuildModules(buildModuleUrl) {
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
     echo "Environment deployment data loader module loaded successfully."
-
   }
 }
 
