@@ -318,19 +318,24 @@
 }
 
 .dynamodb-fields.arrow_box:after {
-  left: 25%;
+  left: 17.5%;
   margin-left: -12px;
   margin-bottom: -15px;
 }
 
 .kinesis-fields.arrow_box:after {
-  left: 50%;
+  left: 36%;
   margin-left: -7px;
   margin-bottom: -15px;
 }
 
 .s3-fields.arrow_box:after {
-  left: 75%;
+  left: 54%;
+  margin-left: -3px;
+  margin-bottom: -15px;
+}
+.sqs-fields.arrow_box:after{
+  left:74%;
   margin-left: -3px;
   margin-bottom: -15px;
 }
@@ -797,4 +802,11 @@ p.learn-more {
 .disble {
   border-color: #ddd !important;
   opacity: 0.5 !important;
+}
+.events-radio{
+  margin:0 0.5rem;
+  padding:0;
+}
+.aws-events-left-block.stream-sqs{
+  width: 280px;
 }
