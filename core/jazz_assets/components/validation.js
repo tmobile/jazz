@@ -201,11 +201,11 @@ function validateAssetExists(assets_data, asset_table) {
   logger.debug("Inside validateExists");
   return new Promise((resolve, reject) => {
     var filter_expression = utils.createFilterExpression(assets_data);
-    crud.postSearch(filter_expression, asset_table, (error, data) => {
+    crud.getList(assets_data, asset_table, (error, data) => {
       if (error) {
         reject(error);
       } else {
-        if (data.length > 0) {
+        if (data && data.count > 0) {
           logger.debug('Asset with given data already exists.');
           reject({
             "result": "inputError",
