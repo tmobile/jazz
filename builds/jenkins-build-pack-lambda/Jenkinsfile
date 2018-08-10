@@ -377,22 +377,22 @@ def LoadConfiguration() {
  */
 def buildLambda(String runtime) {
   echo "installing dependencies for $runtime"
-  if (runtime.indexOf("nodejs") > -1) {
-    sh "npm install --save"
-  } else if (runtime.indexOf("java") > -1) {
-    sh "mvn package"
-  } else if (runtime.indexOf("python") > -1) {
-    // install requirements.txt in library folder, these python modules will be a part of deployment package
-    sh "rm -rf library"
-    sh "mkdir library"
-    sh "pip install -r requirements.txt -t library"
-    sh "touch library/__init__.py"
-    // create virtual environment and install pytest
-    sh """
-    pip install virtualenv
-    virtualenv venv
-      .venv / bin / activate
-    pip install pytest
+	if (runtime.indexOf("nodejs") > -1) {
+		sh "npm install --save"
+	} else if (runtime.indexOf("java") > -1) {
+		sh "mvn package"
+	} else if (runtime.indexOf("python") > -1) {
+		// install requirements.txt in library folder, these python modules will be a part of deployment package
+		sh "rm -rf library"
+		sh "mkdir library"
+		sh "pip install -r requirements.txt -t library"
+		sh "touch library/__init__.py"
+		// create virtual environment and install pytest
+		sh """
+		pip install virtualenv
+		virtualenv venv
+		. venv/bin/activate
+		pip install pytest
     """
   }
 }
