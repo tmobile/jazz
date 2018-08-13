@@ -88,7 +88,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     if (!this.activatedRoute.snapshot.params['env']) {
       return this.getEnvironments()
         .then(() => {
-            return this.applyFilter();
+          return this.applyFilter();
         });
     } else {
       return this.applyFilter();
@@ -120,7 +120,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
             selected: 'prod'
           };
           let environmentField = this.filters.getFieldValueOfLabel('ENVIRONMENT');
-          if(!environmentField) {
+          if (!environmentField) {
             this.formFields.splice(0, 0, this.environmentFilter);
           }
         }
@@ -222,6 +222,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     }
 
     if (this.selectedAsset) {
+      this.sortAssetData(this.selectedAsset);
       this.setMetric();
       this.sectionStatus = 'resolved';
     } else {
@@ -289,5 +290,14 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     }
   }
 
+  sortAssetData(asset) {
+    asset.metrics.forEach((metric) => {
+      let datapoints = metric.datapoints
+        .sort((pointA, pointB) => {
+          return moment(pointA.Timestamp).diff(moment(pointB.Timestamp));
+        });
+      metric.datapoints = datapoints;
+    })
+  }
 
 }

@@ -19,12 +19,15 @@
 }
 
 .metrics-card {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
   border-radius: 3px;
   background-color: #fdfdfd;
   border: solid 1px #dddddd;
   width: 135px;
-  display: inline-block;
-  padding: 0.5rem;
+  padding: .65rem 0.5rem;
   text-align: center;
   font-size: 1rem;
   color: #000;
@@ -68,21 +71,20 @@
   }
 }
 
-.metrics-card-content {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
+.metrics-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #555555;
+  text-transform: capitalize;
 }
 
-.metrics-name {
-  font-size: 1.2rem;
-  font-weight: bold;
-  text-align: center;
-  color: #666;
-  height: 2rem;
-  margin: 0.75rem 0 0.5rem;
-  text-transform: capitalize;
+.metrics-card-content {
+  flex: 1;
+  font-size: 24px;
+}
+
+.metrics-footer {
+  font-size: 12px;
 }
 
 .metrics-data {
@@ -113,5 +115,4 @@
   top: 50%;
   left: calc(100% + 5px);
   transform: translateY(-50%);
-
 }
