@@ -21,7 +21,7 @@
     @author:
     @version: 1.0
 **/
-
+const moment = require("moment");
 const global_config = require("../config/global-config.json");
 const _ = require("lodash");
 
@@ -31,6 +31,8 @@ var validateGeneralFields = (input) => {
     validateIsEmptyInputData(input)
       .then(() => validateRequiredFields(input, required_fields))
       .then(() => validateAllRequiredFieldsValue(input, required_fields))
+      .then(() => validateDate(input.start_time, input.end_time))
+      .then(() => validateInterval(input.interval))
       .then(() => validateMetricsInput(input))
       .then(res => {
         resolve(res);
@@ -38,6 +40,43 @@ var validateGeneralFields = (input) => {
       .catch(error => {
         reject(error);
       })
+  });
+}
+
+function validateDate(startDate, endDate) {
+  return new Promise((resolve, reject) => {
+    if(!moment(startDate).isValid()) {
+      reject({
+        result: "inputError",
+        message: `Start date time is not in valid format`
+      })
+    }
+    if(!moment(endDate).isValid()) {
+      reject({
+        result: "inputError",
+        message: `End date time is not in valid format`
+      })
+    }
+    resolve({
+      result: "success"
+    });
+  });
+}
+
+function validateInterval(interval) {
+
+  return new Promise((resolve, reject) => {
+    const intervalKeys = Object.keys(global_config.APIGEE.INTERVAL_MAP);
+    if(!intervalKeys.includes(interval)) {
+      reject({
+        result: "inputError",
+        message: `Interval can only be ${intervalKeys.join(', ')} seconds`
+      })
+    } else {
+      resolve({
+        result: "success"
+      });
+    }
   });
 }
 
