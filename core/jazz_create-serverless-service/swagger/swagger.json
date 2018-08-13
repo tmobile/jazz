@@ -289,7 +289,7 @@
                 "deployment_targets": {
                     "type": "object",
                     "description": "Deployment targets list for the service",
-                    "required": true,
+                    "required": false,
                     "properties": {
                         "api": {
                             "type": "string",
