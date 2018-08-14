@@ -21,6 +21,7 @@ import groovy.transform.Field
 @Field def serviceMetadataLoader
 @Field def environmentMetadataLoader
 @Field def sonarModule
+@Field def apigeeModule
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -142,6 +143,7 @@ node {
 				stage('Undeploy Service') {
 					updateServiceNameConfig()
 					def path = getResourcePath()
+					def apiPlatform = service_config.deployment_targets.api;
 					for (_envId in environmentIds) {
 						current_environment_id = _envId
 						try {
@@ -155,7 +157,18 @@ node {
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 							echo 'undeploying service for environment: ' + _envId
 
-							cleanUpApiGatewayResources(_envId, path)
+							switch(apiPlatform) {
+								case 'aws_apigateway':
+									cleanUpApiGatewayResources(_envId, path)
+									break
+								case 'gcp_apigee':
+									def env_key = _envId.endsWith("-dev") ? "DEV" : "PROD"
+									apigeeModule.delete("swagger/swagger.json", env_key, _envId, service_config)
+									break
+								default:
+									error "Deployment platform not recognized."
+							}
+							
 							cleanUpApiDocs(_envId)
 							unDeployService(_envId)
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
@@ -363,7 +376,7 @@ def writeServerlessFile(){
 def updateSwaggerConfig() {
 	try {
 		if (fileExists('swagger/swagger.json')) {
-			sh "sed -i -- 's/{service_name}/${service_config['service']}/g' swagger/swagger.json"
+			sh "sed -i -- 's/{serviceName}/${service_config['service']}/g' swagger/swagger.json"
 			sh "sed -i -- 's/{domain}/${service_config['domain']}/g' swagger/swagger.json"
 
 			def region = "${configLoader.AWS.REGION}"
@@ -373,9 +386,9 @@ def updateSwaggerConfig() {
 			// TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
-			sh "sed -i -- 's/{conf-role}/${roleARN}/g' ./swagger/swagger.json"
-			sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
-			sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{confRole}/${roleARN}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{confRegion}/${region}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{confAccId}/${roleId}/g' ./swagger/swagger.json"
 		}
 	} catch (ex) {
 		handleFailureEvent(ex.getMessage())
@@ -1091,6 +1104,12 @@ def loadBuildModules(buildModuleUrl){
 
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
+		
+		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {			
+			apigeeModule = load "apigee-module.groovy"
+			apigeeModule.initialize(configLoader.APIGEE, events)
+			echo "Apigee module loaded successfully."
+		}
 	}
 }
 

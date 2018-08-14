@@ -285,6 +285,25 @@
 				"require_internal_access": {
                     "type": "boolean",
                     "description":"Does service require access to internal SLF network and resources"
+                },
+                "deployment_targets": {
+                    "type": "object",
+                    "description": "Deployment targets list for the service",
+                    "required": false,
+                    "properties": {
+                        "api": {
+                            "type": "string",
+                            "enum": ["aws_apigateway", "gcp_apigee"]
+                        },
+                        "function": {
+                            "type": "string",
+                            "enum": ["aws_lambda"]
+                        },
+                        "website": {
+                            "type": "string",
+                            "enum": ["aws_s3", "aws_cloudfront"]
+                        }
+                    }
                 }
             }
         }

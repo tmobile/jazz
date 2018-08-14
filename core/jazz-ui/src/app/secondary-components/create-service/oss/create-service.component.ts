@@ -15,6 +15,7 @@ import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
+import {environment} from "../../../../environments/environment";
  
 @Component({
   selector: 'create-service',
@@ -79,6 +80,10 @@ docs_link = env_oss.urls.docs_link;
   errMessage: any;
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
+  public apiDeployment = "aws_apigateway";
+  public functionDeployment = "aws_lambda";
+  public websiteDeployment = "aws_cloudfront";
+  public buildEnvironment = environment;
   
 
   constructor (
@@ -283,16 +288,23 @@ docs_link = env_oss.urls.docs_link;
                 "service_name": this.model.serviceName,
                 "approvers": approversPayload,
                 "domain": this.model.domainName,
-                "description":this.model.serviceDescription
+                "description":this.model.serviceDescription,
+                "deployment_targets": {}
             };
 
     if (this.typeOfService == 'api') {
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["deployment_targets"] = {
+        "api": this.apiDeployment
+      }
     }
     else if(this.typeOfService == 'function'){
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["deployment_targets"] = {
+        "function": this.functionDeployment
+      }
       if(this.rateExpression.type != 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
@@ -321,6 +333,9 @@ docs_link = env_oss.urls.docs_link;
 
     } else if(this.typeOfService == 'website'){
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
+      payload["deployment_targets"] = {
+        "website": this.websiteDeployment
+      }
     }
 
     if(this.slackSelected){
