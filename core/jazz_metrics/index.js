@@ -148,8 +148,14 @@ function getAssetsDetails(config, eventBody, authToken) {
       if (error) {
         reject(error);
       } else {
-        if (response.statusCode && response.statusCode === 200 && body && body.data && body.data.count && body.data.count > 0) {
-          var apiAssetsArray = body.data.assets;
+        if (response.statusCode && response.statusCode === 200) {
+          var responseBody = JSON.parse(body);
+          var apiAssetsArray = [];
+
+          if (responseBody && responseBody.data && responseBody.data.count > 0) {
+            apiAssetsArray = responseBody.data.assets;
+          }
+
           var userStatistics = eventBody.statistics.toLowerCase();
           // Massaging data from assets api , to get required list of assets which contains type, asset_name and statistics.
           var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
