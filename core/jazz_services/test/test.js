@@ -896,10 +896,7 @@ it("should indicate an InternalServerError occured if DynamoDB.scan fails during
   });
 
   it("should indicate that input data is missing given a POST with an event.body missing required fields", ()=>{
-    //query has all required fields, cloning these properties will get us past first check
-    
-    Object.assign(event.body, event.query);
-    event.body.newProperty = "Ludo!";
+    //do NOT assign required fields from event.query to event.body
     event.method = "POST";
     event.path.id = undefined;
     errType = "inputError";
@@ -931,9 +928,7 @@ it("should indicate an InternalServerError occured if DynamoDB.scan fails during
   });
 
   it("should attempt dynamoDB scan and fail given a POST with valid missing required body data", ()=>{
-    //query has all required fields, cloning required fields to body
-    Object.assign(event.body, event.query);
-    event.body.region = ["east", "west"];
+    //do NOT assign required fields from event.query to event.body
     event.method = "POST";
     event.path.id = undefined;
     var attemptBool = dynamoCheck("scan",spy);
