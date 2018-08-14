@@ -110,7 +110,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	lastCommitted: any;
 	islink:boolean = false;
 	count: any = [];
-	relativeUrl:string = '/jazz/assets/search';
+	relativeUrl:string = '/jazz/assets';
 
 
   @Input() service: any = {};
@@ -183,113 +183,115 @@ export class EnvAssetsSectionComponent implements OnInit {
     if ( this.subscription ) {
       this.subscription.unsubscribe();
 		}
-				var payload = {
-				service: this.service.name,
-				domain: this.service.domain,
-				environment: this.env
-				};
-				if(this.offsetval > 0){
-					payload["offset"] = this.offsetval;
-				}
-				this.subscription = this.http.post(this.relativeUrl, payload).subscribe(
-        (response) => {
-
-					if((response.data == undefined) || (response.data.length == 0)){
-            this.envResponseEmpty = true;
-						this.isLoading = false;
-					}
-					else
-					{
-						var pageCount = response.data.length;
 
 
-          if(pageCount){
-            this.totalPageNum = Math.ceil(pageCount/this.limitValue);
+    var payload = {
+      service: this.service.name,
+      domain: this.service.domain,
+      environment: this.env,
+      limit: this.limitValue,
+      offset: this.offsetval
+    };
+
+    this.subscription = this.http.get(this.relativeUrl, payload).subscribe(
+      (response) => {
+
+        if((response.data == undefined) || (response.data.length == 0)){
+          this.envResponseEmpty = true;
+          this.isLoading = false;
+        }
+        else
+        {
+          var pageCount = response.data.count;
+
+
+        if(pageCount){
+          this.totalPageNum = Math.ceil(pageCount/this.limitValue);
+        }
+        else{
+          this.totalPageNum = 0;
+        }
+        this.envResponseEmpty = false;
+        this.isLoading = false;
+
+        this.envResponseTrue = true;
+        this.length = response.data.assets.length;
+
+        this.assetsList = response.data.assets;
+
+        for(var i=0; i < this.length ; i++){
+          this.type[i] = response.data.assets[i].asset_type;
+          this.slNumber[i] = this.offsetval + (i+1);
+          if( response.data.assets[i].provider == undefined ){
+            this.Provider[i] = "-"
+          }else{
+          this.Provider[i] = response.data.assets[i].provider;
           }
-          else{
-            this.totalPageNum = 0;
+          if( response.data.assets[i].status == undefined ){
+            this.status[i] = "-"
+          }else{
+          this.status[i] = response.data.assets[i].status;
           }
-					this.envResponseEmpty = false;
-					this.isLoading = false;
+          if( response.data.assets[i].endpoint_url == undefined ){
+            this.endpoint[i] = "-"
+          }else{
+          this.endpoint[i] = response.data.assets[i].endpoint_url;;
+          }
+          if( response.data.assets[i].swagger_url == undefined ){
+            this.url[i] = "-"
+          }else{
+          this.url[i] = response.data.assets[i].swagger_url;
+          }
+          if( response.data.assets[i].provider_id == undefined ){
+            this.arn[i] = "-"
+          }else{
+          this.arn[i] = response.data.assets[i].provider_id;
+          }
 
-					this.envResponseTrue = true;
-					this.length = response.data.length;
+          this.lastCommitted = response.data.assets[i].timestamp;
+          var commit = this.lastCommitted.substring(0,19);
+          var lastCommit = new Date(commit);
+          var now = new Date();
+          var todays = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),  now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
 
-					this.assetsList = response.data;
+          this.count[i] = 3;
+          this.commitDiff[i] = Math.floor(Math.abs((todays.getTime() - lastCommit.getTime())/(1000*60*60*24)));
+          if( this.commitDiff[i] > 30){
+            this.count[i] = 4;
+            this.commitDiff[i] = Math.floor(this.commitDiff[i]/30)
+          }else
+          if( this.commitDiff[i] == 0 ){
+            this.count[i] = 2;
+            this.commitDiff[i] = Math.floor(Math.abs((todays.getHours() - lastCommit.getHours())));
+            if( this.commitDiff[i] == 0 ){
+            this.count[i] = 1;
+            this.commitDiff[i] = Math.floor(Math.abs((todays.getMinutes() - lastCommit.getMinutes())));
+            if( this.commitDiff[i] == 0 ){
+              this.count[i] = 0;
+              this.commitDiff[i] = "Just now";
+            }
+            }
+          }
 
-					for(var i=0; i < this.length ; i++){
-						this.type[i] = response.data[i].asset_type;
-						this.slNumber[i] = (i+1);
-						if( response.data[i].provider == undefined ){
-							this.Provider[i] = "-"
-						}else{
-						this.Provider[i] = response.data[i].provider;
-						}
-						if( response.data[i].status == undefined ){
-							this.status[i] = "-"
-						}else{
-						this.status[i] = response.data[i].status;
-						}
-						if( response.data[i].endpoint_url == undefined ){
-							this.endpoint[i] = "-"
-						}else{
-						this.endpoint[i] = response.data[i].endpoint_url;;
-						}
-						if( response.data[i].swagger_url == undefined ){
-							this.url[i] = "-"
-						}else{
-						this.url[i] = response.data[i].swagger_url;
-						}
-						if( response.data[i].provider_id == undefined ){
-							this.arn[i] = "-"
-						}else{
-						this.arn[i] = response.data[i].provider_id;
-						}
-
-						this.lastCommitted = response.data[i].timestamp;
-						var commit = this.lastCommitted.substring(0,19);
-						var lastCommit = new Date(commit);
-						var now = new Date();
-						var todays = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),  now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-
-						this.count[i] = 3;
-						this.commitDiff[i] = Math.floor(Math.abs((todays.getTime() - lastCommit.getTime())/(1000*60*60*24)));
-						if( this.commitDiff[i] > 30){
-							this.count[i] = 4;
-							this.commitDiff[i] = Math.floor(this.commitDiff[i]/30)
-						}else
-						if( this.commitDiff[i] == 0 ){
-							this.count[i] = 2;
-							this.commitDiff[i] = Math.floor(Math.abs((todays.getHours() - lastCommit.getHours())));
-						  if( this.commitDiff[i] == 0 ){
-							this.count[i] = 1;
-							this.commitDiff[i] = Math.floor(Math.abs((todays.getMinutes() - lastCommit.getMinutes())));
-							if( this.commitDiff[i] == 0 ){
-								this.count[i] = 0;
-							  this.commitDiff[i] = "Just now";
-							}
-						  }
-						}
-
-						}
+          }
 
 
-					}
-        },
-        (error) => {
-					this.envResponseTrue = false;
-          this.envResponseEmpty = false;
-					this.isLoading = false;
-					this.envResponseError = true;
-          this.getTime();
-					this.errorURL = window.location.href;
-					this.errorAPI = env_internal.baseurl+"jazz/assets/search";
-					this.errorRequest = payload;
-					this.errorUser = this.authenticationservice.getUserId();
-					this.errorResponse = JSON.parse(error._body);
+        }
+      },
+      (error) => {
+        this.envResponseTrue = false;
+        this.envResponseEmpty = false;
+        this.isLoading = false;
+        this.envResponseError = true;
+        this.getTime();
+        this.errorURL = window.location.href;
+        this.errorAPI = env_internal.baseurl+"jazz/assets/search";
+        this.errorRequest = payload;
+        this.errorUser = this.authenticationservice.getUserId();
+        this.errorResponse = JSON.parse(error._body);
 
 
-			})
+      })
 		};
 		getTime() {
 			var now = new Date();
