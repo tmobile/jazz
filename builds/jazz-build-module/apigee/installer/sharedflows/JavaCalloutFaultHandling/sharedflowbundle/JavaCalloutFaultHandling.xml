@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SharedFlowBundle revision="1" name="JavaCalloutFaultHandling">
+    <ConfigurationVersion majorVersion="4" minorVersion="0"/>
+    <CreatedAt>1502052059817</CreatedAt>
+    <CreatedBy></CreatedBy>
+    <Description>Jazz-1.0.b-001</Description>
+    <DisplayName>JavaCalloutFaultHandling</DisplayName>
+    <LastModifiedAt>1502052374074</LastModifiedAt>
+    <LastModifiedBy></LastModifiedBy>
+    <Policies>
+        <Policy>JavaFaultHandling</Policy>
+    </Policies>
+    <Resources>
+        <Resource>jsc://JavaFaultHandling.js</Resource>
+    </Resources>
+    <Spec></Spec>
+    <subType>SharedFlow</subType>
+    <validate>false</validate>
+    <SharedFlows>
+        <SharedFlow>default</SharedFlow>
+    </SharedFlows>
+</SharedFlowBundle>

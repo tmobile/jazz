@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SharedFlowBundle revision="2" name="VerifyAccessKey">
+    <ConfigurationVersion majorVersion="4" minorVersion="0"/>
+    <CreatedAt>1501969422219</CreatedAt>
+    <CreatedBy></CreatedBy>
+    <Description>Jazz-1.0.b-001</Description>
+    <DisplayName>VerifyAccessKey</DisplayName>
+    <LastModifiedAt>1501972437096</LastModifiedAt>
+    <LastModifiedBy></LastModifiedBy>
+    <Policies>
+        <Policy>VerifyAPIKey</Policy>
+    </Policies>
+    <Resources/>
+    <Spec></Spec>
+    <subType>SharedFlow</subType>
+    <validate>false</validate>
+    <SharedFlows>
+        <SharedFlow>default</SharedFlow>
+    </SharedFlows>
+</SharedFlowBundle>

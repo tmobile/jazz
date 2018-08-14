@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SharedFlowBundle revision="50" name="DefaultFaultHandling">
+    <ConfigurationVersion majorVersion="4" minorVersion="0"/>
+    <CreatedAt>1494971388425</CreatedAt>
+    <CreatedBy></CreatedBy>
+    <Description>Jazz-1.0.b-001</Description>
+    <DisplayName>DefaultFaultHandling</DisplayName>
+    <LastModifiedAt>1527040191975</LastModifiedAt>
+    <LastModifiedBy></LastModifiedBy>
+    <ManifestVersion>SHA-512:fe91aabf21f2d1c7857b234e26eeb092ed466a86031305aea39639bc10f528891dc602c9ca25f74986ef59a46125a14926b41c4bceade2357ee53db3c18ee98c</ManifestVersion>
+    <Policies>
+        <Policy>CORSValidation</Policy>
+        <Policy>FaultMessage</Policy>
+        <Policy>getCORSDomainList</Policy>
+    </Policies>
+    <Resources>
+        <Resource>jsc://CORS.js</Resource>
+    </Resources>
+    <Spec></Spec>
+    <subType>SharedFlow</subType>
+    <SharedFlows>
+        <SharedFlow>default</SharedFlow>
+    </SharedFlows>
+</SharedFlowBundle>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SharedFlowBundle revision="33" name="SecurityFaultHandling">
+    <ConfigurationVersion majorVersion="4" minorVersion="0"/>
+    <CreatedAt>1502137599796</CreatedAt>
+    <CreatedBy></CreatedBy>
+    <Description>Jazz-1.0.b-001</Description>
+    <DisplayName>SecurityFaultHandling</DisplayName>
+    <LastModifiedAt>1523158658722</LastModifiedAt>
+    <LastModifiedBy></LastModifiedBy>
+    <ManifestVersion>SHA-512:932dad70200d04c6998a4a94f8ed4ab2cc8aa162d0e5c21a333e5fdd9a30b20dc70fc630a0b4057e9519e2caae78a5e3c762f8edf436d2409465494c1cfd6a36</ManifestVersion>
+    <Policies>
+        <Policy>SecurityFaultHandling</Policy>
+    </Policies>
+    <Resources>
+        <Resource>jsc://SecurityFaultHandling.js</Resource>
+    </Resources>
+    <Spec></Spec>
+    <subType>SharedFlow</subType>
+    <SharedFlows>
+        <SharedFlow>default</SharedFlow>
+    </SharedFlows>
+</SharedFlowBundle>

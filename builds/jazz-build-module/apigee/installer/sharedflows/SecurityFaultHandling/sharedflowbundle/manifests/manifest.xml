@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Manifest name="manifest">
+    <Policies>
+        <VersionInfo resourceName="SecurityFaultHandling" version="SHA-512:dfd24cda2c652d2135fa43bec174359714e1e95d70cfddc439c1db76d2da21337dfddbe43c379750fecb405887bf3d7659a6de13ede98ef5cb9ed3222e808388"/>
+    </Policies>
+    <ProxyEndpoints/>
+    <Resources>
+        <VersionInfo resourceName="jsc://SecurityFaultHandling.js" version="SHA-512:53af40801f166ad0d79c657523b34d4edb5ada1ce9c8dd1268d019ed0477f7ccc1942c3ec93e886f91e83b3754830ce8f83c969cac9adfa7619de9dd363ac1cf"/>
+    </Resources>
+    <SharedFlows>
+        <VersionInfo resourceName="default" version="SHA-512:917d5dd013d05040308350c9ff76d2f89e11dc8c1d3c870edfd2edb105aac715b7f667833ab8b2949b5fadcc01b0db573781ae7e179cbb07d3ea10fd8d189d87"/>
+    </SharedFlows>
+    <TargetEndpoints/>
+</Manifest>

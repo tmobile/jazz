@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AssignMessage async="false" continueOnError="false" enabled="true" name="cf_elf_AssignTargetError">
+    <AssignVariable>
+        <Name>elfLog.TargetFaultResponse</Name>
+        <Ref>error.content</Ref>
+    </AssignVariable>
+    <AssignVariable>
+        <Name>elfLog.targetResponse</Name>
+        <Ref>response.content</Ref>
+    </AssignVariable>
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+    <AssignTo createNew="false" transport="http" type="request"/>
+    <DisplayName>cf_elf_AssignTargetError</DisplayName>
+</AssignMessage>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SharedFlowBundle revision="1" name="LoggerTargetResponse">
+    <ConfigurationVersion majorVersion="4" minorVersion="0"/>
+    <CreatedAt>1508259519207</CreatedAt>
+    <CreatedBy></CreatedBy>
+    <Description>Jazz-1.0.b-001</Description>
+    <DisplayName>Logger_SBResponse</DisplayName>
+    <LastModifiedAt>1509560964987</LastModifiedAt>
+    <LastModifiedBy></LastModifiedBy>
+    <Policies>
+        <Policy>cf_ELFLog</Policy>
+        <Policy>cf_elf_AssignProxyPostFlowResp</Policy>
+    </Policies>
+    <Resources>
+        <Resource>jsc://cf_ELFLog.js</Resource>
+    </Resources>
+    <Spec></Spec>
+    <subType>SharedFlow</subType>
+    <validate>false</validate>
+    <SharedFlows>
+        <SharedFlow>default</SharedFlow>
+    </SharedFlows>
+</SharedFlowBundle>

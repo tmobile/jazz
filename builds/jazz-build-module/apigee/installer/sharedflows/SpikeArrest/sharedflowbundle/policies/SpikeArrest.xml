@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SpikeArrest async="false" continueOnError="false" enabled="true" name="SpikeArrest">
+    <DisplayName>SpikeArrest</DisplayName>
+    <Properties/>
+    <Rate ref="spikearrest.rate">300ps</Rate>
+    <Identifier ref="spikeIdentifier"/>
+</SpikeArrest>

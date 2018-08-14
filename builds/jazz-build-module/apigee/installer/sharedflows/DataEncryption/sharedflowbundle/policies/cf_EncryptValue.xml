@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<JavaCallout async="false" continueOnError="false" enabled="true" name="cf_EncryptValue">
+    <DisplayName>cf_EncryptValue</DisplayName>
+    <Properties/>
+    <ClassName>com.apigee.callout.JavaCallout.AESEncryption</ClassName>
+    <ResourceURL>java://AESEncryption.jar</ResourceURL>
+</JavaCallout>

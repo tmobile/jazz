@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SharedFlow name="default">
+    <!-- This policy accept "encryptKey", "encryptData", "decryptData" parameters. 
+    User can encrypt or decrypt the request using given key.
+    Return execution result in the "status" as "Success/Failure"
+    This policy uses AES algorithm UTF-8, 16 byte-->
+    <Step>
+        <Name>cf_EncryptValue</Name>
+    </Step>
+</SharedFlow>

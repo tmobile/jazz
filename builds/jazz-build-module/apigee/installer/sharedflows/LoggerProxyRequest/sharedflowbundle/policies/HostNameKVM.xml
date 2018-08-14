@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<KeyValueMapOperations async="false" continueOnError="false" enabled="true" name="HostNameKVM" mapIdentifier="EnvConfig">
+    <DisplayName>HostNameKVM</DisplayName>
+    <Properties/>
+    <Get assignTo="hostName" index="1">
+        <Key>
+            <Parameter ref="hostName"/>
+        </Key>
+    </Get>
+    <Scope>environment</Scope>
+</KeyValueMapOperations>

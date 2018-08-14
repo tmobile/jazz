@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<SharedFlowBundle revision="1" name="ThreatFaultHandler">
+    <ConfigurationVersion majorVersion="4" minorVersion="0"/>
+    <CreatedAt>1495140664823</CreatedAt>
+    <CreatedBy></CreatedBy>
+    <Description>Jazz-1.0.b-001</Description>
+    <DisplayName>ThreatFaultHandler</DisplayName>
+    <LastModifiedAt>1495140664823</LastModifiedAt>
+    <LastModifiedBy></LastModifiedBy>
+    <Policies>
+        <Policy>ThreatFaultHandler</Policy>
+    </Policies>
+    <Resources>
+        <Resource>jsc://ThreatFaultHandler.js</Resource>
+    </Resources>
+    <Spec></Spec>
+    <subType>SharedFlow</subType>
+    <SharedFlows>
+        <SharedFlow>default</SharedFlow>
+    </SharedFlows>
+</SharedFlowBundle>

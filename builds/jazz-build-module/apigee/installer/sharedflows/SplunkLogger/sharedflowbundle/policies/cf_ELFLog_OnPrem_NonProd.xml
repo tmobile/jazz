@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<MessageLogging async="false" continueOnError="true" enabled="true" name="cf_ELFLog_OnPrem_NonProd">
+    <Syslog>
+        <Message>{elf.logMsg}||proxyRespStart={client.sent.start.timestamp}||proxyRespEnd={client.sent.end.timestamp}</Message>
+        <Host>spksys-b.t-mobile.com</Host>
+        <!-- Splunk building new environment for the PLAB logs. In the meantime, this can be sent to the temporary syslog location -->
+        <Port>1999</Port>
+        <Protocol>TCP</Protocol>
+        <SSLInfo>
+            <Enabled>true</Enabled>
+        </SSLInfo>
+    </Syslog>
+</MessageLogging>

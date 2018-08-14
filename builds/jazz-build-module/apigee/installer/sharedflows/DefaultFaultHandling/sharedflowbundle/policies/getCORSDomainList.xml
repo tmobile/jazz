@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<KeyValueMapOperations async="false" continueOnError="false" enabled="true" name="getCORSDomainList" mapIdentifier="CORSDomainMapping">
+    <DisplayName>getCORSDomainList</DisplayName>
+    <Properties/>
+    <Scope>environment</Scope>
+    <Get assignTo="corsDomain" index="1">
+        <Key>
+            <Parameter ref="request.header.origin"/>
+        </Key>
+    </Get>
+    <Get assignTo="corsAllowHeaders">
+        <Key>
+            <Parameter>corsAllowHeaders</Parameter>
+        </Key>
+    </Get>
+    <Get assignTo="corsMaxAge" index="1">
+        <Key>
+            <Parameter>corsMaxAge</Parameter>
+        </Key>
+    </Get>
+    <Get assignTo="corsAllowMethods">
+        <Key>
+            <Parameter>corsAllowMethods</Parameter>
+        </Key>
+    </Get>
+</KeyValueMapOperations>
