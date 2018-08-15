@@ -3,9 +3,5 @@
     "JOB_TOKEN": "{job_token}",
     "API_TOKEN": "{api_token}",
     "SVC_USER": "{ci_user}",
-    "DEPLOYMENT_TARGETS": {
-      "api": ["aws_apigateway", "gcp_apigee"],
-      "function": ["aws_lambda"],
-      "website": ["aws_s3", "aws_cloudfront"]
-    }
+    "DEPLOYMENT_TARGETS": "{conf_deployment_targets}"
 }
