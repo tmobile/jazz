@@ -14,12 +14,9 @@
         <strong>Input</strong>
         <div class="section-description">Enter the parameters for your function here.</div>
 
-        <strong>Content-Type</strong>
+        <strong class='dropdown-hdr'>Content-Type</strong>
         <dropdown [dropdwnContent]="contentTypeMenu" [selected]="contentTypeSelected"></dropdown>
 
-        <div class="format-button">
-          <button (click)="formatJSON()" class="btn-round btn-xs primary">FORMAT</button>
-        </div>
       </div>
       <div class="column-input">
         <div class="textbox">
@@ -30,8 +27,7 @@
                     (change)="toggleSavePayload(savingPayload)" (blur)="inputIsValid()"></textarea>
         </div>
         <div class='warning-chk-wrp'>
-          <p class="warning" *ngIf="!valid">{{validityMessage}}</p>
-          <div class="column-input try-service-cb">
+          <div class="try-service-cb">
             <div class="custom-cb">
               <input id="try-service-cb" type="checkbox" [checked]="savingPayload"
                       (click)="toggleSavePayload(!savingPayload)">
@@ -39,42 +35,38 @@
               <div class="cb-status-dets">Click here to save your input data for later!</div>
             </div>
           </div>
+          <p class="warning" *ngIf="!valid">{{validityMessage}}</p>
         </div>
         <div class="button-group">
-          <button (click)="closeSideMenu()" class="btn-round secondary">CANCEL</button>
-          <button (click)="startTest()" class="btn-round primary start-button">TEST</button>
+          <div class='hyperlink-padding'>
+            <a (click)="formatJSON()" class="pointer">FORMAT</a>
+          </div>
+          <div>
+              <a (click)="clearInputbox()" class="btn-round pointer clear-icon-padding">CLEAR</a>
+              <button (click)="startTest()" class="btn-round primary start-button">TEST</button>
+          </div>
         </div>
       </div>
     </section>
     <section>
       <div class="column-description">
         <strong>Output</strong>
-        <div class="section-description">Once your function runs you will see the results shown here</div>
+        <div class="section-description">Function output will be shown here</div>
       </div>
       <div class="column-input">
-        <div class="column-heading"
-             *ngIf="!outputHeader"></div>
-        <div class='column-heading'
-             *ngIf="!!outputHeader"
-             [ngClass]="reponse_code == 200 ? 'success' : 'error'"
-             [class.error]='error'>
-             <span *ngIf='reponse_code == 200' class='icon-icon-good inactive-icon succ'>
-              <span class="path1"></span><span class="path2"></span>
-             </span>
-             <span *ngIf='reponse_code != 200' class='icon-icon-inactive inactive-icon'></span>
-          {{outputHeader.statusCode}} {{outputHeader.statusText}}<br>
-          <span *ngIf='success && !error'>Function got executed successfully </span>
-          <span *ngIf='success && error'>Function execution failed</span>
-          <span *ngIf='!success && error && !FunctionInvocationError'>Function execution is taking too long. Alternatively, you can check your function logs to verify the functionality</span>
-        </div>
         <div class="textbox op-box">
           <div class="line-numbers">
             <div *ngFor="let value of lineNumberCount_op; let i = index">{{i + 1}}</div>
           </div>
-          <textarea [class.success]='api_status == "success"'
-                    [class.error]='api_status == "error"'
-                    readonly [ngModel]="outputValue"
-                    class="output-textarea"></textarea>
+          <textarea [class.success]='api_status == "success"' [class.error]='api_status == "error"' readonly [ngModel]="outputValue" class="output-textarea"></textarea>
+        </div>
+        <div class='column-heading' *ngIf="!!outputHeader" [ngClass]="reponse_code == 200 ? 'success' : 'error'" [class.error]='!success'>
+          <span *ngIf='reponse_code == 200' class='icon-icon-good inactive-icon succ'>
+            <span class="path1"></span><span class="path2"></span>
+          </span>
+          <span *ngIf='reponse_code != 200' class='icon-icon-inactive inactive-icon'></span>
+          <span *ngIf='success' >Function got triggered successfully</span>
+          <span *ngIf='!success'>Failed to trigger the function</span>
         </div>
       </div>
     </section>
