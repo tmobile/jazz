@@ -237,6 +237,10 @@ node() {
 						}
 					}
 
+          if(isDynamoDbEnabled) {
+            config['event_source_dynamodb'] = getStreamEnabledArn(config, configLoader.AWS.REGION)
+          }
+
 					writeServerlessFile(config, current_environment)
 
 					echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
@@ -279,6 +283,45 @@ node() {
 			} //end of withCredentials
 		} //end of deployment to an environment
 	}
+}
+
+def getStreamEnabledArn(config, region) {
+  def tableStreamArn = config['event_source_dynamodb']
+  def tableName = tableStreamArn.tokenize("/").last()
+  def streamList = sh(
+    script: "aws dynamodbstreams list-streams --table-name ${tableName} --region ${region} --output json",
+    returnStdout: true
+  ).trim()
+  def streamListJson = parseJson(streamList)
+
+  if(streamListJson.Streams.size() == 0) {
+    return createDynamodbStream(tableName, region)
+  } else {
+    def streamArnList = streamListJson.Streams
+    for (stream in streamArnList) {
+      def streamDetails = sh(
+        script: "aws dynamodbstreams describe-stream --stream-arn ${stream.StreamArn} --region ${region} --output json",
+        returnStdout: true
+      ).trim()
+      def streamDetailsJson = parseJson(streamDetails)
+
+      if (streamDetailsJson.StreamDescription.StreamStatus == ("ENABLING" || "ENABLED")) {
+        return stream.StreamArn
+      } else if (streamArnList.last().StreamArn == stream.StreamArn){
+        return createDynamodbStream(tableName, region)
+      }
+    }
+  }
+}
+
+def createDynamodbStream(tableName, region) {
+	def tableDetails = sh(
+    script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES --region ${region} --output json",
+    returnStdout: true
+  ).trim()
+  def tableDetailsJson = parseJson(tableDetails)
+
+	return tableDetailsJson.TableDescription.LatestStreamArn
 }
 
 def echoServerlessFile() {
@@ -495,6 +538,10 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 		sh "cp _config/serverless-python.yml ./serverless.yml"
 	}
 
+  if(isDynamoDbEnabled) {
+		sh "cp _config/policy.yml ./policyFile.yml"
+	}
+
 	if (isEventSchdld == true) {
 		addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
 	}
@@ -568,7 +615,6 @@ def writeServerlessFile(config, current_environment) {
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
-	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
@@ -582,6 +628,14 @@ def writeServerlessFile(config, current_environment) {
 	}
 	if (config['mainClass']) {
 		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
+	}
+  if (config['event_source_dynamodb']) {
+    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
+    sh "sed -i -- 's|\${file(deployment-env.yml):event_source_dynamodb}|${config['event_source_dynamodb']}|g' serverless.yml"
+    sh "sed -i -- 's|\${file(deployment-env.yml):event_source_dynamodb}|${config['event_source_dynamodb']}|g' policyFile.yml"
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
+  } else {
+		sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
 	}
 
 }
