@@ -151,16 +151,18 @@ describe('jazz asset handler tests: ', function () {
       let responseObject = {
         statusCode: 200,
         body: {
-          data: ["test1","test2"]
+          data: {
+            count:2,
+            assets:["test1","test2"]}
         }
       };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObject, responseObject.body);
       });
 
-      let result = index.checkIfAssetExists(eventPayload, configData, authToken).then(obj =>{
+      index.checkIfAssetExists(eventPayload, configData, authToken).then(obj =>{
         sinon.assert.calledOnce(reqStub);
-        expect(obj).to.eq(responseObject.body.data[0]);
+        expect(obj).to.eq(responseObject.body.data.assets[0]);
         reqStub.restore();
       });
     });
@@ -294,7 +296,7 @@ describe('jazz asset handler tests: ', function () {
         reqStub.restore();
       });
     });
-{}
+
     it('process create asset error',() => {
       responseObject = {
         statusCode:0,
@@ -487,17 +489,10 @@ describe('jazz asset handler tests: ', function () {
   });
 
   describe("handler",()=>{
-    result = {
+    let result = {
       result: "sample Resopnse"
     };
-    record = {
-      "processed_events": 3,
-      "failed_events": 1
-    };
-    error ={
-      message: "sample error message"
-    };
-    var tokenResponseObj = {
+    let tokenResponseObj = {
       statusCode: 200,
       body: {
         data: {
@@ -516,15 +511,6 @@ describe('jazz asset handler tests: ', function () {
     });
 
     it('index should resolve for not interested events', function () {
-      var callback = (err, responseObj) => {
-        if (err) {
-          return err;
-        }
-        else {
-          return JSON.stringify(responseObj);
-        }
-      };
-
       tokenResponseObj.statusCode = 400;
 
       var message = 'User is not authorized to access this service';
@@ -555,14 +541,6 @@ describe('jazz asset handler tests: ', function () {
           "eventSourceARN": "abc"
         }
       ];
-      var callback = (err, responseObj) => {
-        if (err) {
-          return err;
-        }
-        else {
-          return JSON.stringify(responseObj);
-        }
-      };
 
       var responseObject = {
         statusCode: 200,
