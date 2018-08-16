@@ -39,10 +39,15 @@ functions:
     memorySize: ${file(deployment-env.yml):providerMemorySize}
     timeout: ${file(deployment-env.yml):providerTimeout}
     eventsDisabled:
+      #Start:isScheduleEnabled
       - schedule:
           rate: ${file(deployment-env.yml):eventScheduleRate}
           name: ${self:service}-${self:custom.myStage}-schedule
           enabled: ${file(deployment-env.yml):eventScheduleEnable}
+      #End:isScheduleEnabled
+      #Start:isDynamoDbEnabled
+      - stream: {event_source_dynamodb}
+      #End:isDynamoDbEnabled
     vpcDisabled:
       securityGroupIds:
         "Fn::Split":
@@ -52,3 +57,7 @@ functions:
         "Fn::Split":
           - ","
           - ${file(deployment-env.yml):subnetIds}
+
+resourcesDisabled:
+  Resources:
+    customEventRole: ${file(policyFile.yml):eventSubscribed}
