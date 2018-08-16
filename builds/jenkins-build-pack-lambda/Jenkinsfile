@@ -518,7 +518,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
   }
 
   if(isDynamoDbEnabled) {
-    sh "cp _config/policy.yml ./policyFile.yml"
+    sh "cp _config/aws-events-policies/dynamodb-policy.yml ./policyFile.yml"
   }
 
   if (isEventSchdld == true) {
