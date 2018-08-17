@@ -140,6 +140,7 @@ node() {
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
+
   if (isScheduleEnabled || isEc2EventEnabled || isDynamoDbEnabled) {
     isEventSchdld = true
   }
@@ -247,8 +248,15 @@ node() {
 
           writeServerlessFile(config, environment_logical_id)
 
+          def isLambdaUpdateRequired
+          if (isS3EventEnabled) {
+            isLambdaUpdateRequired = lambdaEvents.checkS3AndUpdateServerless(s3BucketName, stackName, isEventSchdld);
+          }
+
           echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
           setLambdaExecutionRole(configLoader.AWS.ROLEID);
+
+          echoServerlessFile()
 
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
@@ -262,8 +270,8 @@ node() {
           if (isSQSEventEnabled) {
             lambdaEvents.checkSQSAndAddLambdaTrigger(config['event_source_sqs'], lambdaARN);
           }
-          if (isS3EventEnabled) {
-            lambdaEvents.checkS3AndUpdateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
+          if (isLambdaUpdateRequired) {
+            lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
           }
           if (isStreamEnabled) {
             lambdaEvents.checkKinesisAndAddLambdaTrigger(config['event_source_stream'], lambdaARN);
@@ -389,7 +397,7 @@ def LoadConfiguration() {
 /**	Build project based on runtime
  */
 def buildLambda(String runtime) {
-  echo "installing dependencies for $runtime"
+	echo "installing dependencies for $runtime"
 	if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
 	} else if (runtime.indexOf("java") > -1) {
@@ -406,8 +414,8 @@ def buildLambda(String runtime) {
 		virtualenv venv
 		. venv/bin/activate
 		pip install pytest
-    """
-  }
+		"""
+	}
 }
 
 /** Reset credentials
@@ -515,10 +523,9 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     sh "cp _config/serverless-python.yml ./serverless.yml"
   }
 
-  if (isEventSchdld == true) {
+  if (isEventSchdld == true || isS3EventEnabled == true) {
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
-  echoServerlessFile()
 }
 
 def echoServiceInfo(String env) {
@@ -597,6 +604,10 @@ def writeServerlessFile(config, env) {
   sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
 
+  if(config['event_source_s3']){
+    sh "sed -i -- 's/{event_source_s3}/${config['event_source_s3']}/g' ./serverless.yml"
+    sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
+  }
   if (config['artifact']) {
     sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
   }
