@@ -31,6 +31,8 @@ def checkSQSAndAddLambdaTrigger(queueName, lambdaARN) {
     if (response) {
       echo "Queue does not exists"
       addLambdaTriggerToSqsQueue(false, queueName, lambdaARN)
+    } else{
+      error "Unknown error occured"
     }
   }
 }
@@ -87,43 +89,84 @@ def listEventSourceMapping(queue_name, arn){
   }
 }
 
-def checkS3AndUpdateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {
-  def isExists = checkS3BucketExists(s3BucketName)
-  if(isExists){
-    updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action)
-  }else{
-    createBucket(s3BucketName)
-    updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action)
-  }
+def checkS3AndUpdateServerless(s3BucketName, stackName, isEventSchdld) {
+	try {
+		sh "aws s3api head-bucket --bucket $s3BucketName --output json"
+		echo "Bucket exists and have access"
+    checkSlsResourcesAndUpdateServerless(s3BucketName, stackName, isEventSchdld)
+		return true
+	} catch(ex) {//bucket exists but with no access
+		def res
+		try {
+			res = sh (script: "aws s3api head-bucket --bucket $s3BucketName --output json 2<&1 | grep -c 'Forbidden'", returnStdout: true).trim()
+		} catch(e) {
+			echo "Bucket does not exist"
+      enableS3Events()
+			return false;
+		}
+		if(res) {
+			echo "Bucket exists and don't have access"
+			error ex.getMessage()
+		}
+	}
 }
 
-def checkS3BucketExists(s3BucketName){
-   try {
-    sh "aws s3api head-bucket --bucket $s3BucketName --output json"
-    echo "Bucket exists and have access"
-    return true
-  } catch (ex) {//bucket exists but with no access
+def checkSlsResourcesAndUpdateServerless(s3BucketName, stackName, isEventSchdld){
+  try {
+    def isSlsResource = false
+    def response = sh(
+      script: "aws cloudformation list-stack-resources --stack-name ${stackName} --profile cloud-api --output json",
+      returnStdout: true
+    ).trim()
+    echo "response: $response"
+    def resources = parseJson(response)
+    if(resources.StackResourceSummaries.size() > 0){
+      for(resource in resources.StackResourceSummaries){
+        if(resource.ResourceType == "AWS::S3::Bucket" && resource.PhysicalResourceId == "${s3BucketName}"){
+          isSlsResource = true
+        }
+      }
+    }
+    if(isSlsResource == false ){
+      removeS3Events()
+      if(isEventSchdld == true){
+        disableS3Events()
+      } else {
+        sh "sed -i -- 's/events:/ /g' ./serverless.yml"
+      }
+    } else {
+      enableS3Events()
+    }
+  } catch (ex) {
+    echo "Failed to list the stack resources"
     def res
     try {
-      res = sh(script: "aws s3api head-bucket --bucket $s3BucketName --output json 2<&1 | grep -c 'Forbidden'", returnStdout: true).trim()
-    } catch (e) {
-      echo "Bucket does not exist "
-      return false
-    }
-    if (res) {
-      echo "Bucket exists and don't have access"
-      error ex.getMessage()
-    }
+			res = sh (script: "aws cloudformation list-stack-resources --stack-name ${stackName} --profile cloud-api --output json 2<&1 | grep -c 'ValidationError'", returnStdout: true).trim()
+		} catch(e) {
+      error "Failed to list the stack resources"
+		}
+		if (res) {
+			removeS3Events()
+      if (isEventSchdld == true) {
+        disableS3Events()
+      } else {
+        sh "sed -i -- 's/events:/ /g' ./serverless.yml"
+      }
+		}
   }
 }
 
-def createBucket(s3BucketName){
-  try{
-    def res = sh(script: "aws s3api create-bucket --bucket $s3BucketName --profile cloud-api", returnStdout: true).trim()
-  }catch(ex){
-    echo "Failed to create the bucket"
-    error ex.getMessage()
-  }
+def removeS3Events(){
+  def sedCommand = "/#Start:isS3EventEnabled/,/#End:isS3EventEnabled/d"
+	sh "sed -i -- '$sedCommand' ./serverless.yml"
+}
+
+def disableS3Events(){
+  sh "sed -i -- 's/events/eventsDisabled/g' ./serverless.yml"
+}
+
+def enableS3Events(){
+  sh "sed -i -- 's/eventsDisabled/events/g' ./serverless.yml"
 }
 
 def updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {

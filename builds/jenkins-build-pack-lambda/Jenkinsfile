@@ -132,15 +132,15 @@ node() {
   def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
   def s3BucketName
-  
+
   if (isS3EventEnabled) {
     s3BucketName = config['event_source_s3'];
   }
-  
+
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-  
-  if (isScheduleEnabled || isEc2EventEnabled || isStreamEnabled || isDynamoDbEnabled) {
+
+  if (isScheduleEnabled || isEc2EventEnabled || isStreamEnabled || isDynamoDbEnabled ) {
     isEventSchdld = true
   }
 
@@ -247,8 +247,15 @@ node() {
 
           writeServerlessFile(config, environment_logical_id)
 
+          def isLambdaUpdateRequired
+          if (isS3EventEnabled) {
+            isLambdaUpdateRequired = lambdaEvents.checkS3AndUpdateServerless(s3BucketName, stackName, isEventSchdld);
+          }
+
           echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
           setLambdaExecutionRole(configLoader.AWS.ROLEID);
+
+          echoServerlessFile()
 
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
@@ -261,8 +268,8 @@ node() {
           if (isSQSEventEnabled) {
             lambdaEvents.checkSQSAndAddLambdaTrigger(config['event_source_sqs'], lambdaARN);
           }
-          if (isS3EventEnabled) {
-            lambdaEvents.checkS3AndUpdateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
+          if (isLambdaUpdateRequired) {
+            lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
           }
 
           // reset Credentials
@@ -280,7 +287,7 @@ node() {
 
         } catch (ex) {
           send_status_email(config, 'FAILED', '')
-          
+
           events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
           events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
           events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
@@ -324,7 +331,7 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
   if (!isDynamoDbEnabled) {
     sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
   }
-  
+
   sh "sed -i -- '$sedCommand' ./serverless.yml"
   echoServerlessFile()
   echo "------------------------DONE--------------"
@@ -385,7 +392,7 @@ def LoadConfiguration() {
 /**	Build project based on runtime
  */
 def buildLambda(String runtime) {
-  echo "installing dependencies for $runtime"
+	echo "installing dependencies for $runtime"
 	if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
 	} else if (runtime.indexOf("java") > -1) {
@@ -402,8 +409,8 @@ def buildLambda(String runtime) {
 		virtualenv venv
 		. venv/bin/activate
 		pip install pytest
-    """
-  }
+		"""
+	}
 }
 
 /** Reset credentials
@@ -511,10 +518,9 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     sh "cp _config/serverless-python.yml ./serverless.yml"
   }
 
-  if (isEventSchdld == true) {
+  if (isEventSchdld == true || isS3EventEnabled == true) {
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
-  echoServerlessFile()
 }
 
 def echoServiceInfo(String env) {
@@ -593,6 +599,10 @@ def writeServerlessFile(config, env) {
   sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
 
+  if(config['event_source_s3']){
+    sh "sed -i -- 's/{event_source_s3}/${config['event_source_s3']}/g' ./serverless.yml"
+    sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
+  }
   if (config['artifact']) {
     sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
   }
