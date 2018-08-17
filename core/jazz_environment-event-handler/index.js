@@ -264,21 +264,21 @@ var processEventInitialCommit = function (environmentPayload, configData, authTo
       };
 
       if (environmentPayload.service === 'ui' && environmentPayload.domain === 'jazz') {
-        resolve();
-      } else {
-        logger.info("svcPayload" + JSON.stringify(svcPayload));
-        request(svcPayload, function (error, response, body) {
-          if (response.statusCode === 200 && body && body.data) {
-            return resolve(null, body);
-          } else {
-            logger.error(`Error creating ${env} environment in catalog: ${JSON.stringify(response)}`);
-            return reject({
-              "error": `Error creating ${env} environment for ${environmentPayload.domain} "_" ${environmentPayload.service} in catalog`,
-              "details": response.body.message
-            });
-          }
-        });
+        return resolve();
       }
+      logger.info("svcPayload" + JSON.stringify(svcPayload));
+      request(svcPayload, function (error, response, body) {
+        if (response.statusCode === 200 && body && body.data) {
+          return resolve(null, body);
+        } else {
+          logger.error(`Error creating ${env} environment in catalog: ${JSON.stringify(response)}`);
+          return reject({
+            "error": `Error creating ${env} environment for ${environmentPayload.domain} "_" ${environmentPayload.service} in catalog`,
+            "details": response.body.message
+          });
+        }
+      });
+
     });
   }
 
@@ -317,23 +317,21 @@ var processEventCreateBranch = function (environmentPayload, configData, authTok
     };
 
     if (environmentPayload.service === 'ui' && environmentPayload.domain === 'jazz') {
-      resolve();
-    } else {
-      logger.info("svcPayload" + JSON.stringify(svcPayload));
-      request(svcPayload, function (error, response, body) {
-        if (response.statusCode && response.statusCode === 200 && body && body.data) {
-          return resolve(body);
-        } else {
-          logger.error("Error creating  " + environmentPayload.logical_id + " environment in catalog. response" + JSON.stringify(response));
-          return reject({
-            "error": "Error creating " + environmentPayload.logical_id + " environment for " + environmentPayload.domain + "_" + environmentPayload.service + " in catalog",
-            "details": response.body.message
-          });
-        }
-      });
+      return resolve();
     }
+    logger.info("svcPayload" + JSON.stringify(svcPayload));
+    request(svcPayload, function (error, response, body) {
+      if (response.statusCode && response.statusCode === 200 && body && body.data) {
+        return resolve(body);
+      } else {
+        logger.error("Error creating  " + environmentPayload.logical_id + " environment in catalog. response" + JSON.stringify(response));
+        return reject({
+          "error": "Error creating " + environmentPayload.logical_id + " environment for " + environmentPayload.domain + "_" + environmentPayload.service + " in catalog",
+          "details": response.body.message
+        });
+      }
+    });
   });
-
 }
 
 var processEventDeleteBranch = function (environmentPayload, configData, authToken) {
@@ -500,29 +498,28 @@ function getServiceDetails(eventPayload, configData, authToken) {
     var apiEndpoint = `${configData.BASE_API_URL}${configData.SERVICE_API_RESOURCE}?service=${eventPayload.service}&domain=${eventPayload.domain}&isAdmin=true`;
     var svcPayload = getSvcPayload("GET", null, apiEndpoint, authToken);
     if (eventPayload.service === 'ui' && eventPayload.domain === 'jazz') {
-      resolve();
-    } else {
-      processRequest(svcPayload)
-        .then(result => { return resolve(result); })
-        .catch(err => {
-          logger.error("getServiceDetails failed: " + JSON.stringify(err));
-          var error = handleError(failureCodes.PR_ERROR_5.code, failureCodes.PR_ERROR_5.message);
-          return reject(error);
-        });
+      return resolve();
     }
+    processRequest(svcPayload)
+      .then(result => { return resolve(result); })
+      .catch(err => {
+        logger.error("getServiceDetails failed: " + JSON.stringify(err));
+        var error = handleError(failureCodes.PR_ERROR_5.code, failureCodes.PR_ERROR_5.message);
+        return reject(error);
+      });
   });
 }
 
 var triggerBuildJob = function (result, payload, configData) {
   return new Promise((resolve, reject) => {
-    var output
+    var output;
     if (result) {
       output = JSON.parse(result);
     }
-    var serviceDetails = {}
-    var buildQuery
+    var serviceDetails = {};
+    var buildQuery;
     if (payload.service === 'ui' && payload.domain === 'jazz') {
-      serviceDetails.type = 'ui'
+      serviceDetails.type = 'ui';
       buildQuery = `/build?token=${configData.JOB_TOKEN}`;
     } else {
       if (!output.data && !output.data.services && output.data.services.length > 0) {
