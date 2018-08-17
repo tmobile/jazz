@@ -464,16 +464,16 @@ describe('create-serverless-service', function () {
       eventsList.forEach(each => {
         let eachEvent = {
           type: each,
-          source: "temp-"+each+"-source",
-          action: "temp-"+each+"-action"
+          source: "temp-" + each + "-source",
+          action: "temp-" + each + "-action"
         }
         
         service_creation_data.events = [eachEvent]
         
         index.getServiceData(service_creation_data, authToken, config)
         .then((input) => {
-          let action = 'event_action_'+each;
-          let source = 'event_source_'+each;
+          let action = 'event_action_' + each;
+          let source = 'event_source_' + each;
           expect(input.METADATA).to.have.all.keys(action, source)
         });
       })
