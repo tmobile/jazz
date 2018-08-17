@@ -301,6 +301,44 @@ def checkAndConvertEvents(events){
   return new_events
 }
 
+def getStreamEnabledArn(tableStreamArn) {
+  def tableName = tableStreamArn.tokenize("/").last()
+  def streamList = sh(
+    script: "aws dynamodbstreams list-streams --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json",
+    returnStdout: true
+  ).trim()
+  def streamListJson = parseJson(streamList)
+
+  if(streamListJson.Streams.size() == 0) {
+    return createDynamodbStream(tableName)
+  } else {
+    def streamArnList = streamListJson.Streams
+    for (stream in streamArnList) {
+      def streamDetails = sh(
+        script: "aws dynamodbstreams describe-stream --stream-arn ${stream.StreamArn} --region ${config_loader.AWS.REGION} --output json",
+        returnStdout: true
+      ).trim()
+      def streamDetailsJson = parseJson(streamDetails)
+
+      if (streamDetailsJson.StreamDescription.StreamStatus == ("ENABLING" || "ENABLED")) {
+        return stream.StreamArn
+      } else if (streamArnList.last().StreamArn == stream.StreamArn){
+        return createDynamodbStream(tableName)
+      }
+    }
+  }
+}
+
+def createDynamodbStream(tableName) {
+	def tableDetails = sh(
+    script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES --region ${config_loader.AWS.REGION} --output json",
+    returnStdout: true
+  ).trim()
+  def tableDetailsJson = parseJson(tableDetails)
+
+	return tableDetailsJson.TableDescription.LatestStreamArn
+}
+
 /**
 * Non-lazy JSON parser
 */

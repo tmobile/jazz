@@ -243,6 +243,8 @@ node() {
               def arn = eventsArns[i]
               events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "cloudwatch_event", config), environment_logical_id);
             }
+          if(isDynamoDbEnabled) {
+            config['event_source_dynamodb'] = lambdaEvents.getStreamEnabledArn(config['event_source_dynamodb'])
           }
 
           writeServerlessFile(config, environment_logical_id)
@@ -515,6 +517,10 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     sh "cp _config/serverless-python.yml ./serverless.yml"
   }
 
+  if(isDynamoDbEnabled) {
+    sh "cp _config/aws-events-policies/dynamodb-policy.yml ./policyFile.yml"
+  }
+
   if (isEventSchdld == true) {
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
@@ -588,7 +594,6 @@ def writeServerlessFile(config, env) {
   sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
-  sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
@@ -602,6 +607,15 @@ def writeServerlessFile(config, env) {
   }
   if (config['mainClass']) {
     sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
+	}
+
+  if (config['event_source_dynamodb']) {
+    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
+    sh "sed -i -- 's|{event_source_dynamodb}|${config['event_source_dynamodb']}|g' serverless.yml"
+    sh "sed -i -- 's|{event_source_dynamodb}|${config['event_source_dynamodb']}|g' policyFile.yml"
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
+  } else {
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
   }
 
 }
