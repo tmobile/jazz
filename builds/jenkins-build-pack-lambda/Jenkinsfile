@@ -140,7 +140,8 @@ node() {
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
-  if (isScheduleEnabled || isEc2EventEnabled || isStreamEnabled || isDynamoDbEnabled ) {
+
+  if (isScheduleEnabled || isEc2EventEnabled || isDynamoDbEnabled) {
     isEventSchdld = true
   }
 
@@ -260,7 +261,8 @@ node() {
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
-          lambdaARN = getLambdaARN(stackName)
+          def function_arn = getLambdaARN(stackName) ;
+          lambdaARN = function_arn.split(":(?!.*:.*)")[0]
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
           echo "lambdaARN: ${lambdaARN}"
@@ -270,6 +272,9 @@ node() {
           }
           if (isLambdaUpdateRequired) {
             lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
+          }
+          if (isStreamEnabled) {
+            lambdaEvents.checkKinesisAndAddLambdaTrigger(config['event_source_stream'], lambdaARN);
           }
 
           // reset Credentials

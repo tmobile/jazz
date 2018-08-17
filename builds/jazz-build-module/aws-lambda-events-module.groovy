@@ -14,6 +14,84 @@ def initialize(configLoader){
   config_loader = configLoader
 }
 
+def checkKinesisAndAddLambdaTrigger(stream_name, lambdaARN) {
+  try {
+    sh "aws kinesis describe-stream --stream-name ${stream_name} --profile cloud-api --output json"
+    echo "Stream exists and have access"
+    addLambdaTriggerToKinesisStream(true, stream_name, lambdaARN)
+  } catch (ex) {
+    def response
+    try {
+      response = sh(
+        script: "aws kinesis describe-stream --stream-name ${stream_name} --profile cloud-api --output json 2<&1 | grep -c 'ResourceNotFoundException'",
+        returnStdout: true
+      ).trim()
+    } catch (e) {
+      echo "Error occured while describing the stream"
+    }
+    if (response) {
+      echo "Stream does not exists"
+      addLambdaTriggerToKinesisStream(false, stream_name, lambdaARN)
+    } else {
+      error "Error occured while describing the stream details"
+    }
+  }
+}
+
+def addLambdaTriggerToKinesisStream(isExists, stream_name, lambdaARN){
+  def event_source_arn = "arn:aws:kinesis:${config_loader.AWS.REGION}:${config_loader.AWS.ACCOUNTID}:stream/${stream_name}"
+  if(isExists){
+    def isDefined = listEventSourceMapping(event_source_arn, lambdaARN)
+    if(!isDefined){
+      createEventSourceMapping(event_source_arn, lambdaARN, true)
+    }
+  }else{
+    createKinesisStream(stream_name, lambdaARN)
+  }
+}
+
+def createKinesisStream(stream_name, lambdaARN){
+  try{
+    sh "aws kinesis create-stream --stream-name ${stream_name} --shard-count 1 --profile cloud-api --output json"
+    def event_source_arn = "arn:aws:kinesis:${config_loader.AWS.REGION}:${config_loader.AWS.ACCOUNTID}:stream/${stream_name}"
+    createEventSourceMapping(event_source_arn, lambdaARN, true)
+  }catch(ex){
+    echo "Failed to create the stream"
+    error "Failed to create the stream"
+  }
+}
+
+def createEventSourceMapping(event_source_arn, lambdaARN, isStream){
+  try{
+    if (isStream == true){
+      sh "aws lambda create-event-source-mapping --function-name ${lambdaARN} --event-source ${event_source_arn} --starting-position LATEST --profile cloud-api --output json"
+    }else {
+      sh "aws lambda create-event-source-mapping --function-name ${lambdaARN} --event-source ${event_source_arn} --profile cloud-api --output json"
+    }
+  }catch(ex){
+    echo "Failed to create the event source mapping"
+    error "Failed to create the event source mapping"
+  }
+}
+
+def listEventSourceMapping(event_source_arn, lambdaARN){
+  try{
+    def response =  sh(
+			script: "aws lambda list-event-source-mappings --function-name ${lambdaARN} --event-source ${event_source_arn} --profile cloud-api --output json",
+			returnStdout: true
+		).trim()
+    def mappings = parseJson(response)
+    if(mappings.EventSourceMappings.size() > 0){
+      return true
+    }else{
+      return false
+    }
+  }catch(ex){
+    echo "Failed to list the event source mapping"
+    error "Failed to list the event source mapping"
+  }
+}
+
 def checkSQSAndAddLambdaTrigger(queueName, lambdaARN) {
   try {
     sh "aws sqs get-queue-url --queue-name $queueName --profile cloud-api --output json"
@@ -31,17 +109,18 @@ def checkSQSAndAddLambdaTrigger(queueName, lambdaARN) {
     if (response) {
       echo "Queue does not exists"
       addLambdaTriggerToSqsQueue(false, queueName, lambdaARN)
-    } else{
-      error "Unknown error occured"
+    } else {
+      error "Error occured while fetching the queue details"
     }
   }
 }
 
 def addLambdaTriggerToSqsQueue(isExists, queue_name, lambdaARN){
+  def event_source_arn = "arn:aws:sqs:${config_loader.AWS.REGION}:${config_loader.AWS.ACCOUNTID}:${queue_name}"
   if (isExists) {
-    def isDefined = listEventSourceMapping(queue_name, lambdaARN)
+    def isDefined = listEventSourceMapping(event_source_arn, lambdaARN)
     if (!isDefined) {
-      createEventSourceMapping(queue_name, lambdaARN)
+      createEventSourceMapping(event_source_arn, lambdaARN, false)
     }
   } else {
     createSqsQueue(queue_name, lambdaARN)
@@ -51,41 +130,11 @@ def addLambdaTriggerToSqsQueue(isExists, queue_name, lambdaARN){
 def createSqsQueue(queue_name, lambdaARN){
   try {
     sh "aws sqs create-queue --queue-name ${queue_name} --attributes '{\"VisibilityTimeout\": \"${queue_visibility_timeout}\"}' --profile cloud-api --output json"
-    createEventSourceMapping(queue_name, lambdaARN)
+     def event_source_arn = "arn:aws:sqs:${config_loader.AWS.REGION}:${config_loader.AWS.ACCOUNTID}:${queue_name}"
+    createEventSourceMapping(event_source_arn, lambdaARN, false)
   } catch (ex) {
     echo "Failed to create the queue"
     error "Failed to create the queue"
-  }
-}
-
-def createEventSourceMapping(queue_name, arn){
-  try {
-    def lambdaARN = arn.split(":(?!.*:.*)")[0];
-    def queue_arn = "arn:aws:sqs:${config_loader.AWS.REGION}:${config_loader.AWS.ACCOUNTID}:${queue_name}"
-    sh "aws lambda create-event-source-mapping --function-name ${lambdaARN} --event-source ${queue_arn} --profile cloud-api --output json"
-  } catch (ex) {
-    echo "Failed to create the event source mapping"
-    error "Failed to create the event source mapping"
-  }
-}
-
-def listEventSourceMapping(queue_name, arn){
-  try {
-    def lambdaARN = arn.split(":(?!.*:.*)")[0];
-    def queue_arn = "arn:aws:sqs:${config_loader.AWS.REGION}:${config_loader.AWS.ACCOUNTID}:${queue_name}"
-    def response = sh(
-      script: "aws lambda list-event-source-mappings --function-name ${lambdaARN} --event-source ${queue_arn} --profile cloud-api --output json",
-      returnStdout: true
-    ).trim()
-    def mappings = parseJson(response)
-    if (mappings.EventSourceMappings.size() > 0) {
-      return true
-    } else {
-      return false
-    }
-  } catch (ex) {
-    echo "Failed to list the event source mapping"
-    error "Failed to list the event source mapping"
   }
 }
 
