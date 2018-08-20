@@ -70,9 +70,9 @@ node ()  {
     aws_configure()
   }
 
-  stage('Checking out Jazz-UI repo') {
-    dir('jazz-ui') {
-      checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz-ui")]]])
+  stage('Checking out Jazz_UI repo') {
+    dir('jazz_ui') {
+      checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
 	    def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
 
       if(config_loader.UI_CONFIG.service_tabs.overview)   sh "sed -i 's/{overview}/overview/g' ./src/environments/environment.oss.ts";
@@ -104,9 +104,9 @@ node ()  {
   }
   stage('Building the UI - NPM build') {
     sh '''
-    #Generate build file from jazz-ui
+    #Generate build file from jazz_ui
     npm update
-    cd jazz-ui
+    cd jazz_ui
     rm -rf node_modules
     npm install
     ng set --global warnings.versionMismatch=false
@@ -121,7 +121,7 @@ node ()  {
   stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
     sh """
     aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB} --profile cloud-api
-    aws s3 cp jazz-ui/dist s3://${config_loader.JAZZ.S3_BUCKET_WEB} --recursive --include "*" --profile cloud-api
+    aws s3 cp jazz_ui/dist s3://${config_loader.JAZZ.S3_BUCKET_WEB} --recursive --include "*" --profile cloud-api
     aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB} --profile cloud-api
     """
   }
