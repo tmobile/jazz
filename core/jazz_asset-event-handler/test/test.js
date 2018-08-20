@@ -157,7 +157,7 @@ describe('jazz asset handler tests: ', function () {
         }
       };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
-        return obj.callback(null, responseObject, responseObject.body);
+        return obj.callback(null, responseObject, JSON.stringify(responseObject.body));
       });
 
       index.checkIfAssetExists(eventPayload, configData, authToken).then(obj =>{
