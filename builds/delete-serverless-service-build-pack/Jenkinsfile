@@ -191,6 +191,9 @@ node {
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
 							}
+              if(service_config['event_source_dynamodb']) {
+                cleanupDynamodbStream(service_config['event_source_dynamodb'])
+              }
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
 							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
@@ -240,6 +243,27 @@ node {
 		}
 	}
 
+}
+
+def cleanupDynamodbStream(tableStreamArn) {
+  withCredentials([
+    [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+  ]) {
+    try {
+      sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+      sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+      sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+
+      def tableName = tableStreamArn.tokenize("/").last()
+      def tableDetails = sh(
+        script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=false --region ${configLoader.AWS.REGION} --output json",
+        returnStdout: true
+      ).trim()
+
+    } catch(ex) {
+      console.log(ex)
+    }
+  }
 }
 
 def cleanupCodeQualityReports(){

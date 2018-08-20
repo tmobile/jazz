@@ -320,7 +320,7 @@ def getStreamEnabledArn(tableStreamArn) {
       ).trim()
       def streamDetailsJson = parseJson(streamDetails)
 
-      if (streamDetailsJson.StreamDescription.StreamStatus == ("ENABLING" || "ENABLED")) {
+      if ((streamDetailsJson.StreamDescription.StreamStatus == "ENABLED") || (streamDetailsJson.StreamDescription.StreamStatus == "ENABLING")) {
         return stream.StreamArn
       } else if (streamArnList.last().StreamArn == stream.StreamArn){
         return createDynamodbStream(tableName)
