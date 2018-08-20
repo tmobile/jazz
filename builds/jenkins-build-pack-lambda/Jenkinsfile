@@ -140,7 +140,7 @@ node() {
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
-  if (isScheduleEnabled || isEc2EventEnabled || isDynamoDbEnabled) {
+  if (isScheduleEnabled || isEc2EventEnabled || isDynamoDbEnabled ) {
     isEventSchdld = true
   }
 
@@ -243,7 +243,9 @@ node() {
               def arn = eventsArns[i]
               events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "cloudwatch_event", config), environment_logical_id);
             }
-          if(isDynamoDbEnabled) {
+          }
+
+          if (isDynamoDbEnabled) {
             config['event_source_dynamodb'] = lambdaEvents.getStreamEnabledArn(config['event_source_dynamodb'])
           }
 
@@ -253,9 +255,33 @@ node() {
           setLambdaExecutionRole(configLoader.AWS.ROLEID);
 
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
-          sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
-          def function_arn = getLambdaARN(stackName) ;
+          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+          def isLambdaUpdateRequired = false
+
+          if (deployOutput != 'success') {
+            def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
+            if (deployOutput.contains(s3BucketErrString)) {
+              if (lambdaEvents.checkS3BucketExists(s3BucketName)) {
+                isLambdaUpdateRequired = true
+                lambdaEvents.removeS3EventsFromServerless(isEventSchdld)
+                echoServerlessFile()
+                sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+                def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+                if (redeployOutput != 'success') {
+                  echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
+                  error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+                }
+              } else {
+                error "Error occured while accessing the s3 bucket"
+              }
+            } else {
+              echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
+              error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+            }
+          }
+
+          def function_arn = getLambdaARN(stackName);
           lambdaARN = function_arn.split(":(?!.*:.*)")[0]
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
@@ -264,8 +290,8 @@ node() {
           if (isSQSEventEnabled) {
             lambdaEvents.checkSQSAndAddLambdaTrigger(config['event_source_sqs'], lambdaARN);
           }
-          if (isS3EventEnabled) {
-            lambdaEvents.checkS3AndUpdateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
+          if (isLambdaUpdateRequired) {
+            lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
           }
           if (isStreamEnabled) {
             lambdaEvents.checkKinesisAndAddLambdaTrigger(config['event_source_stream'], lambdaARN);
@@ -307,6 +333,17 @@ node() {
 def echoServerlessFile() {
   def serverlessyml = readFile('serverless.yml').trim()
   echo "serverless file data $serverlessyml"
+}
+
+def servelessDeploy(env, envBucketKey){
+  try {
+    sh "serverless deploy --stage ${env} -v --bucket ${configLoader.AWS.S3[envBucketKey]} > output.log"
+    return "success"
+  } catch (ex) {
+    echo "Serverless deployment failed due to $ex"
+  }
+  def outputLog = readFile('output.log').trim()
+  return outputLog
 }
 
 def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
@@ -391,7 +428,7 @@ def LoadConfiguration() {
 /**	Build project based on runtime
  */
 def buildLambda(String runtime) {
-  echo "installing dependencies for $runtime"
+	echo "installing dependencies for $runtime"
 	if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
 	} else if (runtime.indexOf("java") > -1) {
@@ -408,8 +445,8 @@ def buildLambda(String runtime) {
 		virtualenv venv
 		. venv/bin/activate
 		pip install pytest
-    """
-  }
+		"""
+	}
 }
 
 /** Reset credentials
@@ -517,11 +554,11 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     sh "cp _config/serverless-python.yml ./serverless.yml"
   }
 
-  if(isDynamoDbEnabled) {
+  if (isDynamoDbEnabled) {
     sh "cp _config/aws-events-policies/dynamodb-policy.yml ./policyFile.yml"
   }
 
-  if (isEventSchdld == true) {
+  if (isEventSchdld == true || isS3EventEnabled == true) {
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
   echoServerlessFile()
@@ -607,7 +644,12 @@ def writeServerlessFile(config, env) {
   }
   if (config['mainClass']) {
     sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
-	}
+  }
+
+  if (config['event_source_s3']) {
+    sh "sed -i -- 's/{event_source_s3}/${config['event_source_s3']}/g' ./serverless.yml"
+    sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
+  }
 
   if (config['event_source_dynamodb']) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"

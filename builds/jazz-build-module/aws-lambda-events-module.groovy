@@ -138,13 +138,11 @@ def createSqsQueue(queue_name, lambdaARN){
   }
 }
 
-def checkS3AndUpdateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {
-  def isExists = checkS3BucketExists(s3BucketName)
-  if(isExists){
-    updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action)
-  }else{
-    createBucket(s3BucketName)
-    updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action)
+def removeS3EventsFromServerless(isEventSchdld){
+  def sedCommand = "/#Start:isS3EventEnabled/,/#End:isS3EventEnabled/d"
+	sh "sed -i -- '$sedCommand' ./serverless.yml"
+  if(isEventSchdld == false){
+    sh "sed -i -- 's/events:/ /g' ./serverless.yml"
   }
 }
 
@@ -165,15 +163,6 @@ def checkS3BucketExists(s3BucketName){
       echo "Bucket exists and don't have access"
       error ex.getMessage()
     }
-  }
-}
-
-def createBucket(s3BucketName){
-  try{
-    def res = sh(script: "aws s3api create-bucket --bucket $s3BucketName --profile cloud-api", returnStdout: true).trim()
-  }catch(ex){
-    echo "Failed to create the bucket"
-    error ex.getMessage()
   }
 }
 
