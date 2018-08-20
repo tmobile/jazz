@@ -48,6 +48,11 @@ functions:
       #Start:isDynamoDbEnabled
       - stream: {event_source_dynamodb}
       #End:isDynamoDbEnabled
+      #Start:isS3EventEnabled
+      - s3:
+          bucket: {event_source_s3}
+          event: {event_action_s3}
+      #End:isS3EventEnabled
     vpcDisabled:
       securityGroupIds:
         "Fn::Split":
