@@ -344,10 +344,20 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 
-      sh "sed -i -- 's/{conf_deployment_targets}/${config_loader.JAZZ.DEPLOYMENT_TARGETS}/g' ./config/dev-config.json"
-      sh "sed -i -- 's/{conf_deployment_targets}/${config_loader.JAZZ.DEPLOYMENT_TARGETS}/g' ./config/stg-config.json"
-      sh "sed -i -- 's/{conf_deployment_targets}/${config_loader.JAZZ.DEPLOYMENT_TARGETS}/g' ./config/prod-config.json"
-      sh "sed -i -- 's/{conf_deployment_targets}/${config_loader.JAZZ.DEPLOYMENT_TARGETS}/g' ./config/test-config.json"
+      sh "sed -i -- 's/{conf_deployment_targets_api}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.API}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{conf_deployment_targets_api}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.API}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{conf_deployment_targets_api}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.API}/g' ./config/prod-config.json"
+      sh "sed -i -- 's/{conf_deployment_targets_api}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.API}/g' ./config/test-config.json"
+
+      sh "sed -i -- 's/{conf_deployment_targets_function}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.FUNCTION}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{conf_deployment_targets_function}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.FUNCTION}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{conf_deployment_targets_function}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.FUNCTION}/g' ./config/prod-config.json"
+      sh "sed -i -- 's/{conf_deployment_targets_function}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.FUNCTION}/g' ./config/test-config.json"
+
+      sh "sed -i -- 's/{conf_deployment_targets_website}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.WEBSITE}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{conf_deployment_targets_website}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.WEBSITE}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{conf_deployment_targets_website}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.WEBSITE}/g' ./config/prod-config.json"
+      sh "sed -i -- 's/{conf_deployment_targets_website}/${config_loader.JAZZ.DEPLOYMENT_TARGETS.WEBSITE}/g' ./config/test-config.json"
 		}
 
 		if ((service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service")
