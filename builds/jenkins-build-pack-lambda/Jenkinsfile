@@ -246,7 +246,9 @@ node() {
           }
 
           if (isDynamoDbEnabled) {
-            config['event_source_dynamodb'] = lambdaEvents.getStreamEnabledArn(config['event_source_dynamodb'])
+            def dynamodbStreamArn = lambdaEvents.getStreamEnabledArn(config['event_source_dynamodb'])
+            config['event_source_dynamodb'] = dynamodbStreamArn
+            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", dynamodbStreamArn, "create_event", config), environment_logical_id);
           }
 
           writeServerlessFile(config, environment_logical_id)
