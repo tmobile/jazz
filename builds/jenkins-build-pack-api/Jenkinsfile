@@ -257,7 +257,7 @@ node() {
 								} else {
 									sh "aws apigateway update-stage --rest-api-id ${api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${configLoader.AWS.REGION}"
 								}
-        
+
 								if (current_environment == 'prod' || config['domain'] == 'jazz') {
 									endpointUrl = "https://${apiHostName}/${current_environment}/${config['domain']}/${config['service']}"
 								} else {
@@ -493,11 +493,11 @@ def buildLambda(runtime) {
 	Generate the swagger file specific to each environment
 */
 def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
-    sh "sed -i -- 's/{lambdaFunctionName}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
-    sh "sed -i -- 's/{apiDeploymentNodeTitle}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
-    sh "sed -i -- 's/{serviceName}/${config['service']}/g' swagger/swagger.json" // {service_name}
-    sh "sed -i -- 's/{apiHostName}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
-    sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
+  sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
+  sh "sed -i -- 's/{api_deployment_node_title}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
+  sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
+  sh "sed -i -- 's/{api_host_name}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
+  sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
@@ -505,9 +505,9 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;
 	def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
-	sh "sed -i -- 's/{confRole}/${roleARN}/g' ./swagger/swagger.json"
-	sh "sed -i -- 's/{confRegion}/${configLoader.AWS.REGION}/g' ./swagger/swagger.json"
-	sh "sed -i -- 's/{confAccId}/${roleId}/g' ./swagger/swagger.json"
+	sh "sed -i -- 's/{conf-role}/${roleARN}/g' ./swagger/swagger.json"
+	sh "sed -i -- 's/{conf-region}/${configLoader.AWS.REGION}/g' ./swagger/swagger.json"
+	sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 }
 
 /* method to read the file and add operation id */
@@ -954,7 +954,7 @@ def loadBuildModules(buildModuleUrl){
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
 
-		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {			
+		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {
 			apigeeModule = load "apigee-module.groovy"
 			apigeeModule.initialize(configLoader.APIGEE, events)
 			echo "Apigee module loaded successfully."
