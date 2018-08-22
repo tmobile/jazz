@@ -18,6 +18,7 @@ import { AdvFilters }            from '../adv-filter.directive';
 import {AdvancedFilterService} from '../advanced-filter.service';
 
 import { Symbol } from 'rxjs';
+import {CreateServiceCustomFormComponent} from "../secondary-components/create-service-custom-form/create-service-custom-form.component";
 
 let routerRoutes:any;
 let specificComponents:any;
@@ -53,7 +54,7 @@ for(let i in specificComponents){
   ],
   providers:[AdvancedFilterService],
   declarations: [
-    
+    CreateServiceCustomFormComponent,
     ...declarationsArray,
     // AdvFilters,
     
