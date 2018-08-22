@@ -1,6 +1,6 @@
 // =========================================================================
-// Copyright 2017 T-Mobile USA, Inc.
-// 
+// Copyright © 2017 T-Mobile USA, Inc.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,37 +23,38 @@
 **/
 
 module.exports = () => {
-    var errorObj = {
-        throwInputValidationError: function(errorMessage) { //Raise a  bad requests exception
-            return {
+    const errorObj = {
+        throwInputValidationError: (errorMessage) => ( //Raise a  bad requests exception
+            {
                 errorType: "BadRequest",
                 message: errorMessage.toString()
-            };
-        },
-        throwForbiddenError: function(errorMessage) { //Raise not found exceptions
-            return {
+            }
+        ),
+        throwForbiddenError: (errorMessage) => ( //Raise not found exceptions
+            {
                 errorType: "Forbidden",
                 message: errorMessage.toString()
-            };
-        },
-        throwUnauthorizedError: function(errorMessage) { //Raise not found exceptions
-            return {
+            }
+        ),
+        throwUnauthorizedError: (errorMessage) => ( //Raise not found exceptions
+            {
                 errorType: "Unauthorized",
                 message: errorMessage.toString()
-            };
-        },
-        throwNotFoundError: function(errorMessage) { //Raise not found exceptions
-            return {
+            }
+        ),
+        throwNotFoundError: (errorMessage) => ( //Raise not found exceptions
+            {
                 errorType: "NotFound",
                 message: errorMessage.toString()
-            };
-        },
-        throwInternalServerError: function(errorMessage) { //Raise internal server exceptions
-            return {
+            }
+        ),
+        throwInternalServerError: (errorMessage) => ( //Raise internal server exceptions
+            {
                 errorType: "InternalServerError",
                 message: errorMessage.toString()
-            };
-        }
+            }
+        )
     };
+
     return errorObj;
 };

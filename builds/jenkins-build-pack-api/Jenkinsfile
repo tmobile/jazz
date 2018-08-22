@@ -199,17 +199,30 @@ node() {
 			env_key = "DEV"
 		}
 		stage("Deployment to ${env_key} environment") {
-			events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
-			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
+			def env_info = environmentDeploymentMetadata.getEnvironmentInfo()
 
-			echo "starts Deployment to ${env_key} Env"
+			def env_metadata = [:]
+
+			if (env_info && env_info["metadata"]) {
+				env_metadata = env_info["metadata"]
+			}
+
+			events.sendStartedEvent('DEPLOY_TO_AWS', "Deployment started to ${env_key} AWS environment", context_map, environment_logical_id)
+			events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
+
 			def endpointUrl = null
 			def api_deployment_target
+			def aws_api_id = null
+
+			if (env_metadata["AWS_API_ID"] != null) {
+				aws_api_id = env_metadata["AWS_API_ID"]
+			}
+
 			try {
 
 				// resetting env endpoint url
 				environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
-				events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
+				events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
 					sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
@@ -243,19 +256,22 @@ node() {
 						switch (api_deployment_target) {
 							case 'aws_apigateway':
 								events.sendStartedEvent('DEPLOY_TO_AWS_APIGATEWAY', 'Deployment started for API Gateway', context_map, environment_logical_id)
-								def api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
-								echo "API ID: $api_id"
-								apiHostName ="${api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com"
+								if (aws_api_id == null) {
+									aws_api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
+								}
+
+								apiHostName ="${aws_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com"
+								echo "API Host Name: $apiHostName"
 								awsAPIGatewayModule.addApigatewayLambdaIntegration('swagger/swagger.json');
 								updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
 
-								sh "aws apigateway put-rest-api --rest-api-id ${api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+ " --profile cloud-api"
-								sh "aws apigateway create-deployment --rest-api-id ${api_id} --stage-name ${current_environment} --profile cloud-api"
-								sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+								sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+ " --profile cloud-api"
+								sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile cloud-api"
+								sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
 								if("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
-									sh "aws apigateway update-stage --rest-api-id ${api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
+									sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
 								} else {
-									sh "aws apigateway update-stage --rest-api-id ${api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${configLoader.AWS.REGION}"
+									sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${configLoader.AWS.REGION}"
 								}
         
 								if (current_environment == 'prod' || config['domain'] == 'jazz') {
@@ -264,7 +280,7 @@ node() {
 									endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
 								}
 
-								def apiArns = getAPIGatewayResourceARNs(api_id, environment_logical_id)
+								def apiArns = getAPIGatewayResourceARNs(aws_api_id, environment_logical_id)
 								if(apiArns) {
 									for (arn in apiArns) {
 										events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
@@ -284,6 +300,12 @@ node() {
 								break;
 							default:
 								error "Deployment targets are not defined"
+
+						def apiArns = getAPIGatewayResourceARNs(aws_api_id, environment_logical_id)
+						if(apiArns) {
+							for (arn in apiArns) {
+								events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
+							}
 						}
 
 						if (domain != "jazz") {
@@ -299,6 +321,11 @@ node() {
 
 						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
 						send_status_email(config, 'COMPLETED', svc_status)
+
+					}
+
+					if (domain && domain == "jazz") {
+						serviceConfigdata.setLogStreamPermission(config)
 					}
 				}
 			} catch (ex) {
@@ -307,7 +334,7 @@ node() {
 				} else if(api_deployment_target == 'gcp_apigee') {
 					events.sendFailureEvent('DEPLOY_TO_GCP_APIGEE', ex.getMessage(), context_map, environment_logical_id)
 				}
-				events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id), environment_logical_id)
+				events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
 				events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 				error ex.getMessage()
@@ -315,11 +342,13 @@ node() {
 			environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
 			def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
 
+			env_metadata["AWS_API_ID"] = aws_api_id
+
 			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
-			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
-			events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
-			events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
-		}//stage to prod ends here
+			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, env_metadata), environment_logical_id)
+			events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
+			events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
+		}//stage of deployment to an environment ends here
 
 	}//dir ends here
 }
@@ -616,7 +645,7 @@ def validateDeploymentConfigurations(def prop) {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports. DSundar3
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"]
 			def flag = false
 			for (int i = 0; i < validRuntimes.size(); i++) {
 				if (_runtime == validRuntimes[i]) {

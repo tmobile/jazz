@@ -149,6 +149,7 @@ node {
 						try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
+								environmentMetadataLoader.setBranch(branch)
 								events.setBranch(branch)
 								sonarModule.setBranch(branch)
 								branch = 'NA'
@@ -172,7 +173,7 @@ node {
 							cleanUpApiDocs(_envId)
 							unDeployService(_envId)
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
-								cleanupCodeQualityReports()								
+								cleanupCodeQualityReports()
 							}
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
@@ -202,7 +203,7 @@ node {
 							echo 'undeploying function for environment: ' + _envId
 							unDeployService(_envId)
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
-								cleanupCodeQualityReports()								
+								cleanupCodeQualityReports()
 							}
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
@@ -259,7 +260,7 @@ def cleanupCodeQualityReports(){
 	try {
 		sonarModule.cleanupCodeQualityReports()
 	} catch (ex) {
-		echo "error occured while deleting code quality reports: " + ex.getMessage()	
+		echo "error occured while deleting code quality reports: " + ex.getMessage()
 	}
 }
 
@@ -440,9 +441,11 @@ def cleanUpApiGatewayResources(stage, path) {
 				current_environment = 'prod'
 			}
 			echo "Resource search key for ApiGateway : $resource_search_key"
+			def aws_api_id = getApiId(stage)
+
 			try {
 				def outputStr = sh(
-					script: "aws apigateway get-resources --rest-api-id ${getApiId(stage)} --region ${configLoader.AWS.REGION} --output json",
+					script: "aws apigateway get-resources --rest-api-id ${aws_api_id} --region ${configLoader.AWS.REGION} --output json",
 					returnStdout: true
 				).trim()
 
@@ -457,18 +460,18 @@ def cleanUpApiGatewayResources(stage, path) {
 			}
 			if (resource_id != null && resource_id != "") {
 				def status_json = sh(
-					script: "aws apigateway delete-resource --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --resource-id ${resource_id} --output json",
+					script: "aws apigateway delete-resource --rest-api-id ${aws_api_id}  --region ${configLoader.AWS.REGION} --resource-id ${resource_id} --output json",
 					returnStdout: true
 				).trim()
 				try {
 					def deployment_status_json = sh(
-						script: "aws apigateway create-deployment --rest-api-id ${getApiId(stage)}  --region ${configLoader.AWS.REGION} --stage-name ${current_environment} --description 'API deployment after resource clean up' --output json",
+						script: "aws apigateway create-deployment --rest-api-id ${aws_api_id}  --region ${configLoader.AWS.REGION} --stage-name ${current_environment} --description 'API deployment after resource clean up' --output json",
 						returnStdout: true
 					).trim()
 				} catch (ex) {
 				}
 			} else {
-				echo "Resource Id does not exists in API gateway."
+				echo "Resource Id does not exist in API gateway."
 			}
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
@@ -501,12 +504,24 @@ def getServiceBucket(stage) {
 
 
 /**
- * Get the API Id of the gateway specific to an environment. The values will be pulled ENV vars set
+ * Get the API Id of the gateway specific to an environment. The value will be retrieved from environments table and if not available will try to retrieve it from config
  * @param  stage the environment
  * @return  api Id
  */
 def getApiId(stage) {
 	echo "stage: $stage"
+
+	def envInfo = environmentMetadataLoader.getEnvironmentInfo()
+	def envMetadata = [:]
+
+	if (envInfo && envInfo["metadata"]) {
+		envMetadata = envInfo["metadata"]
+	}
+
+	if (envMetadata["AWS_API_ID"] != null) {
+		return envMetadata["AWS_API_ID"]
+	}
+
 	if (stage.endsWith('-dev')) {
 		return utilModule.getAPIIdForCore(configLoader.AWS.API["DEV"])
 	} else if (stage == 'stg') {

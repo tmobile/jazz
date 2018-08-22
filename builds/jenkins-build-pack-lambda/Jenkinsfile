@@ -209,12 +209,12 @@ node() {
 		}
 		stage("Deployment to ${env_key} environment") {
 			events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
-			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
+			events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 			echo "starts Deployment to ${env_key} Env"
 			def lambdaARN = null
 			environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
 
-			events.sendStartedEvent('UPDATE_ENVIRONMENT', 'Environment status update event for staging deployment', environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id), environment_logical_id)
+			events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 			withCredentials([
 				[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 			]) {
@@ -265,19 +265,19 @@ node() {
 
 				} catch (ex) {
 					send_status_email(config, 'FAILED', '')
-					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id), environment_logical_id)
+					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
 					events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
 					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 					error ex.getMessage()
 				}
 				environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
 				def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
-				events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment Update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id), environment_logical_id)
-				events.sendCompletedEvent('UPDATE_DEPLOYMENT', 'Deployment completion Event for stage deployment', environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
-				events.sendCompletedEvent('DEPLOY_TO_AWS', 'successfully deployed services to AWS', serviceContext, environment_logical_id)
+				events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null), environment_logical_id)
+				events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
+				events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
 
 			} //end of withCredentials
-		} //end of stage to production
+		} //end of deployment to an environment
 	}
 }
 

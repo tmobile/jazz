@@ -30,7 +30,7 @@ function handler(event, context, cb) {
 	let config = configModule.getConfig(event, context);
 
 	logger.init(serviceContext, context);
-
+	
 	try {
 		logger.debug(serviceContext.resourcePath);
 		utils.getAPIPath(serviceContext.resourcePath)
@@ -54,7 +54,7 @@ function handler(event, context, cb) {
 
 						return utils.getJazzToken(config)
 							.then((data) => utils.getProjectBranch(data.auth_token, query, config)
-							).then(data => utils.getCodeqReport(metrics, data.branch, toDate, fromDate, query, config)
+							).then(data => utils.getCodeqReport(metrics, data.branch, toDate, fromDate, query, config , serviceContext)
 							).then(data => {
 								const output = responseObj(data, serviceContext.query);
 								return cb(null, output);
@@ -151,7 +151,6 @@ function getCodeqInputsUsingQuery(serviceContext, config) {
 	}
 
 	const metricsResult = utils.getMetrics(query, config, messages);
-
 	if (metricsResult.error) {
 		logger.error(metricsResult.error);
 		result.error = metricsResult.error;
