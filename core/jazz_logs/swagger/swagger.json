@@ -2,16 +2,16 @@
   "swagger": "2.0",
   "info": {
     "version": "2017-01-30T23:30:18Z",
-    "title": "{apiDeploymentNodeTitle}",
+    "title": "{api_deployment_node_title}",
     "description": "API specification to get the application logs"
   },
-  "host": "{apiHostName}",
+  "host": "{api_host_name}",
   "basePath": "/{domain}",
   "schemes": [
     "https"
   ],
   "paths": {
-    "/{serviceName}": {
+    "/{service_name}": {
       "options": {
         "description": "CORS Support",
         "consumes": [
@@ -239,9 +239,9 @@
         },
         "x-amazon-apigateway-integration": {
           "type": "aws",
-          "uri": "arn:aws:apigateway:{confRegion}:lambda:path/2015-03-31/functions/arn:aws:lambda:{confRegion}:{confAccId}:function:{lambdaFunctionName}/invocations",
+          "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
           "httpMethod": "POST",
-          "credentials": "{confRole}",
+          "credentials": "{conf-role}",
           "requestTemplates": {
             "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
             "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
@@ -409,7 +409,7 @@
         "service",
         "domain",
         "environment",
-		    "category"
+		"category"
       ],
       "properties": {
         "service": {
@@ -429,22 +429,22 @@
           "type": "string",
           "description": "Environment in which the service is deployed"
         },
-		    "category": {
-		      "enum": [
+		"category": {
+		  "enum": [
             "api",
             "function"
           ],
           "type": "string",
           "description": "Service type"
         },
-	    	"start_time": {
+		"start_time": {
           "type": "string",
-		    "format": "date-time",
+		  "format": "date-time",
           "description": "start time"
         },
         "end_time": {
           "type": "string",
-		      "format": "date-time",
+		  "format": "date-time",
           "description": "end time"
         },
         "size": {
@@ -455,16 +455,16 @@
           "type": "number",
           "description": "Starting record number"
         },
-		    "type": {
-          "enum": [
-            "warn",
-            "error",
-            "info",
-            "debug"
-          ],
-		    "type": "string",
-		    "description": "log type"
-	      }
+		"type": {
+		  "enum": [
+		    "warn",
+			"error",
+		    "info",
+		    "debug"		    
+		  ],
+		  "type": "string",
+		  "description": "log type"
+	    }
       }
     },
     "OutputObj": {
@@ -480,7 +480,7 @@
                 "type": "string",
                 "description": "request id of the log message"
               },
-			        "timestamp": {
+			  "timestamp": {
                 "type": "string",
                 "description": "time of the log message"
               },
@@ -489,12 +489,12 @@
                 "description": "log message"
               },
               "type": {
-                "enum": [
-                  "debug",
-                  "info",
-                  "warn",
-                  "error"
-                ],
+			    "enum": [
+				 "debug",
+				 "info",
+				 "warn",
+				 "error"
+				],
                 "type": "string",
                 "description": "log type"
               }
