@@ -14,11 +14,11 @@ def initialize(configLoader){
   config_loader = configLoader
 }
 
-def checkKinesisAndAddLambdaTrigger(stream_name, lambdaARN) {
+def checkKinesisStreamExists(stream_name) {
   try {
     sh "aws kinesis describe-stream --stream-name ${stream_name} --profile cloud-api --output json"
     echo "Stream exists and have access"
-    addLambdaTriggerToKinesisStream(true, stream_name, lambdaARN)
+    return true
   } catch (ex) {
     def response
     try {
@@ -31,62 +31,60 @@ def checkKinesisAndAddLambdaTrigger(stream_name, lambdaARN) {
     }
     if (response) {
       echo "Stream does not exists"
-      addLambdaTriggerToKinesisStream(false, stream_name, lambdaARN)
+      return false
     } else {
       error "Error occured while describing the stream details"
     }
   }
 }
 
-def addLambdaTriggerToKinesisStream(isExists, stream_name, lambdaARN){
-  def event_source_arn = "arn:aws:kinesis:${config_loader.AWS.REGION}:${config_loader.AWS.ACCOUNTID}:stream/${stream_name}"
-  if(isExists){
-    def isDefined = listEventSourceMapping(event_source_arn, lambdaARN)
-    if(!isDefined){
-      createEventSourceMapping(event_source_arn, lambdaARN, true)
-    }
-  }else{
-    createKinesisStream(stream_name, lambdaARN)
-  }
+def updateKinesisResourceServerless(stream_name){
+  def event_stream_arn = getKinesisStreamArn(stream_name)
+  sh "sed -i -- 's/resources/resourcesDisabled/g' ./serverless.yml"
+  sh "sed -i -- '/#Start:streamGetArn/,/#End:streamGetArn/d' ./serverless.yml"
+  sh "sed -i -- 's/arnDisabled/arn/g' ./serverless.yml"
+  sh "sed -i -- 's|{event_stream_arn}|${event_stream_arn}|g' ./serverless.yml"
 }
 
-def createKinesisStream(stream_name, lambdaARN){
-  try{
-    sh "aws kinesis create-stream --stream-name ${stream_name} --shard-count 1 --profile cloud-api --output json"
-    def event_source_arn = "arn:aws:kinesis:${config_loader.AWS.REGION}:${config_loader.AWS.ACCOUNTID}:stream/${stream_name}"
-    createEventSourceMapping(event_source_arn, lambdaARN, true)
-  }catch(ex){
-    echo "Failed to create the stream"
-    error "Failed to create the stream"
+def getKinesisStreamArn(stream_name){
+  try {
+    def response = sh(
+      script: "aws kinesis describe-stream --stream-name ${stream_name} --profile cloud-api --output json",
+      returnStdout: true
+    ).trim()
+    def mappings = parseJson(response)
+    return mappings.StreamDescription.StreamARN
+  } catch (ex) {
+    error "Error occured while describing the stream details"
   }
 }
 
 def createEventSourceMapping(event_source_arn, lambdaARN, isStream){
-  try{
-    if (isStream == true){
+  try {
+    if (isStream == true) {
       sh "aws lambda create-event-source-mapping --function-name ${lambdaARN} --event-source ${event_source_arn} --starting-position LATEST --profile cloud-api --output json"
-    }else {
+    } else {
       sh "aws lambda create-event-source-mapping --function-name ${lambdaARN} --event-source ${event_source_arn} --profile cloud-api --output json"
     }
-  }catch(ex){
+  } catch (ex) {
     echo "Failed to create the event source mapping"
     error "Failed to create the event source mapping"
   }
 }
 
 def listEventSourceMapping(event_source_arn, lambdaARN){
-  try{
-    def response =  sh(
-			script: "aws lambda list-event-source-mappings --function-name ${lambdaARN} --event-source ${event_source_arn} --profile cloud-api --output json",
-			returnStdout: true
-		).trim()
+  try {
+    def response = sh(
+      script: "aws lambda list-event-source-mappings --function-name ${lambdaARN} --event-source ${event_source_arn} --profile cloud-api --output json",
+      returnStdout: true
+    ).trim()
     def mappings = parseJson(response)
-    if(mappings.EventSourceMappings.size() > 0){
+    if (mappings.EventSourceMappings.size() > 0) {
       return true
-    }else{
+    } else {
       return false
     }
-  }catch(ex){
+  } catch (ex) {
     echo "Failed to list the event source mapping"
     error "Failed to list the event source mapping"
   }
@@ -130,7 +128,7 @@ def addLambdaTriggerToSqsQueue(isExists, queue_name, lambdaARN){
 def createSqsQueue(queue_name, lambdaARN){
   try {
     sh "aws sqs create-queue --queue-name ${queue_name} --attributes '{\"VisibilityTimeout\": \"${queue_visibility_timeout}\"}' --profile cloud-api --output json"
-     def event_source_arn = "arn:aws:sqs:${config_loader.AWS.REGION}:${config_loader.AWS.ACCOUNTID}:${queue_name}"
+    def event_source_arn = "arn:aws:sqs:${config_loader.AWS.REGION}:${config_loader.AWS.ACCOUNTID}:${queue_name}"
     createEventSourceMapping(event_source_arn, lambdaARN, false)
   } catch (ex) {
     echo "Failed to create the queue"
@@ -140,14 +138,14 @@ def createSqsQueue(queue_name, lambdaARN){
 
 def removeS3EventsFromServerless(isEventSchdld){
   def sedCommand = "/#Start:isS3EventEnabled/,/#End:isS3EventEnabled/d"
-	sh "sed -i -- '$sedCommand' ./serverless.yml"
-  if(isEventSchdld == false){
+  sh "sed -i -- '$sedCommand' ./serverless.yml"
+  if (isEventSchdld == false) {
     sh "sed -i -- 's/events:/ /g' ./serverless.yml"
   }
 }
 
 def checkS3BucketExists(s3BucketName){
-   try {
+  try {
     sh "aws s3api head-bucket --bucket $s3BucketName --output json"
     echo "Bucket exists and have access"
     return true
@@ -264,7 +262,7 @@ def checkAndConvertEvents(events){
       new_events.add(item)
     }
 
-    if(new_events.contains("s3:ObjectRemoved:*")){
+    if (new_events.contains("s3:ObjectRemoved:*")) {
       isRemovalEvent = true
     }
 
@@ -274,7 +272,7 @@ def checkAndConvertEvents(events){
         isCreationEvent = true
         new_events[cleanupIndex] = null
       }
-      if(isRemovalEvent == true && item.contains("ObjectRemoved")){
+      if (isRemovalEvent == true && item.contains("ObjectRemoved")) {
         new_events[cleanupIndex] = null
       }
     }
@@ -298,7 +296,7 @@ def getStreamEnabledArn(tableStreamArn) {
   ).trim()
   def streamListJson = parseJson(streamList)
 
-  if(streamListJson.Streams.size() == 0) {
+  if (streamListJson.Streams.size() == 0) {
     return createDynamodbStream(tableName)
   } else {
     def streamArnList = streamListJson.Streams
@@ -311,7 +309,7 @@ def getStreamEnabledArn(tableStreamArn) {
 
       if (streamDetailsJson.StreamDescription.StreamStatus == ("ENABLING" || "ENABLED")) {
         return stream.StreamArn
-      } else if (streamArnList.last().StreamArn == stream.StreamArn){
+      } else if (streamArnList.last().StreamArn == stream.StreamArn) {
         return createDynamodbStream(tableName)
       }
     }
@@ -319,13 +317,13 @@ def getStreamEnabledArn(tableStreamArn) {
 }
 
 def createDynamodbStream(tableName) {
-	def tableDetails = sh(
+  def tableDetails = sh(
     script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES --region ${config_loader.AWS.REGION} --output json",
     returnStdout: true
   ).trim()
   def tableDetailsJson = parseJson(tableDetails)
 
-	return tableDetailsJson.TableDescription.LatestStreamArn
+  return tableDetailsJson.TableDescription.LatestStreamArn
 }
 
 /**

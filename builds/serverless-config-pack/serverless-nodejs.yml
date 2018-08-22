@@ -48,6 +48,21 @@ functions:
       #Start:isDynamoDbEnabled
       - stream: {event_source_dynamodb}
       #End:isDynamoDbEnabled
+      #Start:isStreamEnabled
+      - stream:
+          type: kinesis
+          startingPosition: LATEST
+          enabled: true
+          #Start:streamGetArn
+          arn:
+            Fn::GetAtt:
+              - {event_source_kinesis}
+              - Arn
+          #End:streamGetArn
+          #Start:streamArn
+          arnDisabled: {event_stream_arn}
+          #End:streamArn
+      #End:isStreamEnabled
       #Start:isS3EventEnabled
       - s3:
           bucket: {event_source_s3}
@@ -65,4 +80,13 @@ functions:
 
 resourcesDisabled:
   Resources:
+   #Start:isDynamoDbEnabled
     customEventRole: ${file(policyFile.yml):eventSubscribed}
+   #End:isDynamoDbEnabled
+   #Start:isStreamEnabled
+    {event_source_kinesis}:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: {event_source_kinesis}
+        ShardCount: 1
+   #End:isStreamEnabled

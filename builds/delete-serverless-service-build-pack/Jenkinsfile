@@ -352,6 +352,16 @@ def writeServerlessFile(){
 	if (service_config['mainClass']) {
 		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${service_config['mainClass']}/g' serverless.yml"
 	}
+
+  if (service_config['event_source_s3']) {
+    sh "sed -i -- 's/{event_source_s3}/${service_config['event_source_s3']}/g' ./serverless.yml"
+    sh "sed -i -- 's/{event_action_s3}/${service_config['event_action_s3']}/g' ./serverless.yml"
+  }
+
+  if (service_config['event_source_stream']) {
+    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
+    sh "sed -i -- 's/{event_source_stream}/${service_config['event_source_stream']}/g' ./serverless.yml"
+  }
 }
 
 /**
