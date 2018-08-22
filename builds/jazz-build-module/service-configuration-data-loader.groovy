@@ -63,6 +63,18 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{conf-apikey-stg}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/global-config.json"
 			sh "sed -i -- 's/{conf-apikey-prod}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/global-config.json"
 
+      sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_HOST}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_HOST}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_HOST}/g' ./config/prod-config.json"
+
+      sh "sed -i -- 's/{apigee_mgmt_org}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_ORG}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_org}/${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_ORG}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_org}/${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_ORG}/g' ./config/prod-config.json"
+
+      sh "sed -i -- 's/{apigee_mgmt_env}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_ENV}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_env}/${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_ENV}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_env}/${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_ENV}/g' ./config/prod-config.json"
+
 			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
 
       sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
@@ -72,6 +84,16 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.APIGEE.APIGEE_CRED_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+        sh "sed -i -- 's/{apigee_user}/${UNAME}/g' ./config/dev-config.json"
+        sh "sed -i -- 's/{apigee_user}/${UNAME}/g' ./config/stg-config.json"
+        sh "sed -i -- 's/{apigee_user}/${UNAME}/g' ./config/prod-config.json"
+
+        sh "sed -i -- 's/{apigee_password}/${PWD}/g' ./config/dev-config.json"
+        sh "sed -i -- 's/{apigee_password}/${PWD}/g' ./config/stg-config.json"
+        sh "sed -i -- 's/{apigee_password}/${PWD}/g' ./config/prod-config.json"
+      }
 		}
 
 		if ( (service_name.trim() == "jazz_codeq") ) {
@@ -321,6 +343,39 @@ def loadServiceConfigurationData() {
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
 			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+      def apiOptions=""
+      def functionOptions=""
+      def websiteOptions=""
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.API) {
+          apiOptions += '"' + item + '",'
+      }
+      apiOptions = apiOptions.substring(0, apiOptions.length()-1)
+
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.FUNCTION) {
+          functionOptions += '"' + item + '",'
+      }
+      functionOptions = functionOptions.substring(0, functionOptions.length()-1)
+
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.WEBSITE) {
+          websiteOptions += '"' + item + '",'
+      }
+      websiteOptions = websiteOptions.substring(0, websiteOptions.length()-1)
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/test-config.json"
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/test-config.json"
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/test-config.json"
 		}
 
 		if ((service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service")
