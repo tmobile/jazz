@@ -17,8 +17,8 @@ import groovy.transform.Field
  */
 def initialize(apigee_config, event_logger) {
     apigeeConfig = apigee_config
-    mavenHome = tool name: "${apigeeConfig.maven}", type: 'maven'
-    apiversion = "${apigeeConfig.buildVersion}.${env.BUILD_NUMBER}"
+    mavenHome = tool name: "${apigeeConfig.MAVEN}", type: 'maven'
+    apiversion = "${apigeeConfig.BUILD_VERSION}.${env.BUILD_NUMBER}"
     apigeeModuleRoot = getModuleRoot()
     events = event_logger
 }
@@ -46,7 +46,6 @@ String deploy(swaggerFile, arn, env_key, environment_logical_id, config, context
 
     dir (apigeeModuleRoot) {
         def functionName = arn.functionName
-        
         try {
             events.sendStartedEvent('APIGEE_API_PROXY_GEN', 'Creating Apigee API proxy configuration', apigeeContextMap)
             proxygen(templateValues)
@@ -60,7 +59,7 @@ String deploy(swaggerFile, arn, env_key, environment_logical_id, config, context
 
         // echo out the projects: Build number, Build Version and Apiversion Number
         echo "Build Number is ${env.BUILD_NUMBER}"
-        echo "Build Version is ${apigeeConfig.buildVersion}"
+        echo "Build Version is ${apigeeConfig.BUILD_VERSION}"
         echo "Apiversion Number is ${apiversion}"
 
         dir("gen/CoreAPI") {
@@ -79,7 +78,7 @@ String deploy(swaggerFile, arn, env_key, environment_logical_id, config, context
 
                 try {
                     events.sendStartedEvent('APIGEE_API_PROXY_DEPLOY', 'Deploying Apigee API proxy bundle', apigeeContextMap)
-                    sh("./build/deploy.sh ${deployEnv.mgmt_host} ${deployEnv.mgmt_org} ${deployEnv.mgmt_env} ${templateValues.ProxyName} ${apiversion} ${USER} ${PASS} v1")
+                    sh("./build/deploy.sh ${deployEnv.MGMT_HOST} ${deployEnv.MGMT_ORG} ${deployEnv.MGMT_ENV} ${templateValues.ProxyName} ${apiversion} ${USER} ${PASS} v1")
                     events.sendCompletedEvent('APIGEE_API_PROXY_DEPLOY', 'Completed Apigee API proxy bundle deployment', apigeeContextMap)
                 } catch (e) {
                     events.sendFailureEvent('APIGEE_API_PROXY_DEPLOY', e.getMessage(), apigeeContextMap)
@@ -87,9 +86,9 @@ String deploy(swaggerFile, arn, env_key, environment_logical_id, config, context
                 }
             }
         }
-        
+
     }
-    
+
     return hostUrl
 }
 
@@ -102,13 +101,13 @@ String deploy(swaggerFile, arn, env_key, environment_logical_id, config, context
  * @param config The config metadata.
  */
 def delete(swaggerFile, env_key, environment_logical_id, config) {
-    def templateValues = getTemplateValues(swaggerFile, environment_logical_id)    
+    def templateValues = getTemplateValues(swaggerFile, environment_logical_id)
     def deployEnv = apigeeConfig.API_ENDPOINTS[env_key]
     dir (apigeeModuleRoot) {
         withCredentials([usernamePassword(credentialsId: apigeeConfig.apigeeCredId, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
             try {
                 events.sendStartedEvent('APIGEE_API_PROXY_DELETE', 'Deleting Apigee API proxy.')
-                sh("./build/delete.sh ${deployEnv.mgmt_host} ${deployEnv.mgmt_org} ${deployEnv.mgmt_env} ${templateValues.ProxyName} ${USER} ${PASS}")
+                sh("./build/delete.sh ${deployEnv.MGMT_HOST} ${deployEnv.MGMT_ORG} ${deployEnv.MGMT_ENV} ${templateValues.ProxyName} ${USER} ${PASS}")
                 events.sendCompletedEvent('APIGEE_API_PROXY_DELETE', 'Completed deletion of Apigee API proxy.')
             } catch (e) {
                 events.sendFailureEvent('APIGEE_API_PROXY_DELETE', e.getMessage())
@@ -126,13 +125,13 @@ def delete(swaggerFile, env_key, environment_logical_id, config) {
 def proxygen(templateValues) {
     dir ('gen') {
         deleteDir()
-    }    
+    }
     dir ('templates/CoreAPI') {
         deleteDir()
     }
     dir ('templates') {
         sh "mkdir ./CoreAPI"
-        if (apigeeConfig.useSecure) {
+        if (apigeeConfig.USE_SECURE) {
             sh ("cp -r ./coreAPI_secure/* ./CoreAPI")
         } else {
             sh ("cp -r ./coreAPI_default/* ./CoreAPI")
@@ -159,7 +158,7 @@ String getHostUrl(deployEnv, swaggerFile) {
     def swaggerObj = new JsonSlurperClassic().parseText(swaggerFileContent)
     def domain = swaggerObj.basePath.substring(1)
     def serviceName
-    for (k in swaggerObj.paths.keySet()) {        
+    for (k in swaggerObj.paths.keySet()) {
         def keyTokens = k.split('/')
         if (keyTokens.length < 2) {
             error "Path must contain at least one element after the initial / to indicate the service name."
@@ -167,7 +166,7 @@ String getHostUrl(deployEnv, swaggerFile) {
         serviceName = keyTokens[1]
         break;
     }
-    return "https://${deployEnv.service_hostname}/${domain}/${serviceName}"
+    return "https://${deployEnv.SERVICE_HOSTNAME}/${domain}/${serviceName}"
 }
 
 /**
@@ -204,7 +203,6 @@ def getTemplateValues(swaggerFile, environment_logical_id) {
         }
         modPaths.put(key, path.value)
     }
-    
     swaggerObj.basePath += serviceName
     swaggerObj.paths = modPaths
     def out = JsonOutput.prettyPrint(JsonOutput.toJson(swaggerObj))
@@ -225,7 +223,7 @@ def getTemplateValues(swaggerFile, environment_logical_id) {
 
 @NonCPS
 def parseJson(inString) {
-    return new JsonSlurperClassic().parseText(inString)  
+    return new JsonSlurperClassic().parseText(inString)
 }
 
 /**
@@ -239,7 +237,7 @@ String getModuleRoot() {
     def currentDir = tokens[tokens.length - 1]
     if (currentDir != 'build_modules') {
         here += '/build_modules'
-    } 
+    }
     return "${here}/apigee"
 }
 
@@ -249,7 +247,7 @@ String getModuleRoot() {
  *
  * @param templateFile The full path to the template file.
  * @param targetDir The directory into which filled template will be written.
- * @param targetFile The file name for the filled template. 
+ * @param targetFile The file name for the filled template.
  * @param valueMap A map of token:value pairs used to replace tokens in the template file.
  */
 def applyTemplate(templateFile, targetDir, targetFile, valueMap) {

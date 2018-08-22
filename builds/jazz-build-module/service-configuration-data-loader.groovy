@@ -53,6 +53,423 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
+		}
+
+		if ( (service_name.trim() == "jazz_metrics") ) {
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-apikey-dev}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/global-config.json"
+			sh "sed -i -- 's/{conf-apikey-stg}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/global-config.json"
+			sh "sed -i -- 's/{conf-apikey-prod}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/global-config.json"
+
+      sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_HOST}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_HOST}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_HOST}/g' ./config/prod-config.json"
+
+      sh "sed -i -- 's/{apigee_mgmt_org}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_ORG}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_org}/${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_ORG}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_org}/${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_ORG}/g' ./config/prod-config.json"
+
+      sh "sed -i -- 's/{apigee_mgmt_env}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_ENV}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_env}/${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_ENV}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{apigee_mgmt_env}/${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_ENV}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
+
+      sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.APIGEE.APIGEE_CRED_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+        sh "sed -i -- 's/{apigee_user}/${UNAME}/g' ./config/dev-config.json"
+        sh "sed -i -- 's/{apigee_user}/${UNAME}/g' ./config/stg-config.json"
+        sh "sed -i -- 's/{apigee_user}/${UNAME}/g' ./config/prod-config.json"
+
+        sh "sed -i -- 's/{apigee_password}/${PWD}/g' ./config/dev-config.json"
+        sh "sed -i -- 's/{apigee_password}/${PWD}/g' ./config/stg-config.json"
+        sh "sed -i -- 's/{apigee_password}/${PWD}/g' ./config/prod-config.json"
+      }
+		}
+
+		if ( (service_name.trim() == "jazz_codeq") ) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{sonar_hostname}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{sonar_hostname}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{sonar_hostname}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/prod-config.json"
+
+			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.CODE_QUALITY.SONAR.ADMIN_SONAR_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+				sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/prod-config.json"
+
+				sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/dev-config.json"
+				sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/stg-config.json"
+				sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/prod-config.json"
+			}
+
+			sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+		}
+
+		if ( (service_name.trim() == "jazz_assets") ) {
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+		}
+
+		if ( (service_name.trim() == "jazz_deployments") ) {
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_scm-webhook")) {
+
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+		}
+
+		if ((service_name.trim() == "jazz_environments")) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_environment-event-handler")) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_asset-event-handler")) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_deployments-event-handler")) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_slack-event-handler")) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
+
+		}
+
+		if ((service_name.trim() == "jazz_events")) {
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+		}
+
+		if ((service_name.trim() == "jazz_events-handler")) {
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_services-handler")) {
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+		}
+
+		if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer")) {
+			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+
+			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+
+			sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_is-service-available")) {
+			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_create-serverless-service")) {
+
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+      def apiOptions=""
+      def functionOptions=""
+      def websiteOptions=""
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.API) {
+          apiOptions += '"' + item + '",'
+      }
+      apiOptions = apiOptions.substring(0, apiOptions.length()-1)
+
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.FUNCTION) {
+          functionOptions += '"' + item + '",'
+      }
+      functionOptions = functionOptions.substring(0, functionOptions.length()-1)
+
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.WEBSITE) {
+          websiteOptions += '"' + item + '",'
+      }
+      websiteOptions = websiteOptions.substring(0, websiteOptions.length()-1)
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/test-config.json"
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/test-config.json"
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/test-config.json"
+		}
+
+		if ((service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service")
+     || (service_name.trim() == "jazz_deployments") || (service_name.trim() == "jazz_environment-event-handler")) {
+			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{api_token}/${utilModule.getApiToken()}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{api_token}/${utilModule.getApiToken()}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{api_token}/${utilModule.getApiToken()}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+			withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/dev-config.json"
+			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/stg-config.json"
+			    sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/prod-config.json"
+			}
+		}
+
+		if (service_name.trim() == "jazz_services") {
+
+			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+		}
+
+		if (service_name.trim() == "jazz_logs") {
+			sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
+		}
+
+		if (service_name.trim() == "jazz_cloud-logs-streamer") {
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
+		}
+
+		if (service_name.trim() == "jazz_usermanagement") {
+			sh "sed -i -- 's/{user_pool_id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{user_pool_id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{user_pool_id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{user_client_id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{user_client_id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{user_client_id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{region}/${region}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{region}/${region}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{region}/${region}/g' ./config/prod-config.json"
+
+			sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/dev-config.json"
+			sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/stg-config.json"
+			sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/prod-config.json"
+
+			if (config_loader.SCM.TYPE == "bitbucket") {
+				sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
+				sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
+				sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
+
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+          sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/dev-config.json"
+          sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/stg-config.json"
+          sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/prod-config.json"
+
+          sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/dev-config.json"
+          sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/stg-config.json"
+          sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/prod-config.json"
         }
 
         if (service_name.trim() == "jazz_metrics") {
