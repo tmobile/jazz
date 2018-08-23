@@ -51,6 +51,7 @@
   "BUILDPACKMAP": {
     "api": "build-pack-api",
     "function": "build-pack-lambda",
-    "website": "build-pack-website"
+    "website": "build-pack-website",
+    "ui": "jazz_ui"
   }
 }

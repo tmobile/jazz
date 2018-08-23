@@ -1,12 +1,12 @@
-/** 
-  * @type Component 
+/**
+  * @type Component
   * @desc Generic tab element
   * @author
 */
 
 import { Component, OnInit, Input, Output, EventEmitter  } from '@angular/core';
 import { environment } from './../../../environments/environment';
- 
+
 @Component({
   selector: 'tabs',
   templateUrl: './tabs.component.html',
@@ -19,6 +19,7 @@ export class TabsComponent implements OnInit {
   @Input() selectedTab;
   @Input() public tabChanged: Function;
   @Output() onSelected:EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Input() beforeEnv: boolean = true;
   disableobj:any= {
 'overview':true,
 'access control':true,
@@ -38,7 +39,7 @@ export class TabsComponent implements OnInit {
   }
   disabletabs(){
     var tabs;
-    
+
       tabs=environment.serviceTabs;
     for(var i=0;i<tabs.length;i++){
       if(tabs[i] == 'overview') this.disableobj['overview']=false;
@@ -66,7 +67,7 @@ export class TabsComponent implements OnInit {
   ngOnInit() {
     this.disabletabs();
     this.disableENVtabs();
-    
+
 
   }
 

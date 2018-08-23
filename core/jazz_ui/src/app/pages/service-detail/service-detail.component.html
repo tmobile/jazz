@@ -1,11 +1,11 @@
 <jazz-mob-header [icon]="'notification'" [headText]="service.name" [status]="'green'"></jazz-mob-header>
 <section class="page-container service-detail-page">
     <navigation-bar [links]="breadcrumbs"></navigation-bar>
-    
+
     <div class="content relative" [class.non-clickable] = 'service.status == "deletion started" || service.status == "deletion completed"'>
                         <span  class="reduxC" *ngIf='service.status == "deletion completed"'></span>
                         <span  class="reduxS" *ngIf='service.status == "deletion started"'></span>
-            
+
         <div class="page-title-wrap hide-for-mobile">
             <h1 class="page-hdr bold-title">{{service.name}}</h1>
             <span class="page-sub-title"><span class="service-type">{{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
@@ -16,11 +16,11 @@
                 <span class="icon-icon-refresh"></span>
                 <span>Refresh</span>
             </div>
-            <tabs [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
-           
+            <tabs [beforeEnv]= "!isENVavailable" [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+
         </div>
-       
-        <div *ngIf='!err_flag'> 
+
+        <div *ngIf='!err_flag'>
             <section class="page-content" *ngIf="selectedTab == 0">
                 <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isLoadingService]="isLoadingService"></service-overview>
             </section>
@@ -39,7 +39,7 @@
           </section>
         </div>
         <div *ngIf='err_flag' class='err-wrp'>
-                
+
                 <div class="empty-row with-refresh relative">
                         <div class="loading-row" [class.show]="isLoadingService">
                                 <div class="loading-circle"></div>
@@ -80,7 +80,7 @@
                 </div>
                 <div class="footer-btns" [class.invisible]="isLoading">
                         <btn-jazz-primary text="DONE" (click)="backtoservice()" newclass="delete-btn"></btn-jazz-primary>
-                       
+
                 </div>
         </div>
         <div class="step-1" *ngIf="serviceDeleteFailed">
@@ -92,7 +92,7 @@
                 </div>
                 <div class="footer-btns" [class.invisible]="isLoading">
                         <btn-jazz-primary text=" DONE" (click)="backtoservice()" newclass="delete-btn"></btn-jazz-primary>
-                       
+
                 </div>
         </div>
     </div>

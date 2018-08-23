@@ -5,7 +5,7 @@ $primary-pink: #fc2f98;
 
 .sidebar-frame {
   min-width: 64rem;
-  min-height: calc(100 vh-4rem);
+  min-height: calc( 100vh - 4rem );
   width: 60%;
   z-index: 2;
   background: #faf9f9;
@@ -74,19 +74,20 @@ textarea {
   border: none;
   background-color: #F8F8F8;
   border-radius: 0 5px 5px 0;
-  min-height: 10rem;
+  min-height: 12rem;
 }
 
 .line-numbers {
+  text-align:center;
   border-radius: 5px 0 0 5px;
   width: 4rem;
   background-color: #EEEEEE;
-  padding: 2px 2px 2.5rem 2px;
+  padding: 2px 2px 2px 2px;
 }
 
 .button-group {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   width: 100%;
   > * + * {
     margin-left: 1rem;
@@ -95,7 +96,7 @@ textarea {
 
 button {
   outline: none;
-  padding: 1rem 0;
+  padding: 0.5rem 0;
   text-align: center;
   width: 6rem;
   &.btn-round {
@@ -133,13 +134,14 @@ button {
 
 .warning {
   padding: 2px;
-  font-size: 10px;
+  font-size: 12px;
   color: #d0021b;
+  margin:1rem 0;
 }
 
 .warning-chk-wrp{
   display:flex;
-
+  justify-content: space-between;
 }
 
 .try-service-cb {
@@ -177,8 +179,20 @@ button {
 .column-heading {
   height: calc(25rem/12);
   font-size: 1.5rem;
+  margin-top:1rem;
+}
+.hyperlink-padding{
+  padding:0.5rem 0;
+}
+.dropdown-hdr{
+  margin-bottom: 0.4rem;
+  display: block;
+}
+.cb-status-dets{
+  padding-left: 1rem;
+}
+.clear-icon-padding{
+  padding-right: 1rem;
 }
 
-.op-box{
-  margin-top:2rem;
-}
+

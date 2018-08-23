@@ -17,8 +17,8 @@ export class EnvTryServiceSidebarComponent implements OnInit {
 
   public contentTypeMenu = ['application/json'];
   public contentTypeSelected = this.contentTypeMenu[0];
-  public lineNumberCount: any = new Array(5).fill('');
-  public lineNumberCount_op: any = new Array(5).fill('');
+  public lineNumberCount: any = new Array(7).fill('');
+  public lineNumberCount_op: any = new Array(7).fill('');
   public inputValue = '';
   public outputValue = '';
 
@@ -64,7 +64,7 @@ export class EnvTryServiceSidebarComponent implements OnInit {
       this.loading = true;
       let payload = {
         "functionARN": this.environment.endpoint,
-        "inputJSON": this.inputValue
+        "inputJSON": JSON.parse(this.inputValue)
       };
       this.subscription = this.http.post('/jazz/test-lambda', payload).subscribe((response) => {
         this.loading = false;
@@ -75,24 +75,13 @@ export class EnvTryServiceSidebarComponent implements OnInit {
         this.reponse_code = response.data.payload.StatusCode;
         if(response.data.payload.StatusCode === 200){
           this.success=true;
-          this.error=false;
         }
-        if(response.data.execStatus === 'HandledError'){
-          this.success=true;
-          this.error=true;
-        }
-        if(response.data.execStatus === 'UnhandledError'){
-          this.success=true;
-          this.error=true;
-        }
-        if(response.data.execStatus === 'TimeoutError'){
+        else{
           this.success=false;
-          this.error=true;
         }
         if(response.data.execStatus === 'FunctionInvocationError'){
           this.FunctionInvocationError = true;
           this.success=false;
-          this.error=true;
         }
         if(this.outputHeader.statusCode != ''){
           this.outputHeader.statusCode+=' : ';
@@ -103,14 +92,35 @@ export class EnvTryServiceSidebarComponent implements OnInit {
         this.outputValue = this.stringToPrettyString(response.data.payload.Payload);
         this.lineNumbers('op');
       }, (error) => {
+        let errorObj;
+        try{
+          errorObj = JSON.parse(error._body);
+        }
+        catch(e){
+          console.log('Error in parsing JSON',e)
+        }
         this.loading = false;
         this.outputHeader = {
           statusCode: error.status,
           statusText: error.statusText || 'Error'
         };
-        this.outputValue = 'Error'
+        if(errorObj.errorType === "BadRequest"){
+          this.success=false;
+          this.error=false;
+          this.outputHeader.statusText='Bad Request';
+        }
+        this.outputValue = 'Error';
       });
     }
+  }
+
+  clearInputbox(){
+    this.inputValue='';
+    this.lineNumbers("ip");
+    this.outputValue="";
+    this.lineNumbers("op");
+    this.valid = true;
+    this.outputHeader=false;
   }
 
   inputIsValid() {
@@ -125,19 +135,23 @@ export class EnvTryServiceSidebarComponent implements OnInit {
   }
 
   lineNumbers(event) {
-    var lines;
+    let lines;
     if (event == "op") {
       lines = this.outputValue.split(/\r*\n/);
     }
-    else {
+    else{
       lines = this.inputValue.split(/\r*\n/);
     }
-    var line_numbers = lines.length;
+    let line_numbers = lines.length;
+    if(line_numbers < 7){
+      line_numbers = 7;
+    }
     if (event == "op") {
       this.lineNumberCount_op = new Array(line_numbers).fill('');
     }
     else {
       this.lineNumberCount = new Array(line_numbers).fill('');
+
     }
 
   }

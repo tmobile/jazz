@@ -46,7 +46,7 @@ export class EnvironmentDetailComponent implements OnInit {
   baseUrl: string = '';
   swaggerUrl: string = '';
   disablingWebsiteButton: boolean = true;
-  disablingFunctionButton: boolean = false;
+  disablingFunctionButton: boolean = true;
   disablingApiButton: boolean = true;
   nonClickable: boolean = false;
   message: string;
@@ -54,6 +54,7 @@ export class EnvironmentDetailComponent implements OnInit {
   private sub: any;
   private subscription: any;
   public assets;
+  isENVavailable:boolean = false;
 
   constructor(
     private toasterService: ToasterService,
@@ -81,9 +82,13 @@ export class EnvironmentDetailComponent implements OnInit {
 
   EnvLoad(event) {
     this.environment_obj = event.environment[0];
+    this.envStatus = this.environment_obj.status;
+    this.envStatus = this.envStatus.replace("_"," ");
+    this.isENVavailable = true;
     this.status_val = parseInt(status[this.environment_obj.status]);
     if ((this.status_val < 2) || (this.status_val == 4)) {
       this.disablingApiButton = false;
+      this.disablingFunctionButton = false;
     }
 
     this.status_inactive = true;
@@ -188,16 +193,16 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   getAssets() {
-    this.http.post('/jazz/assets/search', {
+    this.http.get('/jazz/assets', {
       service: this.service.service || this.service.name,
       domain: this.service.domain,
       environment: this.envSelected,
       limit: undefined
     }).subscribe((assetsResponse) => {
-      this.assets = assetsResponse.data;
+      this.assets = assetsResponse.data.assets;
       this.service.assets = this.assets;
     }, (err) => {
-      this.toast_pop('error', 'Oops!', 'Failed to load swagger file.');
+      this.toast_pop('error', 'Oops!', 'Failed to load Assets.');
     });
   }
 
@@ -238,7 +243,7 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.api_doc_name = env_oss.api_doc_name;  
+    this.api_doc_name = env_oss.api_doc_name;
     this.sub = this.route.params.subscribe(params => {
       let id = params['id'];
       this.serviceId = id;

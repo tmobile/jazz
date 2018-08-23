@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -86,12 +86,11 @@ module.exports = (query, asset_table, onComplete) => {
                     params.ExclusiveStartKey = data.LastEvaluatedKey;
                     queryExecute(onComplete);
                 } else {
-
-                    if (pagination.limit && pagination.offset) {
+                    count = items.length;
+                    if (pagination.limit >= 0 && pagination.offset >=0 ) {
                         items = utils.paginateUtil(items, parseInt(pagination.limit), parseInt(pagination.offset));
                     }
 
-                    count = items.length;
                     let paginatedObjList = items.map(item => utils.formatResponse(item));
                     let obj = {
                         count: count,
