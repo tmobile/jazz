@@ -17,7 +17,7 @@ import org.apache.log4j.Logger;
  * EnvironmentConfig configObject = new EnvironmentConfig(context);
  * String config_value = configObject.getConfig("config_key");
 
- * @author DSundar3
+ * @author
  * @version
  *
  */
