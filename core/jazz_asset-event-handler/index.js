@@ -289,7 +289,7 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
     };
 
     var svcPostSearchPayload = {
-      uri: configData.BASE_API_URL + configData.ASSETS_API_SEARCH_RESOURCE+ "?domain=" + searchAssetPayload.domain + "&service=" + searchAssetPayload.service + "&provider_id=" +searchAssetPayload.provider_id + "&asset_type=" +searchAssetPayload.asset_type,
+      uri: configData.BASE_API_URL + configData.ASSETS_API_SEARCH_RESOURCE+ "?domain=" + searchAssetPayload.domain + "&service=" + searchAssetPayload.service + "&provider_id=" +searchAssetPayload.provider_id + "&asset_type=" +searchAssetPayload.asset_type + "&limit=-1",
       method: "GET",
       headers: { Authorization: authToken },
       rejectUnauthorized: false
