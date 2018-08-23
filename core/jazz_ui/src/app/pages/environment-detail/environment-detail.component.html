@@ -47,7 +47,7 @@
         <span class="icon-icon-refresh"></span>
         <span>Refresh</span>
       </div>
-        <tabs [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+        <tabs [beforeEnv]= "!isENVavailable" [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
 
 
         <section class="page-content" *ngIf="selectedTab == 0">

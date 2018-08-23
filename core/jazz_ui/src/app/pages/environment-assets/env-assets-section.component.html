@@ -31,8 +31,8 @@
                     </div>
                 <a (click)='openModal = !openModal;isLoading=false'  [class.invisible]="isLoading || feedbackRes">CANCEL</a>
                 <btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading" [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'" (click)='submitFeedback(buttonText)'></btn-jazz-primary>
-            </div> 
-    </div>    
+            </div>
+    </div>
 </div>
 
 <div class='full-page'>
@@ -45,11 +45,11 @@
             </div>
 
             <!-- <div class='filtr-wrap ' *ngIf='service.serviceType == "function"'>
-        
+
                     <div class="filter-icon relative hide" >
                             <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; "></span>
                             <div [class.show]='filterSelected' class="filter-wrap">
-                                <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>                    
+                                <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>
                                 <div class="filter-inner-wrap">
                                     <div class='view-label'>View by:</div>
                                     <div class="eachFilter" *ngIf='service.serviceType == "function"'>
@@ -67,7 +67,7 @@
         <!-- <div class="mask-wrap"></div> -->
         <div *ngIf="envResponseTrue">
         <div class="asset-wrp" *ngFor="let asset of assetsList ; let i = index">
-            
+
             <div class="asset-title-row" [ngSwitch]="asset.asset_type">
                 <span *ngSwitchCase='"apigateway"' class="icon-icon-APIGateway">
                         <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span>
@@ -86,7 +86,7 @@
                 </span>
                 <span class="asset-title">Asset {{slNumber[i]}}</span><span class="asset-subtitle">{{type[i]}}</span>
             </div>
-            
+
             <div class="asset-content-row row">
                 <ul class="section-left col-md-6 col-sm-12">
                     <!-- <li>
@@ -97,38 +97,38 @@
                         <div class="det-label">Namespace</div>
                         <div class="det-value">{{domain[i]}}</div>
                     </li> -->
-    
+
                     <li *ngIf='status[i] != "-"'>
                         <div class="det-label">Status</div>
                         <div class="det-value">{{status[i]}}</div>
                     </li>
-    
+
                     <li *ngIf='Provider[i] != "-"'>
                             <div class="det-label">Provider</div>
                             <div class="det-value">{{Provider[i]}}</div>
                     </li>
-    
-                   
+
+
                     <li *ngIf='arn[i] != "-"'>
                             <div class="det-label">{{assetTypeToLabel(asset.type)}}</div>
                             <div class="det-value arn-value">{{arn[i]}}</div>
                     </li>
-                    
-                    
-    
+
+
+
                 </ul>
                 <ul class="section-right col-md-6 col-sm-12">
-    
+
                     <li *ngIf='endpoint[i] != "-"'>
                             <div class="det-label">URL</div>
                             <div class="det-value link">{{endpoint[i]}}</div>
                     </li>
-    
+
                     <li  *ngIf='url[i] != "-"'>
                             <div class="det-label">Swagger</div>
                             <div class="det-value link arn-value" (click)='redirect(url[i])'>{{url[i]}}</div>
                     </li>
-    
+
                     <li>
                         <div class="det-label">Last Updated</div>
                         <!-- <div class="det-value">{{time[i]}}</div> -->
@@ -138,14 +138,14 @@
                         <div class="det-value" *ngIf="count[i] == 1" >{{commitDiff[i]}} minute<span *ngIf='commitDiff[i] > 1'>s</span> ago</div>
                         <div class="det-value" *ngIf="count[i] == 0" >{{commitDiff[i]}}</div>
                     </li>
-    
-                   
-    
+
+
+
                 </ul>
             </div>
-    
+
         </div>
-        
+
     </div>
 
     <div class='assets-row' *ngIf="envResponseError">
@@ -160,14 +160,14 @@
         </div>
         <div class="empty-row nodata with-refresh relative" *ngIf="envResponseEmpty">
             <div class="icon-icon-nodata"></div>
-            <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div> 
+            <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
         </div>
         <div class="loading-row" [class.show]="isLoading">
             <div class="loading-circle"></div>
         </div>
     </div>
 
-    <div *ngIf='!envResponseError && !envResponseEmpty && length > 10' class="table-pagination assets-pag" [class.show]="showPaginationtable && state !='loading' && state != 'empty' && state != 'error' && totalPageNum > 0">
+    <div *ngIf='!envResponseError && !envResponseEmpty' class="table-pagination assets-pag" [class.show]="showPaginationtable && state !='loading' && state != 'empty' && state != 'error' && totalPageNum > 0">
         <nav class="pagination-nav" aria-label="Page navigation table">
             <ul class="pagination justify-content-center">
                 <li class="page-item" (click)="paginatePageInTable('prev')" [class.disable]="currentlyActive == 1">

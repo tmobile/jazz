@@ -176,13 +176,6 @@ function genericInputValidation(event) {
       });
     }
 
-    if (event.method === "POST" && Object.keys(event.path).length > 0 && event.path.id !== "search") {
-      reject({
-        result: "inputError",
-        message: "Parameters are not supported for asset search"
-      });
-    }
-
     if (!event.principalId) {
       reject({
         result: "unauthorized",
