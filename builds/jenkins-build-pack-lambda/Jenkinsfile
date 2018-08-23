@@ -140,7 +140,7 @@ node() {
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
-  if (isScheduleEnabled || isEc2EventEnabled || isDynamoDbEnabled ) {
+  if (isScheduleEnabled || isEc2EventEnabled || isDynamoDbEnabled || isSQSEventEnabled) {
     isEventSchdld = true
   }
 
@@ -251,30 +251,16 @@ node() {
 
           writeServerlessFile(config, environment_logical_id)
 
-          echo "setting lambda execution role as ${configLoader.AWS.ROLEID}";
-          setLambdaExecutionRole(configLoader.AWS.ROLEID);
-
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
-
+          echoServerlessFile()
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey)
           def isLambdaUpdateRequired = false
 
           if (deployOutput != 'success') {
-            def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
-            if (deployOutput.contains(s3BucketErrString)) {
-              if (lambdaEvents.checkS3BucketExists(s3BucketName)) {
-                isLambdaUpdateRequired = true
-                lambdaEvents.removeS3EventsFromServerless(isEventSchdld)
-                echoServerlessFile()
-                sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
-                def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
-                if (redeployOutput != 'success') {
-                  echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
-                  error "Exception occured while serverless deployment to ${environment_logical_id} environment"
-                }
-              } else {
-                error "Error occured while accessing the s3 bucket"
-              }
+            if (config['event_source_s3']) {
+              handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld)
+            } else if (config['event_source_sqs']) {
+              handleSqsError(deployOutput, config['event_source_sqs'], environment_logical_id, envBucketKey)
             } else {
               echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
               error "Exception occured while serverless deployment to ${environment_logical_id} environment"
@@ -287,9 +273,6 @@ node() {
 
           echo "lambdaARN: ${lambdaARN}"
 
-          if (isSQSEventEnabled) {
-            lambdaEvents.checkSQSAndAddLambdaTrigger(config['event_source_sqs'], lambdaARN);
-          }
           if (isLambdaUpdateRequired) {
             lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
           }
@@ -330,6 +313,50 @@ node() {
   }
 }
 
+def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld) {
+  def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
+  if (deployOutput.contains(s3BucketErrString)) {
+    if (lambdaEvents.checkS3BucketExists(s3BucketName)) {
+      isLambdaUpdateRequired = true
+      lambdaEvents.removeS3EventsFromServerless(isEventSchdld)
+      echoServerlessFile()
+      sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+      def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+      if (redeployOutput != 'success') {
+        echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
+        error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+      }
+    } else {
+      error "Error occured while accessing the s3 bucket"
+    }
+  } else {
+    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
+    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+  }
+}
+
+def handleSqsError(deployOutput, event_source_sqs_arn, environment_logical_id, envBucketKey) {
+  def sqsErrString = "CloudFormation - CREATE_FAILED - AWS::SQS::Queue - "
+  if (deployOutput.contains(sqsErrString)) {
+    def event_source_sqs = event_source_sqs_arn.split(":(?!.*:.*)")[1]
+    if (lambdaEvents.checkSqsQueueExists(event_source_sqs)) {
+      lambdaEvents.updateSqsResourceServerless()
+      echoServerlessFile()
+      sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+      def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+      if (redeployOutput != 'success') {
+        echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
+        error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+      }
+    } else {
+      error "Error occured while accessing the kinesis stream"
+    }
+  } else {
+    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
+    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+  }
+}
+
 def echoServerlessFile() {
   def serverlessyml = readFile('serverless.yml').trim()
   echo "serverless file data $serverlessyml"
@@ -342,7 +369,9 @@ def servelessDeploy(env, envBucketKey){
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
   }
+
   def outputLog = readFile('output.log').trim()
+  echo "serverless deployment log $outputLog"
   return outputLog
 }
 
@@ -554,8 +583,8 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     sh "cp _config/serverless-python.yml ./serverless.yml"
   }
 
-  if (isDynamoDbEnabled) {
-    sh "cp _config/aws-events-policies/dynamodb-policy.yml ./policyFile.yml"
+  if (isDynamoDbEnabled || isSQSEventEnabled) {
+    sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
   }
 
   if (isEventSchdld == true || isS3EventEnabled == true) {
@@ -651,26 +680,27 @@ def writeServerlessFile(config, env) {
     sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
   }
 
+  if (config['event_source_sqs']) {
+    def  event_source_sqs = config['event_source_sqs'].split(":(?!.*:.*)")[1]
+    sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
+    sh "sed -i -- 's|{event_sqs_arn}|${config['event_source_sqs']}|g' ./serverless.yml"
+    sh "sed -i -- 's|{event_sqs_arn}|${config['event_source_sqs']}|g' policyFile.yml"
+    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
+  }
+
   if (config['event_source_dynamodb']) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -- 's|{event_source_dynamodb}|${config['event_source_dynamodb']}|g' serverless.yml"
     sh "sed -i -- 's|{event_source_dynamodb}|${config['event_source_dynamodb']}|g' policyFile.yml"
+  }
+
+  if( config['event_source_dynamodb'] || config['event_source_sqs']){
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
-  } else {
+  }else{
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
   }
 
 }
-
-/**
-	Set the Lambda execution role. If user provided a custom role override the default.
-*/
-def setLambdaExecutionRole(role) {
-  sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#${role}#g' serverless.yml"
-}
-
-
-
 
 /**
  * For getting token to access catalog APIs.
