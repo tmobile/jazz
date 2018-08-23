@@ -1,10 +1,8 @@
-'''
-    Python Logging Component
-    @module: logger.py
-    @description: a simple logging module for python
-    @author:
-    @version: 1.0
-'''
+# Python Logging Component
+# @module: logger.py
+# @description: a simple logging module for python
+# @author:
+# @version: 1.0
 
 from datetime import datetime
 import os
