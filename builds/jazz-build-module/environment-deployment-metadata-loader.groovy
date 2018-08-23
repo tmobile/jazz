@@ -6,8 +6,8 @@ import groovy.transform.Field
 echo "Environment and deployment metadata module loaded successfully"
 
 /**
- * The environment-deployment loader module. This module will load all environment and deployment related  metadata from respective  tables or Apis 
- * get it ready for Jenkins builds. It loads data for all service types. 
+ * The environment-deployment loader module. This module will load all environment and deployment related  metadata from respective  tables or Apis
+ * get it ready for Jenkins builds. It loads data for all service types.
 */
 
 
@@ -15,7 +15,7 @@ echo "Environment and deployment metadata module loaded successfully"
 @Field def g_service_config
 @Field def config_loader
 @Field def scm_module
-@Field def g_service_branch 
+@Field def g_service_branch
 @Field def g_build_url
 @Field def g_build_id
 @Field def g_environment_logical_id
@@ -39,7 +39,6 @@ def initialize(serviceConfig, configLoader, scmMdule, branch, buildUrl, buildId,
 
 def getEnvironmentLogicalId() {
 	if (g_environment_logical_id == null && g_service_config['domain'] != "jazz") {
-		def API_ENVIRONMENT_QUERY_URL = "${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}"
 		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
 		def environmentOutput
 		def environment_logical_id
@@ -67,6 +66,28 @@ def getEnvironmentLogicalId() {
 	return g_environment_logical_id
 }
 
+def getEnvironmentInfo() {
+	if (g_service_config['domain'] != "jazz") {
+		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
+		def environmentOutput
+		def environment_logical_id
+		if (getEnvironments != null) {
+			try {
+				environmentOutput = parseJson(getEnvironments)
+			} catch (ex) {
+				error ex.getMessage()
+			}
+			if (environmentOutput != null && environmentOutput.data != null && environmentOutput.data.environment != null) {
+				for (environment in environmentOutput.data.environment) {
+					if (environment.physical_id.equals(g_service_branch)) {
+						return environment;
+					}
+				}
+			}
+		}
+	}
+}
+
 /**
  * @param environment_logical_id
  */
@@ -88,7 +109,7 @@ def createPromotedEnvironment(environment_logical_id, created_by) {
 						-H 'authorization: $g_login_token' \
 						-H 'Content-type: application/json' \
 						-d '$payload'", returnStdout: true)
-			def resObj 
+			def resObj
 			if (res) {
 				resObj = parseJson(res)
 			}
@@ -111,11 +132,10 @@ def createPromotedEnvironment(environment_logical_id, created_by) {
  * Method to check an env is created with same logical id
  * @param environment = logical_id
  */
-def checkIfEnvironmentAvailable(environment_logical_id) {	
+def checkIfEnvironmentAvailable(environment_logical_id) {
 	def isAvailable = false
 	try {
 		if (environment_logical_id && g_service_config['domain'] != "jazz") {
-			def API_ENVIRONMENT_QUERY_URL = "${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}"
 			def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=$s{ervice_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
 			def environmentOutput
 			if (getEnvironments) {
@@ -197,7 +217,7 @@ def getEnvironmentBranchName(logical_id) {
 	}
 }
 
-def generateEnvironmentMap(status, environment_logical_id) {
+def generateEnvironmentMap(status, environment_logical_id, metadata) {
 	def env_logical_id
 	if (environment_logical_id == null) {
 		env_logical_id = getEnvironmentLogicalId()
@@ -213,6 +233,11 @@ def generateEnvironmentMap(status, environment_logical_id) {
 	if (g_environment_endpoint != null) {
 		serviceCtxMap.endpoint = g_environment_endpoint
 	}
+
+	if (metadata != null) {
+		serviceCtxMap.metadata = metadata
+	}
+
 	return serviceCtxMap;
 }
 
@@ -279,7 +304,7 @@ def parseJson(def json) {
 
 /**
  * Set Service config
- * @return      
+ * @return
  */
 def setServiceConfig(config) {
 	g_service_config = config
@@ -287,7 +312,7 @@ def setServiceConfig(config) {
 
 /**
  * Set Service config
- * @return      
+ * @return
  */
 def setConfigLoader(configLoader) {
 	config_loader = configLoader
@@ -295,7 +320,7 @@ def setConfigLoader(configLoader) {
 
 /**
  * Set Scm module
- * @return      
+ * @return
  */
 def setScmModule(scmModule){
 	scm_module = scmModule
@@ -303,7 +328,7 @@ def setScmModule(scmModule){
 
 /**
  * Set Branch
- * @return      
+ * @return
  */
 def setBranch(branch) {
 	g_service_branch = branch
@@ -312,7 +337,7 @@ def setBranch(branch) {
 
 /**
  * Set Branch
- * @return      
+ * @return
  */
 def setEnvironmentLogicalId(logical_id) {
 	g_environment_logical_id = logical_id
@@ -320,7 +345,7 @@ def setEnvironmentLogicalId(logical_id) {
 
 /**
  * Set Build Url
- * @return      
+ * @return
  */
 def setBuildUrl(build_url) {
 	g_build_url = build_url
@@ -329,7 +354,7 @@ def setBuildUrl(build_url) {
 
 /**
  * Set Build Id
- * @return      
+ * @return
  */
 def setBuildId(build_id) {
 	g_build_id = build_id
@@ -338,7 +363,7 @@ def setBuildId(build_id) {
 
 /**
  * Set Service
- * @return      
+ * @return
  */
 def setAuthToken(token) {
 	g_login_token = token
@@ -346,23 +371,23 @@ def setAuthToken(token) {
 
 /**
  * Set Environment Endpoint
- * @return      
+ * @return
  */
 def setEnvironmentEndpoint(endpoint) {
 	g_environment_endpoint = endpoint
 }
 
 /**
- * Set Request Id 
- * @return      
+ * Set Request Id
+ * @return
  */
 def setRequestId(requestId) {
 	g_request_id = requestId
 }
 
 /**
- * Set Base Url 
- * @return      
+ * Set Base Url
+ * @return
  */
 def setBaseUrl(base_url) {
 	g_environment_api = base_url

@@ -57,8 +57,9 @@ import {ChartjsLinegraphComponent} from "../secondary-components/chartjs-linegra
 import {FilterModalComponent} from "../secondary-components/filter-modal/filter-modal.component";
 import {ServiceMetricsComponent} from "../pages/service-metrics/service-metrics.component";
 import {MetricsCarouselComponent} from "../secondary-components/metrics-carousel/metrics-carousel.component";
+import {RouterModule} from "@angular/router";
 
-let specificComponents: any
+let specificComponents:any
 let specificModules: any;
 if (environment.envName == 'oss') {
   specificComponents = OssComponents;
@@ -79,6 +80,7 @@ for (let i in specificComponents) {
 //
 @NgModule({
   imports: [
+    RouterModule,
     CommonModule,
     FormsModule,
     DropdownModule,

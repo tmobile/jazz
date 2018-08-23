@@ -68,28 +68,39 @@ function handler(event, context, cb) {
 
     exportable.genericInputValidation(event)
       .then(() => {
-
         if (event.method === 'GET' && assets_id) {
-          logger.info('GET assets by ID : ' + assets_id);
+          logger.debug('GET assets by ID : ' + assets_id);
           exportable.processAssetData(assets_id, asset_table)
             .then(res => {
-              logger.info("get asset by Id result:" + JSON.stringify(res));
+              logger.debug("get asset by Id result:" + JSON.stringify(res));
               handleResponse(null, res, event.path);
             })
             .catch(error => {
-              logger.error("update error:" + JSON.stringify(error));
+              logger.debug("update error:" + JSON.stringify(error));
               handleResponse(error, null, event.path);
+            });
+        } else if (event.method === 'GET' && !assets_id) {
+          logger.debug('GET assets list by service name and domain');
+          var query = event.query;
+          exportable.processGetList(query, asset_table)
+            .then(res => {
+              logger.debug("GET assets list by service name and domain:" + JSON.stringify(res));
+              handleResponse(null, res, event.query);
+            })
+            .catch(error => {
+              logger.error("update error:" + JSON.stringify(error));
+              handleResponse(error, null, event.query);
             });
         }
 
         // Update assets
         // 2: PUT assets by id (/assets/{assets_id})
         else if (event.method === 'PUT' && assets_id) {
-          logger.info('Update asset assets_id ' + assets_id);
+          logger.debug('Update asset assets_id ' + assets_id);
           var update_data = event.body;
           exportable.processAssetsUpdate(assets_id, update_data, asset_table)
             .then(res => {
-              logger.info("update result:" + JSON.stringify(res));
+              logger.debug("update result:" + JSON.stringify(res));
               handleResponse(null, res.data, res.input);
             })
             .catch(error => {
@@ -112,21 +123,8 @@ function handler(event, context, cb) {
               handleResponse(error, null, assets_data);
             });
         }
-        // 4: POST search assets attributes
-        else if (event.method === 'POST' && assets_id === 'search') {
-          assets_data = event.body;
-          logger.info('POST search assets' + JSON.stringify(assets_data));
-          exportable.processAssetSearch(assets_data, asset_table)
-            .then(res => {
-              logger.info("search asset result:" + JSON.stringify(res));
-              handleResponse(null, res, assets_data);
-            })
-            .catch(error => {
-              logger.error("create asset error:" + JSON.stringify(error));
-              handleResponse(error, null, assets_data);
-            });
-        } else {
-          logger.error(JSON.stringify(event));
+        else {
+          logger.error("Requested Asset not found"+ JSON.stringify(event));
           return cb(JSON.stringify(errorHandler.throwNotFoundError("Requested Asset not found")));
         }
       })
@@ -150,10 +148,17 @@ function genericInputValidation(event) {
       })
     }
 
-    if ((event.method === "GET" || event.method === "PUT") && (Object.keys(event.path).length > 0 && !event.path.id)) {
+    if ((event.method === "GET" || event.method === "PUT") && event.path && (Object.keys(event.path).length > 0 && !event.path.id)) {
       reject({
         result: "inputError",
         message: "Missing input parameter asset id"
+      });
+    }
+
+    if ((event.method === "GET") && (!event.path || !event.path.id) && !event.query.service && !event.query.domain) {
+      reject({
+        result: "inputError",
+        message: "Missing input parameter service name and domain name"
       });
     }
 
@@ -200,6 +205,19 @@ function processAssetData(assets_id, asset_table) {
   })
 }
 
+function processGetList(query, asset_table) {
+  return new Promise((resolve, reject) => {
+    crud.getList(query, asset_table, (error, data) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(data);
+      }
+    });
+  })
+}
+
+
 function processAssetsUpdate(assets_id, update_data, asset_table) {
   return new Promise((resolve, reject) => {
     validateutils.validateUpdatePayload(assets_id, update_data, asset_table)
@@ -217,19 +235,6 @@ function processAssetCreation(assets_data, asset_table) {
   return new Promise((resolve, reject) => {
     validateutils.validateCreatePayload(assets_data, asset_table)
       .then(() => exportable.createNewAsset(assets_data, asset_table))
-      .then(res => {
-        resolve(res);
-      })
-      .catch(error => {
-        reject(error)
-      });
-  });
-};
-
-function processAssetSearch(assets_data, asset_table) {
-  return new Promise((resolve, reject) => {
-    validateutils.validateSearchPayload(assets_data)
-      .then(() => exportable.postSearch(assets_data, asset_table))
       .then(res => {
         resolve(res);
       })
@@ -291,8 +296,8 @@ const exportable = {
   processAssetData,
   processAssetsUpdate,
   processAssetCreation,
-  processAssetSearch,
   updateAssetsData,
+  processGetList,
   createNewAsset,
   postSearch
 }
