@@ -53,6 +53,21 @@ functions:
           enabled: true
           arn: {event_sqs_arn}
       #End:isSQSEnabled
+      #Start:isStreamEnabled
+      - stream:
+          type: kinesis
+          startingPosition: LATEST
+          enabled: true
+          #Start:streamGetArn
+          arn:
+            Fn::GetAtt:
+              - {event_source_kinesis}
+              - Arn
+          #End:streamGetArn
+          #Start:streamArn
+          arnDisabled: {event_stream_arn}
+          #End:streamArn
+      #End:isStreamEnabled
       #Start:isS3EventEnabled
       - s3:
           bucket: {event_source_s3}
@@ -84,4 +99,11 @@ resourcesDisabled:
         QueueName: {event_source_sqs}
         VisibilityTimeout: 165
     #End:isSqsResourceNotExist
-    #End:isSqsEnabled
+    #End:isSqsEnabled  
+   #Start:isStreamEnabled
+    {event_source_kinesis}:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: {event_source_kinesis}
+        ShardCount: 1
+   #End:isStreamEnabled
