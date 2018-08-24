@@ -289,7 +289,7 @@ describe('jazz_metrics', function () {
         }
       };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
-        return obj.callback(null, responseObj, responseObj.body)
+        return obj.callback(null, responseObj, JSON.stringify(responseObj.body))
       });
       var getAssetRes = {
         "type": "assetType",
@@ -316,7 +316,7 @@ describe('jazz_metrics', function () {
         }
       };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
-        return obj.callback(null, responseObj, responseObj.body)
+        return obj.callback(null, responseObj, JSON.stringify(responseObj.body))
       });
       index.getAssetsDetails(config, event.body, authToken)
         .then(res => {
@@ -1032,7 +1032,7 @@ describe('jazz_metrics', function () {
       });
 
       index.handler(event, context, (error, res) => {
-        expect(error).to.include('{"errorType":"InternalServerError","message":"Error in fetching cloudwatch metrics"}');
+        expect(error).to.include('{"errorType":"InternalServerError","message":"Error in fetching metrics"}');
 
         sinon.assert.calledOnce(genericValidation);
         sinon.assert.calledOnce(validateGeneralFields);
