@@ -114,8 +114,6 @@ function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
 };
 
 function extractValueFromString(string, keyword) {
-
-  var value = "";
   var startIndex = string.indexOf(keyword + ":") + (keyword + ":").length;
   var extractedString = string.substring(startIndex, string.length);
   var extractedSplitString = extractedString.split(":");
@@ -208,7 +206,8 @@ function updateNewAssetObj(newAssetObj, asset) {
       break;
     default:
       newAssetObj = {
-        "isError": "Metric not supported for asset type " + assetType
+        "isError": true,
+        "message": "Metric not supported for asset type " + assetType
       }
   }
   return newAssetObj;
@@ -235,7 +234,8 @@ function updateAWSAsset(newAssetObj, asset) {
       break;
     default:
       newAssetObj = {
-        "isError": "Metric not supported for asset type " + assetType
+        "message": "Metric not supported for asset type " + assetType,
+        "isError": true
       }
     }
     return newAssetObj;

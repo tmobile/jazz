@@ -53,7 +53,7 @@ function handler(event, context, cb) {
       .then(() => exportable.getToken(config))
       .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
       .then(res => exportable.validateAssets(res, eventBody))
-      .then(res => exportable.getMetricsDetails(res, eventBody))
+      .then(res => exportable.getMetricsDetails(res, eventBody, config))
       .then(res => {
         var finalObj = utils.massageData(res, eventBody);
         return cb(null, responseObj(finalObj, eventBody));
@@ -64,11 +64,11 @@ function handler(event, context, cb) {
         } else if (error.result === "unauthorized") {
           return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
         } else {
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching metrics")));
         }
       });
   } catch (e) {
-    return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
+    return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching metrics")));
   }
 
 };
@@ -178,7 +178,7 @@ function validateAssets(assetsArray, eventBody) {
     if (assetsArray.length > 0) {
       var newAssetArray = [];
       var invalidTypeCount = 0;
-
+      logger.info("Validating assets");
       assetsArray.forEach((assetItem) => {
         if (assetItem.isError) {
           logger.error(assetItem.isError);
