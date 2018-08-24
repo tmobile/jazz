@@ -108,7 +108,7 @@ export class CreateServiceComponent implements OnInit {
   model = new ServiceFormData('', '', '', '', '', '');
   cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
   rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
-  eventExpression = new EventExpression("awsEventsNone", undefined, undefined, undefined);
+  eventExpression = new EventExpression("awsEventsNone", undefined, undefined, undefined, undefined);
   private doctors = [];
   private toastmessage: any;
   errBody: any;
@@ -133,7 +133,7 @@ export class CreateServiceComponent implements OnInit {
   regions=this.regList;
 
   supported_account:string = this.accList[0];
-  
+
   selectedRegion=[];
   regionInput:string;
   selectedAccount=[];
@@ -362,7 +362,7 @@ export class CreateServiceComponent implements OnInit {
     this.serviceAvailable = false;
     this.serviceNotAvailable = false;
   }
- 
+
   onRegionChange(newVal) {
     if (!newVal) {
       this.showRegionList = false;
@@ -442,7 +442,7 @@ export class CreateServiceComponent implements OnInit {
           event["action"] = "PutRecord";
         } else if (this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;
-          event["action"] = "S3:" + this.eventExpression.S3BucketName + ":*";
+          event["action"] = "s3:" + this.eventExpression.S3BucketName + ":*";
         }
         payload["events"] = [];
         payload["events"].push(event);
@@ -483,7 +483,7 @@ export class CreateServiceComponent implements OnInit {
     //   payload["accounts"]=this.selectedAccount;
     //   payload["regions"]=this.selectedRegion;
     // }
-    
+
 
     this.isLoading = true;
     this.http.post('/jazz/create-serverless-service', payload)
@@ -659,7 +659,7 @@ keypressAccount(hash){
     var pinkElement = document.getElementsByClassName("pinkfocus")[0].children;
 
     var approverObj = pinkElement[0].attributes[2].value;
-    
+
     this.selectAccount(approverObj);
 
     this.showApproversList = false;
@@ -705,7 +705,7 @@ keypressRegion(hash){
     var pinkElement = document.getElementsByClassName("pinkfocus")[0].children;
 
     var approverObj = pinkElement[0].attributes[2].value;
-    
+
     this.selectRegion(approverObj);
 
     this.showApproversList = false;
@@ -722,7 +722,7 @@ blurAccount(){
   setTimeout(() => {
     this.showAccountList=false;
   }, 500);
-  
+
 }
 
 blurRegion(){
@@ -730,12 +730,12 @@ blurRegion(){
   setTimeout(() => {
     this.showRegionList=false;
   }, 500);
-  
+
 }
 
   //function for selecting approvers from dropdown//
   selectApprovers(approver) {
-    
+
     this.selApprover = approver;
     let thisclass: any = this;
     this.showApproversList = false;
@@ -956,11 +956,11 @@ blurRegion(){
       // {
       //   var p_ele = document.getElementsByClassName('pinkfocus')[2];
       //   if(p_ele == undefined){
-          
+
       //   }
       //   else pinkElement = document.getElementsByClassName('pinkfocus')[2].children;
-        
-      // }  
+
+      // }
       // else
       //   pinkElement = pinkElementS.children;
       var approverObj = {
@@ -1018,12 +1018,12 @@ blurRegion(){
       // if(pink_ele != undefined){
       //   alert('not undefined')
       //   pinkElement = document.getElementsByClassName("pinkfocus")[2].children;
-        
+
       // }
       // else{
       //   alert('undefined')
-       
-        
+
+
 
       // }
 
@@ -1113,7 +1113,7 @@ blurRegion(){
     }
     this.selectedApprovers2 = [];
   }
-  selectAccountsRegions(){    
+  selectAccountsRegions(){
 
     this.selectAccount(this.accList[0]);
     this.selectRegion(this.regList[0]);
@@ -1156,7 +1156,7 @@ blurRegion(){
   //   this.git_private =  gitPrivate.checked;
 
   //   this.git_url = "https://"+this.gitRepo;
-  // 
+  //
   // }
   // cron validation related functions //
 
