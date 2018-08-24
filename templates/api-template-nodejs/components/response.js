@@ -7,9 +7,10 @@
 **/
 
 module.exports = (response, input) => {
-  var output = {
+  const output = {
     "data": response,
     "input": input
   };
+
   return output;
 };

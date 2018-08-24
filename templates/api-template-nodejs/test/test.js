@@ -1,8 +1,8 @@
 const assert = require('chai').assert;
 const index = require('../index');
 
-describe('Sample', function () {
-  it('tests handler', function (done) {
+describe('Sample', () => {
+  it('tests handler', (done) => {
 
     // Add your test cases here.
     assert(true);

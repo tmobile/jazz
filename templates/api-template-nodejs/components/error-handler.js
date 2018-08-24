@@ -7,37 +7,38 @@
 **/
 
 module.exports = () => {
-    var errorObj = {
-        throwInputValidationError: function (errorMessage) {
-            return {
+    const errorObj = {
+        throwInputValidationError: (errorMessage) => (
+            {
                 errorType: "BadRequest",
                 message: errorMessage.toString()
-            };
-        },
-        throwForbiddenError: function (errorMessage) { //Raise not found exceptions
-            return {
+            }
+        ),
+        throwForbiddenError: (errorMessage) => (
+            {
                 errorType: "Forbidden",
                 message: errorMessage.toString()
-            };
-        },
-        throwUnauthorizedError: function (errorMessage) {
-            return {
+            }
+        ),
+        throwUnauthorizedError: (errorMessage) => (
+            {
                 errorType: "Unauthorized",
                 message: errorMessage.toString()
-            };
-        },
-        throwNotFoundError: function (errorMessage) {
-            return {
+            }
+        ),
+        throwNotFoundError: (errorMessage) => (
+            {
                 errorType: "NotFound",
                 message: errorMessage.toString()
-            };
-        },
-        throwInternalServerError: function (errorMessage) {
-            return {
+            }
+        ),
+        throwInternalServerError: (errorMessage) => (
+            {
                 errorType: "InternalServerError",
                 message: errorMessage.toString()
-            };
-        }
+            }
+        )
     };
+
     return errorObj;
 };

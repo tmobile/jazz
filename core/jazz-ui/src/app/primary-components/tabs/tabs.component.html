@@ -1,7 +1,0 @@
-<div class="tabs-wrap">
-    <ul>
-        <li *ngFor="let option of tabData;let i=index" [class.disable]='disableobj[option]' (click)="onDropdownClick(i)" [ngClass]="{'active': selectedTab == i}" class="x caps">
-            {{option}}
-        </li>
-    </ul>
-</div>

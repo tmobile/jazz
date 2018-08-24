@@ -1,0 +1,47 @@
+<div class="jz-section" [ngSwitch]="sectionStatus">
+  <div *ngSwitchCase="'loading'" class="jz-absolute-container">
+    <div class="jz-spinner"></div>
+  </div>
+  <div *ngSwitchCase="'error'" class="jz-section-content">
+    <report-issue [request]="errorData.request" [response]="errorData.response" (onRefresh)="refresh()"></report-issue>
+  </div>
+  <div *ngSwitchCase="'empty'" class="jz-section-content">
+    <div class="jz-section-icon">
+      <span class="icon-icon-nodata"></span>
+    </div>
+    <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
+  </div>
+  <div *ngSwitchCase="'resolved'" class="jz-section-content">
+    <div class="jz-chart">
+      <div class="jz-chart-header">
+        <div style="width:30%;"></div>
+        <div style="width:30%;" class="jz-text-center">
+          <p class="graphtitle">{{utils.hyphenToSpace(selectedMetric?.name)}}</p>
+          <p class="graphtitlefilter">{{selectedMetricGraphData?.options.headerMessage}}</p>
+        </div>
+        <div style="width: 30%;" class="jz-text-right">
+          <filters [filtersList]="filters"
+                   (onSelected)="onFilterSelect($event)"
+                   [multiple]='false'
+                   [selectedList]="filterSelected"></filters>
+        </div>
+      </div>
+      <div class="jz-chart-content">
+        <chartjs-linegraph
+            [datasets]="selectedMetricGraphData.datasets"
+            [options]="selectedMetricGraphData.options"></chartjs-linegraph>
+      </div>
+
+      <div class="jz-chart-footer jz-text-right">
+        <a *ngIf='selectedMetric.link' class="sonar-link" href="{{selectedMetric.link}}" target="_blank">More Details</a>
+      </div>
+    </div>
+
+    <metrics-carousel [metrics]="graphDataRaw.metrics"
+                      (indexChange)="selectMetric($event)"
+                      [index]="metricsIndex"
+                      [options]="{listProperty: 'values',
+                       valueProperty: 'value',
+                        nameProperty: 'name'}"></metrics-carousel>
+  </div>
+</div>
