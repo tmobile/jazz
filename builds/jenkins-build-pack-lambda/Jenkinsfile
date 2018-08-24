@@ -495,74 +495,74 @@ def resetCredentials() {
 	missing.
 */
 def validateDeploymentConfigurations(def prop) {
-  if (prop.containsKey("service")) {
-    if (prop['service'] == "") {
-      error "Wrong configuration. Value for Key 'service' is missing in the configuration"
-    }
-  } else {
-    error "Wrong configuration. Key 'service' is missing in the configuration"
-  }
-  if (prop.containsKey("providerRuntime")) {
-    def _runtime = prop['providerRuntime']
-    if (_runtime == "") {
-      error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
-    } else {
-      def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports. DSundar3
-      def flag = false
+	if (prop.containsKey("service")) {
+		if (prop['service'] == "") {
+			error "Wrong configuration. Value for Key 'service' is missing in the configuration"
+		}
+	} else {
+		error "Wrong configuration. Key 'service' is missing in the configuration"
+	}
+	if (prop.containsKey("providerRuntime")) {
+		def _runtime = prop['providerRuntime']
+		if (_runtime == "") {
+			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
+		} else {
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports.
+			def flag = false
 
-      for (int i = 0; i < validRuntimes.size(); i++) {
-        if (_runtime == validRuntimes[i]) {
-          flag = true
-        }
-      }
+			for (int i = 0; i < validRuntimes.size(); i++) {
+				if (_runtime == validRuntimes[i]) {
+					flag = true
+				}
+			}
 
-      if (!flag) {
-        echo "$flag"
-        error "Runtime given in the configuration is not valid."
-      }
-    }
-  } else {
-    error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
-  }
-  if (prop.containsKey("providerTimeout")) {
-    if (prop['providerTimeout'] == "") {
-      error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
-    } else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
-      error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
-    }
-  } else {
-    error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
-  }
+			if (!flag) {
+				echo "$flag"
+				error "Runtime given in the configuration is not valid."
+			}
+		}
+	} else {
+		error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
+	}
+	if (prop.containsKey("providerTimeout")) {
+		if (prop['providerTimeout'] == "") {
+			error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
+		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
+			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
+		}
+	} else {
+		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
+	}
 
-  if (prop.containsKey("region")) {
-    if (prop['region'] == "") {
-      error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-    } else if (prop['region'] != configLoader.AWS.REGION) {
-      error "Wrong configuration. Value for Key 'region' should be ${region}"
-    }
-  } else {
-    error "Wrong configuration. Key 'region' is missing in the configuration"
-  }
+	if (prop.containsKey("region")) {
+		if (prop['region'] == "") {
+			error "Wrong configuration. Value for Key 'region' is missing in the configuration"
+		} else if (prop['region'] != configLoader.AWS.REGION) {
+			error "Wrong configuration. Value for Key 'region' should be ${region}"
+		}
+	} else {
+		error "Wrong configuration. Key 'region' is missing in the configuration"
+	}
 
-  def runtime = prop['providerRuntime']
-  if (runtime.indexOf("java") > -1) {
+	def runtime = prop['providerRuntime']
+	if (runtime.indexOf("java") > -1) {
 
-    if (prop.containsKey("artifact")) {
-      if (prop['artifact'] == "") {
-        error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
-      }
-    } else {
-      error "Wrong configuration. Key 'artifact' is missing in the configuration"
-    }
+		if (prop.containsKey("artifact")) {
+			if (prop['artifact'] == "") {
+				error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
+			}
+		} else {
+			error "Wrong configuration. Key 'artifact' is missing in the configuration"
+		}
 
-    if (prop.containsKey("mainClass")) {
-      if (prop['mainClass'] == "") {
-        error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
-      }
-    } else {
-      error "Wrong configuration. Key 'mainClass' is missing in the configuration"
-    }
-  }
+		if (prop.containsKey("mainClass")) {
+			if (prop['mainClass'] == "") {
+				error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
+			}
+		} else {
+			error "Wrong configuration. Key 'mainClass' is missing in the configuration"
+		}
+	}
 }
 
 
