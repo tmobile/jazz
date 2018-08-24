@@ -319,13 +319,7 @@ def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envB
     if (lambdaEvents.checkS3BucketExists(s3BucketName)) {
       isLambdaUpdateRequired = true
       lambdaEvents.removeS3EventsFromServerless(isEventSchdld)
-      echoServerlessFile()
-      sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
-      def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
-      if (redeployOutput != 'success') {
-        echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
-        error "Exception occured while serverless deployment to ${environment_logical_id} environment"
-      }
+      deleteAndRedeployService(environment_logical_id, envBucketKey)
     } else {
       error "Error occured while accessing the s3 bucket"
     }
@@ -341,18 +335,22 @@ def handleSqsError(deployOutput, event_source_sqs_arn, environment_logical_id, e
     def event_source_sqs = event_source_sqs_arn.split(":(?!.*:.*)")[1]
     if (lambdaEvents.checkSqsQueueExists(event_source_sqs)) {
       lambdaEvents.updateSqsResourceServerless()
-      echoServerlessFile()
-      sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
-      def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
-      if (redeployOutput != 'success') {
-        echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
-        error "Exception occured while serverless deployment to ${environment_logical_id} environment"
-      }
+      deleteAndRedeployService(environment_logical_id, envBucketKey)
     } else {
-      error "Error occured while accessing the kinesis stream"
+      error "Error occured while accessing the SQS queue"
     }
   } else {
     echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
+    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+  }
+}
+
+def deleteAndRedeployService(environment_logical_id, envBucketKey){
+  echoServerlessFile()
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+  if (redeployOutput != 'success') {
+    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
     error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
 }
