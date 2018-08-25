@@ -1,0 +1,82 @@
+input[type="radio"] {
+  // display: none;
+  opacity: 0;
+  // &:focus{
+  //     outline-color: #aaaaaa;//border color need to be changed
+  // }
+}
+input[type="radio"] + label {
+  color: #000;
+  font-size: 1rem;
+  line-height: 1.5rem;
+  position: relative;
+}
+
+input[type="radio"] + label span {
+  display: inline-block;
+  width: 19px;
+  height: 19px;
+  margin: 0px 4px 0 0;
+  vertical-align: middle;
+  cursor: pointer;
+  -moz-border-radius: 50%;
+  border-radius: 50%;
+  background-color: #fff;
+  border: 1px solid #cccccc;
+  &.background {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    bottom: 4px;
+    border: none;
+    width: 11px;
+    height: 11px;
+    background-color: #fff;
+    margin: 0;
+  }
+}
+
+input[type="radio"]:checked + label span {
+  &.background {
+    background-color: #ed008c;
+  }
+}
+input[type="radio"]:focus + label .outer {
+  border: 1px solid #ed008c;
+}
+
+input[type="radio"] + label span,
+input[type="radio"]:checked + label span {
+  -webkit-transition: background-color 0.4s linear;
+  -o-transition: background-color 0.4s linear;
+  -moz-transition: background-color 0.4s linear;
+  transition: background-color 0.4s linear;
+}
+
+.disable-radio {
+  pointer-events: none;
+  input[type="radio"] + label {
+    opacity: 0.3;
+  }
+  input[type="checkbox"] + label + div {
+    color: #ddd;
+    border-color: #ddd;
+  }
+  /deep/input[type="checkbox"] label{
+    border-color: #dddd;
+
+  }
+}
+
+.radio-group {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.radio-container {
+  width: 25%;
+}

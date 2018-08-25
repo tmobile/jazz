@@ -72,32 +72,9 @@
                     <p class="step-title">Choose your runtime<span>*</span></p>
                 </div>
                 <div class="col-lg-8 col-md-8">
-                    <div class="input-field-container">
-                        <section class="col-lg-3 col-md-3 pad-left0">
-                            <div class="radio-container">
-                                <input type="radio" class='test-focus' name="runtime" id="nodejs" [value]="nodejs" [checked]="runtime == 'nodejs'" (click)="onSelectionChange('nodejs')">
-                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (6.10)</label>
-                            </div>
-                        </section>
-                        <section class="col-lg-3 col-md-3 pad-left0">
-                            <div class="radio-container">
-                                <input type="radio" name="runtime" id="java" [value]="java" [checked]="runtime == 'java'" (click)="onSelectionChange('java')">
-                                <label for="java"><span class='outer'></span><span class="background"></span>Java 8</label>
-                            </div>
-                        </section>
-                        <section class="col-lg-3 col-md-3 pad-left0">
-                            <div class="radio-container">
-                                <input type="radio" name="runtime" id="python" [value]="python" [checked]="runtime == 'python'" (change)="onSelectionChange('python')">
-                                <label for="python"><span class='outer'></span><span class="background"></span>Python (2.7)</label>
-                            </div>
-                        </section>
-                        <section class="col-lg-3 col-md-3 pad-left0">
-                            <div class="radio-container" class="disable-event">
-                                <input type="radio" disabled='disabled' name="runtime" id="cshell" [value]="cshell" [checked]="runtime == 'cshell'" (click)="onSelectionChange('cshell')">
-                                <label for="cshell"><span class='outer'></span><span class="background"></span>C#</label>
-                            </div>
-                        </section>
-                    </div>
+                    <radio-checkbox
+                        [(selected)]="createServiceForm.runtime"
+                        [options]="runtimeOptions"></radio-checkbox>
                 </div>
             </div>
         </section>
@@ -231,26 +208,8 @@
                         <p class="step-title">Event Schedule</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
-                        <div class="input-field-container event-schedule-radio row zero-margin">
-                            <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container">
-                                    <input type="radio" name="EventSchedule" id="none" [value]="none" [checked]="rateExpression.type == 'none'" (click)="onEventScheduleChange('none')">
-                                    <label for="none"><span></span><span class="background"></span>None</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container">
-                                    <input type="radio" name="EventSchedule" id="fixedRate" [value]="rate" [checked]="rateExpression.type == 'rate'" (click)="onEventScheduleChange('rate')">
-                                    <label for="fixedRate"><span></span><span class="background"></span>Fixed Rate of</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container">
-                                    <input type="radio" name="EventSchedule" id="cron" [value]="cron" [checked]="rateExpression.type == 'cron'" (click)="onEventScheduleChange('cron')">
-                                    <label for="cron"><span></span><span class="background"></span>Cron Expression</label>
-                                </div>
-                            </section>
-                        </div>
+                        <radio-checkbox [(selected)]="rateExpression.type"
+                        [options]="eventScheduleOptions"></radio-checkbox>
                         <div class="event-schedule-fields" [ngClass]="{'zero-padding': rateExpression.type == 'none'}">
                             <div class='clearfix'>
                                 <div class="cron-fields row zero-margin arrow_box" *ngIf="rateExpression.type == 'cron'">
@@ -321,38 +280,8 @@
                         <p class="step-details">Select appropriate events that you want to subscribe to.</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
-                        <div class="input-field-container event-schedule-radio row zero-margin">
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input type="radio" name="AWSEvents" id="awsEventsNone" [value]="awsEventsNone" [checked]="eventExpression.type == 'awsEventsNone'" (click)="onAWSEventChange('awsEventsNone')">
-                                    <label for="awsEventsNone"><span></span><span class="background"></span>None</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input  type="radio" name="AWSEvents" id="dynamodb" [value]="dynamodb" [checked]="eventExpression.type == 'dynamodb'" (click)="onAWSEventChange('dynamodb')">
-                                    <label for="dynamodb"><span></span><span class="background"></span>DynamoDB</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input  type="radio" name="AWSEvents" id="kinesis" [value]="kinesis" [checked]="eventExpression.type == 'kinesis'" (click)="onAWSEventChange('kinesis')">
-                                    <label for="kinesis"><span></span><span class="background"></span>Kinesis</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input  type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
-                                    <label for="s3"><span></span><span class="background"></span>S3</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                              <div class="radio-container">
-                                  <input type="radio" name="AWSEvents" id="sqs" [value]="sqs" [checked]="eventExpression.type == 'sqs'" (click)="onAWSEventChange('sqs')">
-                                  <label for="sqs"><span></span><span class="background"></span>SQS</label>
-                              </div>
-                            </section>
-                        </div>
+                        <radio-checkbox [(selected)]="eventExpression.type"
+                        [options]="awsEventsOptions"></radio-checkbox>
                         <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'none'}">
                             <div class="dynamodb-fields row zero-margin arrow_box" *ngIf="chkDynamodb()">
                                 <div class="col-lg-3 padding-right-0">

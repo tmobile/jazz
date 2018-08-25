@@ -27,6 +27,12 @@ import {AuthenticationService, DataCacheService, MessageService, RequestService}
 export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
+  public runtimeOptions = this.defineRuntimeRadio();
+  public eventScheduleOptions = this.defineEventScheduleRadio();
+  public awsEventsOptions = this.defineAWSEventsRadio();
+  public createServiceForm = {
+    runtime: 'java'
+  }
   sqsStreamString:string = "arn:aws:sqs:us-west-2:" + env_oss.aws.account_number + ":stream/";
   kinesisStreamString:string = "arn:aws:kinesis:us-west-2:" + env_oss.aws.account_number + ":stream/";
   dynamoStreamString:string = "arn:aws:dynamo:us-west-2:" + env_oss.aws.account_number + ":stream/";
@@ -100,6 +106,42 @@ export class CreateServiceComponent implements OnInit {
   public focusKinesis = new EventEmitter<boolean>();
   public focusS3 = new EventEmitter<boolean>();
   public focusSQS = new EventEmitter<boolean>();
+
+  defineRuntimeRadio() {
+    return [
+      {label: 'Nodejs (6.10)',
+      value: 'nodejs',
+      disabled: false},
+      {label: 'Java 8',
+      value: 'java',
+      disabled: false},
+      {label: 'Python (2.7)',
+      value: 'python',
+      disabled: false},
+      {label: 'C#',
+        value: 'cshell',
+      disabled: true}
+    ]
+  }
+  defineEventScheduleRadio() {
+    return [
+      {label: 'None',
+      value: 'none'},
+      {label: 'Fixed Rate of',
+      value: 'rate'},
+      {label: 'Cron Expression',
+      value: 'cron'}
+    ]
+  }
+  defineAWSEventsRadio() {
+    return [
+      {label: 'None', value: 'awsEventsNone'},
+      {label: 'DynamoDB', value: 'dynamodb'},
+      {label: 'Kinesis', value: 'kinesis'},
+      {label: 'S3', value: 's3'},
+      {label: 'SQS', value: 'sqs'}
+      ]
+  }
 
   chkDynamodb() {
     this.focusDynamo.emit(true);
