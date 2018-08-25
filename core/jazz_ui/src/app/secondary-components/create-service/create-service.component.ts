@@ -6,15 +6,15 @@
 import { Http, Headers, Response } from '@angular/http';
 import { Component, Input, OnInit, Output, EventEmitter, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { ServiceFormData, RateExpression, CronObject, EventExpression } from '../service-form-data';
-import { FocusDirective } from '../focus.directive';
-import { CronParserService } from '../../../core/helpers';
+import { ServiceFormData, RateExpression, CronObject, EventExpression } from './service-form-data';
+import { FocusDirective } from './focus.directive';
+import { CronParserService } from './../../core/helpers';
 import { ToasterService} from 'angular2-toaster';
-import { RequestService, DataCacheService, MessageService, AuthenticationService } from "../../../core/services";
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
-import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
-import { environment as env_oss } from './../../../../environments/environment.oss';
+import { ServicesListComponent } from "../../pages/services-list/services-list.component";
+import { environment as env_oss } from '../../../environments/environment.oss';
+import {AuthenticationService, DataCacheService, MessageService, RequestService} from "../../core/services";
 
 @Component({
   selector: 'create-service',
