@@ -296,6 +296,7 @@ node() {
 								updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
 								endpointUrl = apigeeModule.deploy("swagger/swagger.json", arn, env_key, environment_logical_id, config, context_map)
 								echo "API Proxy created at: ${endpointUrl}"
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", null, "apigee", config), environment_logical_id);
 								events.sendCompletedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment complete for APIGEE', context_map, environment_logical_id)
 								break;
 							default:
