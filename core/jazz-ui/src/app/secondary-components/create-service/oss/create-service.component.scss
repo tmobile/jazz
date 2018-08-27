@@ -713,26 +713,26 @@
   border: 1px solid #ccc;
   border-right: 0;
   float: left;
-  width: 315px;
+  width: 25rem;
   padding-right: 0 !important;
   border-radius: 2px 0 0 2px !important;
 }
 
 .aws-events-left-block.stream {
-  width: 300px;
+  width: 25rem;
 }
 
 .aws-events-right-block {
   border: 1px solid #ccc;
   border-left: 0;
   float: left;
-  width: calc(100% - 315px);
+  width: calc(100% - 25rem);
   border-radius: 0 2px 2px 0 !important;
   padding-left: 0 !important;
 }
 
 .aws-events-right-block.stream {
-  width: calc(100% - 300px);
+  width: calc(100% - 25rem);
 }
 
 p.learn-more {
@@ -808,5 +808,8 @@ p.learn-more {
   padding:0;
 }
 .aws-events-left-block.stream-sqs{
-  width: 280px;
+  width: 19.5rem;
+}
+.aws-events-right-block-sqs.stream{
+  width: calc(100% - 20rem)
 }
