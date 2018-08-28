@@ -142,7 +142,7 @@
                   {
                     "{envPrefix}-{domain}-cognito-authorizer": []
                   }
-                ],             
+                ],
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "passthroughBehavior": "when_no_templates",
@@ -201,7 +201,7 @@
 			"type": "token"
 		  }
 		}
-	},  
+	},
     "definitions": {
         "400ErrorResponse": {
             "type": "object",

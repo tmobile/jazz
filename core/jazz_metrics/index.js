@@ -328,7 +328,7 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
   });
 }
 
-function getMetricsDetails(newAssetArray, eventBody) {
+function getMetricsDetails(newAssetArray, eventBody, config) {
 
   return new Promise((resolve, reject) => {
     logger.debug("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
@@ -345,7 +345,7 @@ function getMetricsDetails(newAssetArray, eventBody) {
           .catch(error => reject(error));
       }
       else if (assetParam.nameSpace === 'gcp') {
-        exportable.apigeeMetricDetails(assetParam, eventBody)
+        exportable.apigeeMetricDetails(assetParam, eventBody, config)
         .then(res => {
           metricsStatsArray.push(res);
             if (metricsStatsArray.length === newAssetArray.length) {
@@ -358,7 +358,7 @@ function getMetricsDetails(newAssetArray, eventBody) {
   });
 }
 
-function apigeeMetricDetails(assetParam, eventBody) {
+function apigeeMetricDetails(assetParam, eventBody, config) {
   const DATE_FORMAT = 'MM/DD/YYYY%20HH:MM';
 
   return new Promise((resolve, reject) => {
