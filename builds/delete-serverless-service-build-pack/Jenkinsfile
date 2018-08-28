@@ -2,6 +2,7 @@
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
+import groovy.json.JsonSlurperClassic
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 @Field def repo_credential_id
@@ -175,9 +176,16 @@ node {
 				stage('Undeploy Service') {
 					updateServiceNameConfig()
 
-					for (_envId in environmentIds) {
+          for (_envId in environmentIds) {
 						current_environment_id = _envId
-						try {
+
+            def asset_url = g_base_url + "/jazz/assets"
+						def assetsList = getAssetsList(asset_url, current_environment_id)
+						if(assetsList != null && assetsList.manuallyCreatedAssets.size()) {
+							deleteAndUpdateAssets(asset_url, auth_token, assetsList.manuallyCreatedAssets, service_config, configLoader.AWS.REGION)
+						}
+
+            try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
 								events.setBranch(branch)
@@ -190,6 +198,11 @@ node {
 							unDeployService(_envId)
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
+							}
+              if(assetsList != null && assetsList.slsAssets.size()) {
+								for(each in assetsList.slsAssets) {
+									updateAssetTable(asset_url, auth_token, each, "deleted")
+							  }
 							}
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
@@ -240,6 +253,121 @@ node {
 		}
 	}
 
+}
+
+def getAssetsList(asset_url, current_environment_id) {
+  withCredentials([
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+	]) {
+    try{
+      sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+      sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+      sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+
+      def env_key
+
+      if(current_environment_id != "stg"){
+        if (current_environment_id.endsWith("-dev")) {
+          env_key = current_environment_id
+        } else {
+          env_key = "prod"
+        }
+
+        def stackName = "${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env_key}"
+        def listResource = sh(returnStdout: true, script: "aws cloudformation list-stack-resources --stack-name ${stackName} --region ${configLoader.AWS.REGION} --output json")
+        def sls_created_assets = []
+
+        listResourceJson = parseJsonMap(listResource)
+        for (eachResource in listResourceJson.StackResourceSummaries) {
+          sls_created_assets.push(eachResource.PhysicalResourceId)
+        }
+        echo " sls_created_assets: $sls_created_assets"
+        def getAssetsJson = filterAssetsList(asset_url, auth_token, service_config, configLoader.AWS.REGION, sls_created_assets, env_key)
+        return getAssetsJson
+      }
+    } catch (ex) {
+      echo "$ex"
+    }
+  }
+}
+
+def filterAssetsList(assets_api, auth_token, service_config, region, sls_created_assets, env) {
+  def params = [
+    "service": service_config['service'],
+    "domain": service_config['domain'],
+    "environment": env_key
+  ]
+  def payload = JsonOutput.toJson(params)
+  def searchApi = assets_api + "/search"
+
+  try{
+    def getAssets = sh (
+      script: "curl -X POST ${searchApi} -H \'Authorization: $auth_token\' -H \'Content-Type:application/json\' -d \'$payload\'",
+      returnStdout: true
+    ).trim()
+    def getAssetsJson = parseJsonMap(getAssets)
+    def assetsList = [
+      manuallyCreatedAssets: [],
+      slsAssets : []
+    ]
+
+    for (eachAsset in getAssetsJson.data) {
+      def count = 0
+      for (each in sls_created_assets) {
+        count = count + 1;
+        if(each.indexOf(eachAsset.provider_id) >= 0) {
+          assetsList.slsAssets.push(eachAsset)
+        }
+        if (count == sls_created_assets.size()) {
+          assetsList.manuallyCreatedAssets.push(eachAsset)
+        }
+      }
+    }
+    return assetsList
+  } catch(ex) {
+      echo "$ex"
+  }
+}
+
+def deleteAndUpdateAssets(assets_api, auth_token, manuallyCreatedAssets, service_config, region) {
+  withCredentials([
+    [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+  ]) {
+    try {
+      sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+      sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+      sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+
+      for (each in manuallyCreatedAssets) {
+        if(each.asset_type == "dynamodb_stream_arn") {
+          def tableName = service_config['event_source_dynamodb'].tokenize("/").last()
+          def tableDetails = sh(
+            script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=false --region ${region} --output json",
+            returnStdout: true
+          ).trim()
+          def tableDetailsJson = parseJsonMap(tableDetails)
+          updateAssetTable(assets_api, auth_token, each, "deleted")
+        }
+      }
+    } catch (ex) {
+      echo "$ex"
+    }
+  }
+}
+
+def updateAssetTable(assets_api, auth_token, asset, status) {
+  def params = [
+    "status": status
+  ]
+  def payload = JsonOutput.toJson(params)
+  def apiId = assets_api + "/${asset.id}"
+  def updateAssets = sh(script: "curl -X PUT \
+						${apiId} \
+						-H 'authorization: $auth_token' \
+						-H 'Content-type: application/json' \
+						-d '$payload'", returnStdout: true).trim()
+  def updatedAsset = parseJsonMap(updateAssets)
+  echo "updatedAsset: $updatedAsset"
 }
 
 def cleanupCodeQualityReports(){

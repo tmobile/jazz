@@ -30,7 +30,8 @@
 		"dynamodb",
 		"cloudwatch_event",
 		"swagger_url",
-		"endpoint_url"
+		"endpoint_url",
+    "dynamodb_stream_arn"
 	],
 	"ASSET_STATUS": [
 		"active",
