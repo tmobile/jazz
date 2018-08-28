@@ -32,3 +32,39 @@ eventSubscribed:
                 - "logs:CreateLogStream"
                 - "logs:PutLogEvents"
               Resource: "*"
+
+#SQS Role
+sqsRole:
+  Type: AWS::IAM::Role
+  Properties:
+    RoleName: ${self:service}-${self:custom.myStage}
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        -
+          Effect: "Allow"
+          Principal:
+            Service:
+              - "lambda.amazonaws.com"
+          Action:
+            - "sts:AssumeRole"
+    Path: "/"
+    Policies:
+      -
+        PolicyName: "sqs-queue-logs-policy"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "sqs:SendMessage"
+                - "sqs:ReceiveMessage"
+                - "sqs:DeleteMessage"
+                - "sqs:GetQueueAttributes"
+              Resource: {event_sqs_arn}
+            - Effect: "Allow"
+              Action:
+                - "logs:CreateLogGroup"
+                - "logs:CreateLogStream"
+                - "logs:PutLogEvents"
+              Resource: "*"

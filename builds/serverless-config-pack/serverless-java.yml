@@ -51,6 +51,11 @@ functions:
       #Start:isDynamoDbEnabled
       - stream: {event_source_dynamodb}
       #End:isDynamoDbEnabled
+      #Start:isSQSEnabled
+      - sqs:
+          enabled: true
+          arn: {event_sqs_arn}
+      #End:isSQSEnabled
       #Start:isStreamEnabled
       - stream:
           type: kinesis
@@ -84,14 +89,26 @@ functions:
 
 resourcesDisabled:
   Resources:
-   #Start:isDynamoDbEnabled
+    #Start:isDynamoDbEnabled
     customEventRole: ${file(policyFile.yml):eventSubscribed}
-   #End:isDynamoDbEnabled
-   #Start:isStreamEnabled
+    #End:isDynamoDbEnabled
+    #Start:isSqsEnabled
+    customEventRole: ${file(policyFile.yml):sqsRole}
+    #End:isSqsEnabled
+    #Start:isSqsEnabled
+    #Start:isSqsResourceNotExist
+    {event_source_sqs}:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: {event_source_sqs}
+        VisibilityTimeout: 165
+    #End:isSqsResourceNotExist
+    #End:isSqsEnabled
+    #Start:isStreamEnabled
     {event_source_kinesis}:
       Type: AWS::Kinesis::Stream
       Properties:
         Name: {event_source_kinesis}
         ShardCount: 1
-   #End:isStreamEnabled
+    #End:isStreamEnabled
 
