@@ -268,21 +268,20 @@ def getStreamEnabledArn(tableStreamArn) {
       }
     }
   } catch (ex) {
-      def response
-      try {
-        response = sh(
-          script: "aws dynamodb describe-table --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json 2<&1 | grep -c 'ResourceNotFoundException'",
-          returnStdout: true
-        ).trim()
-      } catch (e) {
-        echo "Error occured while describing the dynamodb"
-      }
-      if (response) {
-        echo "Dynamodb does not exists"
-        return false
-      } else {
-        error "Error occured while describing the dynamodb details"
-      }
+    def response
+    try {
+      response = sh(
+        script: "aws dynamodb describe-table --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json 2<&1 | grep -c 'ResourceNotFoundException'",
+        returnStdout: true
+      ).trim()
+    } catch (e) {
+      echo "Error occured while describing the dynamodb"
+    }
+    if (response) {
+      echo "Dynamodb does not exists"
+    } else {
+      error "Error occured while describing the dynamodb details"
+    }
   }
 }
 

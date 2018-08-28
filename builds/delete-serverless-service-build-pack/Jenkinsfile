@@ -179,7 +179,7 @@ node {
           for (_envId in environmentIds) {
 						current_environment_id = _envId
 
-            def asset_url = g_base_url + "/jazz/assets"
+						def asset_url = g_base_url + "/jazz/assets"
 						def assetsList = getAssetsList(asset_url, current_environment_id)
 						if(assetsList != null && assetsList.manuallyCreatedAssets.size()) {
 							deleteAndUpdateAssets(asset_url, auth_token, assetsList.manuallyCreatedAssets, service_config, configLoader.AWS.REGION)
