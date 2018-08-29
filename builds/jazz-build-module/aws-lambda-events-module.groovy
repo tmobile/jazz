@@ -242,15 +242,21 @@ def getStreamEnabledArn(tableStreamArn) {
   def tableName = tableStreamArn.tokenize("/").last()
   try {
     sh "aws dynamodb describe-table --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json"
-    echo "table exist..."
+    echo "${tableName} exist..."
     def streamList = sh(
       script: "aws dynamodbstreams list-streams --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json",
       returnStdout: true
     ).trim()
     def streamListJson = parseJson(streamList)
+    def result = [
+      "isNewStream" : "fasle",
+      "data" : ""
+    ]
 
     if (streamListJson.Streams.size() == 0) {
-      return createDynamodbStream(tableName)
+      result.isNewStream = "true"
+      result.data = createDynamodbStream(tableName)
+      return result
     } else {
       def streamArnList = streamListJson.Streams
       for (stream in streamArnList) {
@@ -261,9 +267,13 @@ def getStreamEnabledArn(tableStreamArn) {
         def streamDetailsJson = parseJson(streamDetails)
 
         if ((streamDetailsJson.StreamDescription.StreamStatus == "ENABLED") || (streamDetailsJson.StreamDescription.StreamStatus == "ENABLING")) {
-          return stream.StreamArn
+          result.isNewStream = "false"
+          result.data = stream.StreamArn
+          return result
         } else if (streamArnList.last().StreamArn == stream.StreamArn) {
-          return createDynamodbStream(tableName)
+          result.isNewStream = "true"
+          result.data = createDynamodbStream(tableName)
+          return result
         }
       }
     }
@@ -275,10 +285,10 @@ def getStreamEnabledArn(tableStreamArn) {
         returnStdout: true
       ).trim()
     } catch (e) {
-      echo "Error occured while describing the dynamodb"
+      echo "Error occured while describing the dynamodb details"
     }
     if (response) {
-      echo "Dynamodb does not exists"
+      echo "${tableName} does not exists"
     } else {
       error "Error occured while describing the dynamodb details"
     }
