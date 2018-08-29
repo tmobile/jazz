@@ -531,6 +531,9 @@ def writeServerlessFile(config, environment_logical_id){
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
+  sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${config['eventScheduleRate']}|g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
+  sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
 
 	if (config['artifact']) {
 		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
@@ -538,6 +541,7 @@ def writeServerlessFile(config, environment_logical_id){
 	if (config['mainClass']) {
 		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
 	}
+
 
 }
 

@@ -363,7 +363,7 @@ def handleKinesisStreamError(deployOutput, event_source_kinesis, environment_log
     error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
 }
-     
+
 
 def deleteAndRedeployService(environment_logical_id, envBucketKey){
   echoServerlessFile()
@@ -418,6 +418,10 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
   sh "sed -i -- '$sedCommand' ./serverless.yml"
   echoServerlessFile()
   echo "------------------------DONE--------------"
+}
+
+def removeEventResources(){
+   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
 }
 
 
@@ -608,6 +612,11 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
   if (isEventSchdld || isS3EventEnabled ) {
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
+
+  if (!isEventSchdld && !isS3EventEnabled ) {
+    removeEventResources ()
+  }
+
   echoServerlessFile()
 }
 
@@ -705,7 +714,7 @@ def writeServerlessFile(config, env) {
     sh "sed -i -- 's|{event_sqs_arn}|${config['event_source_sqs']}|g' policyFile.yml"
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
   }
-  
+
   if (config['event_source_kinesis']) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -- 's/{event_source_kinesis}/${config['event_source_kinesis']}/g' ./serverless.yml"
