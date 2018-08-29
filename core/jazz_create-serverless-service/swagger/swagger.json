@@ -146,7 +146,7 @@
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "passthroughBehavior": "when_no_templates",
-					"uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
+					          "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
                     "httpMethod": "POST",
                     "credentials": "{conf-role}",
                     "requestTemplates": {
@@ -171,7 +171,7 @@
                             "responseTemplates": {
                                 "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
                             },
-							"responseParameters": {
+							          "responseParameters": {
                               "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
                               "method.response.header.Access-Control-Allow-Methods": "'*'",
                               "method.response.header.Access-Control-Allow-Origin": "'*'"
@@ -282,14 +282,13 @@
                     "type": "string",
                     "description":"Slack channel to receive all the service notifications"
                 },
-				"require_internal_access": {
+				        "require_internal_access": {
                     "type": "boolean",
                     "description":"Does service require access to internal SLF network and resources"
                 },
                 "deployment_targets": {
                     "type": "object",
                     "description": "Deployment targets list for the service",
-                    "required": false,
                     "properties": {
                         "api": {
                             "type": "string",
