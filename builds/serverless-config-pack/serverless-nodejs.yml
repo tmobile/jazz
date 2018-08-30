@@ -16,20 +16,52 @@ provider:
 
 custom:
   myStage: ${opt:stage, self:provider.stage}
-# This settings will be enabled once we need monitoring enabled across the board.
-#  alerts:
-#    topics:
-#      alarm: ${self:service}-${opt:stage}-alerts-alarm
-#    global:
-#      - functionThrottles
-#      - functionErrors
-#      - functionInvocations
-#      - functionDuration
-#
-#plugins:
-#  - serverless-plugin-aws-alerts
+  alerts:
+    stages: # Optionally - select which stages to deploy alarms to
+      - prod
+      - production
+    dashboards: true
+    topics:
+      ok: ${self:service}-${opt:stage}-alerts-ok
+      alarm:
+        topic: ${self:service}-${opt:stage}-alerts-alarm
+        notifications:
+          - protocol: email
+            endpoint: sughosh@moonraft.com
+      insufficientData: ${self:service}-${opt:stage}-alerts-insufficientData
+    definitions:
+      functionErrors:
+        period: 300
+      customAlarm:
+        description: 'My custom alarm'
+        namespace: 'AWS/Lambda'
+        metric: duration
+        threshold: 200
+        statistic: Average
+        period: 300
+        evaluationPeriods: 1
+        comparisonOperator: GreaterThanOrEqualToThreshold
+    alarms:
+      - functionThrottles
+      - functionErrors
+
+plugins:
+  - serverless-plugin-aws-alerts
 
 functions:
+  myalarm:
+    handler: myalarm.handler
+    alarms: # merged with function alarms
+      - customAlarm
+      - name: ${file(deployment-env.yml):service} # creates new alarm or overwrites some properties of the alarm (with the same name) from definitions
+        namespace: 'AWS/Lambda'
+        metric: errors # define custom metrics here
+        threshold: 1
+        statistic: Minimum
+        period: 60
+        evaluationPeriods: 1
+        comparisonOperator: GreaterThanOrEqualToThreshold
+
   handler:
     name: ${self:service}-${self:custom.myStage}
     handler: index.handler
