@@ -240,28 +240,57 @@ def checkAndConvertEvents(events){
 
 def getStreamEnabledArn(tableStreamArn) {
   def tableName = tableStreamArn.tokenize("/").last()
-  def streamList = sh(
-    script: "aws dynamodbstreams list-streams --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json",
-    returnStdout: true
-  ).trim()
-  def streamListJson = parseJson(streamList)
+  try {
+    sh "aws dynamodb describe-table --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json"
+    echo "${tableName} exist..."
+    def streamList = sh(
+      script: "aws dynamodbstreams list-streams --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json",
+      returnStdout: true
+    ).trim()
+    def streamListJson = parseJson(streamList)
+    def result = [
+      "isNewStream" : "fasle",
+      "data" : ""
+    ]
 
-  if (streamListJson.Streams.size() == 0) {
-    return createDynamodbStream(tableName)
-  } else {
-    def streamArnList = streamListJson.Streams
-    for (stream in streamArnList) {
-      def streamDetails = sh(
-        script: "aws dynamodbstreams describe-stream --stream-arn ${stream.StreamArn} --region ${config_loader.AWS.REGION} --output json",
+    if (streamListJson.Streams.size() == 0) {
+      result.isNewStream = "true"
+      result.data = createDynamodbStream(tableName)
+      return result
+    } else {
+      def streamArnList = streamListJson.Streams
+      for (stream in streamArnList) {
+        def streamDetails = sh(
+          script: "aws dynamodbstreams describe-stream --stream-arn ${stream.StreamArn} --region ${config_loader.AWS.REGION} --output json",
+          returnStdout: true
+        ).trim()
+        def streamDetailsJson = parseJson(streamDetails)
+
+        if ((streamDetailsJson.StreamDescription.StreamStatus == "ENABLED") || (streamDetailsJson.StreamDescription.StreamStatus == "ENABLING")) {
+          result.isNewStream = "false"
+          result.data = stream.StreamArn
+          return result
+        } else if (streamArnList.last().StreamArn == stream.StreamArn) {
+          result.isNewStream = "true"
+          result.data = createDynamodbStream(tableName)
+          return result
+        }
+      }
+    }
+  } catch (ex) {
+    def response
+    try {
+      response = sh(
+        script: "aws dynamodb describe-table --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json 2<&1 | grep -c 'ResourceNotFoundException'",
         returnStdout: true
       ).trim()
-      def streamDetailsJson = parseJson(streamDetails)
-
-      if ((streamDetailsJson.StreamDescription.StreamStatus == "ENABLED") || (streamDetailsJson.StreamDescription.StreamStatus == "ENABLING")) {
-        return stream.StreamArn
-      } else if (streamArnList.last().StreamArn == stream.StreamArn) {
-        return createDynamodbStream(tableName)
-      }
+    } catch (e) {
+      echo "Error occured while describing the dynamodb details"
+    }
+    if (response) {
+      echo "${tableName} does not exists"
+    } else {
+      error "Error occured while describing the dynamodb details"
     }
   }
 }
