@@ -180,7 +180,7 @@ node {
 
 						def asset_url = g_base_url + "/jazz/assets"
 						def assetsList = getAssetsList(asset_url, current_environment_id)
-						if(assetsList != null && assetsList.manuallyCreatedAssets.size()) {
+						if (assetsList != null && assetsList.manuallyCreatedAssets.size()) {
 							deleteAndUpdateAssets(asset_url, auth_token, assetsList.manuallyCreatedAssets, service_config, configLoader.AWS.REGION)
 						}
 
@@ -198,8 +198,8 @@ node {
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
 							}
-              if(assetsList != null && assetsList.slsAssets.size()) {
-								for(each in assetsList.slsAssets) {
+              if (assetsList != null && assetsList.slsAssets.size()) {
+								for (each in assetsList.slsAssets) {
 									updateAssetTable(asset_url, auth_token, each, "ARCHIVED")
 							  }
 							}
@@ -266,7 +266,7 @@ def getAssetsList(asset_url, current_environment_id) {
 
       def env_key
 
-      if(current_environment_id != "stg"){
+      if (current_environment_id != "stg"){
         if (current_environment_id.endsWith("-dev")) {
           env_key = current_environment_id
         } else {
@@ -309,9 +309,9 @@ def filterAssetsList(assets_api, auth_token, service_config, region, sls_created
 
     for (eachAsset in getAssetsJson.data.assets) {
       def count = 0
-      for (each in sls_created_assets) {
+      for (eachResource in sls_created_assets) {
         count = count + 1;
-        if(each.indexOf(eachAsset.provider_id) >= 0) {
+        if (eachResource.indexOf(eachAsset.provider_id) >= 0) {
           assetsList.slsAssets.push(eachAsset)
         }
         if (count == sls_created_assets.size()) {
@@ -336,7 +336,7 @@ def deleteAndUpdateAssets(assets_api, auth_token, manuallyCreatedAssets, service
       sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
       for (asset in manuallyCreatedAssets) {
-        if(asset.asset_type == "dynamodb_stream_arn") {
+        if (asset.asset_type == "dynamodb_stream_arn") {
           def tableName = service_config['event_source_dynamodb'].tokenize("/").last()
           def tableDetails = sh(
             script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=false --region ${region} --output json",
@@ -487,6 +487,18 @@ def writeServerlessFile(){
   if (service_config['event_source_stream']) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -- 's/{event_source_stream}/${service_config['event_source_stream']}/g' ./serverless.yml"
+  }
+
+  if (service_config['event_source_dynamodb']) {
+    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
+    sh "sed -i -- 's|{event_source_dynamodb}|${service_config['event_source_dynamodb']}|g' serverless.yml"
+    sh "sed -i -- 's|{event_source_dynamodb}|${service_config['event_source_dynamodb']}|g' policyFile.yml"
+  }
+
+  if ( service_config['event_source_dynamodb'] || service_config['event_source_sqs']){
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
+  }else{
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${service_config['iamRoleARN']}|g' serverless.yml"
   }
 }
 
