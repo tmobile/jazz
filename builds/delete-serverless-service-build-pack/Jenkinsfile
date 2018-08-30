@@ -199,8 +199,8 @@ node {
 								cleanupCodeQualityReports()
 							}
               if (assetsList != null && assetsList.slsAssets.size()) {
-								for (each in assetsList.slsAssets) {
-									updateAssetTable(asset_url, auth_token, each, "ARCHIVED")
+								for (eachSlsAsset in assetsList.slsAssets) {
+									updateAssetTable(asset_url, auth_token, eachSlsAsset, "ARCHIVED")
 							  }
 							}
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
