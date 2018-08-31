@@ -54,7 +54,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
         }
 
-        if ( (service_name.trim() == "jazz_metrics") ) {
+        if (service_name.trim() == "jazz_metrics") {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
@@ -100,7 +100,7 @@ def loadServiceConfigurationData() {
             }
         }
 
-        if ( (service_name.trim() == "jazz_codeq") ) {
+        if (service_name.trim() == "jazz_codeq") {
             sh "sed -i -- 's/{conf-apikey}/${apiKeyDev}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyStg}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyProd}/g' ./config/prod-config.json"
@@ -136,7 +136,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
         }
 
-        if ( (service_name.trim() == "jazz_assets") ) {
+        if (service_name.trim() == "jazz_assets") {
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
@@ -146,7 +146,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
         }
 
-        if ( (service_name.trim() == "jazz_deployments") ) {
+        if (service_name.trim() == "jazz_deployments") {
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
@@ -160,7 +160,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
         }
 
-        if ((service_name.trim() == "jazz_scm-webhook")) {
+        if (service_name.trim() == "jazz_scm-webhook") {
 
             sh "sed -i -- 's/{conf-apikey}/${apiKeyDev}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyStg}/g' ./config/stg-config.json"
@@ -172,7 +172,7 @@ def loadServiceConfigurationData() {
 
         }
 
-        if ((service_name.trim() == "jazz_environments")) {
+        if (service_name.trim() == "jazz_environments") {
             sh "sed -i -- 's/{conf-apikey}/${apiKeyDev}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyStg}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyProd}/g' ./config/prod-config.json"
@@ -190,7 +190,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
         }
 
-        if ((service_name.trim() == "jazz_environment-event-handler")) {
+        if (service_name.trim() == "jazz_environment-event-handler") {
             sh "sed -i -- 's/{conf-apikey}/${apiKeyDev}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyStg}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyProd}/g' ./config/prod-config.json"
@@ -208,7 +208,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
         }
 
-        if ((service_name.trim() == "jazz_asset-event-handler")) {
+        if (service_name.trim() == "jazz_asset-event-handler") {
             sh "sed -i -- 's/{conf-apikey}/${apiKeyDev}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyStg}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyProd}/g' ./config/prod-config.json"
@@ -226,7 +226,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
         }
 
-        if ((service_name.trim() == "jazz_deployments-event-handler")) {
+        if (service_name.trim() == "jazz_deployments-event-handler") {
             sh "sed -i -- 's/{conf-apikey}/${apiKeyDev}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyStg}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyProd}/g' ./config/prod-config.json"
@@ -244,7 +244,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
         }
 
-        if ((service_name.trim() == "jazz_slack-event-handler")) {
+        if (service_name.trim() == "jazz_slack-event-handler") {
             sh "sed -i -- 's/{conf-apikey}/${apiKeyDev}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyStg}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyProd}/g' ./config/prod-config.json"
@@ -271,7 +271,7 @@ def loadServiceConfigurationData() {
 
         }
 
-        if ((service_name.trim() == "jazz_events")) {
+        if (service_name.trim() == "jazz_events") {
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
@@ -282,13 +282,13 @@ def loadServiceConfigurationData() {
 
         }
 
-        if ((service_name.trim() == "jazz_events-handler")) {
+        if (service_name.trim() == "jazz_events-handler") {
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
         }
 
-        if ((service_name.trim() == "jazz_services-handler")) {
+        if (service_name.trim() == "jazz_services-handler") {
             sh "sed -i -- 's/{conf-apikey}/${apiKeyDev}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyStg}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyProd}/g' ./config/prod-config.json"
@@ -324,7 +324,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
         }
 
-        if ((service_name.trim() == "jazz_is-service-available")) {
+        if (service_name.trim() == "jazz_is-service-available") {
             sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
@@ -334,7 +334,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
         }
 
-        if ((service_name.trim() == "jazz_create-serverless-service")) {
+        if (service_name.trim() == "jazz_create-serverless-service") {
 
             sh "sed -i -- 's/{conf-apikey}/${apiKeyDev}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${apiKeyStg}/g' ./config/stg-config.json"
@@ -384,7 +384,7 @@ def loadServiceConfigurationData() {
         }
 
         if ((service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service")
-        || (service_name.trim() == "jazz_deployments") || (service_name.trim() == "jazz_environment-event-handler")) {
+          || (service_name.trim() == "jazz_deployments") || (service_name.trim() == "jazz_environment-event-handler")) {
             sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/prod-config.json"
