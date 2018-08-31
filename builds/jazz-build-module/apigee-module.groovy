@@ -63,7 +63,7 @@ String deploy(swaggerFile, arn, env_key, environment_logical_id, config, context
         echo "Apiversion Number is ${apiversion}"
 
         dir("gen/CoreAPI") {
-            withCredentials([usernamePassword(credentialsId: apigeeConfig.apigeeCredId, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+            withCredentials([usernamePassword(credentialsId: apigeeConfig.APIGEE_CRED_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
                 try {
                 // call the script bundle.sh which will build the proxy files and upload them to artifactory. Note artifactory url is set in the script.
                     events.sendStartedEvent('APIGEE_API_PROXY_BUILD', 'Creating Apigee API proxy bundle', apigeeContextMap)
@@ -104,7 +104,7 @@ def delete(swaggerFile, env_key, environment_logical_id, config) {
     def templateValues = getTemplateValues(swaggerFile, environment_logical_id)
     def deployEnv = apigeeConfig.API_ENDPOINTS[env_key]
     dir (apigeeModuleRoot) {
-        withCredentials([usernamePassword(credentialsId: apigeeConfig.apigeeCredId, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+        withCredentials([usernamePassword(credentialsId: apigeeConfig.APIGEE_CRED_ID, passwordVariable: 'PASS', usernameVariable: 'USER')]) {
             try {
                 events.sendStartedEvent('APIGEE_API_PROXY_DELETE', 'Deleting Apigee API proxy.')
                 sh("./build/delete.sh ${deployEnv.MGMT_HOST} ${deployEnv.MGMT_ORG} ${deployEnv.MGMT_ENV} ${templateValues.ProxyName} ${USER} ${PASS}")
