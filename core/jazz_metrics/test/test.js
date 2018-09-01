@@ -897,7 +897,7 @@ describe('jazz_metrics', function () {
       };
       let reqStub = sinon.stub(request, "Request").callsFake((obj) => obj.callback(null, responseObj, responseObj.body));
 
-      index.getMetricsDetails(assetsArray, event.body)
+      index.getMetricsDetails(assetsArray, event.body, config)
         .then(res => {
           expect(res[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'metrics');
           expect(res[0].metrics[0].metric_name).to.eq('sum(total_response_time)');
