@@ -263,6 +263,9 @@ var processEventInitialCommit = function (environmentPayload, configData, authTo
         rejectUnauthorized: false
       };
 
+      if (environmentPayload.service === 'ui' && environmentPayload.domain === 'jazz') {
+        return resolve();
+      }
       logger.info("svcPayload" + JSON.stringify(svcPayload));
       request(svcPayload, function (error, response, body) {
         if (response.statusCode === 200 && body && body.data) {
@@ -275,6 +278,7 @@ var processEventInitialCommit = function (environmentPayload, configData, authTo
           });
         }
       });
+
     });
   }
 
@@ -312,6 +316,9 @@ var processEventCreateBranch = function (environmentPayload, configData, authTok
       rejectUnauthorized: false
     };
 
+    if (environmentPayload.service === 'ui' && environmentPayload.domain === 'jazz') {
+      return resolve();
+    }
     logger.info("svcPayload" + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200 && body && body.data) {
@@ -325,7 +332,6 @@ var processEventCreateBranch = function (environmentPayload, configData, authTok
       }
     });
   });
-
 }
 
 var processEventDeleteBranch = function (environmentPayload, configData, authToken) {
@@ -386,7 +392,7 @@ var processEventUpdateEnvironment = function (environmentPayload, configData, au
     }
 
     var svcPayload = {
-      uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "/" + environmentPayload.logical_id 
+      uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "/" + environmentPayload.logical_id
         + `?domain=${environmentPayload.domain}&service=${environmentPayload.service}`,
       method: "PUT",
       headers: { Authorization: authToken },
@@ -477,7 +483,7 @@ function getSvcPayload(method, payload, apiEndpoint, authToken) {
 function processRequest(svcPayload) {
   return new Promise((resolve, reject) => {
     request(svcPayload, function (error, response, body) {
-      if ((response.statusCode === 200 || response.statusCode === 201 ) && body) {
+      if ((response.statusCode === 200 || response.statusCode === 201) && body) {
         return resolve(body);
       } else {
         logger.error("Error processing request: " + JSON.stringify(response));
@@ -491,7 +497,9 @@ function getServiceDetails(eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
     var apiEndpoint = `${configData.BASE_API_URL}${configData.SERVICE_API_RESOURCE}?service=${eventPayload.service}&domain=${eventPayload.domain}&isAdmin=true`;
     var svcPayload = getSvcPayload("GET", null, apiEndpoint, authToken);
-
+    if (eventPayload.service === 'ui' && eventPayload.domain === 'jazz') {
+      return resolve();
+    }
     processRequest(svcPayload)
       .then(result => { return resolve(result); })
       .catch(err => {
@@ -504,16 +512,26 @@ function getServiceDetails(eventPayload, configData, authToken) {
 
 var triggerBuildJob = function (result, payload, configData) {
   return new Promise((resolve, reject) => {
-    var output = JSON.parse(result);
-    if (!output.data && !output.data.services && output.data.services.length > 0) {
-      logger.error("Service details not found in service catalog: " + JSON.stringify(output));
-      var error = handleError(failureCodes.PR_ERROR_5.code, failureCodes.PR_ERROR_5.message);
-      return reject(error);
+    var output;
+    if (result) {
+      output = JSON.parse(result);
     }
-    var serviceDetails = output.data.services[0];
-    logger.debug("service details : " + JSON.stringify(serviceDetails));
+    var serviceDetails = {};
+    var buildQuery;
+    if (payload.service === 'ui' && payload.domain === 'jazz') {
+      serviceDetails.type = 'ui';
+      buildQuery = `/build?token=${configData.JOB_TOKEN}`;
+    } else {
+      if (!output.data && !output.data.services && output.data.services.length > 0) {
+        logger.error("Service details not found in service catalog: " + JSON.stringify(output));
+        var error = handleError(failureCodes.PR_ERROR_5.code, failureCodes.PR_ERROR_5.message);
+        return reject(error);
+      }
+      serviceDetails = output.data.services[0];
+      logger.debug("service details : " + JSON.stringify(serviceDetails));
+      buildQuery = `/buildWithParameters?token=${configData.JOB_TOKEN}&service_name=${serviceDetails.service}&domain=${serviceDetails.domain}&scm_branch=${payload.physical_id}`;
+    }
 
-    var buildQuery = `/buildWithParameters?token=${configData.JOB_TOKEN}&service_name=${serviceDetails.service}&domain=${serviceDetails.domain}&scm_branch=${payload.physical_id}`;
     var authToken = "Basic " + new Buffer(configData.JENKINS_USER + ":" + configData.API_TOKEN).toString("base64");
     var apiEndpoint = `${configData.JOB_BUILD_URL}${configData.BUILDPACKMAP[serviceDetails.type]}${buildQuery}`;
     var svcPayload = getSvcPayload("POST", null, apiEndpoint, authToken);
@@ -575,7 +593,7 @@ module.exports = {
   processEventCreateBranch: processEventCreateBranch,
   processEventInitialCommit: processEventInitialCommit,
   getEnvironmentLogicalId: getEnvironmentLogicalId,
-  processBuild:processBuild,
+  processBuild: processBuild,
   triggerBuildJob: triggerBuildJob,
   getServiceDetails: getServiceDetails,
   processRequest: processRequest,

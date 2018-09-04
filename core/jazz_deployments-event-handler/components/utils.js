@@ -62,11 +62,11 @@ function getDeploymentPayload(svcContext) {
 
 function getSvcPayload(method, payload, apiEndpoint, authToken) {
   let svcPayload = {
+    'uri': apiEndpoint,
+    'method': method,
     headers: {
       'content-type': "application/json",
-      'authorization': authToken,
-      'uri': apiEndpoint,
-      'method': method
+      'authorization': authToken
     },
     rejectUnauthorized: false
   }

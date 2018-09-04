@@ -367,7 +367,7 @@ def handleKinesisStreamError(deployOutput, event_source_kinesis, environment_log
     error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
 }
-     
+
 
 def deleteAndRedeployService(environment_logical_id, envBucketKey){
   echoServerlessFile()
@@ -422,6 +422,10 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
   sh "sed -i -- '$sedCommand' ./serverless.yml"
   echoServerlessFile()
   echo "------------------------DONE--------------"
+}
+
+def removeEventResources(){
+   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
 }
 
 
@@ -512,74 +516,74 @@ def resetCredentials() {
 	missing.
 */
 def validateDeploymentConfigurations(def prop) {
-  if (prop.containsKey("service")) {
-    if (prop['service'] == "") {
-      error "Wrong configuration. Value for Key 'service' is missing in the configuration"
-    }
-  } else {
-    error "Wrong configuration. Key 'service' is missing in the configuration"
-  }
-  if (prop.containsKey("providerRuntime")) {
-    def _runtime = prop['providerRuntime']
-    if (_runtime == "") {
-      error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
-    } else {
-      def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports. DSundar3
-      def flag = false
+	if (prop.containsKey("service")) {
+		if (prop['service'] == "") {
+			error "Wrong configuration. Value for Key 'service' is missing in the configuration"
+		}
+	} else {
+		error "Wrong configuration. Key 'service' is missing in the configuration"
+	}
+	if (prop.containsKey("providerRuntime")) {
+		def _runtime = prop['providerRuntime']
+		if (_runtime == "") {
+			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
+		} else {
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports.
+			def flag = false
 
-      for (int i = 0; i < validRuntimes.size(); i++) {
-        if (_runtime == validRuntimes[i]) {
-          flag = true
-        }
-      }
+			for (int i = 0; i < validRuntimes.size(); i++) {
+				if (_runtime == validRuntimes[i]) {
+					flag = true
+				}
+			}
 
-      if (!flag) {
-        echo "$flag"
-        error "Runtime given in the configuration is not valid."
-      }
-    }
-  } else {
-    error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
-  }
-  if (prop.containsKey("providerTimeout")) {
-    if (prop['providerTimeout'] == "") {
-      error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
-    } else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
-      error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
-    }
-  } else {
-    error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
-  }
+			if (!flag) {
+				echo "$flag"
+				error "Runtime given in the configuration is not valid."
+			}
+		}
+	} else {
+		error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
+	}
+	if (prop.containsKey("providerTimeout")) {
+		if (prop['providerTimeout'] == "") {
+			error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
+		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
+			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
+		}
+	} else {
+		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
+	}
 
-  if (prop.containsKey("region")) {
-    if (prop['region'] == "") {
-      error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-    } else if (prop['region'] != configLoader.AWS.REGION) {
-      error "Wrong configuration. Value for Key 'region' should be ${region}"
-    }
-  } else {
-    error "Wrong configuration. Key 'region' is missing in the configuration"
-  }
+	if (prop.containsKey("region")) {
+		if (prop['region'] == "") {
+			error "Wrong configuration. Value for Key 'region' is missing in the configuration"
+		} else if (prop['region'] != configLoader.AWS.REGION) {
+			error "Wrong configuration. Value for Key 'region' should be ${region}"
+		}
+	} else {
+		error "Wrong configuration. Key 'region' is missing in the configuration"
+	}
 
-  def runtime = prop['providerRuntime']
-  if (runtime.indexOf("java") > -1) {
+	def runtime = prop['providerRuntime']
+	if (runtime.indexOf("java") > -1) {
 
-    if (prop.containsKey("artifact")) {
-      if (prop['artifact'] == "") {
-        error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
-      }
-    } else {
-      error "Wrong configuration. Key 'artifact' is missing in the configuration"
-    }
+		if (prop.containsKey("artifact")) {
+			if (prop['artifact'] == "") {
+				error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
+			}
+		} else {
+			error "Wrong configuration. Key 'artifact' is missing in the configuration"
+		}
 
-    if (prop.containsKey("mainClass")) {
-      if (prop['mainClass'] == "") {
-        error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
-      }
-    } else {
-      error "Wrong configuration. Key 'mainClass' is missing in the configuration"
-    }
-  }
+		if (prop.containsKey("mainClass")) {
+			if (prop['mainClass'] == "") {
+				error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
+			}
+		} else {
+			error "Wrong configuration. Key 'mainClass' is missing in the configuration"
+		}
+	}
 }
 
 
@@ -612,6 +616,11 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
   if (isEventSchdld || isS3EventEnabled ) {
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
+
+  if (!isEventSchdld && !isS3EventEnabled ) {
+    removeEventResources ()
+  }
+
   echoServerlessFile()
 }
 
@@ -709,7 +718,7 @@ def writeServerlessFile(config, env) {
     sh "sed -i -- 's|{event_sqs_arn}|${config['event_source_sqs']}|g' policyFile.yml"
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
   }
-  
+
   if (config['event_source_kinesis']) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -- 's/{event_source_kinesis}/${config['event_source_kinesis']}/g' ./serverless.yml"

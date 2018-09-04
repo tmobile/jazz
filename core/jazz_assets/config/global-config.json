@@ -57,11 +57,18 @@
 		"environment",
 		"asset_type",
 		"provider",
-		"provider_id"
+		"provider_id",
+		"limit",
+		"offset"
 	],
 	"ASSET_SEARCH_REQUIRED_FILTER_PARAMS": [
 		"service",
 		"domain"
 	],
-	"ASSETS_DOMAIN_SERVICE_INDEX": "AssetsDomainServiceIndex"
+	"ASSETS_DOMAIN_SERVICE_INDEX": "AssetsDomainServiceIndex",
+	"PAGINATION_DEFAULTS": {
+		"offset": 0,
+		"limit": 10,
+		"max_limit": 100
+	}
 }
