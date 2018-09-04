@@ -1123,7 +1123,7 @@ def loadServerlessConfig() {
     sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
   }
 
-  if(!service_config['event_source_dynamodb'] || !service_config['event_source_sqs'] || !service_config['event_source_s3']) {
+  if (!service_config['event_source_dynamodb'] || !service_config['event_source_sqs'] || !service_config['event_source_s3'] || !service_config['event_source_kinesis']) {
     removeEventResources ()
   }
 
