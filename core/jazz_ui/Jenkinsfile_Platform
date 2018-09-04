@@ -87,12 +87,11 @@ node ()  {
       if(config_loader.UI_CONFIG.environment_tabs.logs)  sh "sed -i 's/{env_logs}/logs/g' ./src/environments/environment.oss.ts";
 
       sh "sed -i 's/{api_doc_name}/${config_loader.AWS.S3.API_DOC}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{account_number}/${config_loader.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{region}/${config_loader.REGION}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{account_number}/${config_loader.AWS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{region}/${config_loader.AWS.REGION}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{multi_env}/${config_loader.UI_CONFIG.feature.multi_env}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{account_number}/${config_loader.AWS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
 
       if(config_loader.SLACK.ENABLE_SLACK == "true") sh "sed -i 's/{slack_support}/true/g' ./src/environments/environment.oss.ts";
       else sh "sed -i 's/{slack_support}/false/g' ./src/environments/environment.oss.ts";
