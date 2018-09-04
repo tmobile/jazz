@@ -1104,19 +1104,7 @@ def loadServerlessConfig() {
 		sh "cp _config/serverless-python.yml ./serverless.yml"
 	}
 
-  if (service_config['event_source_dynamodb'] || service_config['event_source_sqs']) {
-    sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
-  }
-
-  if(!service_config['event_source_dynamodb'] || !service_config['event_source_sqs'] || !service_config['event_source_s3']) {
-    removeEventResources ()
-  }
-
 	sh "cp serverless.yml serverless-temp.yml"
-}
-
-def removeEventResources(){
-   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
 }
 
 
