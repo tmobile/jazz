@@ -217,6 +217,7 @@ node() {
 			if (env_metadata["AWS_API_ID"] != null) {
 				aws_api_id = env_metadata["AWS_API_ID"]
 			}
+      def swaggerDocUrl=""
 
 			try {
 
@@ -241,7 +242,7 @@ node() {
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
 					def lambdaARN = awsLambdaModule.getLambdaARN(stackName);
-					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN.arn, "lambda", config), environment_logical_id);
 
 					if (fileExists('swagger/swagger.json')) {
 						echo "Generating swagger file for environment: ${env_key}"
@@ -291,23 +292,16 @@ node() {
 
 							case 'gcp_apigee':
 								events.sendStartedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment started for APIGEE', context_map, environment_logical_id)
-								def arn = awsLambdaModule.getLambdaARN(stackName)
 								apiHostName ="${configLoader.APIGEE.API_ENDPOINTS[env_key].service_hostname}"
 								updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
-								endpointUrl = apigeeModule.deploy("swagger/swagger.json", arn, env_key, environment_logical_id, config, context_map)
+								endpointUrl = apigeeModule.deploy("swagger/swagger.json", lambdaARN, env_key, environment_logical_id, config, context_map)
 								echo "API Proxy created at: ${endpointUrl}"
-                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", null, "apigee", config), environment_logical_id);
 								events.sendCompletedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment complete for APIGEE', context_map, environment_logical_id)
+                //adding svc, domain and environment as the provider id since that is used as apiproxy(resource)
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", "${config['domain']}-${config['service']}-${environment_logical_id}", "apigee_proxy", config), environment_logical_id);
 								break;
 							default:
 								error "Deployment targets are not defined"
-
-              def apiArns = getAPIGatewayResourceARNs(aws_api_id, environment_logical_id)
-              if(apiArns) {
-                for (arn in apiArns) {
-                  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
-                }
-              }
 
               if (domain != "jazz") {
                 createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
@@ -317,8 +311,7 @@ node() {
               sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
               echo "completed deployment........."
 
-              def swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
+              swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
 
               def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
               send_status_email(config, 'COMPLETED', svc_status)
@@ -328,25 +321,30 @@ node() {
             if (domain && domain == "jazz") {
               serviceConfigdata.setLogStreamPermission(config)
             }
-          }
-				}
-			} catch (ex) {
-				if(api_deployment_target == 'aws_apigateway') {
+				  }
+			  }
+      } catch (ex) {
+				if (api_deployment_target == 'aws_apigateway') {
 					events.sendFailureEvent('DEPLOY_TO_AWS_APIGATEWAY', ex.getMessage(), context_map, environment_logical_id)
-				} else if(api_deployment_target == 'gcp_apigee') {
+          events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+				} else if (api_deployment_target == 'gcp_apigee') {
 					events.sendFailureEvent('DEPLOY_TO_GCP_APIGEE', ex.getMessage(), context_map, environment_logical_id)
 				}
 				events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-				events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 				error ex.getMessage()
 			}
 			environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
 			def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
 
 			env_metadata["AWS_API_ID"] = aws_api_id
-
-			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
+      if (api_deployment_target == 'aws_apigateway') {
+        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
+        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
+      } else if (api_deployment_target == 'gcp_apigee') {
+        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", swaggerDocUrl, "swagger_url", config), environment_logical_id);
+        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", endpointUrl, "endpoint_url", config), environment_logical_id);
+      }
 			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, env_metadata), environment_logical_id)
 			events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
 			events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)

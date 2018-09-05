@@ -30,7 +30,8 @@
 		"dynamodb",
 		"cloudwatch_event",
 		"swagger_url",
-		"endpoint_url"
+		"endpoint_url",
+    "apigee_proxy"
 	],
 	"ASSET_STATUS": [
 		"active",
