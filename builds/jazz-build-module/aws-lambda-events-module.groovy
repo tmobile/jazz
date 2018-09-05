@@ -187,11 +187,13 @@ def getLambdaEvents(existing_notifications, events){
   // Removing the existing events from the new event list
   for (item in events) {
     cleanupIndex++
-    if (((item.contains("ObjectCreated") || item.contains("ObjectRemoved")) &&
-      (existing_events.contains("s3:ObjectCreated:*") || existing_events.contains("s3:ObjectRemoved:*"))) || (existing_events.contains(item))) {
-      new_events[cleanupIndex] = null
+    if ((item.contains("ObjectCreated") && existing_events.contains("s3:ObjectCreated:*")) ||
+       (item.contains("ObjectRemoved") && existing_events.contains("s3:ObjectRemoved:*")) ||
+       existing_events.contains(item) ) {
+         new_events[cleanupIndex] = null
     }
   }
+
   new_events.removeAll([null])
   def events_list = []
   if (new_events.size() > 0 && new_events != null) {
