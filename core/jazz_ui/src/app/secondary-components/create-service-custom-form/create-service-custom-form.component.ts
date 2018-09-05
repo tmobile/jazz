@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 
 @Component({
   selector: 'create-service-custom-form',
@@ -7,9 +7,29 @@ import { Component, OnInit } from '@angular/core';
 })
 export class CreateServiceCustomFormComponent implements OnInit {
 
-  constructor() { }
+  public customForm = {
+    first: 'one'
+  };
+
+  public options = this.defineOptions();
+
+  constructor() {
+  }
 
   ngOnInit() {
+  }
+
+  defineOptions() {
+    return [
+      {
+        label: 'Option1',
+        value: 'one'
+      },
+      {
+        label: 'Option2',
+        value: 'two'
+      }
+    ]
   }
 
 }

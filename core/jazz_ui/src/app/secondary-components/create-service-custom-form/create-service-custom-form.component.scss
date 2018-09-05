@@ -1,0 +1,14 @@
+.each-step-wrap {
+  /deep/ input[type="radio"] + label {
+    margin-left: -15px;
+  }
+}
+
+.step-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: bold;
+  color: #222222;
+  padding-bottom: 16px;
+}
+
