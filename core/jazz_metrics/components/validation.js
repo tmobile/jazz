@@ -67,7 +67,7 @@ function validateInterval(interval) {
 
   return new Promise((resolve, reject) => {
     const intervalKeys = Object.keys(global_config.APIGEE.INTERVAL_MAP);
-    if(!intervalKeys.includes(interval)) {
+    if(!intervalKeys.includes(interval.toString())) {
       reject({
         result: "inputError",
         message: `Interval can only be ${intervalKeys.join(', ')} seconds`

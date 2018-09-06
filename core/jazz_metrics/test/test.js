@@ -41,7 +41,7 @@ describe('jazz_metrics', function () {
         "environment": "test",
         "end_time": "2018-06-22T07:48:56.000Z",
         "start_time": "2018-06-12T07:48:56.712Z",
-        "interval": "60",
+        "interval": 60,
         "statistics": "average"
       },
       "principalId": "xswdxwscvff@test.com"
