@@ -172,25 +172,41 @@ def putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3Buck
   }
 }
 
-def getLambdaEvents(existing_notifications, events){
+def getLambdaEvents(existing_notifications, events_action){
   def existing_events = []
   def new_events = []
-  for (item in events) {
+  def new_events_action = []
+
+  for (item in events_action) {
     new_events.add(item)
+    new_events_action.add(item)
   }
+
   for (item in existing_notifications.LambdaFunctionConfigurations) {
     existing_events.addAll(item.Events)
   }
+
   def cleanupIndex = -1
-  echo "events . $events"
+  echo "events . $events_action"
 
   // Removing the existing events from the new event list
-  for (item in events) {
+  // If the existing event has (*)
+  for (item in events_action) {
     cleanupIndex++
     if ((item.contains("ObjectCreated") && existing_events.contains("s3:ObjectCreated:*")) ||
        (item.contains("ObjectRemoved") && existing_events.contains("s3:ObjectRemoved:*")) ||
        existing_events.contains(item) ) {
          new_events[cleanupIndex] = null
+    }
+  }
+
+  // Removing the existing events from the new event list
+  // If the new event has (*)
+  for (item in existing_events) {
+    if (item.contains("ObjectCreated") && new_events_action.contains("s3:ObjectCreated:*")) {
+      new_events.remove("s3:ObjectCreated:*")
+    } else if (item.contains("ObjectRemoved") && new_events_action.contains("s3:ObjectRemoved:*")) {
+      new_events.remove("s3:ObjectRemoved:*")
     }
   }
 
