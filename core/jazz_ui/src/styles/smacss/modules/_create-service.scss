@@ -1,0 +1,35 @@
+.jz-cs-form {
+  padding: 0 3.5rem;
+}
+.jz-cs-row {
+  border-top: 1px solid #cccccc;
+  padding: 20px 0;
+}
+
+.jz-cs-column-left {
+  width: calc(99%/3);
+  display: inline-block;
+  border: 1px solid red;
+}
+
+.jz-cs-column-right {
+  padding: 0 15px;
+  vertical-align: top;
+  width: calc(95% * (2/3) - 35px);
+  display: inline-block;
+  border: 1px solid red;
+}
+
+.jz-cs-label {
+  color: #222222;
+  font-size: 12px;
+}
+
+.jz-cs-required {
+  color: #d0021b;
+}
+
+.jz-cs-sublabel {
+  color: #555555;
+  font-size: 11px;
+}
