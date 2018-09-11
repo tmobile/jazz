@@ -83,9 +83,6 @@ export class CreateServiceComponent implements OnInit {
   errMessage: any;
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
-  public apiDeployment = "aws_apigateway";
-  public functionDeployment = "aws_lambda";
-  public websiteDeployment = "aws_cloudfront";
   public buildEnvironment = environment;
   
 
