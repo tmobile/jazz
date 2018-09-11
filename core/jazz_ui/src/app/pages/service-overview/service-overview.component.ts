@@ -15,6 +15,8 @@ import { ServiceDetailComponent } from '../service-detail/service-detail.compone
 import { environment } from './../../../environments/environment';
 import {  environment as env_internal } from './../../../environments/environment.internal';
 import { environment as env_oss } from './../../../environments/environment.oss';
+import { ServiceFormData, RateExpression, CronObject, EventExpression } from './../../secondary-components/create-service/service-form-data';
+import { CronParserService } from '../../core/helpers';
 
 
 declare var $: any;
@@ -36,6 +38,7 @@ export class ServiceOverviewComponent implements OnInit {
   flag: boolean = false;
   @Input() service: any = {};
   @Input() isLoadingService: boolean = false;
+  @Input() application_arr:any;
   private subscription: any;
 
   multiENV: boolean = true;
@@ -46,7 +49,8 @@ export class ServiceOverviewComponent implements OnInit {
   hide_email_error: boolean = true;
   hide_slack_error: boolean = true;
   service_error: boolean = true;
-  disp_show: boolean = false;
+  disp_show:boolean = true;
+  disp_show2:boolean = true;
   err404: boolean = false;
   disable_button: boolean = false;
   email_valid: boolean;
@@ -125,6 +129,30 @@ export class ServiceOverviewComponent implements OnInit {
   showbar: boolean = false;
   friendly_name: any;
   list: any = {};
+  publicSelected: boolean = this.service.is_public_endpoint;
+  publicInitial: boolean = this.service.is_public_endpoint;
+  cdnConfigSelected: boolean = this.service.create_cloudfront_url;
+  cdnConfigInitial: boolean = this.service.create_cloudfront_url;
+  saveClicked:boolean = false;
+  advancedSaveClicked:boolean = false;
+  showApplicationList:boolean = false;
+  selectedApplications=[];
+  initialselectedApplications = [];
+  oneSelected:boolean=false;
+  app_placeH:string = 'Start typing...';
+  applc:string;
+  isSlackAvailable:boolean = true;
+  isPUTLoading:boolean = false;
+  PutPayload:any;
+  isPayloadAvailable:boolean = false;
+  selected: string = "Minutes";
+  eventSchedule: string = 'fixedRate';
+  cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
+  eventExpression = new EventExpression("awsEventsNone", undefined, undefined, undefined, undefined);
+  viewMode:boolean = true;
+  cronFieldValidity: any;
+
 
 
   constructor(
@@ -132,6 +160,7 @@ export class ServiceOverviewComponent implements OnInit {
     private router: Router,
     private request: RequestService,
     private messageservice: MessageService,
+    private cronParserService: CronParserService,
     private cache: DataCacheService,
     private toasterService: ToasterService,
     private serviceDetail: ServiceDetailComponent,
@@ -289,71 +318,226 @@ export class ServiceOverviewComponent implements OnInit {
     this.open_sidebar.emit(true);
 
   }
-  onEditClick() {
+  private isCronObjValid(cronObj) {
+    var cronValidity = this.cronParserService.validateCron(cronObj);
+    this.cronFieldValidity = cronValidity;
+    if (cronValidity.isValid === true) {
+      return true;
+    }
+    return false;
+  };
 
 
-    var email_temporary = this.email_temp;
-    var slack_temporary = this.slackChannel_temp;
-    this.check_empty_fields();
-    if (this.service.status && this.service.status != 'deletion_completed' && this.service.status != 'deletion_started') {};
-    if (!this.disp_show) { //set edit view to true ---> switch to edit mode
-      this.disp_edit = false;
-      this.disp_show = true;
-      this.edit_save = 'SAVE';
-      this.showCancel = true;
-      this.loadPlaceholders();
 
-    } else { //set display view to true ---> save and switch to view mode
-      this.isLoadingService = true;
-      this.check_email_valid()
-      this.validateChannelName();
 
-      this.http.put('/jazz/services/' + this.service.id, this.update_payload)
-        .subscribe(
-          (Response) => {
+  generateExpression(rateExpression) {
+    if (this.rateExpression !== undefined) {
+      this.rateExpression.error = undefined;
+    }
+    if (rateExpression === undefined || rateExpression['type'] === 'none') {
+      this.rateExpression.isValid = undefined;
+    } else if (rateExpression['type'] == 'rate') {
+      var duration, interval;
+      duration = rateExpression['duration'];
+      interval = rateExpression['interval'];
 
-            this.service.description = this.desc_temp;
-            this.service.tags = this.tags_temp.split(',');
-            var this2 = this;
-            this.service.tags.forEach(function (item, index) {
-              this2.service.tags[index] = item.trim();
-            });
-            this.service.email = email_temporary;
-            this.service.slackChannel = slack_temporary;
+      if (duration === undefined || duration === null || duration <= 0) {
+        this.rateExpression.isValid = false;
+        this.rateExpression.error = 'Please enter a valid duration';
+      } else {
+        if (interval == 'Minutes') {
+          this.cronObj = new CronObject(('0/' + duration), '*', '*', '*', '?', '*');
+        } else if (interval == 'Hours') {
+          this.cronObj = new CronObject('0', ('0/' + duration), '*', '*', '?', '*');
+        } else if (interval == 'Days') {
+          this.cronObj = new CronObject('0', '0', ('1/' + duration), '*', '?', '*');
+        }
+        this.rateExpression.isValid = true;
+        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+      }
+    } else if (rateExpression['type'] == 'cron') {
+      var cronExpression;
+      var cronObj = this.cronObj;
+      var cronObjFields = this.cronParserService.cronObjFields;
+      var _isCronObjValid = this.isCronObjValid(cronObj)
 
-            this.isLoadingService = false;
-            this.disp_edit = true;
-            this.showCancel = false;
-            this.disp_show = false;
-            this.edit_save = 'EDIT';
-            let successMessage = this.toastmessage.successMessage(Response, "updateService");
-            this.toast_pop('success', "", "Data for service: " + this.service.name + " " + successMessage);
-            this.check_empty_fields();
-          },
-          (Error) => {
-            this.isLoadingService = false;
-            this.disp_edit = false;
-            this.disp_show = true;
-            this.edit_save = 'SAVE';
-            let errorMessage = this.toastmessage.errorMessage(Error, "updateService");
-            this.toast_pop('error', 'Oops!', errorMessage)
-          });
+      if (_isCronObjValid === false) {
+        this.rateExpression.isValid = false;
+        this.rateExpression.error = 'Please enter a valid cron expression';
+      } else {
+        this.rateExpression.isValid = true;
+        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+      }
+    }
+
+    if (this.rateExpression.isValid === undefined) {
+      return undefined;
+    } else if (this.rateExpression.isValid === false) {
+      return 'invalid';
+    } else if (this.rateExpression.isValid === true) {
+      return this.rateExpression.cronStr;
     }
   }
 
-  onCancelClick() {
-    this.update_payload = {};
-    this.disp_edit = true;
-    this.disp_show = false;
-    this.edit_save = 'EDIT';
-    this.showCancel = false;
-    this.hide_email_error = true;
-    this.hide_slack_error = true;
-    if (this.subscription != undefined)
-      this.subscription.unsubscribe();
-    this.show_loader = false;
-    this.disableSaveBtn();
+  editClick(){
+    console.log('this.service',this.service)
+    this.viewMode = !this.viewMode;
   }
+  onEditClick(){
+    this.loadPlaceholders();
+
+    console.log('this.service',this.service)
+
+    this.disp_show=false;
+  }
+  onEditClickAdvanced(){
+    this.disp_show2=false;
+    this.publicSelected = this.publicInitial;
+    this.cdnConfigSelected = this.cdnConfigInitial;
+
+
+  }
+  onCompleteClick(){
+    this.isPUTLoading = true;
+
+    this.http.put('/jazz/services/'+this.service.id,this.PutPayload)
+        .subscribe(
+            (Response)=>{
+              // debugger
+              this.isPUTLoading = false;
+              this.disp_show = true;
+              this.isLoadingService = true;
+              this.serviceDetail.onDataFetched(Response.data.updatedService);
+              this.isLoadingService = false;
+              this.loadPlaceholders()
+              this.disp_show=true;
+              this.saveClicked = false;
+              let successMessage = this.toastmessage.successMessage(Response,"updateService");
+              this.toast_pop('success',"", "Data for service: "+this.service.name +" "+successMessage);
+            },
+            (Error)=>{
+                this.isLoadingService=false;
+                this.isPUTLoading = false;
+                this.disp_show=true;
+                this.saveClicked = false;
+                this.edit_save='SAVE';
+                let errorMessage = this.toastmessage.errorMessage(Error,"updateService");
+                this.toast_pop('error', 'Oops!', errorMessage)
+                // this.toast_pop('error','Oops!', "Data cannot be updated. Service Error.");
+            });
+
+
+  }
+  onAdvancedSaveClick(){
+    this.saveClicked = false;
+    this.advancedSaveClicked = true;
+    let payload = {};
+
+    if( this.advancedSaveClicked){
+      if (this.rateExpression.type != 'none') {
+        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+        if (this.rateExpression.cronStr == 'invalid') {
+          return;
+        } else if (this.rateExpression.cronStr !== undefined) {
+          payload["rateExpression"] = this.rateExpression.cronStr;
+        }
+      }
+
+      if (this.eventExpression.type !== "awsEventsNone") {
+        var event = {};
+        event["type"] = this.eventExpression.type;
+        if (this.eventExpression.type === "dynamodb") {
+          event["source"] = "arn:aws:dynamodb:us-west-2:302890901340:table/" + this.eventExpression.dynamoTable;
+          event["action"] = "PutItem";
+        } else if (this.eventExpression.type === "kinesis") {
+          event["source"] = "arn:aws:kinesis:us-west-2:302890901340:stream/" + this.eventExpression.streamARN;
+          event["action"] = "PutRecord";
+        } else if (this.eventExpression.type === "s3") {
+          event["source"] = this.eventExpression.S3BucketName;
+          event["action"] = "s3:ObjectCreated:*";
+        }
+        payload["events"] = [];
+        payload["events"].push(event);
+      }
+
+      if(this.publicSelected !== this.publicInitial){
+        payload["is_public_endpoint"] = this.publicSelected;
+      }
+      if(this.cdnConfigSelected !== this.cdnConfigInitial){
+        payload["create_cloudfront_url"] = this.cdnConfigSelected;
+      }
+
+    }
+    this.PutPayload = payload;
+    if(Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
+  }
+
+  onSaveClick(){
+    this.saveClicked = true;
+    this.advancedSaveClicked = false;
+
+    let payload = {};
+    if( this.saveClicked ){
+      if(this.desc_temp != this.service.description){
+        payload["description"]=this.desc_temp;
+      }
+      if(this.slackChannel_temp != this.service.slackChannel){
+        payload["slack_channel"]=this.slackChannel_temp;
+      }
+      if((this.selectedApplications.length > 0) && (this.selectedApplications[0].appName != this.initialselectedApplications[0].appName) ){
+        payload["appName"]=this.selectApp.appName;
+        if( this.selectApp.appID )
+          payload["appID"]=this.selectApp.appID.toLowerCase();
+      }
+
+    }
+    this.PutPayload = payload;
+    if(Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
+
+  }
+
+  onCancelClick()
+  {
+      this.update_payload={};
+      this.selectedApplications=[];
+      this.oneSelected = false;
+      this.disp_show=true;
+      this.disp_show2=true;
+      this.edit_save='EDIT';
+      this.showCancel=false;
+      this.hide_email_error= true;
+      this.hide_slack_error = true;
+      if(this.subscription!=undefined)
+      this.subscription.unsubscribe();
+      this.show_loader=false;
+      this.disableSaveBtn();
+  }
+
+  onEventScheduleChange(val) {
+    this.rateExpression.type = val;
+  }
+  onAWSEventChange(val) {
+    this.eventExpression.type = val;
+  }
+  public focusDynamo = new EventEmitter<boolean>();
+public focusKinesis = new EventEmitter<boolean>();
+public focusS3 = new EventEmitter<boolean>();
+
+chkDynamodb() {
+  this.focusDynamo.emit(true);
+  return this.eventExpression.type === 'dynamodb';
+}
+
+chkfrKinesis() {
+  this.focusKinesis.emit(true);
+  return this.eventExpression.type === 'kinesis';
+}
+
+chkS3() {
+  this.focusS3.emit(true);
+  return this.eventExpression.type === 's3';
+}
+
   toast_pop(error, oops, errorMessage) {
     var tst = document.getElementById('toast-container');
     tst.classList.add('toaster-anim');
@@ -897,7 +1081,7 @@ export class ServiceOverviewComponent implements OnInit {
 
     this.prodEnv = {};
     this.stgEnv = {};
-    
+
 
 
 
