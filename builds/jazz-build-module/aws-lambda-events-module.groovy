@@ -142,48 +142,53 @@ def getbucketNotificationConfiguration(s3BucketName){
 
 def putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action){
   def new_lambda_configuration = [:]
+  def new_s3_event_configuration = [:]
   def events = action.split(",")
   def lambdaFunctionConfigurations = []
   def new_events = []
   new_lambda_configuration.LambdaFunctionArn = lambdaARN
 
   try {
-    if (existing_notifications.containsKey("LambdaFunctionConfigurations")) {
-      def existing_lambda_configs = existing_notifications.LambdaFunctionConfigurations
-      new_events = getLambdaEvents(existing_notifications, events)
-      if (new_events != null && new_events.size() > 0) {
-        for (item in existing_lambda_configs) {
-          lambdaFunctionConfigurations.add(item)
-        }
-        new_lambda_configuration.Events = new_events
-        lambdaFunctionConfigurations.add(new_lambda_configuration)
-      }
+    if (existing_notifications != null && existing_notifications.size() > 0) {
+      new_s3_event_configuration = getS3Events(existing_notifications, events, lambdaARN)
     } else {
       new_events = checkAndConvertEvents(events)
       new_lambda_configuration.Events = new_events
       lambdaFunctionConfigurations.add(new_lambda_configuration)
+      new_s3_event_configuration.LambdaFunctionConfigurations = lambdaFunctionConfigurations
     }
-    if (lambdaFunctionConfigurations != null && lambdaFunctionConfigurations.size() > 0) {
-      existing_notifications.LambdaFunctionConfigurations = lambdaFunctionConfigurations
-      def newNotificationJson = JsonOutput.toJson(existing_notifications)
+
+    echo "new existing_notifications : $new_s3_event_configuration"
+    if (new_s3_event_configuration != null && new_s3_event_configuration.size() > 0) {
+      def newNotificationJson = JsonOutput.toJson(new_s3_event_configuration)
       def response = sh(returnStdout: true, script: "aws s3api put-bucket-notification-configuration --bucket $s3BucketName --notification-configuration \'${newNotificationJson}\' --output json")
     }
   } catch (ex) {
   }
 }
 
-def getLambdaEvents(existing_notifications, events_action){
+def getS3Events(existing_notifications, events_action, lambdaARN){
   def existing_events = []
   def new_events = []
   def new_events_action = []
+  def lambdaFunctionConfigurations = []
+  def new_lambda_configuration = [:]
+  def existing_event_configs = [:]
+  def existing_event_configs_copy = [:]
+  new_lambda_configuration.LambdaFunctionArn = lambdaARN
 
   for (item in events_action) {
     new_events.add(item)
     new_events_action.add(item)
   }
 
-  for (item in existing_notifications.LambdaFunctionConfigurations) {
-    existing_events.addAll(item.Events)
+  for (item in existing_notifications) {
+    existing_event_configs[item.key] = item.value
+    existing_event_configs_copy[item.key] = item.value
+    eventConfigs = item.value
+    for (event_config in eventConfigs) {
+      existing_events.addAll(event_config.Events)
+    }
   }
 
   def cleanupIndex = -1
@@ -194,28 +199,71 @@ def getLambdaEvents(existing_notifications, events_action){
   for (item in events_action) {
     cleanupIndex++
     if ((item.contains("ObjectCreated") && existing_events.contains("s3:ObjectCreated:*")) ||
-       (item.contains("ObjectRemoved") && existing_events.contains("s3:ObjectRemoved:*")) ||
-       existing_events.contains(item) ) {
-         new_events[cleanupIndex] = null
-    }
-  }
-
-  // Removing the existing events from the new event list
-  // If the new event has (*)
-  for (item in existing_events) {
-    if (item.contains("ObjectCreated") && new_events_action.contains("s3:ObjectCreated:*")) {
-      new_events.remove("s3:ObjectCreated:*")
-    } else if (item.contains("ObjectRemoved") && new_events_action.contains("s3:ObjectRemoved:*")) {
-      new_events.remove("s3:ObjectRemoved:*")
+      (item.contains("ObjectRemoved") && existing_events.contains("s3:ObjectRemoved:*")) ||
+      existing_events.contains(item)) {
+      new_events[cleanupIndex] = null
     }
   }
 
   new_events.removeAll([null])
+
+  // Checking the existing events
+  // If the new event has (*)
+  def isCreationEvent = false
+  def isRemovalEvent = false
+  if (new_events_action.contains("s3:ObjectCreated:*")) {
+    isCreationEvent = true
+  }
+  if (new_events_action.contains("s3:ObjectRemoved:*")) {
+    isRemovalEvent = true
+  }
+
   def events_list = []
   if (new_events.size() > 0 && new_events != null) {
     events_list = checkAndConvertEvents(new_events)
   }
-  return events_list
+
+  cleanupIndex = -1
+  def eventStr
+
+  for (item in existing_notifications) {
+    eventConfigs = item.value
+    cleanupIndex = -1
+    for (event_config in eventConfigs) {
+      cleanupIndex++
+      eventStr = event_config.Events.join(",")
+      if ((eventStr.contains("ObjectCreated") && !eventStr.contains("s3:ObjectCreated:*") && isCreationEvent == true) ||
+        (eventStr.contains("ObjectRemoved") && !eventStr.contains("s3:ObjectRemoved:*") && isRemovalEvent == true)) {
+        existing_event_configs[item.key][cleanupIndex] = null
+      }
+    }
+  }
+
+  for (item in existing_notifications) {
+    existing_event_configs[item.key].removeAll([null])
+  }
+
+  for (item in existing_event_configs) {
+    if (item.value.size() <= 0) {
+      existing_event_configs_copy.remove(item.key);
+    }
+  }
+
+  if (existing_event_configs_copy.LambdaFunctionConfigurations) {
+    for (item in existing_event_configs_copy.LambdaFunctionConfigurations) {
+      lambdaFunctionConfigurations.add(item)
+    }
+  }
+  if (events_list != null && events_list.size() > 0) {
+    new_lambda_configuration.Events = new_events
+    lambdaFunctionConfigurations.add(new_lambda_configuration)
+  }
+  if (lambdaFunctionConfigurations != null && lambdaFunctionConfigurations.size() > 0) {
+    existing_event_configs_copy.LambdaFunctionConfigurations = lambdaFunctionConfigurations
+  }
+
+  echo "s3 event config : $existing_event_configs_copy"
+  return existing_event_configs_copy
 }
 
 def checkAndConvertEvents(events){
