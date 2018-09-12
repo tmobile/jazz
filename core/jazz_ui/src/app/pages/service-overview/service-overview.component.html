@@ -28,7 +28,7 @@
         <label for="checkbox-slack"></label>
         <div class="cb-status-dets">Include error details</div>
       </div>
-      <a (click)='openModal = !openModal;isLoading=false' [class.invisible]="isLoading || feedbackRes">CANCEL</a>
+      <a class="jz-pointer" (click)='openModal = !openModal;isLoading=false' [class.invisible]="isLoading || feedbackRes">CANCEL</a>
       <btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading" [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'"
         (click)='submitFeedback(buttonText)'></btn-jazz-primary>
     </div>
@@ -119,7 +119,7 @@
     </summary>
     <div *ngIf='!disp_show' class='down-btn-wrap'>
       <btn-jazz-primary  [disablePrimaryBtn]="!isSlackAvailable" text="SAVE" (click)='onSaveClick()'></btn-jazz-primary>
-      <a (click)="onCancelClick()">CANCEL</a>
+      <a class="jz-pointer" (click)="onCancelClick()">CANCEL</a>
     </div>
     <div class='metadata-body metadata-body-border' [class.no-border]='service.serviceType != "function"'>
 
@@ -203,7 +203,7 @@
     </div>
     <div *ngIf='!disp_show2' class='down-btn-wrap down-btn-wrap-advanced'>
       <btn-jazz-primary text="SAVE" (click)='onAdvancedSaveClick()'></btn-jazz-primary>
-      <a (click)='onCancelClick()'>CANCEL</a>
+      <a class="jz-pointer" (click)='onCancelClick()'>CANCEL</a>
     </div>
     <div class='metadata-body-advanced'>
       <div class='metadata-row'>
@@ -395,7 +395,7 @@
         <div *ngIf="!isPUTLoading" class='overlay-body'>Are you sure you want to permanently complete this edit?</div>
         <div class='overlay-btns'>
           <btn-jazz-primary text="COMPLETE" [disablePrimaryBtn]="!isPayloadAvailable" (click)='onCompleteClick()'></btn-jazz-primary>
-          <a (click)='saveClicked = false; advancedSaveClicked = false'>CANCEL</a>
+          <a class="jz-pointer" (click)='saveClicked = false; advancedSaveClicked = false'>CANCEL</a>
         </div>
     </div>
   </div>
