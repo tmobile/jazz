@@ -121,7 +121,7 @@
       <btn-jazz-primary  [disablePrimaryBtn]="!isSlackAvailable" text="SAVE" (click)='onSaveClick()'></btn-jazz-primary>
       <a (click)="onCancelClick()">CANCEL</a>
     </div>
-    <div class='metadata-body metadata-body-border'>
+    <div class='metadata-body metadata-body-border' [class.no-border]='service.serviceType != "function"'>
 
       <div class='metadata-column'>
         <ul>
@@ -168,10 +168,6 @@
           </li>
           <p class='email-err-msg' [class.hide]='hide_slack_error'>Slack channel is not available. Please provide a valid slack channel.</p>
 
-          <li>
-            <div class='det-label'>Approvers</div>
-            <div class='det-value'>{{service.approvers}}</div>
-          </li>
         </ul>
       </div>
       <div class='metadata-column'>
@@ -190,7 +186,7 @@
 
   </details>
 
-  <details>
+  <details  *ngIf="service.serviceType == 'function'">
     <summary class='summary-last-child'>
       <div class='metadata-heading-wrap'>
         <div class='metadata-heading'>
@@ -223,7 +219,7 @@
                               <label for="none"><span></span><span class="background"></span>None</label>
                           </div>
                       </section>
-                      <section class="   pad-left0">
+                      <section class="fixed-rate pad-left0">
                           <div class="radio-container">
                               <input type="radio" name="EventSchedule" id="fixedRate" [value]="rate" [checked]="rateExpression.type == 'rate'" (click)="onEventScheduleChange('rate')">
                               <label for="fixedRate"><span></span><span class="background"></span>Fixed Rate of</label>
@@ -382,48 +378,6 @@
             </div>
           </li>
 
-        </ul>
-      </div>
-      <div class='metadata-row'>
-        <ul class='advanced-ul'>
-          <li>
-            <div class='det-label'>Publicly Accesible</div>
-            <div *ngIf='disp_show2' class="det-value">{{service.is_public_endpoint}}</div>
-            <div *ngIf='!disp_show2'class='det-value'>
-                <div class="">
-                  <section class="col-lg-12  pad-left0">
-                      <div class="input-field-container">
-                          <div class="slack-checkbox custom-cb">
-                              <input type="checkbox" [disabled]="service.serviceType != 'website'" id="checkbox-public" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="publicSelected" (change)="publicSelected = !publicSelected">
-                              <label for="checkbox-public" [class.disableCb]="service.serviceType != 'website'"></label>
-                              <div class="cb-status-dets" [class.grey]="service.serviceType != 'website'" >The {{service.serviceType}} should be publicly accessible</div>
-                          </div>
-                      </div>
-                  </section>
-              </div>
-            </div>
-          </li>
-          <li>
-            <div class='det-label'>Security Enabled</div>
-            <div class='det-value'>-</div>
-          </li>
-          <li *ngIf="service.serviceType == 'website'">
-            <div class='det-label'>Cloudfront Enabled</div>
-            <div *ngIf='disp_show2' class="det-value">{{service.create_cloudfront_url}}</div>
-            <div *ngIf='!disp_show2' class='det-value'>
-                <div class="">
-                    <section class="pad-left0">
-                        <div class="input-field-container">
-                            <div class="slack-checkbox custom-cb">
-                                <input type="checkbox" id="checkbox-cdnconfig" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="cdnConfigSelected" (change)="cdnConfigSelected = !cdnConfigSelected">
-                                <label for="checkbox-cdnconfig"></label>
-                                <div class="cb-status-dets">Do you need CDN configured for your website?</div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-          </li>
         </ul>
       </div>
 

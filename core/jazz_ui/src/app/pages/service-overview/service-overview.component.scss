@@ -1184,7 +1184,7 @@ padding-right: 1rem;
 
 .cron-field{
 min-width: 45rem;
-margin-left: -5rem;
+margin-left: -3.5rem;
 }
 .event-schedule-radio{
 width:110%;
@@ -1333,4 +1333,14 @@ left: 59%;
 }
 .s3-fields.arrow_box:after {
 left: 86%;
+}
+.fixed-rate{
+  padding-right:2.5rem;
+}
+.event-schedule-radio{
+  margin-top:-5px;
+  display: flex;
+}
+.no-border{
+  border:none;
 }

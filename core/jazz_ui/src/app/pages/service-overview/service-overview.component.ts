@@ -484,11 +484,7 @@ export class ServiceOverviewComponent implements OnInit {
       if(this.slackChannel_temp != this.service.slackChannel){
         payload["slack_channel"]=this.slackChannel_temp;
       }
-      if((this.selectedApplications.length > 0) && (this.selectedApplications[0].appName != this.initialselectedApplications[0].appName) ){
-        payload["appName"]=this.selectApp.appName;
-        if( this.selectApp.appID )
-          payload["appID"]=this.selectApp.appID.toLowerCase();
-      }
+
 
     }
     this.PutPayload = payload;
