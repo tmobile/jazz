@@ -1,9 +1,5 @@
 input[type="radio"] {
-  // display: none;
   opacity: 0;
-  // &:focus{
-  //     outline-color: #aaaaaa;//border color need to be changed
-  // }
 }
 input[type="radio"] + label {
   color: #000;
