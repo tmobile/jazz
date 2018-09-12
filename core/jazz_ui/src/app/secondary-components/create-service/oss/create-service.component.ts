@@ -83,8 +83,9 @@ export class CreateServiceComponent implements OnInit {
   errMessage: any;
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
-  public buildEnvironment = environment;
-  
+  public buildEnvironment:any = environment;
+  public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
+  public selectedDeploymentTarget = "";
 
   constructor (
     private toasterService: ToasterService,
@@ -302,14 +303,14 @@ export class CreateServiceComponent implements OnInit {
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
       payload["deployment_targets"] = {
-        "api": this.apiDeployment
+        "api": this.selectedDeploymentTarget
       }
     }
     else if(this.typeOfService == 'function'){
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
       payload["deployment_targets"] = {
-        "function": this.functionDeployment
+        "function": this.selectedDeploymentTarget
       }
       if(this.rateExpression.type != 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
@@ -342,7 +343,7 @@ export class CreateServiceComponent implements OnInit {
     } else if(this.typeOfService == 'website'){
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
       payload["deployment_targets"] = {
-        "website": this.websiteDeployment
+        "website": this.selectedDeploymentTarget
       }
     }
 

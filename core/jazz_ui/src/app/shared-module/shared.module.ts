@@ -58,6 +58,7 @@ import {FilterModalComponent} from "../secondary-components/filter-modal/filter-
 import {ServiceMetricsComponent} from "../pages/service-metrics/service-metrics.component";
 import {MetricsCarouselComponent} from "../secondary-components/metrics-carousel/metrics-carousel.component";
 import {RouterModule} from "@angular/router";
+import {RadioCheckboxComponent} from "../primary-components/radio-checkbox/radio-checkbox.component";
 
 let specificComponents:any
 let specificModules: any;
@@ -131,6 +132,7 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    RadioCheckboxComponent,
     ...declarationsArray,
 
 
@@ -175,6 +177,7 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    RadioCheckboxComponent,
     ...declarationsArray
 
   ],
