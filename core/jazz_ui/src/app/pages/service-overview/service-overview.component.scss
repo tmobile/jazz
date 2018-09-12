@@ -1,6 +1,7 @@
-@import './../../../main-styles.scss';
-@import './../service-detail/service-detail.component.scss';
 @import './../../secondary-components/create-service/create-service.component.scss';
+$screen-sm:                  768px !default;
+$screen-md:                  992px !default;
+$screen-lg:                  1200px !default;
 @keyframes blink {
   0% {
     opacity: .2;
@@ -1072,4 +1073,275 @@ section:focus {
 .wrap {
   width: 100%;
   word-break: break-all;
+}
+.wrap{
+  width: 100%;
+  word-break: break-all;
+}
+
+summary{
+display: flex;
+outline:none;
+margin-bottom: 1rem;
+cursor:pointer
+}
+.summary-last-child{
+margin: 2rem 0 1rem 0;
+}
+
+details summary::-webkit-details-marker {
+color: #ed008c;
+font-size: 120%;
+margin:7px 1rem 0 0;
+}
+.metadata-body-border{
+  border-bottom: solid 1px #d7d7d7;
+  padding-bottom:1rem
+}
+
+.service-metadata-wrap{
+padding:2rem;
+}
+
+.metadata-heading-wrap{
+display: flex;
+justify-content: space-between;
+width: 100%;
+.metadata-heading{
+  font-size:1.8rem;
+  font-weight: bold;
+}
+
+.metadata-buttons-wrap{
+  /deep/.btnT-radial-in{
+    margin:0;
+    padding: 0.4rem 1.5rem;
+    border: 1px solid;
+  }
+}
+
+}
+
+.metadata-body{
+display: flex;
+.metadata-column{
+  width:33%;
+}
+
+li{
+  display: flex;
+  margin:1rem;
+}
+}
+.extra-bottom-padding{
+padding-bottom: 4rem;
+}
+.metadata-body-advanced{
+.metadata-row{
+
+}
+ul{
+  display:flex;
+  &:nth-child(1){
+    li{
+      &:nth-child(1){
+        max-width:40%;
+        width:40%;
+      }
+      &:nth-child(2){
+        width:59%;
+      }
+    }
+  }
+}
+li{
+  &:nth-child(1){
+    width:40%;
+  }
+  &:nth-child(2){
+    min-width:40%;
+  }
+  &:nth-child(3){
+    width:20%;
+  }
+  display: flex;
+  margin:1rem;
+  .det-value{
+    position: relative;
+    width:100%;
+  }
+}
+}
+
+.event-schedule-radio{
+display: flex;
+}
+.event-schedule-fields, .aws-event-fields .row {
+margin-left: 4px;
+}
+.pad-left0{
+padding-right: 1rem;
+}
+
+.cron-field{
+min-width: 45rem;
+margin-left: -3.5rem;
+}
+.event-schedule-radio{
+width:110%;
+}
+details{
+position: relative;
+}
+.down-btn-wrap{
+display: flex;
+position: absolute;
+bottom: -1rem;
+right: 1rem;
+padding: 1rem;
+btn-jazz-primary,a{
+  padding:1rem
+}
+a{
+  align-self:center;
+}
+}
+.down-btn-wrap-advanced{
+bottom: -4rem;
+}
+.metadata-body-advanced{
+/deep/.advanced-ul{
+/deep/li{
+  &:nth-child(2){
+    width:20% !important;
+    min-width:20%
+  }
+  &:nth-child(3){
+    width:40%;
+  }
+}
+}
+}
+.warn-msg{
+display:inline-flex;
+border-radius:3px;
+background:#f9ada4;
+padding: 3px 10px;
+margin: 5px;
+div{
+  &:first-child{
+    background:white;
+    border-radius: 50%;
+    padding:3px 10px;
+    margin:5px;
+  }
+  &:last-child{
+    align-self:center;
+  }
+}
+}
+.confirm-overlay{
+padding:1rem;
+position: fixed;
+display: flex;
+width:100%;
+height: 100vh;
+top:0;
+left:0;
+background:rgba(0,0,0,0.3);
+justify-content: center;
+z-index: 1;
+.confirm-overlay-inner-wrap{
+  align-self: center;
+  background:white;
+}
+.overlay-header{
+  text-align: center;
+  padding: 1.5rem;
+  margin: 0rem 2rem;
+  font-weight: bold;
+  font-size: 1.5rem;
+  border-bottom: 1px solid #d3d3d3;
+}
+.overlay-body{
+  padding:4rem 3rem;
+  width: 36rem;
+}
+.overlay-btns{
+  display:flex;
+  justify-content: space-evenly;
+  padding: 0 0 2.5rem 0;
+  a{
+    align-self: center;
+  }
+}
+}
+btn-jazz-primary{
+/deep/button.btn-primary{
+  padding: 7px 23px;
+}
+}
+.selected-applications{
+ul{
+
+}
+li{
+background: none;
+color: #666;
+border: 1px solid #666;
+padding: 4px 2rem 4px 1rem;
+margin:0;
+.icon-icon-close{
+  top:4px !important;
+}
+.icon-icon-close:before {
+  color:#ed008c;
+}
+}
+input{
+width:70%;
+border: none;
+border-bottom: 1px solid #ccc;
+height: 20px !important ;
+margin:0;
+text-overflow: ellipsis;
+}
+}
+.slack-relative{
+position: relative;
+input{
+  width:auto;
+}
+img{
+  right:-15px;
+}
+}
+.loader-confirmation{
+width: 36rem;
+
+}
+.loading-row-confirm{
+display: flex;
+align-items: center;
+padding:4rem 3rem;
+}
+.dynamodb-fields.arrow_box:after {
+left: 32%;
+}
+
+.kinesis-fields.arrow_box:after {
+left: 59%;
+}
+.s3-fields.arrow_box:after {
+left: 86%;
+}
+.fixed-rate{
+  padding-right:2.5rem;
+}
+.event-schedule-radio{
+  margin-top:-5px;
+  display: flex;
+}
+.no-border{
+  border:none;
 }
