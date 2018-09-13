@@ -1,0 +1,46 @@
+.radio-group {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.service-box {
+  text-align:center;
+  border-radius: 5px;
+  border: 1px solid #cccccc;
+  padding: 2rem 0;
+  min-height: 120px;
+  width: 137px;
+  cursor: pointer;
+  &:active {
+    border-color: #ed008c;
+  }
+}
+
+.service-box-label {
+  padding-top: 1rem;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 0.7px;
+  color: #cccccc;
+}
+
+.service-box-icon {
+  font-size: 40px;
+  color: #cccccc !important;
+}
+
+.option-active {
+  color: #ed008c;
+  border: 2px solid #ed008c;
+  .service-box-icon {
+    color: #ed008c !important;
+  }
+  .service-box-label {
+    color: #ed008c !important;
+  }
+}

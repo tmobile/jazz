@@ -1,17 +1,36 @@
 .jz-btn {
   display: inline;
-  border-radius: $border-radius-default;
+  border-radius: 100px;
   line-height: 1;
   cursor: pointer;
   box-shadow: none;
   border: none;
   outline: none;
+  padding: 0 15px;
+  height: 32px;
+  font-weight: bold;
+  font-size: 12px;
+  min-width: 120px;
+}
+
+.jz-btn-sm {
+  height: 24px;
+  padding: 0 20px;
+  font-size: 12px;
+  min-width: 90px;
+}
+
+.jz-btn-lg {
+  height: 48px;
+  padding: 0 20px;
+  min-width: 180px;
+  font-size: 16px;
 }
 
 .jz-btn-primary {
   color: white;
   background-color: $color-pink-primary;
-  border:1px solid $color-pink-primary;
+  border: 1px solid $color-pink-primary;
   transition: .3s ease-in-out;
   &:hover {
     color: $color-pink-primary;
@@ -19,14 +38,14 @@
   }
 }
 
-.jz-btn-inverse{
+.jz-btn-inverse {
   color: $color-pink-primary;
   border: 1px solid $color-pink-primary;
   background-color: white;
   &:hover {
     color: white;
     background-color: $color-pink-primary;
-    border:1px solid $color-pink-primary;
+    border: 1px solid $color-pink-primary;
   }
 }
 

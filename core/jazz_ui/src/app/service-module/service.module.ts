@@ -3,8 +3,6 @@ import {RouterModule} from '@angular/router';
 import {environment} from '../../environments/environment';
 import {routes} from './service.route';
 import {AdvancedFilterService} from '../advanced-filter.service';
-import {CreateServiceCustomFormComponent} from "../secondary-components/create-service-custom-form/create-service-custom-form.component";
-import {CreateServiceComponent} from "../secondary-components/create-service/create-service.component";
 import {BarGraphComponent} from "../secondary-components/bar-graph/bar-graph.component";
 import {AmountComponent} from "../primary-components/amount/amount.component";
 import {ServicesComponent} from "../pages/services/services.component";
@@ -26,6 +24,7 @@ import {SharedModule} from "../shared-module/shared.module";
 import {FormsModule} from "@angular/forms";
 import {EnvironmentModule} from "../environment-module/environment.module";
 import {CommonModule} from "@angular/common";
+import {CreateServiceModule} from "../create-service/create-service.module";
 
 
 @NgModule({
@@ -40,12 +39,11 @@ import {CommonModule} from "@angular/common";
     IonRangeSliderModule,
     SharedModule,
     FormsModule,
-    EnvironmentModule
+    EnvironmentModule,
+    CreateServiceModule
   ],
   providers: [AdvancedFilterService],
   declarations: [
-    CreateServiceCustomFormComponent,
-    CreateServiceComponent,
     BarGraphComponent,
     AmountComponent,
     ServicesComponent,

@@ -1,0 +1,108 @@
+<jazz-mob-header (backClick)='closeCreateService(serviceRequestSuccess)'
+                 class='show-for-mobile'
+                 [icon]="'notification'"
+                 [headText]="'Create a Service'"
+                 [status]="'none'"></jazz-mob-header>
+
+<div class="create-service-menu"
+     (click)="closeDropdowns()"
+     [ngClass]="isLoading ? 'body-fix':'body-auto'">
+  <section class="create-service-header hide-for-mobile">
+    <h4 class="jz-bold-title">
+      Create a Service
+    </h4>
+    <div (click)="closeCreateService(serviceRequestSuccess)" class="icon-icon-close"></div>
+
+  </section>
+  <create-service-row [title]="'Choose the type of service you want to create'" [required]="true">
+    <radio-panels [(selected)]="createServiceForm.type" [options]="serviceTypeOptions"></radio-panels>
+  </create-service-row>
+  <create-service-row [title]="'Choose your platform you would like to use'" [required]="true">
+    <radio-panels [(selected)]="createServiceForm.platform"
+                  [options]="platformOptions"></radio-panels>
+  </create-service-row>
+  <create-service-row [title]="'Choose your runtime'" [required]="true">
+    <radio-checkbox [(selected)]="createServiceForm.runtime"
+                    [options]="runtimeOptions"></radio-checkbox>
+  </create-service-row>
+  <create-service-row [title]="'Service Name'" [required]="true">
+    <input type="text" class="jz-cs-textbox">
+    <div [ngSwitch]="serviceNameError">
+      <p *ngSwitchCase="'available'">
+        Service name is available !
+      </p>
+      <p *ngSwitchCase="'available-in-namespace'">
+        Service name in the specified namespace is available!
+      </p>
+      <p *ngSwitchCase="'invalid-character'">
+        Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
+      </p>
+      <p *ngSwitchCase="'unavailable'">
+        Service name in the specified namespace is not available. Please try another combination of namespace &
+        service name.
+      </p>
+      <p *ngSwitchCase="'unavailable-in-namespace'">
+        Service name in the specified namespace is not available. Please try another combination of namespace &
+        service name.
+      </p>
+      <p *ngSwitchCase="'start-end-hyphen'">
+        Service name should not start or end with hyphens
+      </p>
+    </div>
+  </create-service-row>
+  <create-service-row [title]="'Namespace'">
+    <input type="text" class="jz-cs-textbox">
+    <div [ngSwitch]="namespaceError">
+      <p *ngSwitchCase="'invalid'">
+        Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
+      </p>
+      <p *ngSwitchCase="'hyphens'">
+        Namespace should not start or
+        end with hyphens
+      </p>
+    </div>
+  </create-service-row>
+  <create-service-row [title]="'Description'">
+    <textarea class="jz-cs-textbox"></textarea>
+  </create-service-row>
+  <create-service-row [title]="'Slack Channel Integration'">
+    <square-checkbox [(value)]="createServiceForm.slackIntegration">
+      Do you want us to notify you through slack?
+    </square-checkbox>
+  </create-service-row>
+  <create-service-row [title]="'Cache Time-to-Live (TTL)'">
+    <square-checkbox [value]="createServiceForm.cacheTTL">Yes, I want to enable caching</square-checkbox>
+    <input type="number" class="jz-cs-textbox" placeholder="Enter time in seconds">
+    <p>Maximum TTL is 3600 seconds.</p>
+  </create-service-row>
+  <create-service-row [title]="'CDN Configuration'">
+    <square-checkbox [(value)]="createServiceForm.cdnConfigured">
+      Do you need CDN configured for your website?
+    </square-checkbox>
+  </create-service-row>
+  <create-service-row [title]="'Events'">
+    <radio-checkbox [(selected)]="rateExpression.type"
+                    [options]="eventScheduleOptions"></radio-checkbox>
+    <create-service-event-schedule [type]="rateExpression.type"></create-service-event-schedule>
+  </create-service-row>
+  <create-service-row [title]="'AWS Events'">
+    <radio-checkbox [(selected)]="eventExpression.type"
+                    [options]="awsEventsOptions"></radio-checkbox>
+    <create-service-aws-events [type]="eventExpression.type"></create-service-aws-events>
+  </create-service-row>
+  <div class="requiredInfo">
+    <span class="jz-error">*</span>
+    Indicates required fields
+  </div>
+  <div class="submit-form">
+    <div>
+      <button class="jz-btn jz-btn-primary">SUBMIT</button>
+    </div>
+    <div>
+      <button class="jz-btn jz-btn-primary jz-btn-sm">SMALL</button>
+    </div>
+    <div>
+      <button class="jz-btn jz-btn-primary jz-btn-lg">LARGE</button>
+    </div>
+  </div>
+</div>

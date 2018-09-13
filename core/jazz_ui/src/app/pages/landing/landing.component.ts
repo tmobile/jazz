@@ -122,7 +122,7 @@ export class LandingComponent implements OnInit {
             this.buttonText = "GET STARTED NOW";
         }
          if(this.authenticationservice.isLoggedIn() && this.router.url == "/"){
-            this.router.navigateByUrl('/services');
+            // this.router.navigateByUrl('/services');
         }
         
         var scroll_flag = this.cache.get('scroll_flag');

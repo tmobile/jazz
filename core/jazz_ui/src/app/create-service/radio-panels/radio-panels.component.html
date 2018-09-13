@@ -1,0 +1,14 @@
+<div class="radio-group">
+  <div class="radio-container"
+       *ngFor="let option of options">
+
+    <div class="service-box"
+         [class.option-active]="selected === option.value"
+         (click)="select(option.value)">
+      <div class="service-box-icon"
+           [ngClass]="option.icon"></div>
+      <div class="service-box-label">{{option.label}}</div>
+    </div>
+
+  </div>
+</div>

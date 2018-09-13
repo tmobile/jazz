@@ -3,3 +3,28 @@
   font-size: 1rem;
   color: $color-gray-tertiary;
 }
+
+.jz-bold-title  {
+  font-size: 27px;
+  font-weight: 900;
+  color: #555555;
+}
+
+.jz-step-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: bold;
+  color: #222222;
+  padding-bottom: 16px;
+}
+
+.jz-step-details {
+  font-size: 11px;
+  color: #555555;
+  width: 60%;
+  min-width: 180px;
+}
+
+.jz-error {
+  color: $color-red !important
+}
