@@ -126,7 +126,7 @@
       }
     },
     "gcp": {
-      "apigee": {
+      "apigee_proxy": {
         "metrics": [{
           "Label": "Requests",
           "MetricName": "message_count",
