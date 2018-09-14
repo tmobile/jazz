@@ -282,7 +282,7 @@ node() {
 								}
 
 								def apiArns = getAPIGatewayResourceARNs(aws_api_id, environment_logical_id)
-								if(apiArns) {
+								if (apiArns) {
 									for (arn in apiArns) {
 										events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
 									}
@@ -302,33 +302,32 @@ node() {
 								break;
 							default:
 								error "Deployment targets are not defined"
+						}
 
-              if (domain != "jazz") {
-                createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
-              }
+            if (domain != "jazz") {
+              createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
+            }
 
-              updateApiDocUrl(current_environment)
-              sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
-              echo "completed deployment........."
+            updateApiDocUrl(current_environment)
+            sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
+            echo "completed deployment........."
 
-              swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
+            swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
 
-              def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
-              send_status_email(config, 'COMPLETED', svc_status)
-
-					  }
+            def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
+            send_status_email(config, 'COMPLETED', svc_status)
 
             if (domain && domain == "jazz") {
-              serviceConfigdata.setLogStreamPermission(config)
+                serviceConfigdata.setLogStreamPermission(config)
             }
 				  }
 			  }
       } catch (ex) {
-				if (api_deployment_target == 'aws_apigateway') {
-					events.sendFailureEvent('DEPLOY_TO_AWS_APIGATEWAY', ex.getMessage(), context_map, environment_logical_id)
-          events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+			    if (api_deployment_target == 'aws_apigateway') {
+					  events.sendFailureEvent('DEPLOY_TO_AWS_APIGATEWAY', ex.getMessage(), context_map, environment_logical_id)
+            events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 				} else if (api_deployment_target == 'gcp_apigee') {
-					events.sendFailureEvent('DEPLOY_TO_GCP_APIGEE', ex.getMessage(), context_map, environment_logical_id)
+					  events.sendFailureEvent('DEPLOY_TO_GCP_APIGEE', ex.getMessage(), context_map, environment_logical_id)
 				}
 				events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -339,11 +338,11 @@ node() {
 
 			env_metadata["AWS_API_ID"] = aws_api_id
       if (api_deployment_target == 'aws_apigateway') {
-        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
-        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
       } else if (api_deployment_target == 'gcp_apigee') {
-        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", swaggerDocUrl, "swagger_url", config), environment_logical_id);
-        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", endpointUrl, "endpoint_url", config), environment_logical_id);
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", swaggerDocUrl, "swagger_url", config), environment_logical_id);
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", endpointUrl, "endpoint_url", config), environment_logical_id);
       }
 			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, env_metadata), environment_logical_id)
 			events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
