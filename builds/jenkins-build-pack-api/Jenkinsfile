@@ -282,7 +282,7 @@ node() {
 								}
 
 								def apiArns = getAPIGatewayResourceARNs(aws_api_id, environment_logical_id)
-								if(apiArns) {
+								if (apiArns) {
 									for (arn in apiArns) {
 										events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
 									}
