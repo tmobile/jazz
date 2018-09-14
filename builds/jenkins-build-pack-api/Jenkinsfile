@@ -217,7 +217,7 @@ node() {
 			if (env_metadata["AWS_API_ID"] != null) {
 				aws_api_id = env_metadata["AWS_API_ID"]
 			}
-            def swaggerDocUrl=""
+      def swaggerDocUrl=""
 
 			try {
 
@@ -324,10 +324,10 @@ node() {
 			  }
       } catch (ex) {
 			    if (api_deployment_target == 'aws_apigateway') {
-					events.sendFailureEvent('DEPLOY_TO_AWS_APIGATEWAY', ex.getMessage(), context_map, environment_logical_id)
-                    events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+					  events.sendFailureEvent('DEPLOY_TO_AWS_APIGATEWAY', ex.getMessage(), context_map, environment_logical_id)
+            events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 				} else if (api_deployment_target == 'gcp_apigee') {
-					events.sendFailureEvent('DEPLOY_TO_GCP_APIGEE', ex.getMessage(), context_map, environment_logical_id)
+					  events.sendFailureEvent('DEPLOY_TO_GCP_APIGEE', ex.getMessage(), context_map, environment_logical_id)
 				}
 				events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
