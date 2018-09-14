@@ -111,7 +111,14 @@ export class ServiceDetailComponent implements OnInit {
         slackChannel: service.slack_channel,
         repository: service.repository,
         tags: service.tags,
-        endpoints: service.endpoints
+        endpoints: service.endpoints,
+        is_public_endpoint:service.is_public_endpoint,
+        create_cloudfront_url:service.metadata.create_cloudfront_url,
+        eventScheduleRate:service.metadata.eventScheduleRate,
+        event_source_dynamodb:service.metadata.event_source_dynamodb,
+        event_source_kinesis:service.metadata.event_source_kinesis,
+        event_source_s3:service.metadata.event_source_s3,
+        created_by:service.created_by
       };
     }
   };

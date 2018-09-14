@@ -15,7 +15,8 @@ import { ServiceDetailComponent } from '../service-detail/service-detail.compone
 import { environment } from './../../../environments/environment';
 import {  environment as env_internal } from './../../../environments/environment.internal';
 import { environment as env_oss } from './../../../environments/environment.oss';
-
+import { ServiceFormData, RateExpression, CronObject, EventExpression } from './../../secondary-components/create-service/service-form-data';
+import { CronParserService } from '../../core/helpers';
 
 declare var $: any;
 
@@ -46,7 +47,8 @@ export class ServiceOverviewComponent implements OnInit {
   hide_email_error: boolean = true;
   hide_slack_error: boolean = true;
   service_error: boolean = true;
-  disp_show: boolean = false;
+  disp_show:boolean = true;
+  disp_show2:boolean = true;
   err404: boolean = false;
   disable_button: boolean = false;
   email_valid: boolean;
@@ -65,7 +67,6 @@ export class ServiceOverviewComponent implements OnInit {
   runtime_empty: boolean = false;
   tags_empty: boolean;
   ErrEnv: boolean = false;
-
   accounts = env_internal.urls.accounts;
   regions = env_internal.urls.regions;
   errMessage = ''
@@ -125,13 +126,29 @@ export class ServiceOverviewComponent implements OnInit {
   showbar: boolean = false;
   friendly_name: any;
   list: any = {};
-
+  publicSelected: boolean = this.service.is_public_endpoint;
+  publicInitial: boolean = this.service.is_public_endpoint;
+  cdnConfigSelected: boolean = this.service.create_cloudfront_url;
+  cdnConfigInitial: boolean = this.service.create_cloudfront_url;
+  saveClicked:boolean = false;
+  advancedSaveClicked:boolean = false;
+  isSlackAvailable:boolean = true;
+  isPUTLoading:boolean = false;
+  PutPayload:any;
+  isPayloadAvailable:boolean = false;
+  selected: string = "Minutes";
+  eventSchedule: string = 'fixedRate';
+  cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
+  eventExpression = new EventExpression("awsEventsNone", undefined, undefined, undefined, undefined);
+  viewMode:boolean = true;
+  cronFieldValidity: any;
 
   constructor(
-
     private router: Router,
     private request: RequestService,
     private messageservice: MessageService,
+    private cronParserService: CronParserService,
     private cache: DataCacheService,
     private toasterService: ToasterService,
     private serviceDetail: ServiceDetailComponent,
@@ -156,77 +173,7 @@ export class ServiceOverviewComponent implements OnInit {
   prodEnv: any;
   stgEnv: any;
   status: string = this.service.status;
-  environments = [{
-      stageDisp: 'PROD',
-      stage: 'prd',
-      serviceHealth: 'NA',
-      lastSuccess: {},
-      lastError: {
-        value: 'NA',
-        // unit: 'Days'
-      },
-      deploymentsCount: {
-        'value': 'NA',
-        'duration': 'Last 24 hours'
-      },
-      cost: {
-        'value': 'NA',
-        'duration': 'Per Day',
-        // 'status': 'good'
-      },
-      codeQuality: {
-        'value': 'NA',
-        // 'status': 'bad'
-      }
-    },
-    {
-      stageDisp: 'STAGE',
-      stage: 'stg',
-      serviceHealth: 'NA',
-      lastSuccess: {
-        value: 'NA',
-        // unit: 'Days'
-      },
-      lastError: {},
-      deploymentsCount: {
-        'value': 'NA',
-        'duration': 'Last 24 hours'
-      },
-      cost: {
-        'value': 'NA',
-        'duration': 'Per Day',
-        // 'status': 'good'
-      },
-      codeQuality: {
-        'value': 'NA',
-        // 'status': 'good'
-      }
-    }
 
-  ];
-
-  branches = [{
-      title: 'DEV',
-      stage: 'dev'
-    },
-    {
-      title: 'BRANCH1',
-      stage: 'dev'
-    },
-    {
-      title: 'BRANCH2',
-      stage: 'dev'
-    },
-    {
-      title: 'BRANCH3',
-      stage: 'dev'
-    },
-    {
-      title: 'BRANCH4',
-      stage: 'dev'
-    },
-
-  ];
   copy_link(id) {
     var element = null; // Should be <textarea> or <input>
     element = document.getElementById(id);
@@ -241,8 +188,6 @@ export class ServiceOverviewComponent implements OnInit {
       document.getSelection().removeAllRanges;
     }
   }
-
-
   openLink(link) {
     if (link) {
       window.open(link, "_blank");
@@ -256,6 +201,7 @@ export class ServiceOverviewComponent implements OnInit {
     this.router.navigateByUrl(url);
 
   }
+
   ValidURL(str) {
     var regex = /(http|https):\/\/(\w+:{0,1}\w*)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/;
     if (!regex.test(str)) {
@@ -268,13 +214,14 @@ export class ServiceOverviewComponent implements OnInit {
   showService(s) {
 
   }
-  loadPlaceholders() {
 
+  loadPlaceholders() {
     if (this.service.tags != undefined) this.tags_temp = this.service.tags.join();
     this.desc_temp = this.service.description;
     this.email_temp = this.service.email;
     this.slackChannel_temp = this.service.slackChannel;
   }
+
   updateTags() {
     var payloag_tags;
     payloag_tags = this.tags_temp.split(',');
@@ -289,71 +236,213 @@ export class ServiceOverviewComponent implements OnInit {
     this.open_sidebar.emit(true);
 
   }
-  onEditClick() {
 
+  private isCronObjValid(cronObj) {
+    var cronValidity = this.cronParserService.validateCron(cronObj);
+    this.cronFieldValidity = cronValidity;
+    if (cronValidity.isValid === true) {
+      return true;
+    }
+    return false;
+  };
 
-    var email_temporary = this.email_temp;
-    var slack_temporary = this.slackChannel_temp;
-    this.check_empty_fields();
-    if (this.service.status && this.service.status != 'deletion_completed' && this.service.status != 'deletion_started') {};
-    if (!this.disp_show) { //set edit view to true ---> switch to edit mode
-      this.disp_edit = false;
-      this.disp_show = true;
-      this.edit_save = 'SAVE';
-      this.showCancel = true;
-      this.loadPlaceholders();
+  generateExpression(rateExpression) {
+    if (this.rateExpression !== undefined) {
+      this.rateExpression.error = undefined;
+    }
+    if (rateExpression === undefined || rateExpression['type'] === 'none') {
+      this.rateExpression.isValid = undefined;
+    } else if (rateExpression['type'] == 'rate') {
+      var duration, interval;
+      duration = rateExpression['duration'];
+      interval = rateExpression['interval'];
 
-    } else { //set display view to true ---> save and switch to view mode
-      this.isLoadingService = true;
-      this.check_email_valid()
-      this.validateChannelName();
+      if (duration === undefined || duration === null || duration <= 0) {
+        this.rateExpression.isValid = false;
+        this.rateExpression.error = 'Please enter a valid duration';
+      } else {
+        if (interval == 'Minutes') {
+          this.cronObj = new CronObject(('0/' + duration), '*', '*', '*', '?', '*');
+        } else if (interval == 'Hours') {
+          this.cronObj = new CronObject('0', ('0/' + duration), '*', '*', '?', '*');
+        } else if (interval == 'Days') {
+          this.cronObj = new CronObject('0', '0', ('1/' + duration), '*', '?', '*');
+        }
+        this.rateExpression.isValid = true;
+        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+      }
+    } else if (rateExpression['type'] == 'cron') {
+      var cronExpression;
+      var cronObj = this.cronObj;
+      var cronObjFields = this.cronParserService.cronObjFields;
+      var _isCronObjValid = this.isCronObjValid(cronObj)
 
-      this.http.put('/jazz/services/' + this.service.id, this.update_payload)
-        .subscribe(
-          (Response) => {
+      if (_isCronObjValid === false) {
+        this.rateExpression.isValid = false;
+        this.rateExpression.error = 'Please enter a valid cron expression';
+      } else {
+        this.rateExpression.isValid = true;
+        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+      }
+    }
 
-            this.service.description = this.desc_temp;
-            this.service.tags = this.tags_temp.split(',');
-            var this2 = this;
-            this.service.tags.forEach(function (item, index) {
-              this2.service.tags[index] = item.trim();
-            });
-            this.service.email = email_temporary;
-            this.service.slackChannel = slack_temporary;
-
-            this.isLoadingService = false;
-            this.disp_edit = true;
-            this.showCancel = false;
-            this.disp_show = false;
-            this.edit_save = 'EDIT';
-            let successMessage = this.toastmessage.successMessage(Response, "updateService");
-            this.toast_pop('success', "", "Data for service: " + this.service.name + " " + successMessage);
-            this.check_empty_fields();
-          },
-          (Error) => {
-            this.isLoadingService = false;
-            this.disp_edit = false;
-            this.disp_show = true;
-            this.edit_save = 'SAVE';
-            let errorMessage = this.toastmessage.errorMessage(Error, "updateService");
-            this.toast_pop('error', 'Oops!', errorMessage)
-          });
+    if (this.rateExpression.isValid === undefined) {
+      return undefined;
+    } else if (this.rateExpression.isValid === false) {
+      return 'invalid';
+    } else if (this.rateExpression.isValid === true) {
+      return this.rateExpression.cronStr;
     }
   }
 
-  onCancelClick() {
-    this.update_payload = {};
-    this.disp_edit = true;
-    this.disp_show = false;
-    this.edit_save = 'EDIT';
-    this.showCancel = false;
-    this.hide_email_error = true;
-    this.hide_slack_error = true;
-    if (this.subscription != undefined)
-      this.subscription.unsubscribe();
-    this.show_loader = false;
-    this.disableSaveBtn();
+  onEditClick(){
+    this.loadPlaceholders();
+    this.disp_show=false;
   }
+
+  onEditClickAdvanced(){
+    this.disp_show2=false;
+    this.publicSelected = this.publicInitial;
+    this.cdnConfigSelected = this.cdnConfigInitial;
+
+  }
+
+  onCompleteClick(){
+    this.isPUTLoading = true;
+    this.http.put('/jazz/services/'+this.service.id,this.PutPayload)
+        .subscribe(
+            (Response)=>{
+              // debugger
+              this.isPUTLoading = false;
+              this.disp_show = true;
+              this.isLoadingService = true;
+              this.serviceDetail.onDataFetched(Response.data.updatedService);
+              this.isLoadingService = false;
+              this.loadPlaceholders()
+              this.disp_show=true;
+              this.saveClicked = false;
+              let successMessage = this.toastmessage.successMessage(Response,"updateService");
+              this.toast_pop('success',"", "Data for service: "+this.service.name +" "+successMessage);
+            },
+            (Error)=>{
+                this.isLoadingService=false;
+                this.isPUTLoading = false;
+                this.disp_show=true;
+                this.saveClicked = false;
+                this.edit_save='SAVE';
+                let errorMessage = this.toastmessage.errorMessage(Error,"updateService");
+                this.toast_pop('error', 'Oops!', errorMessage)
+                // this.toast_pop('error','Oops!', "Data cannot be updated. Service Error.");
+            });
+
+
+  }
+
+  onAdvancedSaveClick(){
+    this.saveClicked = false;
+    this.advancedSaveClicked = true;
+    let payload = {};
+
+    if( this.advancedSaveClicked){
+      if (this.rateExpression.type != 'none') {
+        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+        if (this.rateExpression.cronStr == 'invalid') {
+          return;
+        } else if (this.rateExpression.cronStr !== undefined) {
+          payload["rateExpression"] = this.rateExpression.cronStr;
+        }
+      }
+
+      if (this.eventExpression.type !== "awsEventsNone") {
+        var event = {};
+        event["type"] = this.eventExpression.type;
+        if (this.eventExpression.type === "dynamodb") {
+          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":table/" + this.eventExpression.dynamoTable;
+          event["action"] = "PutItem";
+        } else if (this.eventExpression.type === "kinesis") {
+          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":stream/" + this.eventExpression.streamARN;
+          event["action"] = "PutRecord";
+        } else if (this.eventExpression.type === "s3") {
+          event["source"] = this.eventExpression.S3BucketName;
+          event["action"] = "s3:ObjectCreated:*";
+        }
+        payload["events"] = [];
+        payload["events"].push(event);
+      }
+
+      if(this.publicSelected !== this.publicInitial){
+        payload["is_public_endpoint"] = this.publicSelected;
+      }
+      if(this.cdnConfigSelected !== this.cdnConfigInitial){
+        payload["create_cloudfront_url"] = this.cdnConfigSelected;
+      }
+
+    }
+    this.PutPayload = payload;
+    if(Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
+  }
+
+  onSaveClick(){
+    this.saveClicked = true;
+    this.advancedSaveClicked = false;
+
+    let payload = {};
+    if( this.saveClicked ){
+      if(this.desc_temp != this.service.description){
+        payload["description"]=this.desc_temp;
+      }
+      if(this.slackChannel_temp != this.service.slackChannel){
+        payload["slack_channel"]=this.slackChannel_temp;
+      }
+
+
+    }
+    this.PutPayload = payload;
+    if(Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
+
+  }
+
+  onCancelClick()
+  {
+      this.update_payload={};
+      this.disp_show=true;
+      this.disp_show2=true;
+      this.edit_save='EDIT';
+      this.showCancel=false;
+      this.hide_email_error= true;
+      this.hide_slack_error = true;
+      if(this.subscription!=undefined)
+      this.subscription.unsubscribe();
+      this.show_loader=false;
+      this.disableSaveBtn();
+  }
+
+  onEventScheduleChange(val) {
+    this.rateExpression.type = val;
+  }
+  onAWSEventChange(val) {
+    this.eventExpression.type = val;
+  }
+
+  public focusDynamo = new EventEmitter<boolean>();
+  public focusKinesis = new EventEmitter<boolean>();
+  public focusS3 = new EventEmitter<boolean>();
+
+  chkDynamodb() {
+    this.focusDynamo.emit(true);
+    return this.eventExpression.type === 'dynamodb';
+  }
+
+  chkfrKinesis() {
+    this.focusKinesis.emit(true);
+    return this.eventExpression.type === 'kinesis';
+  }
+
+  chkS3() {
+    this.focusS3.emit(true);
+    return this.eventExpression.type === 's3';
+  }
+
   toast_pop(error, oops, errorMessage) {
     var tst = document.getElementById('toast-container');
     tst.classList.add('toaster-anim');
@@ -374,6 +463,7 @@ export class ServiceOverviewComponent implements OnInit {
     }
 
   }
+
   checkSlackNameAvailability() {
 
     this.validateChannelName();
@@ -401,10 +491,7 @@ export class ServiceOverviewComponent implements OnInit {
 
   }
 
-
   public validateChannelName() {
-
-
     this.show_loader = true;
     if (this.slackChannel_temp == '' || this.slackChannel_temp == null) {
 
@@ -590,6 +677,7 @@ export class ServiceOverviewComponent implements OnInit {
         }
       )
   }
+
   modifyEnvArr() {
     var j = 0;
     var k = 2;
@@ -666,6 +754,7 @@ export class ServiceOverviewComponent implements OnInit {
 
 
   }
+
   getenvData() {
     this.isenvLoading = true;
     this.ErrEnv = false;
@@ -708,6 +797,7 @@ export class ServiceOverviewComponent implements OnInit {
 
       })
   };
+
   getTime() {
     var now = new Date();
     this.errorTime = ((now.getMonth() + 1) + '/' + (now.getDate()) + '/' + now.getFullYear() + " " + now.getHours() + ':' +
@@ -728,6 +818,7 @@ export class ServiceOverviewComponent implements OnInit {
   isLoading: boolean = false;
   sjson: any = {};
   djson: any = {};
+
   reportIssue() {
 
     this.json = {
@@ -756,7 +847,9 @@ export class ServiceOverviewComponent implements OnInit {
     this.isLoading = false;
     this.buttonText = 'SUBMIT';
   }
+
   reportEmail: string;
+
   mailTo() {
     location.href = 'mailto:' + this.reportEmail + '?subject=Jazz : Issue reported by' + " " + this.authenticationservice.getUserId() + '&body=' + this.sjson;
   }
@@ -816,9 +909,12 @@ export class ServiceOverviewComponent implements OnInit {
       }
     );
   }
+
   frndload(event) {}
+
   is_multi_env: boolean = false;
   SlackEnabled:boolean = false;
+
   ngOnInit() {
     if(env_oss.slack_support) this.SlackEnabled=true;
     if (environment.envName == 'oss')
@@ -888,6 +984,7 @@ export class ServiceOverviewComponent implements OnInit {
 
 
   internal_build: boolean = true;
+
   ngOnChanges(x: any) {
     if (environment.multi_env) this.is_multi_env = true;
     if (environment.envName == 'oss') this.internal_build = false;
@@ -897,7 +994,7 @@ export class ServiceOverviewComponent implements OnInit {
 
     this.prodEnv = {};
     this.stgEnv = {};
-    
+
 
 
 
@@ -946,6 +1043,7 @@ export class ServiceOverviewComponent implements OnInit {
       this.serviceDeletionStatus();
     }
   }
+
   ngOnDestroy() {
     //unsubscribe  request status api call
     if ((this.service.status === 'creation started' || this.service.status === 'deletion started') && this.intervalSubscription) {
