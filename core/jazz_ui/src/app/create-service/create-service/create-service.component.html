@@ -21,49 +21,55 @@
     <radio-panels [(selected)]="createServiceForm.platform"
                   [options]="platformOptions"></radio-panels>
   </create-service-row>
-  <create-service-row [title]="'Choose your runtime'" [required]="true">
+  <create-service-row [title]="'Choose your runtime'"
+                      [type]="createServiceForm.type" [serviceTypes]="'api function'" [required]="true">
     <radio-checkbox [(selected)]="createServiceForm.runtime"
                     [options]="runtimeOptions"></radio-checkbox>
   </create-service-row>
   <create-service-row [title]="'Service Name'" [required]="true">
-    <input type="text" class="jz-cs-textbox">
-    <div [ngSwitch]="serviceNameError">
-      <p *ngSwitchCase="'available'">
-        Service name is available !
-      </p>
-      <p *ngSwitchCase="'available-in-namespace'">
-        Service name in the specified namespace is available!
-      </p>
-      <p *ngSwitchCase="'invalid-character'">
-        Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
-      </p>
-      <p *ngSwitchCase="'unavailable'">
-        Service name in the specified namespace is not available. Please try another combination of namespace &
-        service name.
-      </p>
-      <p *ngSwitchCase="'unavailable-in-namespace'">
-        Service name in the specified namespace is not available. Please try another combination of namespace &
-        service name.
-      </p>
-      <p *ngSwitchCase="'start-end-hyphen'">
-        Service name should not start or end with hyphens
-      </p>
+    <div class="jz-relative">
+      <input type="text" class="jz-input"
+             [attr.data-state]="serviceNameMessage"
+             [(ngModel)]="createServiceForm.serviceName"
+             (blur)="validateServiceName($event)">
+
+      <img *ngIf="availabilityLoader" class="jz-input-loader" src="../assets/images/icons/loading.png">
+      <div [ngSwitch]="serviceNameMessage" class="ja-input-message">
+        <p *ngSwitchCase="'valid-available'" class="jz-success">
+          Service name in the specified namespace is available!
+        </p>
+        <p *ngSwitchCase="'invalid-character'" class="jz-error">
+          Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
+        </p>
+        <p *ngSwitchCase="'invalid-unavailable'" class="jz-error">
+          Service name in the specified namespace is not available. Please try another combination of namespace &
+          service name.
+        </p>
+        <p *ngSwitchCase="'invalid-hyphens'" class="jz-error">
+          Service name should not start or end with hyphens
+        </p>
+      </div>
     </div>
   </create-service-row>
   <create-service-row [title]="'Namespace'">
-    <input type="text" class="jz-cs-textbox">
-    <div [ngSwitch]="namespaceError">
-      <p *ngSwitchCase="'invalid'">
-        Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
-      </p>
-      <p *ngSwitchCase="'hyphens'">
-        Namespace should not start or
-        end with hyphens
-      </p>
+    <div class="jz-relative">
+      <input type="text" class="jz-input"
+             [attr.data-state]="namespaceMessage"
+             [(ngModel)]="createServiceForm.namespace"
+             (blur)="validateNamespace($event)">
+      <img *ngIf="availabilityLoader" class="jz-input-loader" src="../assets/images/icons/loading.png">
+      <div [ngSwitch]="namespaceMessage" class="jz-input-message">
+        <p *ngSwitchCase="'invalid-character'" class="jz-error">
+          Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
+        </p>
+        <p *ngSwitchCase="'invalid-hyphens'" class="jz-error">
+          Namespace should not start or end with hyphens
+        </p>
+      </div>
     </div>
   </create-service-row>
   <create-service-row [title]="'Description'">
-    <textarea class="jz-cs-textbox"></textarea>
+    <textarea class="jz-input"></textarea>
   </create-service-row>
   <create-service-row [title]="'Slack Channel Integration'">
     <square-checkbox [(value)]="createServiceForm.slackIntegration">
@@ -71,8 +77,9 @@
     </square-checkbox>
   </create-service-row>
   <create-service-row [title]="'Cache Time-to-Live (TTL)'">
-    <square-checkbox [value]="createServiceForm.cacheTTL">Yes, I want to enable caching</square-checkbox>
-    <input type="number" class="jz-cs-textbox" placeholder="Enter time in seconds">
+    <square-checkbox [disabled]="true" [value]="createServiceForm.cacheTTL">Yes, I want to enable caching
+    </square-checkbox>
+    <input type="number" class="jz-input" placeholder="Enter time in seconds">
     <p>Maximum TTL is 3600 seconds.</p>
   </create-service-row>
   <create-service-row [title]="'CDN Configuration'">
@@ -95,14 +102,6 @@
     Indicates required fields
   </div>
   <div class="submit-form">
-    <div>
-      <button class="jz-btn jz-btn-primary">SUBMIT</button>
-    </div>
-    <div>
-      <button class="jz-btn jz-btn-primary jz-btn-sm">SMALL</button>
-    </div>
-    <div>
-      <button class="jz-btn jz-btn-primary jz-btn-lg">LARGE</button>
-    </div>
+    <button class="jz-btn jz-btn-pink jz-btn-lg">SUBMIT</button>
   </div>
 </div>

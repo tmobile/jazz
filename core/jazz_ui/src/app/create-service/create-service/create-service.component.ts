@@ -15,6 +15,8 @@ import {Observable} from 'rxjs/Rx';
 import {ServicesListComponent} from "../../pages/services-list/services-list.component";
 import {environment as env_oss} from '../../../environments/environment.oss';
 import {AuthenticationService, DataCacheService, MessageService, RequestService} from "../../core/services";
+import {UtilsService} from "../../core/services/utils.service";
+import {CreateServiceUtilsService} from "../create-service-utils.service";
 
 @Component({
   selector: 'create-service',
@@ -36,10 +38,19 @@ export class CreateServiceComponent implements OnInit {
     type: 'api',
     platform: 'aws',
     runtime: 'java',
+    serviceName: '',
+    namespace: '',
     slackIntegration: false,
     eventSchedule: 'none',
-    cachTTL: 50
+    cacheTTL: 50
   };
+
+  public namespaceMessage:string = '';
+  public serviceNameMessage:string = '';
+  public availabilityLoader = false;
+  private specialCharRegex = new RegExp(/^[A-Za-z0-9\-]+$/);
+  private doubleHyphenRegex = new RegExp('--', 'g');
+
   sqsStreamString: string = "arn:aws:sqs:us-west-2:" + env_oss.aws.account_number + ":stream/";
   kinesisStreamString: string = "arn:aws:kinesis:us-west-2:" + env_oss.aws.account_number + ":stream/";
   dynamoStreamString: string = "arn:aws:dynamo:us-west-2:" + env_oss.aws.account_number + ":stream/";
@@ -104,8 +115,11 @@ export class CreateServiceComponent implements OnInit {
     private cache: DataCacheService,
     private messageservice: MessageService,
     private servicelist: ServicesListComponent,
-    private authenticationservice: AuthenticationService
+    private authenticationservice: AuthenticationService,
+    private utils: UtilsService,
+    private createServiceUtils: CreateServiceUtilsService
   ) {
+    this.createServiceUtils.test();
     this.toastmessage = messageservice;
   }
 
@@ -114,9 +128,65 @@ export class CreateServiceComponent implements OnInit {
   public focusS3 = new EventEmitter<boolean>();
   public focusSQS = new EventEmitter<boolean>();
 
+
+  validateServiceName(blurEvent?) {
+    let service = this.createServiceForm.serviceName;
+    if(this.namespaceMessage.startsWith('valid')){
+      this.namespaceMessage = '';
+    }
+
+
+    if (!service) {
+      this.serviceNameMessage = 'invalid-empty';
+    } else if (!service.match(this.specialCharRegex)) {
+      this.serviceNameMessage = 'invalid-character';
+    } else if (service.match(this.doubleHyphenRegex)) {
+      this.serviceNameMessage = 'invalid-character';
+    } else if (service[0] === '-' || service[service.length - 1] === '-') {
+      this.serviceNameMessage = 'invalid-hyphens'
+    } else {
+      this.serviceNameMessage = 'valid';
+      if (this.namespaceMessage.startsWith('valid')) {
+        this.availabilityLoader = true;
+        return this.createServiceUtils.validateServiceNameAvailable(this.createServiceForm.serviceName, this.createServiceForm.namespace)
+          .then((available) => {
+            this.availabilityLoader = false;
+            this.serviceNameMessage = available ? 'valid-available' : 'invalid-unavailable';
+            this.namespaceMessage = available ? 'valid-available' : 'invalid-unavailable';
+          });
+      }
+    }
+  }
+
+  validateNamespace(blurEvent?) {
+    let namespace = this.createServiceForm.namespace;
+    if (!namespace) {
+      this.namespaceMessage = 'invalid-empty';
+    } else if (!namespace.match(this.specialCharRegex)) {
+      this.namespaceMessage = 'invalid-character'
+    } else if (namespace.match(this.doubleHyphenRegex)) {
+      this.namespaceMessage = 'invalid-character';
+    } else if (namespace[0] === '-' || namespace[namespace.length - 1] === '-') {
+      this.namespaceMessage = 'invalid-hyphens';
+    }else {
+      this.namespaceMessage = 'valid';
+      if (this.serviceNameMessage.startsWith('valid')) {
+        this.availabilityLoader = true;
+        return this.createServiceUtils.validateServiceNameAvailable(this.createServiceForm.serviceName, this.createServiceForm.namespace)
+          .then((available) => {
+            this.availabilityLoader = false;
+            this.serviceNameMessage = available ? 'valid-available' : 'invalid-unavailable';
+            this.namespaceMessage = available ? 'valid-available' : 'invalid-unavailable'
+          });
+      }
+    }
+
+
+  }
+
   definePlatformsRadio() {
     return [
-      {label: 'AWS', value: 'aws', icon: 'icon-icon-AWS'},
+      {label: 'AWS', value: 'aws', icon: 'icon-icon-AWS', template: this.utils.getAWSIcon()},
       {label: 'Azure', value: 'azure', icon: 'icon-icon-azure'},
       {label: 'Google Cloud', value: 'gcloud', icon: 'icon-icon-googlecloud'}
     ]
@@ -272,42 +342,42 @@ export class CreateServiceComponent implements OnInit {
   }
 
   // check service name availability
-  public validateServiceName() {
-    this.showLoader = true;
-
-
-    this.http.get('/jazz/is-service-available/?service=' + this.model.serviceName + '&domain=' + this.model.domainName)
-      .subscribe(
-        (Response) => {
-
-          var output = Response;
-          this.showLoader = false;
-          if (output.data.available == true) {
-            this.serviceAvailable = true;
-            this.serviceNotAvailable = false;
-          } else if (output.data.available == false) {
-            this.serviceAvailable = false;
-            this.serviceNotAvailable = true;
-          } else {
-            this.serviceAvailable = false;
-            this.serviceNotAvailable = false;
-          }
-          this.checkdomainName();
-          (error) => {
-            this.showLoader = false;
-            this.serviceAvailable = false;
-            this.serviceNotAvailable = false;
-            var err = error;
-            this.checkdomainName();
-          }
-        },
-        (error) => {
-          this.showLoader = false;
-          this.resMessage = this.toastmessage.errorMessage(error, 'serviceAvailability');
-          this.toast_pop('error', 'Oops!', this.resMessage);
-        }
-      );
-  }
+  // public validateServiceName() {
+  //   this.showLoader = true;
+  //
+  //
+  //   this.http.get('/jazz/is-service-available/?service=' + this.model.serviceName + '&domain=' + this.model.domainName)
+  //     .subscribe(
+  //       (Response) => {
+  //
+  //         var output = Response;
+  //         this.showLoader = false;
+  //         if (output.data.available == true) {
+  //           this.serviceAvailable = true;
+  //           this.serviceNotAvailable = false;
+  //         } else if (output.data.available == false) {
+  //           this.serviceAvailable = false;
+  //           this.serviceNotAvailable = true;
+  //         } else {
+  //           this.serviceAvailable = false;
+  //           this.serviceNotAvailable = false;
+  //         }
+  //         this.checkdomainName();
+  //         (error) => {
+  //           this.showLoader = false;
+  //           this.serviceAvailable = false;
+  //           this.serviceNotAvailable = false;
+  //           var err = error;
+  //           this.checkdomainName();
+  //         }
+  //       },
+  //       (error) => {
+  //         this.showLoader = false;
+  //         this.resMessage = this.toastmessage.errorMessage(error, 'serviceAvailability');
+  //         this.toast_pop('error', 'Oops!', this.resMessage);
+  //       }
+  //     );
+  // }
 
   toast_pop(error, oops, errorMessage) {
     var tst = document.getElementById('toast-container');
@@ -508,7 +578,7 @@ export class CreateServiceComponent implements OnInit {
     if (!this.model.serviceName || !this.model.domainName) {
       return;
     }
-    this.validateServiceName();
+    // this.validateServiceName();
   }
 
   // function ttl value

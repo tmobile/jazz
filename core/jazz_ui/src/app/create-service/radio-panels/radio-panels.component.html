@@ -4,9 +4,12 @@
 
     <div class="service-box"
          [class.option-active]="selected === option.value"
+         [class.disabled]="option.disabled"
          (click)="select(option.value)">
       <div class="service-box-icon"
+           [innerHTML]="option.template || ''"
            [ngClass]="option.icon"></div>
+      <div class="service-box-icon"></div>
       <div class="service-box-label">{{option.label}}</div>
     </div>
 

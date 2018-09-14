@@ -1,4 +1,5 @@
-<div class="jz-checkbox">
+<div class="jz-checkbox"
+  [class.disabled]="disabled">
   <input type="checkbox" aria-invalid="false" [checked]="value">
   <label (click)="clickCheckbox()"></label>
   <div class="checkbox-label">

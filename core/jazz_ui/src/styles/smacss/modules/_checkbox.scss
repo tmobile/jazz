@@ -2,6 +2,12 @@
   position: relative;
   display: inline-flex;
   align-items: center;
+  &.disabled {
+    opacity: .5 !important;
+    label {
+      cursor: not-allowed;
+    }
+  }
 }
 
 .jz-checkbox label {
