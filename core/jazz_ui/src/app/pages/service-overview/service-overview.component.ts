@@ -989,15 +989,8 @@ export class ServiceOverviewComponent implements OnInit {
     if (environment.multi_env) this.is_multi_env = true;
     if (environment.envName == 'oss') this.internal_build = false;
     var obj;
-
-
-
     this.prodEnv = {};
     this.stgEnv = {};
-
-
-
-
 
     this.check_empty_fields();
 
