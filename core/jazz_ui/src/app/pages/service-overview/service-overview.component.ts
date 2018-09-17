@@ -4,7 +4,7 @@
  * @author
  */
 
-import { Component, OnInit, Input, Output, EventEmitter,ViewChild} from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
 import { ToasterService } from 'angular2-toaster';
@@ -13,7 +13,7 @@ import { Observable } from 'rxjs/Rx';
 import { Subscription } from 'rxjs/Subscription';
 import { ServiceDetailComponent } from '../service-detail/service-detail.component'
 import { environment } from './../../../environments/environment';
-import {  environment as env_internal } from './../../../environments/environment.internal';
+import { environment as env_internal } from './../../../environments/environment.internal';
 import { environment as env_oss } from './../../../environments/environment.oss';
 import { ServiceFormData, RateExpression, CronObject, EventExpression } from './../../secondary-components/create-service/service-form-data';
 import { CronParserService } from '../../core/helpers';
@@ -30,9 +30,9 @@ declare var $: any;
 export class ServiceOverviewComponent implements OnInit {
   @ViewChild('env') envComponent;
 
-  @Output() onload: EventEmitter < any > = new EventEmitter < any > ();
-  @Output() onEnvGet: EventEmitter < any > = new EventEmitter < any > ();
-  @Output() open_sidebar: EventEmitter < any > = new EventEmitter < any > ();
+  @Output() onload: EventEmitter<any> = new EventEmitter<any>();
+  @Output() onEnvGet: EventEmitter<any> = new EventEmitter<any>();
+  @Output() open_sidebar: EventEmitter<any> = new EventEmitter<any>();
 
   flag: boolean = false;
   @Input() service: any = {};
@@ -47,8 +47,8 @@ export class ServiceOverviewComponent implements OnInit {
   hide_email_error: boolean = true;
   hide_slack_error: boolean = true;
   service_error: boolean = true;
-  disp_show:boolean = true;
-  disp_show2:boolean = true;
+  disp_show: boolean = true;
+  disp_show2: boolean = true;
   err404: boolean = false;
   disable_button: boolean = false;
   email_valid: boolean;
@@ -130,18 +130,18 @@ export class ServiceOverviewComponent implements OnInit {
   publicInitial: boolean = this.service.is_public_endpoint;
   cdnConfigSelected: boolean = this.service.create_cloudfront_url;
   cdnConfigInitial: boolean = this.service.create_cloudfront_url;
-  saveClicked:boolean = false;
-  advancedSaveClicked:boolean = false;
-  isSlackAvailable:boolean = true;
-  isPUTLoading:boolean = false;
-  PutPayload:any;
-  isPayloadAvailable:boolean = false;
+  saveClicked: boolean = false;
+  advancedSaveClicked: boolean = false;
+  isSlackAvailable: boolean = true;
+  isPUTLoading: boolean = false;
+  PutPayload: any;
+  isPayloadAvailable: boolean = false;
   selected: string = "Minutes";
   eventSchedule: string = 'fixedRate';
   cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
   rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
   eventExpression = new EventExpression("awsEventsNone", undefined, undefined, undefined, undefined);
-  viewMode:boolean = true;
+  viewMode: boolean = true;
   cronFieldValidity: any;
 
   constructor(
@@ -295,55 +295,55 @@ export class ServiceOverviewComponent implements OnInit {
     }
   }
 
-  onEditClick(){
+  onEditClick() {
     this.loadPlaceholders();
-    this.disp_show=false;
+    this.disp_show = false;
   }
 
-  onEditClickAdvanced(){
-    this.disp_show2=false;
+  onEditClickAdvanced() {
+    this.disp_show2 = false;
     this.publicSelected = this.publicInitial;
     this.cdnConfigSelected = this.cdnConfigInitial;
 
   }
 
-  onCompleteClick(){
+  onCompleteClick() {
     this.isPUTLoading = true;
-    this.http.put('/jazz/services/'+this.service.id,this.PutPayload)
-        .subscribe(
-            (Response)=>{
-              // debugger
-              this.isPUTLoading = false;
-              this.disp_show = true;
-              this.isLoadingService = true;
-              this.serviceDetail.onDataFetched(Response.data.updatedService);
-              this.isLoadingService = false;
-              this.loadPlaceholders()
-              this.disp_show=true;
-              this.saveClicked = false;
-              let successMessage = this.toastmessage.successMessage(Response,"updateService");
-              this.toast_pop('success',"", "Data for service: "+this.service.name +" "+successMessage);
-            },
-            (Error)=>{
-                this.isLoadingService=false;
-                this.isPUTLoading = false;
-                this.disp_show=true;
-                this.saveClicked = false;
-                this.edit_save='SAVE';
-                let errorMessage = this.toastmessage.errorMessage(Error,"updateService");
-                this.toast_pop('error', 'Oops!', errorMessage)
-                // this.toast_pop('error','Oops!', "Data cannot be updated. Service Error.");
-            });
+    this.http.put('/jazz/services/' + this.service.id, this.PutPayload)
+      .subscribe(
+        (Response) => {
+          // debugger
+          this.isPUTLoading = false;
+          this.disp_show = true;
+          this.isLoadingService = true;
+          this.serviceDetail.onDataFetched(Response.data.updatedService);
+          this.isLoadingService = false;
+          this.loadPlaceholders()
+          this.disp_show = true;
+          this.saveClicked = false;
+          let successMessage = this.toastmessage.successMessage(Response, "updateService");
+          this.toast_pop('success', "", "Data for service: " + this.service.name + " " + successMessage);
+        },
+        (Error) => {
+          this.isLoadingService = false;
+          this.isPUTLoading = false;
+          this.disp_show = true;
+          this.saveClicked = false;
+          this.edit_save = 'SAVE';
+          let errorMessage = this.toastmessage.errorMessage(Error, "updateService");
+          this.toast_pop('error', 'Oops!', errorMessage)
+          // this.toast_pop('error','Oops!', "Data cannot be updated. Service Error.");
+        });
 
 
   }
 
-  onAdvancedSaveClick(){
+  onAdvancedSaveClick() {
     this.saveClicked = false;
     this.advancedSaveClicked = true;
     let payload = {};
 
-    if( this.advancedSaveClicked){
+    if (this.advancedSaveClicked) {
       if (this.rateExpression.type != 'none') {
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
@@ -357,10 +357,10 @@ export class ServiceOverviewComponent implements OnInit {
         var event = {};
         event["type"] = this.eventExpression.type;
         if (this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":table/" + this.eventExpression.dynamoTable;
+          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/" + this.eventExpression.dynamoTable;
           event["action"] = "PutItem";
         } else if (this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":stream/" + this.eventExpression.streamARN;
+          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/" + this.eventExpression.streamARN;
           event["action"] = "PutRecord";
         } else if (this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;
@@ -370,51 +370,51 @@ export class ServiceOverviewComponent implements OnInit {
         payload["events"].push(event);
       }
 
-      if(this.publicSelected !== this.publicInitial){
+      if (this.publicSelected !== this.publicInitial) {
         payload["is_public_endpoint"] = this.publicSelected;
       }
-      if(this.cdnConfigSelected !== this.cdnConfigInitial){
+      if (this.cdnConfigSelected !== this.cdnConfigInitial) {
         payload["create_cloudfront_url"] = this.cdnConfigSelected;
       }
 
     }
     this.PutPayload = payload;
-    if(Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
+    if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
   }
 
-  onSaveClick(){
+  onSaveClick() {
     this.saveClicked = true;
     this.advancedSaveClicked = false;
 
     let payload = {};
-    if( this.saveClicked ){
-      if(this.desc_temp != this.service.description){
-        payload["description"]=this.desc_temp;
+    if (this.saveClicked) {
+      if (this.desc_temp != this.service.description) {
+        payload["description"] = this.desc_temp;
       }
-      if(this.slackChannel_temp != this.service.slackChannel){
-        payload["slack_channel"]=this.slackChannel_temp;
+      if (this.slackChannel_temp != this.service.slackChannel) {
+        payload["slack_channel"] = this.slackChannel_temp;
       }
 
 
     }
     this.PutPayload = payload;
-    if(Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
+    if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
 
   }
 
-  onCancelClick()
-  {
-      this.update_payload={};
-      this.disp_show=true;
-      this.disp_show2=true;
-      this.edit_save='EDIT';
-      this.showCancel=false;
-      this.hide_email_error= true;
-      this.hide_slack_error = true;
-      if(this.subscription!=undefined)
+  onCancelClick() {
+    this.update_payload = {};
+    this.disp_show = true;
+    this.disp_show2 = true;
+    this.edit_save = 'EDIT';
+    this.showCancel = false;
+    this.hide_email_error = true;
+    this.hide_slack_error = true;
+    if (this.subscription !== undefined) {
       this.subscription.unsubscribe();
-      this.show_loader=false;
-      this.disableSaveBtn();
+    }
+    this.show_loader = false;
+    this.disableSaveBtn();
   }
 
   onEventScheduleChange(val) {
@@ -604,7 +604,7 @@ export class ServiceOverviewComponent implements OnInit {
       .subscribe(
         response => {
 
-          let dataResponse = < any > {};
+          let dataResponse = <any>{};
           dataResponse.list = response;
           var respStatus = dataResponse.list.data;
           if (respStatus.status.toLowerCase() === 'completed') {
@@ -853,11 +853,11 @@ export class ServiceOverviewComponent implements OnInit {
   mailTo() {
     location.href = 'mailto:' + this.reportEmail + '?subject=Jazz : Issue reported by' + " " + this.authenticationservice.getUserId() + '&body=' + this.sjson;
   }
-  errorIncluded() {}
+  errorIncluded() { }
 
   submitFeedback(action) {
 
-    this.errorChecked = ( < HTMLInputElement > document.getElementById("checkbox-slack")).checked;
+    this.errorChecked = (<HTMLInputElement>document.getElementById("checkbox-slack")).checked;
     if (this.errorChecked == true) {
       this.json = {
         "user_reported_issue": this.model.userFeedback,
@@ -910,13 +910,13 @@ export class ServiceOverviewComponent implements OnInit {
     );
   }
 
-  frndload(event) {}
+  frndload(event) { }
 
   is_multi_env: boolean = false;
-  SlackEnabled:boolean = false;
+  SlackEnabled: boolean = false;
 
   ngOnInit() {
-    if(env_oss.slack_support) this.SlackEnabled=true;
+    if (env_oss.slack_support) this.SlackEnabled = true;
     if (environment.envName == 'oss')
       if (!environment.multi_env)
         this.multiENV = false;
@@ -978,7 +978,7 @@ export class ServiceOverviewComponent implements OnInit {
     // arrEnv[0].status.replace("_"," ");
   }
 
-  refresh_env(){
+  refresh_env() {
     this.envComponent.refresh();
   }
 
@@ -1062,7 +1062,7 @@ export class ServiceOverviewComponent implements OnInit {
       .subscribe(
         response => {
           this.createloader = false;
-          let dataResponse = < any > {};
+          let dataResponse = <any>{};
           dataResponse.list = response;
           var respStatus = dataResponse.list.data;
           if (respStatus.status.toLowerCase() === 'completed') {
