@@ -1,4 +1,4 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, Input, OnInit} from '@angular/core';
 
 @Component({
   selector: 'create-service-custom-form',
@@ -7,11 +7,11 @@ import {Component, OnInit} from '@angular/core';
 })
 export class CreateServiceCustomFormComponent implements OnInit {
 
-  public customForm = {
-    first: 'one'
-  };
+  @Input() form;
 
-  public options = this.defineOptions();
+
+  public customForm = {};
+
 
   constructor() {
   }
@@ -19,17 +19,14 @@ export class CreateServiceCustomFormComponent implements OnInit {
   ngOnInit() {
   }
 
-  defineOptions() {
-    return [
-      {
-        label: 'Option1',
-        value: 'one'
-      },
-      {
-        label: 'Option2',
-        value: 'two'
-      }
-    ]
+  applyFormFields(createServicePayload) {
+    // Overwrites properties made in /create-serverless-service request
+    return;
+  }
+
+  formIsValid() {
+    // Returning false disables the submit button
+    return true;
   }
 
 }

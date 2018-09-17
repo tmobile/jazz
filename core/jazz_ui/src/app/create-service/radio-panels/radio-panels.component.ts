@@ -22,8 +22,9 @@ export class RadioPanelsComponent implements OnInit {
   ngOnInit() {
   }
 
-  select(value) {
-    this.selected = value;
+  select(option) {
+    if(option.disabled) return;
+    this.selected = option.value;
   }
 
 }

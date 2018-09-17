@@ -1,11 +1,11 @@
 <section class="component-row" *ngIf="!hideForServiceType">
   <div class="row">
     <div class="col-lg-4 col-md-4">
-      <p class="jz-step-title">
+      <p class="jz-cs-step-title">
         {{title}}
         <span *ngIf="required" class="jz-error">*</span>
       </p>
-      <p *ngIf="subtitle" class="jz-step-description">{{subtitle}}</p>
+      <p *ngIf="subtitle" class="jz-cs-step-subtitle">{{subtitle}}</p>
     </div>
     <div class="col-lg-8 col-md-8">
       <ng-content></ng-content>

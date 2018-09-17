@@ -1,35 +1,55 @@
 <div class="jz-radio-extension"
      [ngSwitch]="type"
-     [style.display]="type=== 'none' ? 'none': ''">
-  <div class="row cron-expression-form" *ngSwitchCase="'cron'">
-    <div class="col-lg-2">
-      <p class="jz-radio-extension-label">Minutes</p>
-      <input type="text" class="jz-input" [ngModel]="cronObj.minutes">
+     [style.display]="type === 'none' ? 'none' : ''">
+  <ng-container *ngSwitchCase="'cron'">
+    <div class="row cron-expression-form">
+      <div class="col-lg-2">
+        <p class="jz-radio-extension-label">Minutes</p>
+        <input type="text" class="jz-input"
+               (change)="validateCronExpression()"
+               [(ngModel)]="cronObj.minutes">
+      </div>
+      <div class="col-lg-2">
+        <p class="jz-radio-extension-label">Hours</p>
+        <input type="text" class="jz-input"
+               (change)="validateCronExpression()"
+               [(ngModel)]="cronObj.hours">
+      </div>
+      <div class="col-lg-2">
+        <p class="jz-radio-extension-label">Day-of-month</p>
+        <input type="text" class="jz-input"
+               (change)="validateCronExpression()"
+               [(ngModel)]="cronObj.dayOfMonth">
+      </div>
+      <div class="col-lg-2">
+        <p class="jz-radio-extension-label">Month</p>
+        <input type="text" class="jz-input"
+               (change)="validateCronExpression()"
+               [(ngModel)]="cronObj.month">
+      </div>
+      <div class="col-lg-2">
+        <p class="jz-radio-extension-label">Day-of-week</p>
+        <input type="text" class="jz-input"
+               (change)="validateCronExpression()"
+               [(ngModel)]="cronObj.dayOfWeek">
+      </div>
+      <div class="col-lg-2">
+        <p class="jz-radio-extension-label">Year</p>
+        <input type="text" class="jz-input"
+               (change)="validateCronExpression()"
+               [(ngModel)]="cronObj.year">
+      </div>
     </div>
-    <div class="col-lg-2">
-      <p class="jz-radio-extension-label">Hours</p>
-      <input type="text" class="jz-input" [ngModel]="cronObj.hours">
+    <div *ngIf="!cronExpressionValid" class="jz-text-subtle jz-error">
+      {{cronValidityMessage}}
     </div>
-    <div class="col-lg-2">
-      <p class="jz-radio-extension-label">Day-of-month</p>
-      <input type="text" class="jz-input" [ngModel]="cronObj.dayOfMonth">
-    </div>
-    <div class="col-lg-2">
-      <p class="jz-radio-extension-label">Month</p>
-      <input type="text" class="jz-input" [ngModel]="cronObj.month">
-    </div>
-    <div class="col-lg-2">
-      <p class="jz-radio-extension-label">Day-of-week</p>
-      <input type="text" class="jz-input" [ngModel]="cronObj.dayOfWeek">
-    </div>
-    <div class="col-lg-2">
-      <p class="jz-radio-extension-label">Year</p>
-      <input type="text" class="jz-input" [ngModel]="cronObj.year">
-    </div>
-  </div>
+  </ng-container>
   <div class="row rate-expression-form" *ngSwitchCase="'rate'">
     <div class="col-lg-7">
-      <input class="jz-input" type="number" [ngModel]="rateExpression.duration">
+      <input class="jz-input" type="number"
+             min="1"
+             (blur)="changeRateDuration()"
+             [(ngModel)]="rateExpression.duration">
     </div>
     <div class="col-lg-5">
       <dropdown [dropdwnContent]="rateData"

@@ -24,9 +24,9 @@ import {CreateServiceUtilsService} from "./create-service-utils.service";
     CreateServiceComponent,
     CreateServiceCustomFormComponent,
     CreateServiceRowComponent,
-    RadioPanelsComponent,
     CreateServiceEventScheduleComponent,
-    CreateServiceAwsEventsComponent
+    CreateServiceAwsEventsComponent,
+    RadioPanelsComponent
   ],
   providers: [
     CreateServiceUtilsService
@@ -36,7 +36,8 @@ import {CreateServiceUtilsService} from "./create-service-utils.service";
     CreateServiceCustomFormComponent,
     CreateServiceRowComponent,
     CreateServiceEventScheduleComponent,
-    CreateServiceAwsEventsComponent
+    CreateServiceAwsEventsComponent,
+    RadioPanelsComponent
   ]
 })
 export class CreateServiceModule { }

@@ -1,107 +1,211 @@
-<jazz-mob-header (backClick)='closeCreateService(serviceRequestSuccess)'
+<jazz-mob-header (backClick)='closeCreateService()'
                  class='show-for-mobile'
                  [icon]="'notification'"
                  [headText]="'Create a Service'"
                  [status]="'none'"></jazz-mob-header>
 
 <div class="create-service-menu"
-     (click)="closeDropdowns()"
      [ngClass]="isLoading ? 'body-fix':'body-auto'">
+  <div class="jz-cs-loader" *ngIf="isLoading">
+    <div class="loader">
+      <div class="inner one"></div>
+      <div class="inner two"></div>
+      <div class="inner three"></div>
+    </div>
+  </div>
   <section class="create-service-header hide-for-mobile">
     <h4 class="jz-bold-title">
       Create a Service
     </h4>
-    <div (click)="closeCreateService(serviceRequestSuccess)" class="icon-icon-close"></div>
-
+    <div (click)="closeCreateService()" class="icon-icon-close"></div>
   </section>
-  <create-service-row [title]="'Choose the type of service you want to create'" [required]="true">
-    <radio-panels [(selected)]="createServiceForm.type" [options]="serviceTypeOptions"></radio-panels>
-  </create-service-row>
-  <create-service-row [title]="'Choose your platform you would like to use'" [required]="true">
-    <radio-panels [(selected)]="createServiceForm.platform"
-                  [options]="platformOptions"></radio-panels>
-  </create-service-row>
-  <create-service-row [title]="'Choose your runtime'"
-                      [type]="createServiceForm.type" [serviceTypes]="'api function'" [required]="true">
-    <radio-checkbox [(selected)]="createServiceForm.runtime"
-                    [options]="runtimeOptions"></radio-checkbox>
-  </create-service-row>
-  <create-service-row [title]="'Service Name'" [required]="true">
-    <div class="jz-relative">
-      <input type="text" class="jz-input"
-             [attr.data-state]="serviceNameMessage"
-             [(ngModel)]="createServiceForm.serviceName"
-             (blur)="validateServiceName($event)">
 
-      <img *ngIf="availabilityLoader" class="jz-input-loader" src="../assets/images/icons/loading.png">
-      <div [ngSwitch]="serviceNameMessage" class="ja-input-message">
-        <p *ngSwitchCase="'valid-available'" class="jz-success">
-          Service name in the specified namespace is available!
-        </p>
-        <p *ngSwitchCase="'invalid-character'" class="jz-error">
-          Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
-        </p>
-        <p *ngSwitchCase="'invalid-unavailable'" class="jz-error">
-          Service name in the specified namespace is not available. Please try another combination of namespace &
-          service name.
-        </p>
-        <p *ngSwitchCase="'invalid-hyphens'" class="jz-error">
-          Service name should not start or end with hyphens
-        </p>
+  <ng-container [ngSwitch]="createServiceState">
+    <ng-container *ngSwitchCase="'form'">
+      <create-service-row title="Choose the type of service you want to create" required>
+        <radio-panels [(selected)]="createServiceForm.type" [options]="serviceTypeOptions"></radio-panels>
+      </create-service-row>
+      <create-service-row title="Choose your platform you would like to use" required>
+        <radio-panels [(selected)]="createServiceForm.platform"
+                      [options]="platformOptions"></radio-panels>
+      </create-service-row>
+      <create-service-row title="Choose your runtime"
+                          [type]="createServiceForm.type" serviceTypes="api function" required>
+        <radio-checkbox [(selected)]="createServiceForm.runtime"
+                        [options]="runtimeOptions"></radio-checkbox>
+      </create-service-row>
+      <create-service-row title="Service Name" required
+                          subtitle="Name of your API, Microservice or Website that you want to create.">
+        <div class="jz-relative">
+          <input type="text" class="jz-input"
+                 placeholder="Enter Service Name"
+                 [attr.data-state]="serviceNameMessage"
+                 [(ngModel)]="createServiceForm.serviceName"
+                 (blur)="validateServiceName($event)">
+          <img *ngIf="availabilityLoader" class="jz-input-loader" src="../assets/images/icons/loading.png">
+          <div [ngSwitch]="serviceNameMessage" class="jz-input-message">
+            <p *ngSwitchCase="'success-valid-available'" class="jz-success">
+              Service name in the specified namespace is available!
+            </p>
+            <p *ngSwitchCase="'error-empty'" class="jz-error">
+              Service name may not be empty
+            </p>
+            <p *ngSwitchCase="'error-characters'" class="jz-error">
+              Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
+            </p>
+            <p *ngSwitchCase="'error-valid-unavailable'" class="jz-error">
+              Service name in the specified namespace is not available. Please try another combination of namespace &
+              service name.
+            </p>
+            <p *ngSwitchCase="'error-hyphens'" class="jz-error">
+              Service name should not start or end with hyphens
+            </p>
+          </div>
+        </div>
+      </create-service-row>
+      <create-service-row title="Namespace" required
+                          subtitle="Namespaces provide easier abstraction to implement similar security & access control on your APIs.">
+        <div class="jz-relative">
+          <input type="text" class="jz-input"
+                 placeholder="Enter Namespace"
+                 [attr.data-state]="namespaceMessage"
+                 [(ngModel)]="createServiceForm.namespace"
+                 (blur)="validateNamespace($event)">
+          <img *ngIf="availabilityLoader" class="jz-input-loader" src="../assets/images/icons/loading.png">
+          <div [ngSwitch]="namespaceMessage" class="jz-input-message">
+            <p *ngSwitchCase="'error-empty'" class="jz-error">
+              Namespace may not be empty
+            </p>
+            <p *ngSwitchCase="'error-characters'" class="jz-error">
+              Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
+            </p>
+            <p *ngSwitchCase="'error-hyphens'" class="jz-error">
+              Namespace should not start or end with hyphens
+            </p>
+          </div>
+        </div>
+      </create-service-row>
+      <create-service-row title="Description">
+    <textarea class="jz-input"
+              placeholder="Service Description"></textarea>
+      </create-service-row>
+      <create-service-row title="Slack Channel Integration">
+        <div class="row">
+          <div class="col-lg-6">
+            <square-checkbox [disabled]="!allowSlackIntegration"
+                             [(value)]="createServiceForm.enableSlack">
+              Do you want us to notify you through slack?
+            </square-checkbox>
+          </div>
+          <div class="col-lg-6" *ngIf="createServiceForm.enableSlack">
+            <div class="jz-relative">
+              <input type="text" class="jz-input"
+                     [attr.data-state]="slackChannelMessage"
+                     [(ngModel)]="createServiceForm.slackChannelName"
+                     (blur)="validateSlackChannel()"
+                     placeholder="Enter Slack Channel Name">
+              <img *ngIf="availabilityLoaderSlack" class="jz-input-loader" src="../assets/images/icons/loading.png">
+              <div [ngSwitch]="slackChannelMessage" class="jz-input-message">
+                <p *ngSwitchCase="'error-empty'" class="jz-error">
+                  Channel name may not be empty.
+                </p>
+                <p *ngSwitchCase="'error-characters'" class="jz-error">
+                  Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed).
+                </p>
+                <p *ngSwitchCase="'error-hyphens'" class="jz-error">
+                  Namespace should not start or end with hyphens.
+                </p>
+                <p *ngSwitchCase="'error-validation'" class="jz-error">
+                  Error in validating Slack Channel name. Please try again or contact administrator.
+                </p>
+                <p *ngSwitchCase="'error-unavailable'" class="jz-error">
+                  Slack channel is not available. Please provide a different channel name.
+                </p>
+                <p *ngSwitchCase="'success-available'" class="jz-error">
+                  Slack channel is available.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </create-service-row>
+      <create-service-row title="Cache Time-to-Live (TTL)"
+                          [type]="createServiceForm.type" serviceTypes="api">
+        <div class="row">
+          <div class="col-lg-6">
+            <square-checkbox [disabled]="!allowCacheTTL" [(value)]="createServiceForm.enableCaching">Yes, enable caching
+              for my API.
+            </square-checkbox>
+          </div>
+          <div class="col-lg-6" *ngIf="createServiceForm.enableCaching">
+            <input type="number" class="jz-input"
+                   min="1" max="3600"
+                   [(ngModel)]="createServiceForm.cacheTTL"
+                   placeholder="Enter time in seconds">
+            <p class="jz-input-message">Maximum TTL is 3600 seconds.</p>
+          </div>
+        </div>
+      </create-service-row>
+      <create-service-row title="CDN Configuration"
+                          [type]="createServiceForm.type" serviceTypes="website">
+        <square-checkbox [disabled]="!allowCDN"
+                         [(value)]="createServiceForm.cdnConfigured">
+          Do you need CDN configured for your website?
+        </square-checkbox>
+      </create-service-row>
+      <create-service-row title="Event Schedule"
+                          [type]="createServiceForm.type" serviceTypes="function">
+        <radio-checkbox [(selected)]="createServiceForm.rateExpressionType"
+                        [options]="eventScheduleOptions"></radio-checkbox>
+        <create-service-event-schedule #eventSchedule
+                                       (setSchedule)="setEventSchedule($event)"
+                                       [type]="createServiceForm.rateExpressionType"></create-service-event-schedule>
+      </create-service-row>
+      <create-service-row #awsEvents
+                          *ngIf="allowAWSEvents"
+                          title="AWS Events"
+                          subtitle="Select appropriate events that you want to subscribe to."
+                          [type]="createServiceForm.type" serviceTypes="function">
+        <radio-checkbox [(selected)]="createServiceForm.awsEventsType"
+                        [options]="awsEventsOptions"></radio-checkbox>
+        <create-service-aws-events (setAWSEvents)="setAWSEvents($event)"
+                                   [type]="createServiceForm.awsEventsType"></create-service-aws-events>
+      </create-service-row>
+      <create-service-custom-form #customForm [form]="createServiceForm"></create-service-custom-form>
+      <div class="requiredInfo">
+        <span class="jz-error">*</span>
+        Indicates required fields
       </div>
-    </div>
-  </create-service-row>
-  <create-service-row [title]="'Namespace'">
-    <div class="jz-relative">
-      <input type="text" class="jz-input"
-             [attr.data-state]="namespaceMessage"
-             [(ngModel)]="createServiceForm.namespace"
-             (blur)="validateNamespace($event)">
-      <img *ngIf="availabilityLoader" class="jz-input-loader" src="../assets/images/icons/loading.png">
-      <div [ngSwitch]="namespaceMessage" class="jz-input-message">
-        <p *ngSwitchCase="'invalid-character'" class="jz-error">
-          Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)
-        </p>
-        <p *ngSwitchCase="'invalid-hyphens'" class="jz-error">
-          Namespace should not start or end with hyphens
-        </p>
+      <div class="jz-cs-submit">
+        <button class="jz-btn jz-btn-pink jz-btn-lg"
+                [class.disabled]="!validateCreateServiceForm()"
+                (click)="submitCreateService()">
+          SUBMIT
+        </button>
       </div>
+    </ng-container>
+    <div *ngSwitchCase="'error'" class="jz-cs-submitted-screen">
+      <img src="../assets/images/refresh.png">
+      <p class="jz-submitted-header jz-error">Oops!</p>
+      <section>
+        <p class="jz-submitted-message">{{submittedMessage}}</p>
+        <p class="jz-submitted-message">If the issue persists, please contact us </p>
+      </section>
+      <section class="jz-cs-submit">
+        <button class="jz-btn jz-btn-pink jz-btn-lg" (click)="closeCreateService(true)">BACK</button>
+      </section>
     </div>
-  </create-service-row>
-  <create-service-row [title]="'Description'">
-    <textarea class="jz-input"></textarea>
-  </create-service-row>
-  <create-service-row [title]="'Slack Channel Integration'">
-    <square-checkbox [(value)]="createServiceForm.slackIntegration">
-      Do you want us to notify you through slack?
-    </square-checkbox>
-  </create-service-row>
-  <create-service-row [title]="'Cache Time-to-Live (TTL)'">
-    <square-checkbox [disabled]="true" [value]="createServiceForm.cacheTTL">Yes, I want to enable caching
-    </square-checkbox>
-    <input type="number" class="jz-input" placeholder="Enter time in seconds">
-    <p>Maximum TTL is 3600 seconds.</p>
-  </create-service-row>
-  <create-service-row [title]="'CDN Configuration'">
-    <square-checkbox [(value)]="createServiceForm.cdnConfigured">
-      Do you need CDN configured for your website?
-    </square-checkbox>
-  </create-service-row>
-  <create-service-row [title]="'Events'">
-    <radio-checkbox [(selected)]="rateExpression.type"
-                    [options]="eventScheduleOptions"></radio-checkbox>
-    <create-service-event-schedule [type]="rateExpression.type"></create-service-event-schedule>
-  </create-service-row>
-  <create-service-row [title]="'AWS Events'">
-    <radio-checkbox [(selected)]="eventExpression.type"
-                    [options]="awsEventsOptions"></radio-checkbox>
-    <create-service-aws-events [type]="eventExpression.type"></create-service-aws-events>
-  </create-service-row>
-  <div class="requiredInfo">
-    <span class="jz-error">*</span>
-    Indicates required fields
-  </div>
-  <div class="submit-form">
-    <button class="jz-btn jz-btn-pink jz-btn-lg">SUBMIT</button>
-  </div>
+    <div *ngSwitchCase="'success'" class="jz-cs-submitted-screen">
+      <img src="../assets/images/create-success.png">
+      <p class="jz-submitted-header jz-success">SUCCESS!</p>
+      <p class="jz-submitted-message">{{submittedMessage}}
+        <a class="jz-anchor" (click)="closeCreateService(serviceRequestSuccess)">here</a>.</p>
+      <p class="jz-submitted-message">You can find more details on next steps
+        <a class="jz-anchor" target="_blank" href="{{environment.urls['docs_link']}}">here</a>.
+      </p>
+      <section class="jz-cs-submit">
+        <button class="jz-btn jz-btn-pink jz-btn-lg" (click)="closeCreateService(true)">DONE</button>
+      </section>
+    </div>
+  </ng-container>
 </div>

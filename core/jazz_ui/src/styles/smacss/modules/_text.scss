@@ -1,28 +1,33 @@
+.jz-anchor {
+  font-weight: 400;
+  color: $color-pink-primary;
+  text-decoration: none;
+  cursor: pointer;
+  &:hover {
+    text-decoration: none;
+    color: $color-pink-primary;
+  }
+}
 
 .jz-text-subtle {
   font-size: 1rem;
   color: $color-gray-tertiary;
 }
 
-.jz-bold-title  {
+.jz-submitted-header {
+  font-weight: 900;
+  font-size: 2rem;
+}
+
+.jz-submitted-message {
+  font-size: 1.5rem;
+  color: #000;
+}
+
+.jz-bold-title {
   font-size: 27px;
   font-weight: 900;
   color: #555555;
-}
-
-.jz-step-title {
-  margin: 0;
-  font-size: 12px;
-  font-weight: bold;
-  color: #222222;
-  padding-bottom: 16px;
-}
-
-.jz-step-details {
-  font-size: 11px;
-  color: #555555;
-  width: 60%;
-  min-width: 180px;
 }
 
 .jz-error {

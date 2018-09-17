@@ -5,7 +5,7 @@
     <div class="service-box"
          [class.option-active]="selected === option.value"
          [class.disabled]="option.disabled"
-         (click)="select(option.value)">
+         (click)="select(option)">
       <div class="service-box-icon"
            [innerHTML]="option.template || ''"
            [ngClass]="option.icon"></div>

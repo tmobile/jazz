@@ -8,7 +8,7 @@ import {Component, Input, OnChanges, OnInit} from '@angular/core';
 export class CreateServiceRowComponent implements OnInit, OnChanges {
  @Input() title;
  @Input() subtitle;
- @Input() required;
+ @Input() required: Boolean;
  @Input() type;
  // Takes space separated list of service types to be shown for ie. 'api website' or 'function'
  //  If either type='' or serviceTypes='' the row is available for all service types
@@ -20,6 +20,7 @@ export class CreateServiceRowComponent implements OnInit, OnChanges {
   constructor() { }
 
   ngOnInit() {
+    this.required = (this.required !== undefined);
   }
 
   ngOnChanges(changes) {

@@ -16,13 +16,13 @@
   &[type="text"], [type="number"] {
     height: 40px;
   }
-  //Use the [data-state] attribute on the input tag to mark the element as 'valid' or 'invalid'
+  //Use the [data-state] attribute on the input tag to mark the element as 'success' or 'error'
   //the selector looks for the first whole word of the attribute
-  &[data-state|="invalid"] {
+  &[data-state|="error"] {
     color: $color-red;
     border: 1px solid $color-red;
   }
-  &[data-state|="valid"] {
+  &[data-state|="success"] {
     color: $color-green;
     border: 1px solid $color-green;
   }
