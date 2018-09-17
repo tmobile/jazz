@@ -236,7 +236,7 @@ export class CreateServiceComponent implements OnInit {
     };
     this.customForm.applyFormFields(payload);
 
-    return this.createServiceUtils.createServerlessService(this.createServiceForm)
+    return this.createServiceUtils.createServerlessService(payload)
       .then((response) => {
         this.isLoading = false;
         this.createServiceState = 'success';

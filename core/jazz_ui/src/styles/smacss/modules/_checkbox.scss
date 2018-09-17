@@ -4,6 +4,7 @@
   align-items: center;
   &.disabled {
     opacity: .5 !important;
+    border-color: $color-gray-primary !important;
     label {
       cursor: not-allowed;
     }
