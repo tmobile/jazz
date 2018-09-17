@@ -34,6 +34,7 @@ npm-debug.log
 testem.log
 /typings
 src/environments/environment.local.ts
+src/environments/environment.local-internal.ts
 package-lock.json
 # e2e
 /e2e/*.js
