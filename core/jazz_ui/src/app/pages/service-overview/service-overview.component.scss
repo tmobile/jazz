@@ -1154,24 +1154,18 @@ ul{
   &:nth-child(1){
     li{
       &:nth-child(1){
-        max-width:40%;
-        width:40%;
       }
       &:nth-child(2){
-        width:59%;
       }
     }
   }
 }
 li{
   &:nth-child(1){
-    width:40%;
   }
   &:nth-child(2){
-    min-width:40%;
   }
   &:nth-child(3){
-    width:20%;
   }
   display: flex;
   margin:1rem;
@@ -1194,7 +1188,6 @@ padding-right: 1rem;
 
 .cron-field{
 min-width: 45rem;
-margin-left: -3.5rem;
 }
 .event-schedule-radio{
 width:110%;
@@ -1228,11 +1221,9 @@ bottom: -4rem;
 /deep/.advanced-ul{
 /deep/li{
   &:nth-child(2){
-    width:20% !important;
-    min-width:20%
+
   }
   &:nth-child(3){
-    width:40%;
   }
 }
 }
@@ -1346,14 +1337,14 @@ align-items: center;
 padding:4rem 3rem;
 }
 .dynamodb-fields.arrow_box:after {
-left: 32%;
+  left: 14%;
 }
 
 .kinesis-fields.arrow_box:after {
-left: 59%;
+  left: 33%;
 }
 .s3-fields.arrow_box:after {
-left: 86%;
+  left: 61%;
 }
 .fixed-rate{
   padding-right:2.5rem;
@@ -1365,3 +1356,24 @@ left: 86%;
 .no-border{
   border:none;
 }
+.rate-field.arrow_box:after{
+  left: 14.5%;
+}
+
+.cron-fields.arrow_box:after {
+  left: 36%;
+}
+.cron-field {
+  margin-left: 0;
+}
+.first-row{
+  li{
+    width:31%;
+  }
+}
+.top-shift{
+  position: absolute;
+  top: 1rem;
+  left: 31%;
+}
+
