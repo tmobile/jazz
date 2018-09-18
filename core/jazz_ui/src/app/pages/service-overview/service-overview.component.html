@@ -204,18 +204,18 @@
     </div>
     <div class='metadata-body-advanced'>
       <div *ngIf='disp_show2' class='metadata-buttons-wrap second-wrap'>
-        <btn-jazz-secondary text="EDIT" (click)='onEditClickAdvanced()'></btn-jazz-secondary>
+        <btn-jazz-secondary text="EDIT" [disablebtn]="true" (click)='onEditClickAdvanced()'></btn-jazz-secondary>
       </div>
       <div *ngIf='disp_show2' class='metadata-row first-row'>
         <ul>
           <li *ngIf="service.serviceType == 'function'">
               <div class="det-label">Event Schedule</div>
-              <div *ngIf='disp_show2' class="det-value">{{service.eventScheduleRate || "NONE"}}</div>
+              <div *ngIf='disp_show2' class="det-value">{{service.eventScheduleRate || "NA"}}</div>
 
           </li>
           <li *ngIf="service.serviceType == 'function'">
             <div class='det-label'>AWS events</div>
-            <div *ngIf='disp_show2' class="det-value">{{service.event_source || "NONE"}}</div>
+            <div *ngIf='disp_show2' class="det-value">{{service.event_source || "NA"}}</div>
 
           </li>
 
