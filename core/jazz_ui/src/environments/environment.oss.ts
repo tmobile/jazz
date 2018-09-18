@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
+  INSTALLER_VARS: {INSTALLER_VARS},
   configFile: 'config/config.oss.json',
   baseurl: "https://{API_GATEWAY_KEY_PROD}.execute-api.{inst_region}.amazonaws.com/prod",
   api_doc_name: "https://{api_doc_name}.s3.amazonaws.com",
@@ -8,11 +9,6 @@ export const environment = {
   slack_support: {slack_support},
   serviceTabs: ["{overview}", "{access control}", "{metrics}", "{logs}", "{cost}"],
   environmentTabs: ["{env_overview}", "{deployments}", "{code quality}", "{metrics}", "{assets}", "{env_logs}"],
-  createService: {
-    apiDeploymentTargets: {api_deployment_targets},
-    functionDeploymentTargets: {function_deployment_targets},
-    websiteDeploymentTargets: {website_deployment_targets}
-  },
   urls: {
     docs_link: "https://github.com/tmobile/jazz/wiki",
     swagger_editor: "{swagger_editor}",
@@ -21,7 +17,7 @@ export const environment = {
   userJourney: {
     registrationMessage: 'Please contact your Jazz Admin(s) to get a registration code.'
   },
-  aws:{
-    account_number:"{account_number}"
+  aws: {
+    account_number: "{account_number}"
   }
 };

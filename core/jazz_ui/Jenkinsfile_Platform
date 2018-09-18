@@ -102,7 +102,11 @@ node ()  {
       sh "sed -i 's/{function_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.FUNCTION_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{website_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.WEBSITE_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
 
-      
+      def uiConfig = JsonOutput.toJson(config_loader.UI_CONFIG)
+
+      def importUICommand = 'sed -i s/{INSTALLER_VARS}/' + uiConfig + '/g ./src/environments/environment.oss.ts'
+      sh importUICommand
+
       def envFile = readFile('./src/environments/environment.oss.ts');
       echo "displaying env file :"
       echo "$envFile";
