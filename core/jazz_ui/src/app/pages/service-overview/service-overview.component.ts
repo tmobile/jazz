@@ -410,6 +410,7 @@ export class ServiceOverviewComponent implements OnInit {
     this.showCancel = false;
     this.hide_email_error = true;
     this.hide_slack_error = true;
+    this.isSlackAvailable = true;
     if (this.subscription !== undefined) {
       this.subscription.unsubscribe();
     }
@@ -492,6 +493,7 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   public validateChannelName() {
+    this.isSlackAvailable = false;
     this.show_loader = true;
     if (this.slackChannel_temp == '' || this.slackChannel_temp == null) {
 
@@ -505,7 +507,7 @@ export class ServiceOverviewComponent implements OnInit {
         .subscribe(
           (Response) => {
             let isAvailable = Response.data.is_available;
-
+            this.isSlackAvailable = isAvailable;
             if (isAvailable) //if valid
             {
               this.hide_slack_error = true;
