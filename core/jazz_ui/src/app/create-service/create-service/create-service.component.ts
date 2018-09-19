@@ -233,7 +233,7 @@ export class CreateServiceComponent implements OnInit {
       "events": createServiceForm.events || undefined,
       "rateExpression": (createServiceForm.rateExpressionType !== 'none') ? createServiceForm.rateExpression : undefined
     };
-    this.customForm.applyFormFields(payload);
+    payload = this.customForm.applyFormFields(payload);
 
     return this.createServiceUtils.createServerlessService(payload)
       .then((response) => {
