@@ -6,12 +6,7 @@ import {Component, Input, OnInit} from '@angular/core';
   styleUrls: ['./create-service-form-custom.component.scss']
 })
 export class CreateServiceFormCustomComponent implements OnInit {
-
-
-
-
-  public customForm = {};
-
+  @Input() form;
 
   constructor() {
   }
@@ -19,20 +14,14 @@ export class CreateServiceFormCustomComponent implements OnInit {
   ngOnInit() {
   }
 
-
-  @Input() form;
-
-
   //@param: http post request object sent to /create-serverless-service without custom fields
   //@return: returns modified request payload to create service
   applyFormFields(createServicePayload) {
     return createServicePayload;
   }
 
-
   //Return true to enable [SUBMIT] if generic form is also valid, return false to disable [SUBMIT]
   formIsValid() {
     return true;
   }
-
 }
