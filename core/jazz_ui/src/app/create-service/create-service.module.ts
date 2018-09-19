@@ -11,6 +11,7 @@ import {CreateServiceEventScheduleComponent} from './create-service-event-schedu
 import {CreateServiceAwsEventsComponent} from './create-service-aws-events/create-service-aws-events.component';
 import {CreateServiceUtilsService} from "./create-service-utils.service";
 import {CreateServiceCustomModule} from "./create-service-custom/create-service-custom.module";
+import {CreateServiceFormCustomComponent} from "./create-service-form-custom/create-service-form-custom.component";
 
 @NgModule({
   imports: [
@@ -26,7 +27,8 @@ import {CreateServiceCustomModule} from "./create-service-custom/create-service-
     CreateServiceRowComponent,
     CreateServiceEventScheduleComponent,
     CreateServiceAwsEventsComponent,
-    RadioPanelsComponent
+    RadioPanelsComponent,
+    CreateServiceFormCustomComponent
   ],
   providers: [
     CreateServiceUtilsService
@@ -36,7 +38,8 @@ import {CreateServiceCustomModule} from "./create-service-custom/create-service-
     CreateServiceRowComponent,
     CreateServiceEventScheduleComponent,
     CreateServiceAwsEventsComponent,
-    RadioPanelsComponent
+    RadioPanelsComponent,
+    CreateServiceFormCustomComponent
   ]
 })
 export class CreateServiceModule {
