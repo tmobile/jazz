@@ -71,16 +71,15 @@
   <div *ngSwitchCase="'sqs'">
     <div class="row">
       <div class="col-lg-12">
-        <div>Stream ARN</div>
+        <div>Queue ARN</div>
         <div class="jz-relative">
-          <input type="text" disabled class="jz-input arn-table" [value]="sqsStreamString">
+          <input type="text" disabled class="jz-input arn-table" [value]="sqsQueueString">
           <input type="text" class="jz-input arn-input" placeholder="Stream Name"
-                 [(ngModel)]="eventExpression.SQSstreamARN">
+                 [(ngModel)]="eventExpression.SQSQueueARN">
         </div>
       </div>
     </div>
-    <p class="jz-radio-extension-link">Function would be triggered when an object is added or modified inside the
-      bucket.</p>
+    <p class="jz-radio-extension-link">Function would be triggered whenever the Lambda detects new messages in the source SQS queue.</p>
   </div>
 
 </div>

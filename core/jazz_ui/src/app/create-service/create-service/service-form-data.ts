@@ -43,6 +43,6 @@ export class EventExpression {
     public dynamoTable: string,
     public streamARN: string,
     public S3BucketName: string,
-    public SQSstreamARN: string,
+    public SQSQueueARN: string,
   ) {  }
 }

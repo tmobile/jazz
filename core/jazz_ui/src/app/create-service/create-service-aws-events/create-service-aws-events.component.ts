@@ -12,9 +12,9 @@ export class CreateServiceAwsEventsComponent implements OnInit {
   @Output() setAWSEvents = new EventEmitter();
 
 
-  public sqsStreamString: string = "arn:aws:sqs:us-west-2:" + environment.aws.account_number + ":stream/";
-  public kinesisStreamString: string = "arn:aws:kinesis:us-west-2:" + environment.aws.account_number + ":stream/";
-  public dynamoStreamString: string = "arn:aws:dynamo:us-west-2:" + environment.aws.account_number + ":stream/";
+  public sqsQueueString: string = "arn:aws:sqs:" + environment.aws["region"] + ":" + environment.aws.account_number + ":table/";
+  public kinesisStreamString: string = "arn:aws:kinesis:" + environment.aws["region"] + ":" + environment.aws.account_number + ":stream/";
+  public dynamoStreamString: string = "arn:aws:dynamo:" + environment.aws["region"] + ":" + environment.aws.account_number + ":";
 
   eventExpression = new EventExpression(this.type, undefined, undefined, undefined, undefined);
 
@@ -36,11 +36,11 @@ export class CreateServiceAwsEventsComponent implements OnInit {
 
     switch (this.type) {
       case 'dynamodb':
-        event["source"] = "arn:aws:dynamodb:us-west-2:" + environment.aws.account_number + ":table/" + this.eventExpression.dynamoTable;
+        event["source"] = this.dynamoStreamString + this.eventExpression.dynamoTable;
         event["action"] = "PutItem";
         break;
       case 'kinesis':
-        event["source"] = "arn:aws:kinesis:us-west-2:" + environment.aws.account_number + ":stream/" + this.eventExpression.streamARN;
+        event["source"] = this.kinesisStreamString + this.eventExpression.streamARN;
         event["action"] = "PutRecord";
         break;
       case 's3':
@@ -48,12 +48,9 @@ export class CreateServiceAwsEventsComponent implements OnInit {
         event["action"] = "S3:" + this.eventExpression.S3BucketName + ":*";
         break;
       case 'sqs':
-        event["source"] = "arn:aws:sqs:us-west-2:" + environment.aws.account_number + ":stream/" + this.eventExpression.SQSstreamARN;
+        event["source"] = this.sqsQueueString + this.eventExpression.SQSQueueARN;
         break;
     }
-
     this.setAWSEvents.emit(this.eventExpression);
   }
-
-
 }

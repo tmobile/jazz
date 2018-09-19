@@ -28,7 +28,6 @@ import {environment} from '../../../environments/environment';
 
 
 export class CreateServiceComponent implements OnInit {
-
   @Output() onClose: EventEmitter<boolean> = new EventEmitter<boolean>();
   @ViewChild('eventSchedule') eventSchedule;
   @ViewChild('awsEvents') awsEvents;
@@ -254,7 +253,6 @@ export class CreateServiceComponent implements OnInit {
   }
 
   setAWSEvents(event) {
-
     this.createServiceForm.events = [event];
   }
 
@@ -274,5 +272,4 @@ export class CreateServiceComponent implements OnInit {
 
   ngOnInit() {
   };
-
 }
