@@ -154,7 +154,7 @@
       <div *ngIf='noSecEnv' class='empty-row'>No Environments Available</div>
 
       <div *ngIf='!noSecEnv'>
-          <div class='stage-title2 stageDisp'>{{item.physical_id || item.friendly_name}} <span class='icon-icon-rightArrow right-arow'></span> </div>
+          <div class='stage-title2 stageDisp'>{{item.friendly_name || item.physical_id}} <span class='icon-icon-rightArrow right-arow'></span> </div>
           <div class="overview-value"  [ngSwitch]="item.status">
                   <span class='icon-icon-good' title='{{item.status}}' *ngSwitchCase='"deployment completed"'>
 
