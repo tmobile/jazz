@@ -145,7 +145,7 @@ var initDynamodb = function () {
 
 //Assigning null to empty string as DynamoDB doesnot allow empty string.
 //But our usecase needs empty string for updation
-var getUpdateData = function (update_data,old_data) {
+var getUpdateData = function (update_data, old_data) {
     var input_data = {};
     for (var field in update_data) {
         if (update_data[field] === "" || update_data[field] === undefined) {
@@ -163,19 +163,18 @@ var getUpdateData = function (update_data,old_data) {
             } else {
                 input_data[field] = [];
             }
-        }
-        else if (update_data[field] && update_data[field].constructor === Object) {
-            var ref_data = old_data.validateServiceExists['service_payload'];
-            var new_keys = Object.keys(update_data[field]);
-            var old_keys = Object.keys(ref_data[field]);
-            var update_object = update_data[field];
-            var new_object = ref_data[field];
+        } else if (update_data[field] && update_data[field].constructor === Object) {
+            const ref_data = old_data.validateServiceExists['service_payload'];
+            const new_keys = Object.keys(update_data[field]);
+            const old_keys = Object.keys(ref_data[field]);
+            let update_object = update_data[field];
+            let new_object = ref_data[field];
             if (new_keys.length > 0) {
                 for (var i = 0; i < new_keys.length; i++) {
-                    if(old_keys.indexOf(new_keys[0])>=0){
+                    if (old_keys.indexOf(new_keys[0])>=0) {
                         new_object[new_keys[i]]=update_object[new_keys[i]]
                     }
-                    else{
+                    else {
                         new_object[new_keys[i]]=update_object[new_keys[i]];
                     }
                 }

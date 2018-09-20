@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,23 +22,23 @@
 	@version: 1.0
 **/
 
-const utils = require("../utils.js")();
+const utils = require('../utils.js')()
 
 module.exports = (service_id, onComplete) => {
-    var docClient = utils.initDocClient();
+  var docClient = utils.initDocClient()
 
-    var params = {
-        TableName: global.services_table,
-        Key: {
-            "SERVICE_ID": service_id
-        }
-    };
+  var params = {
+    TableName: global.services_table,
+    Key: {
+      SERVICE_ID: service_id,
+    },
+  }
 
-    docClient.delete(params, function (err, data) {
-        if (err) {
-            onComplete(err);
-        } else {
-            onComplete(null, { service_id: service_id });
-        }
-    });
-};
+  docClient.delete(params, function(err, data) {
+    if (err) {
+      onComplete(err)
+    } else {
+      onComplete(null, { service_id: service_id })
+    }
+  })
+}

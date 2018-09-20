@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,19 +22,18 @@
 	@version: 1.0
 **/
 
-var _get = require('./get.js');
-var _getList = require('./getList.js');
-var _create = require('./create.js');
-var _delete = require('./delete.js');
-var _update = require('./update.js');
-
+var _get = require('./get.js')
+var _getList = require('./getList.js')
+var _create = require('./create.js')
+var _delete = require('./delete.js')
+var _update = require('./update.js')
 
 module.exports = () => {
-    return {
-        get: _get,
-        getList: _getList,
-        create: _create,
-        delete: _delete,
-        update: _update
-    }
+  return {
+    get: _get,
+    getList: _getList,
+    create: _create,
+    delete: _delete,
+    update: _update,
+  }
 }

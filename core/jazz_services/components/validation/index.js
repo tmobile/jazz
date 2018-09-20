@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,14 +22,14 @@
 	@version: 1.0
 **/
 
-var _validateCreatePayload = require("./validate_create_payload");
-var _validateUpdatePayload = require("./validate_update_payload");
-var _validateServiceWithServiceId = require("./validate_service");
+var _validateCreatePayload = require('./validate_create_payload')
+var _validateUpdatePayload = require('./validate_update_payload')
+var _validateServiceWithServiceId = require('./validate_service')
 
 module.exports = () => {
-    return {
-        validateCreatePayload: _validateCreatePayload,
-        validateUpdatePayload: _validateUpdatePayload,
-        validateServiceWithServiceId: _validateServiceWithServiceId
-    };
-};
+  return {
+    validateCreatePayload: _validateCreatePayload,
+    validateUpdatePayload: _validateUpdatePayload,
+    validateServiceWithServiceId: _validateServiceWithServiceId,
+  }
+}
