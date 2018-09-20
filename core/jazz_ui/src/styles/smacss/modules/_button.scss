@@ -1,45 +1,84 @@
 .jz-btn {
   display: inline;
-  border-radius: $border-radius-default;
-  line-height: 1;
+  border-radius: 30px;
   cursor: pointer;
-  box-shadow: none;
-  border: none;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
   outline: none;
+  padding: 7px 16px;
+  letter-spacing: .3px;
+  font-weight: 700;
+  font-size: 13px;
+  &:active {
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, .2px);
+  }
 }
 
-.jz-btn-primary {
-  color: white;
+//JAZZ BUTTON THEMES
+.jz-btn-pink {
   background-color: $color-pink-primary;
-  border:1px solid $color-pink-primary;
-  transition: .3s ease-in-out;
+  color: white;
+  border: 1px solid $color-pink-primary;
   &:hover {
-    color: $color-pink-primary;
+    border: 1px solid white;
     background-color: white;
+    color: $color-pink-primary;
+  }
+  &.disabled {
+    color: white !important;
+    background-color: $color-pink-primary !important;
+    border: 1px solid $color-pink-primary !important;
+    cursor: not-allowed;
+    opacity: .5;
   }
 }
 
-.jz-btn-inverse{
+.jz-btn-outline {
   color: $color-pink-primary;
+  background-color: transparent;
   border: 1px solid $color-pink-primary;
-  background-color: white;
   &:hover {
-    color: white;
     background-color: $color-pink-primary;
-    border:1px solid $color-pink-primary;
+    color: white;
   }
+  &.disabled {
+    color: $color-gray-tertiary !important;
+    border: $color-gray-tertiary !important;
+    cursor: not-allowed;
+  }
+}
+
+
+//JAZZ BUTTON SIZE CATEGORIES
+.jz-btn-welcome {
+  font-size: 1.4rem;
+  font-weight: 400;
+  letter-spacing: .5px;
+  width: 20rem;
+  line-height: 2rem;
+  padding: 12px 16px;
+}
+
+.jz-btn-lg {
+  font-size:16px;
+  letter-spacing: .7px;
+  min-width: 10rem;
+}
+
+
+.jz-btn-sm {
+  padding: 0 1.5rem;
+  font-size: 1rem;
+  line-height: 2
+}
+
+
+//JAZZ CUSTOM BUTTONS
+.jz-btn-thin {
+  padding: 0 23px;
+  font-weight: 500;
 }
 
 .jz-btn-icon {
-  font-size: 18px;
-  padding: 6px;
-  color: $color-pink-primary;
-  background-color: white;
-  &:hover {
-    color: lighten($color-pink-primary, 10%);
-  }
-  &.is-toggled {
-    color: white;
-    background-color: $color-pink-primary;
-  }
+  height: 30px;
+  width: 30px;
 }

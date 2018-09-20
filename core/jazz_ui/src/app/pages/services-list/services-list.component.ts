@@ -293,7 +293,7 @@ export class ServicesListComponent implements OnInit {
     return array;
   }
   addQueryParam(queryParamKey, queryParamValue, makeCall){
-   
+
 
     if( this.relativeUrl.indexOf('?') == -1 ){
         this.relativeUrl += '?';
@@ -320,12 +320,12 @@ export class ServicesListComponent implements OnInit {
 
   onFilter(event) {
 
-    
-    
+
+
     this.serviceList = this.backupdata;
-    
+
     for (var i = 0; i < this.tableHeader2.length; i++) {
-   
+
     var col = this.tableHeader2[i];
     if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined) {
     var colFilterVal = col.filter['_value'].toLowerCase().replace(' ', '_');
@@ -338,28 +338,28 @@ export class ServicesListComponent implements OnInit {
     this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
     }
     }
-    
+
     if (col.filter != undefined && colFilterVal != undefined) {
     // adding ?
     if (this.relativeUrl.indexOf('?') == -1) {
     this.relativeUrl += '?';
     }
-    
+
     if (col.filter['type'] == 'dateRange') {
     // code...
-    
-    
+
+
     } else if (col.filter['type'] == 'dropdown' || (event.filter['type'] === 'input' && (event.keyCode === 13))) {
 
-    
+
     var queryParamKey = 'offset=';
     var offsetValue = 0;
     var queryParamValue = offsetValue;
     $(".pagination.justify-content-center li:nth-child(2)")[0].click();
     // this.pageSelected = 1;
-    
+
     this.addQueryParam(queryParamKey, queryParamValue, false);
-    
+
     if (event.key == col.key) {
     queryParamKey = col.key + '=';
     if (queryParamKey == "name=") {
@@ -368,15 +368,15 @@ export class ServicesListComponent implements OnInit {
     queryParamKey = "timestamp=";
     }
     queryParamValue = colFilterVal;
-   
+
     this.addQueryParam(queryParamKey, queryParamValue, true);
     }
-    
+
     }
     }
     }
     }
-    
+
     CancelFilters(event){
 switch(event){
 case 'name':{
@@ -390,7 +390,7 @@ label:'Name'
 // var ip=document.getElementById('inputfilter').setAttribute('ng-reflect-model','');
 this.tableTemplate.resetInput('name',a);
 
-this.onFilterCancel(a); 
+this.onFilterCancel(a);
 break;
 }
 case "domain":{
@@ -426,7 +426,7 @@ searchString:""
 }
 this.onServiceSearch(c);
 this.searchBox.clearSearchbox('');
-break; 
+break;
 }
 case "all":{
 var OBJ={
@@ -437,9 +437,9 @@ keyCode:13,
 label:'Name'
 };
 this.tableTemplate.resetInput('name',OBJ);
-this.onFilterCancel(OBJ); 
+this.onFilterCancel(OBJ);
 OBJ.key='domain';
-OBJ.label="Namespace"; 
+OBJ.label="Namespace";
 this.tableTemplate.resetInput('domain',OBJ);
 this.onFilterCancel(OBJ);
 OBJ.filterType='dropdown';
@@ -464,7 +464,7 @@ break;
 onFilterCancel(event) {
 
   for (var i = 0; i < this.tableHeader2.length; i++) {
-  
+
   var col = this.tableHeader2[i];
   if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined) {
   var colFilterVal = event.filterValue.toLowerCase().replace(' ', '_');
@@ -477,40 +477,40 @@ onFilterCancel(event) {
   this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
   }
   }
-  
+
   if (col.filter != undefined && colFilterVal != undefined) {
   // adding ?
   if (this.relativeUrl.indexOf('?') == -1) {
   this.relativeUrl += '?';
   }
-  
+
   if (col.filter['type'] == 'dateRange') {
   // code...
-  
-  
+
+
   } else if (col.filter['type'] == 'dropdown' || (event.filterType == 'input' && (event.keyCode === 13))) {
-  
-  
+
+
   var queryParamKey = 'offset=';
   var offsetValue = 0;
   var queryParamValue = offsetValue;
   $(".pagination.justify-content-center li:nth-child(2)")[0].click();
   // this.pageSelected = 1;
-  
+
   this.addQueryParam(queryParamKey, queryParamValue, false);
-  
+
   if (event.key == col.key) {
   queryParamKey = col.key + '=';
   if (queryParamKey == "name=") {
   queryParamKey = "service=";
-  
+
   } else if (queryParamKey == "lastModified=") {
   queryParamKey = "timestamp=";
   }
   queryParamValue = colFilterVal;
   this.addQueryParam(queryParamKey, queryParamValue, true);
   }
-  
+
   }
   }
   }
@@ -519,7 +519,7 @@ onFilterCancel(event) {
 
   onFilterSelected(selectedList){
     this.selectedListData = selectedList;
-   
+
     var queryParamKey = 'offset=';
     var offsetValue = 0;
     $(".pagination.justify-content-center li:nth-child(2)")[0].click();
@@ -566,11 +566,11 @@ onFilterCancel(event) {
       // this.pageSelected = currentlyActivePage;
       this.serviceList = [];
       this.backupdata = [];
-      
+
 
 
       var queryParamKey = 'offset=';
-      
+
       var offsetValue = (this.limitValue * (currentlyActivePage-1));
 
 
@@ -586,10 +586,10 @@ onFilterCancel(event) {
     }
   }
   onServiceSearch(searchbar){
-    this.searchbar = searchbar; 
+    this.searchbar = searchbar;
     if(searchbar.keyCode == 13){
     this.FilterTags.notifyServices("search",searchbar.searchString);
-    
+
     var queryParamKey = 'offset=';
     $(".pagination.justify-content-center li:nth-child(2)")[0].click();
     var offsetValue = 0;
@@ -654,7 +654,7 @@ onFilterCancel(event) {
     this.updateList = this.cache.get("updateServiceList");
     this.updateServices(this.updateList);
   }
-  refreshData(event){
+  refreshData(event?){
 		this.loadingState = 'default';
 		this.serviceCall();
 	}
@@ -689,6 +689,13 @@ onFilterCancel(event) {
   }
   closeDetelePopup(){
     this.setMessage("hide popup","no msg");
+  }
+
+  closeCreateServiceMenu(refreshList) {
+    this.showAddService = false;
+    if(refreshList) {
+      this.refreshData()
+    }
   }
   ngOnDestroy() {
     if(this.updateList){

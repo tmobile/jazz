@@ -1,6 +1,6 @@
 @import './../../../main-styles';
 @import './../service-detail/service-detail.component.scss';
-@import './../../secondary-components/create-service/create-service.component.scss';
+@import './../../create-service/create-service/create-service.component.scss';
 .left-item {
   margin-right: 1rem;
   @media (max-width: $screen-sm) {

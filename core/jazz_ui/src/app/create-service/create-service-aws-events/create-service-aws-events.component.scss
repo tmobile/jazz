@@ -1,0 +1,50 @@
+.row {
+  margin: 0;
+}
+
+.col-lg-2, .col-lg-3, .col-lg-5, .col-lg-7 {
+  padding: 0;
+}
+
+.select-box-wrap {
+    display: inline-block;
+    vertical-align: middle;
+    margin-bottom: 10px;
+    width: 100%;
+    border: 1px solid #ccc;
+    height: 40px;
+    line-height: 40px;
+    background: #fff;
+    padding: 0 10px;
+    border-radius: 2px;
+}
+
+.select-box-selected {
+  input {
+    font-size: 13px !important;
+  }
+  &.disabled {
+    color: #999;
+    cursor: default;
+    font-size: 14px;
+  }
+}
+
+
+.arn-table {
+  position: absolute;
+  left: 0;
+  right: 30%;
+  width: 70%;
+  border-radius: 2px 0 0 2px;
+  border-right: none;
+}
+
+.arn-input {
+  position: absolute;
+  left: 70%;
+  right: 0;
+  width: 30%;
+  border-radius: 0 2px 2px 0;
+  border-left:none;
+}

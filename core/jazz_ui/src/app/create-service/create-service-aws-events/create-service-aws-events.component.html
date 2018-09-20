@@ -1,0 +1,85 @@
+<div class="jz-radio-extension"
+     [ngSwitch]="type"
+     (blur)="setCreateServiceProperty()"
+     *ngIf="type !== 'awsEventsNone'">
+
+  <div *ngSwitchCase="'dynamodb'">
+    <div class="row">
+      <div class="col-lg-3">
+        <div>Event</div>
+        <div class="select-box-wrap">
+          <div class="select-box-selected disabled">PutItem</div>
+        </div>
+      </div>
+      <div class="col-lg-9">
+        <div>Table ARN</div>
+        <div class="jz-relative">
+          <input type="text" disabled class="jz-input arn-table"
+                 [value]="dynamoStreamString">
+          <input type="text" class="jz-input arn-input" placeholder="Table Name"
+                 [(ngModel)]="eventExpression.dynamoTable">
+        </div>
+      </div>
+    </div>
+    <p class="jz-radio-extension-link">Function would be triggered whenever the corresponding DynamoDB table is modified
+      (e.g. a new entry is added)</p>
+  </div>
+
+  <div *ngSwitchCase="'kinesis'">
+    <div class="row">
+      <div class="col-lg-3">
+        <div>Event</div>
+        <div class="select-box-wrap">
+          <div class="select-box-selected disabled">PutRecord</div>
+        </div>
+      </div>
+      <div class="col-lg-9">
+        <div>Stream ARN</div>
+        <div class="label-input slct-bx-selected input-wrapper">
+          <div class="jz-relative">
+            <input type="text" disabled class="jz-input arn-table" [value]="kinesisStreamString">
+            <input type="text" class="jz-input arn-input" placeholder="Stream Name"
+                   [(ngModel)]="eventExpression.streamARN">
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="jz-radio-extension-link">Function would be triggered whenever the Lambda checkpoint has not reached the
+      end of the Kinesis stream</p>
+
+  </div>
+  <div *ngSwitchCase="'s3'">
+    <div class="row">
+      <div class="col-lg-3">
+        <div>Event</div>
+        <div class="select-box-wrap">
+          <div class="select-box-selected disabled">PutItem</div>
+        </div>
+      </div>
+      <div class="col-lg-9">
+        <div>Bucket ARN</div>
+        <div class="jz-relative">
+          <input type="text" disabled class="jz-input arn-table">
+          <input type="text" class="jz-input arn-input" placeholder="Bucket Name"
+          [(ngModel)]="eventExpression.S3BucketName">
+        </div>
+      </div>
+    </div>
+    <p class="jz-radio-extension-link">Function would be triggered when an object is added or modified inside the
+      bucket.</p>
+  </div>
+  <div *ngSwitchCase="'sqs'">
+    <div class="row">
+      <div class="col-lg-12">
+        <div>Queue ARN</div>
+        <div class="jz-relative">
+          <input type="text" disabled class="jz-input arn-table" [value]="sqsQueueString">
+          <input type="text" class="jz-input arn-input" placeholder="Stream Name"
+                 [(ngModel)]="eventExpression.SQSQueueARN">
+        </div>
+      </div>
+    </div>
+    <p class="jz-radio-extension-link">Function would be triggered whenever the Lambda detects new messages in the source SQS queue.</p>
+  </div>
+
+</div>

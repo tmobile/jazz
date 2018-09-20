@@ -13,7 +13,6 @@ import {DropdownComponent} from '../primary-components/dropdown/dropdown.compone
 import {InputComponent} from '../primary-components/input/input.component';
 import {BtnJazzPrimaryComponent} from '../primary-components/btn-jazz-primary/btn-jazz-primary.component';
 import {SidebarComponent} from '../secondary-components/sidebar/sidebar.component';
-import {OnlyNumber} from '../secondary-components/create-service/onlyNumbers';
 import {BtnJazzSecondaryComponent} from '../primary-components/btn-jazz-secondary/btn-jazz-secondary.component';
 import {DaterangePickerComponent} from '../primary-components/daterange-picker/daterange-picker.component';
 import {FiltersComponent} from '../secondary-components/filters/filters.component';
@@ -22,7 +21,6 @@ import {FilterTagsServicesComponent} from '../secondary-components/filter-tags-s
 //import {AdvancedFiltersComponent} from './../secondary-components/advanced-filters/advanced-filters.component';
 import {TabsComponent} from '../primary-components/tabs/tabs.component';
 import {JenkinsStatusComponent} from '../pages/jenkins-status/jenkins-status.component';
-import {FocusDirective} from '../secondary-components/create-service/focus.directive';
 import {JazzMobHeaderComponent} from '../secondary-components/jazz-mob-header/jazz-mob-header.component';
 import {ClickOutsideDirective} from '../secondary-components/jazz-header/outside-click';
 import {FormsModule} from '@angular/forms';
@@ -58,6 +56,10 @@ import {FilterModalComponent} from "../secondary-components/filter-modal/filter-
 import {ServiceMetricsComponent} from "../pages/service-metrics/service-metrics.component";
 import {MetricsCarouselComponent} from "../secondary-components/metrics-carousel/metrics-carousel.component";
 import {RouterModule} from "@angular/router";
+import {RadioCheckboxComponent} from "../primary-components/radio-checkbox/radio-checkbox.component";
+import {FocusDirective} from "../create-service/create-service/focus.directive";
+import {OnlyNumber} from "../create-service/create-service/onlyNumbers";
+import {SquareCheckboxComponent} from "../primary-components/square-checkbox/square-checkbox.component";
 
 let specificComponents:any
 let specificModules: any;
@@ -131,6 +133,8 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    RadioCheckboxComponent,
+    SquareCheckboxComponent,
     ...declarationsArray,
 
 
@@ -175,6 +179,8 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    RadioCheckboxComponent,
+    SquareCheckboxComponent,
     ...declarationsArray
 
   ],

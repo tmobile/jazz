@@ -1,0 +1,67 @@
+.jz-cs-step-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: bold;
+  color: #222222;
+  padding-bottom: 16px;
+}
+
+.jz-cs-step-subtitle{
+  font-size: 11px;
+  color: #555555;
+  width: 60%;
+  min-width: 180px;
+}
+
+.jz-radio-extension {
+  padding: 1.25rem 15px;
+  background-color: lightgray;
+  margin-left: 15px;
+}
+.jz-radio-extension-link {
+  margin-bottom: 0;
+  font-size: 1rem;
+  a {
+    color: #ed0295;
+    text-decoration: none;
+    cursor: pointer;
+  }
+}
+
+.jz-radio-extension-label {
+  font-size: 1rem;
+}
+
+.jz-cs-submit {
+  padding: 3rem 0 7rem 0;
+  text-align: center;
+  @media(max-width: 853px) {
+    position: fixed;
+    bottom: 0;
+    padding: 2rem 0;
+    left: 0;
+    right: 0;
+    background: #fff;
+    box-shadow: 0px 0px 16px 0px rgba(0, 0, 0, 0.28);
+  }
+}
+
+.jz-cs-submitted-screen {
+  text-align: center;
+  padding-top: 5.8333rem;
+  width: 60%;
+  margin: auto;
+  img {
+    width: 150px;
+  }
+}
+
+.jz-cs-loader {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(54, 69, 85, 0.9);
+    z-index: 2;
+}

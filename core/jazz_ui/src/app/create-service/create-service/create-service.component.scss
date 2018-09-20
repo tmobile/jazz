@@ -1,5 +1,21 @@
-@import './../../../main-styles';
-.create-service-wrap {
+//@import './../../../main-styles';
+
+.textForm {
+  display: inline-block;
+  height: 40px;
+  padding: 4px 10px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  line-height: 20px;
+  color: #555;
+  -webkit-border-radius: 2px;
+  -moz-border-radius: 2px;
+  border-radius: 2px;
+  vertical-align: middle;
+  outline: none;
+}
+
+.create-service-menu {
     background-color: white;
     max-width: 980px;
     width: 100vw;
@@ -11,15 +27,29 @@
     }
 }
 
+.create-service-header {
+  position: relative;
+  border-bottom: 1px solid #cccccc;
+  .icon-icon-close {
+    position: absolute;
+    top: 2rem;
+    right: 0;
+    width: 1.25rem;
+    cursor: pointer;
+    color: #ed008c;
+  }
+  h4 {
+    padding: 1.33rem 0;
+  }
+}
+
+
 .termsConditions {
     padding: 5px 0;
     margin: 0;
     font-size: 1rem;
 }
 
-.create-service-wrap .bold-title {
-    padding: 1.33rem 0;
-}
 .service-box-section{
     padding-bottom: 15px;
     min-width: 150px;
@@ -40,227 +70,11 @@
 .type-of-platform, .type-of-service{
     padding-bottom: 0;
 }
-.service-box {
-    border-radius: 5px;
-    border: solid 1px #cccccc;
-    text-align: center;
-    padding: 2rem 0;
-    cursor: pointer;
-    min-height: 120px;
-    &.disabled-box {
-        cursor: default;
-    }
-    &.disabled-box:focus{
-      border-color: #cccccc !important;
-    }
-}
 
-.service-box img {
-    height: 3.33rem;
-    width: 88%;
-    max-width: 70px;
-}
 
-.service-box p {
-    padding-top: 1rem;
-    margin: 0;
-    font-size: 1rem;
-    font-weight: bold;
-    letter-spacing: 0.7px;
-    color: #cccccc;
-}
-
-.service-box-selected p {
-    color: #ed008c;
-}
-
-.service-box.service-box-selected {
-    border: solid 2px #ed008c !important;
-}
-
-.service-box {
-    .icon-icon-api,
-    .icon-icon-lambda,
-    .icon-icon-web,
-    .icon-logo-aws,
-    .icon-logo-azure,
-    .icon-logo-googleCloud,
-    .icon-logo-docker{
-        font-size: 40px;
-        color: #ccc;
-    }
-    &.service-box-selected {
-        .icon-icon-api,
-        .icon-icon-lambda,
-        .icon-icon-web {
-            color: #ed008c;
-        }
-    }
-}
-.service-box .icon-logo-aws,
-.service-box .icon-logo-azure,
-.service-box .icon-logo-googleCloud,
-.service-box .icon-logo-docker{
-    position: relative;
-    span{
-        position: absolute;
-    }
-    span:first-child{
-        position: relative;
-    }
-}
-.service-box .icon-logo-azure,
-.service-box .icon-logo-googleCloud,
-.service-box .icon-logo-docker{
-    span:before{
-        color: #ccc !important;
-    }
-}
-.service-box {
-    .icon-icon-api,
-    .icon-icon-function,
-    .icon-icon-web,
-    .icon-icon-AWS,
-    .icon-icon-azure,
-    .icon-icon-googlecloud,
-    .icon-icon-ccp{
-        font-size: 40px;
-        color: #ccc;
-        span{
-            font-size: 40px;
-            color: #ccc;
-        }
-    }
-    &.service-box-selected {
-        .icon-icon-api,
-        .icon-icon-function,
-        .icon-icon-web {
-            color: #ed008c;
-        }
-    }
-}
-.service-box .icon-icon-AWS,
-.service-box .icon-icon-azure,
-.service-box .icon-icon-googlecloud,
-.service-box .icon-icon-ccp{
-    position: relative;
-    span{
-        position: absolute;
-    }
-    span:first-child{
-        position: relative;
-    }
-}
-.service-box .icon-icon-azure,
-.service-box .icon-icon-googlecloud,
-.service-box .icon-icon-ccp{ 
-    span:before{
-        color: #ccc !important;
-    }
-}
 
 /*checkbox related styles*/
 
-.custom-cb {
-    position: relative;
-    margin-bottom: .85rem;
-    display: flex;
-}
-
-
-
-.custom-cb label {
-    cursor: pointer;
-    width: 1.5rem;
-    height: 1.5rem;
-    position: absolute;
-    top: 0;
-    background: transparent;
-    left: 0;
-    border: 1px solid;
-}
-
-.custom-cb label:after {
-    content: '';
-    width: 1.066rem;
-    height: .5rem;
-    position: absolute;
-    top: .75rem;
-    left: 1px;
-    border: 2px solid #fff;
-    border-top: none;
-    border-right: none;
-    background: transparent;
-    opacity: 0;
-    -webkit-transform: rotate(-45deg);
-    transform: rotate(-45deg);
-    -webkit-transform-origin: left top;
-    transform-origin: left top;
-}
-
-.custom-cb label:hover::after {
-    opacity: 0.3;
-}
-
-.custom-cb input[type=checkbox] {
-    opacity: 0;
-}
-
-.custom-cb input[type=checkbox]:checked + label {
-    opacity: 1;
-    background: #ed0295;
-    border: 1px solid #ed0295;
-}
-
-.custom-cb input[type=checkbox]:checked + label:after {
-    opacity: 1;
-    -webkit-animation: check 0.28s;
-    animation: check 0.28s;
-}
-
-.cb-status-dets {
-    display: inline-block;
-    line-height: 1.5rem;
-    vertical-align: top;
-    font-size: 1rem;
-    padding-left: 1rem;
-    margin-top: 1px;
-    max-width: 92%;
-}
-
-@-webkit-keyframes check {
-    0% {
-        height: 0;
-        width: 0;
-    }
-    40% {
-        height: .5rem;
-        width: 0;
-    }
-    50% {
-        height: .5rem;
-        width: 1.066rem;
-    }
-}
-
-@keyframes check {
-    0% {
-        height: 0;
-        width: 0;
-    }
-    40% {
-        height: .5rem;
-        width: 0;
-    }
-    50% {
-        height: .5rem;
-        width: 1.066rem;
-    }
-}
-
-.input-field-container {
-    position: relative;
-}
 
 .form-error {
     color: #d0021b;
@@ -516,27 +330,6 @@
 .approvers-list-wrap {
     position: relative;
 }
-.input-wrapper input[type="text"], 
-.input-wrapper input[type="number"]{
-    margin-bottom: 0;
-}
-.input-wrapper .input-loader {
-    animation-name: rotate;
-    animation-duration: 0.8s;
-    animation-iteration-count: infinite;
-    animation-timing-function: linear;
-    height: 2rem;
-    position: absolute;
-    right: 0;
-    top: 0;
-    transform: scale(0.7);
-    margin: 0.666rem 1rem;
-}
-.input-wrapper textarea{
-    padding: 10px 10px;
-    max-width: 100%;
-    height: auto;
-}
 
 .success-screen {
     text-align: center;
@@ -628,18 +421,6 @@
                 width:10rem;
             }
         }
-    }
-}
-
-.create-service-header {
-    position: relative;
-    .icon-icon-close {
-        position: absolute;
-        top: 2rem;
-        right: 0;
-        width: 1.25rem;
-        cursor: pointer;
-        color: #ed008c;
     }
 }
 
@@ -743,9 +524,6 @@ p.learn-more {
     height: 100%;
     overflow: hidden;
 }
-.body-auto{
-
-}
 .requiredInfo{
     padding:20px 0;
     font-weight: bold;
@@ -761,11 +539,7 @@ p.learn-more {
     background-color: #ed008c;
     color: #fff;
 }
-.each-step-wrap{
-    /deep/ input[type="radio"] + label{
-        margin-left:-15px;
-    }
-}
+
 .padding-right-0{
     padding-right:0;
 }
@@ -773,4 +547,9 @@ p.learn-more {
 .disble{
     border-color: #ddd !important;   
     opacity: 0.5 !important; 
+}
+
+.section-controls-padding {
+  padding-left: 15px;
+  padding-right: 15px;
 }

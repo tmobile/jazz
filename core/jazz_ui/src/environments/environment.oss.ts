@@ -8,6 +8,7 @@ export const environment = {
   slack_support: {slack_support},
   serviceTabs: ["{overview}", "{access control}", "{metrics}", "{logs}", "{cost}"],
   environmentTabs: ["{env_overview}", "{deployments}", "{code quality}", "{metrics}", "{assets}", "{env_logs}"],
+  gaTrackingId: '',
   urls: {
     docs_link: "https://github.com/tmobile/jazz/wiki",
     swagger_editor: "{swagger_editor}",

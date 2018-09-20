@@ -1,0 +1,14 @@
+<div class="radio-group ">
+    <div class="radio-container jz-radio-checkbox"
+       *ngFor="let option of options"
+       [class.disable-radio]="option.disabled">
+      <input type="radio"
+             [value]="option.value"
+             [checked]="option.value === selected">
+      <label (click)="select(option)">
+        <span class='outer'></span>
+        <span class="background"></span>
+        {{option.label}}
+      </label>
+    </div>
+</div>
