@@ -385,6 +385,22 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
         }
 
+        if (service_name.trim() == "jazz_splunk-kinesis-log-streamer") {
+            sh "sed -i -- 's|{splunk_endpoint}|${config_loader.SPLUNK.ENDPOINT}|g' ./config/dev-config.json"
+            sh "sed -i -- 's|{splunk_endpoint}|${config_loader.SPLUNK.ENDPOINT}|g' ./config/stg-config.json"
+            sh "sed -i -- 's|{splunk_endpoint}|${config_loader.SPLUNK.ENDPOINT}|g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{spunk_hec_token}/${config_loader.SPLUNK.HEC_TOKEN}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{spunk_hec_token}/${config_loader.SPLUNK.HEC_TOKEN}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{spunk_hec_token}/${config_loader.SPLUNK.HEC_TOKEN}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{splunk_index}/${config_loader.SPLUNK.INDEX}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{splunk_index}/${config_loader.SPLUNK.INDEX}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{splunk_index}/${config_loader.SPLUNK.INDEX}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{enable_splunk_logging_global}/${config_loader.SPLUNK.IS_ENABLED}/g' ./config/global-config.json"
+        }
+
         if (service_name.trim() == "jazz_usermanagement") {
             sh "sed -i -- 's/{user_pool_id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{user_pool_id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
