@@ -521,18 +521,28 @@ def setKinesisStream(config){
     if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ||
         (config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler") ||
         (config['service'] == "asset-event-handler") || ((config['service'] == "slack-event-handler") && (config_loader.SLACK.ENABLE_SLACK == "true"))) {
+        def kinesisArn = "arn:aws:kinesis:$region:$role_id:stream/${config_loader.INSTANCE_PREFIX}-events-hub-" + current_environment
         def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
-        def event_source_list = sh(
-            script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"",
-            returnStdout: true
-        ).trim()
-        echo "$event_source_list"
-        if (event_source_list == "[]") {
-            sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$role_id:stream/${config_loader.INSTANCE_PREFIX}-events-hub-" + current_environment + " --function-name arn:aws:lambda:$region:$role_id:function:$function_name --starting-position LATEST --region " + region
-        }
-
+        setEventSourceMapping(kinesisArn, function_name, config)
+    } else if ((config['service'].trim() == "cloud-logs-streamer") || (config['service'].trim() == "splunk-kinesis-log-streamer")) {
+      def kinesisArn = "arn:aws:kinesis:$region:$role_id:stream/${config_loader.INSTANCE_PREFIX}-logs-streamer-" + current_environment
+      def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
+      setEventSourceMapping(kinesisArn, function_name, config)
     }
 }
+
+def setEventSourceMapping(eventSourceArn, function_name, config) {
+  def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
+  def event_source_list = sh(
+      script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"",
+      returnStdout: true
+  ).trim()
+  echo "$event_source_list"
+  if (event_source_list == "[]") {
+      sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$role_id:function:$function_name --starting-position LATEST --region " + region
+  }
+}
+
 def setLogStreamPermission(config){
     if (config['service'] == "cloud-logs-streamer") {
         def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"

@@ -701,7 +701,7 @@ def updateApiDocUrl(String env) {
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
 	def lambda = "/aws/lambda/${stackName}"
-	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
+    def logStreamer = "arn:aws:kinesis:${configLoader.AWS.REGION}:${roleId}:stream/${configLoader.INSTANCE_PREFIX}-logs-streamer-prod"
 	try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
 	} catch (Exception ex) { }// ignore if already existing
@@ -721,7 +721,7 @@ def createSubscriptionFilters(stackName, region, roleId) {
 	} catch (Exception ex) { }// ignore error if not created yet
 
 	try {
-		sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region}"
+		sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn \"arn:aws:iam::${roleId}:role/${configLoader.INSTANCE_PREFIX}_basic_execution\""
 	} catch (Exception ex) {
 		echo "error occured: " + ex.getMessage()
 	}
