@@ -22,137 +22,123 @@
 	@version: 1.0
 **/
 
-const utils = require('../utils.js')()
-const _ = require('lodash')
+const utils = require("../utils.js")();
+const _ = require("lodash");
 
 module.exports = (query, getAllRecords, onComplete) => {
-  // initialize dynamodb
-  var dynamodb = utils.initDynamodb()
+    // initialize dynamodb
+    var dynamodb = utils.initDynamodb();
 
-  var filter = ''
-  var attributeValues = {}
-  var insertAnd = ' AND '
+    var filter = "";
+    var attributeValues = {};
+    var insertAnd = " AND ";
 
-  var scanparams = {
-    TableName: global.services_table,
-    ReturnConsumedCapacity: 'TOTAL',
-    Limit: '500',
-  }
+    var scanparams = {
+        "TableName": global.services_table,
+        "ReturnConsumedCapacity": "TOTAL",
+        "Limit": "500"
+    };
 
-  var filter_key = utils.getDatabaseKeyName(global.config.service_filter_key)
+    var filter_key = utils.getDatabaseKeyName(global.config.service_filter_key);
 
-  if (query !== undefined && query !== null) {
-    var keys_list = global.config.service_filter_params
+    if (query !== undefined && query !== null) {
 
-    keys_list.forEach(function(key) {
-      var key_name = utils.getDatabaseKeyName(key)
+        var keys_list = global.config.service_filter_params;
 
-      if (
-        key_name == 'SERVICE_TIMESTAMP' &&
-        (query.last_updated_after !== undefined ||
-          query.last_updated_before !== undefined)
-      ) {
-        filter =
-          filter + key_name + ' BETWEEN :BEFORE' + ' AND :AFTER ' + insertAnd
-        attributeValues[':BEFORE'] = {
-          S: query.last_updated_before,
-        }
-        attributeValues[':AFTER'] = {
-          S: query.last_updated_after,
-        }
-      } else if (key_name == 'SERVICE_STATUS' && query.status !== undefined) {
-        var status = query.status
-        var array = status.split(',')
-        var obj = {}
+        keys_list.forEach(function (key) {
 
-        var filterString = '( '
-        array.forEach(function(value) {
-          filterString += ' :' + value + ' , '
-        })
-        filterString = filterString.substring(0, filterString.length - 3)
-        filterString += ' )'
+            var key_name = utils.getDatabaseKeyName(key);
 
-        filter = filter + key_name + ' IN ' + filterString + ' AND '
-        array.forEach(function(value) {
-          attributeValues[':' + value] = {
-            S: value,
-          }
-        })
-      } else if (query[key]) {
-        filter = filter + key_name + ' = :' + key_name + insertAnd
-        attributeValues[':' + key_name] = {
-          S: query[key],
-        }
-      }
-    })
-  }
+            if (key_name == "SERVICE_TIMESTAMP" && (query.last_updated_after !== undefined || query.last_updated_before !== undefined)) {
+                filter = filter + key_name + " BETWEEN :BEFORE" + " AND :AFTER " + insertAnd;
+                attributeValues[(":BEFORE")] = {
+                    'S': query.last_updated_before
+                };
+                attributeValues[(":AFTER")] = {
+                    'S': query.last_updated_after
+                };
+            } else if (key_name == "SERVICE_STATUS" && query.status !== undefined) {
+                var status = query.status;
+                var array = status.split(',');
+                var obj = {};
 
-  if (
-    !getAllRecords ||
-    (global.userId &&
-      !_.includes(global.config.admin_users, global.userId.toLowerCase()))
-  ) {
-    var ddb_created_by = utils.getDatabaseKeyName('created_by')
+                var filterString = "( ";
+                array.forEach(function (value) {
+                    filterString += " :" + value + " , ";
+                });
+                filterString = filterString.substring(0, filterString.length - 3);
+                filterString += " )";
 
-    // filter for services created by current user
-    filter = filter + ddb_created_by + ' = :' + ddb_created_by + insertAnd
-    attributeValues[':' + ddb_created_by] = {
-      S: global.userId,
+                filter = filter + key_name + " IN " + filterString + " AND ";
+                array.forEach(function (value) {
+                    attributeValues[(":" + value)] = {
+                        'S': value
+                    };
+                });
+            } else if (query[key]) {
+                filter = filter + key_name + " = :" + key_name + insertAnd;
+                attributeValues[(":" + key_name)] = {
+                    'S': query[key]
+                };
+            }
+        });
     }
-  }
 
-  if (filter !== '') {
-    filter = filter.substring(0, filter.length - insertAnd.length) // remove insertAnd at the end
+    if (!getAllRecords || (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()))) {
+        var ddb_created_by = utils.getDatabaseKeyName("created_by");
 
-    scanparams.FilterExpression = filter
-    scanparams.ExpressionAttributeValues = attributeValues
-  }
+        // filter for services created by current user
+        filter = filter + ddb_created_by + " = :" + ddb_created_by + insertAnd;
+        attributeValues[(":" + ddb_created_by)] = {
+            'S': global.userId
+        };
+    }
 
-  query.limit = query.limit || 10
-  query.offset = query.offset || 0
-  query.filter = query.filter || ''
-  var scanExecute = function(onComplete) {
-    dynamodb.scan(scanparams, function(err, items) {
-      var count
-      if (err) {
-        onComplete(err)
-      } else {
-        var items_formatted = []
-        items.Items.forEach(function(item) {
-          items_formatted.push(utils.formatService(item, true))
-        })
-        if (items.LastEvaluatedKey) {
-          scanparams.ExclusiveStartKey = items.LastEvaluatedKey
-          scanExecute(onComplete)
-        } else {
-          if (items_formatted.length > 0) {
-            items_formatted = utils.sortUtil(
-              items_formatted,
-              query.sort_by,
-              query.sort_direction
-            )
+    if (filter !== "") {
+        filter = filter.substring(0, filter.length - insertAnd.length); // remove insertAnd at the end
 
-            if (query.filter) {
-              items_formatted = utils.filterUtil(items_formatted, query.filter)
+        scanparams.FilterExpression = filter;
+        scanparams.ExpressionAttributeValues = attributeValues;
+    }
+
+    query.limit = query.limit || 10;
+    query.offset = query.offset || 0;
+    query.filter = query.filter || "";
+    var scanExecute = function (onComplete) {
+        dynamodb.scan(scanparams, function (err, items) {
+            var count;
+            if (err) {
+                onComplete(err);
+            } else {
+                var items_formatted = [];
+                items.Items.forEach(function (item) {
+                    items_formatted.push(utils.formatService(item, true));
+                });
+                if (items.LastEvaluatedKey) {
+                    scanparams.ExclusiveStartKey = items.LastEvaluatedKey;
+                    scanExecute(onComplete);
+                } else {
+                    if (items_formatted.length > 0) {
+
+                        items_formatted = utils.sortUtil(items_formatted, query.sort_by, query.sort_direction);
+
+                        if (query.filter) {
+                            items_formatted = utils.filterUtil(items_formatted, query.filter);
+                        }
+                        count = items_formatted.length;
+                        if (query.limit && query.offset) {
+                            items_formatted = utils.paginateUtil(items_formatted, parseInt(query.limit), parseInt(query.offset));
+                        }
+                    }
+                    var obj = {
+                        count: count,
+                        services: items_formatted
+                    };
+
+                    onComplete(null, obj);
+                }
             }
-            count = items_formatted.length
-            if (query.limit && query.offset) {
-              items_formatted = utils.paginateUtil(
-                items_formatted,
-                parseInt(query.limit),
-                parseInt(query.offset)
-              )
-            }
-          }
-          var obj = {
-            count: count,
-            services: items_formatted,
-          }
-
-          onComplete(null, obj)
-        }
-      }
-    })
-  }
-  scanExecute(onComplete)
-}
+        });
+    };
+    scanExecute(onComplete);
+};

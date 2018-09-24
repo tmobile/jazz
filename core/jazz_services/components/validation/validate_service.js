@@ -1,6 +1,6 @@
 // =========================================================================
 // Copyright © 2017 T-Mobile USA, Inc.
-//
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -22,29 +22,29 @@
     @version: 1.0
 **/
 
-const logger = require('../logger.js') //Import the logging module.
-const crud = require('../crud')() //Import the utils module.
-const _ = require('lodash')
+const logger = require("../logger.js"); //Import the logging module.
+const crud = require("../crud")(); //Import the utils module.
+const _ = require("lodash");
 
 module.exports = (service_id, onComplete) => {
-  logger.info('Inside Validate Service with service id: ' + service_id)
+    logger.info("Inside Validate Service with service id: " + service_id);
 
-  crud.get(service_id, function onServiceGet(error, data) {
-    if (error) {
-      onComplete(error, null)
-    } else {
-      if (_.isEmpty(data)) {
-        onComplete({
-          result: 'notFoundError',
-          message: 'Cannot find service with id: ' + service_id,
-        })
-      } else {
-        onComplete(null, {
-          result: 'success',
-          message: 'service exists',
-          data: data,
-        })
-      }
-    }
-  })
-}
+    crud.get(service_id, function onServiceGet(error, data) {
+        if (error) {
+            onComplete(error, null);
+        } else {
+            if (_.isEmpty(data)) {
+                onComplete({
+                    result: "notFoundError",
+                    message: "Cannot find service with id: " + service_id
+                });
+            } else {
+                onComplete(null, {
+                    result: "success",
+                    message: "service exists",
+                    data: data
+                });
+            }
+        }
+    });
+};
