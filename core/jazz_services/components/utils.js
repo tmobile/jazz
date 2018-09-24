@@ -23,6 +23,7 @@
 **/
 
 const AWS = require("aws-sdk")
+const logger = require("./logger")
 
 // function to convert key name in schema to database column name
 var getDatabaseKeyName = function(key) {
@@ -145,13 +146,9 @@ var initDynamodb = function() {
 //But our usecase needs empty string for updation
 var getUpdateData = function(update_data, old_data) {
   var input_data = {}
+  old_data = old_data.validateServiceExists["service_payload"]
   for (var field in update_data) {
-    if (
-      update_data[field] === "" ||
-      update_data[field] === undefined ||
-      old_data[field] === "" ||
-      old_data[field] === undefined
-    ) {
+    if (update_data[field] === "" || update_data[field] === undefined) {
       input_data[field] = null
     } else if (update_data[field] && update_data[field].constructor === Array) {
       var array = update_data[field]
@@ -166,8 +163,13 @@ var getUpdateData = function(update_data, old_data) {
       } else {
         input_data[field] = []
       }
-    } else if (update_data[field] && update_data[field].constructor === Object) {
-      var ref_data = old_data.validateServiceExists["service_payload"]
+    } else if (
+      update_data[field] &&
+      update_data[field].constructor === Object &&
+      old_data[field] != undefined &&
+      old_data[field] != ""
+    ) {
+      var ref_data = old_data
       var new_keys = Object.keys(update_data[field])
       var old_keys = Object.keys(ref_data[field])
       var update_object = update_data[field]

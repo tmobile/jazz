@@ -683,6 +683,7 @@ describe('platform_services', function() {
     sinon.assert.called(logStub);
     logStub.restore();
     assert.isTrue(logCheck);
+    
   });
 
   /*

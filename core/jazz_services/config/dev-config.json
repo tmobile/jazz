@@ -1,5 +1,5 @@
 {
-    "services_table": "{inst_stack_prefix}_services_dev",
+    "services_table": "{inst_stack_prefix}_services_prod",
     "service_required_fields": ["service", "domain", "type", "created_by", "runtime", "status"],
     "service_update_fields": ["description", "email", "slack_channel", "tags", "repository", "status","metadata","is_public_endpoint"],
     "service_filter_params": ["service", "domain", "region", "type", "runtime", "created_by", "status"],
