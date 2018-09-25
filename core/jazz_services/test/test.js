@@ -701,7 +701,7 @@ describe("platform_services", function() {
   })
 
   /* 
-  * Given a successful attempt at a dynamo service update, handler() should indicate metadat updated successfully
+  * Given a successful attempt at a dynamo service update, handler() should indicate metadata updated successfully
   * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   */
@@ -741,11 +741,11 @@ describe("platform_services", function() {
   })
 
   /* 
-  * Given a successful attempt at a dynamo service update, handler() should indicate metadat updated successfully
+  * Given a successful attempt at a dynamo service update, handler() should indicate array updated successfully
   * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   */
- it("should indicate that metadata was updated upon successful documentClient.update()", () => {
+ it("should indicate that array was updated upon successful documentClient.update()", () => {
   event.method = "PUT"
   logMessage = "Array data updated"
   event.body = {
