@@ -135,7 +135,9 @@ export class ServiceDetailComponent implements OnInit {
           returnObject["event_source_arn"] = service.metadata.event_source_sqs;
         }
       }
-      this.addEventSource(returnObject);
+      if(typeof returnObject["event_source_arn"] == "object"){
+        returnObject["event_source_arn"] = returnObject["event_source_arn"].S;
+      }
       return returnObject;
 
     }
