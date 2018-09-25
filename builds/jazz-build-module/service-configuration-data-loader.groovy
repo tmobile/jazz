@@ -525,7 +525,14 @@ def setKinesisStream(config){
         def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
         setEventSourceMapping(kinesisArn, function_name, config)
     } else if ((config['service'].trim() == "es-kinesis-log-streamer") || (config['service'].trim() == "splunk-kinesis-log-streamer")) {
-      def kinesisArn = "arn:aws:kinesis:$region:$role_id:stream/${config_loader.INSTANCE_PREFIX}-logs-streamer-${current_environment}"
+      def kinesisArn = ""
+      if (current_environment && current_environment.endsWith('dev')) {
+        kinesisArn = configLoader.AWS.KINESIS_LOG_STREAMER.DEV
+      } else if (current_environment && current_environment.endsWith('stg')) {
+        kinesisArn = configLoader.AWS.KINESIS_LOG_STREAMER.STG
+      } else if (current_environment && current_environment.endsWith('prod')) {
+        kinesisArn = configLoader.AWS.KINESIS_LOG_STREAMER.PROD
+      }
       def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
       setEventSourceMapping(kinesisArn, function_name, config)
     }

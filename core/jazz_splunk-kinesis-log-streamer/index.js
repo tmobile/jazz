@@ -4,8 +4,6 @@
 	@version: 1.0
 **/
 
-'use strict';
-
 const SplunkLogger = require('splunk-logging').Logger;
 const zlib = require('zlib');
 const configData = require("./components/config.js"); //Import the environment data.
@@ -17,7 +15,7 @@ const global_config = require("./config/global-config.json");
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-function handler(event, context, callback){
+function handler(event, context, callback) {
 
   logger.debug('Received event:' + JSON.stringify(event));
   let errorHandler = errorHandlerModule();
@@ -30,21 +28,21 @@ function handler(event, context, callback){
       maxBatchCount: 0, // Manually flush events
       maxRetries: 1 // Retry 1 times
     };
-  
+
     const splunkLog = new SplunkLogger(loggerConfig);
     // Set common error handler for splunkLog.send() and splunkLog.flush()
     splunkLog.error = (error, context) => {
       logger.error('error:' + error + ', context:' + JSON.stringify(context));
       return callback(JSON.stringify(error));
     };
-  
+
     try {
-      
+
       event.Records.forEach(eachRecord => {
         // CloudWatch Logs data is base64 encoded so decode here
         let payload = new Buffer(eachRecord.kinesis.data, 'base64');
         logger.info("payload:" + JSON.stringify(payload));
-  
+
         // CloudWatch Logs are gzip compressed so expand here
         zlib.gunzip(payload, (error, result) => {
           if (error) {
@@ -56,7 +54,7 @@ function handler(event, context, callback){
             logger.info('Decoded payload:' + JSON.stringify(awslogsData));
             exportable.sendSplunkEvent(awslogsData, splunkLog, config)
               .then((count) => {
-                if(count) {
+                if (count) {
                   splunkLog.flush((err, resp, body) => {
                     // Request failure or valid response from Splunk with HEC error code
                     if (err || (body && body.code !== 0)) {
@@ -72,7 +70,7 @@ function handler(event, context, callback){
                 } else {
                   return callback(null, "Success");
                 }
-                
+
               })
               .catch(error => {
                 logger.error(JSON.stringify(error));
@@ -81,7 +79,7 @@ function handler(event, context, callback){
           }
         });
       });
-      
+
     } catch (e) {
       logger.error("Error:" + JSON.stringify(e));
       return callback(null, "Success");
@@ -111,23 +109,23 @@ function sendSplunkEvent(awslogsData, splunkLog, config) {
         });
     } else if (awslogsData.logGroup.indexOf("/aws/lambda/") === 0) {
       utils.getCommonData(awslogsData)
-      .then(commonData => {
-        awslogsData.logEvents.forEach(logEvent => {
-          utils.transformLambdaLogs(logEvent, commonData)
-            .then(event => {
-              exportable.sendDataToSplunk(splunkLog, event, config);
-              count++;
-              if (count === awslogsData.logEvents.length) {
-                resolve(count);
-              }
-            })
-            .catch(error => {
-              logger.error("Error in sendSplunkEvent:" + JSON.stringify(error));
-              resolve();
-            });
+        .then(commonData => {
+          awslogsData.logEvents.forEach(logEvent => {
+            utils.transformLambdaLogs(logEvent, commonData)
+              .then(event => {
+                exportable.sendDataToSplunk(splunkLog, event, config);
+                count++;
+                if (count === awslogsData.logEvents.length) {
+                  resolve(count);
+                }
+              })
+              .catch(error => {
+                logger.error("Error in sendSplunkEvent:" + JSON.stringify(error));
+                resolve();
+              });
+          });
         });
-      });
-      
+
     } else {
       logger.debug('Received unsupported logEvents');
       resolve();
@@ -139,7 +137,7 @@ function sendDataToSplunk(splunkLog, eventData, config) {
   logger.debug("Send event data:" + JSON.stringify(eventData));
   let payload = {
     message: eventData.event,
-    metadata:{
+    metadata: {
       sourcetype: eventData.sourcetype,
       index: config.SPLUNK_INDEX
     }

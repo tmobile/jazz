@@ -1,18 +1,20 @@
 {
-    "name": "jazz_es-kinesis-log-streamer",
-    "version": "0.0.1",
-    "description": "Cloud Logs Streamer Services",
-    "main": "index.js",
-    "private": true,
-    "author": [],
-    "scripts": {
-        "test": "mocha"
-    },
-    "dependencies": {
-        "unicode-byte-truncate": "*"
-    },
-    "devDependencies": {
-        "chai": "*",
-        "mocha": "*"
-    }
+  "name": "jazz_es-kinesis-log-streamer",
+  "version": "0.0.1",
+  "description": "Cloud Logs Streamer Services",
+  "main": "index.js",
+  "private": true,
+  "author": {
+    "name": "Jazz"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "unicode-byte-truncate": "*"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0"
+  }
 }

@@ -4,7 +4,9 @@
   "description": "Splunk cloudwatch logs streamer.",
   "main": "index.js",
   "private": true,
-  "author": [],
+  "author": {
+    "name": "Jazz"
+  },
   "scripts": {
     "test": "mocha"
   },

@@ -17,22 +17,22 @@
 /**
   @module: config.js
   @description: Defines variables/functions to retrieve environment related data
-  @author:
-  @version: 1.0
+	@author:
+	@version: 1.0
 **/
 
 const fs = require('fs');
 const path = require('path');
 
-var getStageConfig = (event, context) => {
-  var stage, configObj;
+const getStageConfig = (event, context) => {
+  let stage, configObj;
 
   if (event && event.stage) {
     stage = event.stage;
   } else if (context && context.functionName && context.functionName.length > 0) {
-    var functionName = context.functionName;
+    let functionName = context.functionName;
 
-    var fnName = functionName.substr(functionName.lastIndexOf('-') + 1, functionName.length);
+    let fnName = functionName.substr(functionName.lastIndexOf('-') + 1, functionName.length);
 
     if (fnName.endsWith('dev')) {
       stage = 'dev';
@@ -46,7 +46,7 @@ var getStageConfig = (event, context) => {
   }
 
   if (stage) {
-    var configFile = path.join(__dirname, `../config/${stage}-config.json`);
+    let configFile = path.join(__dirname, `../config/${stage}-config.json`);
 
     if (fs.existsSync(configFile)) {
       configObj = JSON.parse(fs.readFileSync(configFile));
