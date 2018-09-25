@@ -98,6 +98,7 @@ export class ServiceDetailComponent implements OnInit {
     if (service === undefined) {
       return {};
     } else {
+      service.metadata = this.addEventSource(service.metadata);
       let returnObject = {
         id: service.id,
         name: service.service,
@@ -118,17 +119,20 @@ export class ServiceDetailComponent implements OnInit {
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
         returnObject["eventScheduleRate"] = service.metadata.eventScheduleRate;
+        if(service.metadata.event_source){
+          returnObject["event_source"] = service.metadata.event_source;
+        }
         if(service.metadata.event_source_dynamodb){
-          returnObject["event_source_dynamodb"] = service.metadata.event_source_dynamodb;
+          returnObject["event_source_arn"] = service.metadata.event_source_dynamodb;
         }
         if(service.metadata.event_source_kinesis){
-          returnObject["event_source_kinesis"] = service.metadata.event_source_kinesis;
+          returnObject["event_source_arn"] = service.metadata.event_source_kinesis;
         }
         if(service.metadata.event_source_s3){
-          returnObject["event_source_s3"] = service.metadata.event_source_s3;
+          returnObject["event_source_arn"] = service.metadata.event_source_s3;
         }
         if(service.metadata.event_source_sqs){
-          returnObject["event_source_sqs"] = service.metadata.event_source_sqs;
+          returnObject["event_source_arn"] = service.metadata.event_source_sqs;
         }
       }
       this.addEventSource(returnObject);
@@ -137,14 +141,14 @@ export class ServiceDetailComponent implements OnInit {
     }
   };
 
-  addEventSource(returnObject){
-    let keysList = Object.keys(returnObject);
+  addEventSource(obj){
+    let keysList = Object.keys(obj);
     for(let i =0; i < keysList.length ; i++){
       if(keysList[i].includes("event_source_")) {
-        returnObject.event_source = keysList[i].replace("event_source_","");
+        obj.event_source = keysList[i].replace("event_source_","");
       }
     }
-    return returnObject
+    return obj;
   }
   onDataFetched(service) {
 

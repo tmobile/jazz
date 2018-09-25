@@ -359,9 +359,7 @@ export class CreateServiceComponent implements OnInit {
           var index = output.data.indexOf("https://");
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
-          this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
-          this.rateExpression.error = undefined;
-          this.rateExpression.type = 'none';
+          this.resetEvents();
        },
         (error) => {
           this.isLoading = false;
@@ -382,6 +380,17 @@ export class CreateServiceComponent implements OnInit {
             }
         }
       );
+  }
+
+  resetEvents(){
+    this.eventExpression.dynamoTable = "";
+    this.eventExpression.streamARN = "";
+    this.eventExpression.S3BucketName = "";
+    this.eventExpression.SQSstreamARN = "";
+    this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+    this.rateExpression.error = undefined;
+    this.rateExpression.type = 'none';
+    this.rateExpression.duration = "5";
   }
 
   // function to navigate from success or error screen to create service screen

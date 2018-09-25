@@ -214,8 +214,13 @@
 
           </li>
           <li *ngIf="service.serviceType == 'function'">
-            <div class='det-label'>AWS events</div>
+            <div class='det-label'>Event Source Type</div>
             <div *ngIf='disp_show2' class="det-value">{{service.event_source || "NA"}}</div>
+
+          </li>
+          <li *ngIf="service.serviceType == 'function'">
+            <div class='det-label'>Event Source</div>
+            <div *ngIf='disp_show2' class="det-value">{{service.event_source_arn || "NA"}}</div>
 
           </li>
 
