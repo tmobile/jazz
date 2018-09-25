@@ -32,10 +32,10 @@ function getInfo(messages, patternStr) {
   let result = "";
   if (messages) {
     for (let i = 0, len = messages.length; i < len; i++) {
-      let _tmp = pattern.exec(messages[i].message);
-      if (_tmp && _tmp[1]) {
-        logger.debug("found match..:" + _tmp[1]);
-        result = _tmp[1];
+      let tmp = pattern.exec(messages[i].message);
+      if (tmp && tmp[1]) {
+        logger.debug("found match..:" + tmp[1]);
+        result = tmp[1];
         break;
       }
     }
@@ -47,10 +47,10 @@ function getSubInfo(message, patternStr, index) {
   let pattern = new RegExp(patternStr);
   let result = "";
   if (message) {
-    let _tmp = pattern.exec(message);
-    if (_tmp && _tmp[index]) {
-      logger.debug("found match..:" + _tmp[index]);
-      result = _tmp[index];
+    let tmp = pattern.exec(message);
+    if (tmp && tmp[index]) {
+      logger.debug("found match..:" + tmp[index]);
+      result = tmp[index];
     }
   }
   return result;
@@ -141,13 +141,13 @@ function getLambdaLogsData(payload) {
       domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.Lambda_environment_dev, 1);
       data.environment = dev_environment;
     } else {
-      domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.Lambda_domain_service, 1);
+      domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.Lambdadomain_service, 1);
     }
 
-    let _domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
-    if (_domain) {
-      data.domain = _domain;
-      data.servicename = domainAndservice.substring(_domain.length + 1);
+    let domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
+    if (domain) {
+      data.domain = domain;
+      data.servicename = domainAndservice.substring(domain.length + 1);
     } else {
       data.domain = "";
       data.servicename = domainAndservice;

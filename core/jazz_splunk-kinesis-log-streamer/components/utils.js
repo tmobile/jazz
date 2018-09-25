@@ -31,10 +31,10 @@ var getInfo = function (messages, patternStr) {
   let result = "";
   if (messages) {
     for (let i = 0, len = messages.length; i < len; i++) {
-      let _tmp = pattern.exec(messages[i].message);
-      if (_tmp && _tmp[1]) {
-        logger.debug("found match..:" + _tmp[1]);
-        result = _tmp[1];
+      let tmp = pattern.exec(messages[i].message);
+      if (tmp && tmp[1]) {
+        logger.debug("found match..:" + tmp[1]);
+        result = tmp[1];
         break;
       }
     }
@@ -46,10 +46,10 @@ var getSubInfo = function (message, patternStr, index) {
   let pattern = new RegExp(patternStr);
   let result = "";
   if (message) {
-    let _tmp = pattern.exec(message);
-    if (_tmp && _tmp[index]) {
-      logger.debug("found match..:" + _tmp[index]);
-      result = _tmp[index];
+    let tmp = pattern.exec(message);
+    if (tmp && tmp[index]) {
+      logger.debug("found match..:" + tmp[index]);
+      result = tmp[index];
     }
   }
   return result;
@@ -72,10 +72,10 @@ var getCommonData = function (payload) {
         domainAndservice = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_domain_service, 1);
       }
 
-      let _namespace = domainAndservice.substring(0, domainAndservice.indexOf("_"));
-      if (_namespace) {
-        data.namespace = _namespace;
-        data.service = domainAndservice.substring(_namespace.length + 1);
+      let namespace = domainAndservice.substring(0, domainAndservice.indexOf("_"));
+      if (namespace) {
+        data.namespace = namespace;
+        data.service = domainAndservice.substring(namespace.length + 1);
       } else {
         data.namespace = "";
         data.service = domainAndservice;
@@ -107,11 +107,11 @@ var transformApiLogs = function (payload) {
     }
 
     let apiDomainAndService = getInfo(payload.logEvents, global_config.PATTERNS.domain_service);
-    let _apiDomain = apiDomainAndService.substring(0, apiDomainAndService.indexOf("/"));
+    let apiDomain = apiDomainAndService.substring(0, apiDomainAndService.indexOf("/"));
 
-    if (_apiDomain) {
-      data.namespace = _apiDomain;
-      data.service = apiDomainAndService.substring(_apiDomain.length + 1);
+    if (apiDomain) {
+      data.namespace = apiDomain;
+      data.service = apiDomainAndService.substring(apiDomain.length + 1);
     } else {
       data.namespace = "";
       data.service = apiDomainAndService;
