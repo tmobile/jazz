@@ -68,12 +68,12 @@ var formatService = function(service, format) {
   if (format !== undefined) {
     service_obj = {
       id: service.SERVICE_ID.S,
-      timestamp: service.TIMESTAMP.S,
+      timestamp: service.TIMESTAMP.S
     }
   } else {
     service_obj = {
       id: service.SERVICE_ID,
-      timestamp: service.TIMESTAMP,
+      timestamp: service.TIMESTAMP
     }
   }
 
@@ -146,7 +146,7 @@ var initDynamodb = function() {
 //But our usecase needs empty string for updation
 var getUpdateData = function(update_data, old_data) {
   var input_data = {}
-  old_data = old_data.validateServiceExists["service_payload"]
+  old_data = old_data.validateServiceExists["service_payload"] || {}
   for (var field in update_data) {
     if (update_data[field] === "" || update_data[field] === undefined) {
       input_data[field] = null
@@ -163,11 +163,11 @@ var getUpdateData = function(update_data, old_data) {
       } else {
         input_data[field] = []
       }
+      logger.info("Array data updated")
     } else if (
       update_data[field] &&
       update_data[field].constructor === Object &&
-      old_data[field] != undefined &&
-      old_data[field] != ""
+      old_data[field]
     ) {
       var ref_data = old_data
       var new_keys = Object.keys(update_data[field])
@@ -183,8 +183,10 @@ var getUpdateData = function(update_data, old_data) {
           }
         }
         input_data[field] = new_object
+        logger.info("Metadata updated")
       }
     } else {
+      logger.info("Updated service")
       input_data[field] = update_data[field]
     }
   }
@@ -253,6 +255,6 @@ module.exports = () => {
     sortUtil: sortUtil,
     filterUtil: filterUtil,
     getUpdateData: getUpdateData,
-    paginateUtil: paginateUtil,
+    paginateUtil: paginateUtil
   }
 }
