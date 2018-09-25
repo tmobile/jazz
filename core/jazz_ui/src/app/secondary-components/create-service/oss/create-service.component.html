@@ -367,7 +367,7 @@
                                         <input id="dynamoTable" name="dynamoTable" type="text" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" required>
                                   </div>
                                 </div>
-                                <p class="learn-more">Function would be triggered whenever the corresponding DynamoDB table is modified (e.g. a new entry is added)</p>
+                                <p class="learn-more">Function would be triggered whenever a new entry is added to the table. Note that the DynamoDB table should exist already and Jazz creates a new stream for this table</p>
                             </div>
 
                             <div class="kinesis-fields row zero-margin arrow_box" *ngIf="chkfrKinesis()">
@@ -412,7 +412,7 @@
                                       <input id="SQSstreamARN" name="SQSstreamARN" type="text" [(ngModel)]="eventExpression.SQSstreamARN" [focus]="focusKinesis" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Queue Name" required>
                                   </div>
                                 </div>
-                                <p class="learn-more">Function would be triggered whenever the Lambda detects new messages in the source SQS queue</p>
+                                <p class="learn-more">Function would be triggered whenever new messages are added to the source SQS queue</p>
                               </div>
 
                         </div>
