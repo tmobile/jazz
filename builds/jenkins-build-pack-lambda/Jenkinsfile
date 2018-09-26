@@ -657,14 +657,7 @@ def echoServiceInfo(String env) {
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
   def lambda = "/aws/lambda/${stackName}"
-  def logStreamer = ""
-	if (stackName && stackName.endsWith('dev')) {
-    logStreamer = configLoader.AWS.KINESIS_LOG_STREAMER.DEV
-  } else if (stackName && stackName.endsWith('stg')) {
-    logStreamer = configLoader.AWS.KINESIS_LOG_STREAMER.STG
-  } else if (stackName && stackName.endsWith('prod')) {
-    logStreamer = configLoader.AWS.KINESIS_LOG_STREAMER.PROD
-  }
+  def logStreamer = configLoader.AWS.KINESIS_LOG_STREAMER.PROD
 
   try {
     sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
