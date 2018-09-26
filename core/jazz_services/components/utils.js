@@ -24,7 +24,7 @@
 
 
 const AWS = require('aws-sdk');
-const logger = require('./logger')
+const logger = require('./logger');
 
 // function to convert key name in schema to database column name
 var getDatabaseKeyName = function (key) {
@@ -164,30 +164,30 @@ var getUpdateData = function (update_data, old_data) {
             } else {
                 input_data[field] = [];
             }
-            logger.info("Array data updated")
+            logger.info("Array data updated");
         } else if (
             update_data[field] &&
             update_data[field].constructor === Object &&
             old_data[field]
           ) {
-            var ref_data = old_data
-            var new_keys = Object.keys(update_data[field])
-            var old_keys = Object.keys(ref_data[field])
-            var update_object = update_data[field]
-            var new_object = ref_data[field]
+            var ref_data = old_data;
+            var new_keys = Object.keys(update_data[field]);
+            var old_keys = Object.keys(ref_data[field]);
+            var update_object = update_data[field];
+            var new_object = ref_data[field];
             if (new_keys.length >= 0) {
               for (var i = 0; i < new_keys.length; i++) {
                 if (old_keys.indexOf(new_keys[0]) >= 0) {
-                  new_object[new_keys[i]] = update_object[new_keys[i]]
+                  new_object[new_keys[i]] = update_object[new_keys[i]];
                 } else {
-                  new_object[new_keys[i]] = update_object[new_keys[i]]
+                  new_object[new_keys[i]] = update_object[new_keys[i]];
                 }
               }
-              input_data[field] = new_object
-              logger.info("Metadata updated")
+              input_data[field] = new_object;
+              logger.info("Metadata updated");
             }
           } else {
-            logger.info("Updated service")
+            logger.info("Updated service");
             input_data[field] = update_data[field];
         }
     }
@@ -239,7 +239,6 @@ var filterUtil = function (data, filter_value) {
 
             if (value.indexOf(filter_value.toLowerCase()) !== -1) {
                 newArr.push(ele);
-
                 break;
             }
         }

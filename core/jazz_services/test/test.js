@@ -691,39 +691,38 @@ describe('platform_services', function() {
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   */
  it("should indicate that metadata was updated upon successful documentClient.update()", () => {
-  event.method = "PUT"
-  logMessage = "Metadata updated"
+  event.method = "PUT";
+  logMessage = "Metadata updated";
   event.body = {
     metadata: {
       a: "updated data"
     }
   }
-
   //mocking DocumentClient from DynamoDB, get and  update are mocked with successful return
   AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
     //injecting metadata
     dataObj.Item.metadata = {
       a: "dummy data"
     }
-    return cb(null, dataObj)
+    return cb(null, dataObj);
   })
 
   AWS.mock("DynamoDB.DocumentClient", "update", (params, cb) => {
-    dataObj.updateServiceByID = "heckAp00"
-    return cb(null, dataObj)
+    dataObj.updateServiceByID = "heckAp00";
+    return cb(null, dataObj);
   })
   //wrapping the logger to check for response messages
-  logStub = sinon.stub(logger, "info", spy)
+  logStub = sinon.stub(logger, "info", spy);
   //trigger the mocked logic by calling handler()
-  var callFunction = index.handler(event, context, callbackObj.callback)
-  var logResponse = logStub.args[9][0]
-  var logCheck = logResponse.includes(logMessage)
-  AWS.restore("DynamoDB.DocumentClient")
-  sinon.assert.called(stub)
-  sinon.assert.called(logStub)
-  logStub.restore()
-  assert.isTrue(logCheck)
-})
+  var callFunction = index.handler(event, context, callbackObj.callback);
+  var logResponse = logStub.args[9][0];
+  var logCheck = logResponse.includes(logMessage);
+  AWS.restore("DynamoDB.DocumentClient");
+  sinon.assert.called(stub);
+  sinon.assert.called(logStub);
+  logStub.restore();
+  assert.isTrue(logCheck);
+});
 
 /* 
 * Given a successful attempt at a dynamo service update, handler() should indicate array updated successfully
@@ -731,8 +730,8 @@ describe('platform_services', function() {
 * @params {object, function} default aws context, and callback function as defined in beforeEach
 */
 it("should indicate that array was updated upon successful documentClient.update()", () => {
-event.method = "PUT"
-logMessage = "Array data updated"
+event.method = "PUT";
+logMessage = "Array data updated";
 event.body = {
   tags : [
     "pending"
@@ -744,25 +743,25 @@ AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
   //injecting metadata
   dataObj.Item.tags = [
     "active"
-  ] 
-  return cb(null, dataObj)
+  ];
+  return cb(null, dataObj);
 })
 
 AWS.mock("DynamoDB.DocumentClient", "update", (params, cb) => {
-  dataObj.updateServiceByID = "heckAp00"
-  return cb(null, dataObj)
+  dataObj.updateServiceByID = "heckAp00";
+  return cb(null, dataObj);
 })
 //wrapping the logger to check for response messages
-logStub = sinon.stub(logger, "info", spy)
+logStub = sinon.stub(logger, "info", spy);
 //trigger the mocked logic by calling handler()
-var callFunction = index.handler(event, context, callbackObj.callback)
-var logResponse = logStub.args[9][0]
-var logCheck = logResponse.includes(logMessage)
-AWS.restore("DynamoDB.DocumentClient")
-sinon.assert.called(stub)
-sinon.assert.called(logStub)
-logStub.restore()
-assert.isTrue(logCheck)
+var callFunction = index.handler(event, context, callbackObj.callback);
+var logResponse = logStub.args[9][0];
+var logCheck = logResponse.includes(logMessage);
+AWS.restore("DynamoDB.DocumentClient");
+sinon.assert.called(stub);
+sinon.assert.called(logStub);
+logStub.restore();
+assert.isTrue(logCheck);
 })
 
 
