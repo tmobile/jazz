@@ -159,9 +159,15 @@ export class CreateServiceComponent implements OnInit {
   // function called on event schedule change(radio)
   onEventScheduleChange(val){
     this.rateExpression.type = val;
+    if(val !== `none`){
+      this.eventExpression.type = 'awsEventsNone';
+    }
   }
   onAWSEventChange(val){
     this.eventExpression.type = val;
+    if(val !== `none`){
+      this.rateExpression.type = 'none';
+    }
   }
   onSelectedDr(selected){
     this.rateExpression.interval = selected;
@@ -353,6 +359,7 @@ export class CreateServiceComponent implements OnInit {
           var index = output.data.indexOf("https://");
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
+          this.resetEvents();
        },
         (error) => {
           this.isLoading = false;
@@ -361,6 +368,8 @@ export class CreateServiceComponent implements OnInit {
           this.serviceRequestFailure = true;
           this.errBody = error._body;
           this.errMessage = this.toastmessage.errorMessage(error, 'createService');
+          this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+          this.rateExpression.error = undefined;
           try {
             this.parsedErrBody = JSON.parse(this.errBody);
             if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
@@ -371,6 +380,17 @@ export class CreateServiceComponent implements OnInit {
             }
         }
       );
+  }
+
+  resetEvents(){
+    this.eventExpression.dynamoTable = "";
+    this.eventExpression.streamARN = "";
+    this.eventExpression.S3BucketName = "";
+    this.eventExpression.SQSstreamARN = "";
+    this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+    this.rateExpression.error = undefined;
+    this.rateExpression.type = 'none';
+    this.rateExpression.duration = "5";
   }
 
   // function to navigate from success or error screen to create service screen
