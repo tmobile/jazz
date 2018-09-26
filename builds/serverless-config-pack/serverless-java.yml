@@ -42,10 +42,41 @@ functions:
     memorySize: ${file(deployment-env.yml):providerMemorySize}
     timeout: ${file(deployment-env.yml):providerTimeout}
     eventsDisabled:
+      #Start:isScheduleEnabled
       - schedule:
           rate: ${file(deployment-env.yml):eventScheduleRate}
           name: ${self:service}-${self:custom.myStage}-schedule
           enabled: ${file(deployment-env.yml):eventScheduleEnable}
+      #End:isScheduleEnabled
+      #Start:isDynamoDbEnabled
+      - stream: {event_source_dynamodb}
+      #End:isDynamoDbEnabled
+      #Start:isSQSEventEnabled
+      - sqs:
+          enabled: true
+          arn: {event_sqs_arn}
+      #End:isSQSEventEnabled
+      #Start:isStreamEnabled
+      - stream:
+          type: kinesis
+          startingPosition: LATEST
+          enabled: true
+          #Start:streamGetArn
+          arn:
+            Fn::GetAtt:
+              - {event_source_kinesis}
+              - Arn
+          #End:streamGetArn
+          #Start:streamArn
+          arnDisabled: {event_stream_arn}
+          #End:streamArn
+      #End:isStreamEnabled
+      #Start:isS3EventEnabled
+      - s3:
+          bucket: {event_source_s3}
+          event: {event_action_s3}
+      #End:isS3EventEnabled
+
     vpcDisabled:
       securityGroupIds:
         "Fn::Split":
@@ -55,3 +86,31 @@ functions:
         "Fn::Split":
           - ","
           - ${file(deployment-env.yml):subnetIds}
+
+#Start:resources
+resourcesDisabled:
+  Resources:
+    #Start:isDynamoDbEnabled
+    customEventRole: ${file(policyFile.yml):eventSubscribed}
+    #End:isDynamoDbEnabled
+    #Start:isSQSEventEnabled
+    customEventRole: ${file(policyFile.yml):sqsRole}
+    #End:isSQSEventEnabled
+    #Start:isSQSEventEnabled
+    #Start:isSqsResourceNotExist
+    {event_source_sqs}:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: {event_source_sqs}
+        VisibilityTimeout: 165
+    #End:isSqsResourceNotExist
+    #End:isSQSEventEnabled
+    #Start:isStreamEnabled
+    {event_source_kinesis}:
+      Type: AWS::Kinesis::Stream
+      Properties:
+        Name: {event_source_kinesis}
+        ShardCount: 1
+    #End:isStreamEnabled
+#End:resources
+

@@ -27,9 +27,9 @@ import { environment as env_oss } from './../../../../environments/environment.o
 export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
-  sqsStreamString:string = "arn:aws:sqs:us-west-2:" + env_oss.aws.account_number + ":stream/";
-  kinesisStreamString:string = "arn:aws:kinesis:us-west-2:" + env_oss.aws.account_number + ":stream/";
-  dynamoStreamString:string = "arn:aws:dynamo:us-west-2:" + env_oss.aws.account_number + ":stream/";
+  sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
+  kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
+  dynamoStreamString:string = "arn:aws:dynamo:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/";
   SlackEnabled:boolean = false;
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
@@ -159,9 +159,15 @@ export class CreateServiceComponent implements OnInit {
   // function called on event schedule change(radio)
   onEventScheduleChange(val){
     this.rateExpression.type = val;
+    if(val !== `none`){
+      this.eventExpression.type = 'awsEventsNone';
+    }
   }
   onAWSEventChange(val){
     this.eventExpression.type = val;
+    if(val !== `none`){
+      this.rateExpression.type = 'none';
+    }
   }
   onSelectedDr(selected){
     this.rateExpression.interval = selected;
@@ -315,16 +321,16 @@ export class CreateServiceComponent implements OnInit {
         var event = {};
         event["type"] = this.eventExpression.type;
         if(this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:us-west-2:"+env_oss.aws.account_number+":table/" + this.eventExpression.dynamoTable;
+          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":table/" + this.eventExpression.dynamoTable;
           event["action"] = "PutItem";
         } else if(this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:us-west-2:"+env_oss.aws.account_number+":stream/" + this.eventExpression.streamARN;
+          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":stream/" + this.eventExpression.streamARN;
           event["action"] = "PutRecord";
         } else if(this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;
-          event["action"] = "S3:" + this.eventExpression.S3BucketName + ":*";
+          event["action"] = "s3:ObjectCreated:*";
         } else if (this.eventExpression.type === "sqs") {
-          event["source"] = "arn:aws:sqs:us-west-2:"+env_oss.aws.account_number+":stream/" + this.eventExpression.SQSstreamARN;
+          event["source"] = "arn:aws:sqs:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":"+ this.eventExpression.SQSstreamARN;
         }
         payload["events"] = [];
         payload["events"].push(event);
@@ -353,6 +359,7 @@ export class CreateServiceComponent implements OnInit {
           var index = output.data.indexOf("https://");
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
+          this.resetEvents();
        },
         (error) => {
           this.isLoading = false;
@@ -361,6 +368,8 @@ export class CreateServiceComponent implements OnInit {
           this.serviceRequestFailure = true;
           this.errBody = error._body;
           this.errMessage = this.toastmessage.errorMessage(error, 'createService');
+          this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+          this.rateExpression.error = undefined;
           try {
             this.parsedErrBody = JSON.parse(this.errBody);
             if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
@@ -371,6 +380,17 @@ export class CreateServiceComponent implements OnInit {
             }
         }
       );
+  }
+
+  resetEvents(){
+    this.eventExpression.dynamoTable = "";
+    this.eventExpression.streamARN = "";
+    this.eventExpression.S3BucketName = "";
+    this.eventExpression.SQSstreamARN = "";
+    this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+    this.rateExpression.error = undefined;
+    this.rateExpression.type = 'none';
+    this.rateExpression.duration = "5";
   }
 
   // function to navigate from success or error screen to create service screen

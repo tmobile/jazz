@@ -295,8 +295,8 @@ export class ServiceOverviewMultienvComponent implements OnInit {
     if (this.stgEnv.logical_id == undefined) {
       this.noStg = true;
     }
-    
-    // this.envList        
+
+    // this.envList
     this.cache.set('envList', this.list);
 
 
@@ -407,7 +407,7 @@ export class ServiceOverviewMultienvComponent implements OnInit {
         this.env_call = true;
 
           this.getenvData();
-          
+
       }
   }
   }
@@ -452,9 +452,6 @@ export class ServiceOverviewMultienvComponent implements OnInit {
     if (environment.envName == 'oss') this.internal_build = false;
     var obj;
 
-    this.prodEnv = {};
-    this.stgEnv = {};
-    
     if(!this.env_call){
 
       if((this.service.domain!=undefined)){
