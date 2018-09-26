@@ -133,15 +133,15 @@ function getLambdaLogsData(payload) {
   let bulkRequestBody = '',
     data = {},
     domainAndservice = '';
-  data.request_id = getInfo(payload.logEvents, config.PATTERNS.Lambda_request_id);
+  data.request_id = getInfo(payload.logEvents, config.PATTERNS.lambda_request_id);
   if (data.request_id) {
-    data.environment = getSubInfo(payload.logGroup, config.PATTERNS.Lambda_environment, 2);
+    data.environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);
     if (data.environment === "dev") {
-      let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.Lambda_environment_dev, 2);
-      domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.Lambda_environment_dev, 1);
+      let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 2);
+      domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 1);
       data.environment = dev_environment;
     } else {
-      domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.Lambdadomain_service, 1);
+      domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service, 1);
     }
 
     let domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));

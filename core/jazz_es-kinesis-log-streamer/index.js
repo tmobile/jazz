@@ -35,7 +35,7 @@ module.exports.handler = (input, context, cb) => {
 
   let errorHandler = errorHandlerModule();
   logger.init(input, context);
-  logger.info("event:" + JSON.stringify(input));
+  logger.debug("event:" + JSON.stringify(input));
 
   try {
     if (input && input.Records && input.Records.length) {
@@ -45,19 +45,19 @@ module.exports.handler = (input, context, cb) => {
 
         zlib.gunzip(zippedInput, function (error, buffer) {
           if (error) {
-            logger.error("Not a valid Input");
+            logger.debug("Skipping this record since message is not in supported format (gzip). Raw message: " + zippedInput);
             return cb(null, responseObj("Success", input));
           } else {
             // parse the input from JSON
             let awslogsData = JSON.parse(buffer.toString('utf8'));
 
             // transform the input to Elasticsearch documents
-            logger.info("logs raw data..: " + JSON.stringify(awslogsData));
+            logger.debug("logs raw data..: " + JSON.stringify(awslogsData));
             utils.transform(awslogsData)
               .then(elasticsearchBulkData => {
                 // post documents to the Amazon Elasticsearch Service
                 post(elasticsearchBulkData, function (error, success, statusCode, failedItems) {
-                  logger.info('Response code from ES: ' + JSON.stringify({
+                  logger.debug('Response code from ES: ' + JSON.stringify({
                     "statusCode": statusCode
                   }));
 
@@ -83,7 +83,7 @@ module.exports.handler = (input, context, cb) => {
         });
       });
     } else {
-      logger.debug("Invalid input data");
+      logger.debug("No input or empty records from kinesis stream.");
       return cb(null, responseObj("Success", input));
     }
   } catch (err) {
@@ -99,7 +99,7 @@ function post(body, callback) {
     response.on('data', function (chunk) {
       responseBody += chunk;
     });
-    logger.error("response from post..:" + JSON.stringify(responseBody));
+    logger.debug("response from post..:" + JSON.stringify(responseBody));
     response.on('end', function () {
       let failedItems, success, info = JSON.parse(responseBody);
 
