@@ -239,6 +239,24 @@
                 }
             }
         },
+        "event": {
+          "type": "object",
+          "description": "Event object for each AWS event",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Type of event"
+            },
+            "source": {
+              "type": "string",
+              "description": "Source of event"
+            },
+            "action": {
+              "type": "string",
+              "description": "Action trigger for the event"
+            }
+          }
+        },
         "OnboardingAPIObject": {
             "type": "object",
             "properties": {
@@ -273,6 +291,13 @@
                     "items": {
                         "type": "string"
                     }
+                },
+                "events": {
+                  "description": "Array of events requested for function consisting of type, source and action",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/event"
+                  }
                 },
                 "username": {
                     "type": "string",
