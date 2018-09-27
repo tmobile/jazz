@@ -41,7 +41,7 @@ function handler(event, context, callback) {
       event.Records.forEach(eachRecord => {
         // CloudWatch Logs data is base64 encoded so decode here
         let payload = new Buffer(eachRecord.kinesis.data, 'base64');
-        logger.info("payload:" + JSON.stringify(payload));
+        logger.debug("payload:" + JSON.stringify(payload));
 
         // CloudWatch Logs are gzip compressed so expand here
         zlib.gunzip(payload, (error, result) => {
@@ -51,7 +51,7 @@ function handler(event, context, callback) {
           } else {
             // parse the result from JSON
             let awslogsData = JSON.parse(result.toString('ascii'));
-            logger.info('Decoded payload:' + JSON.stringify(awslogsData));
+            logger.debug('Decoded payload:' + JSON.stringify(awslogsData));
             exportable.sendSplunkEvent(awslogsData, splunkLog, config)
               .then((count) => {
                 if (count) {
@@ -62,7 +62,7 @@ function handler(event, context, callback) {
                       return callback(JSON.stringify(err || body));
                     } else {
                       // If succeeded, body will be { text: 'Success', code: 0 }
-                      logger.info('Response from Splunk:' + JSON.stringify(body));
+                      logger.debug('Response from Splunk:' + JSON.stringify(body));
                       logger.info(`Successfully processed ${count} log event(s).`);
                       return callback(null, count); // Return number of log events
                     }
