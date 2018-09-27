@@ -701,7 +701,7 @@ def updateApiDocUrl(String env) {
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
 	def lambda = "/aws/lambda/${stackName}"
-    def logStreamer = configLoader.AWS.KINESIS_LOG_STREAMER.PROD
+    def logStreamer = configLoader.AWS.KINESIS_LOG_STREAM.PROD
 
     try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"

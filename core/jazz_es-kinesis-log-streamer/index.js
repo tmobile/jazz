@@ -19,7 +19,7 @@ var zlib = require('zlib');
 
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
-const config = require("./config/global_config.json"); //Import the Configuration module.
+const configObj = require("./components/config.js"); //Import the Configuration module.
 const utils = require("./components/utils.js"); //Import the utils module.
 const logger = require("./components/logger.js");
 
@@ -29,11 +29,10 @@ const logger = require("./components/logger.js");
 	@version: 1.0
 **/
 
-const endpoint = config.ELASTIC_SEARCH_ENDPOINT;
-
-module.exports.handler = (input, context, cb) => {
+function handler(input, context, cb) {
 
   let errorHandler = errorHandlerModule();
+  let config = configObj.getConfig(input, context)
   logger.init(input, context);
   logger.debug("event:" + JSON.stringify(input));
 
@@ -56,7 +55,7 @@ module.exports.handler = (input, context, cb) => {
             utils.transform(awslogsData)
               .then(elasticsearchBulkData => {
                 // post documents to the Amazon Elasticsearch Service
-                post(elasticsearchBulkData, function (error, success, statusCode, failedItems) {
+                exportable.post(config, elasticsearchBulkData, function (error, success, statusCode, failedItems) {
                   logger.debug('Response code from ES: ' + JSON.stringify({
                     "statusCode": statusCode
                   }));
@@ -92,8 +91,8 @@ module.exports.handler = (input, context, cb) => {
   }
 };
 
-function post(body, callback) {
-  let requestParams = utils.buildRequest(endpoint, body);
+function post(config, body, callback) {
+  let requestParams = utils.buildRequest(config.ES_ENDPOINT, body);
   let request = https.request(requestParams, function (response) {
     let responseBody = '';
     response.on('data', function (chunk) {
@@ -125,3 +124,10 @@ function post(body, callback) {
   });
   request.end(requestParams.body);
 }
+
+const exportable = {
+  handler,
+  post
+};
+
+module.exports = exportable;
