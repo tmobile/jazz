@@ -239,6 +239,7 @@ var filterUtil = function (data, filter_value) {
 
             if (value.indexOf(filter_value.toLowerCase()) !== -1) {
                 newArr.push(ele);
+
                 break;
             }
         }
