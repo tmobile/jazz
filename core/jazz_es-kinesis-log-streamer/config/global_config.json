@@ -1,0 +1,31 @@
+{
+  "PATTERNS": {
+    "request_id": "[(](.*)[)] Starting execution for request: ",
+    "environment": "API-Gateway-Execution-Logs_(.+)/(.+)$",
+    "method": "HTTP Method: (.+),(.+)$",
+    "domain_service": "Resource Path: /api/(.+)$",
+    "path": "Method request path:(.+)$",
+    "request": "Method request body before transformations: (.+)$",
+    "request_get": "Method request query string: (.+)$",
+    "response": "Endpoint response body before transformations: (.+)$",
+    "status": "Method completed with status: (.+)$",
+    "lambda_request_id": "^END RequestId: (.+\n)$",
+    "lambda_environment": "^/aws/lambda/(.+)-(.+)$",
+    "lambda_environment_dev": "^/aws/lambda/(.+)-(.*\\b(-dev|-stg|-prod))$",
+    "lambda_domain_service": "^/aws/lambda/(.+)-(.+)$",
+    "lambda_ref_id": "x-amzn-RequestId=([^,]+)",
+    "method_req_headers": "Method request headers: (.+)",
+    "origin": ", origin=([^,]+)",
+    "host": ", Host=([^,]+)",
+    "user_agent": ", User-Agent=([^,]+)",
+    "x_forwarded_port": ", X-Forwarded-Port=([^,]+)",
+    "x_forwarded_for": ", X-Forwarded-For=([^,]+)",
+    "x_amzn_trace_id": ", X-Amzn-Trace-Id=([^,]+)",
+    "content_type": ", content-type=([^,]+)",
+    "cache_control": ", cache-control=([^,]+)",
+    "log_level": "FATAL|ERROR|WARN|INFO|VERBOSE|TRACE|DEBUG",
+    "timestamp_pattern": "(\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d.\\d+([+-][0-2]\\d:[0-5]\\d|Z))|(\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d([+-][0-2]\\d:[0-5]\\d|Z))|(\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d([+-][0-2]\\d:[0-5]\\d|Z))",
+    "guid_regex": "[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}"
+  },
+  "DEFAULT_LOG_LEVEL": "INFO"
+}
