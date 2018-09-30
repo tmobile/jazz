@@ -54,25 +54,30 @@ function handler(input, context, cb) {
             logger.debug("logs raw data..: " + JSON.stringify(awslogsData));
             utils.transform(awslogsData)
               .then(elasticsearchBulkData => {
-                // post documents to the Amazon Elasticsearch Service
-                exportable.post(config, elasticsearchBulkData, function (error, success, statusCode, failedItems) {
-                  logger.debug('Response code from ES: ' + JSON.stringify({
-                    "statusCode": statusCode
-                  }));
+                if (elasticsearchBulkData) {
+                  // post documents to the Amazon Elasticsearch Service
+                  exportable.post(config, elasticsearchBulkData, function (error, success, statusCode, failedItems) {
+                    logger.debug('Response code from ES: ' + JSON.stringify({
+                      "statusCode": statusCode
+                    }));
 
-                  if (error) {
-                    logger.error('Error: ' + JSON.stringify(error, null, 2));
+                    if (error) {
+                      logger.error('Error: ' + JSON.stringify(error, null, 2));
 
-                    if (failedItems && failedItems.length > 0) {
-                      logger.error("Failed Items: " +
-                        JSON.stringify(failedItems, null, 2));
+                      if (failedItems && failedItems.length > 0) {
+                        logger.error("Failed Items: " +
+                          JSON.stringify(failedItems, null, 2));
+                      }
+                      return cb(JSON.stringify(errorHandler.throwInternalServerError(JSON.stringify(error))));
+                    } else {
+                      logger.info('Success: ' + JSON.stringify(success));
+                      return cb(null, responseObj("Success", input));
                     }
-                    return cb(JSON.stringify(errorHandler.throwInternalServerError(JSON.stringify(error))));
-                  } else {
-                    logger.info('Success: ' + JSON.stringify(success));
-                    return cb(null, responseObj("Success", input));
-                  }
-                });
+                  });
+                } else {
+                  logger.debug("Invalid or unsupported record from kinesis stream.");
+                  return cb(null, responseObj("Success", input));
+                }
               })
               .catch(error => {
                 logger.error('Error:' + JSON.stringify(error));
@@ -86,25 +91,24 @@ function handler(input, context, cb) {
       return cb(null, responseObj("Success", input));
     }
   } catch (err) {
-    logger.error(err);
-    return cb(JSON.stringify(errorHandler.throwInternalServerError(JSON.stringify(err.message))));
+    logger.error("Something went wrong. " + err);
+    return cb(null, responseObj("Success", input));
   }
 };
 
 function post(config, body, callback) {
   let requestParams = utils.buildRequest(config.ES_ENDPOINT, body);
   let request = https.request(requestParams, function (response) {
+
     let responseBody = '';
     response.on('data', function (chunk) {
       responseBody += chunk;
     });
-    logger.debug("response from post..:" + JSON.stringify(responseBody));
+    logger.info("response from post..:" + JSON.stringify(responseBody));
     response.on('end', function () {
       let failedItems, success, info = JSON.parse(responseBody);
-
       if (response.statusCode >= 200 && response.statusCode < 299) {
         failedItems = info.items.filter(item => item.index.status >= 300);
-
         success = {
           "attemptedItems": info.items.length,
           "successfulItems": info.items.length - failedItems.length,
@@ -119,7 +123,7 @@ function post(config, body, callback) {
       return callback(error, success, response.statusCode, failedItems);
     });
   }).on('error', function (e) {
-    logger.error("e: " + jSON.stringify(e));
+    logger.error("e: " + JSON.stringify(e));
     return callback(e);
   });
   request.end(requestParams.body);
