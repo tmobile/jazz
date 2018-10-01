@@ -209,16 +209,16 @@ function getLambdaLogsData(payload) {
 
 function transform(payload) {
   return new Promise((resolve, reject) => {
-    if (payload.messageType === 'CONTROL_MESSAGE') {
+    if (payload && payload.messageType === 'CONTROL_MESSAGE') {
       logger.debug("This is a control message.")
       resolve();
-    } else if (payload.logGroup.indexOf("API-Gateway-Execution-Logs") === 0) {
+    } else if (payload && payload.logGroup.indexOf("API-Gateway-Execution-Logs") === 0) {
       if (getApiLogsData(payload)) {
         resolve(getApiLogsData(payload));
       } else {
         resolve();
       }
-    } else if (payload.logGroup.indexOf("/aws/lambda/") === 0) {
+    } else if (payload && payload.logGroup.indexOf("/aws/lambda/") === 0) {
       if (getLambdaLogsData(payload)) {
         resolve(getLambdaLogsData(payload));
       } else {

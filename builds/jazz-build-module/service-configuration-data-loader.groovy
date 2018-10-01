@@ -522,16 +522,14 @@ def setKinesisStream(config){
         (config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler") ||
         (config['service'] == "asset-event-handler") || ((config['service'] == "slack-event-handler") && (config_loader.SLACK.ENABLE_SLACK == "true"))) {
         def kinesisArn = "arn:aws:kinesis:$region:$role_id:stream/${config_loader.INSTANCE_PREFIX}-events-hub-${current_environment}"
-        def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
-        setEventSourceMapping(kinesisArn, function_name, config)
+        setEventSourceMapping(kinesisArn, config)
     } else if ((config['service'].trim() == "es-kinesis-log-streamer") || (config['service'].trim() == "splunk-kinesis-log-streamer")) {
-      def kinesisArn = configLoader.AWS.KINESIS_LOG_STREAM.PROD
-      def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
-      setEventSourceMapping(kinesisArn, function_name, config)
+      def kinesisArn = config_loader.AWS.KINESIS_LOGS_STREAM.PROD
+      setEventSourceMapping(kinesisArn, config)
     }
 }
 
-def setEventSourceMapping(eventSourceArn, function_name, config) {
+def setEventSourceMapping(eventSourceArn, config) {
   def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
   def event_source_list = sh(
       script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"",
