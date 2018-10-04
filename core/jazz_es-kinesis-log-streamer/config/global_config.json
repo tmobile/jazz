@@ -3,7 +3,7 @@
     "request_id": "[(](.*)[)] Starting execution for request: ",
     "environment": "API-Gateway-Execution-Logs_(.+)/(.+)$",
     "method": "HTTP Method: (.+),(.+)$",
-    "domain_service": "Resource Path: /api/(.+)$",
+    "domain_service": "Resource Path: /(.+)$",
     "path": "Method request path:(.+)$",
     "request": "Method request body before transformations: (.+)$",
     "request_get": "Method request query string: (.+)$",

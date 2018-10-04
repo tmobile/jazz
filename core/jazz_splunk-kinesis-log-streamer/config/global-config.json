@@ -4,7 +4,7 @@
     "request_id": "[(](.*)[)] Starting execution for request: ",
     "environment": "API-Gateway-Execution-Logs_(.+)/(.+)$",
     "method": "HTTP Method: (.+),(.+)$",
-    "domain_service": "Resource Path: /api/(.+)$",
+    "domain_service": "Resource Path: /(.+)$",
     "path": "Method request path:(.+)$",
     "status": "Method completed with status: (.+)$",
     "Lambda_request_id": "^END RequestId: (.+\n)$",
