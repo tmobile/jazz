@@ -242,6 +242,14 @@ function updateAWSAsset(newAssetObj, asset) {
 }
 
 function updateApigeeAsset(newAssetObj, asset) {
+  let providerArr = asset.provider_id.split("/");
+  newAssetObj.asset_name.Stage = providerArr[1];
+  newAssetObj.asset_name.Method = providerArr[2];
+  let resourceValue = "/" + providerArr[3];
+  if (providerArr[4]) {
+      resourceValue += "/" + providerArr[4];
+  }
+  newAssetObj.asset_name.Resource = resourceValue;
   newAssetObj.asset_name.apiproxy = `${asset.domain}-${asset.service}-${asset.environment}`;
   return newAssetObj;
 }

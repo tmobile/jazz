@@ -18,7 +18,10 @@
     "INTERVAL_MAP": {
       "1": "second",
       "60": "minute",
-      "3600": "hour"
+      "3600": "hour",
+      "86400": "day",
+      "604800": "week",
+      "2592000": "month"
     }
   }
 }

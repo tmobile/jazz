@@ -29,6 +29,7 @@ const request = require('request');
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
 const global_config = require("./config/global-config.json");
+const metricConfig = require("./components/metrics.json");
 
 function handler(event, context, cb) {
   var errorHandler = errorHandlerModule();
@@ -386,18 +387,21 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
         const metricResult = body.environments[0].metrics;
 
         let metricsStats = metricResult.map(metric => {
-          let dataPoints = metric.values.map(val => (
-            {
-              Timestamp: moment(val.timestamp),
-              [eventBody.statistics]: val.value,
-              Unit: eventBody.statistics
-            }
-          ));
+        let dataPoints = metric.values.map(val => (
+          {
+            Timestamp: moment(val.timestamp),
+            [eventBody.statistics]: val.value,
+            Unit: eventBody.statistics
+          }));
+
+          var metricData = {};
+          metricConfig.namespaces.gcp.apigee_proxy.metrics.forEach(item =>
+              metricData[`${item.Statistics.toLowerCase()}(${item.MetricName})`] = item.Label
+          );
           const metricObj = {
-            Label: metric.name,
+            Label: metricData[metric.name],
             Datapoints: dataPoints
           };
-
           return metricObj;
         });
         const assetObj = utils.assetData(metricsStats, assetParam.userParam);

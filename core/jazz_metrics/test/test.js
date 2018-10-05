@@ -345,7 +345,7 @@ describe('jazz_metrics', function () {
     it("should successfully get apigee params", () => {
       var nameSpaceList = {
         'gcp': {
-          'apigee': {
+          'apigee_proxy': {
             assetItem: {
               type: 'apigee',
               asset_name: {
@@ -886,7 +886,7 @@ describe('jazz_metrics', function () {
         body: {
           environments: [{
             metrics: [{
-              name: "sum(total_response_time)",
+              name: "sum(message_count)",
               values: [{
                 timestamp: '2321321321',
                 value: 29.78
@@ -900,7 +900,7 @@ describe('jazz_metrics', function () {
       index.getMetricsDetails(assetsArray, event.body, config)
         .then(res => {
           expect(res[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'metrics');
-          expect(res[0].metrics[0].metric_name).to.eq('sum(total_response_time)');
+          expect(res[0].metrics[0].metric_name).to.eq('Requests');
           sinon.assert.calledOnce(reqStub);
           reqStub.restore();
         });
