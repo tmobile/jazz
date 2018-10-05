@@ -313,7 +313,7 @@
                 </div>
             </section>
             <!-- start of aws events -->
-            <section class="each-step-wrap aws-events" *ngIf="typeOfService == 'function' && false">
+            <section class="each-step-wrap aws-events" *ngIf="typeOfService == 'function'">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">AWS Events</p>
@@ -339,7 +339,7 @@
                                     <label for="kinesis"><span></span><span class="background"></span>Kinesis</label>
                                 </div>
                             </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
+                            <section class="col-lg-2 col-md-2  pad-left0 events-radio disable-event">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
                                     <label for="s3"><span></span><span class="background"></span>S3</label>
@@ -367,7 +367,7 @@
                                         <input id="dynamoTable" name="dynamoTable" type="text" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" required>
                                   </div>
                                 </div>
-                                <p class="learn-more">Function would be triggered whenever the corresponding DynamoDB table is modified (e.g. a new entry is added)</p>
+                                <p class="learn-more">Function would be triggered whenever a new entry is added to the table. Note that the DynamoDB table should exist already and Jazz creates a new stream for this table</p>
                             </div>
 
                             <div class="kinesis-fields row zero-margin arrow_box" *ngIf="chkfrKinesis()">
@@ -397,22 +397,22 @@
                                 <div class="col-lg-9">
                                     <div class="text">Bucket ARN</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
-                                        <input id="S3BucketName" name="S3BucketName" type="text" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" class="inline-input aws-events-left-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Bucket Name" required autofocus>
+                                        <input id="S3BucketName" name="S3BucketName" type="text" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" class="inline-input aws-events-left-block aw-events-s3 ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Bucket Name" required autofocus>
                                   </div>
                                 </div>
-                                <p class="learn-more">Function would be triggered when an object is added or modified inside the bucket</p>
+                                <p class="learn-more">Function would be triggered when an object is added or modified inside the bucket. Creating this lambda trigger will override any previously created triggers on this bucket for any ObjectCreated:*</p>
                             </div>
 
                             <div class="sqs-fields row zero-margin arrow_box" *ngIf="chkSQS()">
 
                               <div class="col-lg-12">
-                                  <div class="text">Stream ARN</div>
+                                  <div class="text">Queue ARN</div>
                                   <div class="label-input slct-bx-selected input-wrapper">
                                       <input type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="{{sqsStreamString}}">
-                                      <input id="SQSstreamARN" name="SQSstreamARN" type="text" [(ngModel)]="eventExpression.SQSstreamARN" [focus]="focusKinesis" class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Stream Name" required>
+                                      <input id="SQSstreamARN" name="SQSstreamARN" type="text" [(ngModel)]="eventExpression.SQSstreamARN" [focus]="focusKinesis" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Queue Name" required>
                                   </div>
                                 </div>
-                                <p class="learn-more">Function would be triggered whenever the Lambda checkpoint has not reached the end of the SQS stream</p>
+                                <p class="learn-more">Function would be triggered whenever new messages are added to the source SQS queue</p>
                               </div>
 
                         </div>

@@ -185,7 +185,7 @@ input[type="radio"] {
 input[type="radio"] + label {
     color: #000;
     font-size: 1rem;
-    line-height: 1.5rem;
+    // line-height: 1.5rem;
     position: relative;
 }
 
@@ -534,13 +534,13 @@ search-box{
     padding-bottom:1rem;
 }
 .success-text-color{
-    color: #5cae01; 
+    color: #5cae01;
 }
 
 .icon-icon-refresh:hover,
 .icon-icon-filter-unselected:hover,
 .icon-icon-search-unselected:hover,
-.icon-icon-close:hover, 
+.icon-icon-close:hover,
 .expandbtn:hover,
 .Expandbtn:hover{
     opacity:0.75;
