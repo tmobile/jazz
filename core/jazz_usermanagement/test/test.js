@@ -5,6 +5,7 @@ const AWSCognito = require('amazon-cognito-identity-js');
 const sinon = require('sinon');
 const index = require('../index');
 const logger = require("../components/logger.js");
+const errorHandlerModule = require("../components/error-handler.js");
 
 var event, context, spy, callback, stub;
 
@@ -21,7 +22,7 @@ describe('forget password', function() {
 			  "resourcePath" : "reset",
               "body" : { "username" : "username",
                          "ClientId" : "123",
-						 "email"    : "abc@xyz.com"
+						  "email" : "abc@xyz.com"
                        }
             };
     context = awsContext();
@@ -67,26 +68,26 @@ describe('forget password', function() {
     assert.isTrue(bool);
   });
   
-  // function validateResetParams(userInput) {
-  //   return new Promise((resolve, reject) => {
+  function validateResetParams(userInput) {
+    return new Promise((resolve, reject) => {
   
-  //     var errorHandler = errorHandlerModule();
+      var errorHandler = errorHandlerModule();
   
-  //     if (!userInput.email) {
-  //       logger.info("no email address provided for password reset");
-  //       reject(errorHandler.throwInputValidationError("102", "email is required field"));
-  //     } else {
-  //       resolve();
-  //     }
-  //   });
-  // }
+      if (!userInput.email) {
+        logger.info("no email address provided for password reset");
+        reject(errorHandler.throwInputValidationError("102", "email is required field"));
+      } else {
+        resolve();
+      }
+    });
+  }
 
-  // it('should return true if valid user email', function(){
-  //   event.email = undefined;
-  //   var isValid = validateResetParams(event)
-  //   console.log(isValid)
-  //   assert.isTrue(isValid);
-  // });
+  it('should return 102 error if not valid user email', function(){
+    event.email = undefined;
+    var isValid = validateResetParams(event).should.have.property("errorCode",102);
+    console.log(isValid)
+    //assert.isTrue(isValid);
+  });
   
   
   
