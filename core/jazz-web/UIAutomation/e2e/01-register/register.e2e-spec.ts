@@ -37,8 +37,8 @@ describe('register', () => {
     browser.driver.switchTo().activeElement();
     register_po.getRegister().click();
     register_po.getUserName().sendKeys('uname' + Date.now() + '@t-mobile.com');
-    register_po.getPassword().sendKeys('passcode123');
-    register_po.getRegistrationCode().sendKeys('jazz');
+    register_po.getPassword().sendKeys('');
+    register_po.getRegistrationCode().sendKeys('');
     register_po.getRegisterButton().click();
     
   });

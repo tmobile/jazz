@@ -35,8 +35,8 @@ describe('login', () => {
     JazzServices_po.navigateToJazzGet();
     browser.wait(EC.visibilityOf(login_po.getLoginButton()), timeOutHigh);
     login_po.getLoginButton().click();
-    login_po.getUserNameInput().sendKeys(config.NT_ID);
-    login_po.getPasswordInput().sendKeys(config.NT_PASSWORD);
+    login_po.getUserNameInput().sendKeys(config.USERNAME);
+    login_po.getPasswordInput().sendKeys(config.PASSWORD);
     login_po.submitLoginButton().click();
     browser.wait(EC.visibilityOf(JazzServices_po.getPageTitle()), timeOutHigh);
     const page_title = JazzServices_po.getPageTitle().getText();

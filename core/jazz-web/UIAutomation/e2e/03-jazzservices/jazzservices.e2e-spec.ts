@@ -42,7 +42,6 @@ describe('Jazz', () => {
         //jazzServices_po.getApplicationClick().click();
         jazzServices_po.getServiceDescription().sendKeys('Testing');
   }
-
   function serviceapprover()
   {
         //jazzServices_po.getApprover().sendKeys('ejohnso178');
@@ -51,7 +50,6 @@ describe('Jazz', () => {
         jazzServices_po.getSubmit().click();
         jazzServices_po.getDone().click();
   }
-
   it('Create API Service', () => {
       browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
       browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
@@ -65,7 +63,6 @@ describe('Jazz', () => {
       expect(jazzServices_po.getAPIStatus().getText()).toEqual('creation started'); 
 
   });
-
   it('Create Lamda Service', () => {
       //browser.driver.navigate().refresh();
       browser.driver.switchTo().activeElement();
@@ -85,9 +82,7 @@ describe('Jazz', () => {
       expect(jazzServices_po.getFunctionServiceName().getText()).toEqual(servicename); 
       expect(jazzServices_po.getFunctionType().getText()).toEqual('function'); 
       expect(jazzServices_po.getFunctionStatus().getText()).toEqual('creation started');
-
     });
-
     it('Create Website Service', () => {
       browser.driver.switchTo().activeElement();
       browser.driver.sleep(5000);
@@ -104,9 +99,8 @@ describe('Jazz', () => {
       expect(jazzServices_po.getWebsiteServiceName().getText()).toEqual(servicename); 
       expect(jazzServices_po.getWebsiteType().getText()).toEqual('website'); 
       expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('creation started'); 
-
     });
-  
+ 
   });
   
   
