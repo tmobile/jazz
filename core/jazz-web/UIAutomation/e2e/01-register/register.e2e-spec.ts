@@ -37,13 +37,10 @@ describe('register', () => {
     browser.driver.switchTo().activeElement();
     register_po.getRegister().click();
     register_po.getUserName().sendKeys('uname' + Date.now() + '@t-mobile.com');
-    register_po.getPassword().sendKeys('');
-    register_po.getRegistrationCode().sendKeys('');
+    register_po.getPassword().sendKeys('passcode123');
+    register_po.getRegistrationCode().sendKeys('jazz');
     register_po.getRegisterButton().click();
-    register_po.getDummy().click();
-    //browser.wait(EC.visibilityOf(JazzServices_po.getPageTitle()), timeOutHigh);
-    //const page_title = JazzServices_po.getPageTitle().getText();
-    //expect(page_title).toEqual('Services');
+    
   });
 
 });
