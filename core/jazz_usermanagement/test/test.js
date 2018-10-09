@@ -92,6 +92,7 @@ describe('forget password', function() {
     let result = index.validateUpdatePasswordParams(event); 
     return result
       .then(rslt => expect(rslt).to.have.property('104'))
+      .catch(error => {rslt.message});
       
   });
 
@@ -125,9 +126,29 @@ describe('forget password', function() {
       .then(rslt => expect(rslt).to.be.equal('success'))
       
   });
+
+  it('should throw all reqired field errors', function () {
+    event.userpassword = undefined;
+    event.usercode = undefined;
+    event.email = undefined;
+    event.userid = 111;
+    let result = index.validateCreaterUserParams(config , event); 
+    return result
+      .then(rslt => expect(rslt).to.be.calledWith(anError))      
+  });
+
+  it('should not throw any error in validateCreaterUserParams function', function () {
+    event.userpassword = 'P@ssword';
+    event.usercode = 'JAZZ';
+    event.email = 'abc@xyz.com';
+    event.userid = 111;
+    let result = index.validateCreaterUserParams(config , event); 
+    return result
+      .then(rslt => expect(rslt).to.be.equal(event))      
+  });
  
   
-   
+  
   
   
 });
