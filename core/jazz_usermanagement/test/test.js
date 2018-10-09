@@ -1,5 +1,6 @@
 const assert = require('chai').assert;
 const expect = require('chai').expect;
+const should = require('chai').should();
 const awsContext = require('aws-lambda-mock-context');
 const AWSCognito = require('amazon-cognito-identity-js');
 const sinon = require('sinon');
@@ -21,7 +22,7 @@ describe('forget password', function() {
               "stage" : "test",
 			  "resourcePath" : "reset",
               "body" : { "username" : "username",
-                         "ClientId" : "123",
+                         "verificationCode" : "123",
 						  "email" : "abc@xyz.com"
                        }
             };
@@ -68,30 +69,65 @@ describe('forget password', function() {
     assert.isTrue(bool);
   });
   
-  function validateResetParams(userInput) {
-    return new Promise((resolve, reject) => {
-  
-      var errorHandler = errorHandlerModule();
-  
-      if (!userInput.email) {
-        logger.info("no email address provided for password reset");
-        reject(errorHandler.throwInputValidationError("102", "email is required field"));
-      } else {
-        resolve();
-      }
-    });
-  }
 
-  it('should return 102 error if not valid user email', function(){
+  it("Should throw an error with errorcode 102", function(){
     event.email = undefined;
-    var isValid = validateResetParams(event).should.have.property("errorCode",102);
-    console.log(isValid)
-    //assert.isTrue(isValid);
+    index.validateResetParams(event)
+    .then(res=> { //console.log(res);
+      expect(res).to.have.property('errorCode');
+    });
+  })
+    
+  it("should throw error Email is required field", function(){
+    event.email = undefined;
+    index.validateUpdatePasswordParams(event)
+    .then(res=> { expect(res).to.have.property('102')
+    });
+
+    
   });
+
+  it('should throw error Email is required field', function () {
+    event.email = undefined;
+    let result = index.validateUpdatePasswordParams(event); 
+    return result
+      .then(rslt => expect(rslt).to.have.property('104'))
+      
+  });
+
+
+  it('should throw error verificationCode is required field', function () {
+    event.verificationCode = undefined;
+    event.email = 'abc@xyz.com';
+    let result = index.validateUpdatePasswordParams(event); 
+    return result
+      .then(rslt => expect(rslt).to.have.property('105'))
+      
+  });
+
+
+  it('should throw error password is required field', function () {
+    event.password = undefined;
+    event.verificationCode = 'S3cret';
+    event.email = 'abc@xyz.com';
+    let result = index.validateUpdatePasswordParams(event); 
+    return result
+      .then(rslt => expect(rslt).to.have.property('102'))
+      
+  });
+
+  it('should not throw any error', function () {
+    event.password = 'P@ssword';
+    event.verificationCode = 'S3cret';
+    event.email = 'abc@xyz.com';
+    let result = index.validateUpdatePasswordParams(event); 
+    return result
+      .then(rslt => expect(rslt).to.be.equal('success'))
+      
+  });
+ 
   
-  
-  
-  
+   
   
   
 });

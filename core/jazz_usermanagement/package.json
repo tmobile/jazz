@@ -12,10 +12,12 @@
     "jshint": "jshint --exclude ./node_modules ."
   },
   "dependencies": {
+    "amazon-cognito-identity-js": "^2.0.30",
+    "aws-lambda-mock-context": "^3.2.1",
     "lodash": "*",
     "request": "*",
-    "request-promise-native": "^1.0.5"
-    
+    "request-promise-native": "^1.0.5",
+    "sinon": "^6.3.4"
   },
   "devDependencies": {
     "mocha": "^v3.0.0",

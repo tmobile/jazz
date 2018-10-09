@@ -32,12 +32,13 @@ const logger = require("./components/logger.js");
 
 const scmFactory = require("./scm/scmFactory.js");
 
-module.exports.handler = (event, context, cb) => {
+function handler(event, context, cb)  {
 
 	var errorHandler = errorHandlerModule();
 	logger.init(event, context);
 
 	var config = configModule.getConfig(event, context);
+	//console.log(config);
 
 	if (!config || config.length) {
 		logger.error("Cannot load config object, will stop processing");
@@ -50,7 +51,7 @@ module.exports.handler = (event, context, cb) => {
 		logger.info(JSON.stringify(event));
 
 		if (!event || !event.method || !event.resourcePath) {
-			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "invalid or missing arguments")));
+			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Service operation not supported")));
 		}
 
 		if (event.method !== 'POST') {
@@ -185,15 +186,15 @@ function validateUpdatePasswordParams(userInput) {
 
 		if (!userInput.verificationCode) {
 			logger.warn("no verification code provided for password update");
-			return reject(errorHandler.throwInputValidationError("102", "Verification code is required"));
+			return reject(errorHandler.throwInputValidationError("104", "Verification code is required"));
 		}
 
 		if (!userInput.password) {
 			logger.warn("no password provided for password update");
-			return reject(errorHandler.throwInputValidationError("102", "Password is required"));
+			return reject(errorHandler.throwInputValidationError("105", "Password is required"));
 		}
 		else {
-			resolve();
+			resolve('success');
 		}
 	});
 }
@@ -292,3 +293,17 @@ function getRequestToCreateSCMUser(config, userData) {
 	var scm = new scmFactory(config);
 	return scm.addUserRequest(userData.userid.toLowerCase(), userData.userpassword);
 }
+
+
+const exportable = {	
+	handler,
+	validateResetParams,
+	validateUpdatePasswordParams,
+	validateCreaterUserParams,
+	createUser,
+	forgotPassword,
+	updatePassword,
+	getRequestToCreateSCMUser
+	
+};
+module.exports = exportable;
