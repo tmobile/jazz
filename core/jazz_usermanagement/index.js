@@ -51,7 +51,7 @@ function handler(event, context, cb)  {
 		logger.info(JSON.stringify(event));
 
 		if (!event || !event.method || !event.resourcePath) {
-			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Service operation not supported")));
+			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "invalid or missing arguments")));
 		}
 
 		if (event.method !== 'POST') {

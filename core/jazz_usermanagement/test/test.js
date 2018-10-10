@@ -20,7 +20,7 @@ describe('forget password', function() {
   beforeEach(function(){
     event = { "method" : "POST",
               "stage" : "test",
-			  "resourcePath" : "reset",
+              "resourcePath" : "reset",
               "body" : { "username" : "username",
                          "verificationCode" : "123",
                          "email" : "abc@xyz.com"
