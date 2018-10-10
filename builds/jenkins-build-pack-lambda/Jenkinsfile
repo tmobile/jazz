@@ -26,7 +26,6 @@ import groovy.transform.Field
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def current_environment = ''
-@Field def stack_name
 @Field def isLambdaUpdateRequired = false
 
 node() {
@@ -270,7 +269,7 @@ node() {
             if (config['event_source_s3']) {
               handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld)
             } else if (config['event_source_sqs']) {
-              handleSqsError(deployOutput, config['event_source_sqs'], environment_logical_id, envBucketKey)
+              handleSqsError(deployOutput, config, environment_logical_id, envBucketKey)
             } else if (config['event_source_kinesis']) {
               handleKinesisStreamError(deployOutput, config['event_source_kinesis'], environment_logical_id, envBucketKey)
             } else {
@@ -337,11 +336,18 @@ def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envB
   }
 }
 
-def handleSqsError(deployOutput, event_source_sqs_arn, environment_logical_id, envBucketKey) {
+def handleSqsError(deployOutput, service_config, environment_logical_id, envBucketKey) {
+  def event_source_sqs_arn = service_config['event_source_sqs']
   def sqsErrString = "CloudFormation - CREATE_FAILED - AWS::SQS::Queue - "
   if (deployOutput.contains(sqsErrString)) {
-    def event_source_sqs = event_source_sqs_arn.split(":(?!.*:.*)")[1]
+    def event_source_sqs = getSqsQueueName(event_source_sqs_arn, environment_logical_id)
+    event_source_sqs_arn =  getSqsQueueArn(event_source_sqs_arn, environment_logical_id)
+    def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
     if (lambdaEvents.checkSqsQueueExists(event_source_sqs)) {
+      if(lambdaEvents.checkTriggerAttachedAlready(event_source_sqs_arn, lambda_arn)){
+        echo "Function trigger exists already. Please remove the existing function trigger and try again."
+        error "Function trigger exists already.Please remove the existing function trigger and try again."
+      }
       lambdaEvents.updateSqsResourceServerless()
       deleteAndRedeployService(environment_logical_id, envBucketKey)
     } else {
@@ -377,6 +383,21 @@ def deleteAndRedeployService(environment_logical_id, envBucketKey){
     echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
     error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
+}
+
+def getSqsQueueName(event_source_sqs_arn, environment_logical_id) {
+  def event_source_sqs = event_source_sqs_arn.split(":(?!.*:.*)")[1]
+  if(environment_logical_id != "prod"){
+    event_source_sqs = "${event_source_sqs}_${environment_logical_id}"
+  }
+  return event_source_sqs
+}
+
+def getSqsQueueArn(event_source_sqs_arn, environment_logical_id) {
+    if(environment_logical_id != "prod"){
+      event_source_sqs_arn = "${event_source_sqs_arn}_${environment_logical_id}"
+    }
+  return event_source_sqs_arn
 }
 
 def echoServerlessFile() {
@@ -712,10 +733,11 @@ def writeServerlessFile(config, env) {
   }
 
   if (config['event_source_sqs']) {
-    def  event_source_sqs = config['event_source_sqs'].split(":(?!.*:.*)")[1]
+    def event_source_sqs =  getSqsQueueName(config['event_source_sqs'], env)
+    def event_sqs_arn = getSqsQueueArn(config['event_source_sqs'], env)
     sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
-    sh "sed -i -- 's|{event_sqs_arn}|${config['event_source_sqs']}|g' ./serverless.yml"
-    sh "sed -i -- 's|{event_sqs_arn}|${config['event_source_sqs']}|g' policyFile.yml"
+    sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
+    sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
   }
 
