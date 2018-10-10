@@ -383,10 +383,10 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
+        }
 
-            if(service_name.trim() == "jazz_es-kinesis-log-streamer") {
-                sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global_config.json"
-            }
+        if((service_name.trim() == "jazz_es-kinesis-log-streamer") || (service_name.trim() == "jazz_splunk-kinesis-log-streamer")) {
+            sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global_config.json"
         }
 
         if (service_name.trim() == "jazz_splunk-kinesis-log-streamer") {
