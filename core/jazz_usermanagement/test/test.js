@@ -107,7 +107,7 @@ describe('forget password', function() {
     let result = index.validateUpdatePasswordParams(event); 
     return result
     .catch(error => expect(error).to.include({
-      errorCode:'104',
+      errorCode:'102',
       errorType: 'BadRequest',
       message: 'Verification code is required'
     }));
@@ -123,7 +123,7 @@ describe('forget password', function() {
     let result = index.validateUpdatePasswordParams(event); 
     return result
     .catch(error => expect(error).to.include({
-      errorCode:'105',
+      errorCode:'102',
       errorType: 'BadRequest',
       message: 'Password is required'
     }));
@@ -146,7 +146,7 @@ describe('forget password', function() {
     let result = index.validateCreaterUserParams(config , event); 
     return result
     .then(err => expect(err).to.include({
-      errorCode:'105',
+      errorCode:'102',
       errorType: 'BadRequest',
       message: 'Password is required'
     }));            

@@ -186,12 +186,12 @@ function validateUpdatePasswordParams(userInput) {
 
 		if (!userInput.verificationCode) {
 			logger.warn("no verification code provided for password update");
-			return reject(errorHandler.throwInputValidationError("104", "Verification code is required"));
+			return reject(errorHandler.throwInputValidationError("102", "Verification code is required"));
 		}
 
 		if (!userInput.password) {
 			logger.warn("no password provided for password update");
-			return reject(errorHandler.throwInputValidationError("105", "Password is required"));
+			return reject(errorHandler.throwInputValidationError("102", "Password is required"));
 		}
 		else {
 			resolve('success');
