@@ -98,7 +98,6 @@ export class ServiceDetailComponent implements OnInit {
     if (service === undefined) {
       return {};
     } else {
-      debugger
       return {
         id: service.id,
         name: service.service,
