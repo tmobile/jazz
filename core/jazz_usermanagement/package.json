@@ -20,10 +20,11 @@
     "sinon": "^6.3.4"
   },
   "devDependencies": {
-    "mocha": "^v3.0.0",
+    "aws-sdk": "*",
     "chai": "^3.5.0",
     "lambda-local": "^1.4.2",
-    "aws-sdk": "*"
+    "mocha": "^v3.0.0",
+    "nyc": "^13.0.1"
   },
   "engines": {
     "node": "6.10"

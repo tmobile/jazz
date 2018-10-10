@@ -180,7 +180,7 @@ function validateUpdatePasswordParams(userInput) {
 		var errorHandler = errorHandlerModule();
 
 		if (!userInput.email) {
-			logger.warn("no email address provided for password update");
+			logger.warn("no email address provided for password update"); console.log(errorHandler.throwInputValidationError("102", "Email is required field"));
 			return reject(errorHandler.throwInputValidationError("102", "Email is required field"));
 		}
 
@@ -204,7 +204,7 @@ function validateUpdatePasswordParams(userInput) {
  * @param {object} userInput
  * @returns promise
  */
-function validateCreaterUserParams(config, userInput) {
+function validateCreaterUserParams(config, userInput) { //console.log(config, userInput)
 	var errorHandler = errorHandlerModule();
 
 	return new Promise((resolve, reject) => {

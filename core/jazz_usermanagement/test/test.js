@@ -91,8 +91,12 @@ describe('forget password', function() {
     event.email = undefined;
     let result = index.validateUpdatePasswordParams(event); 
     return result
-      .then(rslt => expect(rslt).to.have.property('104'))
-      .catch(error => {rslt.message});
+      .catch(error => expect(error).to.include({
+        errorCode:'102',
+        errorType: 'BadRequest',
+			  message: 'Email is required field'
+      }));
+      
       
   });
 
@@ -102,7 +106,12 @@ describe('forget password', function() {
     event.email = 'abc@xyz.com';
     let result = index.validateUpdatePasswordParams(event); 
     return result
-      .then(rslt => expect(rslt).to.have.property('105'))
+    .catch(error => expect(error).to.include({
+      errorCode:'104',
+      errorType: 'BadRequest',
+      message: 'Verification code is required'
+    }));
+      
       
   });
 
@@ -113,7 +122,12 @@ describe('forget password', function() {
     event.email = 'abc@xyz.com';
     let result = index.validateUpdatePasswordParams(event); 
     return result
-      .then(rslt => expect(rslt).to.have.property('102'))
+    .catch(error => expect(error).to.include({
+      errorCode:'105',
+      errorType: 'BadRequest',
+      message: 'Password is required'
+    }));
+      
       
   });
 
@@ -128,13 +142,14 @@ describe('forget password', function() {
   });
 
   it('should throw all reqired field errors', function () {
-    event.userpassword = undefined;
-    event.usercode = undefined;
-    event.email = undefined;
     event.userid = 111;
     let result = index.validateCreaterUserParams(config , event); 
     return result
-      .then(rslt => expect(rslt).to.be.calledWith(anError))      
+    .then(err => expect(err).to.include({
+      errorCode:'105',
+      errorType: 'BadRequest',
+      message: 'Password is required'
+    }));            
   });
 
   it('should not throw any error in validateCreaterUserParams function', function () {
@@ -144,7 +159,7 @@ describe('forget password', function() {
     event.userid = 111;
     let result = index.validateCreaterUserParams(config , event); 
     return result
-      .then(rslt => expect(rslt).to.be.equal(event))      
+      .then(rslt => expect(rslt).to.include(event))      
   });
  
   
