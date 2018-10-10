@@ -102,8 +102,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   setPeriodFilters() {
-    debugger
-
     if (this.service.deployment_targets === 'gcp_apigee'){
       const periodFilterIndex = this.formFields.findIndex(formField => formField.label === 'PERIOD');
       this.formFields[periodFilterIndex].options =  ['1 Minutes', '1 Hour', '1 Day'];
