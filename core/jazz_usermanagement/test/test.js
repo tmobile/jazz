@@ -23,7 +23,7 @@ describe('forget password', function() {
 			  "resourcePath" : "reset",
               "body" : { "username" : "username",
                          "verificationCode" : "123",
-						  "email" : "abc@xyz.com"
+                         "email" : "abc@xyz.com"
                        }
             };
     context = awsContext();
@@ -82,9 +82,7 @@ describe('forget password', function() {
     event.email = undefined;
     index.validateUpdatePasswordParams(event)
     .then(res=> { expect(res).to.have.property('102')
-    });
-
-    
+    });    
   });
 
   it('should throw error Email is required field', function () {
@@ -96,8 +94,6 @@ describe('forget password', function() {
         errorType: 'BadRequest',
 			  message: 'Email is required field'
       }));
-      
-      
   });
 
 
@@ -111,8 +107,6 @@ describe('forget password', function() {
       errorType: 'BadRequest',
       message: 'Verification code is required'
     }));
-      
-      
   });
 
 
@@ -126,9 +120,7 @@ describe('forget password', function() {
       errorCode:'102',
       errorType: 'BadRequest',
       message: 'Password is required'
-    }));
-      
-      
+    }));     
   });
 
   it('should not throw any error', function () {
@@ -138,7 +130,6 @@ describe('forget password', function() {
     let result = index.validateUpdatePasswordParams(event); 
     return result
       .then(rslt => expect(rslt).to.be.equal('success'))
-      
   });
 
   it('should throw all reqired field errors', function () {
@@ -161,11 +152,6 @@ describe('forget password', function() {
     return result
       .then(rslt => expect(rslt).to.include(event))      
   });
- 
-  
-  
-  
-  
 });
 
 
