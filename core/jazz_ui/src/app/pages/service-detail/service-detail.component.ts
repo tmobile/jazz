@@ -98,6 +98,7 @@ export class ServiceDetailComponent implements OnInit {
     if (service === undefined) {
       return {};
     } else {
+      debugger
       return {
         id: service.id,
         name: service.service,
@@ -111,7 +112,8 @@ export class ServiceDetailComponent implements OnInit {
         slackChannel: service.slack_channel,
         repository: service.repository,
         tags: service.tags,
-        endpoints: service.endpoints
+        endpoints: service.endpoints,
+        deployment_targets : service.deployment_targets[service.type]
       };
     }
   };
