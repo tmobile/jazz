@@ -30,8 +30,7 @@ describe('forget password', function() {
 	//console.log(context);
     callback = (value) => {
       return value;
-    };
-	
+    };	
   });
   
   

@@ -11,8 +11,7 @@
     "test": "mocha",
     "jshint": "jshint --exclude ./node_modules ."
   },
-  "dependencies": {
-    "amazon-cognito-identity-js": "^2.0.30",
+  "dependencies": {    
     "aws-lambda-mock-context": "^3.2.1",
     "lodash": "*",
     "request": "*",
