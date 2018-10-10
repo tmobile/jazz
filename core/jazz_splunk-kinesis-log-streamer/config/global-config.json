@@ -9,7 +9,7 @@
     "status": "Method completed with status: (.+)$",
     "Lambda_request_id": "^END RequestId: (.+\n)$",
     "Lambda_environment": "^/aws/lambda/(.+)-(.+)$",
-    "Lambda_environment_dev": "^/aws/lambda/(.+)-(.*\\b(-dev|-stg|-prod))$",
+    "Lambda_environment_dev": "^/aws/lambda/{stack_prefix}-(.+)-(.*\\b(-dev|-stg|-prod))$",
     "Lambda_domain_service": "^/aws/lambda/{stack_prefix}-(.+)-(.+)$",
     "lambda_ref_id": "x-amzn-RequestId=([^,]+)",
     "method_req_headers": "Method request headers: (.+)",
