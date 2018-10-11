@@ -79,6 +79,10 @@ function getApiLogsData(payload) {
   } // Cloudwatch do not have method info for get!
 
   let apiDomainAndService = getInfo(payload.logEvents, config.PATTERNS.domain_service);
+  if(data.environment === "dev") {
+    apiDomainAndService = apiDomainAndService.substring(apiDomainAndService.indexOf("/") + 1, apiDomainAndService.length);
+  }
+
   let apiDomain = apiDomainAndService.substring(0, apiDomainAndService.indexOf("/"));
   if (apiDomain) {
     data.domain = apiDomain;
