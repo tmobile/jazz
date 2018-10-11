@@ -344,9 +344,9 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, envBuck
     event_source_sqs_arn =  getSqsQueueArn(event_source_sqs_arn, environment_logical_id)
     def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
     if (lambdaEvents.checkSqsQueueExists(event_source_sqs)) {
-      if(lambdaEvents.checkTriggerAttachedAlready(event_source_sqs_arn, lambda_arn)){
-        echo "Function trigger exists already. Please remove the existing function trigger and try again."
-        error "Function trigger exists already.Please remove the existing function trigger and try again."
+      if(lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn)){
+        echo "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
+        error "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
       }
       lambdaEvents.updateSqsResourceServerless()
       deleteAndRedeployService(environment_logical_id, envBucketKey)

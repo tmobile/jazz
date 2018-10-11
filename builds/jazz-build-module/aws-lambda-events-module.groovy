@@ -81,7 +81,7 @@ def checkSqsQueueExists(queueName) {
   }
 }
 
-def checkTriggerAttachedAlready(event_source_sqs_arn, lambda_arn){
+def checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn){
    try {
       response = sh(
         script: "aws lambda list-event-source-mappings --event-source-arn  ${event_source_sqs_arn} --profile cloud-api --output json",
@@ -89,18 +89,18 @@ def checkTriggerAttachedAlready(event_source_sqs_arn, lambda_arn){
       ).trim()
       echo "queue_details : $response"
       def queue_details = parseJson(response)
-      def isLambdaAttached = false
+      def isDifferentLambdaAttached  = false
       if(queue_details.EventSourceMappings.size() > 0) {
         for (details in queue_details.EventSourceMappings) {
           if(details.FunctionArn) {
             if (details.FunctionArn != lambda_arn ){
-              isLambdaAttached = true
+              isDifferentLambdaAttached  = true
               echo "Trigger attached already."
             }
           }
         }
       }
-      return isLambdaAttached
+      return isDifferentLambdaAttached
    } catch (ex) {
      error "Exception occured while listing the event source mapping for SQS queue."
    }
