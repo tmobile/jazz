@@ -112,7 +112,7 @@ export class ServiceDetailComponent implements OnInit {
         repository: service.repository,
         tags: service.tags,
         endpoints: service.endpoints,
-        deployment_targets : service.deployment_targets[service.type]
+        // deployment_targets : 'gcp_apigee'
       };
     }
   };
