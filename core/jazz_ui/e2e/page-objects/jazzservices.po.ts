@@ -3,9 +3,9 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); You may not use
  * this file except in compliance with the License. A copy of the License is located at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or
  * implied. See the License for the specific language governing permissions and
@@ -21,27 +21,27 @@ export class Jazz {
   navigateToJazzGet() {
     return browser.driver.get(applicationDomain);
   }
-  
+
   getCreateService() {
     return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/btn-primary-with-icon[@text="CREATE SERVICE"]'));
   }
- 
+
   getPageTitle() {
     return element(by.xpath('//div/div[2]/div/services-list/section/navigation-bar/div'));
   }
 
  getFunction() {
-  
+
     return element(by.xpath('//div[@class="service-box"]/p[text()="FUNCTION"]/parent::div/parent::section'));
   }
 
   getLambda() {
-  
+
     return element(by.xpath('//div[@class="service-box"]/p[text()="LAMBDA"]/parent::div/parent::section'));
   }
 
   getWebsite() {
-  
+
   return element(by.xpath('//div[@class="service-box"]/p[text()="WEBSITE"]/parent::div/parent::section'));
   }
 
@@ -69,7 +69,7 @@ export class Jazz {
 
       return element(by.xpath('//*[@id="applc"]'));
   }
-   
+
   getServiceDescription() {
 
       return element(by.xpath('//*[@id="serviceDescription"]'));
@@ -137,31 +137,31 @@ export class Jazz {
     getApplicationClick() {
 
       return element(by.xpath('//div[@class="approvers-list-wrap"]//div[@appname="ABC Services"]'));
-     
+
     }
 
     getApprover() {
 
       return element(by.xpath('//*[@id="approverName"]'));
-     
+
     }
 
     getApproverClick() {
-      
+
       return element(by.xpath('//div[@class="approvers-list-wrap"]//div[@class="approvers-dets"]/div[@displayname="Elizabeth Johnson"]'));
-     
+
     }
-    
+
     getSubmit() {
 
       return element(by.xpath('//section[@class="submit-form"]/button[@type="submit"]'));
-     
+
     }
 
     getDone() {
 
       return element(by.xpath('//section[@class="footer-btn"]/btn-jazz-primary[@text="DONE"]/button[text()="DONE"]'));
-     
+
     }
 
  }

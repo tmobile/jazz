@@ -3,9 +3,9 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); You may not use
  * this file except in compliance with the License. A copy of the License is located at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or
  * implied. See the License for the specific language governing permissions and
@@ -21,7 +21,8 @@ export class Register {
   }
 
   getLoginButton(){
-    return element(by.xpath('//div/jazz-header/header/div[2]/ul/li[5]/div/btn-jazz-primary/button'));
+   return element(by.xpath('//div/jazz-header/header/div[2]/ul/li[5]/div/btn-jazz-primary/button'));
+   //return element(by.xpath('//btn-jazz-primary/button[text()="LOGIN"]'));
   }
 
   getRegister(){
@@ -47,5 +48,5 @@ export class Register {
   getDummy() {
     return element(by.xpath('//*[@id="exampleName"]'));
   }
-  
+
 }

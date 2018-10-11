@@ -3,9 +3,9 @@
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); You may not use
  * this file except in compliance with the License. A copy of the License is located at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * or in the "license" file accompanying this file. This file is distributed on
  * an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, express or
  * implied. See the License for the specific language governing permissions and
@@ -15,7 +15,7 @@
 import { browser, element, by, protractor, $} from 'protractor';
 import { Login } from '../page-objects/login.po';
 import { Jazz } from '../page-objects/jazzservices.po';
-import { CONFIGURATIONS } from '../../src/config/configurations';
+import { CONFIGURATIONS } from '../../src/config/configuration';
 import { Timeouts } from 'selenium-webdriver';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 
@@ -36,7 +36,7 @@ describe('Overview', () => {
     jazzServices_po = new Jazz();
     });
 
-  
+
 
       function createservice(servicename)
       {
@@ -65,9 +65,9 @@ describe('Overview', () => {
       createservice(servicename);
       serviceapprover();
       browser.driver.sleep(15000);
-      expect(jazzServices_po.getAPIServiceName().getText()).toEqual(servicename); 
-      expect(jazzServices_po.getAPIType().getText()).toEqual('api'); 
-      expect(jazzServices_po.getAPIStatus().getText()).toEqual('creation started'); 
+      expect(jazzServices_po.getAPIServiceName().getText()).toEqual(servicename);
+      expect(jazzServices_po.getAPIType().getText()).toEqual('api');
+      expect(jazzServices_po.getAPIStatus().getText()).toEqual('creation started');
 
     });
       it('Create Lamda Service', () => {
@@ -87,8 +87,8 @@ describe('Overview', () => {
       jazzServices_po.getEventScheduleFixedRate().click();
       serviceapprover();
       browser.driver.sleep(15000);
-      expect(jazzServices_po.getFunctionServiceName().getText()).toEqual(servicename); 
-      expect(jazzServices_po.getFunctionType().getText()).toEqual('function'); 
+      expect(jazzServices_po.getFunctionServiceName().getText()).toEqual(servicename);
+      expect(jazzServices_po.getFunctionType().getText()).toEqual('function');
       expect(jazzServices_po.getFunctionStatus().getText()).toEqual('creation started');
 
     });
@@ -107,14 +107,14 @@ describe('Overview', () => {
       createservice(servicename);
       serviceapprover();
       browser.driver.sleep(15000);
-      expect(jazzServices_po.getWebsiteServiceName().getText()).toEqual(servicename); 
-      expect(jazzServices_po.getWebsiteType().getText()).toEqual('website'); 
-      expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('creation started'); 
+      expect(jazzServices_po.getWebsiteServiceName().getText()).toEqual(servicename);
+      expect(jazzServices_po.getWebsiteType().getText()).toEqual('website');
+      expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('creation started');
 
       });
-  
+
     });
-  
-  
+
+
 
 

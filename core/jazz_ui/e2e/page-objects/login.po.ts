@@ -21,7 +21,7 @@ export class Login {
   }
 
   getLoginButton(){
-    return element(by.xpath('//div/jazz-header/header/div[2]/ul/li[5]/div/btn-jazz-primary/button'));
+    return element(by.xpath('//div/jazz-header/header/div[2]/ul/li[5]/div/btn-jazz-primary/button'));                   
   }
 
   getUserNameInput() {
