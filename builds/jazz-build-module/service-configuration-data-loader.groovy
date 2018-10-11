@@ -250,31 +250,22 @@ def loadServiceConfigurationData() {
 
         }
 
-        if (service_name.trim() == "jazz_events") {
+        if ((service_name.trim() == "jazz_events") || (service_name.trim() == "jazz_events-handler")) {
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-
+            if (service_name.trim() == "jazz_events") {
+                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            }
         }
 
-        if (service_name.trim() == "jazz_events-handler") {
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
-        }
-
-        if (service_name.trim() == "jazz_services-handler") {
+        if ((service_name.trim() == "jazz_services-handler") || (service_name.trim() == "jazz_create-serverless-service")) {
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
 
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
@@ -283,6 +274,12 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+            if(service_name.trim() == "jazz_services-handler") {
+                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            }
 
         }
 
@@ -311,21 +308,6 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-        }
-
-        if (service_name.trim() == "jazz_create-serverless-service") {
-
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
         }
 
         if ((service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service")
@@ -369,23 +351,20 @@ def loadServiceConfigurationData() {
 
         }
 
-        if (service_name.trim() == "jazz_logs") {
-            sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+        if ((service_name.trim() == "jazz_logs") || (service_name.trim() == "jazz_cloud-logs-streamer") || (service_name.trim() == "jazz_es-kinesis-log-streamer")) {
 
             sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
+
+            if (service_name.trim() == "jazz_logs") {
+                sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+            }
         }
 
-        if ((service_name.trim() == "jazz_cloud-logs-streamer") || (service_name.trim() == "jazz_es-kinesis-log-streamer")) {
-            sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
-        }
-
-        if((service_name.trim() == "jazz_es-kinesis-log-streamer") || (service_name.trim() == "jazz_splunk-kinesis-log-streamer")) {
+        if((service_name.trim() == "jazz_es-kinesis-log-streamer")) {
             sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global_config.json"
         }
 
@@ -403,6 +382,8 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{splunk_index}/${config_loader.SPLUNK.INDEX}/g' ./config/prod-config.json"
 
             sh "sed -i -- 's/{enable_splunk_logging_global}/${config_loader.SPLUNK.IS_ENABLED}/g' ./config/global-config.json"
+            sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global-config.json"
+
         }
 
         if (service_name.trim() == "jazz_usermanagement") {
