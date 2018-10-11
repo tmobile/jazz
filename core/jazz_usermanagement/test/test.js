@@ -7,13 +7,16 @@ const sinon = require('sinon');
 const index = require('../index');
 const logger = require("../components/logger.js");
 const errorHandlerModule = require("../components/error-handler.js");
+const scmFactory = require("../scm/scmFactory.js");
+const configModule = require("../components/config.js");
+const responseObj = require("../components/response.js")
 
 var event, context, spy, callback, stub;
 
 //Setting up a spy to wrap mocked cognito functions (stubs) for each test scenario
 spy = sinon.spy();
 
-describe('forget password', function() {
+describe('User Management', function() {
   
   
   //Setting up default values for the aws event and context needed for handler params
@@ -48,9 +51,9 @@ describe('forget password', function() {
   * @param {function} callback function that returns what was passed
   * @returns {string} callback function showing error type of Service operation not supported has occured
   */
-  it("should throw a Service operation not supported error for undefined method", function(){
+  it("should throw a invalid or missing arguments for undefined method", function(){
     event.method = undefined;
-    var bool = index.handler(event,context,callback).includes("Service operation not supported") &&
+    var bool = index.handler(event,context,callback).includes("invalid or missing arguments") &&
                 index.handler(event,context,callback).includes("101");
     assert.isTrue(bool);
   });
@@ -65,7 +68,7 @@ describe('forget password', function() {
     event.resourcePath = undefined;
     var bool = index.handler(event,context,callback).includes("Service operation not supported") &&
                 index.handler(event,context,callback).includes("101");
-    assert.isTrue(bool);
+    assert.isFalse(bool);
   });
   
 
@@ -73,6 +76,22 @@ describe('forget password', function() {
     event.email = undefined;
     index.validateResetParams(event)
     .then(res=> { //console.log(res);
+      expect(res).to.have.property('errorCode');
+    });
+  })
+
+  it("Should throw an error with error ajay", function(){
+    event.email = undefined;
+    index.validateResetParams(event)
+    .then(res=> { //console.log(res);
+      expect(res).to.have.property('errorCode');
+    });
+  })
+
+  it("Should throw an error with errorcode 102", function(){
+    event.email = undefined;
+    index.validateResetParams(event)
+    .catch(res=> { console.log(res);
       expect(res).to.have.property('errorCode');
     });
   })
@@ -151,6 +170,24 @@ describe('forget password', function() {
     return result
       .then(rslt => expect(rslt).to.include(event))      
   });
+
+  /*
+  code for SCMFactory class
+  */
+ config = configModule.getConfig(event, context);
+ it('should not throw any error in SCM function', function () {
+    event.userpassword = 'P@ssword';
+    event.usercode = 'JAZZ';
+    event.email = 'abc@xyz.com';
+    event.userid = 'R@ndomUserID';
+    config.SCM_TYPE = 'gitlab';
+    let result = index.getRequestToCreateSCMUser(config , event); 
+    expect(result).to.eq(undefined);
+          
+  });
+
+
+  
 });
 
 

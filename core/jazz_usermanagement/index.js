@@ -37,8 +37,7 @@ function handler(event, context, cb)  {
 	var errorHandler = errorHandlerModule();
 	logger.init(event, context);
 
-	var config = configModule.getConfig(event, context);
-	//console.log(config);
+	var config = configModule.getConfig(event, context);	
 
 	if (!config || config.length) {
 		logger.error("Cannot load config object, will stop processing");
@@ -82,7 +81,6 @@ function handler(event, context, cb)  {
 						if (err.code) {
 							return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
 						}
-
 						return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while resetting user password for: " + service_data.email)));
 					}
 				});
