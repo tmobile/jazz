@@ -281,7 +281,7 @@ node() {
 									endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
 								}
 
-								def apiArns = getAPIGatewayResourceARNs(aws_api_id, environment_logical_id)
+								def apiArns = getSwaggerResourceARNs(aws_api_id, environment_logical_id, "aws")
 								if (apiArns) {
 									for (arn in apiArns) {
 										events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
@@ -298,7 +298,12 @@ node() {
 								echo "API Proxy created at: ${endpointUrl}"
 								events.sendCompletedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment complete for APIGEE', context_map, environment_logical_id)
                 //adding svc, domain and environment as the provider id since that is used as apiproxy(resource)
-                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", "${config['domain']}-${config['service']}-${environment_logical_id}", "apigee_proxy", config), environment_logical_id);
+                def apiResources = getSwaggerResourceARNs("${config['domain']}-${config['service']}-${environment_logical_id}", environment_logical_id, "gcp")
+                if(apiResources) {
+                  for (path in apiResources) {
+                    events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("gcp", "${config['domain']}-${config['service']}/${environment_logical_id}/${path}", "apigee_proxy", config), environment_logical_id);
+                  }
+                }
 								break;
 							default:
 								error "Deployment targets are not defined"
@@ -356,7 +361,7 @@ node() {
  * Get API Resource Arns
  *
  */
-def getAPIGatewayResourceARNs(apiId, deployStg){
+def getSwaggerResourceARNs(apiId, deployStg, deploymentTarget){
 	def basePath = getBasePath()
 	echo "basePath : $basePath"
 	basePath = basePath.replaceAll("^api/", "/");
@@ -368,7 +373,7 @@ def getAPIGatewayResourceARNs(apiId, deployStg){
 	if(resourcesMap) {
 		for (_map in resourcesMap){
 			for (path in _map) {
-				def arn = createApiGatewayResourceArn(apiId, deployStg, path.value, path.key, basePath)
+				def arn = createSwaggerResourceArn(apiId, deployStg, path.value, path.key, basePath, deploymentTarget)
 				resourceArns.add(arn)
 			}
 		}
@@ -424,7 +429,7 @@ def createPathMethodList() { //Creates a list consisting of all path-method comb
 /**
  * create apigateway arns pattern
  */
-def createApiGatewayResourceArn(apiId, deployStg, method, path, basePath) {
+def createSwaggerResourceArn(apiId, deployStg, method, path, basePath, deploymentTarget) {
 	def apiResourceArn = ""
 	def _region = configLoader.AWS.REGION
 	def _account = configLoader.AWS.ACCOUNTID
@@ -433,6 +438,10 @@ def createApiGatewayResourceArn(apiId, deployStg, method, path, basePath) {
 	def _method = method
 	def _path = path
 	def _basePath = basePath
+  if(deploymentTarget == 'gcp') {
+		apiResourceArn = _method + _basePath + _path
+		return apiResourceArn
+	}
 	apiResourceArn = "arn:aws:execute-api:"+_region+":"+_account+":"+_apiId+"/"+_stgName+"/"+_method+_basePath+_path
 	echo "apiResourceArn : $apiResourceArn"
 	return apiResourceArn;
