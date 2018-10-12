@@ -58,6 +58,24 @@ def getKinesisStreamArn(stream_name){
   }
 }
 
+def getRoleArn(role_name) {
+  def role_arn
+  try {
+    def response = sh(
+      script: "aws iam get-role --role-name ${role_name} --profile cloud-api --output json",
+      returnStdout: true
+    ).trim()
+    def mappings = parseJson(response)
+    echo "role details : $mappings "
+    if(mappings.Role){
+      role_arn = mappings.Role.Arn
+    }
+    return role_arn
+  } catch (ex) {
+    echo "Error occured while describing the role details"
+  }
+}
+
 def checkSqsQueueExists(queueName) {
   try {
     sh "aws sqs get-queue-url --queue-name $queueName --profile cloud-api --output json"
