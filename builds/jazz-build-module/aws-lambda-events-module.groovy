@@ -72,7 +72,7 @@ def getRoleArn(role_name) {
     }
     return role_arn
   } catch (ex) {
-    echo "Error occured while describing the role details"
+    echo "Error occured while describing the role details: " + ex.getMessage()
   }
 }
 

@@ -31,11 +31,10 @@
 		"cloudwatch_event",
 		"swagger_url",
 		"endpoint_url",
-    "dynamodb_stream_arn",
-    "dynamodb_role_arn",
-    "sqs_role_arn",
-    "sqs_queue_arn",
-    "kinesis_stream_arn"
+    "dynamodb_stream",
+    "iam_role",
+    "sqs",
+    "kinesis_stream"
 	],
 	"ASSET_STATUS": [
 		"active",
