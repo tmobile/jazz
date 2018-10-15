@@ -111,7 +111,8 @@ export class ServiceDetailComponent implements OnInit {
         slackChannel: service.slack_channel,
         repository: service.repository,
         tags: service.tags,
-        endpoints: service.endpoints
+        endpoints: service.endpoints,
+        deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type]
       };
     }
   };
