@@ -23,14 +23,14 @@ describe('User Management', function() {
   beforeEach(function(){
     event = { "method" : "POST",
               "stage" : "test",
-              "resourcePath" : "reset",
+              "resourcePath" : "test/service/user/reset",
               "body" : { "username" : "username",
+                          "userid"  : "username",
                          "verificationCode" : "123",
                          "email" : "abc@xyz.com"
                        }
             };
     context = awsContext();
-	//console.log(context);
     callback = (value) => {
       return value;
     };	
@@ -43,6 +43,16 @@ describe('User Management', function() {
     assert(true);
     done();
   });
+
+  it('missing context should return 101 error', function(done) {
+
+    event = undefined;
+    context = undefined;
+    var bool = index.handler(event,context,callback).includes("Internal error, please reach out to admins") &&
+                index.handler(event,context,callback).includes("101");
+                done();
+    assert.isTrue(bool);
+  });
   
     
   /*
@@ -52,8 +62,16 @@ describe('User Management', function() {
   * @returns {string} callback function showing error type of Service operation not supported has occured
   */
   it("should throw a invalid or missing arguments for undefined method", function(){
-    event.method = undefined;
-    var bool = index.handler(event,context,callback).includes("invalid or missing arguments") &&
+    event = { "method" : undefined,
+              "stage" : "test",
+              "resourcePath" : "reset",
+              "body" : { "username" : "username",
+                         "verificationCode" : "123",
+                         "email" : "abc@xyz.com"
+                       }
+            };
+    context = awsContext();
+    var bool = index.handler(event,context,callback).includes("Service operation not supported") &&
                 index.handler(event,context,callback).includes("101");
     assert.isTrue(bool);
   });
@@ -70,28 +88,21 @@ describe('User Management', function() {
                 index.handler(event,context,callback).includes("101");
     assert.isFalse(bool);
   });
+
+  it("Should throw an error with errorcode 102", function(){
+    event.email = undefined;
+    index.validateResetParams(event)
+    .then(res=> {
+      expect(res).to.have.property('errorCode');
+    });
+  })
+
   
 
   it("Should throw an error with errorcode 102", function(){
     event.email = undefined;
     index.validateResetParams(event)
-    .then(res=> { //console.log(res);
-      expect(res).to.have.property('errorCode');
-    });
-  })
-
-  it("Should throw an error with error ajay", function(){
-    event.email = undefined;
-    index.validateResetParams(event)
-    .then(res=> { //console.log(res);
-      expect(res).to.have.property('errorCode');
-    });
-  })
-
-  it("Should throw an error with errorcode 102", function(){
-    event.email = undefined;
-    index.validateResetParams(event)
-    .catch(res=> { console.log(res);
+    .catch(res=> {
       expect(res).to.have.property('errorCode');
     });
   })
@@ -127,6 +138,88 @@ describe('User Management', function() {
     }));
   });
 
+  it('should throw error validateCreaterUserParams', function () {    
+    config.required_fields = {'userid':'userid','email':'email','verificationCode':'verificationCode','param':'param'}
+    let result = index.validateCreaterUserParams(config,event.body);
+    return result
+    .catch(error => expect(error).to.include({
+      errorCode: '102',
+      errorType: 'BadRequest',
+      message: 'Following field(s) are required - param'
+    }));
+  });
+
+  it('should throw error 102 Following field(s) are required userid', function () {   
+    config.required_fields = ['userid','email','verificationCode'];
+      event.body = {  "username" : "username",
+                      "userid" : "",
+                      "verificationCode" : "123",
+                      "email" : "abc@xyz.com"
+                 }
+    // 
+    let result = index.validateCreaterUserParams(config,event.body);
+    return result
+    .catch(error => expect(error).to.include({
+        errorCode: '102',
+        errorType: 'BadRequest',
+        message: 'userid\'s value cannot be empty'
+    })); 
+
+  });
+
+  it('should throw Invalid User Registration Code', function () {   
+    config.required_fields = ['userid','email','usercode'];
+      event.body = {  "username" : "username",
+                      "userid" : "userid",
+                      "usercode" : "aabd123",
+                      "email" : "abc@xyz.com"
+                    }
+    config.reg_codes = ['AAB123'];
+    // 
+    let result = index.validateCreaterUserParams(config,event.body);
+    return result
+    .catch(error => expect(error).to.include({
+        errorCode: '103',
+        errorType: 'BadRequest',
+        message: 'Invalid User Registration Code'
+    })); 
+
+  });
+
+  it('should not throw any error in validateCreaterUserParams', function () {   
+    config.required_fields = ['userid','email','usercode'];
+      event.body = {  "username" : "username",
+                      "userid" : "userid",
+                      "usercode" : "aab123",
+                      "email" : "abc@xyz.com"
+                    }
+    config.reg_codes = ['AAB123'];
+    // 
+    let result = index.validateCreaterUserParams(config,event.body);
+    return result
+    .then(res => expect(res).to.include({ username: 'username',
+    userid: 'userid',
+    usercode: 'AAB123',
+    email: 'abc@xyz.com' })); 
+
+  });
+
+
+  it('should throw error getRequestToCreateSCMUser function', function () {    
+    let result = index.getRequestToCreateSCMUser(config,event.body); 
+    return result
+    .catch(res=> { expect(res).to.have.property('102') 
+    });
+  });
+
+
+  it('should throw error forgotPassword function', function () {    
+    let result = index.forgotPassword(config,event.body); 
+    return result
+    .then(res=> { expect(res).to.have.property('102') 
+    });
+  });
+
 
   it('should throw error password is required field', function () {
     event.password = undefined;
@@ -150,44 +243,43 @@ describe('User Management', function() {
       .then(rslt => expect(rslt).to.be.equal('success'))
   });
 
-  it('should throw all reqired field errors', function () {
-    event.userid = 111;
-    let result = index.validateCreaterUserParams(config , event); 
-    return result
-    .then(err => expect(err).to.include({
-      errorCode:'102',
-      errorType: 'BadRequest',
-      message: 'Password is required'
-    }));            
-  });
+  // Inside handler for subpath reset //
+  it("should should call validateResetParams with Failed while resetting user password", function(){    
+    var responseObj = { result: "success", errorCode: "0", message: "Password reset was successful for user: " + event.email }
+    const validateResetParams = sinon.stub(index, "validateResetParams").resolves(null);
+    const forgotPassword = sinon.stub(index, "forgotPassword").resolves(null);
+    index.handler( event,context,callback)
+    .then(res => { 
+       
+      sinon.assert.calledOnce(validateResetParams);
+      sinon.assert.calledOnce(forgotPassword);
+      expect(res).to.be.eq(err);
+      validateResetParams.restore();
+      forgotPassword.restore();    
+    })
+    .done();
+    
+  }); 
 
-  it('should not throw any error in validateCreaterUserParams function', function () {
-    event.userpassword = 'P@ssword';
-    event.usercode = 'JAZZ';
-    event.email = 'abc@xyz.com';
-    event.userid = 111;
-    let result = index.validateCreaterUserParams(config , event); 
-    return result
-      .then(rslt => expect(rslt).to.include(event))      
-  });
-
-  /*
-  code for SCMFactory class
-  */
- config = configModule.getConfig(event, context);
- it('should not throw any error in SCM function', function () {
-    event.userpassword = 'P@ssword';
-    event.usercode = 'JAZZ';
-    event.email = 'abc@xyz.com';
-    event.userid = 'R@ndomUserID';
-    config.SCM_TYPE = 'gitlab';
-    let result = index.getRequestToCreateSCMUser(config , event); 
-    expect(result).to.eq(undefined);
-          
-  });
-
-
+ // Inside handler for subpath updatepwd //
+ it("should should call validateResetParams with Failed while update user password", function(){    
+  event.resourcePath = "test/service/user/reset";
+  var responseObj = { result: "success", errorCode: "0", message: "Password reset was successful for user: " + event.email }
   
+  const updatePassword = sinon.stub(index, "updatePassword").rejects(null);
+  index.handler( event,context,callback)
+  .catch(res => {
+    expect(res).to.be.eq(responseObj)
+    sinon.assert.calledOnce(validateResetParams);
+    sinon.assert.calledOnce(updatePassword);
+    validateResetParams.restore();
+    updatePassword.restore(); 
+  })  
+  .done();
+  
+}); 
+
+
 });
 
 

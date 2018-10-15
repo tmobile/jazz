@@ -39,17 +39,16 @@ function handler(event, context, cb)  {
 
 	var config = configModule.getConfig(event, context);	
 
-	if (!config || config.length) {
+	if (!config || config.length) { 	
 		logger.error("Cannot load config object, will stop processing");
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Internal error, please reach out to admins")));
 	}
 
 	global.config = config;
-
 	try {
 		logger.info(JSON.stringify(event));
 
-		if (!event || !event.method || !event.resourcePath) {
+		if (!event || !event.resourcePath) {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "invalid or missing arguments")));
 		}
 
@@ -178,7 +177,7 @@ function validateUpdatePasswordParams(userInput) {
 		var errorHandler = errorHandlerModule();
 
 		if (!userInput.email) {
-			logger.warn("no email address provided for password update"); console.log(errorHandler.throwInputValidationError("102", "Email is required field"));
+			logger.warn("no email address provided for password update"); 
 			return reject(errorHandler.throwInputValidationError("102", "Email is required field"));
 		}
 
@@ -202,13 +201,13 @@ function validateUpdatePasswordParams(userInput) {
  * @param {object} userInput
  * @returns promise
  */
-function validateCreaterUserParams(config, userInput) { //console.log(config, userInput)
+function validateCreaterUserParams(config, userInput) { 
 	var errorHandler = errorHandlerModule();
 
 	return new Promise((resolve, reject) => {
 
 		var missing_required_fields = _.difference(_.values(config.required_fields), _.keys(userInput));
-
+		
 		if (missing_required_fields.length > 0) {
 			logger.error("Following field(s) are required - " + missing_required_fields.join(", "));
 			return reject(errorHandler.throwInputValidationError("102", "Following field(s) are required - " + missing_required_fields.join(", ")));
