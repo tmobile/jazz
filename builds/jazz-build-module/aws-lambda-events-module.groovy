@@ -8,7 +8,6 @@ import groovy.transform.Field
 */
 
 @Field def config_loader
-@Field def queue_visibility_timeout = 165
 
 def initialize(configLoader){
   config_loader = configLoader
@@ -59,6 +58,24 @@ def getKinesisStreamArn(stream_name){
   }
 }
 
+def getRoleArn(role_name) {
+  def role_arn
+  try {
+    def response = sh(
+      script: "aws iam get-role --role-name ${role_name} --profile cloud-api --output json",
+      returnStdout: true
+    ).trim()
+    def mappings = parseJson(response)
+    echo "role details : $mappings "
+    if(mappings.Role){
+      role_arn = mappings.Role.Arn
+    }
+    return role_arn
+  } catch (ex) {
+    echo "Error occured while describing the role details: " + ex.getMessage()
+  }
+}
+
 def checkSqsQueueExists(queueName) {
   try {
     sh "aws sqs get-queue-url --queue-name $queueName --profile cloud-api --output json"
@@ -80,6 +97,31 @@ def checkSqsQueueExists(queueName) {
       error "Error occured while fetching the queue details"
     }
   }
+}
+
+def checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn){
+   try {
+      response = sh(
+        script: "aws lambda list-event-source-mappings --event-source-arn  ${event_source_sqs_arn} --profile cloud-api --output json",
+        returnStdout: true
+      ).trim()
+      echo "queue_details : $response"
+      def queue_details = parseJson(response)
+      def isDifferentLambdaAttached  = false
+      if(queue_details.EventSourceMappings.size() > 0) {
+        for (details in queue_details.EventSourceMappings) {
+          if(details.FunctionArn) {
+            if (details.FunctionArn != lambda_arn ){
+              isDifferentLambdaAttached  = true
+              echo "Trigger attached already."
+            }
+          }
+        }
+      }
+      return isDifferentLambdaAttached
+   } catch (ex) {
+     error "Exception occured while listing the event source mapping for SQS queue."
+   }
 }
 
 def updateSqsResourceServerless(){
