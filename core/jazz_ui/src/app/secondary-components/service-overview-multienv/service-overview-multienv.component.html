@@ -1,0 +1,184 @@
+<div class="env-err-widget" >
+  <div class="loading-row" [class.show]="isenvLoading">
+      <div class="loading-circle"></div>
+  </div>
+  <div class='ErrEnv' [class.show]="ErrEnv && !err404">
+      <div class="icon-icon-server-error">
+          <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span>
+      </div>
+      <div class='oops'>Oops!</div>
+      <div>{{errMessage}}<br><a (click)="getenvData($event)">REFRESH</a> to give it another try.</div>
+      <br><div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
+  </div>
+  <div class='ErrEnv'  [class.show]="ErrEnv && err404">
+      <div class="empty-row nodata with-refresh relative">
+          <div class="icon-icon-nodata"></div>
+          <div class='hang-in'>
+              <b>Oops, looks like there are no environments yet...</b>
+              <p>
+                  Please check again after some time.
+              </p>
+          </div>
+      </div>
+  </div>
+
+
+</div>
+
+<div *ngIf="!ErrEnv && !isenvLoading " class="service-overview-wrp relative">
+  <div *ngIf='noProd' class='empty-row stg-wrp active'>No Data <br> Available</div>
+  <div *ngIf='!noProd' class="stage-wrp active" (click)="stageClicked(prodEnv.logical_id)">
+      <div class="stage-title stageDisp">{{prodEnv.logical_id}}
+          <span class='icon-icon-rightArrow right-arow'></span>
+      </div>
+      <div class="stage-overview">
+          <ul class="service-overview">
+              <li class="overview-item">
+                  <div class="overview-value" [ngSwitch]="prodEnv.status" >
+                      <!-- <div class='background-icon' [class.success]='prodEnv.status=="deployment completed"' [class.inprogress]='prodEnv.status=="deployment failed"' [class.failed]='prodEnv.status=="deployment started" || prodEnv.status=="active"'> -->
+                          <span class='icon-icon-good' title='{{prodEnv.status}}' *ngSwitchCase='"deployment completed"'>
+
+                              <span class="path1"></span><span class="path2"></span>
+
+                      </span>
+                      <span class='icon-icon-good' title='{{prodEnv.status}}' *ngSwitchCase='"active"'>
+
+                              <span class="path1"></span><span class="path2"></span>
+
+                      </span>
+
+                      <span title='{{prodEnv.status}} '*ngSwitchCase='"deployment failed"' class='icon-icon-inactive' >
+                              <span class="path1"></span><span class="path2"></span>
+                      </span>
+                      <span title='{{prodEnv.status}}' class='icon-icon-inactive' *ngSwitchDefault ></span>
+                      <span title='{{prodEnv.status}}' class='icon-In-Progress' *ngSwitchCase='"deployment started"'></span>
+
+                      <!-- </div> -->
+                  </div>
+                  <div class="overview-label">Deployment<br>Status</div>
+              </li>
+              <li class="overview-item">
+                  <div class="overview-value">
+                       NA
+                  </div>
+                  <div class="overview-label">Last Successful<br>Deployment</div>
+              </li>
+
+
+              <li class="overview-item">
+                  <div class="overview-value">{{prodEnv.deploymentsCountvalue || 'NA'}}</div>
+                  <div class="overview-label">
+                      <div># of Deployments<br>(Last 24 hours) </div>
+                      <!-- <div>(Last 24 hours)</div> -->
+                      <!-- ({{prodEnv.deploymentsCountduration}}) -->
+                  </div>
+              </li>
+              <li class="overview-item" >
+                  <div class="overview-value">{{prodEnv.costvalue || 'NA'}}</div>
+                  <div class="overview-label">
+                      <div>Cost<br>(Per Day) </div>
+                      <!-- <div>(Per Day)</div> -->
+                      <!-- {{prodEnv.costduration}} -->
+                  </div>
+              </li>
+
+          </ul>
+      </div>
+  </div>
+
+  <div *ngIf='noStg && !isenvLoading' class='empty-row stage-wrp active'>No Data <br> Available</div>
+  <div *ngIf='!noStg' class="stage-wrp active"  (click)="stageClicked(stgEnv.logical_id)">
+      <div class="stage-title stageDisp">{{stgEnv.logical_id}}
+          <span class='icon-icon-rightArrow right-arow'></span>
+      </div>
+      <div class="stage-overview">
+          <ul class="service-overview">
+              <li class="overview-item">
+                      <div class="overview-value" [ngSwitch]="stgEnv.status" >
+                              <!-- <div class='background-icon' [class.success]='prodEnv.status=="deployment completed"' [class.inprogress]='prodEnv.status=="deployment failed"' [class.failed]='prodEnv.status=="deployment started" || prodEnv.status=="active"'> -->
+                                  <span class='icon-icon-good' title='{{stgEnv.status}}' *ngSwitchCase='"deployment completed"'>
+
+                                          <span class="path1"></span><span class="path2"></span>
+
+                                  </span>
+                                  <span class='icon-icon-good' title='{{stgEnv.status}}' *ngSwitchCase='"active"'>
+
+                                          <span class="path1"></span><span class="path2"></span>
+
+                                  </span>
+
+                                  <span title='{{stgEnv.status}} '*ngSwitchCase='"deployment failed"' class='icon-icon-bad' >
+                                          <span class="path1"></span><span class="path2"></span>
+                                  </span>
+                                  <span title='{{stgEnv.status}}' class='icon-icon-inactive' *ngSwitchDefault ></span>
+                                  <span title='{{stgEnv.status}}' class='icon-In-Progress' *ngSwitchCase='"deployment started"'></span>
+
+
+                              <!-- </div> -->
+                          </div>
+                  <div class="overview-label">Deployment<br>Status</div>
+              </li>
+              <li class="overview-item dep">
+                  <div class="overview-value">
+                      <!-- <img *ngIf="stgEnv.serviceHealth == 'good'" src="assets/images/icons/icon-good.png">
+                      <img *ngIf="stgEnv.serviceHealth == 'bad'" src="assets/images/icons/icon-bad.png"> -->
+                      NA
+                  </div>
+                  <div class="overview-label">Last Successful<br>Deployment</div>
+              </li>
+              <li class="overview-item">
+                  <div class="overview-value">{{stgEnv.deploymentsCountvalue || 'NA'}}</div>
+                  <div class="overview-label">
+                      <div># of Deployments<br>(Last 24 hours) </div>
+                      <!-- <div>(Last 24 hours)</div> -->
+                  </div>
+              </li>
+              <li class="overview-item" >
+                  <div class="overview-value">{{stgEnv.costvalue || 'NA'}}</div>
+                  <div class="overview-label">
+                      <div>(Cost<br>Per Day) </div>
+                      <!-- <div>(Per Day)</div> -->
+                  </div>
+              </li>
+
+          </ul>
+      </div>
+  </div>
+
+</div>
+
+
+
+<div *ngIf="!ErrEnv" class="service-overview-wrap relative row" >
+  <div class='eachBranch col-md-2 col-sm-5' *ngFor='let item of Environments'  (click)='stageClicked(item.logical_id)'>
+      <div *ngIf='noSecEnv' class='empty-row'>No Environments Available</div>
+
+      <div *ngIf='!noSecEnv'>
+          <div class='stage-title2 stageDisp'>{{item.friendly_name || item.physical_id}} <span class='icon-icon-rightArrow right-arow'></span> </div>
+          <div class="overview-value"  [ngSwitch]="item.status">
+                  <span class='icon-icon-good' title='{{item.status}}' *ngSwitchCase='"deployment completed"'>
+
+                          <span class="path1"></span><span class="path2"></span>
+
+                  </span>
+                  <span class='icon-icon-good' title='{{item.status}}' *ngSwitchCase='"active" '>
+
+                      <span class="path1"></span><span class="path2"></span>
+
+                  </span>
+
+                  <span title='{{item.status}}' *ngSwitchCase='"deployment failed"' class='icon-icon-bad' >
+                          <span class="path1"></span><span class="path2"></span>
+                  </span>
+                  <span title='{{item.status}}' class='icon-icon-inactive' *ngSwitchDefault ></span>
+                  <span title='{{item.status}}' class='icon-In-Progress' *ngSwitchCase='"deployment started"'></span>
+
+          </div>
+          <div class="overview-label">
+              <span>Deployment<br>Status</span>
+          </div>
+
+
+      </div>
+  </div>
+</div>

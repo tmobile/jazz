@@ -1,0 +1,22 @@
+{
+  "name": "logs",
+  "version": "0.0.1",
+  "description": "API to get the application logs",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "*",
+    "lodash": "*"
+  },
+  "devDependencies": {
+    "aws-lambda-mock-context": "^3.1.1",
+    "chai": "^3.5.0",
+    "lambda-local": "^1.4.2",
+    "mocha": "^v3.0.0",
+    "sinon": "^1.17.7"
+  }
+}

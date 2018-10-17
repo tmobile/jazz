@@ -1,0 +1,2556 @@
+/* You can add global styles to this file, and also import other style files */
+
+html.jazz {
+    font-size: 12px;
+    height: 100%;
+    width: 100%;
+}
+
+.jazz body {
+    margin: 0;
+    font-size: 14px;
+    height: 100%;
+    width: 100%;
+    font-family: Lato !important;
+}
+
+.no-border-no-padding{
+  border:none !important;
+  padding-bottom:0 !important;
+}
+
+@font-face {
+    font-family: Lato;
+    src: url(/assets/fonts/lato/Lato-Thin.ttf);
+    font-weight: 100;
+}
+
+@font-face {
+    font-family: Lato;
+    src: url(/assets/fonts/lato/Lato-Light.ttf);
+    font-weight: 300;
+}
+
+@font-face {
+    font-family: Lato;
+    src: url(/assets/fonts/lato/Lato-Regular.eot);
+    src: url(/assets/fonts/lato/Lato-Regular.woff) format('woff'), url(/assets/fonts/lato/Lato-Regular.woff2) format('woff2'), url(/assets/fonts/lato/Lato-Regular.ttf) format('ttf');
+    font-weight: 500;
+}
+
+@font-face {
+    font-family: Lato;
+    src: url(/assets/fonts/lato/Lato-Bold.eot);
+    src: url(/assets/fonts/lato/Lato-Bold.woff) format('woff'), url(/assets/fonts/lato/Lato-Bold.woff2) format('woff2'), url(/assets/fonts/lato/Lato-Bold.ttf) format('ttf');
+    font-weight: 700;
+}
+
+@font-face {
+    font-family: Lato;
+    src: url(/assets/fonts/lato/Lato-Heavy.ttf);
+    font-weight: 900;
+}
+
+@font-face {
+    font-family: 'icomoon';
+    src: url(/assets/fonts/icomoon.eot);
+    src: url(/assets/fonts/icomoon.woff) format('woff'), url(/assets/fonts/icomoon.ttf) format('ttf'), url(/assets/fonts/icomoon.svg#icomoon) format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+[class^="icon-"],
+[class*=" icon-"] {
+    /* use !important to prevent issues with browser extensions that change fonts */
+    font-family: 'icomoon' !important;
+    speak: none;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    /* Better Font Rendering =========== */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+
+/*
+.icon-icon-error .path1:before {
+  content: "\e93a";
+  color: rgb(208, 1, 27);
+}
+.icon-icon-error .path2:before {
+  content: "\e93b";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-icon-filter-selected .path1:before {
+  content: "\e93c";
+  color: rgb(237, 0, 140);
+}
+.icon-icon-filter-selected .path2:before {
+  content: "\e93d";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-icon-filter-unselected:before {
+  content: "\e93e";
+  color: #ed008c;
+}
+.icon-icon-search-selected .path1:before {
+  content: "\e93f";
+  color: rgb(0, 0, 0);
+}
+.icon-icon-search-selected .path2:before {
+  content: "\e940";
+  margin-left: -1em;
+  color: rgb(237, 0, 140);
+}
+.icon-icon-search-selected .path3:before {
+  content: "\e941";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-icon-search-unselected:before {
+  content: "\e942";
+  color: #ed008c;
+}
+.icon-icon-feedback:before {
+  content: "\e937";
+}
+.icon-icon-help:before {
+  content: "\e938";
+}
+.icon-icon-logout:before {
+  content: "\e939";
+}
+.icon-icon-lambda:before {
+  content: "\e900";
+}
+.icon-icon-web:before {
+  content: "\e901";
+}
+.icon-logo-aws .path1:before {
+  content: "\e902";
+  color: rgb(32, 28, 29);
+}
+.icon-logo-aws .path2:before {
+  content: "\e903";
+  margin-left: -2.6630859375em;
+  color: rgb(0, 0, 0);
+}
+.icon-logo-aws .path3:before {
+  content: "\e904";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-logo-aws .path4:before {
+  content: "\e905";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-logo-aws .path5:before {
+  content: "\e906";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-logo-aws .path6:before {
+  content: "\e907";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-logo-aws .path7:before {
+  content: "\e908";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-logo-azure .path1:before {
+  content: "\e909";
+  color: rgb(0, 173, 239);
+}
+.icon-logo-azure .path2:before {
+  content: "\e90a";
+  margin-left: -1em;
+  color: rgb(60, 158, 187);
+}
+.icon-logo-docker .path1:before {
+  content: "\e90b";
+  color: rgb(54, 69, 72);
+}
+.icon-logo-docker .path2:before {
+  content: "\e90c";
+  margin-left: -1.7607421875em;
+  color: rgb(34, 160, 200);
+}
+.icon-logo-docker .path3:before {
+  content: "\e90d";
+  margin-left: -1.7607421875em;
+  color: rgb(55, 177, 217);
+}
+.icon-logo-docker .path4:before {
+  content: "\e90e";
+  margin-left: -1.7607421875em;
+  color: rgb(27, 129, 165);
+}
+.icon-logo-docker .path5:before {
+  content: "\e90f";
+  margin-left: -1.7607421875em;
+  color: rgb(29, 145, 180);
+}
+.icon-logo-docker .path6:before {
+  content: "\e910";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path7:before {
+  content: "\e911";
+  margin-left: -1.7607421875em;
+  color: rgb(52, 187, 222);
+}
+.icon-logo-docker .path8:before {
+  content: "\e912";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path9:before {
+  content: "\e913";
+  margin-left: -1.7607421875em;
+  color: rgb(52, 187, 222);
+}
+.icon-logo-docker .path10:before {
+  content: "\e914";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path11:before {
+  content: "\e915";
+  margin-left: -1.7607421875em;
+  color: rgb(52, 187, 222);
+}
+.icon-logo-docker .path12:before {
+  content: "\e916";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path13:before {
+  content: "\e917";
+  margin-left: -1.7607421875em;
+  color: rgb(211, 236, 236);
+}
+.icon-logo-docker .path14:before {
+  content: "\e918";
+  margin-left: -1.7607421875em;
+  color: rgb(54, 69, 72);
+}
+.icon-logo-docker .path15:before {
+  content: "\e919";
+  margin-left: -1.7607421875em;
+  color: rgb(189, 217, 215);
+}
+.icon-logo-docker .path16:before {
+  content: "\e91a";
+  margin-left: -1.7607421875em;
+  color: rgb(211, 236, 236);
+}
+.icon-logo-googleCloud .path1:before {
+  content: "\e91b";
+  color: rgb(255, 206, 64);
+}
+.icon-logo-googleCloud .path2:before {
+  content: "\e91c";
+  margin-left: -1.119140625em;
+  color: rgb(219, 68, 54);
+}
+.icon-logo-googleCloud .path3:before {
+  content: "\e91d";
+  margin-left: -1.119140625em;
+  color: rgb(84, 125, 191);
+}
+.icon-logo-googleCloud .path4:before {
+  content: "\e91e";
+  margin-left: -1.119140625em;
+  color: rgb(238, 238, 238);
+}
+.icon-icon-add:before {
+  content: "\e91f";
+  color: #fff;
+}
+.icon-icon-alert:before {
+  content: "\e920";
+  color: #d0011b;
+}
+.icon-icon-back:before {
+  content: "\e921";
+  color: #ed008c;
+}
+.icon-icon-close:before {
+  content: "\e922";
+  color: #ed008c;
+}
+.icon-icon-create:before {
+  content: "\e923";
+}
+.icon-icon-deploy:before {
+  content: "\e924";
+}
+.icon-icon-deployment:before {
+  content: "\e925";
+  color: #1ea6ce;
+}
+.icon-icon-down:before {
+  content: "\e926";
+  color: #ed008c;
+}
+.icon-icon-edit:before {
+  content: "\e927";
+  color: #ccc;
+}
+.icon-icon-api:before {
+  content: "\e928";
+}
+.icon-icon-expand:before {
+  content: "\e929";
+  color: #eee;
+}
+.icon-icon-good .path1:before {
+  content: "\e92a";
+  color: rgb(92, 174, 1);
+}
+.icon-icon-good .path2:before {
+  content: "\e92b";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-icon-info:before {
+  content: "\e92c";
+  color: #ed0295;
+}
+.icon-icon-manage:before {
+  content: "\e92d";
+}
+.icon-icon-merge:before {
+  content: "\e92e";
+  color: #60b602;
+}
+.icon-icon-minimize:before {
+  content: "\e92f";
+  color: #eee;
+}
+.icon-icon-notifcation:before {
+  content: "\e930";
+  color: #fff;
+}
+.icon-icon-search:before {
+  content: "\e931";
+  color: #fff;
+}
+.icon-icon-bad .path1:before {
+  content: "\e932";
+  color: rgb(208, 1, 27);
+}
+.icon-icon-bad .path2:before {
+  content: "\e933";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-icon-settings:before {
+  content: "\e934";
+  color: #aaa;
+}
+.icon-logo:before {
+  content: "\e935";
+}
+.icon-tmobile-logo:before {
+  content: "\e936";
+  color: #fff;
+}
+*/
+
+/* .icon-icon-warning:before {
+    content: "\e95a";
+    color: #fff;
+}
+
+.icon-icon-success:before {
+    content: "\e959";
+    color: #fff;
+}
+
+.icon-icon-calendar2:before {
+    content: "\e951";
+    color: #ed008c;
+}
+
+.icon-icon-confirmcheck:before {
+    content: "\e952";
+    color: #5cae01;
+}
+
+.icon-icon-doubleleft-inactive:before {
+    content: "\e953";
+    color: #ccc;
+}
+
+.icon-icon-doubleleft:before {
+    content: "\e954";
+    color: #ed0295;
+}
+
+.icon-icon-doubleright-inactive:before {
+    content: "\e955";
+    color: #ccc;
+}
+
+.icon-icon-doubleright:before {
+    content: "\e956";
+    color: #ed0295;
+}
+
+.icon-icon-up:before {
+    content: "\e957";
+    color: #ed0295;
+}
+
+.icon-icon-updown:before {
+    content: "\e958";
+    color: #ed0295;
+}
+
+.icon-icon-calendar:before {
+    content: "\e943";
+    color: #fff;
+}
+
+.icon-icon-code .path1:before {
+    content: "\e944";
+    color: rgb(240, 31, 134);
+}
+
+.icon-icon-code .path2:before {
+    content: "\e945";
+    margin-left: -0.9921875em;
+    color: rgb(225, 13, 117);
+}
+
+.icon-icon-code .path3:before {
+    content: "\e946";
+    margin-left: -0.9921875em;
+    color: rgb(225, 13, 117);
+}
+
+.icon-icon-code .path4:before {
+    content: "\e947";
+    margin-left: -0.9921875em;
+    color: rgb(255, 255, 255);
+}
+
+.icon-icon-scale .path1:before {
+    content: "\e948";
+    color: rgb(240, 31, 134);
+}
+
+.icon-icon-scale .path2:before {
+    content: "\e949";
+    margin-left: -0.9921875em;
+    color: rgb(225, 12, 117);
+}
+
+.icon-icon-scale .path3:before {
+    content: "\e94a";
+    margin-left: -0.9921875em;
+    color: rgb(0, 0, 0);
+}
+
+.icon-icon-scale .path4:before {
+    content: "\e94b";
+    margin-left: -0.9921875em;
+    color: rgb(255, 255, 255);
+}
+
+.icon-icon-serverless .path1:before {
+    content: "\e94c";
+    color: rgb(240, 31, 134);
+}
+
+.icon-icon-serverless .path2:before {
+    content: "\e94d";
+    margin-left: -0.9921875em;
+    color: rgb(225, 12, 117);
+}
+
+.icon-icon-serverless .path3:before {
+    content: "\e94e";
+    margin-left: -0.9921875em;
+    color: rgb(0, 0, 0);
+}
+
+.icon-icon-serverless .path4:before {
+    content: "\e94f";
+    margin-left: -0.9921875em;
+    color: rgb(255, 255, 255);
+}
+
+.icon-logo-slack:before {
+    content: "\e950";
+}
+
+.icon-icon-error .path1:before {
+    content: "\e93a";
+    color: rgb(208, 1, 27);
+}
+
+.icon-icon-error .path2:before {
+    content: "\e93b";
+    margin-left: -1em;
+    color: rgb(255, 255, 255);
+}
+
+.icon-icon-filter-selected .path1:before {
+    content: "\e93c";
+    color: rgb(237, 0, 140);
+}
+
+.icon-icon-filter-selected .path2:before {
+    content: "\e93d";
+    margin-left: -1em;
+    color: rgb(255, 255, 255);
+}
+
+.icon-icon-filter-unselected:before {
+    content: "\e93e";
+    color: #ed008c;
+}
+
+.icon-icon-search-selected .path1:before {
+    content: "\e93f";
+    color: rgb(0, 0, 0);
+}
+
+.icon-icon-search-selected .path2:before {
+    content: "\e940";
+    margin-left: -1em;
+    color: rgb(237, 0, 140);
+}
+
+.icon-icon-search-selected .path3:before {
+    content: "\e941";
+    margin-left: -1em;
+    color: rgb(255, 255, 255);
+}
+
+.icon-icon-search-unselected:before {
+    content: "\e942";
+    color: #ed008c;
+}
+
+.icon-icon-feedback:before {
+    content: "\e937";
+}
+
+.icon-icon-help:before {
+    content: "\e938";
+}
+
+.icon-icon-logout:before {
+    content: "\e939";
+}
+
+.icon-icon-function:before {
+    content: "\e9f2";
+}
+
+.icon-icon-web:before {
+    content: "\e903";
+}
+/* .icon-logo-aws:before{
+    content: "\e91a";
+    color: rgb(32, 28, 29);
+} */
+
+/*
+.icon-logo-aws .path1:before {
+    content: "\e91a";
+    color: rgb(32, 28, 29);
+}
+
+.icon-logo-aws .path2:before {
+    content: "\e960";
+    margin-left: -2.6630859375em;
+    color: rgb(0, 0, 0);
+}
+
+.icon-logo-aws .path3:before {
+    content: "\e961";
+    margin-left: -2.6630859375em;
+    color: rgb(247, 168, 13);
+}
+
+.icon-logo-aws .path4:before {
+    content: "\e962";
+    margin-left: -2.6630859375em;
+    color: rgb(247, 168, 13);
+}
+
+.icon-logo-aws .path5:before {
+    content: "\e963";
+    margin-left: -2.6630859375em;
+    color: rgb(247, 168, 13);
+}
+
+.icon-logo-aws .path6:before {
+    content: "\e964";
+    margin-left: -2.6630859375em;
+    color: rgb(247, 168, 13);
+}
+
+.icon-logo-aws .path7:before {
+    content: "\e965";
+    margin-left: -2.6630859375em;
+    color: rgb(247, 168, 13);
+}
+
+.icon-logo-azure .path1:before {
+    content: "\e91b";
+     color: rgb(0, 173, 239);
+}
+
+.icon-logo-azure .path2:before {
+    content: "\e966";
+    margin-left: -1em;
+    color: rgb(60, 158, 187);
+}
+.icon-logo-docker .path1:before {
+  content: "\e91c";
+  color: rgb(54, 69, 72);
+}
+.icon-logo-docker .path2:before {
+  content: "\e967";
+  margin-left: -1.7607421875em;
+  color: rgb(34, 160, 200);
+}
+.icon-logo-docker .path3:before {
+  content: "\e968";
+  margin-left: -1.7607421875em;
+  color: rgb(55, 177, 217);
+}
+.icon-logo-docker .path4:before {
+  content: "\e969";
+  margin-left: -1.7607421875em;
+  color: rgb(27, 129, 165);
+}
+.icon-logo-docker .path5:before {
+  content: "\e96a";
+  margin-left: -1.7607421875em;
+  color: rgb(29, 145, 180);
+}
+.icon-logo-docker .path6:before {
+  content: "\e96b";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path7:before {
+  content: "\e96c";
+  margin-left: -1.7607421875em;
+  color: rgb(52, 187, 222);
+}
+.icon-logo-docker .path8:before {
+  content: "\e96d";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path9:before {
+  content: "\e96e";
+  margin-left: -1.7607421875em;
+  color: rgb(52, 187, 222);
+}
+.icon-logo-docker .path10:before {
+  content: "\e96f";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path11:before {
+  content: "\e970";
+  margin-left: -1.7607421875em;
+  color: rgb(52, 187, 222);
+}
+.icon-logo-docker .path12:before {
+  content: "\e971";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path13:before {
+  content: "\e972";
+  margin-left: -1.7607421875em;
+  color: rgb(211, 236, 236);
+}
+.icon-logo-docker .path14:before {
+  content: "\e973";
+  margin-left: -1.7607421875em;
+  color: rgb(54, 69, 72);
+}
+.icon-logo-docker .path15:before {
+  content: "\e974";
+  margin-left: -1.7607421875em;
+  color: rgb(189, 217, 215);
+}
+.icon-logo-docker .path16:before {
+  content: "\e975";
+  margin-left: -1.7607421875em;
+  color: rgb(211, 236, 236);
+}
+
+
+.icon-logo-googleCloud .path1:before {
+    content: "\e91d";
+    color: rgb(255, 206, 64);
+}
+
+.icon-logo-googleCloud .path2:before {
+    content: "\e976";
+    margin-left: -1.119140625em;
+    color: rgb(219, 68, 54);
+}
+
+.icon-logo-googleCloud .path3:before {
+    content: "\e977";
+    margin-left: -1.119140625em;
+    color: rgb(84, 125, 191);
+}
+
+.icon-logo-googleCloud .path4:before {
+    content: "\e978";
+    margin-left: -1.119140625em;
+    color: rgb(255, 255, 255);
+}
+
+.icon-icon-add:before {
+    content: "\e91f";
+    color: #fff;
+}
+
+.icon-icon-alert:before {
+    content: "\e920";
+    color: #d0011b;
+}
+
+.icon-icon-back:before {
+    content: "\e921";
+    color: #ed008c;
+}
+
+.icon-icon-close:before {
+    content: "\e922";
+    color: #ed008c;
+}
+
+.icon-icon-create:before {
+    content: "\e923";
+}
+
+.icon-icon-deploy:before {
+    content: "\e924";
+}
+
+.icon-icon-deployment:before {
+    content: "\e925";
+    color: #1ea6ce;
+}
+
+.icon-icon-down:before {
+    content: "\e926";
+    color: #ed008c;
+}
+
+.icon-icon-edit:before {
+    content: "\e927";
+    color: #ccc;
+}
+
+.icon-icon-api:before {
+    content: "\e928";
+}
+
+.icon-icon-expand:before {
+    content: "\e929";
+    color: #eee;
+}
+
+.icon-icon-good .path1:before {
+    content: "\e92a";
+    color: rgb(92, 174, 1);
+}
+
+.icon-icon-good .path2:before {
+    content: "\e92b";
+    margin-left: -1em;
+    color: rgb(255, 255, 255);
+}
+
+.icon-icon-info:before {
+    content: "\e92c";
+    color: #f01f86;
+}
+
+.icon-icon-manage:before {
+    content: "\e92d";
+}
+
+.icon-icon-merge:before {
+    content: "\e92e";
+    color: #60b602;
+}
+
+.icon-icon-minimize:before {
+    content: "\e92f";
+    color: #eee;
+}
+
+.icon-icon-notifcation:before {
+    content: "\e930";
+    color: #fff;
+}
+
+.icon-icon-search:before {
+    content: "\e931";
+    color: #fff;
+}
+
+.icon-icon-bad .path1:before {
+    content: "\e932";
+    color: rgb(208, 1, 27);
+}
+
+.icon-icon-bad .path2:before {
+    content: "\e933";
+    margin-left: -1em;
+    color: rgb(255, 255, 255);
+}
+
+.icon-icon-settings:before {
+    content: "\e934";
+}
+
+.icon-logo:before {
+    content: "\e935";
+}
+
+.icon-tmobile-logo:before {
+    content: "\e936";
+    color: #fff;
+}
+.icon-icon-rigtArrow:before{
+    content: "\e95d";
+    color:#fff;
+} */
+
+
+/*10/11/2017*/
+
+.icon-icon-AWS .path1:before {
+    content: "\ea67";
+    color: rgb(17, 16, 14);
+  }
+  .icon-icon-AWS .path2:before {
+    content: "\ea68";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 141, 17);
+  }
+  .icon-icon-AWS .path3:before {
+    content: "\ea69";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 142, 20);
+  }
+  .icon-icon-AWS .path4:before {
+    content: "\ea6a";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 142, 20);
+  }
+  .icon-icon-AWS .path5:before {
+    content: "\ea6b";
+    margin-left: -2.6650390625em;
+    color: rgb(18, 17, 15);
+  }
+  .icon-icon-AWS .path6:before {
+    content: "\ea6c";
+    margin-left: -2.6650390625em;
+    color: rgb(18, 17, 15);
+  }
+  .icon-icon-AWS .path7:before {
+    content: "\ea6d";
+    margin-left: -2.6650390625em;
+    color: rgb(18, 17, 15);
+  }
+  .icon-icon-AWS .path8:before {
+    content: "\ea6e";
+    margin-left: -2.6650390625em;
+    color: rgb(18, 17, 15);
+  }
+  .icon-icon-AWS .path9:before {
+    content: "\ea6f";
+    margin-left: -2.6650390625em;
+    color: rgb(19, 18, 16);
+  }
+  .icon-icon-AWS .path10:before {
+    content: "\ea70";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 141, 18);
+  }
+  .icon-icon-AWS .path11:before {
+    content: "\ea71";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 141, 18);
+  }
+  .icon-icon-AWS .path12:before {
+    content: "\ea72";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 141, 18);
+  }
+  .icon-icon-AWS .path13:before {
+    content: "\ea73";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 141, 18);
+  }
+  .icon-icon-AWS .path14:before {
+    content: "\ea74";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 141, 18);
+  }
+  .icon-icon-AWS .path15:before {
+    content: "\ea75";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 141, 17);
+  }
+  .icon-icon-AWS .path16:before {
+    content: "\ea76";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 141, 17);
+  }
+  .icon-icon-AWS .path17:before {
+    content: "\ea77";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 141, 17);
+  }
+  .icon-icon-AWS .path18:before {
+    content: "\ea78";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 141, 17);
+  }
+  .icon-icon-AWS .path19:before {
+    content: "\ea79";
+    margin-left: -2.6650390625em;
+    color: rgb(20, 19, 17);
+  }
+  .icon-icon-AWS .path20:before {
+    content: "\ea7a";
+    margin-left: -2.6650390625em;
+    color: rgb(18, 17, 15);
+  }
+  .icon-icon-AWS .path21:before {
+    content: "\ea7b";
+    margin-left: -2.6650390625em;
+    color: rgb(21, 20, 18);
+  }
+  .icon-icon-AWS .path22:before {
+    content: "\ea7c";
+    margin-left: -2.6650390625em;
+    color: rgb(21, 20, 18);
+  }
+  .icon-icon-AWS .path23:before {
+    content: "\ea7d";
+    margin-left: -2.6650390625em;
+    color: rgb(21, 20, 18);
+  }
+  .icon-icon-AWS .path24:before {
+    content: "\ea7e";
+    margin-left: -2.6650390625em;
+    color: rgb(20, 19, 17);
+  }
+  .icon-icon-AWS .path25:before {
+    content: "\ea7f";
+    margin-left: -2.6650390625em;
+    color: rgb(21, 20, 18);
+  }
+  .icon-icon-AWS .path26:before {
+    content: "\ea80";
+    margin-left: -2.6650390625em;
+    color: rgb(20, 19, 17);
+  }
+  .icon-icon-AWS .path27:before {
+    content: "\ea81";
+    margin-left: -2.6650390625em;
+    color: rgb(20, 19, 17);
+  }
+  .icon-icon-AWS .path28:before {
+    content: "\ea82";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 142, 20);
+  }
+  .icon-icon-AWS .path29:before {
+    content: "\ea83";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 142, 20);
+  }
+  .icon-icon-AWS .path30:before {
+    content: "\ea84";
+    margin-left: -2.6650390625em;
+    color: rgb(245, 142, 20);
+  }
+  .icon-icon-AWS .path31:before {
+    content: "\ea85";
+    margin-left: -2.6650390625em;
+    color: rgb(18, 17, 15);
+  }
+  .icon-icon-AWS .path32:before {
+    content: "\ea86";
+    margin-left: -2.6650390625em;
+    color: rgb(25, 24, 22);
+  }
+  .icon-icon-AWS .path33:before {
+    content: "\ea87";
+    margin-left: -2.6650390625em;
+    color: rgb(20, 19, 17);
+  }
+  .icon-icon-googlecloud:before {
+    content: "\ea88";
+  }
+
+  .icon-icon-warning:before {
+    content: "\ea48";
+  }
+  .icon-icon-success:before {
+    content: "\ea47";
+  }
+  .icon-icon-calendar2:before {
+    content: "\ea3f";
+  }
+  .icon-icon-confirmcheck:before {
+    content: "\ea40";
+  }
+  .icon-icon-doubleleft-inactive:before {
+    content: "\ea41";
+  }
+  .icon-icon-doubleleft:before {
+    content: "\ea42";
+  }
+  .icon-icon-doubleright-inactive:before {
+    content: "\ea43";
+  }
+  .icon-icon-doubleright:before {
+    content: "\ea44";
+  }
+  .icon-icon-up:before {
+    content: "\ea45";
+  }
+  .icon-icon-updown:before {
+    content: "\ea46";
+  }
+  .icon-icon-calendar:before {
+    content: "\ea32";
+  }
+  .icon-icon-Slack .path1:before {
+    content: "\e93d";
+    color: rgb(236, 179, 45);
+  }
+  .icon-icon-Slack .path2:before {
+    content: "\e93e";
+    margin-left: -2.1337890625em;
+    color: rgb(99, 193, 160);
+  }
+  .icon-icon-Slack .path3:before {
+    content: "\e93f";
+    margin-left: -2.1337890625em;
+    color: rgb(224, 26, 89);
+  }
+  .icon-icon-Slack .path4:before {
+    content: "\e940";
+    margin-left: -2.1337890625em;
+    color: rgb(51, 20, 51);
+  }
+  .icon-icon-Slack .path5:before {
+    content: "\e941";
+    margin-left: -2.1337890625em;
+    color: rgb(214, 32, 39);
+  }
+  .icon-icon-Slack .path6:before {
+    content: "\e942";
+    margin-left: -2.1337890625em;
+    color: rgb(137, 211, 223);
+  }
+  .icon-icon-Slack .path7:before {
+    content: "\e943";
+    margin-left: -2.1337890625em;
+    color: rgb(37, 139, 116);
+  }
+  .icon-icon-Slack .path8:before {
+    content: "\e944";
+    margin-left: -2.1337890625em;
+    color: rgb(129, 156, 60);
+  }
+  .icon-icon-Slack .path9:before {
+    content: "\e945";
+    margin-left: -2.1337890625em;
+    color: rgb(45, 51, 58);
+  }
+  .icon-icon-Slack .path10:before {
+    content: "\e946";
+    margin-left: -2.1337890625em;
+    color: rgb(45, 51, 58);
+  }
+  .icon-icon-Slack .path11:before {
+    content: "\e947";
+    margin-left: -2.1337890625em;
+    color: rgb(45, 51, 58);
+  }
+  .icon-icon-Slack .path12:before {
+    content: "\e948";
+    margin-left: -2.1337890625em;
+    color: rgb(45, 51, 58);
+  }
+  .icon-icon-Slack .path13:before {
+    content: "\e949";
+    margin-left: -2.1337890625em;
+    color: rgb(45, 51, 58);
+  }
+
+  .icon-icon-SlackMark .path1:before {
+    content: "\e935";
+    color: rgb(236, 179, 45);
+  }
+  .icon-icon-SlackMark .path2:before {
+    content: "\e936";
+    margin-left: -1em;
+    color: rgb(99, 193, 160);
+  }
+  .icon-icon-SlackMark .path3:before {
+    content: "\e937";
+    margin-left: -1em;
+    color: rgb(224, 26, 89);
+  }
+  .icon-icon-SlackMark .path4:before {
+    content: "\e938";
+    margin-left: -1em;
+    color: rgb(51, 20, 51);
+  }
+  .icon-icon-SlackMark .path5:before {
+    content: "\e939";
+    margin-left: -1em;
+    color: rgb(214, 32, 39);
+  }
+  .icon-icon-SlackMark .path6:before {
+    content: "\e93a";
+    margin-left: -1em;
+    color: rgb(137, 211, 223);
+  }
+  .icon-icon-SlackMark .path7:before {
+    content: "\e93b";
+    margin-left: -1em;
+    color: rgb(37, 139, 116);
+  }
+  .icon-icon-SlackMark .path8:before {
+    content: "\e93c";
+    margin-left: -1em;
+    color: rgb(129, 156, 60);
+  }
+  .icon-icon-errorNotification:before {
+    content: "\ea0e";
+  }
+  .icon-icon-filter-unselected:before {
+    content: "\ea2d";
+    color:#ed008c;
+  }
+  .icon-icon-search-unselected:before {
+    content: "\ea31";
+    color:#ed008c;
+  }
+  .icon-icon-search:before {
+    content: "\ea21";
+  }
+  .icon-icon-feedback:before {
+    content: "\ea26";
+  }
+  .icon-icon-help:before {
+    content: "\ea27";
+  }
+  .icon-icon-logout:before {
+    content: "\ea28";
+  }
+  .icon-icon-function:before {
+    content: "\e9f2";
+  }
+  .icon-icon-web:before {
+    content: "\e9f3";
+  }
+  .icon-icon-azure:before {
+    content: "\ea0b";
+  }
+  .icon-icon-ccp:before {
+    content: "\ea0c";
+  }
+  .icon-icon-add:before {
+    content: "\ea0f";
+  }
+  .icon-icon-alert:before {
+    content: "\ea10";
+    color: #d0011b;
+  }
+  .icon-icon-back:before {
+    content: "\ea11";
+  }
+  .icon-icon-close2:before {
+    content: "\ea12";
+  }
+  .icon-icon-create:before {
+    content: "\ea13";
+  }
+  .icon-icon-deploy:before {
+    content: "\ea14";
+  }
+  .icon-icon-deployment:before {
+    content: "\ea15";
+  }
+  .icon-icon-down:before {
+    content: "\ea16";
+  }
+  .icon-icon-edit:before {
+    content: "\ea17";
+  }
+  .icon-icon-api:before {
+    content: "\ea18";
+  }
+  .icon-icon-expand:before {
+    content: "\ea19";
+  }
+  .icon-icon-close:before {
+    content: "\e9f4";
+  }
+  .icon-icon-successNotification:before {
+    content: "\ea4c";
+  }
+  .icon-icon-info:before {
+    content: "\ea1c";
+    color: #ed008c;
+  }
+  .icon-icon-manage:before {
+    content: "\ea1d";
+  }
+  .icon-icon-merge:before {
+    content: "\ea1e";
+  }
+  .icon-icon-minimize:before {
+    content: "\ea1f";
+  }
+  .icon-icon-notifcation:before {
+    content: "\ea20";
+  }
+  .icon-icon-settings:before {
+    content: "\ea24";
+  }
+  .icon-tmobile-logo:before {
+    content: "\ea25";
+  }
+  .icon-icon-leftArrow:before {
+    content: "\ea4a";
+  }
+  .icon-icon-rightArrow:before {
+    content: "\ea4b";
+  }
+  .icon-icon-warning:before {
+    content: "\ea48";
+  }
+
+  .icon-icon-server-success:before {
+    content: "\e94d";
+  }
+  .icon-icon-server-error .path1:before {
+    content: "\e94e";
+    color: rgb(208, 8, 33);
+  }
+  .icon-icon-server-error .path2:before {
+    content: "\e950";
+    margin-left: -0.8955078125em;
+    color: rgb(209, 12, 36);
+  }
+  .icon-icon-server-error .path3:before {
+    content: "\e951";
+    margin-left: -0.8955078125em;
+    color: rgb(209, 9, 33);
+  }
+  .icon-icon-server-error .path4:before {
+    content: "\e952";
+    margin-left: -0.8955078125em;
+    color: rgb(208, 9, 33);
+  }
+  .icon-icon-server-error .path5:before {
+    content: "\e953";
+    margin-left: -0.8955078125em;
+    color: rgb(209, 9, 33);
+  }
+  .icon-icon-server-error .path6:before {
+    content: "\e954";
+    margin-left: -0.8955078125em;
+    color: rgb(209, 13, 37);
+  }
+  .icon-icon-server-error .path7:before {
+    content: "\e955";
+    margin-left: -0.8955078125em;
+    color: rgb(209, 11, 35);
+  }
+  .icon-icon-server-error .path8:before {
+    content: "\e956";
+    margin-left: -0.8955078125em;
+    color: rgb(209, 11, 35);
+  }
+  .icon-icon-server-error .path9:before {
+    content: "\e992";
+    margin-left: -0.8955078125em;
+    color: rgb(209, 13, 36);
+  }
+  .icon-icon-server-error .path10:before {
+    content: "\e9af";
+    margin-left: -0.8955078125em;
+    color: rgb(209, 11, 35);
+  }
+  .icon-icon-nodata:before {
+    content: "\e957";
+    color: #d10a22;
+  }
+  .icon-icon-login .path1:before {
+    content: "\e94c";
+    color: rgb(0, 0, 0);
+    opacity: 0.7;
+  }
+  .icon-icon-login .path2:before {
+    content: "\e94f";
+    margin-left: -1.294921875em;
+    color: rgb(237, 0, 140);
+  }
+  .icon-icon-cicd .path1:before {
+    content: "\e958";
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-cicd .path2:before {
+    content: "\e959";
+    margin-left: -2.568359375em;
+    color: rgb(234, 202, 218);
+  }
+  .icon-icon-cicd .path3:before {
+    content: "\e95a";
+    margin-left: -2.568359375em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-cicd .path4:before {
+    content: "\e95b";
+    margin-left: -2.568359375em;
+    color: rgb(240, 39, 138);
+  }
+  .icon-icon-cicd .path5:before {
+    content: "\e95c";
+    margin-left: -2.568359375em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-cicd .path6:before {
+    content: "\e95d";
+    margin-left: -2.568359375em;
+    color: rgb(239, 37, 137);
+  }
+  .icon-icon-cicd .path7:before {
+    content: "\e95e";
+    margin-left: -2.568359375em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-cicd .path8:before {
+    content: "\e95f";
+    margin-left: -2.568359375em;
+    color: rgb(239, 32, 134);
+  }
+  .icon-icon-cicd .path9:before {
+    content: "\e960";
+    margin-left: -2.568359375em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-cicd .path10:before {
+    content: "\e961";
+    margin-left: -2.568359375em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-cicd .path11:before {
+    content: "\e962";
+    margin-left: -2.568359375em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-cicd .path12:before {
+    content: "\e963";
+    margin-left: -2.568359375em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-cicd .path13:before {
+    content: "\e964";
+    margin-left: -2.568359375em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-cicd .path14:before {
+    content: "\e965";
+    margin-left: -2.568359375em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-cicd .path15:before {
+    content: "\e966";
+    margin-left: -2.568359375em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-cicd .path16:before {
+    content: "\e967";
+    margin-left: -2.568359375em;
+    color: rgb(87, 86, 87);
+  }
+  .icon-icon-cicd .path17:before {
+    content: "\e968";
+    margin-left: -2.568359375em;
+    color: rgb(239, 31, 133);
+  }
+  .icon-icon-cicd .path18:before {
+    content: "\e969";
+    margin-left: -2.568359375em;
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-cicd .path19:before {
+    content: "\e96a";
+    margin-left: -2.568359375em;
+    color: rgb(87, 87, 87);
+  }
+  .icon-icon-cicd .path20:before {
+    content: "\e96b";
+    margin-left: -2.568359375em;
+    color: rgb(86, 86, 86);
+  }
+  .icon-icon-cicd .path21:before {
+    content: "\e96c";
+    margin-left: -2.568359375em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-vendor .path1:before {
+    content: "\e96d";
+    color: rgb(240, 39, 138);
+  }
+  .icon-icon-vendor .path2:before {
+    content: "\e96e";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-vendor .path3:before {
+    content: "\e96f";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-vendor .path4:before {
+    content: "\e970";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 36, 136);
+  }
+  .icon-icon-vendor .path5:before {
+    content: "\e971";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 36, 136);
+  }
+  .icon-icon-vendor .path6:before {
+    content: "\e972";
+    margin-left: -1.7509765625em;
+    color: rgb(240, 39, 138);
+  }
+  .icon-icon-vendor .path7:before {
+    content: "\e973";
+    margin-left: -1.7509765625em;
+    color: rgb(240, 39, 138);
+  }
+  .icon-icon-vendor .path8:before {
+    content: "\e974";
+    margin-left: -1.7509765625em;
+    color: rgb(240, 39, 138);
+  }
+  .icon-icon-vendor .path9:before {
+    content: "\e975";
+    margin-left: -1.7509765625em;
+    color: rgb(240, 39, 138);
+  }
+  .icon-icon-vendor .path10:before {
+    content: "\e976";
+    margin-left: -1.7509765625em;
+    color: rgb(240, 39, 138);
+  }
+  .icon-icon-vendor .path11:before {
+    content: "\e977";
+    margin-left: -1.7509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-vendor .path12:before {
+    content: "\e978";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-vendor .path13:before {
+    content: "\e979";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 34, 135);
+  }
+  .icon-icon-vendor .path14:before {
+    content: "\e97a";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-vendor .path15:before {
+    content: "\e97b";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-vendor .path16:before {
+    content: "\e97c";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-vendor .path17:before {
+    content: "\e97d";
+    margin-left: -1.7509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-vendor .path18:before {
+    content: "\e97e";
+    margin-left: -1.7509765625em;
+    color: rgb(95, 95, 95);
+  }
+  .icon-icon-vendor .path19:before {
+    content: "\e97f";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-vendor .path20:before {
+    content: "\e980";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-vendor .path21:before {
+    content: "\e981";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-vendor .path22:before {
+    content: "\e982";
+    margin-left: -1.7509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-vendor .path23:before {
+    content: "\e983";
+    margin-left: -1.7509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-vendor .path24:before {
+    content: "\e984";
+    margin-left: -1.7509765625em;
+    color: rgb(95, 95, 95);
+  }
+  .icon-icon-vendor .path25:before {
+    content: "\e985";
+    margin-left: -1.7509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-vendor .path26:before {
+    content: "\e986";
+    margin-left: -1.7509765625em;
+    color: rgb(86, 86, 86);
+  }
+  .icon-icon-vendor .path27:before {
+    content: "\e987";
+    margin-left: -1.7509765625em;
+    color: rgb(86, 86, 86);
+  }
+  .icon-icon-vendor .path28:before {
+    content: "\e988";
+    margin-left: -1.7509765625em;
+    color: rgb(86, 86, 86);
+  }
+  .icon-icon-vendor .path29:before {
+    content: "\e989";
+    margin-left: -1.7509765625em;
+    color: rgb(86, 86, 86);
+  }
+  .icon-icon-vendor .path30:before {
+    content: "\e98a";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 37, 137);
+  }
+  .icon-icon-vendor .path31:before {
+    content: "\e98b";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 36, 136);
+  }
+  .icon-icon-vendor .path32:before {
+    content: "\e98c";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-vendor .path33:before {
+    content: "\e98d";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-vendor .path34:before {
+    content: "\e98e";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 35, 136);
+  }
+  .icon-icon-vendor .path35:before {
+    content: "\e98f";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 37, 137);
+  }
+  .icon-icon-vendor .path36:before {
+    content: "\e990";
+    margin-left: -1.7509765625em;
+    color: rgb(239, 36, 136);
+  }
+  .icon-icon-focusoncode:before {
+    content: "\e991";
+    color: #575757;
+  }
+  .icon-icon-secure .path1:before {
+    content: "\e94a";
+    color: rgb(92, 92, 92);
+  }
+  .icon-icon-secure .path2:before {
+    content: "\ea89";
+    margin-left: -1.234375em;
+    color: rgb(239, 37, 137);
+  }
+  .icon-icon-secure .path3:before {
+    content: "\ea8a";
+    margin-left: -1.234375em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-secure .path4:before {
+    content: "\ea8b";
+    margin-left: -1.234375em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-secure .path5:before {
+    content: "\ea8c";
+    margin-left: -1.234375em;
+    color: rgb(92, 92, 92);
+  }
+  .icon-icon-secure .path6:before {
+    content: "\ea8d";
+    margin-left: -1.234375em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-secure .path7:before {
+    content: "\ea8e";
+    margin-left: -1.234375em;
+    color: rgb(92, 92, 92);
+  }
+  .icon-icon-secure .path8:before {
+    content: "\ea8f";
+    margin-left: -1.234375em;
+    color: rgb(92, 92, 92);
+  }
+  .icon-icon-secure .path9:before {
+    content: "\ea90";
+    margin-left: -1.234375em;
+    color: rgb(92, 92, 92);
+  }
+  .icon-icon-secure .path10:before {
+    content: "\ea91";
+    margin-left: -1.234375em;
+    color: rgb(92, 92, 92);
+  }
+  .icon-icon-secure .path11:before {
+    content: "\ea92";
+    margin-left: -1.234375em;
+    color: rgb(92, 92, 92);
+  }
+  .icon-icon-secure .path12:before {
+    content: "\ea93";
+    margin-left: -1.234375em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-secure .path13:before {
+    content: "\ea94";
+    margin-left: -1.234375em;
+    color: rgb(92, 92, 92);
+  }
+  .icon-icon-secure .path14:before {
+    content: "\ea95";
+    margin-left: -1.234375em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-monitoring .path1:before {
+    content: "\e993";
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path2:before {
+    content: "\e994";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path3:before {
+    content: "\e995";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path4:before {
+    content: "\e996";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path5:before {
+    content: "\e997";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path6:before {
+    content: "\e998";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path7:before {
+    content: "\e999";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path8:before {
+    content: "\e99a";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path9:before {
+    content: "\e99b";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path10:before {
+    content: "\e99c";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path11:before {
+    content: "\e99d";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path12:before {
+    content: "\e99e";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path13:before {
+    content: "\e99f";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path14:before {
+    content: "\e9a0";
+    margin-left: -1.2509765625em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-monitoring .path15:before {
+    content: "\e9a1";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path16:before {
+    content: "\e9a2";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path17:before {
+    content: "\e9a3";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path18:before {
+    content: "\e9a4";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path19:before {
+    content: "\e9a5";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path20:before {
+    content: "\e9a6";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path21:before {
+    content: "\e9a7";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path22:before {
+    content: "\e9a8";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path23:before {
+    content: "\e9a9";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path24:before {
+    content: "\e9aa";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path25:before {
+    content: "\e9ab";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path26:before {
+    content: "\e9ac";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path27:before {
+    content: "\e9ad";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-monitoring .path28:before {
+    content: "\e9ae";
+    margin-left: -1.2509765625em;
+    color: rgb(240, 31, 134);
+  }
+  .icon-icon-bankrupt .path1:before {
+    content: "\e94b";
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path2:before {
+    content: "\ea96";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path3:before {
+    content: "\ea97";
+    margin-left: -1.462890625em;
+    color: rgb(240, 41, 139);
+  }
+  .icon-icon-bankrupt .path4:before {
+    content: "\ea98";
+    margin-left: -1.462890625em;
+    color: rgb(240, 41, 139);
+  }
+  .icon-icon-bankrupt .path5:before {
+    content: "\ea99";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path6:before {
+    content: "\ea9a";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path7:before {
+    content: "\ea9b";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path8:before {
+    content: "\ea9c";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path9:before {
+    content: "\ea9d";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path10:before {
+    content: "\ea9e";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path11:before {
+    content: "\ea9f";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path12:before {
+    content: "\eaa0";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path13:before {
+    content: "\eaa1";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-bankrupt .path14:before {
+    content: "\eaa2";
+    margin-left: -1.462890625em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-access .path1:before {
+    content: "\e9b0";
+    color: rgb(239, 37, 137);
+  }
+  .icon-icon-access .path2:before {
+    content: "\e9b1";
+    margin-left: -1.4189453125em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-access .path3:before {
+    content: "\e9b2";
+    margin-left: -1.4189453125em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-access .path4:before {
+    content: "\e9b3";
+    margin-left: -1.4189453125em;
+    color: rgb(91, 91, 91);
+  }
+  .icon-icon-access .path5:before {
+    content: "\e9b4";
+    margin-left: -1.4189453125em;
+    color: rgb(239, 36, 136);
+  }
+  .icon-icon-access .path6:before {
+    content: "\e9b5";
+    margin-left: -1.4189453125em;
+    color: rgb(91, 91, 91);
+  }
+  .icon-icon-access .path7:before {
+    content: "\e9b6";
+    margin-left: -1.4189453125em;
+    color: rgb(97, 97, 97);
+  }
+  .icon-icon-access .path8:before {
+    content: "\e9b7";
+    margin-left: -1.4189453125em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-access .path9:before {
+    content: "\e9b8";
+    margin-left: -1.4189453125em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-access .path10:before {
+    content: "\e9b9";
+    margin-left: -1.4189453125em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-access .path11:before {
+    content: "\e9ba";
+    margin-left: -1.4189453125em;
+    color: rgb(90, 90, 90);
+  }
+  .icon-icon-access .path12:before {
+    content: "\e9bb";
+    margin-left: -1.4189453125em;
+    color: rgb(90, 88, 89);
+  }
+  .icon-icon-access .path13:before {
+    content: "\e9bc";
+    margin-left: -1.4189453125em;
+    color: rgb(91, 90, 90);
+  }
+  .icon-icon-access .path14:before {
+    content: "\e9bd";
+    margin-left: -1.4189453125em;
+    color: rgb(87, 87, 87);
+  }
+  .icon-icon-access .path15:before {
+    content: "\e9be";
+    margin-left: -1.4189453125em;
+    color: rgb(87, 87, 87);
+  }
+  .icon-icon-access .path16:before {
+    content: "\e9bf";
+    margin-left: -1.4189453125em;
+    color: rgb(87, 87, 87);
+  }
+  .icon-icon-access .path17:before {
+    content: "\e9c0";
+    margin-left: -1.4189453125em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-access .path18:before {
+    content: "\e9c1";
+    margin-left: -1.4189453125em;
+    color: rgb(239, 36, 136);
+  }
+  .icon-icon-access .path19:before {
+    content: "\e9c2";
+    margin-left: -1.4189453125em;
+    color: rgb(239, 36, 136);
+  }
+  .icon-icon-access .path20:before {
+    content: "\e9c3";
+    margin-left: -1.4189453125em;
+    color: rgb(239, 36, 136);
+  }
+  .icon-icon-access .path21:before {
+    content: "\e9c4";
+    margin-left: -1.4189453125em;
+    color: rgb(239, 36, 136);
+  }
+  .icon-icon-serverless .path1:before {
+    content: "\e9c5";
+    color: rgb(239, 32, 134);
+  }
+  .icon-icon-serverless .path2:before {
+    content: "\e9c6";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path3:before {
+    content: "\e9c7";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path4:before {
+    content: "\e9c8";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path5:before {
+    content: "\e9c9";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path6:before {
+    content: "\e9ca";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path7:before {
+    content: "\e9cb";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path8:before {
+    content: "\e9cc";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path9:before {
+    content: "\e9cd";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path10:before {
+    content: "\e9ce";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path11:before {
+    content: "\e9cf";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path12:before {
+    content: "\e9d0";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path13:before {
+    content: "\e9d1";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path14:before {
+    content: "\e9d2";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path15:before {
+    content: "\e9d3";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path16:before {
+    content: "\e9d4";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path17:before {
+    content: "\e9d5";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path18:before {
+    content: "\e9d6";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path19:before {
+    content: "\e9d7";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path20:before {
+    content: "\e9d8";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path21:before {
+    content: "\e9d9";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path22:before {
+    content: "\e9da";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path23:before {
+    content: "\e9db";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path24:before {
+    content: "\e9dc";
+    margin-left: -1em;
+    color: rgb(239, 33, 135);
+  }
+  .icon-icon-serverless .path25:before {
+    content: "\e9dd";
+    margin-left: -1em;
+    color: rgb(238, 35, 135);
+  }
+  .icon-icon-serverless .path26:before {
+    content: "\e9de";
+    margin-left: -1em;
+    color: rgb(85, 85, 85);
+  }
+  .icon-icon-serverless .path27:before {
+    content: "\e9df";
+    margin-left: -1em;
+    color: rgb(86, 86, 86);
+  }
+  .icon-icon-serverless .path28:before {
+    content: "\e9e0";
+    margin-left: -1em;
+    color: rgb(86, 86, 86);
+  }
+  .icon-icon-serverless .path29:before {
+    content: "\e9e1";
+    margin-left: -1em;
+    color: rgb(88, 88, 88);
+  }
+  .icon-icon-serverless .path30:before {
+    content: "\e9e2";
+    margin-left: -1em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-serverless .path31:before {
+    content: "\e9e3";
+    margin-left: -1em;
+    color: rgb(96, 96, 96);
+  }
+  .icon-icon-serverless .path32:before {
+    content: "\e9e4";
+    margin-left: -1em;
+    color: rgb(96, 96, 96);
+  }
+  .icon-icon-serverless .path33:before {
+    content: "\e9e5";
+    margin-left: -1em;
+    color: rgb(127, 126, 126);
+  }
+  .icon-icon-serverless .path34:before {
+    content: "\e9e6";
+    margin-left: -1em;
+    color: rgb(211, 211, 211);
+  }
+  .icon-icon-serverless .path35:before {
+    content: "\e9e7";
+    margin-left: -1em;
+    color: rgb(211, 211, 211);
+  }
+  .icon-icon-serverless .path36:before {
+    content: "\e9e8";
+    margin-left: -1em;
+    color: rgb(211, 211, 211);
+  }
+  .icon-icon-serverless .path37:before {
+    content: "\e9e9";
+    margin-left: -1em;
+    color: rgb(180, 179, 179);
+  }
+  .icon-icon-serverless .path38:before {
+    content: "\e9ea";
+    margin-left: -1em;
+    color: rgb(87, 87, 87);
+  }
+  .icon-icon-serverless .path39:before {
+    content: "\e9eb";
+    margin-left: -1em;
+    color: rgb(87, 87, 87);
+  }
+  .icon-icon-serverless .path40:before {
+    content: "\e9ec";
+    margin-left: -1em;
+    color: rgb(89, 89, 89);
+  }
+  .icon-icon-refresh:before {
+    content: "\e9ed";
+    color: #ed008c;
+  }
+  .icon-icon-profile:before {
+    content: "\e9ee";
+    color: #fff;
+  }
+  .icon-icon-AWS-lambda .path1:before {
+    content: "\e900";
+    color: rgb(157, 80, 37);
+  }
+  .icon-icon-AWS-lambda .path2:before {
+    content: "\e901";
+    margin-left: -0.8330078125em;
+    color: rgb(245, 133, 54);
+  }
+  .icon-icon-AWS-lambda .path3:before {
+    content: "\e902";
+    margin-left: -0.8330078125em;
+    color: rgb(157, 80, 37);
+  }
+  .icon-icon-AWS-lambda .path4:before {
+    content: "\e903";
+    margin-left: -0.8330078125em;
+    color: rgb(245, 133, 54);
+  }
+  .icon-icon-AWS-lambda .path5:before {
+    content: "\e904";
+    margin-left: -0.8330078125em;
+    color: rgb(157, 80, 37);
+  }
+  .icon-icon-AWS-lambda .path6:before {
+    content: "\e905";
+    margin-left: -0.8330078125em;
+    color: rgb(107, 58, 25);
+  }
+  .icon-icon-AWS-lambda .path7:before {
+    content: "\e906";
+    margin-left: -0.8330078125em;
+    color: rgb(251, 191, 147);
+  }
+  .icon-icon-AWS-lambda .path8:before {
+    content: "\e907";
+    margin-left: -0.8330078125em;
+    color: rgb(157, 80, 37);
+  }
+  .icon-icon-AWS-lambda .path9:before {
+    content: "\e908";
+    margin-left: -0.8330078125em;
+    color: rgb(157, 80, 37);
+  }
+  .icon-icon-AWS-lambda .path10:before {
+    content: "\e909";
+    margin-left: -0.8330078125em;
+    color: rgb(245, 133, 54);
+  }
+  .icon-icon-AWS-lambda .path11:before {
+    content: "\e90a";
+    margin-left: -0.8330078125em;
+    color: rgb(245, 133, 54);
+  }
+  .icon-icon-EC2 .path1:before {
+    content: "\e90b";
+    color: rgb(157, 80, 37);
+  }
+  .icon-icon-EC2 .path2:before {
+    content: "\e90c";
+    margin-left: -0.8330078125em;
+    color: rgb(245, 133, 54);
+  }
+  .icon-icon-EC2 .path3:before {
+    content: "\e90d";
+    margin-left: -0.8330078125em;
+    color: rgb(157, 80, 37);
+  }
+  .icon-icon-EC2 .path4:before {
+    content: "\e90e";
+    margin-left: -0.8330078125em;
+    color: rgb(245, 133, 54);
+  }
+  .icon-icon-EC2 .path5:before {
+    content: "\e90f";
+    margin-left: -0.8330078125em;
+    color: rgb(157, 80, 37);
+  }
+  .icon-icon-EC2 .path6:before {
+    content: "\e910";
+    margin-left: -0.8330078125em;
+    color: rgb(245, 133, 54);
+  }
+  .icon-icon-EC2 .path7:before {
+    content: "\e911";
+    margin-left: -0.8330078125em;
+    color: rgb(157, 80, 37);
+  }
+  .icon-icon-EC2 .path8:before {
+    content: "\e912";
+    margin-left: -0.8330078125em;
+    color: rgb(245, 133, 54);
+  }
+  .icon-icon-S3 .path1:before {
+    content: "\e913";
+    color: rgb(140, 49, 35);
+  }
+  .icon-icon-S3 .path2:before {
+    content: "\e914";
+    margin-left: -0.8291015625em;
+    color: rgb(224, 82, 67);
+  }
+  .icon-icon-S3 .path3:before {
+    content: "\e915";
+    margin-left: -0.8291015625em;
+    color: rgb(140, 49, 35);
+  }
+  .icon-icon-S3 .path4:before {
+    content: "\e916";
+    margin-left: -0.8291015625em;
+    color: rgb(224, 82, 67);
+  }
+  .icon-icon-S3 .path5:before {
+    content: "\e917";
+    margin-left: -0.8291015625em;
+    color: rgb(140, 49, 35);
+  }
+  .icon-icon-S3 .path6:before {
+    content: "\e918";
+    margin-left: -0.8291015625em;
+    color: rgb(94, 31, 24);
+  }
+  .icon-icon-S3 .path7:before {
+    content: "\e919";
+    margin-left: -0.8291015625em;
+    color: rgb(242, 176, 169);
+  }
+  .icon-icon-S3 .path8:before {
+    content: "\e91a";
+    margin-left: -0.8291015625em;
+    color: rgb(224, 82, 67);
+  }
+  .icon-icon-S3 .path9:before {
+    content: "\e91b";
+    margin-left: -0.8291015625em;
+    color: rgb(140, 49, 35);
+  }
+  .icon-icon-S3 .path10:before {
+    content: "\e91c";
+    margin-left: -0.8291015625em;
+    color: rgb(224, 82, 67);
+  }
+  .icon-icon-S3 .path11:before {
+    content: "\e91d";
+    margin-left: -0.8291015625em;
+    color: rgb(140, 49, 35);
+  }
+  .icon-icon-S3 .path12:before {
+    content: "\e91e";
+    margin-left: -0.8291015625em;
+    color: rgb(224, 82, 67);
+  }
+  .icon-icon-APIGateway .path1:before {
+    content: "\e91f";
+    color: rgb(250, 215, 145);
+  }
+  .icon-icon-APIGateway .path2:before {
+    content: "\e920";
+    margin-left: -0.8330078125em;
+    color: rgb(98, 74, 30);
+  }
+  .icon-icon-APIGateway .path3:before {
+    content: "\e921";
+    margin-left: -0.8330078125em;
+    color: rgb(98, 74, 30);
+  }
+  .icon-icon-APIGateway .path4:before {
+    content: "\e922";
+    margin-left: -0.8330078125em;
+    color: rgb(250, 215, 145);
+  }
+  .icon-icon-APIGateway .path5:before {
+    content: "\e923";
+    margin-left: -0.8330078125em;
+    color: rgb(217, 167, 65);
+  }
+  .icon-icon-APIGateway .path6:before {
+    content: "\e924";
+    margin-left: -0.8330078125em;
+    color: rgb(135, 105, 41);
+  }
+  .icon-icon-APIGateway .path7:before {
+    content: "\e925";
+    margin-left: -0.8330078125em;
+    color: rgb(217, 167, 65);
+  }
+  .icon-icon-APIGateway .path8:before {
+    content: "\e926";
+    margin-left: -0.8330078125em;
+    color: rgb(98, 74, 30);
+  }
+  .icon-icon-APIGateway .path9:before {
+    content: "\e927";
+    margin-left: -0.8330078125em;
+    color: rgb(135, 105, 41);
+  }
+  .icon-icon-APIGateway .path10:before {
+    content: "\e928";
+    margin-left: -0.8330078125em;
+    color: rgb(217, 167, 65);
+  }
+  .icon-icon-APIGateway .path11:before {
+    content: "\e929";
+    margin-left: -0.8330078125em;
+    color: rgb(135, 105, 41);
+  }
+  .icon-icon-APIGateway .path12:before {
+    content: "\e92a";
+    margin-left: -0.8330078125em;
+    color: rgb(98, 74, 30);
+  }
+  .icon-icon-APIGateway .path13:before {
+    content: "\e92b";
+    margin-left: -0.8330078125em;
+    color: rgb(217, 167, 65);
+  }
+  .icon-icon-APIGateway .path14:before {
+    content: "\e92c";
+    margin-left: -0.8330078125em;
+    color: rgb(135, 105, 41);
+  }
+  .icon-icon-APIGateway .path15:before {
+    content: "\e92d";
+    margin-left: -0.8330078125em;
+    color: rgb(217, 167, 65);
+  }
+  .icon-icon-APIGateway .path16:before {
+    content: "\e92e";
+    margin-left: -0.8330078125em;
+    color: rgb(250, 215, 145);
+  }
+  .icon-icon-APIGateway .path17:before {
+    content: "\e92f";
+    margin-left: -0.8330078125em;
+    color: rgb(135, 105, 41);
+  }
+  .icon-icon-APIGateway .path18:before {
+    content: "\e930";
+    margin-left: -0.8330078125em;
+    color: rgb(217, 167, 65);
+  }
+  .icon-icon-APIGateway .path19:before {
+    content: "\e931";
+    margin-left: -0.8330078125em;
+    color: rgb(135, 105, 41);
+  }
+  .icon-icon-APIGateway .path20:before {
+    content: "\e932";
+    margin-left: -0.8330078125em;
+    color: rgb(250, 215, 145);
+  }
+  .icon-icon-APIGateway .path21:before {
+    content: "\e933";
+    margin-left: -0.8330078125em;
+    color: rgb(135, 105, 41);
+  }
+  .icon-icon-APIGateway .path22:before {
+    content: "\e934";
+    margin-left: -0.8330078125em;
+    color: rgb(217, 167, 65);
+  }
+  .icon-icon-good .path1:before {
+    content: "\eaa3";
+    color: rgb(92, 174, 1);
+  }
+  .icon-icon-good .path2:before {
+    content: "\eaa4";
+    margin-left: -1em;
+    color: rgb(255, 255, 255);
+  }
+  .icon-icon-bad .path1:before {
+    content: "\eaa5";
+    color: rgb(208, 2, 27);
+  }
+  .icon-icon-bad .path2:before {
+    content: "\eaa6";
+    margin-left: -1em;
+    color: rgb(255, 255, 255);
+  }
+  .icon-Collapse-All:before {
+    content: "\eaa7";
+    color: #ed008c;
+  }
+  .icon-Expand-All:before {
+    content: "\eaa8";
+    color: #ed008c;
+  }
+
+  .icon-Deployed:before {
+    content: "\eaa9";
+
+    font-size:2rem;
+
+  }
+
+  .icon-Failed:before {
+    content: "\eaaa";
+
+    font-size:2rem;
+
+  }
+
+  .icon-In-Progress:before {
+    content: "\eaab";
+    color: #f5a623;
+    font-size:2rem;
+
+  }
+
+  .icon-icon-inactive:before {
+    content: "\eaac";
+    color: rgb(208, 2, 27);
+    /* font-size:2rem; */
+
+  }
+
+.user-journey-btn {
+    padding: 6px 12px;
+    outline: none;
+    border: 1px solid #ed008c;
+    border-radius: 30px;
+    height: 40px;
+    width: 150px;
+    color: white;
+    background-color: #ed008c;
+    transition: background-color 200ms, color 200ms, transform 500ms;
+}
+
+.user-journey-btn:hover, .user-journey-btn:active {
+    background-color: white;
+    border: 1px solid white;
+    color: #ed008c;
+    outline: none;
+}
+
+.user-journey-btn.secondary {
+    color: #ed008c;
+    background-color: white;
+    border: 1px solid #ed008c;
+}
+
+.user-journey-btn.secondary:hover, .user-journey-btn.secondary:active {
+    color: white;
+    background-color: #ed008c;
+}
+
+.user-journey-btn.message-button {
+    height: initial;
+    width: initial;
+    margin: 0 10px;
+    font-size: 10px;
+    padding: 3px 6px;
+    transform: translateY(-4px);
+}

@@ -1,0 +1,168 @@
+#!groovy
+import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
+import groovy.transform.Field
+
+// To be replaced as @Field def repo_credential_id = "value" except for config_loader. instance_prefix, jazz_bucket_web to be taken from the config_loader.
+@Field def repo_credential_id
+@Field def repo_base
+@Field def repo_core
+@Field def scm_type
+
+@Field def config_loader
+@Field def scmModule
+@Field def utilModule
+
+/*
+* Get CloudFront DistID
+*/
+def get_cloudfront_ID() {
+  try {
+    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-originid']].{Id: Id}\" --output json --profile cloud-api" , returnStdout: true).trim()
+    echo "cf_list_dists is: $cf_list_dists"
+    def config_parser = new groovy.json.JsonSlurper()
+    def cf_dists = config_parser.parseText(cf_list_dists)
+    return cf_dists[0].Id
+  }catch(ex) {
+    error "Failed while get_cloudfront_ID " + ex.toString()
+    return null;
+  }
+}
+
+/*
+* Invalidate CloudFront
+*/
+def invalidate_cloudfront(cf_id) {
+  try {
+  //Using Jenkins build ID to form a unique callerReference
+    def caller_reference = "JazzWeb_"+ env.BUILD_ID
+    def invalidate_config= "{\"Paths\":{\"Quantity\":1,\"Items\":[\"/*\"]},\"CallerReference\":\"$caller_reference\"}"
+    def invalidate_status = sh (script: "aws cloudfront create-invalidation --distribution-id $cf_id --invalidation-batch '$invalidate_config' --output json --profile cloud-api" , returnStdout: true).trim()
+    echo "Invalidated Cloud Front Cache:$invalidate_status"
+  }catch(ex) {
+    error "Failed while invalidate_cloudfront " + ex.toString()
+  }
+}
+
+/*
+* Configure AWS CLI
+*/
+def aws_configure() {
+  withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: config_loader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+    try {
+    sh "aws configure set profile.cloud-api.region ${config_loader.AWS.REGION}"
+    sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+    sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+    } catch(ex) {
+    error "Failed while configuring AWS CLI " + ex.toString()
+    }
+  }
+}
+/*
+* Start the Pipeline stages
+*/
+node ()  {
+  stage('Loading Config-Loader') {
+    def jazzBuildModuleURL = getBuildModuleUrl()
+	  loadBuildModules(jazzBuildModuleURL)
+  }
+  stage('Configure AWS CLI') {
+    aws_configure()
+  }
+
+  stage('Checking out Jazz_UI repo') {
+    dir('jazz_ui') {
+      checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
+	    def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
+
+      if(config_loader.UI_CONFIG.service_tabs.overview)   sh "sed -i 's/{overview}/overview/g' ./src/environments/environment.oss.ts";
+      if(config_loader.UI_CONFIG.service_tabs.access_control)   sh "sed -i 's/{access control}/access control/g' ./src/environments/environment.oss.ts";
+      if(config_loader.UI_CONFIG.service_tabs.metrics)   sh "sed -i 's/{metrics}/metrics/g' ./src/environments/environment.oss.ts";
+      if(config_loader.UI_CONFIG.service_tabs.cost)   sh "sed -i 's/{cost}/cost/g' ./src/environments/environment.oss.ts";
+      if(config_loader.UI_CONFIG.service_tabs.logs)       sh "sed -i 's/{logs}/logs/g' ./src/environments/environment.oss.ts";
+      if(config_loader.UI_CONFIG.environment_tabs.overview) sh "sed -i 's/{env_overview}/overview/g' ./src/environments/environment.oss.ts";
+      if(config_loader.UI_CONFIG.environment_tabs.deployments)  sh "sed -i 's/{deployments}/deployments/g' ./src/environments/environment.oss.ts";
+      if( config_loader.UI_CONFIG.environment_tabs.code_quality == "true" )  sh "sed -i 's/{code quality}/code quality/g' ./src/environments/environment.oss.ts";
+      if(config_loader.UI_CONFIG.environment_tabs.assets)  sh "sed -i 's/{assets}/assets/g' ./src/environments/environment.oss.ts";
+      if(config_loader.UI_CONFIG.environment_tabs.logs)  sh "sed -i 's/{env_logs}/logs/g' ./src/environments/environment.oss.ts";
+
+      sh "sed -i 's/{api_doc_name}/${config_loader.AWS.S3.API_DOC}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{account_number}/${config_loader.AWS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{region}/${config_loader.AWS.REGION}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{multi_env}/${config_loader.UI_CONFIG.feature.multi_env}/g' ./src/environments/environment.oss.ts"
+
+      if(config_loader.SLACK.ENABLE_SLACK == "true") sh "sed -i 's/{slack_support}/true/g' ./src/environments/environment.oss.ts";
+      else sh "sed -i 's/{slack_support}/false/g' ./src/environments/environment.oss.ts";
+
+      sh "sed -i s!{swagger_editor}!${config_loader.JAZZ.SWAGGER.EDITOR_URL}!g ./src/environments/environment.oss.ts"
+
+      def envFile = readFile('./src/environments/environment.oss.ts');
+      echo "displaying env file :"
+      echo "$envFile";
+    }
+  }
+  stage('Building the UI - NPM build') {
+    sh '''
+    #Generate build file from jazz_ui
+    npm update
+    cd jazz_ui
+    rm -rf node_modules
+    npm install
+    ng set --global warnings.versionMismatch=false
+    ng build --env=oss --prod --aot=false
+    cd ..
+    '''
+  }
+  stage('Getting CloudFront DistID') {
+    cf_id = get_cloudfront_ID()
+    echo "$cf_id"
+  }
+  stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
+    sh """
+    aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB} --profile cloud-api
+    aws s3 cp jazz_ui/dist s3://${config_loader.JAZZ.S3_BUCKET_WEB} --recursive --include "*" --profile cloud-api
+    aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB} --profile cloud-api
+    """
+  }
+  stage('Invalidating CloudFront') {
+    invalidate_cloudfront(cf_id)
+  }
+}
+
+/*
+load build modules
+*/
+def loadBuildModules(buildModuleUrl){
+
+	try {
+		dir('scm-loader') {
+			checkout([$class: 'GitSCM', branches: [
+				[name: '*/master']
+			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildModuleUrl]
+			]])
+
+      def result_json_string = readFile("jazz-installer-vars.json")
+      config_module = load "config-loader.groovy"
+      config_loader = config_module.initialize(result_json_string)
+
+			scmModule = load "scm-module.groovy"
+			scmModule.initialize(config_loader)
+
+      utilModule = load "utility-loader.groovy"
+		}
+	}catch(ex) {
+		error "loadBuildModules failed: " + ex.toString()
+	}
+}
+
+def getBuildModuleUrl() {
+    if (scm_type && scm_type != "bitbucket") {
+      // right now only bitbucket has this additional tag scm in its git clone path
+      return "http://${repo_base}/${repo_core}/jazz-build-module.git"
+    }else {
+      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+    }
+}

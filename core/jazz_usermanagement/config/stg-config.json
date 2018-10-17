@@ -1,0 +1,29 @@
+{
+  "USER_POOL_ID": "{user_pool_id}",
+  "REGION": "{region}",
+  "USER_CLIENT_ID": "{user_client_id}",
+  "reg_codes": [
+    "JAZZ"
+  ],
+  "required_fields": [
+    "userid",
+    "userpassword",
+    "usercode"
+  ],
+  "SCM_TYPE": "{scm_type}",
+  "SCM_CONFIG": {
+    "bitbucket": {
+      "HOSTNAME": "{scm_base_url}",
+      "USERNAME": "{bb_username}",
+      "PASSWORD": "{bb_password}",
+      "API_USER_ADD": "/rest/api/1.0/admin/users",
+      "API_GROUP_ADD": "/rest/api/1.0/admin/groups/add-users"
+    },
+    "gitlab": {
+      "HOSTNAME": "{scm_base_url}",
+      "API_USER_ADD": "/api/v3/users",
+      "API_GROUP_ADD": "/api/v3/groups",
+      "PRIVATE_TOKEN": "{private_token}"
+    }
+  }
+}

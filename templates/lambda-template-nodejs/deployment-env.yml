@@ -1,0 +1,4 @@
+providerRuntime : nodejs6.10
+providerMemorySize : 256
+providerTimeout : 160
+

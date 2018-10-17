@@ -1,0 +1,30 @@
+{
+    "name": "jazz_asset-event-handler",
+    "version": "0.0.1",
+    "description": "The event handler funtion to handle asset related events and catalog updates",
+    "main": "index.js",
+    "private": true,
+    "author": [],
+    "scripts": {
+        "test": "mocha"
+    },
+    "dependencies": {
+        "string-template": "*",
+        "json-query": "*",
+        "lodash": "*",
+        "request": "*",
+        "request-promise-native": "^1.0.5"
+    },
+    "devDependencies": {
+        "aws-lambda-mock-context": "^3.1.1",
+        "aws-sdk": "*",
+        "aws-sdk-mock": "^1.7.0",
+        "chai": "^3.5.0",
+        "chai-as-promised": "^7.1.1",
+        "es6-promise": "^2.3.0",
+        "lambda-local": "^1.5.0",
+        "mocha": "^v3.0.0",
+        "sinon": "^6.1.4",
+        "request": "*"
+    }
+}

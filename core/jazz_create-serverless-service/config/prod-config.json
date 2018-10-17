@@ -1,0 +1,11 @@
+{
+    "JOB_BUILD_URL": "{conf-jenkins-host}/job/create-service/buildWithParameters",
+    "JOB_TOKEN": "{job_token}",
+    "API_TOKEN": "{api_token}",
+    "SVC_USER": "{ci_user}",
+    "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+    "SERVICE_API_RESOURCE": "/prod/jazz/services",
+    "TOKEN_URL": "/prod/jazz/login",
+    "SERVICE_USER": "{jazz_admin}",
+    "TOKEN_CREDS": "{jazz_admin_creds}"
+}

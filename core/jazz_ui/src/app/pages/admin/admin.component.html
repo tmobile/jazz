@@ -1,0 +1,12 @@
+<div>
+  <div class="view-hdr-wrp">
+    <jazz-header class="hide-for-mobile"></jazz-header>
+  </div>
+  <div class="view-container" [class.translate-for-mob]="mobSecState == 2">
+    <div class="services-content-wrp">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+  <mobile-secondary-tab (mobSecClicked)='changeActivity($event)' [tabList]='mobTabData'></mobile-secondary-tab>
+</div>

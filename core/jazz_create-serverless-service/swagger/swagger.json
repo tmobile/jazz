@@ -1,0 +1,317 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "version": "2016-11-05T20:58:52Z",
+        "title": "{api_deployment_node_title}",
+        "description": "This API onboards developers to the Service creation automation. The API implementation produces the templates, which the developers can customize to implement their service."
+    },
+    "host": "{api_host_name}",
+    "basePath": "/{domain}",
+    "schemes": [
+        "https"
+    ],
+    "paths": {
+        "/{service_name}": {
+            "options": {
+                "description": "CORS Support",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CORS"
+                ],
+                "x-amazon-apigateway-integration": {
+                    "type": "mock",
+                    "requestTemplates": {
+                      "application/json": "{\"statusCode\": 200}"
+                    },
+                    "responses": {
+                        "default": {
+                            "statusCode": "200",
+                            "responseParameters": {
+                              "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                              "method.response.header.Access-Control-Allow-Methods": "'*'",
+                              "method.response.header.Access-Control-Allow-Origin": "'*'"
+                            },
+                            "responseTemplates": {
+                                   "application/json": "{}"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Default response for CORS method",
+                        "headers": {
+                            "Access-Control-Allow-Headers": {
+                                "type": "string"
+                            },
+                            "Access-Control-Allow-Methods": {
+                                "type": "string"
+                            },
+                            "Access-Control-Allow-Origin": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/400ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/404ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/500ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Post method used for calling the onboarding API",
+                "parameters": [
+                    {
+                        "name": "data",
+                        "in": "body",
+                        "description": "Input object for creating the Service",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/OnboardingAPIObject"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "consumes": [
+                    "application/json",
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json",
+                    "application/x-www-form-urlencoded"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful Execution",
+                        "headers": {
+                            "Access-Control-Allow-Headers": {
+                                "type": "string"
+                            },
+                            "Access-Control-Allow-Methods": {
+                                "type": "string"
+                            },
+                            "Access-Control-Allow-Origin": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/400ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/404ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/500ErrorResponse"
+                        }
+                    }
+                },
+               "security": [
+                  {
+                    "{envPrefix}-{domain}-cognito-authorizer": []
+                  }
+                ],             
+                "x-amazon-apigateway-integration": {
+                    "type": "aws",
+                    "passthroughBehavior": "when_no_templates",
+					"uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
+                    "httpMethod": "POST",
+                    "credentials": "{conf-role}",
+                    "requestTemplates": {
+                        "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
+                        "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
+                    },
+                    "responses": {
+                        ".*\"InternalServerError\".*": {
+                            "statusCode": "500",
+                            "responseTemplates": {
+                                "application/json": "$input.path('$.errorMessage')"
+                            }
+                        },
+                        ".*\"BadRequest\".*": {
+                            "statusCode": "400",
+                            "responseTemplates": {
+                                "application/json": "$input.path('$.errorMessage')"
+                            }
+                        },
+                        "default": {
+                            "statusCode": "200",
+                            "responseTemplates": {
+                                "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
+                            },
+							"responseParameters": {
+                              "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                              "method.response.header.Access-Control-Allow-Methods": "'*'",
+                              "method.response.header.Access-Control-Allow-Origin": "'*'"
+                            }
+                        },
+                        ".*\"NotFound\".*": {
+                            "statusCode": "404",
+                            "responseTemplates": {
+                                "application/json": "$input.path('$.errorMessage')"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+  	"securityDefinitions": {
+		"{envPrefix}-{domain}-cognito-authorizer": {
+		  "type": "apiKey",
+		  "name": "Authorization",
+		  "in": "header",
+		  "x-amazon-apigateway-authtype": "custom",
+		  "x-amazon-apigateway-authorizer": {
+			"authorizerCredentials": "{conf-role}",
+			"authorizerResultTtlInSeconds": 300,
+			"authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
+			"type": "token"
+		  }
+		}
+	},  
+    "definitions": {
+        "400ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error_type": {
+                    "type": "string",
+                    "default": "Bad Request format"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "404ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error_type": {
+                    "type": "string",
+                    "default": "Resource Not Found"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "500ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error_type": {
+                    "type": "string",
+                    "default": "Internal Server Error"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "event": {
+          "type": "object",
+          "description": "Event object for each AWS event",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Type of event"
+            },
+            "source": {
+              "type": "string",
+              "description": "Source of event"
+            },
+            "action": {
+              "type": "string",
+              "description": "Action trigger for the event"
+            }
+          }
+        },
+        "OnboardingAPIObject": {
+            "type": "object",
+            "properties": {
+                "service_type": {
+                    "type": "string",
+                    "description": "The type of the service being developed (API/Microservice/Website)",
+                    "enum": [
+                        "api",
+                        "lambda",
+                        "website"
+                    ]
+                },
+                "service_name": {
+                    "type": "string",
+                    "description": "Name of your API/Microservice/Website that you want to create."
+                },
+                "domain": {
+                    "type": "string",
+                    "description": "Domain for the API/Microservice/Website. Multiple APIs can be bundled under a single domain. Domains provide easier abstraction to implement similar security & access control on your APIs."
+                },
+                "runtime": {
+                    "type": "string",
+                    "description": "The runtime framework for executing your code",
+                    "enum": [
+                        "nodejs",
+                        "java",
+                        "python"
+                    ]
+                },
+                "approvers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "events": {
+                  "description": "Array of events requested for function consisting of type, source and action",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/event"
+                  }
+                },
+                "username": {
+                    "type": "string",
+                    "description": "Username/NT ID for the service creator. This will be used for the bitbucket access"
+                },
+                "slack_channel": {
+                    "type": "string",
+                    "description":"Slack channel to receive all the service notifications"
+                },
+				"require_internal_access": {
+                    "type": "boolean",
+                    "description":"Does service require access to internal SLF network and resources"
+                }
+            }
+        }
+    }
+}

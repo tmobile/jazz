@@ -1,0 +1,42 @@
+{
+  "DEPLOYMENT_TABLE": "Stack_Deployments_Test",
+  "DEPLOYMENT_CREATION_REQUIRED_FIELDS": [
+    "service_id",
+    "service",
+    "domain",
+    "environment_logical_id",
+    "provider_build_url",
+    "provider_build_id",
+    "scm_commit_hash",
+    "scm_url",
+    "scm_branch",
+    "status",
+    "request_id"
+  ],
+  "REQUIRED_PARAMS": ["service", "domain", "environment"],
+  "OPTIONAL_PARAMS": ["status", "offset", "limit"],
+  "ARCHIVED_DEPLOYMENT_STATUS": "archived",
+  "DEPLOYMENTS_SORTING_KEY": "provider_build_id",
+  "DEPLOYMENTS_SORTING_ORDER": "desc",
+  "PAGINATION_DEFAULTS": {
+    "offset": 0,
+    "limit": 10,
+    "max_limit": 100
+  },
+  "DEPLOYMENT_STATUS": ["successful", "started", "failed", "archived", "aborted", "in_progress"],
+  "SVC_USER": "{ci_user}",
+  "JOB_TOKEN": "{job_token}",
+  "API_TOKEN": "{api_token}",
+  "ddb_region": "test-region}",
+  "JOB_BUILD_URL": "http://test/job/",
+  "SERVICE_API_URL": "https://test.execute-api.{conf-region}.amazonaws.com",
+  "SERVICE_API_RESOURCE": "/test/jazz/services",
+  "TOKEN_URL": "/test/jazz/login",
+  "SERVICE_USER": "test-user",
+  "TOKEN_CREDS": "test-creds",
+  "BUILDPACKMAP": {
+    "api": "build-pack-api",
+    "function": "build-pack-lambda",
+    "website": "build-pack-website"
+  }
+}

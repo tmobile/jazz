@@ -1,0 +1,100 @@
+<div class="login-wrp" [ngClass]="{'freezScroll':loading}">
+    <div class="login-support-wrap"></div>
+    <div class="login-main-wrap">
+        <div class="logo-wrp">
+            <!-- <img src="assets/images/icons/Login.svg"> -->
+            <img src="assets/images/icons/logo.png">
+
+        </div>
+        <div class="sign-in-form" (keyup.enter)="register ? registerUser($event) : login()">
+
+                <div class="form-row">
+
+                    <div class="form-label">{{userEmail}}</div>
+
+                    <input required
+                           class='ip-usr'
+                           pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,3}$"
+                           [class.err-border]='err_username_brd || (model.username &&(!username.valid && (username.dirty || username.touched)))'
+                           type="email" name='Username'
+                           [(ngModel)]="model.username"
+                           (ngModelChange)="onChange($event)"
+                           #username='ngModel'>
+                    <p class='login-form-errmsg' *ngIf="model.username && (!username.valid && (username.dirty || username.touched))">Please enter a valid email</p>
+                    <div  class='hide-er' [class.error-msg]="error_username_disp">
+                            <div>
+                                <span class="icon-icon-alert"></span>
+                                {{error.username}}
+                            </div>
+                     </div>
+                </div>
+                
+                <div class="form-row bottom-2" *ngIf="new_pwd_req">
+                    <div class="form-label"> Verification Code </div>
+                    <input required class='ip-usr'
+                           [class.err-border]='err_brd'
+                           type="text"
+                           name='verificationCode'
+                           [class.err-border]='err_verificationCode_brd || (model.verificationCode &&(!verificationCode.valid && (verificationCode.dirty || verificationCode.touched)))'
+                           [(ngModel)]="model.verificationCode"
+                           (ngModelChange)="onChange($event)"
+                           #verificationCode='ngModel'>
+                    <p *ngIf='!error_verificationCode_disp'>Verification code is sent to your registered email</p>
+                    <div  class='hide-er' [class.error-msg]="error_verificationCode_disp">
+                        <div>
+                            <span class="icon-icon-alert"></span>
+                            {{error.verificationCode}}
+                        </div>
+                 </div>
+                </div>
+                
+                <div class="form-row bottom-2" *ngIf="!forgot_password || register || new_pwd_req">
+                        <div class="form-label">Password </div>
+                        <input required minlength="8" [class.err-border]='err_password_brd || (model.password && (!password.valid && (password.dirty || password.touched))) && (register || new_pwd_req)' type="password" name='password' [(ngModel)]="model.password"  (ngModelChange)="onChange($event)" #password='ngModel'>
+                        <ul class='login-form-errmsg' *ngIf="model.password && (!password.valid && (password.dirty || password.touched)) && (register || new_pwd_req)">
+                            Password must be atleast 8 characters long
+                        </ul>
+                        <div *ngIf="!register" class='hide-er' [class.error-msg]="error_password_disp">
+                                <div>
+                                    <span class="icon-icon-alert"></span>
+                                    {{error.password}}
+                                </div>
+                         </div>
+                </div>
+                <div *ngIf="register" class="form-row">
+
+                    <div class="form-label">Registration Code</div>
+
+                    <input required class='ip-usr' [class.err-border]='err_brd'
+                           type="text" name='Usercode'
+                           [(ngModel)]="model.usercode"
+                           (ngModelChange)="onChange($event)">
+                    <div class="form-label reg-required">*All fields are required</div>
+
+                </div>
+        </div>
+
+        <div class="btn-wrp">
+            <btn-jazz-primary *ngIf="!register && !forgot_password && !new_pwd_req" [text]="buttonText" (click)="login($event)" newclass="loginbutton"></btn-jazz-primary>
+            <btn-jazz-primary *ngIf="register && !forgot_password && !new_pwd_req" [text]="'REGISTER'" (click)="registerUser($event)" newclass="loginbutton" [disablePrimaryBtn]= '(!username.valid && (username.dirty || username.touched)) || (!password.valid && (password.dirty || password.touched)) || (!model.username) || (!model.password) || (!model.usercode)'></btn-jazz-primary>
+            <btn-jazz-primary *ngIf="!register && (forgot_password || new_pwd_req)" [text]="'SUBMIT'" (click)="resetPassword($event)" newclass="loginbutton" [disablePrimaryBtn]='disableLoginBtn() || (!username.valid && (username.dirty || username.touched)) || (model.password && (!password.valid && (password.dirty || password.touched)))'></btn-jazz-primary>            
+        </div>
+        <div class="forgot-password">
+            <a (click)="toggleReg('newPassword')">{{regist}}</a>
+            <br>
+            <!-- <span *ngIf='forgot_password && !new_pwd_req'> | </span> -->
+            <a *ngIf='forgot_password && !new_pwd_req' (click)="new_pwd_req=true;disableLoginBtn()">Have verification code?</a>
+        </div>
+        <div class="separator-row" *ngIf="!forgot_password && !register"></div>
+        <div class="newUser" *ngIf="!forgot_password && !register">
+            <a (click)="toggleReg('register')">Register</a>
+        </div>
+    </div>
+</div>
+<div class="loader-wrp" [class.show]="loading">
+    <div class="loader">
+        <div class="inner one"></div>
+        <div class="inner two"></div>
+        <div class="inner three"></div>
+    </div>
+</div>
