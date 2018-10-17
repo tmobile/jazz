@@ -1,10 +1,9 @@
-
 import { Component } from '@angular/core';
 import {ToasterContainerComponent, ToasterService, ToasterConfig} from 'angular2-toaster';
 import {Idle, DEFAULT_INTERRUPTSOURCES} from '@ng-idle/core';
 import {Keepalive} from '@ng-idle/keepalive';
 import { AuthenticationService, MessageService } from './core/services/index';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import {BodyOutputType} from 'angular2-toaster';
 
@@ -29,6 +28,13 @@ export class AppComponent {
 		private messageservice:MessageService,
 		private authenticationservice:AuthenticationService
 	) {
+	
+		this.router.events.subscribe(event => {
+  		if (event instanceof NavigationEnd) {
+    		(<any>window).ga('set', 'page', event.urlAfterRedirects);
+    		(<any>window).ga('send', 'pageview');
+  		}
+  	});
 	
 		// sets an idle timeout of 15 mins, for testing purposes.
     idle.setIdle(60*15);
@@ -57,6 +63,7 @@ export class AppComponent {
     }
 	  this.toasterService = toasterService;    
 	}
+    
 	reset() {
     this.idle.watch();
     this.idleState = 'Started.';
