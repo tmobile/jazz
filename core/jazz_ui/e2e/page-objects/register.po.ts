@@ -22,29 +22,26 @@ export class Register {
 
   getLoginButton(){
    return element(by.xpath('//div/jazz-header/header/div[2]/ul/li[5]/div/btn-jazz-primary/button'));
-   //return element(by.xpath('//btn-jazz-primary/button[text()="LOGIN"]'));
   }
-
   getRegister(){
     return element(by.xpath('//div[@class="newUser"]/a[text()="Register"]'));
   }
-
+  getBackToLogin()
+  {
+    return element(by.xpath('//div[@class="forgot-password"]/a[text()="Back to login"]'));  
+  }
   getUserName(){
     return element(by.xpath('//div[text()="User Email"]/following-sibling::input[@type="email"]'));
   }
-
   getPassword(){
     return element(by.xpath('//div[text()="Password "]/following-sibling::input[@type="password"]'));
   }
-
   getRegistrationCode(){
     return element(by.xpath('//div[text()="Registration Code"]/following-sibling::input[@name="Usercode"]'));
   }
-
   getRegisterButton(){
     return element(by.xpath('//div[@class="btn-wrp"]/btn-jazz-primary/button[text()="REGISTER"]'));
   }
-
   getDummy() {
     return element(by.xpath('//*[@id="exampleName"]'));
   }

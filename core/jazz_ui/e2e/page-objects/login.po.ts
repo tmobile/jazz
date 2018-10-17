@@ -19,24 +19,18 @@ export class Login {
   navigateTo() {
     return browser.get('');
   }
-
   getLoginButton(){
     return element(by.xpath('//div/jazz-header/header/div[2]/ul/li[5]/div/btn-jazz-primary/button'));                   
   }
-
   getUserNameInput() {
       return element(by.xpath('//div/div[2]/login/div[1]/div[2]/div[2]/div[1]/input'));
   }
-
   getPasswordInput() {
     return element(by.xpath('//div/div[2]/login/div[1]/div[2]/div[2]/div[2]/input'));
   }
-
-  
   submitLoginButton() {
     return element(by.xpath('//div/div[2]/login/div[1]/div[2]/div[3]/btn-jazz-primary/button'));
   }
- 
   submitUsername() {
     return element(by.id('i0116'));
   }
@@ -47,7 +41,6 @@ export class Login {
   {
     return element(by.xpath('//input[@type="email"]'));
   }
-
   submitNext(){
      return element(by.id('idSIButton9'));
   }

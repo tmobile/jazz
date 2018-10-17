@@ -13,42 +13,37 @@
  */
 
 import { browser, element, by, protractor, $} from 'protractor';
-import { Login } from '../page-objects/login.po';
 import { Jazz } from '../page-objects/jazzservices.po';
 import { CONFIGURATIONS } from '../../src/config/configuration';
 import { Timeouts } from 'selenium-webdriver';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 
 
-const timeOutHigh = 2500000;
+const timeOutHigh = 1800000;
 const emailId = CONFIGURATIONS.optional.general.e2e.EMAIL_ID;
 
 describe('Overview', () => {
-  let login_po: Login;
   let jazzServices_po: Jazz;
   const EC = protractor.ExpectedConditions;
-  let tagging_count;
   let winhandle;
   let servicename;
 
   beforeAll(() => {
-    login_po = new Login();
     jazzServices_po = new Jazz();
     });
 
-
-
       function createservice(servicename)
       {
-        //servicename='servicename' + Date.now();
         jazzServices_po.getServiceName().sendKeys(servicename);
         jazzServices_po.getNameSpace().sendKeys('jazztest');
+        //This code is for internal Jazz-If needed
         //jazzServices_po.getApplication().sendKeys('ABC Services');
         //jazzServices_po.getApplicationClick().click();
         jazzServices_po.getServiceDescription().sendKeys('Testing');
       }
       function serviceapprover()
       {
+        //This code is for internal Jazz-If needed
         //jazzServices_po.getApprover().sendKeys('');
         //jazzServices_po.getApproverClick().click();
         browser.driver.sleep(5000);
@@ -72,7 +67,6 @@ describe('Overview', () => {
     });
       it('Create Lamda Service', () => {
       //For Lambda
-      //browser.driver.navigate().refresh();
       browser.driver.switchTo().activeElement();
       browser.driver.sleep(5000);
       browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
@@ -80,7 +74,6 @@ describe('Overview', () => {
       jazzServices_po.getCreateService().click();
       browser.driver.switchTo().activeElement();
       browser.driver.sleep(5000);
-      //jazzServices_po.getFunction().click();
       jazzServices_po.getLambda().click();
       servicename='servicename' + Date.now();
       createservice(servicename);

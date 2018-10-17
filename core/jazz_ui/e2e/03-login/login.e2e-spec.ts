@@ -29,10 +29,9 @@ describe('login', () => {
     login_po = new Login();
     JazzServices_po = new Jazz();
   });
-
-
+ 
   it('login', () => {
-    JazzServices_po.navigateToJazzGet();
+    browser.refresh();
     browser.wait(EC.visibilityOf(login_po.getLoginButton()), timeOutHigh);
     login_po.getLoginButton().click();
     login_po.getUserNameInput().sendKeys(config.USER_NAME);
@@ -42,5 +41,4 @@ describe('login', () => {
     const page_title = JazzServices_po.getPageTitle().getText();
     expect(page_title).toEqual('Services');
   });
-
 });
