@@ -62,15 +62,16 @@ function handler(event, context, cb)  {
 		const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
 
 		if (subPath.indexOf('reset') > -1) {
-			logger.info('User password reset Request::' + JSON.stringify(service_data));
+			logger.info('User password reset Request:' + JSON.stringify(service_data));
 
-			validateResetParams(service_data)
-				.then(() => forgotPassword(cognito, config, service_data))
-				.then(() => function (result) {
-					logger.info("Password reset was successful for user: " + service_data.email);
-					return cb(null, responseObj({ result: "success", errorCode: "0", message: "Password reset was successful for user: " + service_data.email }));
-				})
-				.catch(function (err) {
+			exportable.validateResetParams(service_data)
+			.then(() => {
+				return exportable.forgotPassword(cognito, config, service_data) })
+				.then(result => {
+						  logger.info("Password reset was successful for user: " + service_data.email);
+						  return cb(null, responseObj({ result: "success", errorCode: "0", message: "Password reset was successful for user: " + service_data.email }));
+					  })
+				.catch(result => {
 					logger.error("Failed while resetting user password: " + JSON.stringify(err));
 
 					if (err.errorType) {
@@ -86,9 +87,9 @@ function handler(event, context, cb)  {
 		} else if (subPath.indexOf('updatepwd') > -1) {
 			logger.info('User password update Request::' + JSON.stringify(service_data));
 
-			validateUpdatePasswordParams(service_data)
-				.then(() => updatePassword(cognito, config, service_data))
-				.then(() => function (result) {
+			exportable.validateUpdatePasswordParams(service_data)
+				.then(() => { return exportable.updatePassword(cognito, config, service_data)})
+				.then(result => {
 					logger.info("Successfully updated password for user: " + service_data.email);
 					return cb(null, responseObj({ result: "success", errorCode: "0", message: "Successfully updated password for user: " + service_data.email }));
 				})
@@ -109,10 +110,10 @@ function handler(event, context, cb)  {
 		} else {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
 
-			validateCreaterUserParams(config, service_data)
-				.then((s) => createUser(cognito, config, s))
+			exportable.validateCreaterUserParams(config, service_data)
+				.then((s) => {return exportable.createUser(cognito, config, s)})
 				.then((s) => rp(getRequestToCreateSCMUser(config, service_data)))
-				.then(() => function (result) {
+				.then(result => {
 					logger.info("User: " + service_data.userid + " registered successfully!");
 					return cb(null, responseObj({ result: "success", errorCode: "0", message: "User registered successfully!" }));
 				})
@@ -257,7 +258,6 @@ function forgotPassword(cognitoClient, config, userData) {
 			ClientId: config.USER_CLIENT_ID,
 			Username: userData.email
 		};
-
 		cognitoClient.forgotPassword(cognitoParams, (err, result) => {
 			if (err)
 				reject(err);
