@@ -94,7 +94,7 @@ resourcesDisabled:
     #End:isSQSEventEnabled
     #Start:isSQSEventEnabled
     #Start:isSqsResourceNotExist
-    {event_source_sqs}:
+    sourceQueue:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: {event_source_sqs}
