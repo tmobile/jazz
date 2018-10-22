@@ -71,9 +71,9 @@ function handler(event, context, cb)  {
 						  logger.info("Password reset was successful for user: " + service_data.email);
 						  return cb(null, responseObj({ result: "success", errorCode: "0", message: "Password reset was successful for user: " + service_data.email }));
 					  })
-				.catch(result => {
+				.catch((err) => {
 					logger.error("Failed while resetting user password: " + JSON.stringify(err));
-
+					
 					if (err.errorType) {
 						// error has already been handled and processed for API gateway
 						return cb(JSON.stringify(err));

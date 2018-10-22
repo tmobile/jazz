@@ -178,6 +178,20 @@ describe("inside index handler", function(){
     });
   });
 
+  it('Should return forgotPassword fail ', function() {  
+    let responseObj = { errorCode: '106',
+          errorType: 'InternalServerError',
+          message: 'Failed while resetting user password for: abc@xyz.com' 
+        }      
+    AWS.mock('CognitoIdentityServiceProvider', 'forgotPassword', function(params, callback) {
+      callback('fail', null);
+    });
+    index.handler(event, context, (err, res) => { 
+      expect(err).to.include(responseObj);
+      return err;
+    });
+  });
+
   it('Should return email require error validateResetParams ', function() {
     event.body.email = undefined;
     let responseObj = { errorCode: '102',
@@ -190,24 +204,7 @@ describe("inside index handler", function(){
           expect(error).to.include(responseObj);
       
     });
-  });    
-
-  // it('Should return forgotPassword failure ', function(done) { 
-  //   const forgotPassword = sinon.stub(index, "forgotPassword").rejects({
-  //     result: "error",
-  //     message: "Some error occured"
-  //   });
-  //   message = '{"errorType":"BadRequest","message":"method cannot be empty"}';
-  //   index.handler(event, context, (err, res) => { console.log(err,'ajay32',res)
-  //     done();
-  //     expect(err).to.include(message);
-  //   });
-
-  //   sinon.assert.calledOnce(forgotPassword);
-  //   forgotPassword.restore(); 
-  // });
-  
-
+  }); 
 });
 
 describe("inside index handler updatepwd", function(){
@@ -285,24 +282,7 @@ describe("inside index handler updatepwd", function(){
           expect(error).to.include(responseObj);
       
     });
-  });
-
-  // it('Should return update failure ', function(done) { 
-  //   const forgotPassword = sinon.stub(index, "forgotPassword").rejects({
-  //     result: "error",
-  //     message: "Some error occured"
-  //   });
-  //   message = '{"errorType":"BadRequest","message":"method cannot be empty"}';
-  //   index.handler(event, context, (err, res) => { console.log(err,'ajay32',res)
-  //     done();
-  //     expect(err).to.include(message);
-  //   });
-
-  //   sinon.assert.calledOnce(forgotPassword);
-  //   forgotPassword.restore(); 
-  // });
-  
-
+  });  
 })
 
 describe("inside index handler else condition", function(){
@@ -350,3 +330,14 @@ describe("inside index handler else condition", function(){
     });
   });
 });
+
+it('test should call subscribers with message as first argument', function(done) {
+  var message = "an example message";
+  var spy = sinon.spy();
+
+  PubSub.subscribe(message, spy);
+  PubSub.publishSync(message, "some payload");
+
+  sinon.assert.calledOnce(spy);
+  sinon.assert.calledWith(spy, message);
+}
