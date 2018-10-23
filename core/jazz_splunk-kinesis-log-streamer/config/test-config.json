@@ -1,0 +1,5 @@
+{
+  "SPLUNK_ENDPOINT": "https://www.google.com/",
+  "SPLUNK_TOKEN": "XXXXXXXXXXXXX",
+  "SPLUNK_INDEX": "test"
+}
