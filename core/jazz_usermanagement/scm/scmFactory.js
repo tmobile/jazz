@@ -94,8 +94,8 @@ module.exports = class ScmFactory {
     }
 
     addUserRequest(userId, password) {
-        if (this.config && this.config.SCM_TYPE && this.addUserMap[this.config.SCM_TYPE]) { console.log(this.addUserMap[this.config.SCM_TYPE])
-            var scmConfig = this.config.SCM_CONFIG[this.config.SCM_TYPE]; console.log(scmConfig, userId, password)
+        if (this.config && this.config.SCM_TYPE && this.addUserMap[this.config.SCM_TYPE]) { 
+            var scmConfig = this.config.SCM_CONFIG[this.config.SCM_TYPE]; 
             return this.addUserMap[this.config.SCM_TYPE](scmConfig, userId, password);
         }
     }

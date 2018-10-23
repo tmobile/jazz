@@ -48,7 +48,7 @@ function handler(event, context, cb)  {
 	try {
 		logger.info(JSON.stringify(event));
 
-		if (!event || !event.resourcePath) {
+		if (!event || !event.method || !event.resourcePath) {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "invalid or missing arguments")));
 		}
 
