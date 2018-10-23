@@ -112,7 +112,7 @@ function handler(event, context, cb)  {
 
 			exportable.validateCreaterUserParams(config, service_data)
 				.then((s) => {return exportable.createUser(cognito, config, s)})
-				.then((s) => rp(getRequestToCreateSCMUser(config, service_data)))
+				.then((s) => rp(exportable.getRequestToCreateSCMUser(config, service_data)))
 				.then(result => {
 					logger.info("User: " + service_data.userid + " registered successfully!");
 					return cb(null, responseObj({ result: "success", errorCode: "0", message: "User registered successfully!" }));

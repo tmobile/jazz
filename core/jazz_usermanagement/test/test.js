@@ -9,7 +9,8 @@ const logger = require("../components/logger.js");
 const errorHandlerModule = require("../components/error-handler.js");
 const scmFactory = require("../scm/scmFactory.js");
 const configModule = require("../components/config.js");
-const responseObj = require("../components/response.js")
+const responseObj = require("../components/response.js");
+const rp = require('request-promise-native');
 
 describe('User Management', function() {
   //Setting up default values for the aws event and context needed for handler params
@@ -29,7 +30,7 @@ describe('User Management', function() {
       };	
       config = configModule.getConfig(event, context);
     });
-
+    
     it('should throw error validateCreaterUserParams', function () {    
       config.required_fields = {'userid':'userid','email':'email','verificationCode':'verificationCode','param':'param'}
       let result = index.validateCreaterUserParams(config,event.body);
@@ -179,16 +180,43 @@ describe("inside index handler", function(){
   });
 
   it('Should return forgotPassword fail ', function() {  
-    let responseObj = { errorCode: '106',
-          errorType: 'InternalServerError',
-          message: 'Failed while resetting user password for: abc@xyz.com' 
-        }      
-    AWS.mock('CognitoIdentityServiceProvider', 'forgotPassword', function(params, callback) {
-      callback('fail', null);
-    });
-    index.handler(event, context, (err, res) => { 
-      expect(err).to.include(responseObj);
+    let responseObj = {"errorType":"102"}      
+    const forgotPassword = sinon.stub(index, "forgotPassword").rejects({errorType:"102"});
+    index.handler(event, context, (err, res) => {
+      forgotPassword.restore();
+      expect(err).to.include('errorType');
       return err;
+    });
+  });
+
+  it('should go in catch funtion err.errorType', function(){
+    const validateResetParams = sinon.stub(index, "validateResetParams").resolves("success");
+    const forgotPassword = sinon.stub(index, "forgotPassword").rejects({errorType:"102"});
+ 
+    index.handler(event, context, (err, res) => {
+      validateResetParams.restore();
+      forgotPassword.restore();
+      expect(JSON.parse(err).errorType).to.eq("102");
+    });
+  });
+  it('should go in catch funtion err with no param', function(){
+    const validateResetParams = sinon.stub(index, "validateResetParams").resolves("success");
+    const forgotPassword = sinon.stub(index, "forgotPassword").rejects({error:"102"}); 
+    index.handler(event, context, (err, res) => {
+      validateResetParams.restore();
+      forgotPassword.restore();
+      expect(JSON.parse(err).error).to.eq("102");
+    });
+  });
+
+  it('should go in catch funtion err.errorType', function(){
+    const validateResetParams = sinon.stub(index, "validateResetParams").resolves("success");
+    const forgotPassword = sinon.stub(index, "forgotPassword").rejects({code:"102", message: "error"});
+ 
+    index.handler(event, context, (err, res) => {
+      expect(JSON.parse(err).errorCode).to.eq("102");
+      validateResetParams.restore();
+      forgotPassword.restore();
     });
   });
 
@@ -282,7 +310,37 @@ describe("inside index handler updatepwd", function(){
           expect(error).to.include(responseObj);
       
     });
+  }); 
+  it('should go in catch funtion err.errorType', function(){
+    const validateUpdatePasswordParams = sinon.stub(index, "validateUpdatePasswordParams").resolves("success");
+    const updatePassword = sinon.stub(index, "updatePassword").rejects({errorType:"102"});
+ 
+    index.handler(event, context, (err, res) => {
+      validateUpdatePasswordParams.restore();
+      updatePassword.restore();
+      expect(JSON.parse(err).errorType).to.eq("102");
+    });
+  });
+  it('should go in catch funtion err.code', function(){
+    const validateUpdatePasswordParams = sinon.stub(index, "validateUpdatePasswordParams").resolves("success");
+    const updatePassword = sinon.stub(index, "updatePassword").rejects({code:"102", message: "error"});
+ 
+    index.handler(event, context, (err, res) => {
+      expect(JSON.parse(err).errorCode).to.eq("102");
+      validateUpdatePasswordParams.restore();
+      updatePassword.restore();
+    });
   });  
+  it('should go in catch funtion err.errorType', function(){
+    const validateUpdatePasswordParams = sinon.stub(index, "validateUpdatePasswordParams").resolves("success");
+    const updatePassword = sinon.stub(index, "updatePassword").rejects({message: "error"});
+ 
+    index.handler(event, context, (err, res) => {
+      expect(JSON.parse(err).errorCode).to.eq("106");
+      validateUpdatePasswordParams.restore();
+      updatePassword.restore();
+    });
+  });
 })
 
 describe("inside index handler else condition", function(){
@@ -310,34 +368,79 @@ describe("inside index handler else condition", function(){
     };
        
   });
-  it('Should return createUser ', function(done) {
-    var cognitoParams = {
-			ClientId: config.USER_CLIENT_ID,
-			Username: event.body.userid.toLowerCase(),
-			Password: event.body.userpassword,
-			UserAttributes: [{ Name: "custom:reg-code", "Value": event.body.usercode }],
-			ValidationData: []
-		};
-
-    AWS.mock('CognitoIdentityServiceProvider', 'signUp', function(cognitoParams, callback) {
-      callback(null, 'success');
-    });
-    const getRequestToCreateSCMUser = sinon.stub(index, "getRequestToCreateSCMUser").resolves("success")
-    index.handler(event, context, (err, res) => { 
-      done();
-      expect(res).to.be.eq('success');
-      return res;
+  
+  it('Should return createUser ', function() {
+    const validateCreaterUserParams = sinon.stub(index, "validateCreaterUserParams").resolves("success");
+    const createUser = sinon.stub(index, "createUser").resolves("success");
+    const rpStub = sinon.stub(rp, 'Request').returns(Promise.resolve("Success"));
+    const getRequestToCreateSCMUser = sinon.stub(index, "getRequestToCreateSCMUser").resolves();
+ 
+    index.handler(event, context, (err, res) => {
+      expect(res.data.result).to.eq("success");
+      sinon.assert.calledOnce(validateCreaterUserParams);
+      sinon.assert.calledOnce(createUser);
+      sinon.assert.calledOnce(getRequestToCreateSCMUser);
+      sinon.assert.calledOnce(rpStub);
+      validateCreaterUserParams.restore();
+      createUser.restore();
+      getRequestToCreateSCMUser.restore();
+      rpStub.restore();
     });
   });
+
+  it('Should return createUser error ', function() {
+    const validateCreaterUserParams = sinon.stub(index, "validateCreaterUserParams").resolves("success");
+    const createUser = sinon.stub(index, "createUser").resolves("success");
+    const rpStub = sinon.stub(rp, 'Request').returns(Promise.reject({result:'reject'}));
+    const getRequestToCreateSCMUser = sinon.stub(index, "getRequestToCreateSCMUser").resolves();
+ 
+    index.handler(event, context, (err, res) => {
+      expect(JSON.parse(err).errorCode).to.eq("101");
+      sinon.assert.calledOnce(validateCreaterUserParams);
+      sinon.assert.calledOnce(createUser);
+      sinon.assert.calledOnce(getRequestToCreateSCMUser);
+      sinon.assert.calledOnce(rpStub);
+      validateCreaterUserParams.restore();
+      createUser.restore();
+      getRequestToCreateSCMUser.restore();
+      rpStub.restore();
+    });
+  });
+
+  it('Should return createUser error ', function() {
+    const validateCreaterUserParams = sinon.stub(index, "validateCreaterUserParams").resolves("success");
+    const createUser = sinon.stub(index, "createUser").resolves();
+    const rpStub = sinon.stub(rp, 'Request').returns(Promise.reject({code:"102", message: "error"}));
+    const getRequestToCreateSCMUser = sinon.stub(index, "getRequestToCreateSCMUser").resolves();
+ 
+    index.handler(event, context, (err, res) => {
+      expect(JSON.parse(err).errorCode).to.eq("102");
+      sinon.assert.calledOnce(validateCreaterUserParams);
+      sinon.assert.calledOnce(createUser);
+      sinon.assert.calledOnce(rpStub);
+      validateCreaterUserParams.restore();
+      createUser.restore();
+      getRequestToCreateSCMUser.restore();
+      rpStub.restore();
+    });
+  });
+
+  it('Should return createUser error ', function() {
+    const validateCreaterUserParams = sinon.stub(index, "validateCreaterUserParams").resolves("success");
+    const createUser = sinon.stub(index, "createUser").resolves();
+    const rpStub = sinon.stub(rp, 'Request').returns(Promise.reject({errorType:"102", message: "error"}));
+    const getRequestToCreateSCMUser = sinon.stub(index, "getRequestToCreateSCMUser").resolves();
+ 
+    index.handler(event, context, (err, res) => {
+      expect(JSON.parse(err).errorType).to.eq("102");
+      sinon.assert.calledOnce(validateCreaterUserParams);
+      sinon.assert.calledOnce(createUser);
+      sinon.assert.calledOnce(rpStub);
+      validateCreaterUserParams.restore();
+      createUser.restore();
+      getRequestToCreateSCMUser.restore();
+      rpStub.restore();
+    });
+  });
+
 });
-
-it('test should call subscribers with message as first argument', function(done) {
-  var message = "an example message";
-  var spy = sinon.spy();
-
-  PubSub.subscribe(message, spy);
-  PubSub.publishSync(message, "some payload");
-
-  sinon.assert.calledOnce(spy);
-  sinon.assert.calledWith(spy, message);
-}
