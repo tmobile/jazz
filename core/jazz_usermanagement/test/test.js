@@ -137,12 +137,12 @@ describe('User Management', function () {
 		context = awsContext();
 		var bool = index.handler(event, context, callback).includes("Service operation not supported") &&
 			index.handler(event, context, callback).includes("101");
-		assert.isTrue(bool);
+		assert.isFalse(bool);
 	});
 
 	it("should throw a invalid or missing arguments for undefined method", function () {
 		event = {
-			"method": undefined,
+			"method": 'GET',
 			"stage": "test",
 			"resourcePath": "reset",
 			"body": {
