@@ -40,8 +40,7 @@ describe('User Management', function () {
 			'verificationCode': 'verificationCode',
 			'param': 'param'
 		}
-		let result = index.validateCreaterUserParams(config, event.body);
-		return result
+		let result = index.validateCreaterUserParams(config, event.body)
 			.catch(error => expect(error).to.include({
 				errorCode: '102',
 				errorType: 'BadRequest',
@@ -57,15 +56,13 @@ describe('User Management', function () {
 			"verificationCode": "123",
 			"email": "abc@xyz.com"
 		}
-		// 
-		let result = index.validateCreaterUserParams(config, event.body);
-		return result
+		
+		let result = index.validateCreaterUserParams(config, event.body)
 			.catch(error => expect(error).to.include({
 				errorCode: '102',
 				errorType: 'BadRequest',
 				message: 'userid\'s value cannot be empty'
 			}));
-
 	});
 
 	it('should throw Invalid User Registration Code', function () {
@@ -77,8 +74,7 @@ describe('User Management', function () {
 			"email": "abc@xyz.com"
 		}
 		config.reg_codes = ['AAB123'];
-		let result = index.validateCreaterUserParams(config, event.body);
-		return result
+		let result = index.validateCreaterUserParams(config, event.body)
 			.catch(error => expect(error).to.include({
 				errorCode: '103',
 				errorType: 'BadRequest',
@@ -95,10 +91,8 @@ describe('User Management', function () {
 			"usercode": "aab123",
 			"email": "abc@xyz.com"
 		}
-		config.reg_codes = ['AAB123'];
-		// 
-		let result = index.validateCreaterUserParams(config, event.body);
-		return result
+		config.reg_codes = ['AAB123'];		
+		let result = index.validateCreaterUserParams(config, event.body)
 			.then(res => expect(res).to.include({
 				username: 'username',
 				userid: 'userid',
@@ -156,13 +150,10 @@ describe('User Management', function () {
 			index.handler(event, context, callback).includes("101");
 		assert.isTrue(bool);
 	});
-
-
 });
 
 describe("inside index handler", function () {
-	beforeEach(function () {
-		spy = sinon.spy();
+	beforeEach(function () {		
 		event = {
 			"method": "POST",
 			"stage": "test",
@@ -203,20 +194,23 @@ describe("inside index handler", function () {
 		const forgotPassword = sinon.stub(index, "forgotPassword").rejects({
 			errorType: "102"
 		});
-		index.handler(event, context, (err, res) => {
+		index.handler(event, context, (err, res) => {      
+      sinon.assert.calledOnce(forgotPassword);
 			forgotPassword.restore();
 			expect(err).to.include('errorType');
 			return err;
 		});
 	});
 
-	it('should go in catch funtion err.errorType', function () {
+	it('should check errorType in catch', function () {
 		const validateResetParams = sinon.stub(index, "validateResetParams").resolves("success");
 		const forgotPassword = sinon.stub(index, "forgotPassword").rejects({
 			errorType: "102"
 		});
 
 		index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateResetParams);
+      sinon.assert.calledOnce(forgotPassword);
 			validateResetParams.restore();
 			forgotPassword.restore();
 			expect(JSON.parse(err).errorType).to.eq("102");
@@ -228,13 +222,15 @@ describe("inside index handler", function () {
 			error: "102"
 		});
 		index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateResetParams);
+      sinon.assert.calledOnce(forgotPassword);
 			validateResetParams.restore();
 			forgotPassword.restore();
 			expect(JSON.parse(err).error).to.eq("102");
 		});
 	});
 
-	it('should go in catch funtion err.errorType', function () {
+	it('should go in catch funtion with error code', function () {
 		const validateResetParams = sinon.stub(index, "validateResetParams").resolves("success");
 		const forgotPassword = sinon.stub(index, "forgotPassword").rejects({
 			code: "102",
@@ -242,6 +238,8 @@ describe("inside index handler", function () {
 		});
 
 		index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateResetParams);
+      sinon.assert.calledOnce(forgotPassword);
 			expect(JSON.parse(err).errorCode).to.eq("102");
 			validateResetParams.restore();
 			forgotPassword.restore();
@@ -259,14 +257,12 @@ describe("inside index handler", function () {
 		index.validateResetParams(event.body, config)
 			.catch((error) => {
 				expect(error).to.include(responseObj);
-
 			});
 	});
 });
 
 describe("inside index handler updatepwd", function () {
-	beforeEach(function () {
-		spy = sinon.spy();
+	beforeEach(function () {		
 		event = {
 			"method": "POST",
 			"stage": "test",
@@ -296,8 +292,7 @@ describe("inside index handler updatepwd", function () {
 		});
 		index.handler(event, context, (err, res) => {
 			done();
-			expect(res.data.result).to.eq("success");
-			return res;
+			expect(res.data.result).to.eq("success");			
 		});
 	});
 
@@ -308,9 +303,7 @@ describe("inside index handler updatepwd", function () {
 		event.body.password = undefined;
 		index.handler(event, context, (err, res) => {
 			done();
-			expect(err).to.includes("errorCode");
-			err.code = err.errorCode;
-			return err;
+			expect(err).to.includes("errorCode");			
 		});
 	});
 
@@ -350,6 +343,8 @@ describe("inside index handler updatepwd", function () {
 		});
 
 		index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateUpdatePasswordParams);
+      sinon.assert.calledOnce(updatePassword);
 			validateUpdatePasswordParams.restore();
 			updatePassword.restore();
 			expect(JSON.parse(err).errorType).to.eq("102");
@@ -363,6 +358,8 @@ describe("inside index handler updatepwd", function () {
 		});
 
 		index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateUpdatePasswordParams);
+      sinon.assert.calledOnce(updatePassword);
 			expect(JSON.parse(err).errorCode).to.eq("102");
 			validateUpdatePasswordParams.restore();
 			updatePassword.restore();
@@ -373,8 +370,9 @@ describe("inside index handler updatepwd", function () {
 		const updatePassword = sinon.stub(index, "updatePassword").rejects({
 			message: "error"
 		});
-
 		index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateUpdatePasswordParams);
+      sinon.assert.calledOnce(updatePassword);
 			expect(JSON.parse(err).errorCode).to.eq("106");
 			validateUpdatePasswordParams.restore();
 			updatePassword.restore();
@@ -383,8 +381,7 @@ describe("inside index handler updatepwd", function () {
 })
 
 describe("inside index handler else condition", function () {
-	beforeEach(function () {
-		spy = sinon.spy();
+	beforeEach(function () {		
 		event = {
 			"method": "POST",
 			"stage": "test",
@@ -478,7 +475,6 @@ describe("inside index handler else condition", function () {
 			message: "error"
 		}));
 		const getRequestToCreateSCMUser = sinon.stub(index, "getRequestToCreateSCMUser").resolves();
-
 		index.handler(event, context, (err, res) => {
 			expect(JSON.parse(err).errorType).to.eq("102");
 			sinon.assert.calledOnce(validateCreaterUserParams);
@@ -490,5 +486,4 @@ describe("inside index handler else condition", function () {
 			rpStub.restore();
 		});
 	});
-
 });
