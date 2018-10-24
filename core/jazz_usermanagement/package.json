@@ -11,15 +11,16 @@
     "test": "nyc --reporter=html --reporter=text mocha",
     "jshint": "jshint --exclude ./node_modules ."
   },
-  "dependencies": {
-    "aws-lambda-mock-context": "^3.2.1",
+  "dependencies": {    
     "lodash": "*",
     "request": "*",
     "request-promise-native": "^1.0.5"
   },
   "devDependencies": {
     "amazon-cognito-identity-js": "^3.0.2",
+    "aws-lambda-mock-context": "^3.2.1",
     "aws-sdk": "*",
+    "aws-sdk-mock": "^4.2.0",
     "chai": "^3.5.0",
     "lambda-local": "^1.4.2",
     "mocha": "^v3.0.0",
