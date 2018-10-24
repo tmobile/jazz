@@ -37,7 +37,7 @@ function handler(event, context, cb)  {
 	var errorHandler = errorHandlerModule();
 	logger.init(event, context);
 
-	var config = configModule.getConfig(event, context);	
+	var config = configModule.getConfig(event, context);
 
 	if (!config || config.length) { 	
 		logger.error("Cannot load config object, will stop processing");
@@ -65,8 +65,7 @@ function handler(event, context, cb)  {
 			logger.info('User password reset Request:' + JSON.stringify(service_data));
 
 			exportable.validateResetParams(service_data)
-			.then(() => {
-				return exportable.forgotPassword(cognito, config, service_data) })
+			.then(() => exportable.forgotPassword(cognito, config, service_data) )
 				.then(result => {
 						  logger.info("Password reset was successful for user: " + service_data.email);
 						  return cb(null, responseObj({ result: "success", errorCode: "0", message: "Password reset was successful for user: " + service_data.email }));
@@ -88,7 +87,7 @@ function handler(event, context, cb)  {
 			logger.info('User password update Request::' + JSON.stringify(service_data));
 
 			exportable.validateUpdatePasswordParams(service_data)
-				.then(() => { return exportable.updatePassword(cognito, config, service_data)})
+				.then(() =>  exportable.updatePassword(cognito, config, service_data))
 				.then(result => {
 					logger.info("Successfully updated password for user: " + service_data.email);
 					return cb(null, responseObj({ result: "success", errorCode: "0", message: "Successfully updated password for user: " + service_data.email }));
@@ -111,7 +110,7 @@ function handler(event, context, cb)  {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
 
 			exportable.validateCreaterUserParams(config, service_data)
-				.then((s) => {return exportable.createUser(cognito, config, s)})
+				.then((s) => exportable.createUser(cognito, config, s))
 				.then((s) => rp(exportable.getRequestToCreateSCMUser(config, service_data)))
 				.then(result => {
 					logger.info("User: " + service_data.userid + " registered successfully!");

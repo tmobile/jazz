@@ -1,6 +1,5 @@
 const assert = require('chai').assert;
 const expect = require('chai').expect;
-const should = require('chai').should();
 const awsContext = require('aws-lambda-mock-context');
 const  AWS  =  require('aws-sdk-mock');
 const sinon = require('sinon');
@@ -40,7 +39,7 @@ describe('User Management', function () {
 			'verificationCode': 'verificationCode',
 			'param': 'param'
 		}
-		let result = index.validateCreaterUserParams(config, event.body)
+		index.validateCreaterUserParams(config, event.body)
 			.catch(error => expect(error).to.include({
 				errorCode: '102',
 				errorType: 'BadRequest',
@@ -57,7 +56,7 @@ describe('User Management', function () {
 			"email": "abc@xyz.com"
 		}
 		
-		let result = index.validateCreaterUserParams(config, event.body)
+		index.validateCreaterUserParams(config, event.body)
 			.catch(error => expect(error).to.include({
 				errorCode: '102',
 				errorType: 'BadRequest',
@@ -74,7 +73,7 @@ describe('User Management', function () {
 			"email": "abc@xyz.com"
 		}
 		config.reg_codes = ['AAB123'];
-		let result = index.validateCreaterUserParams(config, event.body)
+		index.validateCreaterUserParams(config, event.body)
 			.catch(error => expect(error).to.include({
 				errorCode: '103',
 				errorType: 'BadRequest',
@@ -92,7 +91,7 @@ describe('User Management', function () {
 			"email": "abc@xyz.com"
 		}
 		config.reg_codes = ['AAB123'];		
-		let result = index.validateCreaterUserParams(config, event.body)
+		index.validateCreaterUserParams(config, event.body)
 			.then(res => expect(res).to.include({
 				username: 'username',
 				userid: 'userid',
@@ -109,14 +108,14 @@ describe('User Management', function () {
 		assert.isFalse(bool);
 	});
 
-	it('missing context should return 101 error', function (done) {
+	it('missing context should return 101 error', function () {
 		event = undefined;
 		context = undefined;
 		var bool = index.handler(event, context, callback).includes("Internal error, please reach out to admins") &&
-			index.handler(event, context, callback).includes("101");
-		done();
+			index.handler(event, context, callback).includes("101");		
 		assert.isTrue(bool);
 	});
+
 	it("should throw a invalid or missing arguments", function () {
 		event = {
 			"method": undefined,
@@ -176,14 +175,13 @@ describe("inside index handler", function () {
 		};
 
 	});
-	it('Should return forgotPassword success ', function (done) {
+
+	it('Should return forgotPassword success ', function () {
 		AWS.mock('CognitoIdentityServiceProvider', 'forgotPassword', function (params, callback) {
 			callback(null, 'success');
 		});
 		index.handler(event, context, (err, res) => {
-			done();
-			expect(res.data.result).to.eq("success");
-			return res;
+			expect(res.data.result).to.eq("success");			
 		});
 	});
 
@@ -216,14 +214,15 @@ describe("inside index handler", function () {
 			expect(JSON.parse(err).errorType).to.eq("102");
 		});
 	});
+
 	it('should go in catch funtion err with no param', function () {
 		const validateResetParams = sinon.stub(index, "validateResetParams").resolves("success");
 		const forgotPassword = sinon.stub(index, "forgotPassword").rejects({
 			error: "102"
 		});
 		index.handler(event, context, (err, res) => {
-      sinon.assert.calledOnce(validateResetParams);
-      sinon.assert.calledOnce(forgotPassword);
+			sinon.assert.calledOnce(validateResetParams);
+			sinon.assert.calledOnce(forgotPassword);
 			validateResetParams.restore();
 			forgotPassword.restore();
 			expect(JSON.parse(err).error).to.eq("102");
@@ -238,8 +237,8 @@ describe("inside index handler", function () {
 		});
 
 		index.handler(event, context, (err, res) => {
-      sinon.assert.calledOnce(validateResetParams);
-      sinon.assert.calledOnce(forgotPassword);
+			sinon.assert.calledOnce(validateResetParams);
+			sinon.assert.calledOnce(forgotPassword);
 			expect(JSON.parse(err).errorCode).to.eq("102");
 			validateResetParams.restore();
 			forgotPassword.restore();
@@ -286,23 +285,22 @@ describe("inside index handler updatepwd", function () {
 		};
 
 	});
-	it('Should return update password success ', function (done) {
+
+	it('Should return update password success ', function () {
 		AWS.mock('CognitoIdentityServiceProvider', 'confirmForgotPassword', function (params, callback) {
 			callback(null, 'success');
 		});
-		index.handler(event, context, (err, res) => {
-			done();
+		index.handler(event, context, (err, res) => {			
 			expect(res.data.result).to.eq("success");			
 		});
 	});
 
-	it('Should return updated password failure', function (done) {
+	it('Should return updated password failure', function () {
 		AWS.mock('CognitoIdentityServiceProvider', 'confirmForgotPassword', function (params, callback) {
 			callback(null, 'success');
 		});
 		event.body.password = undefined;
 		index.handler(event, context, (err, res) => {
-			done();
 			expect(err).to.includes("errorCode");			
 		});
 	});
@@ -333,9 +331,9 @@ describe("inside index handler updatepwd", function () {
 		index.validateUpdatePasswordParams(event.body)
 			.catch((error) => {
 				expect(error).to.include(responseObj);
-
 			});
 	});
+
 	it('should go in catch funtion err.errorType', function () {
 		const validateUpdatePasswordParams = sinon.stub(index, "validateUpdatePasswordParams").resolves("success");
 		const updatePassword = sinon.stub(index, "updatePassword").rejects({
@@ -343,13 +341,14 @@ describe("inside index handler updatepwd", function () {
 		});
 
 		index.handler(event, context, (err, res) => {
-      sinon.assert.calledOnce(validateUpdatePasswordParams);
-      sinon.assert.calledOnce(updatePassword);
+			sinon.assert.calledOnce(validateUpdatePasswordParams);
+			sinon.assert.calledOnce(updatePassword);
 			validateUpdatePasswordParams.restore();
 			updatePassword.restore();
 			expect(JSON.parse(err).errorType).to.eq("102");
 		});
 	});
+
 	it('should go in catch funtion err.code', function () {
 		const validateUpdatePasswordParams = sinon.stub(index, "validateUpdatePasswordParams").resolves("success");
 		const updatePassword = sinon.stub(index, "updatePassword").rejects({
@@ -358,21 +357,22 @@ describe("inside index handler updatepwd", function () {
 		});
 
 		index.handler(event, context, (err, res) => {
-      sinon.assert.calledOnce(validateUpdatePasswordParams);
-      sinon.assert.calledOnce(updatePassword);
+			sinon.assert.calledOnce(validateUpdatePasswordParams);
+			sinon.assert.calledOnce(updatePassword);
 			expect(JSON.parse(err).errorCode).to.eq("102");
 			validateUpdatePasswordParams.restore();
 			updatePassword.restore();
 		});
 	});
+
 	it('should go in catch funtion err.errorType', function () {
 		const validateUpdatePasswordParams = sinon.stub(index, "validateUpdatePasswordParams").resolves("success");
 		const updatePassword = sinon.stub(index, "updatePassword").rejects({
 			message: "error"
 		});
 		index.handler(event, context, (err, res) => {
-      sinon.assert.calledOnce(validateUpdatePasswordParams);
-      sinon.assert.calledOnce(updatePassword);
+			sinon.assert.calledOnce(validateUpdatePasswordParams);
+			sinon.assert.calledOnce(updatePassword);
 			expect(JSON.parse(err).errorCode).to.eq("106");
 			validateUpdatePasswordParams.restore();
 			updatePassword.restore();
