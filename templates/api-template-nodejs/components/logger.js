@@ -90,12 +90,12 @@ module.exports = function () {
     const log = (level, message) => {
         const timestamp = new Date().toISOString();
         const logLevelMessageTypes = {
-            'error': ` ${message}`,
-            'warn': ` ${message}`,
-            'info': ` ${message}`,
-            'verbose': ` ${message}`,
-            'debug': ` ${message}`,
-            'log': ` ${message}`
+            'error': message}
+            'warn': message,
+            'info': message,
+            'verbose': message,
+            'debug': message,
+            'log': message
         };
         /*
             @TODO: format message as per requirement.
