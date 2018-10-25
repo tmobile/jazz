@@ -37,25 +37,11 @@ def checkKinesisStreamExists(stream_name) {
   }
 }
 
-def updateKinesisResourceServerless(stream_name){
-  def event_stream_arn = getKinesisStreamArn(stream_name)
+def updateKinesisResourceServerless(event_stream_arn){
   sh "sed -i -- 's/resources/resourcesDisabled/g' ./serverless.yml"
   sh "sed -i -- '/#Start:streamGetArn/,/#End:streamGetArn/d' ./serverless.yml"
   sh "sed -i -- 's/arnDisabled/arn/g' ./serverless.yml"
   sh "sed -i -- 's|{event_stream_arn}|${event_stream_arn}|g' ./serverless.yml"
-}
-
-def getKinesisStreamArn(stream_name){
-  try {
-    def response = sh(
-      script: "aws kinesis describe-stream --stream-name ${stream_name} --profile cloud-api --output json",
-      returnStdout: true
-    ).trim()
-    def mappings = parseJson(response)
-    return mappings.StreamDescription.StreamARN
-  } catch (ex) {
-    error "Error occured while describing the stream details"
-  }
 }
 
 def getRoleArn(role_name) {
@@ -99,17 +85,17 @@ def checkSqsQueueExists(queueName) {
   }
 }
 
-def checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn){
+def checkIfDifferentFunctionTriggerAttached(event_source_arn, lambda_arn){
    try {
       response = sh(
-        script: "aws lambda list-event-source-mappings --event-source-arn  ${event_source_sqs_arn} --profile cloud-api --output json",
+        script: "aws lambda list-event-source-mappings --event-source-arn  ${event_source_arn} --profile cloud-api --output json",
         returnStdout: true
       ).trim()
-      echo "queue_details : $response"
-      def queue_details = parseJson(response)
+      echo "mapping_details : $response"
+      def mapping_details = parseJson(response)
       def isDifferentLambdaAttached  = false
-      if(queue_details.EventSourceMappings.size() > 0) {
-        for (details in queue_details.EventSourceMappings) {
+      if(mapping_details.EventSourceMappings.size() > 0) {
+        for (details in mapping_details.EventSourceMappings) {
           if(details.FunctionArn) {
             if (details.FunctionArn != lambda_arn ){
               isDifferentLambdaAttached  = true
@@ -120,7 +106,7 @@ def checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn){
       }
       return isDifferentLambdaAttached
    } catch (ex) {
-     error "Exception occured while listing the event source mapping for SQS queue."
+     error "Exception occured while listing the event source mapping."
    }
 }
 
@@ -190,29 +176,51 @@ def putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3Buck
   def new_events = []
   new_lambda_configuration.LambdaFunctionArn = lambdaARN
 
-  try {
-    if (existing_notifications != null && existing_notifications.size() > 0) {
-      new_s3_event_configuration = getS3Events(existing_notifications, events, lambdaARN)
-    } else {
-      new_events = checkAndConvertEvents(events)
-      new_lambda_configuration.Events = new_events
-      lambdaFunctionConfigurations.add(new_lambda_configuration)
-      new_s3_event_configuration.LambdaFunctionConfigurations = lambdaFunctionConfigurations
+  if (existing_notifications != null && existing_notifications.size() > 0) {
+    if(checkIfDifferentFunctionTriggerAttachedForS3(existing_notifications, lambdaARN, events)) {
+      echo "S3 bucket contains a different event source with same or higher priority event trigger already. Please remove the existing event trigger and try again."
+      error "S3 bucket contains a different event source with same or higher priority event trigger already. Please remove the existing event trigger and try again."
     }
-
-    echo "new existing_notifications : $new_s3_event_configuration"
-    if (new_s3_event_configuration != null && new_s3_event_configuration.size() > 0) {
-      def newNotificationJson = JsonOutput.toJson(new_s3_event_configuration)
-      def response = sh(returnStdout: true, script: "aws s3api put-bucket-notification-configuration --bucket $s3BucketName --notification-configuration \'${newNotificationJson}\' --output json")
-    }
-  } catch (ex) {
+    new_s3_event_configuration = getS3Events(existing_notifications, events, lambdaARN)
+  } else {
+    new_events = checkAndConvertEvents(events)
+    new_lambda_configuration.Events = new_events
+    lambdaFunctionConfigurations.add(new_lambda_configuration)
+    new_s3_event_configuration.LambdaFunctionConfigurations = lambdaFunctionConfigurations
   }
+
+  echo "new existing_notifications : $new_s3_event_configuration"
+  if (new_s3_event_configuration != null && new_s3_event_configuration.size() > 0) {
+    def newNotificationJson = JsonOutput.toJson(new_s3_event_configuration)
+    def response = sh(returnStdout: true, script: "aws s3api put-bucket-notification-configuration --bucket $s3BucketName --notification-configuration \'${newNotificationJson}\' --output json")
+  }
+}
+
+def checkIfDifferentFunctionTriggerAttachedForS3(existing_notifications, lambdaARN, events_action) {
+ def existing_events = []
+ def isDifferentEventSourceAttached = false
+
+  for (item in existing_notifications) {
+    eventConfigs = item.value
+    for (event_config in eventConfigs) {
+      existing_events.addAll(event_config.Events)
+    }
+  }
+
+  for (item in events_action) {
+    if ((item.contains("ObjectCreated") && existing_events.contains("s3:ObjectCreated:*")) ||
+      (item.contains("ObjectRemoved") && existing_events.contains("s3:ObjectRemoved:*")) ||
+      existing_events.contains(item)) {
+      isDifferentEventSourceAttached = true
+    }
+  }
+
+ return isDifferentEventSourceAttached
 }
 
 def getS3Events(existing_notifications, events_action, lambdaARN){
   def existing_events = []
   def new_events = []
-  def new_events_action = []
   def lambdaFunctionConfigurations = []
   def new_lambda_configuration = [:]
   def existing_event_configs = [:]
@@ -221,7 +229,6 @@ def getS3Events(existing_notifications, events_action, lambdaARN){
 
   for (item in events_action) {
     new_events.add(item)
-    new_events_action.add(item)
   }
 
   for (item in existing_notifications) {
@@ -236,27 +243,14 @@ def getS3Events(existing_notifications, events_action, lambdaARN){
   def cleanupIndex = -1
   echo "events . $events_action"
 
-  // Removing the existing events from the new event list
-  // If the existing event has (*)
-  for (item in events_action) {
-    cleanupIndex++
-    if ((item.contains("ObjectCreated") && existing_events.contains("s3:ObjectCreated:*")) ||
-      (item.contains("ObjectRemoved") && existing_events.contains("s3:ObjectRemoved:*")) ||
-      existing_events.contains(item)) {
-      new_events[cleanupIndex] = null
-    }
-  }
-
-  new_events.removeAll([null])
-
   // Checking the existing events
   // If the new event has (*)
   def isCreationEvent = false
   def isRemovalEvent = false
-  if (new_events_action.contains("s3:ObjectCreated:*")) {
+  if (new_events.contains("s3:ObjectCreated:*")) {
     isCreationEvent = true
   }
-  if (new_events_action.contains("s3:ObjectRemoved:*")) {
+  if (new_events.contains("s3:ObjectRemoved:*")) {
     isRemovalEvent = true
   }
 
@@ -273,7 +267,7 @@ def getS3Events(existing_notifications, events_action, lambdaARN){
     cleanupIndex = -1
     for (event_config in eventConfigs) {
       cleanupIndex++
-      eventStr = event_config.Events.join(",")
+       eventStr = event_config.Events.join(",")
       if ((eventStr.contains("ObjectCreated") && !eventStr.contains("s3:ObjectCreated:*") && isCreationEvent == true) ||
         (eventStr.contains("ObjectRemoved") && !eventStr.contains("s3:ObjectRemoved:*") && isRemovalEvent == true)) {
         existing_event_configs[item.key][cleanupIndex] = null

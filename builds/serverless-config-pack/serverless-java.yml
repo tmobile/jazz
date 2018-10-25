@@ -64,7 +64,7 @@ functions:
           #Start:streamGetArn
           arn:
             Fn::GetAtt:
-              - {event_source_kinesis}
+              - sourceKinesisStreams
               - Arn
           #End:streamGetArn
           #Start:streamArn
@@ -106,7 +106,7 @@ resourcesDisabled:
     #End:isSqsResourceNotExist
     #End:isSQSEventEnabled
     #Start:isStreamEnabled
-    {event_source_kinesis}:
+    sourceKinesisStreams:
       Type: AWS::Kinesis::Stream
       Properties:
         Name: {event_source_kinesis}

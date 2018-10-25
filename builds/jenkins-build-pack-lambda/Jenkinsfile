@@ -332,6 +332,7 @@ node() {
 
 def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld) {
   def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
+  s3BucketName = getEventS3BucketName(s3BucketName, environment_logical_id)
   if (deployOutput.contains(s3BucketErrString)) {
     if (lambdaEvents.checkS3BucketExists(s3BucketName)) {
       isLambdaUpdateRequired = true
@@ -369,12 +370,18 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, envBuck
   }
 }
 
-def handleKinesisStreamError(deployOutput, event_source_kinesis, environment_logical_id, envBucketKey) {
+def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, environment_logical_id, envBucketKey) {
   def kinesisStreamErrString = "CloudFormation - CREATE_FAILED - AWS::Kinesis::Stream - "
-  event_source_kinesis = getKinesisStreamName(event_source_kinesis)
+  def event_source_kinesis = getKinesisStreamName(event_source_kinesis_stream_arn, environment_logical_id)
+  event_source_kinesis_stream_arn = getKinesisStreamArn(event_source_kinesis_stream_arn, environment_logical_id)
+  def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
   if (deployOutput.contains(kinesisStreamErrString)) {
     if (lambdaEvents.checkKinesisStreamExists(event_source_kinesis)) {
-      lambdaEvents.updateKinesisResourceServerless(event_source_kinesis)
+      if(lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_kinesis_stream_arn, lambda_arn)){
+        echo "Kinesis stream contains a different function trigger already. Please remove the existing function trigger and try again."
+        error "Kinesis stream contains a different function trigger already. Please remove the existing function trigger and try again."
+      }
+      lambdaEvents.updateKinesisResourceServerless(event_source_kinesis_stream_arn)
       deleteAndRedeployService(environment_logical_id, envBucketKey)
     } else {
       error "Error occured while accessing the Kinesis stream"
@@ -395,6 +402,13 @@ def deleteAndRedeployService(environment_logical_id, envBucketKey){
   }
 }
 
+def getEventS3BucketName(event_source_s3, environment_logical_id) {
+  if(environment_logical_id != "prod"){
+    event_source_s3 = "${event_source_s3}-${environment_logical_id}"
+  }
+  return event_source_s3
+}
+
 def getSqsQueueName(event_source_sqs_arn, environment_logical_id) {
   def event_source_sqs = event_source_sqs_arn.split(":(?!.*:.*)")[1]
   if(environment_logical_id != "prod"){
@@ -410,9 +424,19 @@ def getSqsQueueArn(event_source_sqs_arn, environment_logical_id) {
   return event_source_sqs_arn
 }
 
-def getKinesisStreamName(event_source_kinesis) {
+def getKinesisStreamName(event_source_kinesis, environment_logical_id) {
   def stream_arn = event_source_kinesis.split("/")[1]
+  if(environment_logical_id != "prod"){
+    stream_arn = "${stream_arn}_${environment_logical_id}"
+  }
   return stream_arn
+}
+
+def getKinesisStreamArn(event_source_kinesis, environment_logical_id) {
+  if(environment_logical_id != "prod"){
+      event_source_kinesis = "${event_source_kinesis}_${environment_logical_id}"
+  }
+  return event_source_kinesis
 }
 
 def echoServerlessFile() {
@@ -738,12 +762,14 @@ def writeServerlessFile(config, env) {
   if (config['artifact']) {
     sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
   }
+
   if (config['mainClass']) {
     sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
   }
 
   if (config['event_source_s3']) {
-    sh "sed -i -- 's/{event_source_s3}/${config['event_source_s3']}/g' ./serverless.yml"
+    def event_source_s3 =  getEventS3BucketName(config['event_source_s3'], env)
+    sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
     sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
   }
 
@@ -757,9 +783,9 @@ def writeServerlessFile(config, env) {
   }
 
   if (config['event_source_kinesis']) {
-    def event_source_kinesis = getKinesisStreamName(config['event_source_kinesis'])
+    def event_source_kinesis = getKinesisStreamName(config['event_source_kinesis'], env)
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-    sh "sed -i -- 's/{event_source_kinesis}/${event_source_kinesis}/g' ./serverless.yml"
+    sh "sed -i -- 's|{event_source_kinesis}|${event_source_kinesis}|g' ./serverless.yml"
   }
 
   if (config['event_source_dynamodb']) {
