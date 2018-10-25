@@ -36,7 +36,7 @@ function handler(event, context, callback) {
   logger.debug('Received event:' + JSON.stringify(event));
   let errorHandler = errorHandlerModule();
   let config = configData.getConfig(event, context);
-  let isSplunkEnabled = (global_config.ENABLE_SPLUNK).toLowerCase() == 'true' ? true : false;
+  let isSplunkEnabled = (global_config.ENABLE_SPLUNK && (global_config.ENABLE_SPLUNK).toLowerCase()) == 'true' ? true : false;
 
   if (isSplunkEnabled && event.Records && event.Records.length) {
     const loggerConfig = {
