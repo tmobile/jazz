@@ -102,7 +102,7 @@ describe("getAuthResponse", () => {
 
 });
 describe("checkforInterestedEvents", () => {
-  it("should return object with paramenter interested_event set to true", () => {
+  it("should return object with parameter interested_event set to true", () => {
     var record = event.Records[0];
     var sequenceNumber = record.kinesis.sequenceNumber;
     var encodedPayload = record.kinesis.data;
@@ -110,7 +110,7 @@ describe("checkforInterestedEvents", () => {
       assert.isTrue(res.interested_event);
     });
   });
-  it("should reject with paramenter interested_event set to false", () => {
+  it("should reject with parameter interested_event set to false", () => {
     var payload = {
       Item: {
         EVENT_ID: {
