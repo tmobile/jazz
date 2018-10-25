@@ -13,13 +13,13 @@
  */
 
 import { browser, by, element, $, $$ } from 'protractor';
+import { CONFIGURATIONS } from '../../src/config/configuration';
 const fs = require('fs');
-const applicationDomain = '';
-
+const config = CONFIGURATIONS.optional.general.e2e;
 export class Jazz {
 
   navigateToJazzGet() {
-    return browser.driver.get(applicationDomain);
+    return browser.driver.get(config.APPLN_URL);
   }
   getCreateService() {
     return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/btn-primary-with-icon[@text="CREATE SERVICE"]'));
@@ -105,5 +105,4 @@ export class Jazz {
   getDone() {
      return element(by.xpath('//section[@class="footer-btn"]/btn-jazz-primary[@text="DONE"]/button[text()="DONE"]'));
     }
-
- }
+  }

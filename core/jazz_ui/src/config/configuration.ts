@@ -23,8 +23,12 @@ export const CONFIGURATIONS = {
           ACCESS_MANAGEMENT_PORTAL_URL: '',
           e2e: {
             EMAIL_ID: '',
-            USER_NAME: '', // Add NT ID for e2e login
-            PASSWORD: '' // Add respective password for e2e login
+            USER_NAME: '', 
+            PASSWORD: '', 
+			REG_USER_NAME: '' + Date.now() + '',
+            REG_PASS_WORD: '',
+            REG_CODE: '',
+            APPLN_URL: ''
           }
       }
   }

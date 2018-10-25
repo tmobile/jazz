@@ -18,94 +18,78 @@ import { CONFIGURATIONS } from '../../src/config/configuration';
 import { Timeouts } from 'selenium-webdriver';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 
-
 const timeOutHigh = 1800000;
 const emailId = CONFIGURATIONS.optional.general.e2e.EMAIL_ID;
 
 describe('Overview', () => {
-  let jazzServices_po: Jazz;
-  const EC = protractor.ExpectedConditions;
-  let winhandle;
-  let servicename;
-
-  beforeAll(() => {
+    let jazzServices_po: Jazz;
+    const EC = protractor.ExpectedConditions;
+    let winhandle;
+    let servicename;
+beforeAll(() => {
     jazzServices_po = new Jazz();
     });
-
       function createservice(servicename)
       {
         jazzServices_po.getServiceName().sendKeys(servicename);
         jazzServices_po.getNameSpace().sendKeys('jazztest');
-        //This code is for internal Jazz-If needed
-        //jazzServices_po.getApplication().sendKeys('ABC Services');
-        //jazzServices_po.getApplicationClick().click();
         jazzServices_po.getServiceDescription().sendKeys('Testing');
       }
       function serviceapprover()
       {
-        //This code is for internal Jazz-If needed
-        //jazzServices_po.getApprover().sendKeys('');
-        //jazzServices_po.getApproverClick().click();
         browser.driver.sleep(5000);
         jazzServices_po.getSubmit().click();
         jazzServices_po.getDone().click();
       }
-    it('Create API Service', () => {
-      //For API
-      browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
-      browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
-      winhandle = browser.getWindowHandle();
-      jazzServices_po.getCreateService().click();
-      servicename='servicename' + Date.now();
-      createservice(servicename);
-      serviceapprover();
-      browser.driver.sleep(15000);
-      expect(jazzServices_po.getAPIServiceName().getText()).toEqual(servicename);
-      expect(jazzServices_po.getAPIType().getText()).toEqual('api');
-      expect(jazzServices_po.getAPIStatus().getText()).toEqual('creation started');
-
+  it('Create API Service', () => {
+        browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
+        browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
+        winhandle = browser.getWindowHandle();
+        jazzServices_po.getCreateService().click();
+        servicename='servicename' + Date.now();
+        createservice(servicename);
+        serviceapprover();
+        browser.driver.sleep(15000);
+        expect(jazzServices_po.getAPIServiceName().getText()).toEqual(servicename);
+        expect(jazzServices_po.getAPIType().getText()).toEqual('api');
+        expect(jazzServices_po.getAPIStatus().getText()).toEqual('creation started');
     });
-      it('Create Lamda Service', () => {
-      //For Lambda
-      browser.driver.switchTo().activeElement();
-      browser.driver.sleep(5000);
-      browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
-      browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
-      jazzServices_po.getCreateService().click();
-      browser.driver.switchTo().activeElement();
-      browser.driver.sleep(5000);
-      jazzServices_po.getLambda().click();
-      servicename='servicename' + Date.now();
-      createservice(servicename);
-      jazzServices_po.getEventScheduleFixedRate().click();
-      serviceapprover();
-      browser.driver.sleep(15000);
-      expect(jazzServices_po.getFunctionServiceName().getText()).toEqual(servicename);
-      expect(jazzServices_po.getFunctionType().getText()).toEqual('function');
-      expect(jazzServices_po.getFunctionStatus().getText()).toEqual('creation started');
-
+  it('Create Lamda Service', () => {
+        browser.driver.switchTo().activeElement();
+        browser.driver.sleep(5000);
+        browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
+        browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
+        jazzServices_po.getCreateService().click();
+        browser.driver.switchTo().activeElement();
+        browser.driver.sleep(5000);
+        jazzServices_po.getLambda().click();
+        servicename='servicename' + Date.now();
+        createservice(servicename);
+        jazzServices_po.getEventScheduleFixedRate().click();
+        serviceapprover();
+        browser.driver.sleep(15000);
+        expect(jazzServices_po.getFunctionServiceName().getText()).toEqual(servicename);
+        expect(jazzServices_po.getFunctionType().getText()).toEqual('function');
+        expect(jazzServices_po.getFunctionStatus().getText()).toEqual('creation started');
     });
-
-      it('Create Website Service', () => {
-      //For Website
-      browser.driver.switchTo().activeElement();
-      browser.driver.sleep(5000);
-      browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
-      browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
-      jazzServices_po.getCreateService().click();
-      browser.driver.switchTo().activeElement();
-      browser.driver.sleep(5000);
-      jazzServices_po.getWebsite().click();
-      servicename='servicename' + Date.now();
-      createservice(servicename);
-      serviceapprover();
-      browser.driver.sleep(15000);
-      expect(jazzServices_po.getWebsiteServiceName().getText()).toEqual(servicename);
-      expect(jazzServices_po.getWebsiteType().getText()).toEqual('website');
-      expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('creation started');
-
-      });
-
+  it('Create Website Service', () => {
+        browser.driver.switchTo().activeElement();
+        browser.driver.sleep(5000);
+        browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
+        browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
+        jazzServices_po.getCreateService().click();
+        browser.driver.switchTo().activeElement();
+        browser.driver.sleep(5000);
+        jazzServices_po.getWebsite().click();
+        servicename='servicename' + Date.now();
+        createservice(servicename);
+        serviceapprover();
+        browser.driver.sleep(15000);
+        expect(jazzServices_po.getWebsiteServiceName().getText()).toEqual(servicename);
+        expect(jazzServices_po.getWebsiteType().getText()).toEqual('website');
+        expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('creation started');
+    });
+   
     });
 
 

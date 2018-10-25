@@ -30,7 +30,7 @@ describe('register', () => {
     JazzServices_po = new Jazz();
   });
   
-  it('register', () => {
+  it('backtologin', () => {
     JazzServices_po.navigateToJazzGet();
     browser.wait(EC.visibilityOf(register_po.getLoginButton()), timeOutHigh);
     browser.driver.switchTo().activeElement();
@@ -40,6 +40,10 @@ describe('register', () => {
     register_po.getRegister().click();
     browser.sleep(4000);
     register_po.getBackToLogin().click();
+    
+  });
+
+  it('register', () => {
     browser.refresh();
     browser.driver.switchTo().activeElement();
     register_po.getLoginButton().click();
@@ -51,5 +55,4 @@ describe('register', () => {
     register_po.getRegisterButton().click();
     browser.sleep(4000);
   });
-
-});
+  });
