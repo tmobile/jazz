@@ -273,12 +273,14 @@ node() {
             }
           } else {
             if (config['event_source_s3']) {
-              def s3_bucket_arn = "arn:aws:s3:::${config['event_source_s3']}"
+              def s3_bucket_arn = getS3BucketArn(config['event_source_s3'], environment_logical_id)
               events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", s3_bucket_arn, "s3", config), environment_logical_id);
             } else if (config['event_source_sqs']) {
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws",  getSqsQueueArn(config['event_source_sqs'], environment_logical_id), "sqs", config), environment_logical_id);
+              def event_source_sqs_arn =  getSqsQueueArn(config['event_source_sqs'], environment_logical_id)
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws",  event_source_sqs_arn, "sqs", config), environment_logical_id);
             } else if (config['event_source_kinesis']) {
-             events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", config['event_source_kinesis'], "kinesis_stream", config), environment_logical_id);
+              def event_source_kinesis_stream_arn = getKinesisStreamArn(config['event_source_kinesis'], environment_logical_id)
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", event_source_kinesis_stream_arn, "kinesis_stream", config), environment_logical_id);
             }
           }
 
@@ -407,6 +409,14 @@ def getEventS3BucketName(event_source_s3, environment_logical_id) {
     event_source_s3 = "${event_source_s3}-${environment_logical_id}"
   }
   return event_source_s3
+}
+
+def getS3BucketArn(event_source_s3, environment_logical_id) {
+ def bucket_arn = "arn:aws:s3:::${event_source_s3}"
+ if(environment_logical_id != "prod"){
+    bucket_arn = "${bucket_arn}_${environment_logical_id}"
+  }
+  return bucket_arn
 }
 
 def getSqsQueueName(event_source_sqs_arn, environment_logical_id) {
