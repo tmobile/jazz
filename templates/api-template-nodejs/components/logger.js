@@ -90,7 +90,7 @@ module.exports = function () {
     const log = (level, message) => {
         const timestamp = new Date().toISOString();
         const logLevelMessageTypes = {
-            'error': message}
+            'error': message,
             'warn': message,
             'info': message,
             'verbose': message,
