@@ -98,7 +98,6 @@ module.exports = function () {
             'debug': `${timestamp} DEBUG \t${config.requestDetails} ${message}`,
             'log': `${timestamp} ${level} \t${config.requestDetails} ${message}`
         };
-
         /*
             @TODO: format message as per requirement.
             Will it be just a string / json. Should we except error object also?
