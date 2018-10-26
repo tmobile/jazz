@@ -358,7 +358,6 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, envBuck
     def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
     if (lambdaEvents.checkSqsQueueExists(event_source_sqs)) {
       if(lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn)){
-        echo "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
         error "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
       }
       lambdaEvents.updateSqsResourceServerless()
@@ -380,7 +379,6 @@ def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, envi
   if (deployOutput.contains(kinesisStreamErrString)) {
     if (lambdaEvents.checkKinesisStreamExists(event_source_kinesis)) {
       if(lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_kinesis_stream_arn, lambda_arn)){
-        echo "Kinesis stream contains a different function trigger already. Please remove the existing function trigger and try again."
         error "Kinesis stream contains a different function trigger already. Please remove the existing function trigger and try again."
       }
       lambdaEvents.updateKinesisResourceServerless(event_source_kinesis_stream_arn)
