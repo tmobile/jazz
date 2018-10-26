@@ -99,7 +99,8 @@ def checkIfDifferentFunctionTriggerAttached(event_source_arn, lambda_arn){
           if(details.FunctionArn) {
             if (details.FunctionArn != lambda_arn ){
               isDifferentLambdaAttached  = true
-              echo "Trigger attached already."
+              echo "Function trigger attached already: ${details.FunctionArn}"
+              break;
             }
           }
         }
@@ -178,7 +179,6 @@ def putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3Buck
 
   if (existing_notifications != null && existing_notifications.size() > 0) {
     if(checkIfDifferentFunctionTriggerAttachedForS3(existing_notifications, lambdaARN, events)) {
-      echo "S3 bucket contains a different event source with same or higher priority event trigger already. Please remove the existing event trigger and try again."
       error "S3 bucket contains a different event source with same or higher priority event trigger already. Please remove the existing event trigger and try again."
     }
     new_s3_event_configuration = getS3Events(existing_notifications, events, lambdaARN)
@@ -212,6 +212,7 @@ def checkIfDifferentFunctionTriggerAttachedForS3(existing_notifications, lambdaA
       (item.contains("ObjectRemoved") && existing_events.contains("s3:ObjectRemoved:*")) ||
       existing_events.contains(item)) {
       isDifferentEventSourceAttached = true
+      break
     }
   }
 
