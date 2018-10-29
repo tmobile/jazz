@@ -48,6 +48,7 @@ describe('register', () => {
     browser.driver.switchTo().activeElement();
     register_po.getLoginButton().click();
     browser.driver.switchTo().activeElement();
+    browser.sleep(4000);
     register_po.getRegister().click();
     register_po.getUserName().sendKeys(config.REG_USER_NAME);
     register_po.getPassword().sendKeys(config.REG_PASS_WORD);

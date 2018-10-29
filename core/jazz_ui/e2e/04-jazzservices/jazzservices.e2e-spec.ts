@@ -18,7 +18,7 @@ import { CONFIGURATIONS } from '../../src/config/configuration';
 import { Timeouts } from 'selenium-webdriver';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 
-const timeOutHigh = 1800000;
+const timeOutHigh = 180000;
 const emailId = CONFIGURATIONS.optional.general.e2e.EMAIL_ID;
 
 describe('Overview', () => {
@@ -54,7 +54,7 @@ beforeAll(() => {
         expect(jazzServices_po.getAPIType().getText()).toEqual('api');
         expect(jazzServices_po.getAPIStatus().getText()).toEqual('creation started');
     });
-  it('Create Lamda Service', () => {
+    it('Create Lamda Service', () => {
         browser.driver.switchTo().activeElement();
         browser.driver.sleep(5000);
         browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
@@ -71,8 +71,8 @@ beforeAll(() => {
         expect(jazzServices_po.getFunctionServiceName().getText()).toEqual(servicename);
         expect(jazzServices_po.getFunctionType().getText()).toEqual('function');
         expect(jazzServices_po.getFunctionStatus().getText()).toEqual('creation started');
-    });
-  it('Create Website Service', () => {
+  });
+it('Create Website Service', () => {
         browser.driver.switchTo().activeElement();
         browser.driver.sleep(5000);
         browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
@@ -88,9 +88,91 @@ beforeAll(() => {
         expect(jazzServices_po.getWebsiteServiceName().getText()).toEqual(servicename);
         expect(jazzServices_po.getWebsiteType().getText()).toEqual('website');
         expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('creation started');
-    });
-   
-    });
+  });
+ it('Verify API Service Page Title', () => {
+       browser.wait(EC.visibilityOf(jazzServices_po.getAPIServiceName()), timeOutHigh);
+       browser.wait(EC.elementToBeClickable(jazzServices_po.getAPIServiceName()), timeOutHigh);
+       jazzServices_po.getAPIServiceName().click();
+       browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+       browser.sleep(45000);
+       browser.refresh();
+       browser.driver.switchTo().activeElement();
+       jazzServices_po.getRefresh().click();
+       browser.sleep(30000);
+  });
+  it('Verify API Prod Service', () => {
+      browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+      jazzServices_po.getProdName().click();
+  });   
+  it('Verify API Asset Service', () => {
+      browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
+      browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
+      browser.driver.switchTo().activeElement();
+      browser.sleep(15000);
+      jazzServices_po.getRefresh().click();
+      browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
+      jazzServices_po.getRefresh().click();
+      browser.wait(EC.visibilityOf(jazzServices_po.getAsset()), timeOutHigh);
+      jazzServices_po.getAsset().click();
+      browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
+      browser.sleep(4000);
+      browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
+      jazzServices_po.getServiceFromAsset().click();
+  });
+  it('Verify lamda function Page Title', () => {
+      browser.wait(EC.visibilityOf(jazzServices_po.getAPIServiceName()), timeOutHigh);
+      browser.wait(EC.elementToBeClickable(jazzServices_po.getAPIServiceName()), timeOutHigh);
+      jazzServices_po.getLamdaName().click();
+      browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+      browser.sleep(45000);
+      browser.refresh();
+      browser.driver.switchTo().activeElement();
+      jazzServices_po.getRefresh().click();
+      browser.sleep(40000);
+      browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+      jazzServices_po.getProdName().click();
+      browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
+      browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
+      browser.driver.switchTo().activeElement();
+      browser.sleep(15000);
+      jazzServices_po.getRefresh().click();
+      browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
+      jazzServices_po.getRefresh().click();
+      browser.wait(EC.visibilityOf(jazzServices_po.getAsset()), timeOutHigh);
+      jazzServices_po.getAsset().click();
+      browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
+      browser.sleep(4000);
+      browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
+      jazzServices_po.getServiceFromAsset().click();
+  });
+it('Verify Website Page Title', () => {
+      browser.wait(EC.visibilityOf(jazzServices_po.getAPIServiceName()), timeOutHigh);
+      browser.wait(EC.elementToBeClickable(jazzServices_po.getAPIServiceName()), timeOutHigh);
+      jazzServices_po.getWebsiteName().click();
+      browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+      browser.sleep(45000);
+      browser.refresh();
+      browser.driver.switchTo().activeElement();
+      jazzServices_po.getRefresh().click();
+      browser.sleep(30000);
+      browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+      jazzServices_po.getProdName().click();
+      browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
+      browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
+      browser.driver.switchTo().activeElement();
+      browser.sleep(15000);
+      jazzServices_po.getRefresh().click();
+      browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
+      jazzServices_po.getRefresh().click();
+      browser.wait(EC.visibilityOf(jazzServices_po.getAsset()), timeOutHigh);
+      jazzServices_po.getAsset().click();
+      browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
+      browser.sleep(4000);
+      browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
+      jazzServices_po.getServiceFromAsset().click();
+    
+  });
+});
 
 
 
