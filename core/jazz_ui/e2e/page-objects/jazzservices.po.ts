@@ -136,4 +136,10 @@ export class Jazz {
   getWebsiteName(){
     return element(by.xpath('//div[@class="table-row pointer"]/div[text()="website"]/preceding-sibling::div'));  
   }
- }
+  getOverviewStatus(){
+    return element(by.xpath('//li[@class="x caps active" and contains(text(),"overview")]'));  
+  }
+  getDeploymentStatus(){
+    return element(by.xpath('//li[@class="x caps active" and contains(text(),"deployments")]'));  
+  }
+}
