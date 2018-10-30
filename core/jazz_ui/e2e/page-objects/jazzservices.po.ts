@@ -125,11 +125,8 @@ export class Jazz {
     return element(by.xpath('//div[@class="tab-component"]/div[@class="refresh-button"]/span[text()="Refresh"]'));
   }
   getServiceFromAsset(){
-    return element(by.xpath('/html/body/app-root/div/environment-detail/div/div[2]/div/section[1]/navigation-bar/div/div[1]/a'));
-  }
-  getServiceFromLamda(){
-    return element(by.xpath('/html/body/app-root/div/environment-detail/div/div[2]/div/section[1]/navigation-bar/div/div[1]/a'));
-  }
+    return element(by.xpath('//div[@class="navigation-item"]/span[@class="icon-icon-back hide"]/following-sibling::a[text()="Services"]'));
+  } 
   getLamdaName(){
     return element(by.xpath('//div[@class="table-row pointer"]/div[text()="function"]/preceding-sibling::div'));
   }
@@ -140,6 +137,9 @@ export class Jazz {
     return element(by.xpath('//li[@class="x caps active" and contains(text(),"overview")]'));  
   }
   getDeploymentStatus(){
-    return element(by.xpath('//li[@class="x caps active" and contains(text(),"deployments")]'));  
+    return element(by.xpath('//li[@class="x caps" and contains(text(),"deployments")]'));  
   }
-}
+  getDeploymentStatusVerify(){
+    return element(by.xpath('//div[@class="column status-col"]/div[@class="green"]'));
+  }
+ }
