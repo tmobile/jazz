@@ -286,10 +286,14 @@ def unDeployService(stage) {
 			}
 			def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 
-			// def apiRootFolder = getApiDocsFolder(stage) //aws s3 rm s3://bucket-name --recursive
-			// sh "aws s3 rm s3://${apiRootFolder}/${service_config['domain']}/${service_config['service']}/${stage} --recursive"
-			
-			sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]} --force "
+			def apiRootFolder = getApiDocsFolder(stage) //aws s3 rm s3://bucket-name --recursive
+			//empty bucket before deleting it. //
+			try {
+			    sh "aws s3 rm s3://${service_config['event_source_s3']}/ --recursive"
+			} catch (ex) {
+			    handleFailureEvent(ex.getMessage())
+		    }
+			sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
 			echo "Service undeployed"
 		} catch (ex) {
