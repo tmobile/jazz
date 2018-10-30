@@ -25,7 +25,6 @@ const configObj = require('../components/config.js');
 describe('jazz_admin', function () {
 
   beforeEach(function () {
-    spy = sinon.spy();
     event = {
       "stage": "test",
       "method": "GET",
@@ -78,7 +77,7 @@ describe('jazz_admin', function () {
 
     it("should indicate error while making request to gitlab repo", () => {
       config.SCM_TYPE = "gitlab";
-      var responseObj = {
+      let responseObj = {
         statusCode: 401,
         body: {
           data: {},
@@ -91,14 +90,14 @@ describe('jazz_admin', function () {
       index.getInstallerVarsJSON(config)
         .catch(error => {
           expect(error).to.include('Unauthorized');
+          sinon.assert.calledOnce(reqStub);
+          reqStub.restore();
         });
-      sinon.assert.calledOnce(reqStub);
-      reqStub.restore();
     });
 
     it("should indicate error while making request to bitbucket repo", () => {
       config.SCM_TYPE = "gitlab";
-      var responseObj = {
+      let responseObj = {
         statusCode: 401,
         body: {
           data: {},
@@ -111,13 +110,13 @@ describe('jazz_admin', function () {
       index.getInstallerVarsJSON(config)
         .catch(error => {
           expect(error).to.include('Unauthorized');
+          sinon.assert.calledOnce(reqStub);
+          reqStub.restore();
         });
-      sinon.assert.calledOnce(reqStub);
-      reqStub.restore();
     });
 
     it("should successfully get installer variables on request", () => {
-      var responseObj = {
+      let responseObj = {
         statusCode: 200,
         body: "{\"CRED_ID\": \"jazzaws\", \"INST_PRE\": \"jazzsw\"}"
       };
@@ -127,16 +126,16 @@ describe('jazz_admin', function () {
       index.getInstallerVarsJSON(config)
         .then(res => {
           expect(res).to.deep.eq(JSON.parse(responseObj.body));
+          sinon.assert.calledOnce(reqStub);
+          reqStub.restore();
         });
-      sinon.assert.calledOnce(reqStub);
-      reqStub.restore();
     });
   });
 
   describe('handler', () => {
 
     it("should indicate internal server error when admin file is not fetched", () => {
-      var responseObj = {
+      let responseObj = {
         statusCode: 401,
         body: {
           data: {},
@@ -147,14 +146,13 @@ describe('jazz_admin', function () {
       message = '{"errorType":"InternalServerError","message":"Failed to load config file."}';
       index.handler(event, context, (err, res) => {
         expect(err).to.include(message);
+        sinon.assert.calledOnce(getInstallerVarsJSON);
+        getInstallerVarsJSON.restore();
       });
-
-      sinon.assert.calledOnce(getInstallerVarsJSON);
-      getInstallerVarsJSON.restore();
     });
 
     it("should return admin file as response on success", () => {
-      var responseObj = {
+      let responseObj = {
         body: {
           "CRED_ID": "jazzaws", 
           "INST_PRE": "jazzsw"
