@@ -18,21 +18,20 @@ import { ForgotPassword } from '../page-objects/forgotpassword.po';
 const timeOutHigh = 180000;
 
 describe('forgotpassword', () => {
-  let forgotpassword_po: ForgotPassword;
-  const EC = protractor.ExpectedConditions;
+    let forgotpassword_po: ForgotPassword;
+    const EC = protractor.ExpectedConditions;
 
-  beforeAll(() => {
-    forgotpassword_po = new ForgotPassword();
-  });
+    beforeAll(() => {
+      forgotpassword_po = new ForgotPassword();
+    });
 
-  it('forgotpassword', () => {
-    browser.refresh();
-    browser.driver.switchTo().activeElement();
-    forgotpassword_po.getLoginPassButton().click();
-    browser.wait(EC.visibilityOf(forgotpassword_po.getForgotPasswordButton()), timeOutHigh);
-    forgotpassword_po.getForgotPasswordButton().click();
-    forgotpassword_po.getForgotPasswordSubmit().click();
-    forgotpassword_po.getBackToLogin().click();
- });
-
+    it('forgotpassword', () => {
+      browser.refresh();
+      browser.driver.switchTo().activeElement();
+      forgotpassword_po.getLoginPassButton().click();
+      browser.wait(EC.visibilityOf(forgotpassword_po.getForgotPasswordButton()), timeOutHigh);
+      forgotpassword_po.getForgotPasswordButton().click();
+      forgotpassword_po.getForgotPasswordSubmit().click();
+      forgotpassword_po.getBackToLogin().click();
+    });
 });

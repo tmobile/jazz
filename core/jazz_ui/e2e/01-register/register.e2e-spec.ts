@@ -21,39 +21,38 @@ const timeOutHigh = 180000;
 const config = CONFIGURATIONS.optional.general.e2e;
 
 describe('register', () => {
-  let register_po: Register;
-  let JazzServices_po: Jazz;
-  const EC = protractor.ExpectedConditions;
+    let register_po: Register;
+    let JazzServices_po: Jazz;
+    const EC = protractor.ExpectedConditions;
 
-  beforeAll(() => {
-    register_po = new Register();
-    JazzServices_po = new Jazz();
-  });
+    beforeAll(() => {
+      register_po = new Register();
+      JazzServices_po = new Jazz();
+    });
   
-  it('backtologin', () => {
-    JazzServices_po.navigateToJazzGet();
-    browser.wait(EC.visibilityOf(register_po.getLoginButton()), timeOutHigh);
-    browser.driver.switchTo().activeElement();
-    register_po.getLoginButton().click();
-    browser.driver.switchTo().activeElement();
-    browser.wait(EC.visibilityOf(register_po.getRegister()), timeOutHigh);
-    register_po.getRegister().click();
-    browser.sleep(4000);
-    register_po.getBackToLogin().click();
-    
-  });
+    it('backtologin', () => {
+      JazzServices_po.navigateToJazzGet();
+      browser.wait(EC.visibilityOf(register_po.getLoginButton()), timeOutHigh);
+      browser.driver.switchTo().activeElement();
+      register_po.getLoginButton().click();
+      browser.driver.switchTo().activeElement();
+      browser.wait(EC.visibilityOf(register_po.getRegister()), timeOutHigh);
+      register_po.getRegister().click();
+      browser.sleep(4000);
+      register_po.getBackToLogin().click();
+    });
 
-  it('register', () => {
-    browser.refresh();
-    browser.driver.switchTo().activeElement();
-    register_po.getLoginButton().click();
-    browser.driver.switchTo().activeElement();
-    browser.sleep(4000);
-    register_po.getRegister().click();
-    register_po.getUserName().sendKeys(config.REG_USER_NAME);
-    register_po.getPassword().sendKeys(config.REG_PASS_WORD);
-    register_po.getRegistrationCode().sendKeys(config.REG_CODE);
-    register_po.getRegisterButton().click();
-    browser.sleep(4000);
-  });
-  });
+    it('register', () => {
+      browser.refresh();
+      browser.driver.switchTo().activeElement();
+      register_po.getLoginButton().click();
+      browser.driver.switchTo().activeElement();
+      browser.sleep(4000);
+      register_po.getRegister().click();
+      register_po.getUserName().sendKeys(config.REG_USER_NAME);
+      register_po.getPassword().sendKeys(config.REG_PASS_WORD);
+      register_po.getRegistrationCode().sendKeys(config.REG_CODE);
+      register_po.getRegisterButton().click();
+      browser.sleep(4000);
+    });
+});
