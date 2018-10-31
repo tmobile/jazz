@@ -341,71 +341,101 @@ def checkAndConvertEvents(events){
   return new_events
 }
 
-def getStreamEnabledArn(tableStreamArn) {
-  def tableName = tableStreamArn.tokenize("/").last()
+def checkDynamoDbTableExists (event_source_dynamodb) {
   try {
-    sh "aws dynamodb describe-table --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json"
-    echo "${tableName} exist..."
-    def streamList = sh(
-      script: "aws dynamodbstreams list-streams --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json",
-      returnStdout: true
-    ).trim()
-    def streamListJson = parseJson(streamList)
-    def result = [
-      "isNewStream" : "fasle",
-      "data" : ""
-    ]
-
-    if (streamListJson.Streams.size() == 0) {
-      result.isNewStream = "true"
-      result.data = createDynamodbStream(tableName)
-      return result
-    } else {
-      def streamArnList = streamListJson.Streams
-      for (stream in streamArnList) {
-        def streamDetails = sh(
-          script: "aws dynamodbstreams describe-stream --stream-arn ${stream.StreamArn} --region ${config_loader.AWS.REGION} --output json",
-          returnStdout: true
-        ).trim()
-        def streamDetailsJson = parseJson(streamDetails)
-
-        if ((streamDetailsJson.StreamDescription.StreamStatus == "ENABLED") || (streamDetailsJson.StreamDescription.StreamStatus == "ENABLING")) {
-          result.isNewStream = "false"
-          result.data = stream.StreamArn
-          return result
-        } else if (streamArnList.last().StreamArn == stream.StreamArn) {
-          result.isNewStream = "true"
-          result.data = createDynamodbStream(tableName)
-          return result
-        }
-      }
-    }
-  } catch (ex) {
+    sh "aws dynamodb describe-table --table-name ${event_source_dynamodb} --region ${config_loader.AWS.REGION} --output json"
+    echo "${event_source_dynamodb} exist."
+    return true
+   } catch (ex) {
     def response
     try {
       response = sh(
-        script: "aws dynamodb describe-table --table-name ${tableName} --region ${config_loader.AWS.REGION} --output json 2<&1 | grep -c 'ResourceNotFoundException'",
+        script: "aws dynamodb describe-table --table-name ${event_source_dynamodb} --region ${config_loader.AWS.REGION} --output json 2<&1 | grep -c 'ResourceNotFoundException'",
         returnStdout: true
       ).trim()
     } catch (e) {
-      echo "Error occured while describing the dynamodb details"
     }
     if (response) {
-      echo "${tableName} does not exists"
+      return false
+      echo "${event_source_dynamodb} does not exists"
     } else {
       error "Error occured while describing the dynamodb details"
     }
   }
 }
 
-def createDynamodbStream(tableName) {
-  def tableDetails = sh(
-    script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES --region ${config_loader.AWS.REGION} --output json",
-    returnStdout: true
-  ).trim()
-  def tableDetailsJson = parseJson(tableDetails)
+def updateDynamoDbResourceServerless(event_stream_arn){
+  sh "sed -i -- '/#Start:isDynamoDbtableNotExist/,/#End:isDynamoDbtableNotExist/d' ./serverless.yml"
+  sh "sed -i -- '/#Start:dynamoDbstreamGetArn/,/#End:dynamoDbstreamGetArn/d' ./serverless.yml"
+  sh "sed -i -- 's/streamArnDisabled/arn/g' ./serverless.yml"
+  sh "sed -i -- 's|{event_dynamodb_stream_arn}|${event_stream_arn}|g' ./serverless.yml"
 
-  return tableDetailsJson.TableDescription.LatestStreamArn
+  sh "sed -i -- '/#Start:dynamoDbstreamGetArn/,/#End:dynamoDbstreamGetArn/d' ./policyFile.yml"
+  sh "sed -i -- 's|{event_dynamodb_stream_arn}|${event_stream_arn}|g' ./policyFile.yml"
+  sh  "sed -i -- 's/#ResourceDisabled/Resource/g' ./policyFile.yml"
+}
+
+def getDynamoDbStreamDetails(event_source_dynamodb) {
+  def stream_details
+  try {
+     def streamList = sh(
+      script: "aws dynamodbstreams list-streams --table-name ${event_source_dynamodb} --region ${config_loader.AWS.REGION} --output json",
+      returnStdout: true
+    ).trim()
+    echo "dynamodb table stream details : $streamList"
+    def streamListJson = parseJson(streamList)
+    if (streamListJson.Streams.size() == 0) {
+      echo "No streams are defined for the table."
+      stream_details = createDynamodbStream(event_source_dynamodb)
+    } else {
+      stream_details = checkDynamoDbTableHasEnabledStream (streamListJson.Streams)
+      if (!stream_details.isEnabled) {
+        stream_details = createDynamodbStream(event_source_dynamodb)
+      }
+    }
+    return stream_details
+  } catch (ex) {
+    error "Exception occured while listing the stream details of dynamodb table $event_source_dynamodb"
+  }
+}
+
+def checkDynamoDbTableHasEnabledStream (Streams) {
+  def stream_details = [
+    "isEnabled" : false
+  ]
+  for (stream in Streams) {
+      def streamDetails = sh(
+        script: "aws dynamodbstreams describe-stream --stream-arn ${stream.StreamArn} --region ${config_loader.AWS.REGION} --output json",
+        returnStdout: true
+      ).trim()
+      def streamDetailsJson = parseJson(streamDetails)
+      if ((streamDetailsJson.StreamDescription.StreamStatus == "ENABLED") || (streamDetailsJson.StreamDescription.StreamStatus == "ENABLING")) {
+        stream_details.isEnabled = true
+        stream_details.isNewStream = false
+        stream_details.StreamArn = stream.StreamArn
+        break
+      }
+  }
+  return stream_details
+}
+
+def createDynamodbStream(tableName) {
+   def stream_details = [
+    "isEnabled" : true,
+    "isNewStream" : true
+  ]
+
+  try {
+    def tableDetails = sh(
+      script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES --region ${config_loader.AWS.REGION} --output json",
+      returnStdout: true
+    ).trim()
+    def tableDetailsJson = parseJson(tableDetails)
+    stream_details.StreamArn = tableDetailsJson.TableDescription.LatestStreamArn
+  } catch (ex){
+    error "Exception occured while creating the dynamodb stream. "
+  }
+  return stream_details
 }
 
 /**

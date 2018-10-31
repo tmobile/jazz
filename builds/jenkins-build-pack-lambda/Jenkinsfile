@@ -246,14 +246,6 @@ node() {
             }
           }
 
-          if (isDynamoDbEnabled) {
-            def dynamodbStreamArn = lambdaEvents.getStreamEnabledArn(config['event_source_dynamodb'])
-            config['event_source_dynamodb'] = dynamodbStreamArn.data
-            if(dynamodbStreamArn.isNewStream == "true") {
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", dynamodbStreamArn.data, "dynamodb_stream", config), environment_logical_id);
-            }
-          }
-
           writeServerlessFile(config, environment_logical_id)
 
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
@@ -267,20 +259,29 @@ node() {
               handleSqsError(deployOutput, config, environment_logical_id, envBucketKey)
             } else if (config['event_source_kinesis']) {
               handleKinesisStreamError(deployOutput, config['event_source_kinesis'], environment_logical_id, envBucketKey)
+            } else if (config['event_source_dynamodb']) {
+              handleDynamoDbStreamError(deployOutput, config, environment_logical_id, envBucketKey)
             } else {
               echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
               error "Exception occured while serverless deployment to ${environment_logical_id} environment"
             }
           } else {
             if (config['event_source_s3']) {
-              def s3_bucket_arn = getS3BucketArn(config['event_source_s3'], environment_logical_id)
+              def bucket_arn = "arn:aws:s3:::${config['event_source_s3']}"
+              def s3_bucket_arn = getEventResourceNamePerEnvironment(bucket_arn, environment_logical_id, "-")
               events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", s3_bucket_arn, "s3", config), environment_logical_id);
             } else if (config['event_source_sqs']) {
-              def event_source_sqs_arn =  getSqsQueueArn(config['event_source_sqs'], environment_logical_id)
+              def event_source_sqs_arn =  getEventResourceNamePerEnvironment(config['event_source_sqs'], environment_logical_id, "_")
               events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws",  event_source_sqs_arn, "sqs", config), environment_logical_id);
             } else if (config['event_source_kinesis']) {
-              def event_source_kinesis_stream_arn = getKinesisStreamArn(config['event_source_kinesis'], environment_logical_id)
+              def event_source_kinesis_stream_arn = getEventResourceNamePerEnvironment(config['event_source_kinesis'], environment_logical_id, "_")
               events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", event_source_kinesis_stream_arn, "kinesis_stream", config), environment_logical_id);
+            } else if (config['event_source_dynamodb']) {
+              def dynamodbTableName = splitAndGetResourceName(config['event_source_dynamodb'], environment_logical_id)
+              def stream_details = lambdaEvents.getDynamoDbStreamDetails(dynamodbTableName)
+              def event_source_dynamodb_arn = getEventResourceNamePerEnvironment(config['event_source_dynamodb'], environment_logical_id, "_")
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", event_source_dynamodb_arn, "dynamodb", config), environment_logical_id);
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", stream_details.StreamArn, "dynamodb_stream", config), environment_logical_id);
             }
           }
 
@@ -334,7 +335,7 @@ node() {
 
 def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld) {
   def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
-  s3BucketName = getEventS3BucketName(s3BucketName, environment_logical_id)
+  s3BucketName = getEventResourceNamePerEnvironment(s3BucketName, environment_logical_id, "-")
   if (deployOutput.contains(s3BucketErrString)) {
     if (lambdaEvents.checkS3BucketExists(s3BucketName)) {
       isLambdaUpdateRequired = true
@@ -354,7 +355,7 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, envBuck
   def sqsErrString = "CloudFormation - CREATE_FAILED - AWS::SQS::Queue - "
   if (deployOutput.contains(sqsErrString)) {
     def event_source_sqs = getSqsQueueName(event_source_sqs_arn, environment_logical_id)
-    event_source_sqs_arn =  getSqsQueueArn(event_source_sqs_arn, environment_logical_id)
+    event_source_sqs_arn =  getEventResourceNamePerEnvironment(event_source_sqs_arn, environment_logical_id, "_")
     def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
     if (lambdaEvents.checkSqsQueueExists(event_source_sqs)) {
       if(lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn)){
@@ -373,8 +374,8 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, envBuck
 
 def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, environment_logical_id, envBucketKey) {
   def kinesisStreamErrString = "CloudFormation - CREATE_FAILED - AWS::Kinesis::Stream - "
-  def event_source_kinesis = getKinesisStreamName(event_source_kinesis_stream_arn, environment_logical_id)
-  event_source_kinesis_stream_arn = getKinesisStreamArn(event_source_kinesis_stream_arn, environment_logical_id)
+  def event_source_kinesis = splitAndGetResourceName(event_source_kinesis_stream_arn, environment_logical_id)
+  event_source_kinesis_stream_arn = getEventResourceNamePerEnvironment(event_source_kinesis_stream_arn, environment_logical_id, "_")
   def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
   if (deployOutput.contains(kinesisStreamErrString)) {
     if (lambdaEvents.checkKinesisStreamExists(event_source_kinesis)) {
@@ -382,6 +383,33 @@ def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, envi
         error "Kinesis stream contains a different function trigger already. Please remove the existing function trigger and try again."
       }
       lambdaEvents.updateKinesisResourceServerless(event_source_kinesis_stream_arn)
+      deleteAndRedeployService(environment_logical_id, envBucketKey)
+    } else {
+      error "Error occured while accessing the Kinesis stream"
+    }
+  } else {
+    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
+    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+  }
+}
+
+def handleDynamoDbStreamError (deployOutput, service_config, environment_logical_id, envBucketKey) {
+  def dynamodbTableErrString = "CloudFormation - CREATE_FAILED - AWS::DynamoDB::Table - "
+  def event_source_dynamodb_table_arn = service_config['event_source_dynamodb']
+  def event_source_dynamodb = splitAndGetResourceName(event_source_dynamodb_table_arn, environment_logical_id)
+  event_source_dynamodb_table_arn = getEventResourceNamePerEnvironment(event_source_dynamodb_table_arn, environment_logical_id, "_")
+  def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+  if (deployOutput.contains(dynamodbTableErrString)) {
+    if (lambdaEvents.checkDynamoDbTableExists(event_source_dynamodb)) {
+      def stream_details = lambdaEvents.getDynamoDbStreamDetails(event_source_dynamodb)
+      if (!stream_details.isNewStream) {
+        if(lambdaEvents.checkIfDifferentFunctionTriggerAttached(stream_details.StreamArn, lambda_arn)){
+          error "Dynamodb stream contains a different function trigger already. Please remove the existing function trigger and try again."
+        }
+      } else {
+        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", stream_details.StreamArn, "dynamodb_stream", service_config), environment_logical_id);
+      }
+      lambdaEvents.updateDynamoDbResourceServerless(stream_details.StreamArn)
       deleteAndRedeployService(environment_logical_id, envBucketKey)
     } else {
       error "Error occured while accessing the Kinesis stream"
@@ -402,49 +430,21 @@ def deleteAndRedeployService(environment_logical_id, envBucketKey){
   }
 }
 
-def getEventS3BucketName(event_source_s3, environment_logical_id) {
-  if(environment_logical_id != "prod"){
-    event_source_s3 = "${event_source_s3}-${environment_logical_id}"
+def getEventResourceNamePerEnvironment(resource, env, concantinator) {
+  if(env != "prod"){
+    resource = "${resource}${concantinator}${env}"
   }
-  return event_source_s3
+  return resource
 }
 
-def getS3BucketArn(event_source_s3, environment_logical_id) {
- def bucket_arn = "arn:aws:s3:::${event_source_s3}"
- if(environment_logical_id != "prod"){
-    bucket_arn = "${bucket_arn}_${environment_logical_id}"
-  }
-  return bucket_arn
-}
-
-def getSqsQueueName(event_source_sqs_arn, environment_logical_id) {
+def getSqsQueueName(event_source_sqs_arn, env) {
   def event_source_sqs = event_source_sqs_arn.split(":(?!.*:.*)")[1]
-  if(environment_logical_id != "prod"){
-    event_source_sqs = "${event_source_sqs}_${environment_logical_id}"
-  }
-  return event_source_sqs
+  return getEventResourceNamePerEnvironment(event_source_sqs, env, "_")
 }
 
-def getSqsQueueArn(event_source_sqs_arn, environment_logical_id) {
-    if(environment_logical_id != "prod"){
-      event_source_sqs_arn = "${event_source_sqs_arn}_${environment_logical_id}"
-    }
-  return event_source_sqs_arn
-}
-
-def getKinesisStreamName(event_source_kinesis, environment_logical_id) {
-  def stream_arn = event_source_kinesis.split("/")[1]
-  if(environment_logical_id != "prod"){
-    stream_arn = "${stream_arn}_${environment_logical_id}"
-  }
-  return stream_arn
-}
-
-def getKinesisStreamArn(event_source_kinesis, environment_logical_id) {
-  if(environment_logical_id != "prod"){
-      event_source_kinesis = "${event_source_kinesis}_${environment_logical_id}"
-  }
-  return event_source_kinesis
+def splitAndGetResourceName(resource, env) {
+  def resource_arn = resource.split("/")[1]
+  return getEventResourceNamePerEnvironment(resource_arn, env, "_")
 }
 
 def echoServerlessFile() {
@@ -776,14 +776,14 @@ def writeServerlessFile(config, env) {
   }
 
   if (config['event_source_s3']) {
-    def event_source_s3 =  getEventS3BucketName(config['event_source_s3'], env)
+    def event_source_s3 =  getEventResourceNamePerEnvironment(config['event_source_s3'], env, "-")
     sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
     sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
   }
 
   if (config['event_source_sqs']) {
     def event_source_sqs =  getSqsQueueName(config['event_source_sqs'], env)
-    def event_sqs_arn = getSqsQueueArn(config['event_source_sqs'], env)
+    def event_sqs_arn = getEventResourceNamePerEnvironment(config['event_source_sqs'], env, "_")
     sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
     sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
     sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
@@ -791,15 +791,15 @@ def writeServerlessFile(config, env) {
   }
 
   if (config['event_source_kinesis']) {
-    def event_source_kinesis = getKinesisStreamName(config['event_source_kinesis'], env)
+    def event_source_kinesis = splitAndGetResourceName(config['event_source_kinesis'], env)
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -- 's|{event_source_kinesis}|${event_source_kinesis}|g' ./serverless.yml"
   }
 
   if (config['event_source_dynamodb']) {
+    def event_source_dynamodb = splitAndGetResourceName(config['event_source_dynamodb'], env)
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-    sh "sed -i -- 's|{event_source_dynamodb}|${config['event_source_dynamodb']}|g' serverless.yml"
-    sh "sed -i -- 's|{event_source_dynamodb}|${config['event_source_dynamodb']}|g' policyFile.yml"
+    sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
   }
 
   if( config['event_source_dynamodb'] || config['event_source_sqs']){
