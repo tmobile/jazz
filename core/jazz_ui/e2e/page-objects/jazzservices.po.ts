@@ -105,4 +105,44 @@ export class Jazz {
   getDone() {
      return element(by.xpath('//section[@class="footer-btn"]/btn-jazz-primary[@text="DONE"]/button[text()="DONE"]'));
     }
+  getServiceNameHeader() {
+      
+    return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/h1[@class="page-hdr bold-title"]'));
   }
+  getProdName(){
+    return element(by.xpath('//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
+  }
+  getProdHeader(){
+    return element(by.xpath('//div[@class="servie-details-container"]/h1[@class="page-hdr bold-title relative" and contains(text(),"prod")]'));
+  }
+  getAsset(){
+    return element(by.xpath('//div/div[2]/div/section[1]/div/div[2]/tabs/div/ul/li[3]'));
+  }
+  getAssetHeader(){
+    return element(by.xpath('//div/div[2]/div/section[1]/div/div[2]/section/env-assets-section/div/div[1]/div[2]/div[1]/div[1]/span[2]'));
+  }
+  getRefresh(){ 
+    return element(by.xpath('//div[@class="tab-component"]/div[@class="refresh-button"]/span[text()="Refresh"]'));
+  }
+  getServiceFromAsset(){
+    return element(by.xpath('//div[@class="navigation-item"]/span[@class="icon-icon-back hide"]/following-sibling::a[text()="Services"]'));
+  } 
+  getLamdaName(){
+    return element(by.xpath('//div[@class="table-row pointer"]/div[text()="function"]/preceding-sibling::div'));
+  }
+  getWebsiteName(){
+    return element(by.xpath('//div[@class="table-row pointer"]/div[text()="website"]/preceding-sibling::div'));  
+  }
+  getOverviewStatus(){
+    return element(by.xpath('//li[@class="x caps active" and contains(text(),"overview")]'));  
+  }
+  getDeploymentStatus(){
+    return element(by.xpath('//li[@class="x caps" and contains(text(),"deployments")]'));  
+  }
+  getDeploymentStatusVerify(){
+    return element(by.xpath('//div[@class="column status-col"]/div[@class="green"]'));
+  }
+  getAssetStatusVerify(){
+    return element(by.xpath('//li[@class="x caps active"]'));
+  }
+ }

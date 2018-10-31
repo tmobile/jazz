@@ -21,24 +21,24 @@ const timeOutHigh = 180000;
 const config = CONFIGURATIONS.optional.general.e2e;
 
 describe('login', () => {
-  let login_po: Login;
-  let JazzServices_po: Jazz;
-  const EC = protractor.ExpectedConditions;
+    let login_po: Login;
+    let JazzServices_po: Jazz;
+    const EC = protractor.ExpectedConditions;
 
-  beforeAll(() => {
-    login_po = new Login();
-    JazzServices_po = new Jazz();
-  });
+    beforeAll(() => {
+      login_po = new Login();
+      JazzServices_po = new Jazz();
+    });
  
-  it('login', () => {
-    browser.refresh();
-    browser.wait(EC.visibilityOf(login_po.getLoginButton()), timeOutHigh);
-    login_po.getLoginButton().click();
-    login_po.getUserNameInput().sendKeys(config.USER_NAME);
-    login_po.getPasswordInput().sendKeys(config.PASSWORD);
-    login_po.submitLoginButton().click();
-    browser.wait(EC.visibilityOf(JazzServices_po.getPageTitle()), timeOutHigh);
-    const page_title = JazzServices_po.getPageTitle().getText();
-    expect(page_title).toEqual('Services');
-  });
+    it('login', () => {
+      browser.refresh();
+      browser.wait(EC.visibilityOf(login_po.getLoginButton()), timeOutHigh);
+      login_po.getLoginButton().click();
+      login_po.getUserNameInput().sendKeys(config.USER_NAME);
+      login_po.getPasswordInput().sendKeys(config.PASSWORD);
+      login_po.submitLoginButton().click();
+      browser.wait(EC.visibilityOf(JazzServices_po.getPageTitle()), timeOutHigh);
+      const page_title = JazzServices_po.getPageTitle().getText();
+      expect(page_title).toEqual('Services');
+    });
 });
