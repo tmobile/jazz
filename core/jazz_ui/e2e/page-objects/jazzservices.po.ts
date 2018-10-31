@@ -142,4 +142,7 @@ export class Jazz {
   getDeploymentStatusVerify(){
     return element(by.xpath('//div[@class="column status-col"]/div[@class="green"]'));
   }
+  getAssetStatusVerify(){
+    return element(by.xpath('//li[@class="x caps active"]'));
+  }
  }
