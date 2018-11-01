@@ -289,7 +289,7 @@ def unDeployService(stage) {
 			if(service_config['event_source_s3'] && (service_config['event_source_s3']!= null)){
 				// Empty bucket
 				def targetBucket = service_config['event_source_s3'];
-				if(env_key == "DEV"){
+				if(env_key != "PROD"){
 					targetBucket = service_config['event_source_s3'] + "-" + stage;
 				}				
 				def output = sh(
