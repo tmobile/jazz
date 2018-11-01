@@ -39,7 +39,7 @@ func Handler(ctx context.Context, event models.Request) (models.Response, error)
 	config, _ = components.LoadConfiguration(ctx, event)
 
 	//Logging Config files for Testing
-	log.Info("Value From Config file is %s", config["Host"])
+	log.Info("Value From Config file is %s", config["configKey"])
 	// stdout and stderr are sent to AWS CloudWatch Logs
 	log.Info("Processing Lambda request %f\n", event.ID)
 

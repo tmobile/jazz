@@ -1,4 +1,3 @@
 {
-    "Host":"Test",
-    "PORT": "8080"
+    "configKey":"ConfigValueDev"
 }
