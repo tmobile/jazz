@@ -1,4 +1,4 @@
-eventSubscribed:
+dynamoDbRole:
   Type: AWS::IAM::Role
   Properties:
     RoleName: ${self:service}-${self:custom.myStage}
@@ -21,11 +21,17 @@ eventSubscribed:
           Statement:
             - Effect: "Allow"
               Action:
+                - "dynamodb:DescribeTable"
+                - "dynamodb:UpdateItem"
+                - "dynamodb:GetItem"
                 - "dynamodb:DescribeStream"
                 - "dynamodb:GetRecords"
                 - "dynamodb:GetShardIterator"
                 - "dynamodb:ListStreams"
-              Resource: {event_source_dynamodb}
+              #Start:dynamoDbstreamGetArn
+              Resource: { Fn::GetAtt: [ sourceDynamoDbTable, StreamArn ] }
+              #End:dynamoDbstreamGetArn
+              #ResourceDisabled: {event_dynamodb_stream_arn}
             - Effect: "Allow"
               Action:
                 - "logs:CreateLogGroup"

@@ -49,7 +49,20 @@ functions:
           enabled: ${file(deployment-env.yml):eventScheduleEnable}
       #End:isScheduleEnabled
       #Start:isDynamoDbEnabled
-      - stream: {event_source_dynamodb}
+      - stream:
+          type: dynamodb
+          #Start:dynamoDbstreamArn
+          streamArnDisabled: {event_dynamodb_stream_arn}
+          #End:dynamoDbstreamArn
+          #Start:dynamoDbstreamGetArn
+          arn:
+            Fn::GetAtt:
+              - sourceDynamoDbTable
+              - StreamArn
+          #End:dynamoDbstreamGetArn
+          batchSize: 1
+          startingPosition: LATEST
+          enabled: true
       #End:isDynamoDbEnabled
       #Start:isSQSEventEnabled
       - sqs:
@@ -91,7 +104,7 @@ functions:
 resourcesDisabled:
   Resources:
     #Start:isDynamoDbEnabled
-    customEventRole: ${file(policyFile.yml):eventSubscribed}
+    customEventRole: ${file(policyFile.yml):dynamoDbRole}
     #End:isDynamoDbEnabled
     #Start:isSQSEventEnabled
     customEventRole: ${file(policyFile.yml):sqsRole}
@@ -112,5 +125,23 @@ resourcesDisabled:
         Name: {event_source_kinesis}
         ShardCount: 1
     #End:isStreamEnabled
+    #Start:isDynamoDbEnabled
+    #Start:isDynamoDbtableNotExist
+    sourceDynamoDbTable:
+       Type: AWS::DynamoDB::Table
+       Properties:
+         TableName: {event_source_dynamodb}
+         AttributeDefinitions:
+           - AttributeName: ID
+             AttributeType: S
+         KeySchema:
+           - AttributeName: ID
+             KeyType: HASH
+         ProvisionedThroughput:
+           ReadCapacityUnits: 5
+           WriteCapacityUnits: 5
+         StreamSpecification:
+           StreamViewType: NEW_AND_OLD_IMAGES
+    #End:isDynamoDbtableNotExist
+    #End:isDynamoDbEnabled
 #End:resources
-
