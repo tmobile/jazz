@@ -36,7 +36,13 @@ var format = logging.MustStringFormatter(
 func Handler(ctx context.Context, event models.Request) (models.Response, error) {
 	//Loading the Configuration Files
 	var config map[string]string
-	config, _ = components.LoadConfiguration(ctx, event)
+	config, err := components.LoadConfiguration(ctx, event)
+
+	//Error handling
+	if err != nil {
+		//handle the error
+		log.Error("Error Loading configuration File")
+	}
 
 	//Logging Config files for Testing
 	log.Info("Value From Config file is %s", config["configKey"])
