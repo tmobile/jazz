@@ -306,7 +306,7 @@ def unDeployService(stage) {
 					).trim()				
 					if(output > 0){
 						sh "aws s3 rm s3://${targetBucket}/ --recursive --exclude '/'"
-						echo "Empty bucket which having ${output} contents"
+						echo "Removing items from bucket for ${output}"
 					}
 					
 					sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
@@ -317,17 +317,6 @@ def unDeployService(stage) {
 			handleFailureEvent(ex.getMessage())
 		}
 	}
-}
-
-def checkIfBucketExists(bucketUrl) {
-	def status = true;
-	try {
-		sh "aws s3 ls s3://${bucketUrl} 2>&1"
-	} catch (ex) {
-		echo "Bucket does not exist"
-		status = false
-	}
-	return status
 }
 
 /**
