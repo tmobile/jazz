@@ -284,29 +284,50 @@ def unDeployService(stage) {
 			} else {
 				env_key = "PROD"
 			}
-			def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"			
+			def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"	
 			/*empty bucket before deleting it. */			
-			if(service_config['event_source_s3'] && (service_config['event_source_s3']!= null)){
-				// Empty bucket
+			if(service_config['event_source_s3']){
+			// Empty bucket
 				def targetBucket = service_config['event_source_s3'];
-				if(env_key != "PROD"){
+				if(stage != "prod"){
 					targetBucket = service_config['event_source_s3'] + "-" + stage;
-				}				
-				def output = sh(
-					script: "aws s3 ls s3://${targetBucket} --recursive | wc -l",
-					returnStdout: true
-				).trim()
-				if(output > 0) {
-					sh "aws s3 rm s3://${targetBucket}/ --recursive --exclude '/'"
-					echo "Empty bucket which having ${output} contents"
-				}				
-				sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
-				echo "Service undeployed"
+				}
+				def s3Exists = true;
+				try {
+					sh "aws s3api head-bucket --bucket ${targetBucket} --output json"
+				} catch (ex) {
+					echo "Bucket does not exist"
+					s3Exists = false
+				}								
+				if(s3Exists) {
+					def output = sh(
+						script: "aws s3 ls s3://${targetBucket} --recursive | wc -l",
+						returnStdout: true
+					).trim()				
+					if(output > 0){
+						sh "aws s3 rm s3://${targetBucket}/ --recursive --exclude '/'"
+						echo "Empty bucket which having ${output} contents"
+					}
+					
+					sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
+					echo "Service undeployed"
+				}			
 			}
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
 		}
 	}
+}
+
+def checkIfBucketExists(bucketUrl) {
+	def status = true;
+	try {
+		sh "aws s3 ls s3://${bucketUrl} 2>&1"
+	} catch (ex) {
+		echo "Bucket does not exist"
+		status = false
+	}
+	return status
 }
 
 /**
