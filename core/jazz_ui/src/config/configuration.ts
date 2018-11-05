@@ -25,10 +25,11 @@ export const CONFIGURATIONS = {
             EMAIL_ID: '',
             USER_NAME: '', 
             PASSWORD: '', 
-			REG_USER_NAME: '' + Date.now() + '',
+			REG_USER_NAME: '',
             REG_PASS_WORD: '',
             REG_CODE: '',
             APPLN_URL: ''
+           
           }
       }
   }
