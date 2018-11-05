@@ -505,7 +505,7 @@ def buildLambda(String runtime) {
     //get all dependencies
     sh "dep ensure"
     //Build command 
-    sh "env GOOS=linux GOARCH=amd64 go build -o lam"
+    sh "env GOOS=linux GOARCH=amd64 go build -o main main.go"
   }
 }
 
