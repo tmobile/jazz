@@ -132,12 +132,6 @@ node() {
   // @TODO: the below statement will be replaced with regular expression in very near future;
   def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
-  def s3BucketName
-
-  if (isS3EventEnabled) {
-    s3BucketName = config['event_source_s3'];
-  }
-
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
@@ -254,7 +248,7 @@ node() {
 
           if (deployOutput != 'success') {
             if (config['event_source_s3']) {
-              handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld)
+              handleS3BucketError(deployOutput, config['event_source_s3'], environment_logical_id, envBucketKey, isEventSchdld)
             } else if (config['event_source_sqs']) {
               handleSqsError(deployOutput, config, environment_logical_id, envBucketKey)
             } else if (config['event_source_kinesis']) {
@@ -292,7 +286,8 @@ node() {
           echo "lambdaARN: ${lambdaARN}"
 
           if (isLambdaUpdateRequired) {
-            lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, config['event_action_s3'])
+            def event_source_s3 = getEventResourceNamePerEnvironment(config['event_source_s3'], environment_logical_id, "-")
+            lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, event_source_s3, config['event_action_s3'])
           }
 
           if (config['event_source_dynamodb'] || config['event_source_sqs']) {
