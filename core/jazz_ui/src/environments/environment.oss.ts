@@ -11,7 +11,7 @@ export const environment = {
   charachterLimits:{
     eventMaxLength:{
       "stream_name":128,
-      "table_name":200,
+      "table_name":255,
       "queue_name":80,
       "bucket_name":63
     },

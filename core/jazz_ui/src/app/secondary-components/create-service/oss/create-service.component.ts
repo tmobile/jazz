@@ -608,7 +608,7 @@ export class CreateServiceComponent implements OnInit {
   }
 
   loadMaxLength(){
-    let maxEnvIfLength = 16;
+    let maxEnvIfLength = 15;
     this.serviceLimit = env_oss.charachterLimits.serviceName;
     this.domainLimit = env_oss.charachterLimits.domainName;
     this.eventMaxLength.stream_name = env_oss.charachterLimits.eventMaxLength.stream_name - maxEnvIfLength;
