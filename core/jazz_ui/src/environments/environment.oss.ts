@@ -18,6 +18,15 @@ export const environment = {
     serviceName:20,
     domainName:20
   },
+  servicePatterns:{
+    "serviceName":"^[A-Za-z0-9\-]+$",
+    "domainName":"^[A-Za-z0-9\-]+$",
+    "slackChannel":"^[A-Za-z0-9\-_]+$",
+    "streamName":"[a-zA-Z0-9_.-]+",
+    "tableName":"^[A-Za-z0-9\-._]+$",
+    "queueName":"[A-Za-z0-9_-]+",
+    "bucketName":"[a-z0-9-]+"
+  },
   urls: {
     docs_link: "https://github.com/tmobile/jazz/wiki",
     swagger_editor: "{swagger_editor}",

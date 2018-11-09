@@ -77,6 +77,7 @@ export class CreateServiceComponent implements OnInit {
   };
   serviceLimit:number;
   domainLimit:number;
+  servicePatterns:any;
 
   model = new ServiceFormData('','','', '','','');
   cronObj = new CronObject('0/5','*','*','*','?','*')
@@ -615,6 +616,7 @@ export class CreateServiceComponent implements OnInit {
     this.eventMaxLength.table_name = env_oss.charachterLimits.eventMaxLength.table_name - maxEnvIfLength;
     this.eventMaxLength.queue_name = env_oss.charachterLimits.eventMaxLength.queue_name - maxEnvIfLength;
     this.eventMaxLength.bucket_name = env_oss.charachterLimits.eventMaxLength.bucket_name - maxEnvIfLength;
+    this.servicePatterns = env_oss.servicePatterns;
   }
 
   ngOnInit() {

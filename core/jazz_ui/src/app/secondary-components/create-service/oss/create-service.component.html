@@ -118,7 +118,7 @@
                         <section class="col-lg-12  pad-left0">
                             <div class="input-field-container">
                                 <div class="input-wrapper" [ngClass]="{'available': serviceAvailable && !invalidServiceName && !invalidDomainName, 'unavailable': serviceNotAvailable || !serviceName.valid && (serviceName.dirty || serviceName.touched) || (serviceName.valid && invalidServiceName)}">
-                                    <input name="serviceName" pattern="^[A-Za-z0-9\-]+$" type="text" maxlength="{{serviceLimit}}" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (ngModelChange)="invalidServiceName = false;serviceAvailable=false" #serviceName='ngModel' (blur)="validateName($event)" >
+                                    <input name="serviceName" pattern="{{servicePatterns.serviceName}}" type="text" maxlength="{{serviceLimit}}" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (ngModelChange)="invalidServiceName = false;serviceAvailable=false" #serviceName='ngModel' (blur)="validateName($event)" >
                                     <img class="input-loader ng-hide">
                                     <p class="termsConditions" *ngIf="!serviceName.valid && (serviceName.dirty || serviceName.touched)">Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
                                     <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && !isDomainDefined">Service name is available !</p>
@@ -143,7 +143,7 @@
                         <section class="col-lg-12  pad-left0">
                             <div class="input-field-container">
                                 <div class="input-wrapper" [ngClass]="{'unavailable' : !domainName.valid && (domainName.dirty || domainName.touched) || (domainName.valid && invalidDomainName) }">
-                                    <input name="domainName" pattern="^[A-Za-z0-9\-]+$" maxlength="{{domainLimit}}" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event)" (ngModelChange)="invalidDomainName=false" required>
+                                    <input name="domainName" pattern="{{servicePatterns.domainName}}" maxlength="{{domainLimit}}" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event)" (ngModelChange)="invalidDomainName=false" required>
                                     <p class="termsConditions" *ngIf="!domainName.valid && (domainName.dirty || domainName.touched)">Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
                                     <p class="termsConditions" *ngIf="domainName.valid && invalidDomainName">Namespace should not start or end with hyphens</p>
                                     <img *ngIf="serviceName.valid && domainName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
@@ -185,7 +185,7 @@
                                 </div>
                                 <div *ngIf="slackSelected == true">
                                     <div class="input-wrapper" [ngClass]="{'available': slackAvailble, 'unavailable': slackNotAvailble|| channelNameError || !channelname.valid && (channelname.dirty || channelname.touched)}">
-                                        <input name="channelname" id="channelname" type="text" class="textForm" pattern="^[A-Za-z0-9\-_]+$" required placeholder="Enter Slack Channel name" #channelname='ngModel' [(ngModel)]="model.slackName" (blur)="checkSlackNameAvailability()" (ngModelChange)="onSlackChange($event)">
+                                        <input name="channelname" id="channelname" type="text" class="textForm" pattern="{{servicePatterns.slackChannel}}" required placeholder="Enter Slack Channel name" #channelname='ngModel' [(ngModel)]="model.slackName" (blur)="checkSlackNameAvailability()" (ngModelChange)="onSlackChange($event)">
                                         <img class="input-loader ng-hide">
                                         <p class="termsConditions" *ngIf="!channelname.valid && (channelname.dirty || channelname.touched)">Slack channel must contain only letters, numbers, hyphens and underscores.</p>
                                         <p class="termsConditions" *ngIf="channelname.valid && slackAvailble">Slack channel is available.</p>
@@ -364,7 +364,7 @@
                                     <div class="text">Table ARN</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input type="text" disabled="disabled" class="inline-input input-label aws-events-left-block" value="{{dynamoStreamString}}">
-                                        <input id="dynamoTable" name="dynamoTable" type="text" minlength="3" maxlength="{{eventMaxLength.table_name}}" #dynamoTable='ngModel' pattern="^[A-Za-z0-9\-._]+$" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" (blur)="validateEvents(eventExpression.dynamoTable)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" >
+                                        <input id="dynamoTable" name="dynamoTable" type="text" minlength="3" maxlength="{{eventMaxLength.table_name}}" #dynamoTable='ngModel' pattern="{{servicePatterns.tableName}}" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" (blur)="validateEvents(eventExpression.dynamoTable)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" >
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkDynamodb()) && (!dynamoTable.valid && (dynamoTable.dirty || dynamoTable.touched)))">Table name must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 charachters</p>
@@ -383,7 +383,7 @@
                                     <div class="text">Stream ARN</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input type="text" disabled="disabled" class="inline-input input-label stream aws-events-left-block" value="{{kinesisStreamString}}">
-                                        <input id="streamARN" name="streamARN" type="text" #streamARN="ngModel" maxlength="{{eventMaxLength.stream_name}}" pattern="[a-zA-Z0-9_.-]+" [(ngModel)]="eventExpression.streamARN" [focus]="focusKinesis" (blur)="validateEvents(eventExpression.streamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Stream Name" >
+                                        <input id="streamARN" name="streamARN" type="text" #streamARN="ngModel" maxlength="{{eventMaxLength.stream_name}}" pattern="{{servicePatterns.streamName}}" [(ngModel)]="eventExpression.streamARN" [focus]="focusKinesis" (blur)="validateEvents(eventExpression.streamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Stream Name" >
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkfrKinesis()) && (!streamARN.valid && (streamARN.dirty || streamARN.touched)))">Stream name must contain only letters, numbers, hyphens, underscores or periods.</p>
@@ -401,10 +401,10 @@
                                 <div class="col-lg-9">
                                     <div class="text">Bucket ARN</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
-                                        <input id="S3BucketName" name="S3BucketName" type="text"  minlength="3" maxlength="{{eventMaxLength.bucket_name}}" pattern="[a-z0-9.-]+" #S3BucketName="ngModel" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" (blur)="validateEvents(eventExpression.S3BucketName)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-left-block aw-events-s3 ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Bucket Name"  autofocus>
+                                        <input id="S3BucketName" name="S3BucketName" type="text"  minlength="3" maxlength="{{eventMaxLength.bucket_name}}" pattern="{{servicePatterns.bucketName}}" #S3BucketName="ngModel" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" (blur)="validateEvents(eventExpression.S3BucketName)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-left-block aw-events-s3 ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Bucket Name"  autofocus>
                                   </div>
                                 </div>
-                                <p class="termsConditions error-message" *ngIf="((chkS3()) && (!S3BucketName.valid && (S3BucketName.dirty || S3BucketName.touched)))">Bucket name must contain only lowercase letters, numbers, hyphens or periods.</p>
+                                <p class="termsConditions error-message" *ngIf="((chkS3()) && (!S3BucketName.valid && (S3BucketName.dirty || S3BucketName.touched)))">Bucket name must contain only lowercase letters, numbers or hyphens.</p>
                                 <p class="termsConditions error-message" *ngIf="(chkS3() && invalidEventName)">Bucket name Should not begin or end with special charachter.</p>
 
                                 <p class="learn-more">Function would be triggered when an object is added or modified inside the bucket. Creating this lambda trigger will override any previously created triggers on this bucket for any ObjectCreated:*</p>
@@ -416,7 +416,7 @@
                                   <div class="text">Queue ARN</div>
                                   <div class="label-input slct-bx-selected input-wrapper">
                                       <input type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="{{sqsStreamString}}">
-                                      <input id="SQSstreamARN" name="SQSstreamARN" type="text" #SQSstreamARN="ngModel" [(ngModel)]="eventExpression.SQSstreamARN" pattern="[A-Za-z0-9_-]+" maxlength="{{eventMaxLength.queue_name}}" [focus]="focusSQS" (blur)="validateEvents(eventExpression.SQSstreamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Queue Name" >
+                                      <input id="SQSstreamARN" name="SQSstreamARN" type="text" #SQSstreamARN="ngModel" [(ngModel)]="eventExpression.SQSstreamARN" pattern="{{servicePatterns.queueName}}" maxlength="{{eventMaxLength.queue_name}}" [focus]="focusSQS" (blur)="validateEvents(eventExpression.SQSstreamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Queue Name" >
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkSQS()) && (!SQSstreamARN.valid && (SQSstreamARN.dirty || SQSstreamARN.touched)))">Queue name must contain only letters, numbers, hyphens or underscores.</p>
