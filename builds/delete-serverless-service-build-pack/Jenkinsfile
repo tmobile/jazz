@@ -1,7 +1,7 @@
 #!groovy.
-import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 import groovy.transform.Field
+import groovy.json.JsonSlurperClassic
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 @Field def repo_credential_id
@@ -176,9 +176,16 @@ node {
 				stage('Undeploy Service') {
 					updateServiceNameConfig()
 
-					for (_envId in environmentIds) {
+          for (_envId in environmentIds) {
 						current_environment_id = _envId
-						try {
+
+						def asset_url = g_base_url + "/jazz/assets"
+						def assetsList = getAssetsList(asset_url, current_environment_id)
+						if (assetsList != null && assetsList.manuallyCreatedAssets.size()) {
+							deleteAndUpdateAssets(asset_url, auth_token, assetsList.manuallyCreatedAssets, service_config, configLoader.AWS.REGION)
+						}
+
+            try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
 								events.setBranch(branch)
@@ -192,9 +199,14 @@ node {
 								checkBucket(current_environment_id);
 							}
 							echo 'undeploying function for environment: ' + _envId
-							unDeployService(_envId)							
+							unDeployService(_envId)
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
+							}
+              if (assetsList != null && assetsList.slsAssets.size()) {
+								for (eachSlsAsset in assetsList.slsAssets) {
+									updateAssetTable(asset_url, auth_token, eachSlsAsset, "ARCHIVED")
+							  }
 							}
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
@@ -289,6 +301,120 @@ def checkBucket(stage) {
 	}
 }
 
+// get manually created assets list by filtering from sls resources.
+def getAssetsList(asset_url, current_environment_id) {
+  withCredentials([
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+	]) {
+    try{
+      sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+      sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+      sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+
+      def env_key
+
+      if (current_environment_id != "stg"){
+        if (current_environment_id.endsWith("-dev")) {
+          env_key = current_environment_id
+        } else {
+          env_key = "prod"
+        }
+
+        def stackName = "${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env_key}"
+        def listResource = sh(returnStdout: true, script: "aws cloudformation list-stack-resources --stack-name ${stackName} --region ${configLoader.AWS.REGION} --output json")
+        def sls_created_assets = []
+
+        listResourceJson = parseJsonMap(listResource)
+        for (eachResource in listResourceJson.StackResourceSummaries) {
+          sls_created_assets.push(eachResource.PhysicalResourceId)
+        }
+        echo " sls_created_assets: $sls_created_assets"
+        def getAssetsJson = filterAssetsList(asset_url, auth_token, service_config, configLoader.AWS.REGION, sls_created_assets, env_key)
+        return getAssetsJson
+      }
+    } catch (ex) {
+      echo "$ex"
+    }
+  }
+}
+
+// categorize the list of service assets from assets catalog as 'manuallyCreatedAssets' and 'slsAssets'.
+def filterAssetsList(assets_api, auth_token, service_config, region, sls_created_assets, env) {
+  try{
+    def getAssets = sh (
+      script: "curl GET  \
+			-H \"Content-Type: application/json\" \
+			-H \"Authorization: $auth_token\" \
+			\"${assets_api}?domain=${service_config['domain']}&service=${service_config['service']}&environemnt=${env}\"",
+      returnStdout: true
+    ).trim()
+    def getAssetsJson = parseJsonMap(getAssets)
+    def assetsList = [
+      manuallyCreatedAssets: [],
+      slsAssets : []
+    ]
+
+    for (eachAsset in getAssetsJson.data.assets) {
+      def count = 0
+      for (eachResource in sls_created_assets) {
+        count = count + 1;
+        if (eachResource.indexOf(eachAsset.provider_id) >= 0) {
+          assetsList.slsAssets.push(eachAsset)
+        }
+        if (count == sls_created_assets.size()) {
+          assetsList.manuallyCreatedAssets.push(eachAsset)
+        }
+      }
+    }
+    return assetsList
+  } catch(ex) {
+      echo "$ex"
+  }
+}
+
+// Delete manually created asstes and update the assets status.
+def deleteAndUpdateAssets(assets_api, auth_token, manuallyCreatedAssets, service_config, region) {
+  withCredentials([
+    [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+  ]) {
+    try {
+      sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+      sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+      sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+
+      for (asset in manuallyCreatedAssets) {
+        if (asset.asset_type == "dynamodb_stream_arn") {
+          def tableName = service_config['event_source_dynamodb'].tokenize("/").last()
+          def tableDetails = sh(
+            script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=false --region ${region} --output json",
+            returnStdout: true
+          ).trim()
+          def tableDetailsJson = parseJsonMap(tableDetails)
+          updateAssetTable(assets_api, auth_token, asset, "ARCHIVED")
+        }
+      }
+    } catch (ex) {
+      echo "$ex"
+    }
+  }
+}
+
+// Update assets staus in assets catalog.
+def updateAssetTable(assets_api, auth_token, asset, status) {
+  def params = [
+    "status": status
+  ]
+  def payload = JsonOutput.toJson(params)
+  def apiId = assets_api + "/${asset.id}"
+  def updateAssets = sh(script: "curl -X PUT \
+						${apiId} \
+						-H 'authorization: $auth_token' \
+						-H 'Content-type: application/json' \
+						-d '$payload'", returnStdout: true).trim()
+  def updatedAsset = parseJsonMap(updateAssets)
+  echo "updatedAsset: $updatedAsset"
+}
+
 def cleanupCodeQualityReports(){
 	try {
 		sonarModule.cleanupCodeQualityReports()
@@ -330,9 +456,10 @@ def unDeployService(stage) {
 			} else {
 				env_key = "PROD"
 			}
-			def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"	
+			def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 			sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
-			echo "Service undeployed"			
+
+			echo "Service undeployed"
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
 		}
@@ -398,6 +525,28 @@ def writeServerlessFile(){
 	if (service_config['mainClass']) {
 		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${service_config['mainClass']}/g' serverless.yml"
 	}
+
+  if (service_config['event_source_s3']) {
+    sh "sed -i -- 's/{event_source_s3}/${service_config['event_source_s3']}/g' ./serverless.yml"
+    sh "sed -i -- 's/{event_action_s3}/${service_config['event_action_s3']}/g' ./serverless.yml"
+  }
+
+  if (service_config['event_source_stream']) {
+    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
+    sh "sed -i -- 's/{event_source_stream}/${service_config['event_source_stream']}/g' ./serverless.yml"
+  }
+
+  if (service_config['event_source_dynamodb']) {
+    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
+    sh "sed -i -- 's|{event_source_dynamodb}|${service_config['event_source_dynamodb']}|g' serverless.yml"
+    sh "sed -i -- 's|{event_source_dynamodb}|${service_config['event_source_dynamodb']}|g' policyFile.yml"
+  }
+
+  if ( service_config['event_source_dynamodb'] || service_config['event_source_sqs']){
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
+  }else{
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${service_config['iamRoleARN']}|g' serverless.yml"
+  }
 }
 
 /**
@@ -481,7 +630,7 @@ def cleanUpApiGatewayResources(stage, path) {
 					returnStdout: true
 				).trim()
 
-				def list = parseJson(outputStr)
+				def list = parseJsonMap(outputStr)
 				for (items in list["items"]) {
 					if (items["path"] == resource_search_key) {
 						resource_id = items["id"]
@@ -509,14 +658,6 @@ def cleanUpApiGatewayResources(stage, path) {
 			handleFailureEvent(ex.getMessage())
 		}
 	}
-}
-
-@NonCPS
-def parseJson(jsonString) {
-	def lazyMap = new groovy.json.JsonSlurper().parseText(jsonString)
-	def m = [:]
-	m.putAll(lazyMap)
-	return m
 }
 
 /**
@@ -619,7 +760,7 @@ def getResourcePath() {
 	try {
 		dir("swagger") {
 			def swaggerStr = readFile('swagger.json').trim()
-			def swaggerJsonObj = parseJson(swaggerStr)
+			def swaggerJsonObj = parseJsonMap(swaggerStr)
 			basePath = swaggerJsonObj.basePath
 			def keys = swaggerJsonObj.paths.keySet()
 			for (_p in keys) {
@@ -771,7 +912,7 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 				script: "aws s3api get-bucket-policy --bucket ${assetInfo['s3Bucket']} --output json",
 				returnStdout: true
 			).trim()
-			def policyObject = parseJson(parseJson(bucketPolicy).Policy)
+			def policyObject = parseJsonMap(parseJsonMap(bucketPolicy).Policy)
 			def policyObjectUpdated = [:]
 			policyObjectUpdated.Version = policyObject.Version
 			policyObjectUpdated.Id = policyObject.Id
@@ -867,7 +1008,7 @@ def getDistributionId(environment) {
 		def outputStr = listDistribution(environment)
 		if (outputStr) {
 			echo "### OutputStr for getting Distribution Id: $outputStr"
-			def outputObj = new JsonSlurper().parseText(outputStr)
+			def outputObj = new JsonSlurperClassic().parseText(outputStr)
 			if (outputObj && outputObj[0].Id) {
 				distributionID = outputObj[0].Id
 			}
@@ -961,7 +1102,7 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, stage) {
 		)
 		echo "disableOutput... $disableOutput"
 		if (disableOutput) {
-			def disableConfigObj = new JsonSlurper().parseText(disableOutput)
+			def disableConfigObj = new JsonSlurperClassic().parseText(disableOutput)
 			eTag = disableConfigObj.ETag
 		}
 		echo "disable eTag: $eTag"
@@ -1024,7 +1165,19 @@ def loadServerlessConfig() {
 		sh "cp _config/serverless-python.yml ./serverless.yml"
 	}
 
+  if (service_config['event_source_dynamodb'] || service_config['event_source_sqs']) {
+    sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
+  }
+
+  if (!service_config['event_source_dynamodb'] || !service_config['event_source_sqs'] || !service_config['event_source_s3'] || !service_config['event_source_kinesis']) {
+    removeEventResources ()
+  }
+
 	sh "cp serverless.yml serverless-temp.yml"
+}
+
+def removeEventResources(){
+   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
 }
 
 
@@ -1104,7 +1257,7 @@ def send_status_email(build_status) {
 					 -k -v -H \"Authorization: $g_login_token\" \
 					 -H \"Content-Type: application/json\" \
 					 -d \'${body}\'", returnStdout: true).trim()
-		def responseJSON = parseJson(sendMail)
+		def responseJSON = parseJsonMap(sendMail)
 		if (responseJSON.data) {
 			echo "successfully sent e-mail to $email_id"
 		} else {
