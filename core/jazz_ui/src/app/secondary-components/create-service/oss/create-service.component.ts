@@ -197,7 +197,7 @@ export class CreateServiceComponent implements OnInit {
 
   //function to validate event source names
   validateEvents(value){
-    debugger
+
     if(value != null &&(value[0] === '-' || value[value.length - 1] === '-')){
       this.invalidEventName = true;
     }
