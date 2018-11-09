@@ -187,8 +187,12 @@ node {
 							}
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+							echo 'Service deletion is requested: ' + current_environment_id
+							if (is_service_deletion && service_config['event_source_s3']) { // check service for S3 Bucket and make empty if not. //
+								checkBucket(current_environment_id);
+							}
 							echo 'undeploying function for environment: ' + _envId
-							unDeployService(_envId)
+							unDeployService(_envId)							
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
 							}
@@ -243,6 +247,48 @@ node {
 
 }
 
+/**
+ * Check bucket existance and content in it. if yes then empty it for SLS delete
+ * @param  stage
+ * @return
+ */
+def checkBucket(stage) {
+	withCredentials([
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+	]) {
+		try {
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"					
+			
+			// Empty bucket
+			def targetBucket = service_config['event_source_s3'];
+			if(stage != "prod"){
+				targetBucket = service_config['event_source_s3'] + "-" + stage;
+			}
+			def s3Exists = true;
+			try {
+				sh "aws s3api head-bucket --bucket ${targetBucket} --output json"
+			} catch (ex) {
+				echo "Bucket does not exist"
+				s3Exists = false
+			}								
+			if(s3Exists) {
+				def output = sh(
+					script: "aws s3 ls s3://${targetBucket} --recursive | wc -l",
+					returnStdout: true
+				).trim()				
+				if(output > 0){
+					sh "aws s3 rm s3://${targetBucket}/ --recursive --exclude '/'"
+					echo "Removing items from bucket for ${output}"
+				}					
+			}			
+		} catch (ex) {
+			handleFailureEvent(ex.getMessage())
+		}
+	}
+}
+
 def cleanupCodeQualityReports(){
 	try {
 		sonarModule.cleanupCodeQualityReports()
@@ -285,34 +331,8 @@ def unDeployService(stage) {
 				env_key = "PROD"
 			}
 			def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"	
-			/*empty bucket before deleting it. */			
-			if(service_config['event_source_s3']){
-			// Empty bucket
-				def targetBucket = service_config['event_source_s3'];
-				if(stage != "prod"){
-					targetBucket = service_config['event_source_s3'] + "-" + stage;
-				}
-				def s3Exists = true;
-				try {
-					sh "aws s3api head-bucket --bucket ${targetBucket} --output json"
-				} catch (ex) {
-					echo "Bucket does not exist"
-					s3Exists = false
-				}								
-				if(s3Exists) {
-					def output = sh(
-						script: "aws s3 ls s3://${targetBucket} --recursive | wc -l",
-						returnStdout: true
-					).trim()				
-					if(output > 0){
-						sh "aws s3 rm s3://${targetBucket}/ --recursive --exclude '/'"
-						echo "Removing items from bucket for ${output}"
-					}
-					
-					sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
-					echo "Service undeployed"
-				}			
-			}
+			sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
+			echo "Service undeployed"			
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
 		}
