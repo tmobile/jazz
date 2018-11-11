@@ -55,6 +55,10 @@ var handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'runtime' is not defined")));
         } else if (service_creation_data.domain && !isValidName(service_creation_data.domain)) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("Namespace is not appropriate")));
+        } else if (service_creation_data.service_name && service_creation_data.service_name.length > 20) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_name' can have up to 20 characters")));
+        } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'domain' can have up to 20 characters")));
         }
 
         user_id = event.principalId;
@@ -90,7 +94,9 @@ var handler = (event, context, cb) => {
                             return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
                         }
                     });
-                } else {
+                } else if (err.result == 'inputError') {
+                    return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+                }else {
                     return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
                 }
             });
@@ -281,10 +287,16 @@ var getServiceData = (service_creation_data, authToken, configData) => {
                     var eachEvent, eventSrc, eventAction;
                     eachEvent = service_creation_data.events[idx];
                     logger.info('event: ', JSON.stringify(eachEvent));
-                    eventSrc = "event_source_" + eachEvent.type;
-                    eventAction = "event_action_" + eachEvent.type;
-                    serviceMetadataObj[eventSrc] = eachEvent.source;
-                    serviceMetadataObj[eventAction] = eachEvent.action;
+                    let isEventNameValid = validateEventNmae(eachEvent.type, eachEvent.source, configData);
+                    if (isEventNameValid) {
+                      eventSrc = "event_source_" + eachEvent.type;
+                      eventAction = "event_action_" + eachEvent.type;
+                      serviceMetadataObj[eventSrc] = eachEvent.source;
+                      serviceMetadataObj[eventAction] = eachEvent.action;
+                    } else {
+                      reject({result: 'inputError', message: `${eachEvent.type} name is invalid.`});
+                    }
+
                 }
             }
         }
@@ -294,6 +306,33 @@ var getServiceData = (service_creation_data, authToken, configData) => {
         resolve(inputs);
     });
 }
+
+var validateEventNmae = (eventType, sourceName, config) => {
+    let eventSourceName = '', sourceType = eventType.toLowerCase(), logicalIdLen = 15;
+  if (sourceType == "s3") {
+      eventSourceName = sourceName;
+  } else if (sourceType == "sqs") {
+      eventSourceName = sourceName.split(':').pop();
+  } else if (sourceType == "dynamodb" || sourceType == "stream") {
+      eventSourceName = sourceName.split('/').pop();
+  } else {
+      return false;
+  }
+
+  if (eventSourceName && (eventSourceName.startsWith("-") || eventSourceName.startsWith("_") || eventSourceName.startsWith(".") || eventSourceName.endsWith("-") || eventSourceName.endsWith("_") || eventSourceName.endsWith("."))) {
+    return false;
+  }
+
+  let mapType = config.EVENT_SOURCE[sourceType];
+  let regexPattern = RegExp(mapType.regexPattern);
+
+  if (eventSourceName.length >= mapType.minLength && eventSourceName.length <= (mapType.maxLength - logicalIdLen) && (regexPattern).test(eventSourceName)) {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 module.exports = {
     handler: handler,
     startServiceOnboarding: startServiceOnboarding,
