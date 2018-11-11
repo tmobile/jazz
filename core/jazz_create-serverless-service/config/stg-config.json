@@ -8,7 +8,7 @@
     "TOKEN_URL": "/stg/jazz/login",
     "SERVICE_USER": "{jazz_admin}",
     "TOKEN_CREDS": "{jazz_admin_creds}",
-    "EVENT_SOURCE": {
+    "EVENT_SOURCE_NAME": {
       "s3": {
           "minLength": 3,
           "maxLength": 63,

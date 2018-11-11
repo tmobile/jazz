@@ -323,7 +323,7 @@ var validateEventNmae = (eventType, sourceName, config) => {
     return false;
   }
 
-  let mapType = config.EVENT_SOURCE[sourceType];
+  let mapType = config.EVENT_SOURCE_NAME[sourceType];
   let regexPattern = RegExp(mapType.regexPattern);
 
   if (eventSourceName.length >= mapType.minLength && eventSourceName.length <= (mapType.maxLength - logicalIdLen) && (regexPattern).test(eventSourceName)) {
