@@ -58,7 +58,7 @@ var handler = (event, context, cb) => {
         } else if (service_creation_data.service_name && service_creation_data.service_name.length > 20) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_name' can have up to 20 characters")));
         } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
-            return cb(JSON.stringify(errorHandler.throwInputValidationError("'domain' can have up to 20 characters")));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
         }
 
         user_id = event.principalId;
