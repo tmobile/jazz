@@ -8,5 +8,27 @@
     "SERVICE_API_RESOURCE": "/dev/jazz/services",
     "TOKEN_URL": "/dev/jazz/login",
     "SERVICE_USER": "{jazz_admin}",
-    "TOKEN_CREDS": "{jazz_admin_creds}"
+    "TOKEN_CREDS": "{jazz_admin_creds}",
+    "EVENT_SOURCE": {
+        "s3": {
+            "minLength": 3,
+            "maxLength": 63,
+            "regexPattern": "^[a-z0-9-]+$"
+        },
+        "dynamodb": {
+            "minLength": 3,
+            "maxLength": 255,
+            "regexPattern": "^[a-zA-Z0-9_.-]+$"
+        },
+        "sqs": {
+            "minLength": 1,
+            "maxLength": 80,
+            "regexPattern": "^[a-zA-Z0-9-_]+$"
+        },
+        "stream": {
+            "minLength": 1,
+            "maxLength": 128,
+            "regexPattern": "^[a-zA-Z0-9_.-]+$"
+        }
+    }
 }
