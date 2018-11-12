@@ -278,8 +278,8 @@ def checkBucket(stage) {
 			if(stage != "prod"){
 				targetBucket = service_config['event_source_s3'] + "-" + stage;
 			}
-			def s3Exists = isBucketEmpty(targetBucket);											
-			if(s3Exists) {
+			def s3Empty = isBucketEmpty(targetBucket);											
+			if(!s3Empty) {
 				def output = sh(
 					script: "aws s3 ls s3://${targetBucket} --recursive | wc -l",
 					returnStdout: true
