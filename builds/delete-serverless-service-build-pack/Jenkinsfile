@@ -285,15 +285,9 @@ def checkBucket(stage) {
             echo "Bucket does not exist"
             s3Exists = false
         }
-     if(s3Exists && (!isBucketEmpty(targetBucket))) {
-				def output = sh(
-					script: "aws s3 ls s3://${targetBucket} --recursive | wc -l",
-					returnStdout: true
-				).trim()				
-				if(output > 0){
+     if(s3Exists && (!isBucketEmpty(targetBucket))) {				
 					sh "aws s3 rm s3://${targetBucket}/ --recursive --exclude '/'"
-					echo "Removing items from bucket for ${output}"
-				}					
+					echo "Removing items from bucket for ${output}"								
 			}			
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
