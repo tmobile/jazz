@@ -285,7 +285,7 @@ def checkBucket(stage) {
             echo "Bucket does not exist"
             s3Exists = false
         }
-      if(s3Exists) {
+     if(s3Exists && (!isBucketEmpty(targetBucket))) {
 				def output = sh(
 					script: "aws s3 ls s3://${targetBucket} --recursive | wc -l",
 					returnStdout: true
