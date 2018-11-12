@@ -30,21 +30,6 @@ describe('jazz_email', function () {
       "principalId": "test@test.com",
       "body": {}
     };
-    callback = (err, responseObj) => {
-      if (err) {
-        return err;
-      } else {
-        return JSON.stringify(responseObj);
-      }
-    };
-    err = {
-      "errorType": "foo",
-      "message": "bar"
-    };
-    callbackObj = {
-      "callback": callback
-    };
-    config = configObj.getConfig(event, context);
     context = awsContext();
   });
 
