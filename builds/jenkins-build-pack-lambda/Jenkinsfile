@@ -501,7 +501,12 @@ def buildLambda(String runtime) {
 		. venv/bin/activate
 		pip install pytest
 		"""
-	}
+	} else if (runtime.indexOf("go") > -1 ){
+    //get all dependencies
+    sh "dep ensure"
+    //Build command 
+    sh "env GOOS=linux GOARCH=amd64 go build -o main main.go"
+  }
 }
 
 /** Reset credentials
@@ -528,7 +533,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports.
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8", "go1.x"] //@TODO. Add more runtime supports.
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {
@@ -607,6 +612,8 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     sh "cp _config/serverless-java.yml ./serverless.yml"
   } else if (runtime.indexOf("python") > -1) {
     sh "cp _config/serverless-python.yml ./serverless.yml"
+  } else if (runtime.indexOf("go") > -1){
+    sh "cp _config/serverless-go.yml ./serverless.yml"
   }
 
   if (isDynamoDbEnabled || isSQSEventEnabled) {
@@ -899,6 +906,8 @@ def runValidation(String runtime) {
     echo "running validations for $runtime"
     sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
   } else if (runtime.indexOf("python") > -1) {
+    echo "running validations for $runtime"
+  } else if (runtime.indexOf("go") > -1) {
     echo "running validations for $runtime"
   }
 }
