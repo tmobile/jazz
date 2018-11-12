@@ -194,7 +194,7 @@ node {
 							}
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-              echo 'Service deletion is requested: ' + current_environment_id
+							echo 'Service deletion is requested: ' + current_environment_id
 							if (is_service_deletion && service_config['event_source_s3']) { // check service for S3 Bucket and make empty if not. //
 								checkBucket(current_environment_id);
 							}
@@ -278,13 +278,7 @@ def checkBucket(stage) {
 			if(stage != "prod"){
 				targetBucket = service_config['event_source_s3'] + "-" + stage;
 			}
-			def s3Exists = true;
-			try {
-				sh "aws s3api head-bucket --bucket ${targetBucket} --output json"
-			} catch (ex) {
-				echo "Bucket does not exist"
-				s3Exists = false
-			}								
+			def s3Exists = isBucketEmpty(targetBucket);											
 			if(s3Exists) {
 				def output = sh(
 					script: "aws s3 ls s3://${targetBucket} --recursive | wc -l",
@@ -300,6 +294,7 @@ def checkBucket(stage) {
 		}
 	}
 }
+
 // get manually created assets list by filtering from sls resources.
 def getAssetsList(asset_url, current_environment_id) {
   withCredentials([
