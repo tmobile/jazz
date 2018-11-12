@@ -313,7 +313,7 @@ var validateEventNmae = (eventType, sourceName, config) => {
       eventSourceName = sourceName;
   } else if (sourceType == "sqs") {
       eventSourceName = sourceName.split(':').pop();
-  } else if (sourceType == "dynamodb" || sourceType == "stream") {
+  } else if (sourceType == "dynamodb" || sourceType == "kinesis") {
       eventSourceName = sourceName.split('/').pop();
   } else {
       return false;

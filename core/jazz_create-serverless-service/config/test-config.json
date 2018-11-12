@@ -19,7 +19,7 @@
           "maxLength": 80,
           "regexPattern": "^[a-zA-Z0-9-_]+$"
       },
-      "stream": {
+      "kinesis": {
           "minLength": 1,
           "maxLength": 128,
           "regexPattern": "^[a-zA-Z0-9_.-]+$"

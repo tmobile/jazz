@@ -472,7 +472,7 @@ describe('create-serverless-service', function () {
 
     it("should return input object with METADATA values for valid input parameters for service type function (for different event sources)", () => {
       let authToken = "temp-auth-token";
-      let eventsList = ["s3", "dynamodb", "sqs", "stream"];
+      let eventsList = ["s3", "dynamodb", "sqs", "kinesis"];
       service_creation_data.rateExpression = ""
       let config = configModule.getConfig(event, context);
 
