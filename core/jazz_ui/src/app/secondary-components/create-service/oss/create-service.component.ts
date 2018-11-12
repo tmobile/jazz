@@ -198,17 +198,9 @@ export class CreateServiceComponent implements OnInit {
 
   //function to validate event source names
   validateEvents(value){
-
-    if(value != null &&(value[0] === '-' || value[value.length - 1] === '-')){
+    if(value != null && ((value[0] === '-' || value[value.length - 1] === '-') || (value[0] === '.' || value[value.length - 1] === '.') || (value[0] === '_' || value[value.length - 1] === '_'))){
       this.invalidEventName = true;
     }
-    if(value != null &&(value[0] === '.' || value[value.length - 1] === '.')){
-      this.invalidEventName = true;
-    }
-    if(value != null &&(value[0] === '_' || value[value.length - 1] === '_')){
-      this.invalidEventName = true;
-    }
-
   }
   // function to validate slack channel
   public validateChannelName() {
