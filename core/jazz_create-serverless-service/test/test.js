@@ -174,7 +174,7 @@ describe('create-serverless-service', function () {
 
     it("should inform user of error if given an event with an invalid body.service_name (more than 20 characters)", () => {
       let invalidName = "service-name-with-more-than-20-characters"
-      let errMessage = "'service_name' can have up to 20 characters";
+      let errMessage = "'Service Name' can have up to 20 characters";
       let errType = "BadRequest";
       let allCases =  checkCase("body", "service_name", invalidName, errMessage, errType)
       assert.isTrue(allCases);

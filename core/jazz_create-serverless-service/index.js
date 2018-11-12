@@ -56,7 +56,7 @@ var handler = (event, context, cb) => {
         } else if (service_creation_data.domain && !isValidName(service_creation_data.domain)) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("Namespace is not appropriate")));
         } else if (service_creation_data.service_name && service_creation_data.service_name.length > 20) {
-            return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_name' can have up to 20 characters")));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'Service Name' can have up to 20 characters")));
         } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
         }
@@ -94,7 +94,7 @@ var handler = (event, context, cb) => {
                             return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
                         }
                     });
-                } else if (err.result == 'inputError') {
+                } else if (err.result === 'inputError') {
                     return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
                 }else {
                     return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
@@ -287,7 +287,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
                     var eachEvent, eventSrc, eventAction;
                     eachEvent = service_creation_data.events[idx];
                     logger.info('event: ', JSON.stringify(eachEvent));
-                    let isEventNameValid = validateEventNmae(eachEvent.type, eachEvent.source, configData);
+                    let isEventNameValid = validateEventName(eachEvent.type, eachEvent.source, configData);
                     if (isEventNameValid) {
                       eventSrc = "event_source_" + eachEvent.type;
                       eventAction = "event_action_" + eachEvent.type;
@@ -307,13 +307,13 @@ var getServiceData = (service_creation_data, authToken, configData) => {
     });
 }
 
-var validateEventNmae = (eventType, sourceName, config) => {
-    let eventSourceName = '', sourceType = eventType.toLowerCase(), logicalIdLen = 15;
-  if (sourceType == "s3") {
+var validateEventName = (eventType, sourceName, config) => {
+  let eventSourceName = '', sourceType = eventType.toLowerCase(), logicalIdLen = 15;
+  if (sourceType === "s3") {
       eventSourceName = sourceName;
-  } else if (sourceType == "sqs") {
+  } else if (sourceType === "sqs") {
       eventSourceName = sourceName.split(':').pop();
-  } else if (sourceType == "dynamodb" || sourceType == "kinesis") {
+  } else if (sourceType === "dynamodb" || sourceType === "kinesis") {
       eventSourceName = sourceName.split('/').pop();
   } else {
       return false;
