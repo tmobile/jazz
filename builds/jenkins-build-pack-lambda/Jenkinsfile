@@ -503,9 +503,20 @@ def buildLambda(String runtime) {
 		"""
 	} else if (runtime.indexOf("go") > -1 ){
     //get all dependencies
-    sh "dep ensure"
-    //Build command 
-    sh "env GOOS=linux GOARCH=amd64 go build -o main main.go"
+    
+    /**
+    Created for testing the deployment of Golang lambda function
+    Not a production ready or testable code.
+    **/
+    sh "go env"
+    sh "pwd"
+    sh "mkdir -p /var/lib/jenkins/workspace/build-pack-lambda/src"
+    sh "rsync -a --exclude='.*' /var/lib/jenkins/workspace/build-pack-lambda/develop_lambdatest-go/* /var/lib/jenkins/workspace/build-pack-lambda/src/lambda-template-go"
+    withEnv(['GOPATH=/var/lib/jenkins/workspace/build-pack-lambda']) {
+      sh "cd /var/lib/jenkins/workspace/build-pack-lambda/src/lambda-template-go && dep ensure"
+      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/lambda-template-go/main.go"
+    }
+    sh "pwd"
   }
 }
 
