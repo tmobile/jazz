@@ -309,13 +309,15 @@ var getServiceData = (service_creation_data, authToken, configData) => {
 
 var validateEventName = (eventType, sourceName, config) => {
   let eventSourceName = '', sourceType = eventType.toLowerCase(), logicalIdLen = 15;
-  if (sourceType === "s3") {
-      eventSourceName = sourceName;
-  } else if (sourceType === "sqs") {
-      eventSourceName = sourceName.split(':').pop();
-  } else if (sourceType === "dynamodb" || sourceType === "kinesis") {
-      eventSourceName = sourceName.split('/').pop();
-  } else {
+  let eventSourceObject = {
+    's3': sourceName,
+    'sqs': sourceName.split(':').pop(),
+    'dynamodb': sourceName.split('/').pop(),
+    'kinesis': sourceName.split('/').pop()
+  }
+
+  eventSourceName = eventSourceObject[sourceType];
+  if (!eventSourceName) {
       return false;
   }
 
