@@ -1,10 +1,10 @@
 const assert = require('chai').assert;
+const expect = require('chai').expect;
+const awsContext = require('aws-lambda-mock-context');
+const sinon = require('sinon');
 
-describe('Sample', function() {
-  it('tests handler', function(done) {
+const index = require('../index');
 
-    // Add your test cases here.
-    assert(true);
-    done();
-  });
+describe('jazz event handler tests: ', function () {
+
 });

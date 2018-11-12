@@ -21,118 +21,132 @@ const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const fcodes = require('./utils/failure-codes.js');
 
-module.exports.handler = (event, context, cb) => {
+const dynamodb = new AWS.DynamoDB();
+var docClient = new AWS.DynamoDB.DocumentClient();
 
-	//Initializations
-	var config = configModule.getConfig(event, context);
+function handler(event, context, cb) {
 
-	const dynamodb = new AWS.DynamoDB();
-	var processedEvents = [];
-	var failedEvents = [];
+  //Initializations
+  let config = configModule.getConfig(event, context);
 
-	var docClient = new AWS.DynamoDB.DocumentClient();
-	var interestedEvents = [];
-	var failureCodes = fcodes();
+  let processedEvents = [];
+  let failedEvents = [];
 
-	async.series({
-		getEvents: function (callback) {
-			var params = {
-				TableName: config.EVENT_NAME_TABLE,
-				ProjectionExpression: "EVENT_NAME",
-				Limit: 1000,
-				ReturnConsumedCapacity: "TOTAL"
-			};
-			var scanExecute = function (callback) {
-				docClient.scan(params, function (err, result) {
-					if (err) {
-						callback({
-							"db_error": "Unable to scan Event Names table to fetch interested events"
-						});
-					} else {
+  let interestedEvents = [];
+  let failureCodes = fcodes();
 
-						//interestedEvents = interestedEvents.concat(result.Items);
-						for (i = 0; i < result.Items.length; i++) {
-							interestedEvents.push(result.Items[i].EVENT_NAME);
-						}
-
-						if (result.LastEvaluatedKey) {
-							params.ExclusiveStartKey = result.LastEvaluatedKey;
-							scanExecute(callback);
-						} else {
-							callback(err, interestedEvents);
-						}
-					}
-				});
-			};
-
-			scanExecute(callback);
-		},
-		processRecords: function (callback) {
-			async.each(event.Records, function (record, innerCallback) {
-				var sequenceNumber = record.kinesis.sequenceNumber;
-				var encodedPayload = record.kinesis.data;
-				var payload = new Buffer(encodedPayload, 'base64').toString('ascii');
-
-				if (interestedEvents.indexOf(record.kinesis.partitionKey) !== -1) {
-					var params = JSON.parse(payload);
-					params.ReturnConsumedCapacity = "TOTAL";
-					params.TableName = config.EVENT_TABLE;
-
-					dynamodb.putItem(params, function (err, data) {
-						if (err) {
-							logger.error('Unable to store event in events table, message: ' + JSON.stringify(err));
-							failedEvents.push({
-								"sequence_id": sequenceNumber,
-								"event": payload,
-								"failure_code": failureCodes.DB_ERROR_1.code,
-								"failure_message": failureCodes.DB_ERROR_1.message
-							});
-							innerCallback({
-								"db_error": "Unable to store event in events table"
-							});
-
-						} else {
-							logger.info('Stored interested event in table');
-							processedEvents.push({
-								"sequence_id": sequenceNumber,
-								"event": payload,
-								"failure_code": null,
-								"failure_message": null
-							});
-							innerCallback(null, {
-								"message": "successfully processed interested event"
-							});
-						}
-
-					});
-				} else {
-					processedEvents.push({
-						"sequence_id": sequenceNumber,
-						"event": payload,
-						"failure_code": null,
-						"failure_message": null
-					});
-					logger.info('Skipping storage of un-interested event');
-					innerCallback(null, {
-						"message": "successfully processed un-interested event"
-					});
-				}
-
-			}, function (err) {
-				callback();
-			});
-
-		}
-
-	}, function (err, results) {
-		if (err) {
-			return logger.error('Error inside events handler ' + JSON.stringify(err));
-		}
-
-		cb(null, {
-			"processed_events": processedEvents.length,
-			"failed_events": failedEvents.length
-		});
-	});
-
+  exportable.getEvents()
+    .then(() => exportable.processRecords())
+    .then((result) => { return cb(null, { "processed_events": processedEvents.length, "failed_events": failedEvents.length }); })
+    .catch(err => {
+      return logger.error('Error inside events handler ' + JSON.stringify(err));
+    });
 };
+
+function getEvents() {
+  return new Promise((resolve, reject) => {
+    let params = {
+      TableName: config.EVENT_NAME_TABLE,
+      ProjectionExpression: "EVENT_NAME",
+      Limit: 1000,
+      ReturnConsumedCapacity: "TOTAL"
+    };
+
+    let scanExecute = function (callback) {
+      docClient.scan(params, function (err, result) {
+        if (err) {
+          return reject({ "db_error": "Unable to scan Event Names table to fetch interested events" });
+        } else {
+          //interestedEvents = interestedEvents.concat(result.Items);
+          for (i = 0; i < result.Items.length; i++) {
+            interestedEvents.push(result.Items[i].EVENT_NAME);
+          }
+
+          if (result.LastEvaluatedKey) {
+            params.ExclusiveStartKey = result.LastEvaluatedKey;
+            scanExecute(callback);
+          } else {
+            return resolve(interestedEvents);
+          }
+        }
+      });
+    };
+    scanExecute(callback);
+  })
+}
+
+function processRecords() {
+  return new Promise((resolve, reject) => {
+    let processEachEventPromises = [];
+    for (let i = 0; i < event.Records.length; i++) {
+      processEachEventPromises.push(exportable.processEachEvent(event.Records[i]));
+    }
+
+    Promise.all(processEachEventPromises)
+    .then((result) => {
+      return resolve(result);
+    })
+    .catch((error) => {
+      return resolve();
+    });
+  });
+
+}
+
+function processEachEvent(record) {
+  return new Promise((resolve, reject) => {
+    let sequenceNumber = record.kinesis.sequenceNumber;
+    let encodedPayload = record.kinesis.data;
+    let payload = new Buffer(encodedPayload, 'base64').toString('ascii');
+
+    if (interestedEvents.indexOf(record.kinesis.partitionKey) !== -1) {
+      let params = JSON.parse(payload);
+      params.ReturnConsumedCapacity = "TOTAL";
+      params.TableName = config.EVENT_TABLE;
+
+      dynamodb.putItem(params, function (err, data) {
+        if (err) {
+          logger.error('Unable to store event in events table, message: ' + JSON.stringify(err));
+          failedEvents.push({
+            "sequence_id": sequenceNumber,
+            "event": payload,
+            "failure_code": failureCodes.DB_ERROR_1.code,
+            "failure_message": failureCodes.DB_ERROR_1.message
+          });
+          return reject(err);
+        } else {
+          logger.info('Stored interested event in table');
+          processedEvents.push({
+            "sequence_id": sequenceNumber,
+            "event": payload,
+            "failure_code": null,
+            "failure_message": null
+          });
+          return resolve({
+            "message": "successfully processed interested event"
+          });
+        }
+      });
+    } else {
+      processedEvents.push({
+        "sequence_id": sequenceNumber,
+        "event": payload,
+        "failure_code": null,
+        "failure_message": null
+      });
+      logger.info('Skipping storage of un-interested event');
+      return resolve({
+        "message": "successfully processed un-interested event"
+      });
+    }
+  })
+}
+
+const exportable = {
+  handler,
+  getEvents,
+  processRecords,
+  processEachEvent
+}
+
+module.exports = exportable;
