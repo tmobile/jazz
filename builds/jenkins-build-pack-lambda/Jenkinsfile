@@ -508,7 +508,6 @@ def buildLambda(String runtime, String repo_name) {
     Created for testing the deployment of Golang lambda function
     Not a production ready or testable code.
     **/
-    //Manual Tasks for Testing
     sh "pwd"
     sh "go env"
     echo "Jenkins workspace is ${env.WORKSPACE}"
