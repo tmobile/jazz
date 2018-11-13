@@ -8,9 +8,11 @@ import groovy.transform.Field
 */
 
 @Field def config_loader
+@Field def utilModule
 
-def initialize(configLoader){
+def initialize(configLoader, util){
   config_loader = configLoader
+  utilModule = util
 }
 
 def checkKinesisStreamExists(stream_name) {
@@ -87,11 +89,7 @@ def checkSqsQueueExists(queueName) {
 
 def checkIfDifferentFunctionTriggerAttached(event_source_arn, lambda_arn){
    try {
-      response = sh(
-        script: "aws lambda list-event-source-mappings --event-source-arn  ${event_source_arn} --profile cloud-api --output json",
-        returnStdout: true
-      ).trim()
-      echo "mapping_details : $response"
+      def response = listEventSourceMapping (event_source_arn)
       def mapping_details = parseJson(response)
       def isDifferentLambdaAttached  = false
       if(mapping_details.EventSourceMappings.size() > 0) {
@@ -109,6 +107,20 @@ def checkIfDifferentFunctionTriggerAttached(event_source_arn, lambda_arn){
    } catch (ex) {
      error "Exception occured while listing the event source mapping."
    }
+}
+
+def listEventSourceMapping (event_source_arn) {
+  def response
+  try {
+    response = sh(
+      script: "aws lambda list-event-source-mappings --event-source-arn  ${event_source_arn} --profile cloud-api --output json",
+      returnStdout: true
+    ).trim()
+    echo "mapping_details : $response"
+  } catch (ex) {
+    error "Exception occured while listing the event source mapping."
+  }
+  return response
 }
 
 def updateSqsResourceServerless(){
@@ -199,6 +211,7 @@ def putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3Buck
 def checkIfDifferentFunctionTriggerAttachedForS3(existing_notifications, lambdaARN, events_action) {
  def existing_events = []
  def isDifferentEventSourceAttached = false
+ def isExistsHigherPriorityEventTrigger = false
 
   for (item in existing_notifications) {
     eventConfigs = item.value
@@ -211,12 +224,23 @@ def checkIfDifferentFunctionTriggerAttachedForS3(existing_notifications, lambdaA
     if ((item.contains("ObjectCreated") && existing_events.contains("s3:ObjectCreated:*")) ||
       (item.contains("ObjectRemoved") && existing_events.contains("s3:ObjectRemoved:*")) ||
       existing_events.contains(item)) {
-      isDifferentEventSourceAttached = true
+      isExistsHigherPriorityEventTrigger = true
       break
     }
   }
 
- return isDifferentEventSourceAttached
+  if(isExistsHigherPriorityEventTrigger) {
+    if(existing_notifications.LambdaFunctionConfigurations) {
+      for (lambdaConfigs in existing_notifications.LambdaFunctionConfigurations) {
+        if(lambdaConfigs.LambdaFunctionArn != lambdaARN ){
+          isDifferentEventSourceAttached = true
+          echo "Function trigger attached already: ${lambdaConfigs.LambdaFunctionArn}"
+          break;
+        }
+      }
+    }
+  }
+  return isDifferentEventSourceAttached
 }
 
 def getS3Events(existing_notifications, events_action, lambdaARN){
@@ -288,7 +312,9 @@ def getS3Events(existing_notifications, events_action, lambdaARN){
 
   if (existing_event_configs_copy.LambdaFunctionConfigurations) {
     for (item in existing_event_configs_copy.LambdaFunctionConfigurations) {
-      lambdaFunctionConfigurations.add(item)
+      if(item.LambdaFunctionArn != lambdaARN ){
+        lambdaFunctionConfigurations.add(item)
+      }
     }
   }
   if (events_list != null && events_list.size() > 0) {
@@ -436,6 +462,98 @@ def createDynamodbStream(tableName) {
     error "Exception occured while creating the dynamodb stream. "
   }
   return stream_details
+}
+
+def deleteEventSourceMapping (lambda_arn, assets_api, auth_token, service_config, env) {
+  try {
+    def response = listEventFunctionMapping(lambda_arn)
+    def mapping_details = parseJson(response)
+    if(mapping_details.EventSourceMappings.size() > 0) {
+      for (details in mapping_details.EventSourceMappings) {
+        def delResponse = sh(
+          script: "aws lambda delete-event-source-mapping --uuid  ${details.UUID} --profile cloud-api --output json",
+          returnStdout: true
+        ).trim()
+        echo "delete event source mapping: $delResponse"
+      }
+    }
+    //Deleting dynamodb stream, which is created by jazz using aws cli
+    if(service_config['event_source_dynamodb']) {
+      checkAndDeleteDynamoDbStream(assets_api, auth_token, service_config, env)
+    }
+  } catch (ex){
+    echo "Exception occured while deleting event source mapping."
+  }
+}
+
+def listEventFunctionMapping (lambda_arn) {
+  def response
+  try {
+    response = sh(
+      script: "aws lambda list-event-source-mappings --function-name  ${lambda_arn} --profile cloud-api --output json",
+      returnStdout: true
+    ).trim()
+    echo "mapping_details : $response"
+  } catch (ex) {
+    error "Exception occured while listing the event source mapping."
+  }
+  return response
+}
+
+def checkAndDeleteDynamoDbStream(assets_api, auth_token, service_config, env) {
+  def assets = utilModule.getAssets(assets_api, auth_token, service_config, env)
+  def assetList = parseJson(assets)
+  def isNewStream = false
+  if(assetList.data.assets.size()>0) {
+    def isNewTable = checkResourceTypeInAssets(assetList.data.assets, "dynamodb")
+    if(!isNewTable) {
+      isNewStream = checkResourceTypeInAssets(assetList.data.assets, "dynamodb_stream")
+    }
+    if (isNewStream) {
+      def table_name = splitAndGetResourceName(service_config['event_source_dynamodb'], env)
+      deleteDynamoDbStream(table_name)
+    }
+  }
+}
+
+def deleteDynamoDbStream(table_name) {
+  try {
+    def response = sh(
+      script: "aws dynamodb update-table --table-name ${table_name} --stream-specification StreamEnabled=false --profile cloud-api --output json",
+      returnStdout: true
+    ).trim()
+    echo "Dynamodb stream details updated successfully. $response"
+  } catch(ex) {
+    echo "Error occured while disabling the dynamo db stream details."
+  }
+}
+
+def checkResourceTypeInAssets(assetList, resource_type) {
+  def isNewResource = false
+  for (asset in assetList) {
+    if(asset.asset_type == resource_type) {
+      isNewResource = true
+      break
+    }
+  }
+  return isNewResource
+}
+
+def getEventResourceNamePerEnvironment(resource, env, concantinator) {
+  if(env != "prod"){
+    resource = "${resource}${concantinator}${env}"
+  }
+  return resource
+}
+
+def getSqsQueueName(event_source_sqs_arn, env) {
+  def event_source_sqs = event_source_sqs_arn.split(":(?!.*:.*)")[1]
+  return getEventResourceNamePerEnvironment(event_source_sqs, env, "_")
+}
+
+def splitAndGetResourceName(resource, env) {
+  def resource_arn = resource.split("/")[1]
+  return getEventResourceNamePerEnvironment(resource_arn, env, "_")
 }
 
 /**
