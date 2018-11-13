@@ -508,16 +508,12 @@ def buildLambda(String runtime, String repo_name) {
     Created for testing the deployment of Golang lambda function
     Not a production ready or testable code.
     **/
-    sh "pwd"
-    sh "go env"
-    echo "Jenkins workspace is ${env.WORKSPACE}"
    	withEnv(["GOPATH=${env.WORKSPACE}"]) {
       sh "mkdir -p $GOPATH/src"
       sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
       sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
       sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/"+ repo_name+"/main.go"
     }
-    sh "pwd"
   }
 }
 
