@@ -133,7 +133,7 @@ def getAssets(assets_api, auth_token, service_config, env) {
       script: "curl GET  \
 			-H \"Content-Type: application/json\" \
 			-H \"Authorization: $auth_token\" \
-			\"${assets_api}?domain=${service_config['domain']}&service=${service_config['service']}&environemnt=${env}\"",
+			\"${assets_api}?domain=${service_config['domain']}&service=${service_config['service']}&environment=${env}\"",
       returnStdout: true
     ).trim()
     echo "Asset details for the service: ${service_config['service']} and domain: ${service_config['domain']} : \n $assets"
