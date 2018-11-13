@@ -319,7 +319,7 @@ var validateEventName = (eventType, sourceName, config) => {
 
   if(!eventType || !sourceName) {
     resultObj.result = false;
-    resultObj.message =  `Event type and/or Event source name can not be empty/undefined.`;
+    resultObj.message =  `Event type and/or source name cannot be empty.`;
     return resultObj;
   }
 
@@ -339,7 +339,7 @@ var validateEventName = (eventType, sourceName, config) => {
 
   if (eventSourceName && (eventSourceName.startsWith("-") || eventSourceName.startsWith("_") || eventSourceName.startsWith(".") || eventSourceName.endsWith("-") || eventSourceName.endsWith("_") || eventSourceName.endsWith("."))) {
     resultObj.result = false;
-    resultObj.message =  `${eventSourceName} should not begin or end with special character.`;
+    resultObj.message =  `${eventSourceName} cannot begin or end with special character`;
     return resultObj;
   }
 
