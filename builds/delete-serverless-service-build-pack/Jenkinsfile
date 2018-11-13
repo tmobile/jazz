@@ -287,7 +287,7 @@ def checkBucket(stage) {
       }
      if(s3Exists && (!isBucketEmpty(targetBucket))) {				
 					sh "aws s3 rm s3://${targetBucket}/ --recursive --exclude '/'"
-					echo "Removing items from bucket for ${output}"								
+					echo "Removing items from bucket"								
 			}			
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
