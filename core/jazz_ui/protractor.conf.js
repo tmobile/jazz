@@ -1,7 +1,7 @@
 // Protractor configuration file, see link for more information
 // https://github.com/angular/protractor/blob/master/lib/config.ts
 
-const { SpecReporter } = require('jasmine-spec-reporter');
+const SpecReporter  = require('jasmine-spec-reporter');
 var Jasmine2HtmlReporter = require('protractor-jasmine2-html-reporter');
 const JasmineConsoleReporter = require('jasmine-console-reporter');
 const reporter = new JasmineConsoleReporter({
