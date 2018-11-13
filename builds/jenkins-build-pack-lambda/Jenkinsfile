@@ -205,7 +205,7 @@ node() {
     stage('Build') {
       events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
       try {
-        buildLambda(runtime)
+        buildLambda(runtime, repo_name)
       } catch (ex) {
         events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -482,7 +482,7 @@ def LoadConfiguration() {
 
 /**	Build project based on runtime
  */
-def buildLambda(String runtime) {
+def buildLambda(String runtime, String repo_name) {
 	echo "installing dependencies for $runtime"
 	if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
@@ -503,9 +503,21 @@ def buildLambda(String runtime) {
 		"""
 	} else if (runtime.indexOf("go") > -1 ){
     //get all dependencies
-    sh "dep ensure"
-    //Build command 
-    sh "env GOOS=linux GOARCH=amd64 go build -o main main.go"
+
+    /**
+    Created for testing the deployment of Golang lambda function
+    Not a production ready or testable code.
+    **/
+    sh "pwd"
+    sh "go env"
+    echo "Jenkins workspace is ${env.WORKSPACE}"
+   	withEnv(["GOPATH=${env.WORKSPACE}"]) {
+      sh "mkdir -p $GOPATH/src"
+      sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
+      sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
+      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/"+ repo_name+"/main.go"
+    }
+    sh "pwd"
   }
 }
 
