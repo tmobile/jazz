@@ -126,6 +126,22 @@ def generateAssetMap(provider, providerId, type, service_config) {
 	return serviceCtxMap;
 }
 
+def getAssets(assets_api, auth_token, service_config, env) {
+  def assets
+  try{
+      assets = sh (
+      script: "curl GET  \
+			-H \"Content-Type: application/json\" \
+			-H \"Authorization: $auth_token\" \
+			\"${assets_api}?domain=${service_config['domain']}&service=${service_config['service']}&environemnt=${env}\"",
+      returnStdout: true
+    ).trim()
+    echo "Asset details for the service: ${service_config['service']} and domain: ${service_config['domain']} : \n $assets"
+  } catch(ex) {
+      echo "Exception occured while getting the assets. $ex"
+  }
+  return assets
+}
 /**
 getAPIIdForCore is a helper method to get apiId for jazz core services
 */
