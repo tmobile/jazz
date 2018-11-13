@@ -195,7 +195,7 @@ node {
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 							echo 'Service deletion is requested: ' + current_environment_id
-							if (is_service_deletion && service_config['event_source_s3']) { // check service for S3 Bucket and make empty if not. //
+							if (service_config['event_source_s3']) { // check service for S3 Bucket and make empty if not. //
 								checkBucket(current_environment_id);
 							}
 							echo 'undeploying function for environment: ' + _envId
