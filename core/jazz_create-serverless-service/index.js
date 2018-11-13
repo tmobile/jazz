@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -288,13 +288,13 @@ var getServiceData = (service_creation_data, authToken, configData) => {
                     eachEvent = service_creation_data.events[idx];
                     logger.info('event: ', JSON.stringify(eachEvent));
                     let isEventNameValid = validateEventName(eachEvent.type, eachEvent.source, configData);
-                    if (isEventNameValid) {
+                    if (isEventNameValid.result) {
                       eventSrc = "event_source_" + eachEvent.type;
                       eventAction = "event_action_" + eachEvent.type;
                       serviceMetadataObj[eventSrc] = eachEvent.source;
                       serviceMetadataObj[eventAction] = eachEvent.action;
                     } else {
-                      reject({result: 'inputError', message: `${eachEvent.type} name is invalid.`});
+                      reject({result: 'inputError', message: isEventNameValid.message});
                     }
 
                 }
@@ -308,7 +308,11 @@ var getServiceData = (service_creation_data, authToken, configData) => {
 }
 
 var validateEventName = (eventType, sourceName, config) => {
-  let eventSourceName = '', sourceType = eventType.toLowerCase(), logicalIdLen = 15;
+  let eventSourceName = '', sourceType = eventType.toLowerCase(), logicalIdLen = 15,
+  resultObj = {
+      result: "",
+      message: ""
+  };
   let eventSourceObject = {
     's3': sourceName,
     'sqs': sourceName.split(':').pop(),
@@ -318,20 +322,28 @@ var validateEventName = (eventType, sourceName, config) => {
 
   eventSourceName = eventSourceObject[sourceType];
   if (!eventSourceName) {
-      return false;
+    resultObj.result = false;
+    resultObj.message =  `Event type '${eventType}' is invalid.`
+    return resultObj;
   }
 
   if (eventSourceName && (eventSourceName.startsWith("-") || eventSourceName.startsWith("_") || eventSourceName.startsWith(".") || eventSourceName.endsWith("-") || eventSourceName.endsWith("_") || eventSourceName.endsWith("."))) {
-    return false;
+    resultObj.result = false;
+    resultObj.message =  `${eventSourceName} should not begin or end with special character.`
+    return resultObj;
   }
 
   let mapType = config.EVENT_SOURCE_NAME[sourceType];
-  let regexPattern = RegExp(mapType.regexPattern);
+  let regexPattern = new RegExp(mapType.regexPattern);
 
   if (eventSourceName.length >= mapType.minLength && eventSourceName.length <= (mapType.maxLength - logicalIdLen) && (regexPattern).test(eventSourceName)) {
-    return true;
+    resultObj.result = true;
+    resultObj.message =  `Source name of ${eventType} is valid.`
+    return resultObj;
   } else {
-    return false;
+    resultObj.result = false;
+    resultObj.message =  `Source name of ${eventType} is invalid. '${eventSourceName}' should have valid length and/or pattern.`
+    return resultObj;
   }
 }
 
