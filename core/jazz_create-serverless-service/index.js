@@ -280,7 +280,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
                     reject(cronExpValidator);
                 }
             }
-            
+
             if (service_creation_data.events && service_creation_data.events.length) {
                 //Process events into properties
                 for (let idx = 0; idx < service_creation_data.events.length; idx++) {
@@ -288,12 +288,15 @@ var getServiceData = (service_creation_data, authToken, configData) => {
                     eachEvent = service_creation_data.events[idx];
                     logger.info('event: ', JSON.stringify(eachEvent));
                     let isEventNameValid = validateEventName(eachEvent.type, eachEvent.source, configData);
-                    if (isEventNameValid.result) {
+                    if (isEventNameValid && isEventNameValid.result) {
                       eventSrc = "event_source_" + eachEvent.type;
                       eventAction = "event_action_" + eachEvent.type;
                       serviceMetadataObj[eventSrc] = eachEvent.source;
                       serviceMetadataObj[eventAction] = eachEvent.action;
                     } else {
+                      if (!isEventNameValid) {
+                        isEventNameValid["message"] = `${eachEvent.type} is invalid.`
+                      }
                       reject({result: 'inputError', message: isEventNameValid.message});
                     }
 
