@@ -316,23 +316,30 @@ var validateEventName = (eventType, sourceName, config) => {
       result: "",
       message: ""
   };
+
+  if(!eventType || !sourceName) {
+    resultObj.result = false;
+    resultObj.message =  `Event type and/or source name cannot be empty.`;
+    return resultObj;
+  }
+
   let eventSourceObject = {
     's3': sourceName,
     'sqs': sourceName.split(':').pop(),
     'dynamodb': sourceName.split('/').pop(),
     'kinesis': sourceName.split('/').pop()
-  }
+  };
 
   eventSourceName = eventSourceObject[sourceType];
   if (!eventSourceName) {
     resultObj.result = false;
-    resultObj.message =  `Event type '${eventType}' is invalid.`
+    resultObj.message =  `Event type '${eventType}' is invalid.`;
     return resultObj;
   }
 
   if (eventSourceName && (eventSourceName.startsWith("-") || eventSourceName.startsWith("_") || eventSourceName.startsWith(".") || eventSourceName.endsWith("-") || eventSourceName.endsWith("_") || eventSourceName.endsWith("."))) {
     resultObj.result = false;
-    resultObj.message =  `${eventSourceName} should not begin or end with special character.`
+    resultObj.message =  `${eventSourceName} cannot begin or end with special character`;
     return resultObj;
   }
 
@@ -341,14 +348,14 @@ var validateEventName = (eventType, sourceName, config) => {
 
   if (eventSourceName.length >= mapType.minLength && eventSourceName.length <= (mapType.maxLength - logicalIdLen) && (regexPattern).test(eventSourceName)) {
     resultObj.result = true;
-    resultObj.message =  `Source name of ${eventType} is valid.`
+    resultObj.message =  `Source name of ${eventType} is valid.`;
     return resultObj;
   } else {
     resultObj.result = false;
-    resultObj.message =  `Source name of ${eventType} is invalid. '${eventSourceName}' should have valid length and/or pattern.`
+    resultObj.message =  `Source name of ${eventType} is invalid. '${eventSourceName}' should have valid length and/or pattern.`;
     return resultObj;
   }
-}
+};
 
 module.exports = {
     handler: handler,
