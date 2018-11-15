@@ -454,74 +454,28 @@ describe('create-serverless-service', function () {
 
     });
 
-    it("should return input object with METADATA values for valid input parameters for service type function (event_source e2c)", () => {
+    it("should return input object with METADATA values for valid input parameters for service type function (for different event sources)", () => {
       let authToken = "temp-auth-token";
       let bool = false;
-      service_creation_data["enableEventSchedule"] = true;
-      service_creation_data.event_source_ec2 = "temp-url";
-      service_creation_data.event_action_ec2 = "temp-url";
-      service_creation_data.event_source_ec2 = "sample-test-data"
+      let eventsList = ["s3", "dynamodb", "sqs", "kinesis"];
+      service_creation_data.rateExpression = ""
       let config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config).then((input) => {
-        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
-          if (input.METADATA.event_action_ec2 && input.METADATA.event_action_ec2 != null) {
-            bool = true;
-          }
-        }
-        assert.isTrue(bool);
-      })
-    });
 
-    it("should return input object with METADATA values for valid input parameters for service type function (event_source s3)", () => {
-      let authToken = "temp-auth-token";
-      let bool = false;
-      service_creation_data["enableEventSchedule"] = true;
-      service_creation_data.event_action_s3 = "temp-url";
-      service_creation_data.event_source_s3 = "sample-test-data"
-      let config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config).then((input) => {
-        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
-          if (input.METADATA.event_action_s3 && input.METADATA.event_action_s3 != null) {
-            bool = true;
-          }
+      eventsList.forEach(each => {
+        let eachEvent = {
+          type: each,
+          source: "temp-" + each + "-source",
+          action: "temp-" + each + "-action"
         }
-        assert.isTrue(bool);
-      })
-    });
-
-    it("should return input object with METADATA values for valid input parameters for service type function (event source dynamoDB)", () => {
-      let authToken = "temp-auth-token";
-      let bool = false;
-      service_creation_data["enableEventSchedule"] = true;
-      service_creation_data.event_source_dynamodb = "temp-url";
-      service_creation_data.event_action_dynamodb = "temp-url";
-      service_creation_data.event_source_dynamodb = "sample-test-data"
-      let config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config).then((input) => {
-        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
-          if (input.METADATA.event_action_dynamodb && input.METADATA.event_action_dynamodb != null) {
-            bool = true;
-          }
-        }
-        assert.isTrue(bool);
-      })
-    });
-
-    it("should return input object with METADATA values for valid input parameters for service type function (event source stream", () => {
-      let authToken = "temp-auth-token";
-      let bool = false;
-      service_creation_data["enableEventSchedule"] = true;
-      service_creation_data.event_source_stream = "temp-url";
-      service_creation_data.event_action_stream = "temp-url";
-      service_creation_data.event_source_stream = "sample-test-data"
-      let config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config).then((input) => {
-        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
-          if (input.METADATA.event_action_stream && input.METADATA.event_action_stream != null) {
-            bool = true;
-          }
-        }
-        assert.isTrue(bool);
+        
+        service_creation_data.events = [eachEvent]
+        
+        index.getServiceData(service_creation_data, authToken, config)
+        .then((input) => {
+          let action = 'event_action_' + each;
+          let source = 'event_source_' + each;
+          expect(input.METADATA).to.have.all.keys(action, source)
+        });
       })
     })
 

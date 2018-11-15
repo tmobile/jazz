@@ -91,14 +91,13 @@ module.exports = function () {
         const timestamp = new Date().toISOString();
 
         const logLevelMessageTypes = {
-            'error': `${timestamp}, 'ERROR \t', ${config.requestDetails}, ${message}`,
-            'warn': `${timestamp}, 'WARN \t', ${config.requestDetails}, ${message}`,
-            'info': `${timestamp}, 'INFO \t', ${config.requestDetails}, ${message}`,
-            'verbose': `${timestamp}, 'VERBOSE \t', ${config.requestDetails}, ${message}`,
-            'debug': `${timestamp}, 'DEBUG \t', ${config.requestDetails}, ${message}`,
-            'log': `${timestamp}, ${level} \t', ${config.requestDetails}, ${message}`
+            'error': `${timestamp} ERROR \t${config.requestDetails} ${message}`,
+            'warn': `${timestamp} WARN \t${config.requestDetails} ${message}`,
+            'info': `${timestamp} INFO \t${config.requestDetails} ${message}`,
+            'verbose': `${timestamp} VERBOSE \t${config.requestDetails} ${message}`,
+            'debug': `${timestamp} DEBUG \t${config.requestDetails} ${message}`,
+            'log': `${timestamp} ${level} \t${config.requestDetails} ${message}`
         };
-
         /*
             @TODO: format message as per requirement.
             Will it be just a string / json. Should we except error object also?

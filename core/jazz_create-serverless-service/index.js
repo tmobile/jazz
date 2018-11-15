@@ -268,26 +268,23 @@ var getServiceData = (service_creation_data, authToken, configData) => {
                     if (enable_eventschedule && enable_eventschedule !== "") {
                         serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
                     }
-                    if (service_creation_data.event_source_ec2 && service_creation_data.event_action_ec2) {
-                        serviceMetadataObj["event_action_ec2"] = service_creation_data.event_source_ec2;
-                        serviceMetadataObj["event_action_ec2"] = service_creation_data.event_action_ec2;
-                    }
-                    if (service_creation_data.event_source_s3 && service_creation_data.event_action_s3) {
-                        serviceMetadataObj["event_source_s3"] = service_creation_data.event_source_s3;
-                        serviceMetadataObj["event_action_s3"] = service_creation_data.event_action_s3;
-                    }
-                    if (service_creation_data.event_source_dynamodb && service_creation_data.event_action_dynamodb) {
-                        serviceMetadataObj["event_source_dynamodb"] = service_creation_data.event_source_dynamodb;
-                        serviceMetadataObj["event_action_dynamodb"] = service_creation_data.event_action_dynamodb;
-                    }
-                    if (service_creation_data.event_source_stream && service_creation_data.event_action_stream) {
-                        serviceMetadataObj["event_source_stream"] = service_creation_data.event_source_stream;
-                        serviceMetadataObj["event_action_stream"] = service_creation_data.event_action_stream;
-                    }
 
                 } else {
                     logger.error('cronExpValidator : ', cronExpValidator);
                     reject(cronExpValidator);
+                }
+            }
+            
+            if (service_creation_data.events && service_creation_data.events.length) {
+                //Process events into properties
+                for (let idx = 0; idx < service_creation_data.events.length; idx++) {
+                    var eachEvent, eventSrc, eventAction;
+                    eachEvent = service_creation_data.events[idx];
+                    logger.info('event: ', JSON.stringify(eachEvent));
+                    eventSrc = "event_source_" + eachEvent.type;
+                    eventAction = "event_action_" + eachEvent.type;
+                    serviceMetadataObj[eventSrc] = eachEvent.source;
+                    serviceMetadataObj[eventAction] = eachEvent.action;
                 }
             }
         }
