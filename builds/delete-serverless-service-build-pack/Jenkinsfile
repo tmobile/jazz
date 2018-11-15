@@ -131,6 +131,7 @@ node {
 				}
 			} else {
 				error "Invalid project configuration"
+				
 			}
 		}
 	}
@@ -1117,6 +1118,8 @@ def loadServerlessConfig() {
 		sh "cp _config/serverless-java.yml ./serverless.yml"
 	} else if (service_config['providerRuntime'].indexOf("python") > -1) {
 		sh "cp _config/serverless-python.yml ./serverless.yml"
+	} else if (service_config['providerRuntime'].indexOf("go") > -1) {
+		sh "cp _config/serverless-go.yml ./serverless.yml"
 	}
 
   if (service_config['event_source_dynamodb'] || service_config['event_source_sqs']) {
