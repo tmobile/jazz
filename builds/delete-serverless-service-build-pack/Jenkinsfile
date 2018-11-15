@@ -401,9 +401,11 @@ def unDeployService(stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+			def randomString = Util.generateRequestId();
+			def cloudApi = "jazz-${randomString}";
+			sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
 			def env_key
 			if (stage.endsWith("-dev")) {
@@ -415,6 +417,8 @@ def unDeployService(stage) {
 			sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
 			echo "Service undeployed"
+
+			resetCredentials(cloudApi)
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
 		}
@@ -561,9 +565,11 @@ def cleanUpApiGatewayResources(stage, path) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+			def randomString = Util.generateRequestId();
+			def cloudApi = "jazz-${randomString}";
+			sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
 			def resource_id = null
 			def resource_search_key
@@ -609,6 +615,7 @@ def cleanUpApiGatewayResources(stage, path) {
 			} else {
 				echo "Resource Id does not exist in API gateway."
 			}
+			resetCredentials(cloudApi)
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
 		}
@@ -669,11 +676,14 @@ def cleanUpApiDocs(stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+			def randomString = Util.generateRequestId();
+			def cloudApi = "jazz-${randomString}";
+			sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			def apiRootFolder = getApiDocsFolder(stage)
 			sh "aws s3 rm s3://${apiRootFolder}/${service_config['domain']}/${service_config['service']}/${stage} --recursive"
+			resetCredentials(cloudApi)
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
 		}
@@ -773,9 +783,11 @@ def unDeployWebsite(stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+			def randomString = Util.generateRequestId();
+			def cloudApi = "jazz-${randomString}";
+			sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
 			def assetInfo = generateAssetInfo(stage)
@@ -801,6 +813,7 @@ def unDeployWebsite(stage) {
 					sh "aws s3 rm s3://${assetInfo['folder_name']} --recursive"
 				}
 			}
+			resetCredentials(cloudApi)
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
 		}
@@ -859,9 +872,11 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+			def randomString = Util.generateRequestId();
+			def cloudApi = "jazz-${randomString}";
+			sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 			def bucketPolicy = sh(
 				script: "aws s3api get-bucket-policy --bucket ${assetInfo['s3Bucket']} --output json",
@@ -886,7 +901,7 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 				def policy_json = JsonOutput.toJson(policyObjectUpdated)
 				updateBucketPolicy(policy_json, assetInfo['s3Bucket'])
 			}
-			resetCredentials()
+			resetCredentials(cloudApi)
 		} catch (ex) {
 			resetCredentials()
 			if (ex.getMessage().indexOf("groovy.json.internal.LazyMap") < 0) {
@@ -896,15 +911,13 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 	}
 }
 
-/**
-	Reset credentials
-*/
-def resetCredentials() {
-	echo "resetting AWS credentials"
-	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXX"
+/** Reset credentials
+ */
+def resetCredentials(cloudApi) {
+  echo "resetting AWS credentials"
+	sh "aws configure set profile.${cloudApi}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  sh "aws configure set profile.${cloudApi}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
 }
-
 @NonCPS
 def updateBucketPolicy(policy_json, bucketName){
 	try {
@@ -928,9 +941,11 @@ def cleanupCloudFrontDistribution(stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+			def randomString = Util.generateRequestId();
+			def cloudApi = "jazz-${randomString}";
+			sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
 
 			def distributionID
@@ -943,6 +958,7 @@ def cleanupCloudFrontDistribution(stage) {
 				_Etag = generateDistributionConfigForDisable(distributionConfig)
 				_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
 			}
+			resetCredentials(cloudApi)
 		} catch (ex) {
 			if ((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
 				echo "Could not find a CloudFront distribution Id for service: ${service_config['service']} and environment $stage"

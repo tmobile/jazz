@@ -235,9 +235,11 @@ node() {
       ]) {
         try {
           // initialize aws credentials
-          sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-          sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-          sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+          def randomString = Util.generateRequestId();
+          def cloudApi = "jazz-${randomString}";
+          sh "aws configure set profile.${cloudApi}.region ${Configs.AWS.REGION}"
+          sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+          sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
           loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
 
@@ -279,7 +281,7 @@ node() {
             }
           }
 
-          def function_arn = getLambdaARN(stackName);
+          def function_arn = getLambdaARN(stackName, cloudApi);
           lambdaARN = function_arn.split(":(?!.*:.*)")[0]
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
@@ -290,7 +292,7 @@ node() {
           }
 
           // reset Credentials
-          resetCredentials()
+          resetCredentials(cloudApi)
           if (domain != "jazz") {
             createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
           }
@@ -515,10 +517,10 @@ def buildLambda(String runtime, String repo_name) {
 
 /** Reset credentials
  */
-def resetCredentials() {
+def resetCredentials(cloudApi) {
   echo "resetting AWS credentials"
-  sh "aws configure set profile.tmoDevOps.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-  sh "aws configure set profile.tmoDevOps.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+	sh "aws configure set profile.${cloudApi}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  sh "aws configure set profile.${cloudApi}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
 }
 
 /** Validate basic configurations in the deployment yaml file and error if any keys are
@@ -667,7 +669,7 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
-  def lambda = "/aws/lambda/${stackName}"
+  def lambda = "/aws/lambda/${stackName}" 
   def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
   try {
     sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
@@ -878,12 +880,12 @@ def getEventsArn(config, env) {
   }
 }
 
-def getLambdaARN(String stackName) {
-  def ARN = "";
+def getLambdaARN(String stackName, cloudApi) {
+	def ARN = "";
 
-  try {
-    def cloudformation_resources = "";
-    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+	try {
+		def cloudformation_resources = "";
+		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${cloudApi}")
 
     def parsedObject = parseJson(cloudformation_resources);
     def outputs = parsedObject.Stacks[0].Outputs;
