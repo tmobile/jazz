@@ -35,15 +35,15 @@ function handler(event, context, cb) {
   let interestedEvents = [];
   let failureCodes = fcodes();
 
-  exportable.getEvents()
-    .then(() => exportable.processRecords())
+  exportable.getEvents(config)
+    .then(() => exportable.processRecords(config))
     .then((result) => { return cb(null, { "processed_events": processedEvents.length, "failed_events": failedEvents.length }); })
     .catch(err => {
       return logger.error('Error inside events handler ' + JSON.stringify(err));
     });
 };
 
-function getEvents() {
+function getEvents(config) {
   return new Promise((resolve, reject) => {
     let params = {
       TableName: config.EVENT_NAME_TABLE,
@@ -75,11 +75,11 @@ function getEvents() {
   })
 }
 
-function processRecords() {
+function processRecords(config) {
   return new Promise((resolve, reject) => {
     let processEachEventPromises = [];
     for (let i = 0; i < event.Records.length; i++) {
-      processEachEventPromises.push(exportable.processEachEvent(event.Records[i]));
+      processEachEventPromises.push(exportable.processEachEvent(event.Records[i], config));
     }
 
     Promise.all(processEachEventPromises)
@@ -93,7 +93,7 @@ function processRecords() {
 
 }
 
-function processEachEvent(record) {
+function processEachEvent(record, config) {
   return new Promise((resolve, reject) => {
     let sequenceNumber = record.kinesis.sequenceNumber;
     let encodedPayload = record.kinesis.data;
