@@ -67,7 +67,7 @@ node() {
       auth_token = setCredentials()
       repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
     }
-
+    
     dir(repo_name) {
       checkout([$class: 'GitSCM', branches: [
         [name: '*/' + params.scm_branch]
@@ -502,12 +502,8 @@ def buildLambda(String runtime, String repo_name) {
 		pip install pytest
 		"""
 	} else if (runtime.indexOf("go") > -1 ){
-    //get all dependencies
-
-    /**
-    Created for testing the deployment of Golang lambda function
-    Not a production ready or testable code.
-    **/
+    //Installing dependencies using dep ensure
+    //golang build scripts
    	withEnv(["GOPATH=${env.WORKSPACE}"]) {
       sh "mkdir -p $GOPATH/src"
       sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
