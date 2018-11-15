@@ -220,9 +220,11 @@ node() {
 			]) {
 				try {
 					// initialize aws credentials
-					sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+					def randomString = Util.generateRequestId();
+          			def cloudApi = "jazz-${randomString}";
+          			sh "aws configure set profile.${cloudApi}.region ${Configs.AWS.REGION}"
+          			sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+          			sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
 					loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isStreamEnabled, isDynamoDbEnabled)
 
@@ -245,12 +247,12 @@ node() {
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
-					lambdaARN = getLambdaARN(stackName)
+					lambdaARN = getLambdaARN(stackName, cloudApi)
 					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
 					echo "lambdaARN: ${lambdaARN}"
 					// reset Credentials
-					resetCredentials()
+					resetCredentials(cloudApi)
 					if (domain != "jazz") {
 						createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
 					}
@@ -727,12 +729,12 @@ def getEventsArn(config, env) {
 	}
 }
 
-def getLambdaARN(String stackName) {
+def getLambdaARN(String stackName, cloudApi) {
 	def ARN = "";
 
 	try {
 		def cloudformation_resources = "";
-		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${cloudApi}")
 
 		def parsedObject = parseJson(cloudformation_resources);
 		def outputs = parsedObject.Stacks[0].Outputs;
