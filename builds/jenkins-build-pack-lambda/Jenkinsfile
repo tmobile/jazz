@@ -669,7 +669,7 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
-  def lambda = "/aws/lambda/${stackName}"
+  def lambda = "/aws/lambda/${stackName}" 
   def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
   try {
     sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
