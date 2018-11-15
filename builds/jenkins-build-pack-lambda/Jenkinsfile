@@ -67,7 +67,7 @@ node() {
       auth_token = setCredentials()
       repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
     }
-
+    
     dir(repo_name) {
       checkout([$class: 'GitSCM', branches: [
         [name: '*/' + params.scm_branch]
@@ -205,7 +205,7 @@ node() {
     stage('Build') {
       events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
       try {
-        buildLambda(runtime)
+        buildLambda(runtime, repo_name)
       } catch (ex) {
         events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -235,9 +235,11 @@ node() {
       ]) {
         try {
           // initialize aws credentials
-          sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-          sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-          sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+          def randomString = Util.generateRequestId();
+          def cloudApi = "jazz-${randomString}";
+          sh "aws configure set profile.${cloudApi}.region ${Configs.AWS.REGION}"
+          sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+          sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
           loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
 
@@ -279,7 +281,7 @@ node() {
             }
           }
 
-          def function_arn = getLambdaARN(stackName);
+          def function_arn = getLambdaARN(stackName, cloudApi);
           lambdaARN = function_arn.split(":(?!.*:.*)")[0]
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
@@ -290,7 +292,7 @@ node() {
           }
 
           // reset Credentials
-          resetCredentials()
+          resetCredentials(cloudApi)
           if (domain != "jazz") {
             createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
           }
@@ -482,7 +484,7 @@ def LoadConfiguration() {
 
 /**	Build project based on runtime
  */
-def buildLambda(String runtime) {
+def buildLambda(String runtime, String repo_name) {
 	echo "installing dependencies for $runtime"
 	if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
@@ -502,19 +504,23 @@ def buildLambda(String runtime) {
 		pip install pytest
 		"""
 	} else if (runtime.indexOf("go") > -1 ){
-    //get all dependencies
-    sh "dep ensure"
-    //Build command 
-    sh "env GOOS=linux GOARCH=amd64 go build -o main main.go"
+    //Installing dependencies using dep ensure
+    //golang build scripts
+   	withEnv(["GOPATH=${env.WORKSPACE}"]) {
+      sh "mkdir -p $GOPATH/src"
+      sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
+      sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
+      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/"+ repo_name+"/main.go"
+    }
   }
 }
 
 /** Reset credentials
  */
-def resetCredentials() {
+def resetCredentials(cloudApi) {
   echo "resetting AWS credentials"
-  sh "aws configure set profile.tmoDevOps.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-  sh "aws configure set profile.tmoDevOps.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+	sh "aws configure set profile.${cloudApi}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  sh "aws configure set profile.${cloudApi}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
 }
 
 /** Validate basic configurations in the deployment yaml file and error if any keys are
@@ -663,7 +669,7 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
-  def lambda = "/aws/lambda/${stackName}"
+  def lambda = "/aws/lambda/${stackName}" 
   def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
   try {
     sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
@@ -874,12 +880,12 @@ def getEventsArn(config, env) {
   }
 }
 
-def getLambdaARN(String stackName) {
-  def ARN = "";
+def getLambdaARN(String stackName, cloudApi) {
+	def ARN = "";
 
-  try {
-    def cloudformation_resources = "";
-    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+	try {
+		def cloudformation_resources = "";
+		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${cloudApi}")
 
     def parsedObject = parseJson(cloudformation_resources);
     def outputs = parsedObject.Stacks[0].Outputs;

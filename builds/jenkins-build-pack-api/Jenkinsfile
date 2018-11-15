@@ -221,9 +221,11 @@ node() {
 				events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
-					sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+					def randomString = Util.generateRequestId();
+					def cloudApi = "jazz-${randomString}";
+					sh "aws configure set profile.${cloudApi}.region ${Configs.AWS.REGION}"
+					sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+					sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain for ${env_key}"
@@ -236,7 +238,7 @@ node() {
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
-					def lambdaARN = getLambdaARN(stackName);
+					def lambdaARN = getLambdaARN(stackName, cloudApi);
 					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
 					if (fileExists('swagger/swagger.json')) {
@@ -256,9 +258,9 @@ node() {
 						sh "cat swagger/swagger.json "
 
 						echo "Deploying to API Gateway environment.."
-						sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile cloud-api"
-						sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile cloud-api"
-						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+						sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile ${cloudApi}"
+						sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile ${cloudApi}"
+						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile${cloudApi}"
 
 						if("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
 							sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
@@ -294,9 +296,11 @@ node() {
 						send_status_email(config, 'COMPLETED', svc_status)
 
 					}
-
+					resetCredentials(cloudApi)
+					
 					if (domain && domain == "jazz") {
 						serviceConfigdata.setLogStreamPermission(config)
+	
 					}
 				}
 			} catch (ex) {
@@ -321,10 +325,9 @@ node() {
 
 def getLambdaARN(String stackName) {
 	def ARN = "";
-
 	try {
 		def cloudformation_resources = "";
-		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${cloudApi}")
 
 		def parsedObject = parseJson(cloudformation_resources);
 		def outputs = parsedObject.Stacks[0].Outputs;
@@ -549,13 +552,13 @@ def setLambdaExecutionRole(role) {
 	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#${role}#g' serverless.yml"
 }
 
-/**
+/** 
 	Reset credentials
-*/
-def resetCredentials() {
-	echo "resetting AWS credentials"
-	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXX"
+ */
+def resetCredentials(cloudApi) {
+  echo "resetting AWS credentials"
+	sh "aws configure set profile.${cloudApi}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  sh "aws configure set profile.${cloudApi}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
 }
 
 /**

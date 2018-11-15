@@ -1,7 +1,7 @@
 // Protractor configuration file, see link for more information
 // https://github.com/angular/protractor/blob/master/lib/config.ts
 
-const { SpecReporter } = require('jasmine-spec-reporter');
+const SpecReporter  = require('jasmine-spec-reporter');
 var Jasmine2HtmlReporter = require('protractor-jasmine2-html-reporter');
 const JasmineConsoleReporter = require('jasmine-console-reporter');
 const reporter = new JasmineConsoleReporter({
@@ -23,7 +23,7 @@ exports.config = {
     'browserName': 'chrome',
     'chromeOptions': {
       // Get rid of --ignore-certificate yellow warning
-      args: ['--no-sandbox', '--test-type=browser'],
+      args: [ '--headless', '--disable-gpu', '--no-sandbox', '--test-type=browser'],
       // Set download path and avoid prompting for download even though
       // this is already the default on Chrome but for completeness
       prefs: {
