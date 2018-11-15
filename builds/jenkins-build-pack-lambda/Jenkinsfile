@@ -503,15 +503,7 @@ def buildLambda(String runtime, String repo_name) {
 		"""
 	} else if (runtime.indexOf("go") > -1 ){
     //get all dependencies
-<<<<<<< HEAD
-
-    /**
-    Created for testing the deployment of Golang lambda function
-    Not a production ready or testable code.
-    **/
-=======
-    //Build Scripts for Golang
->>>>>>> Updated delete service for Go
+    //Build Scripts for golang
    	withEnv(["GOPATH=${env.WORKSPACE}"]) {
       sh "mkdir -p $GOPATH/src"
       sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
