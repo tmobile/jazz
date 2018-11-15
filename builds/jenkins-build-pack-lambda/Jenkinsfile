@@ -502,7 +502,7 @@ def buildLambda(String runtime, String repo_name) {
 		pip install pytest
 		"""
 	} else if (runtime.indexOf("go") > -1 ){
-    //get all dependencies
+    //Installing dependencies using dep ensure
     //golang build scripts
    	withEnv(["GOPATH=${env.WORKSPACE}"]) {
       sh "mkdir -p $GOPATH/src"
