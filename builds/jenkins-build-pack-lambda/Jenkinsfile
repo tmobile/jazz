@@ -503,7 +503,7 @@ def buildLambda(String runtime, String repo_name) {
 		"""
 	} else if (runtime.indexOf("go") > -1 ){
     //get all dependencies
-    //Build Scripts for golang
+    //golang build scripts
    	withEnv(["GOPATH=${env.WORKSPACE}"]) {
       sh "mkdir -p $GOPATH/src"
       sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
