@@ -63,7 +63,7 @@ describe('jazz_assets', function () {
     callbackObj = {
       "callback": callback
     };
-    config = configObj(event);
+    config = configObj.getConfig(event);
     assetTable = config.ASSETS_TABLE;
     global = {
       "config": config,
