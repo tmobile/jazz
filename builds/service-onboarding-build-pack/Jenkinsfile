@@ -79,6 +79,9 @@ node  {
 						else if (service_config['runtime'] == "java") {
 							service_template = 'api-template-java'
 						}
+						else if (service_config['runtime'] == "go") {
+							service_template = 'api-template-go'
+						}
 						break
 
 					case "lambda":
