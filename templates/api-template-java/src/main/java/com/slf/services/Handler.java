@@ -1,6 +1,6 @@
 package com.slf.services;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import org.apache.log4j.Logger;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
@@ -39,7 +39,7 @@ public class Handler implements RequestHandler<Request, Response> {
 		}
 		*/
 
-		HashMap<String, String> data = new HashMap<String, String>();
+		LinkedHashMap<String, String> data = new LinkedHashMap<String, String>();
 		if ((input == null) || (input.getMethod() == null)) {
 			data.put("key", "Default Value");
 		} else {
