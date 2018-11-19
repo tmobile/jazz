@@ -401,7 +401,7 @@ def unDeployService(stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			def randomString = Util.generateRequestId();
+			def randomString = utilModule.generateRequestId();
 			def cloudApi = "jazz-${randomString}";
 			sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
 			sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
