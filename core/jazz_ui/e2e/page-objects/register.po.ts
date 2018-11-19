@@ -21,26 +21,26 @@ export class Register {
   }
 
   getLoginButton(){
-   return element(by.xpath('//div/jazz-header/header/div[2]/ul/li[5]/div/btn-jazz-primary/button'));
+   return element(by.css('div.login'));
   }
   getRegister(){
-    return element(by.xpath('//div[@class="newUser"]/a[text()="Register"]'));
+    return element(by.css('div.newUser'));
   }
   getBackToLogin()
   {
-    return element(by.xpath('//div[@class="forgot-password"]/a[text()="Back to login"]'));  
+    return element(by.css('div.forgot-password'));  
   }
   getUserName(){
-    return element(by.xpath('//div[text()="User Email"]/following-sibling::input[@type="email"]'));
+    return element(by.css('input[name=Username]'));
   }
   getPassword(){
-    return element(by.xpath('//div[text()="Password "]/following-sibling::input[@type="password"]'));
+    return element(by.css('input[name=password]'));
   }
   getRegistrationCode(){
-    return element(by.xpath('//div[text()="Registration Code"]/following-sibling::input[@name="Usercode"]'));
+    return element(by.css('input[name=Usercode]'));
   }
   getRegisterButton(){
-    return element(by.xpath('//div[@class="btn-wrp"]/btn-jazz-primary/button[text()="REGISTER"]'));
+    return element(by.css('div.btn-wrp'));
   }
   getDummy() {
     return element(by.xpath('//*[@id="exampleName"]'));
