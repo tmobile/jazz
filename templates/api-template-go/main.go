@@ -21,7 +21,6 @@ var format = logging.MustStringFormatter(
 )
 
 //Request Model struct
-//Request Model struct
 type Request struct {
 	Stage  string  `json:"stage,omitempty"`
 	Method string  `json:"method,omitempty"`
