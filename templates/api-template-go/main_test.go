@@ -10,19 +10,17 @@ import (
 	"context"
 	"reflect"
 	"testing"
-
-	"github.com/aws/aws-lambda-go/events"
 )
 
 func TestHandler(t *testing.T) {
 	type args struct {
 		ctx     context.Context
-		request events.APIGatewayProxyRequest
+		request Request
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    events.APIGatewayProxyResponse
+		want    Response
 		wantErr bool
 	}{
 		// TODO: Add test cases.

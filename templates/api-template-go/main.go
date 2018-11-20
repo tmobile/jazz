@@ -9,9 +9,7 @@ package main
 //Imports
 import (
 	"context"
-	"encoding/json"
 
-	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	logging "github.com/op/go-logging"
 )
@@ -23,9 +21,12 @@ var format = logging.MustStringFormatter(
 )
 
 //Request Model struct
+//Request Model struct
 type Request struct {
-	ID    float64 `json:"id,omitempty"`
-	Value string  `json:"value,omitempty"`
+	Stage  string  `json:"stage,omitempty"`
+	Method string  `json:"method,omitempty"`
+	ID     float64 `json:"id,omitempty"`
+	Value  string  `json:"value,omitempty"`
 }
 
 //Response Model
@@ -44,34 +45,33 @@ type Response struct {
 */
 
 //Handler Function for Aws Lambda which accepts Requests and Produce the response in json.
-func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func Handler(ctx context.Context, request Request) (Response, error) {
 	//Loading the Configuration Files
 	var response Response
 	// stdout and stderr are sent to AWS CloudWatch Logs
 	log.Info("Processing API Request for runtime Go")
 
-	if len(request.HTTPMethod) == 0 {
+	if len(request.Method) == 0 {
 		response = Response{
 			Message: "Sample Request",
 			Ok:      true,
 		}
 	} else {
 
-		if request.HTTPMethod == "GET" {
+		if request.Method == "GET" {
 			response = Response{
-				Message: request.HTTPMethod + " Request",
+				Message: request.Method + " Request",
 				Ok:      true,
 			}
-		} else if request.HTTPMethod == "POST" {
+		} else if request.Method == "POST" {
 			response = Response{
-				Message: request.HTTPMethod + " Request ",
+				Message: request.Method + " Request ",
 				Ok:      true,
 			}
 		}
 	}
 
-	body, _ := json.Marshal(response)
-	return events.APIGatewayProxyResponse{Body: string(body), StatusCode: 200}, nil
+	return response, nil
 
 }
 
