@@ -20,26 +20,26 @@ export class Login {
     return browser.get('');
   }
   getLoginButton(){
-    return element(by.xpath('//div/jazz-header/header/div[2]/ul/li[5]/div/btn-jazz-primary/button'));                   
+    return element(by.css('div.login'));                   
   }
   getUserNameInput() {
-      return element(by.xpath('//div/div[2]/login/div[1]/div[2]/div[2]/div[1]/input'));
+      return element(by.css('input[name=Username]'));
   }
   getPasswordInput() {
-    return element(by.xpath('//div/div[2]/login/div[1]/div[2]/div[2]/div[2]/input'));
+    return element(by.css('input[name=password]'));
   }
   submitLoginButton() {
-    return element(by.xpath('//div/div[2]/login/div[1]/div[2]/div[3]/btn-jazz-primary/button'));
+    return element(by.css('div.btn-wrp'));
   }
   submitUsername() {
     return element(by.id('i0116'));
   }
   typeUserText() {
-    return element(by.xpath('//input[@name="loginfmt"]'));
+    return element(by.css('//input[@name="loginfmt"]'));
   }
   clickNext()
   {
-    return element(by.xpath('//input[@type="email"]'));
+    return element(by.css('//input[@type="email"]'));
   }
   submitNext(){
      return element(by.id('idSIButton9'));
