@@ -48,7 +48,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	//Loading the Configuration Files
 	var response Response
 	// stdout and stderr are sent to AWS CloudWatch Logs
-	log.Info("Processing API Request")
+	log.Info("Processing API Request for runtime Go")
 
 	if len(request.HTTPMethod) == 0 {
 		response = Response{
@@ -64,7 +64,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			}
 		} else if request.HTTPMethod == "POST" {
 			response = Response{
-				Message: request.HTTPMethod + "Request ",
+				Message: request.HTTPMethod + " Request ",
 				Ok:      true,
 			}
 		}
@@ -79,5 +79,4 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 func main() {
 	//Start function to trigger Lambda
 	lambda.Start(Handler)
-
 }
