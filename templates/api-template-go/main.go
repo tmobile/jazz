@@ -10,7 +10,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
@@ -49,14 +48,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 	//Loading the Configuration Files
 	var response Response
 	// stdout and stderr are sent to AWS CloudWatch Logs
-	//log.Info("Processing Lambda request %f\n", event.ID)
-
-	fmt.Println("Headers:")
-	for key, value := range request.Headers {
-		fmt.Printf("    %s: %s\n", key, value)
-	}
-	log.Info("Request Body is :" + request.Body)
-	log.Info("Length of HTTP Method is : %d", len(request.HTTPMethod))
+	log.Info("Processing API Request")
 
 	if len(request.HTTPMethod) == 0 {
 		response = Response{
@@ -72,7 +64,7 @@ func Handler(ctx context.Context, request events.APIGatewayProxyRequest) (events
 			}
 		} else if request.HTTPMethod == "POST" {
 			response = Response{
-				Message: request.HTTPMethod + "Reqeust ",
+				Message: request.HTTPMethod + "Request ",
 				Ok:      true,
 			}
 		}
