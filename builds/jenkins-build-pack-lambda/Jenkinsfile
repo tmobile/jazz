@@ -235,9 +235,9 @@ node() {
       ]) {
         try {
           // initialize aws credentials
-          def randomString = Util.generateRequestId();
+          def randomString = utilModule.generateRequestId();
           def cloudApi = "jazz-${randomString}";
-          sh "aws configure set profile.${cloudApi}.region ${Configs.AWS.REGION}"
+          sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
           sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
