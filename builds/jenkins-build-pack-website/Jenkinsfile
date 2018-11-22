@@ -73,6 +73,18 @@ node()  {
 		error "Failed to fetch service metadata from catalog"
 	}
 
+  if(!service_config.region) {
+    service_config.region = configLoader.AWS.DEFAULTS.REGION
+  }
+
+  if(!service_config.accountId) {
+    service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNT_ID
+  }
+
+  if(!service_config.provider) {
+    service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
+  }
+
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
 	def environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
@@ -145,7 +157,7 @@ node()  {
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 				echo "AWS Configure ......."
 
-				sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+				sh "aws configure set profile.cloud-api.region ${service_config['region']}"
 				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 				sh "aws configure set preview.cloudfront true"
@@ -159,7 +171,7 @@ node()  {
 					def isBucketExists = checkIfBucketExists(s3Bucket)
 					if (!isBucketExists) {
 						echo "creating a new website with name $s3Bucket"
-						sh "aws s3 mb s3://$s3Bucket --region ${configLoader.AWS.REGION}"
+						sh "aws s3 mb s3://$s3Bucket --region ${service_config['region']}"
 					}
 				}
 				def isBucketwithEnvExists = checkIfBucketExists(asset_info)
@@ -229,9 +241,9 @@ node()  {
 def generateAssetUrl(){
 	def url = ""
 	if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
-		url = "http://${s3Bucket}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/${environment}/index.html"
+		url = "http://${s3Bucket}.s3-website-${service_config['region']}.amazonaws.com/${environment}/index.html"
 	} else {
-		url = "http://${s3Bucket}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/${service_config['domain']}-${service_config['service']}/${environment}/index.html"
+		url = "http://${s3Bucket}.s3-website-${service_config['region']}.amazonaws.com/${service_config['domain']}-${service_config['service']}/${environment}/index.html"
 	}
 	return url
 }

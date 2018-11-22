@@ -8,11 +8,16 @@ import groovy.transform.Field
 */
 
 @Field def config_loader
+@Field def service_config
 @Field def utilModule
 
 def initialize(configLoader, util){
   config_loader = configLoader
   utilModule = util
+}
+
+def setServiceConfig(serviceConfig){
+	service_config = serviceConfig
 }
 
 def checkKinesisStreamExists(stream_name) {
@@ -160,7 +165,7 @@ def updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {
     echo "update lambda config using cli"
     UUID uuid = UUID.randomUUID();
     def statementId = uuid.toString();
-    sh "aws lambda --region ${config_loader.AWS.REGION} add-permission --function-name $lambdaARN --statement-id $statementId --action lambda:InvokeFunction --principal s3.amazonaws.com --source-arn arn:aws:s3:::$s3BucketName --output json"
+    sh "aws lambda --region ${service_config['region']} add-permission --function-name $lambdaARN --statement-id $statementId --action lambda:InvokeFunction --principal s3.amazonaws.com --source-arn arn:aws:s3:::$s3BucketName --output json"
     def existing_notifications = getbucketNotificationConfiguration(s3BucketName)
     putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action)
   } catch (ex) {
@@ -369,14 +374,14 @@ def checkAndConvertEvents(events){
 
 def checkDynamoDbTableExists (event_source_dynamodb) {
   try {
-    sh "aws dynamodb describe-table --table-name ${event_source_dynamodb} --region ${config_loader.AWS.REGION} --output json"
+    sh "aws dynamodb describe-table --table-name ${event_source_dynamodb} --region ${service_config['region']} --output json"
     echo "${event_source_dynamodb} exist."
     return true
    } catch (ex) {
     def response
     try {
       response = sh(
-        script: "aws dynamodb describe-table --table-name ${event_source_dynamodb} --region ${config_loader.AWS.REGION} --output json 2<&1 | grep -c 'ResourceNotFoundException'",
+        script: "aws dynamodb describe-table --table-name ${event_source_dynamodb} --region ${service_config['region']} --output json 2<&1 | grep -c 'ResourceNotFoundException'",
         returnStdout: true
       ).trim()
     } catch (e) {
@@ -405,7 +410,7 @@ def getDynamoDbStreamDetails(event_source_dynamodb) {
   def stream_details
   try {
      def streamList = sh(
-      script: "aws dynamodbstreams list-streams --table-name ${event_source_dynamodb} --region ${config_loader.AWS.REGION} --output json",
+      script: "aws dynamodbstreams list-streams --table-name ${event_source_dynamodb} --region ${service_config['region']} --output json",
       returnStdout: true
     ).trim()
     echo "dynamodb table stream details : $streamList"
@@ -431,7 +436,7 @@ def checkDynamoDbTableHasEnabledStream (Streams) {
   ]
   for (stream in Streams) {
       def streamDetails = sh(
-        script: "aws dynamodbstreams describe-stream --stream-arn ${stream.StreamArn} --region ${config_loader.AWS.REGION} --output json",
+        script: "aws dynamodbstreams describe-stream --stream-arn ${stream.StreamArn} --region ${service_config['region']} --output json",
         returnStdout: true
       ).trim()
       def streamDetailsJson = parseJson(streamDetails)
@@ -453,7 +458,7 @@ def createDynamodbStream(tableName) {
 
   try {
     def tableDetails = sh(
-      script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES --region ${config_loader.AWS.REGION} --output json",
+      script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES --region ${service_config['region']} --output json",
       returnStdout: true
     ).trim()
     def tableDetailsJson = parseJson(tableDetails)

@@ -30,6 +30,7 @@ import groovy.json.JsonSlurperClassic
 @Field def context_map = [:]
 @Field def is_service_deletion = true;
 @Field def current_environment_id
+
 node {
 	echo "Starting delete service job with params : $params"
 
@@ -88,6 +89,20 @@ node {
 		if (!service_config) {
 			error "Failed to fetch service metadata from catalog"
 		}
+
+    if(!service_config.region) {
+      service_config.region = configLoader.AWS.DEFAULTS.REGION
+    }
+
+    if(!service_config.accountId) {
+      service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNT_ID
+    }
+
+    if(!service_config.provider) {
+      service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
+    }
+
+    lambdaEvents.setServiceConfig(service_config)
 		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 		def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
 		echo "Environment List: $environmentList"
@@ -254,7 +269,7 @@ node {
 }
 
 def cleanupEventSourceMapping(env) {
-  def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
+  def lambda_arn = "arn:aws:lambda:${service_config['region']}:${service_config.accountId}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
   def assets_api = g_base_url + "/jazz/assets"
   lambdaEvents.deleteEventSourceMapping(lambda_arn, assets_api, auth_token,service_config, env)
 }
@@ -278,7 +293,7 @@ def checkBucket(stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.cloud-api.region ${service_config['region']}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -335,7 +350,7 @@ def unDeployService(stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.cloud-api.region ${service_config['region']}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -394,7 +409,7 @@ def updateServiceNameConfig() {
 
 def writeServerlessFile(){
 	sh "pwd"
-	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${configLoader.AWS.REGION}/g' serverless.yml"
+	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${service_config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${service_config['domain']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${service_config['created_by']}/g' serverless.yml"
 	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${service_config['iamRoleARN']}|g' serverless.yml"
@@ -448,7 +463,7 @@ def updateSwaggerConfig() {
 			sh "sed -i -- 's/{service_name}/${service_config['service']}/g' swagger/swagger.json"
 			sh "sed -i -- 's/{domain}/${service_config['domain']}/g' swagger/swagger.json"
 
-			def region = "${configLoader.AWS.REGION}"
+			def region = "${service_config['region']}"
 			def role = "${configLoader.AWS.ROLEID}"
 			def roleARN = role.replaceAll("/", "\\\\/")
 
@@ -493,7 +508,7 @@ def cleanUpApiGatewayResources(stage, path) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.cloud-api.region ${service_config['region']}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -513,7 +528,7 @@ def cleanUpApiGatewayResources(stage, path) {
 
 			try {
 				def outputStr = sh(
-					script: "aws apigateway get-resources --rest-api-id ${aws_api_id} --region ${configLoader.AWS.REGION} --output json",
+					script: "aws apigateway get-resources --rest-api-id ${aws_api_id} --region ${service_config['region']} --output json",
 					returnStdout: true
 				).trim()
 
@@ -528,12 +543,12 @@ def cleanUpApiGatewayResources(stage, path) {
 			}
 			if (resource_id != null && resource_id != "") {
 				def status_json = sh(
-					script: "aws apigateway delete-resource --rest-api-id ${aws_api_id}  --region ${configLoader.AWS.REGION} --resource-id ${resource_id} --output json",
+					script: "aws apigateway delete-resource --rest-api-id ${aws_api_id}  --region ${service_config['region']} --resource-id ${resource_id} --output json",
 					returnStdout: true
 				).trim()
 				try {
 					def deployment_status_json = sh(
-						script: "aws apigateway create-deployment --rest-api-id ${aws_api_id}  --region ${configLoader.AWS.REGION} --stage-name ${current_environment} --description 'API deployment after resource clean up' --output json",
+						script: "aws apigateway create-deployment --rest-api-id ${aws_api_id}  --region ${service_config['region']} --stage-name ${current_environment} --description 'API deployment after resource clean up' --output json",
 						returnStdout: true
 					).trim()
 				} catch (ex) {
@@ -601,7 +616,7 @@ def cleanUpApiDocs(stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.cloud-api.region ${service_config['region']}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			def apiRootFolder = getApiDocsFolder(stage)
@@ -705,7 +720,7 @@ def unDeployWebsite(stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.cloud-api.region ${service_config['region']}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -791,7 +806,7 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.cloud-api.region ${service_config['region']}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"
@@ -860,7 +875,7 @@ def cleanupCloudFrontDistribution(stage) {
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.cloud-api.region ${service_config['region']}"
 			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			sh "aws configure set preview.cloudfront true"

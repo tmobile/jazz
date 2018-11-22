@@ -22,6 +22,7 @@ import groovy.transform.Field
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 
+@Field def config
 @Field def auth_token = ''
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -50,7 +51,6 @@ node() {
     repo_name = params.domain + "_" + params.service_name
   }
 
-  def config
   def domain = params.domain
 
   stage('Checkout code base') {
@@ -90,8 +90,21 @@ node() {
     error "Failed to fetch service metadata from catalog"
   }
 
+  if(!config.region) {
+    config.region = configLoader.AWS.DEFAULTS.REGION
+  }
+
+  if(!config.accountId) {
+    config.accountId = configLoader.AWS.DEFAULTS.ACCOUNT_ID
+  }
+
+  if(!config.provider) {
+    service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
+  }
+
   dir(repo_name) {
     scmModule.setServiceConfig(config)
+    lambdaEvents.setServiceConfig(config)
     def envApi = "${g_base_url}/jazz/environments"
     environmentDeploymentMetadata.initialize(config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, envApi, auth_token)
     gitCommitHash = scmModule.getRepoCommitHash()
@@ -223,7 +236,7 @@ node() {
       ]) {
         try {
           // initialize aws credentials
-          sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+          sh "aws configure set profile.cloud-api.region ${config['region']}"
           sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -299,7 +312,7 @@ node() {
           // reset Credentials
           resetCredentials()
           if (domain != "jazz") {
-            createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
+            createSubscriptionFilters(stackName, config['region'], roleId);
           }
 
           if (domain && domain == "jazz") {
@@ -351,7 +364,7 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, envBuck
   if (deployOutput.contains(sqsErrString)) {
     def event_source_sqs = lambdaEvents.getSqsQueueName(event_source_sqs_arn, environment_logical_id)
     event_source_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_sqs_arn, environment_logical_id, "_")
-    def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+    def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
     if (lambdaEvents.checkSqsQueueExists(event_source_sqs)) {
       if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn)) {
         error "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
@@ -371,7 +384,7 @@ def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, envi
   def kinesisStreamErrString = "CloudFormation - CREATE_FAILED - AWS::Kinesis::Stream - "
   def event_source_kinesis = lambdaEvents.splitAndGetResourceName(event_source_kinesis_stream_arn, environment_logical_id)
   event_source_kinesis_stream_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_kinesis_stream_arn, environment_logical_id, "_")
-  def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
   if (deployOutput.contains(kinesisStreamErrString)) {
     if (lambdaEvents.checkKinesisStreamExists(event_source_kinesis)) {
       if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_kinesis_stream_arn, lambda_arn)) {
@@ -393,7 +406,7 @@ def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_
   def event_source_dynamodb_table_arn = service_config['event_source_dynamodb']
   def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(event_source_dynamodb_table_arn, environment_logical_id)
   event_source_dynamodb_table_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_dynamodb_table_arn, environment_logical_id, "_")
-  def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
   if (deployOutput.contains(dynamodbTableErrString)) {
     if (lambdaEvents.checkDynamoDbTableExists(event_source_dynamodb)) {
       def stream_details = lambdaEvents.getDynamoDbStreamDetails(event_source_dynamodb)
@@ -604,7 +617,7 @@ def validateDeploymentConfigurations(def prop) {
   if (prop.containsKey("region")) {
     if (prop['region'] == "") {
       error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-    } else if (prop['region'] != configLoader.AWS.REGION) {
+    } else if (prop['region'] != config['region']) {
       error "Wrong configuration. Value for Key 'region' should be ${region}"
     }
   } else {
@@ -703,7 +716,7 @@ def echoServiceInfo(String env) {
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
   def lambda = "/aws/lambda/${stackName}"
-  def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
+  def logStreamer = "arn:aws:lambda:${config['region']}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
   try {
     sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
   } catch (Exception ex) { } // ignore if already existing
@@ -893,7 +906,7 @@ def getEventsArn(config, env) {
   def eventsArn = []
   try {
     def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
-    def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${configLoader.AWS.REGION} --function-name $lambdaFnName --output json", returnStdout: true)
+    def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${config['region']} --function-name $lambdaFnName --output json", returnStdout: true)
 
     def policyLists = null
     if (lambdaPolicyTxt) {

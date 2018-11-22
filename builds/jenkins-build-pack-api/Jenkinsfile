@@ -20,6 +20,7 @@ import groovy.transform.Field
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 
+@Field def config
 @Field def auth_token = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def g_base_url = ''
@@ -47,7 +48,6 @@ node() {
 		repo_name = params.domain + "_" + params.service_name
 	}
 
-	def config
 	def domain = params.domain
 
 	stage('Checkout code base') {
@@ -83,6 +83,18 @@ node() {
 	if (!config) {
 		error "Failed to fetch service metadata from catalog"
 	}
+
+  if(!config.region) {
+    config.region = configLoader.AWS.DEFAULTS.REGION
+  }
+
+  if(!config.accountId) {
+    config.accountId = configLoader.AWS.DEFAULTS.ACCOUNT_ID
+  }
+
+  if(!config.provider) {
+    service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
+  }
 
 	dir(repo_name)
 	{
@@ -221,7 +233,7 @@ node() {
 				events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
-					sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+					sh "aws configure set profile.cloud-api.region ${config['region']}"
 					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
 					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -246,7 +258,7 @@ node() {
 							aws_api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
 						}
 
-						def apiHostName = "${aws_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com"
+						def apiHostName = "${aws_api_id}.execute-api.${config['region']}.amazonaws.com"
 						echo "API Host Name: $apiHostName"
 						generateSwaggerEnv(environment_logical_id, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName, config)
 						if (env_key.equals("DEV") && config['domain'] != 'jazz') {
@@ -258,12 +270,12 @@ node() {
 						echo "Deploying to API Gateway environment.."
 						sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile cloud-api"
 						sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile cloud-api"
-						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${config['region']}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
 
 						if("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
-							sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
+							sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${config['region']}"
 						} else {
-							sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${configLoader.AWS.REGION}"
+							sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${config['region']}"
 						}
 
 						if (current_environment == 'prod' || config['domain'] == 'jazz') {
@@ -280,7 +292,7 @@ node() {
 						}
 
 						if (domain != "jazz") {
-							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
+							createSubscriptionFilters(stackName, config['region'], roleId);
 						}
 
 						updateApiDocUrl(current_environment)
@@ -415,8 +427,8 @@ def createPathMethodList() { //Creates a list consisting of all path-method comb
  */
 def createApiGatewayResourceArn(apiId, deployStg, method, path, basePath) {
 	def apiResourceArn = ""
-	def _region = configLoader.AWS.REGION
-	def _account = configLoader.AWS.ACCOUNTID
+	def _region = config['region']
+	def _account = config['accountId']
 	def _apiId = apiId
 	def _stgName = deployStg
 	def _method = method
@@ -514,7 +526,7 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
 	def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
 	sh "sed -i -- 's/{conf-role}/${roleARN}/g' ./swagger/swagger.json"
-	sh "sed -i -- 's/{conf-region}/${configLoader.AWS.REGION}/g' ./swagger/swagger.json"
+	sh "sed -i -- 's/{conf-region}/${config['region']}/g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 }
 
@@ -701,7 +713,7 @@ def updateApiDocUrl(String env) {
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
 	def lambda = "/aws/lambda/${stackName}"
-	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
+	def logStreamer = "arn:aws:lambda:${config['region']}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
 	try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
 	} catch (Exception ex) { }// ignore if already existing
