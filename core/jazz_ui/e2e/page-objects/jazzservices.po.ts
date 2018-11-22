@@ -24,9 +24,6 @@ export class Jazz {
   getCreateService() {
     return element(by.css('div.btn-text'));
   }
-  getPageTitle() {
-    return element(by.xpath('//div/div[2]/div/services-list/section/navigation-bar/div'));
-  }
   getLambda() {
     return element(by.css('div.service-box>div.icon-icon-function'));
   }
@@ -38,9 +35,6 @@ export class Jazz {
   }
   getNameSpace() {
       return element(by.css('input#domainName'));
-  }
-  getApplication() {
-      return element(by.xpath('//*[@id="applc"]'));
   }
   getServiceDescription() {
       return element(by.css('div.input-field-container>div.input-wrapper>textarea'));
@@ -72,12 +66,6 @@ export class Jazz {
   getDummy() {
       return element(by.xpath('//*[@id="exampleName"]'));
   }
-  getApprover() {
-      return element(by.xpath('//*[@id="approverName"]'));
-  }
-  getApproverClick() {
-     return element(by.xpath('//div[@class="approvers-list-wrap"]//div[@class="approvers-dets"]/div[@displayname="Elizabeth Johnson"]'));
-  }
   getSubmit() {
      return element(by.css('section.submit-form>button.btn'));
   }
@@ -85,8 +73,7 @@ export class Jazz {
      return element(by.css('section.footer-btn>btn-jazz-primary'));
     }
   getServiceNameHeader() {
-      
-    return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/h1[@class="page-hdr bold-title"]'));
+     return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/h1[@class="page-hdr bold-title"]'));
   }
   getProdName(){
     return element(by.xpath('//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
@@ -106,14 +93,8 @@ export class Jazz {
   getServiceFromAsset(){
     return element(by.xpath('//div[@class="navigation-item"]/span[@class="icon-icon-back hide"]/following-sibling::a[text()="Services"]'));
   } 
-  getLamdaName(){
-    return element(by.xpath('//div[@class="table-row pointer"]/div[text()="function"]/preceding-sibling::div'));
-  }
   getWebsiteName(){
     return element(by.xpath('//div[@class="table-row pointer"]/div[text()="website"]/preceding-sibling::div'));  
-  }
-  getOverviewStatus(){
-    return element(by.xpath('//li[@class="x caps active" and contains(text(),"overview")]'));  
   }
   getDeploymentStatus(){
     return element(by.xpath('//li[@class="x caps" and contains(text(),"deployments")]'));  
