@@ -107,6 +107,18 @@ node ()  {
       def importUICommand = 'sed -i s/{INSTALLER_VARS}/' + uiConfig + '/g ./src/environments/environment.oss.ts'
       sh importUICommand
 
+      sh "sed -i 's/AWS API Gateway/\"AWS API Gateway\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/aws_apigateway/\"aws_apigateway\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/APIGEE/\"APIGEE\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/gcp_apigee/\"gcp_apigee\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/AWS Lambda/\"AWS Lambda\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/aws_lambda/\"aws_lambda\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/AWS S3/\"AWS S3\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/aws_s3/\"aws_s3\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/AWS Cloudfront/\"AWS Cloudfront\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/aws_cloudfront/\"aws_cloudfront\"/g' ./src/environments/environment.oss.ts"
+
+
       def envFile = readFile('./src/environments/environment.oss.ts');
       echo "displaying env file :"
       echo "$envFile";
