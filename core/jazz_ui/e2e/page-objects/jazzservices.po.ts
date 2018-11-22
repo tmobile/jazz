@@ -124,8 +124,5 @@ export class Jazz {
   getAssetStatusVerify(){
     return element(by.xpath('//li[@class="x caps active"]'));
   }
-  getAPIServiceName(){
-    return element(by.xpath('//div[@class="table-row pointer"]/div[text()="api"]/preceding-sibling::div'));
- }
- 
+  
  }
