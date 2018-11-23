@@ -48,57 +48,22 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
             winhandle = browser.getWindowHandle();
             jazzServices_po.getCreateService().click();
-            servicename='servicename' + Date.now();
+            var min = 111111111;
+            var max = 999999999;
+            var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
+ 	          servicename='servicename' + randomNum;
             createservice(servicename);
             serviceapprover();
             browser.driver.sleep(15000);
-            expect(jazzServices_po.getAPIServiceName().getText()).toEqual(servicename);
+            expect(jazzServices_po.getAwsServiceName().getText()).toEqual(servicename);
             expect(jazzServices_po.getAPIType().getText()).toEqual('api');
             expect(jazzServices_po.getAPIStatus().getText()).toEqual('creation started');
       });
 
-      it('Create Lamda Service', () => {
-            browser.driver.switchTo().activeElement();
-            browser.driver.sleep(5000);
-            browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
-            browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
-            jazzServices_po.getCreateService().click();
-            browser.driver.switchTo().activeElement();
-            browser.driver.sleep(5000);
-            jazzServices_po.getLambda().click();
-            servicename='servicename' + Date.now();
-            createservice(servicename);
-            jazzServices_po.getEventScheduleFixedRate().click();
-            serviceapprover();
-            browser.driver.sleep(15000);
-            expect(jazzServices_po.getFunctionServiceName().getText()).toEqual(servicename);
-            expect(jazzServices_po.getFunctionType().getText()).toEqual('function');
-            expect(jazzServices_po.getFunctionStatus().getText()).toEqual('creation started');
-      });
-
-      it('Create Website Service', () => {
-            browser.driver.switchTo().activeElement();
-            browser.driver.sleep(5000);
-            browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
-            browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
-            jazzServices_po.getCreateService().click();
-            browser.driver.switchTo().activeElement();
-            browser.driver.sleep(5000);
-            jazzServices_po.getWebsite().click();
-            servicename='servicename' + Date.now();
-            createservice(servicename);
-            serviceapprover();
-            browser.driver.sleep(15000);
-            expect(jazzServices_po.getWebsiteServiceName().getText()).toEqual(servicename);
-            expect(jazzServices_po.getWebsiteType().getText()).toEqual('website');
-            expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('creation started');
-      });
-
       it('Verify API Service Page Title', () => {
-            browser.wait(EC.visibilityOf(jazzServices_po.getAPIServiceName()), timeOutHigh);
-            browser.wait(EC.elementToBeClickable(jazzServices_po.getAPIServiceName()), timeOutHigh);
-            jazzServices_po.getAPIServiceName().click();
-            expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
+            browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
+            browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+            jazzServices_po.getAwsServiceName().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
             browser.sleep(45000);
             browser.refresh();
@@ -110,7 +75,6 @@ describe('Overview', () => {
       it('Verify API Prod Name' ,  () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
             jazzServices_po.getProdName().click();
-            expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
             browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
             browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
             browser.driver.switchTo().activeElement();
@@ -121,67 +85,65 @@ describe('Overview', () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
             jazzServices_po.getDeploymentStatusVerify();
-            expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('successful');
+            expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
       });
 
       it('Verify API Asset' ,  () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getAsset()), timeOutHigh);
             jazzServices_po.getAsset().click();
-            expect(jazzServices_po.getAssetStatusVerify().getText()).toEqual('ACTIVE');
             browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
             browser.sleep(4000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
             jazzServices_po.getServiceFromAsset().click();
       });
-
-      it('Verify Lamda Function Page Title', () => {
-            browser.wait(EC.visibilityOf(jazzServices_po.getAPIServiceName()), timeOutHigh);
-            browser.wait(EC.elementToBeClickable(jazzServices_po.getAPIServiceName()), timeOutHigh);
-            jazzServices_po.getLamdaName().click();
-            expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
-            browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
-            browser.sleep(45000);
-            browser.refresh();
+      
+      it('Create Lamda Service', () => {
             browser.driver.switchTo().activeElement();
-            jazzServices_po.getRefresh().click();
-            browser.sleep(30000);
-      });
-
-      it('Verify Lamda Prod Name' ,  () => {
-            browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
-            jazzServices_po.getProdName().click();
-            expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
-            browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
-            browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
+            browser.driver.sleep(5000);
+            browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
+            browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
+            jazzServices_po.getCreateService().click();
             browser.driver.switchTo().activeElement();
-            browser.sleep(15000);
+            browser.driver.sleep(5000);
+            jazzServices_po.getLambda().click();
+            var min = 111111111;
+            var max = 999999999;
+ 	          var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
+ 	          servicename='servicename' + randomNum;
+            createservice(servicename);
+            jazzServices_po.getEventScheduleFixedRate().click();
+            serviceapprover();
+            browser.driver.sleep(15000);
+            expect(jazzServices_po.getAwsServiceName().getText()).toEqual(servicename);
+            expect(jazzServices_po.getFunctionType().getText()).toEqual('function');
+            expect(jazzServices_po.getFunctionStatus().getText()).toEqual('creation started');
       });
-
-      it('Verify Lamda Deployments' , () => {
-            browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
-            jazzServices_po.getDeploymentStatus().click();
-            jazzServices_po.getDeploymentStatusVerify();
-            expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('successful');
-      });
-
-      it('Verify Lamda Asset' ,  () => {
-            jazzServices_po.getRefresh().click();
-            browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
-            jazzServices_po.getRefresh().click();
-            browser.wait(EC.visibilityOf(jazzServices_po.getAsset()), timeOutHigh);
-            jazzServices_po.getAsset().click();
-            expect(jazzServices_po.getAssetStatusVerify().getText()).toEqual('ACTIVE');
-            browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
-            browser.sleep(4000);
-            browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
-            jazzServices_po.getServiceFromAsset().click();
+     
+      it('Create Website Service', () => {
+            browser.driver.switchTo().activeElement();
+            browser.driver.sleep(5000);
+            browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
+            browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
+            jazzServices_po.getCreateService().click();
+            browser.driver.switchTo().activeElement();
+            browser.driver.sleep(5000);
+            jazzServices_po.getWebsite().click();
+            var min = 111111111;
+            var max = 999999999;
+ 	          var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
+ 	          servicename='servicename' + randomNum;
+            createservice(servicename);
+            serviceapprover();
+            browser.driver.sleep(15000);
+            expect(jazzServices_po.getAwsServiceName().getText()).toEqual(servicename);
+            expect(jazzServices_po.getWebsiteType().getText()).toEqual('website');
+            expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('creation started');
       });
 
       it('Verify Website Page Title', () => {
-            browser.wait(EC.visibilityOf(jazzServices_po.getAPIServiceName()), timeOutHigh);
-            browser.wait(EC.elementToBeClickable(jazzServices_po.getAPIServiceName()), timeOutHigh);
+            browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
+            browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
             jazzServices_po.getWebsiteName().click();
-            expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
             browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
             browser.sleep(45000);
             browser.refresh();
@@ -193,7 +155,6 @@ describe('Overview', () => {
       it('Verify Website Prod Name' ,  () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
             jazzServices_po.getProdName().click();
-            expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
             browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
             browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
             browser.driver.switchTo().activeElement();
@@ -204,7 +165,6 @@ describe('Overview', () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
             jazzServices_po.getDeploymentStatusVerify();
-            expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('successful');
       });
 
       it('Verify Website Asset Name' ,  () => {
@@ -213,7 +173,6 @@ describe('Overview', () => {
             jazzServices_po.getRefresh().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getAsset()), timeOutHigh);
             jazzServices_po.getAsset().click();
-            expect(jazzServices_po.getAssetStatusVerify().getText()).toEqual('ACTIVE');
             browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
             browser.sleep(4000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
