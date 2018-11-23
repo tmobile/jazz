@@ -58,7 +58,7 @@ echo "Events module loaded successfully"
 ]
 
 /**
- * These are the 3 event status.
+ * These are the 3 event statuses.
  * Any new event status added here should be added to the status table in dynamoDB as well.
  */
 @Field def Event_Status = [
