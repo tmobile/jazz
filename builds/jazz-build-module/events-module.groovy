@@ -5,8 +5,8 @@ echo "Events module loaded successfully"
 
 /**
  * The Events module for jenkins packs
- * @author: 
- * @date: 
+ * @author:
+ * @date:
 */
 
 @Field def g_request_id = ""
@@ -19,7 +19,7 @@ echo "Events module loaded successfully"
 @Field def config_loader
 
 /**
- * These are the list of available event_names. Any new event names added here should be added to the events table in dynamoDB as well. 
+ * These are the list of available event_names. Any new event names added here should be added to the events table in dynamoDB as well.
  */
 
 
@@ -33,18 +33,18 @@ echo "Events module loaded successfully"
 	'LOCK_MASTER_BRANCH':'LOCK_MASTER_BRANCH',
 	'PUSH_TEMPLATE_TO_SERVICE_REPO':'PUSH_TEMPLATE_TO_SERVICE_REPO',
 	'CLONE_TEMPLATE':'CLONE_TEMPLATE',
-    'ADD_WEBHOOK':'ADD_WEBHOOK',
+  'ADD_WEBHOOK':'ADD_WEBHOOK',
 	'UNDEPLOY_LAMBDA':'UNDEPLOY_LAMBDA',
 	'GET_SERVICE_CODE':'GET_SERVICE_CODE',
 	'GET_SERVERLESS_CONF':'GET_SERVERLESS_CONF',
 	'UPDATE_DEPLOYMENT_CONF':'UPDATE_DEPLOYMENT_CONF',
 	'UPDATE_SWAGGER':'UPDATE_SWAGGER',
-    'GET_DEPLOYMENT_CONF':'GET_DEPLOYMENT_CONF',
-    'VALIDATE_PRE_BUILD_CONF':'VALIDATE_PRE_BUILD_CONF',
-    'DELETE_PROJECT':'DELETE_PROJECT',
-    'DELETE_API_RESOURCE':'DELETE_API_RESOURCE',
-    'DELETE_CLOUDFRONT':'DELETE_CLOUDFRONT',
-    'DISABLE_CLOUDFRONT':'DISABLE_CLOUDFRONT',
+  'GET_DEPLOYMENT_CONF':'GET_DEPLOYMENT_CONF',
+  'VALIDATE_PRE_BUILD_CONF':'VALIDATE_PRE_BUILD_CONF',
+  'DELETE_PROJECT':'DELETE_PROJECT',
+  'DELETE_API_RESOURCE':'DELETE_API_RESOURCE',
+  'DELETE_CLOUDFRONT':'DELETE_CLOUDFRONT',
+  'DISABLE_CLOUDFRONT':'DISABLE_CLOUDFRONT',
 	'BUILD':'BUILD',
 	'DEPLOY_TO_AWS':'DEPLOY_TO_AWS',
 	'CREATE_ASSET':'CREATE_ASSET',
@@ -58,8 +58,8 @@ echo "Events module loaded successfully"
 ]
 
 /**
- * These are the 3 event status. 
- * Any new event status added here should be added to the status table in dynamoDB as well.  
+ * These are the 3 event statuses.
+ * Any new event status added here should be added to the status table in dynamoDB as well.
  */
 @Field def Event_Status = [
 	'STARTED':'STARTED',
@@ -80,7 +80,7 @@ def initialize(configLoader, serviceConfig, eventType, branch, env, url){
  * Send a started event.
  * @param event_name
  * @param message
- * @return      
+ * @return
  */
 def sendStartedEvent(event_name, message = null, moreCxtMap = null) {
 	def environment = g_environment
@@ -93,7 +93,7 @@ def sendStartedEvent(event_name, message = null, moreCxtMap = null) {
  * @param message
  * @param moreCxt - more contexual info if needed as a map (key, value pair)
  * @param message
- * @return      
+ * @return
  */
 def sendStartedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
@@ -111,7 +111,7 @@ def sendStartedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 
 /**
  * Send a completed event.
- * @return      
+ * @return
  */
 def sendCompletedEvent(event_name, message = null, moreCxtMap = null) {
 	def environment = g_environment
@@ -124,7 +124,7 @@ def sendCompletedEvent(event_name, message = null, moreCxtMap = null) {
  * @param message
  * @param moreCxt - more contexual info if needed as a map (key, value pair)
  * @param message
- * @return      
+ * @return
  */
 def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
@@ -143,7 +143,7 @@ def sendCompletedEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 
 /**
  * Send a failure event.
- * @return      
+ * @return
  */
 def sendFailureEvent(event_name, message = null, moreCxtMap = null) {
 	def environment = g_environment
@@ -156,7 +156,7 @@ def sendFailureEvent(event_name, message = null, moreCxtMap = null) {
  * @param message
  * @param moreCxt - more contexual info if needed as a map (key, value pair)
  * @param message
- * @return      
+ * @return
  */
 def sendFailureEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 	def moreCxtMap = l_moreCxtMap
@@ -176,7 +176,7 @@ def sendFailureEvent(l_event_name, l_message, l_moreCxtMap, l_environment) {
 /**
 * Get the the valid event.
 * @param eventTxt
-* @return      
+* @return
 */
 def getEventName(eventTxt) {
 	def _validEvent
@@ -194,7 +194,7 @@ def getEventName(eventTxt) {
 /**
  * SendEvent method to record events.
  * @param  runtime
- * @return      
+ * @return
  */
 
 
@@ -211,7 +211,7 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 		'domain': service_metadata['domain'],
 		'iam_role': config_loader.AWS.ROLEID,
 		'environment': g_environment,
-		'region': config_loader.AWS.REGION,
+		'region': service_metadata['region'],
 		'message': message
 	]
 	context_json.putAll(moreCxt)
@@ -231,7 +231,7 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 
 	def payload = JsonOutput.toJson(event_json)
 	echo "$event_json"
-	
+
 	try {
 		if (service_metadata['domain'] != "jazz") {
 			def shcmd = sh(script: "curl --silent -X POST -k -v \
@@ -257,7 +257,7 @@ def jazz_quiet_sh(cmd) {
 
 /**
  * Set Request Id
- * @return      
+ * @return
  */
 def setRequestId(request_id) {
 	g_request_id = request_id
@@ -266,7 +266,7 @@ def setRequestId(request_id) {
 
 /**
  * Set Branch Name
- * @return      
+ * @return
  */
 def setBranch(branch) {
 	g_branch = branch
@@ -275,7 +275,7 @@ def setBranch(branch) {
 
 /**
  * Set config_loader
- * @return      
+ * @return
  */
 def setConfigLoader(configLoader) {
 	config_loader = configLoader
@@ -283,7 +283,7 @@ def setConfigLoader(configLoader) {
 
 /**
  * Set service_metadata
- * @return      
+ * @return
  */
 def setServiceConfig(serviceConfig) {
 	service_metadata = serviceConfig
@@ -291,7 +291,7 @@ def setServiceConfig(serviceConfig) {
 
 /**
  * Set Environment
- * @return      
+ * @return
  */
 def setEnvironment(environment) {
 	g_environment = environment
@@ -300,7 +300,7 @@ def setEnvironment(environment) {
 
 /**
  * Set Event handler
- * @return      
+ * @return
  */
 def setEventHandler(eventHandler) {
 	g_event_handler = eventHandler
@@ -309,7 +309,7 @@ def setEventHandler(eventHandler) {
 
 /**
  * Set Event Type
- * @return      
+ * @return
  */
 def setEventType(eventType) {
 	g_event_type = eventType
@@ -319,7 +319,7 @@ def setEventType(eventType) {
 
 /**
  * Set Url
- * @return      
+ * @return
  */
 def setUrl(url) {
 	g_events_api = url
