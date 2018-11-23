@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // =========================================================================
-'use strict';
 
 const assert = require('chai').assert;
 const expect = require('chai').expect;
@@ -23,10 +22,11 @@ const sinon = require('sinon');
 
 const index = require('../index');
 const configModule = require("../components/config.js");
+const fcodes = require('../utils/failure-codes.js');
 
-let event, config, err, interestedEvents;
+let event, config, err, interestedEvents, payload;
 
-describe('jazz events handler tests: ', function () {
+describe('jazz events handler tests: ', () => {
   beforeEach(() => {
     context = awsContext();
     event = {
@@ -55,7 +55,7 @@ describe('jazz events handler tests: ', function () {
     };
   });
 
-  describe('getEvents tests', function () {
+  describe('getEvents tests', () => {
     it("should indicate error if DynamoDB.DocumentClient.scan fails", () => {
       let message = "Unable to scan Event Names table to fetch interested events";
       AWS.mock("DynamoDB.DocumentClient", "scan", (params, cb) => {
@@ -127,9 +127,9 @@ describe('jazz events handler tests: ', function () {
     });
   });
 
-  describe('processEachEvent tests', function () {
+  describe('processEachEvent tests', () => {
     beforeEach(() => {
-      let payload = {
+      payload = {
         "EVENT_ID": {
           "S": "T3ST-1D"
         },
@@ -164,13 +164,18 @@ describe('jazz events handler tests: ', function () {
       ]
     });
 
-    it("should indicate error if DynamoDB.putItem fails", () => {
+    it("should indicate error if DynamoDB.DocumentClient.put fails", () => {
       AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
         return cb(err, null);
       });
+      let expectedResponse = {
+        "status": "failed",
+        "sequence_id": event.Records[0].kinesis.sequenceNumber,
+        "event": JSON.stringify(payload)
+      }
       index.processEachEvent(event.Records[0], config, interestedEvents)
         .catch(error => {
-          expect(error).to.deep.eq(err);
+          expect(error).to.deep.eq(expectedResponse);
           AWS.restore("DynamoDB.DocumentClient");
         });
     });
@@ -182,31 +187,35 @@ describe('jazz events handler tests: ', function () {
         }
         return cb(null, data);
       });
-      let message = {
-        "message": "successfully processed interested event"
+      let expectedResponse = {
+        "status": "success",
+        "sequence_id": event.Records[0].kinesis.sequenceNumber,
+        "event": JSON.stringify(payload)
       };
 
       index.processEachEvent(event.Records[0], config, interestedEvents)
         .then(res => {
-          expect(res).to.deep.eq(message);
+          expect(res).to.deep.eq(expectedResponse);
           AWS.restore("DynamoDB.DocumentClient");
         });
     });
 
-    it("should not process un-interested event", () => {
+    it("should process un-interested event", () => {
       event.Records[0].kinesis.partitionKey = "DELETE_ASSET";
-      let message = {
-        "message": "successfully processed un-interested event"
+      let expectedResponse = {
+        "status": "success",
+        "sequence_id": event.Records[0].kinesis.sequenceNumber,
+        "event": JSON.stringify(payload)
       };
 
       index.processEachEvent(event.Records[0], config, interestedEvents)
         .then(res => {
-          expect(res).to.deep.eq(message);
+          expect(res).to.deep.eq(expectedResponse);
         });
     });
   });
 
-  describe('processRecords tests', function () {
+  describe('processRecords tests', () => {
     beforeEach(() => {
       interestedEvents = [
         'CREATE_DEPLOYMENT',
@@ -230,32 +239,131 @@ describe('jazz events handler tests: ', function () {
     });
 
     it("should successfully process interested events", () => {
-      let result = [
-        { "message": "successfully processed interested event" },
-        { "message": "successfully processed interested event" }
-      ];
+      let result = {
+        "status": "success",
+        "sequence_id": event.Records[0].kinesis.sequenceNumber,
+        "event": ""
+      };
       const processEachEvent = sinon.stub(index, "processEachEvent")
-        .resolves({ "message": "successfully processed interested event" });
+        .resolves(result);
+      const expectedResponse = {
+        "processedEvents" : 
+        [
+          {
+            "sequence_id": result.sequence_id,
+            "event": result.event,
+            "failure_code": null,
+            "failure_message": null
+          },
+          {
+            "sequence_id": result.sequence_id,
+            "event": result.event,
+            "failure_code": null,
+            "failure_message": null
+          }
+        ],
+        "failedEvents" : []
+      }
 
       index.processRecords(config, event, interestedEvents)
         .then(res => {
-          expect(res).to.deep.eq(result);
+          expect(res).to.deep.eq(expectedResponse);
+          sinon.assert.calledTwice(processEachEvent)
+          processEachEvent.restore();
+        });
+    });
+
+    it("should successfully process events as failed", () => {
+      let result = {
+        "status": "failed",
+        "sequence_id": event.Records[0].kinesis.sequenceNumber,
+        "event": ""
+      };
+      let failureCodes = fcodes();
+      const processEachEvent = sinon.stub(index, "processEachEvent")
+        .resolves(result);
+      const expectedResponse = {
+        "failedEvents" : 
+        [
+          {
+            "sequence_id": result.sequence_id,
+            "event": result.event,
+            "failure_code": failureCodes.DB_ERROR_1.code,
+            "failure_message": failureCodes.DB_ERROR_1.message
+          },
+          {
+            "sequence_id": result.sequence_id,
+            "event": result.event,
+            "failure_code": failureCodes.DB_ERROR_1.code,
+            "failure_message": failureCodes.DB_ERROR_1.message
+          }
+        ],
+        "processedEvents" : []
+      }
+
+      index.processRecords(config, event, interestedEvents)
+        .then(res => {
+          expect(res).to.deep.eq(expectedResponse);
           sinon.assert.calledTwice(processEachEvent)
           processEachEvent.restore();
         });
     });
   });
 
-  describe('handler', function() {
+  describe('handler', () => {
     it("should successfully process event", () => {
-      const getEvents = sinon.stub(index, "getEvents").resolves(interestedEvents);
-      const processRecords = sinon.stub(index, "processRecords").resolves();
+      let eventPayload = {
+        Items: [
+          {
+            EVENT_NAME: 'CREATE_DEPLOYMENT'
+          },
+          {
+            EVENT_NAME: 'CREATE_ASSET'
+          },
+          {
+            EVENT_NAME: 'UPDATE_DEPLOYMENT'
+          }
+        ]
+      };
+      AWS.mock("DynamoDB.DocumentClient", "scan", (params, cb) => {
+        return cb(null, eventPayload);
+      });
+      let recordPayload = {
+        "EVENT_ID": {
+          "S": "T3ST-1D"
+        },
+        "TIMESTAMP": {
+          "S": "2018-11-19T10:00:00:007"
+        },
+        "REQUEST_ID": {
+          "S": "T3ST-REQUEST-1D"
+        },
+        "EVENT_HANDLER": {
+          "S": "JENKINS"
+        },
+        "EVENT_NAME": {
+          "S": "CREATE_ASSET"
+        },
+        "SERVICE_NAME": {
+          "S": "jazztest-testapi"
+        },
+        "SERVICE_ID": {
+          "S": "T3ST-S3RV1C3-1D"
+        }
+      }
+      let encoded = Buffer.from(JSON.stringify(recordPayload)).toString('base64');
+      event.Records[0].kinesis.data = encoded;
+      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
+        let data = {
+          "message": "success"
+        }
+        return cb(null, data);
+      });
 
       index.handler(event, context, (error, data) => {
-        sinon.assert.calledOnce(getEvents);
-        sinon.assert.calledOnce(processRecords);
-        getEvents.restore();
-        processRecords.restore();
+        expect(data).to.have.deep.property('processed_events', 2);
+        expect(data).to.have.deep.property('failed_events', 0);
+        AWS.restore("DynamoDB.DocumentClient");
       });
     });
   });

@@ -20,8 +20,6 @@ const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const fcodes = require('./utils/failure-codes.js');
 
-var processedEvents = [];
-var failedEvents = [];
 var failureCodes = fcodes();
 
 function handler(event, context, cb) {
@@ -30,8 +28,8 @@ function handler(event, context, cb) {
 
   exportable.getEvents(config)
     .then(res => exportable.processRecords(config, event, res))
-    .then(() => { 
-      return cb(null, { "processed_events": processedEvents.length, "failed_events": failedEvents.length }); 
+    .then(result => {
+      return cb(null, { "processed_events": result.processedEvents.length, "failed_events": result.failedEvents.length });
     })
     .catch(err => {
       return logger.error('Error inside events handler ' + JSON.stringify(err));
@@ -54,11 +52,9 @@ function getEvents(config) {
         if (err) {
           return reject({ "db_error": "Unable to scan Event Names table to fetch interested events" });
         } else {
-          //interestedEvents = interestedEvents.concat(result.Items);
           for (i = 0; i < result.Items.length; i++) {
             interestedEvents.push(result.Items[i].EVENT_NAME);
           }
-
           if (result.LastEvaluatedKey) {
             params.ExclusiveStartKey = result.LastEvaluatedKey;
             scanExecute();
@@ -73,14 +69,34 @@ function getEvents(config) {
 }
 
 function processRecords(config, event, res) {
-  return new Promise((resolve, reject) => {    
+  return new Promise((resolve, reject) => {
+    let processedEvents = [];
+    let failedEvents = [];
     let processEachEventPromises = [];
     for (let i = 0; i < event.Records.length; i++) {
       processEachEventPromises.push(exportable.processEachEvent(event.Records[i], config, res));
     }
     Promise.all(processEachEventPromises)
       .then((result) => {
-        return resolve(result);
+        for (let i = 0; i < result.length; i++) {
+          if (result[i].status == "success") {
+            processedEvents.push({
+              "sequence_id": result[i].sequence_id,
+              "event": result[i].event,
+              "failure_code": null,
+              "failure_message": null
+            });
+          }
+          else {
+            failedEvents.push({
+              "sequence_id": result[i].sequence_id,
+              "event": result[i].event,
+              "failure_code": failureCodes.DB_ERROR_1.code,
+              "failure_message": failureCodes.DB_ERROR_1.message
+            });
+          }
+        }
+        return resolve({"processedEvents": processedEvents, "failedEvents": failedEvents});
       })
       .catch((error) => {
         return resolve();
@@ -90,7 +106,7 @@ function processRecords(config, event, res) {
 
 function processEachEvent(record, config, interestedEvents) {
   const docClient = new AWS.DynamoDB.DocumentClient();
-  return new Promise((resolve, reject) => {    
+  return new Promise((resolve, reject) => {
     let sequenceNumber = record.kinesis.sequenceNumber;
     let encodedPayload = record.kinesis.data;
     let payload = new Buffer(encodedPayload, 'base64').toString('ascii');
@@ -103,36 +119,26 @@ function processEachEvent(record, config, interestedEvents) {
       docClient.put(params, function (err, data) {
         if (err) {
           logger.error('Unable to store event in events table, message: ' + JSON.stringify(err));
-          failedEvents.push({
+          reject({
+            "status": "failed",
             "sequence_id": sequenceNumber,
-            "event": payload,
-            "failure_code": failureCodes.DB_ERROR_1.code,
-            "failure_message": failureCodes.DB_ERROR_1.message
+            "event": payload
           });
-          return reject(err);
         } else {
           logger.info('Stored interested event in table');
-          processedEvents.push({
+          resolve({
+            "status": "success",
             "sequence_id": sequenceNumber,
-            "event": payload,
-            "failure_code": null,
-            "failure_message": null
-          });
-          return resolve({
-            "message": "successfully processed interested event"
+            "event": payload
           });
         }
       });
     } else {
-      processedEvents.push({
-        "sequence_id": sequenceNumber,
-        "event": payload,
-        "failure_code": null,
-        "failure_message": null
-      });
       logger.info('Skipping storage of un-interested event');
-      return resolve({
-        "message": "successfully processed un-interested event"
+      resolve({
+        "status": "success",
+        "sequence_id": sequenceNumber,
+        "event": payload
       });
     }
   })
