@@ -24,6 +24,9 @@ export class Jazz {
   getCreateService() {
     return element(by.css('div.btn-text'));
   }
+  getPageTitle() {
+    return element(by.xpath('//div/div[2]/div/services-list/section/navigation-bar/div'));
+  }
   getLambda() {
     return element(by.css('div.service-box>div.icon-icon-function'));
   }
@@ -73,7 +76,7 @@ export class Jazz {
      return element(by.css('section.footer-btn>btn-jazz-primary'));
     }
   getServiceNameHeader() {
-     return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/h1[@class="page-hdr bold-title"]'));
+     return element(by.css('div.page-title-wrap.hide-for-mobile>h1.page-hdr.bold-title'));
   }
   getProdName(){
     return element(by.xpath('//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
