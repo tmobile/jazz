@@ -184,17 +184,17 @@ node()  {
 					asset_event = 'CREATE_ASSET'
 					asset_event_message = 'create'
 				}
-				events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config))
+				events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", utilModule.generateAssetMap(service_config['provider'], "arn:aws:s3:::${asset_info}/*", "s3", service_config))
 				try {
 					sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
 					sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
-					events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config), environment);
+					events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap(service_config['provider'], "arn:aws:s3:::${asset_info}/*", "s3", service_config), environment);
 					def url
 					if (create_cloudfront_url == true) {
 						updateOrCreateCF()
 						def cloudFrontDistribution = getCloudFrontARN()
 						cfArn = cloudFrontDistribution.ARN
-						events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", cfArn, "cloudfront", service_config), environment);
+						events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap(service_config['provider'], cfArn, "cloudfront", service_config), environment);
 
 						def cloudFrontDistributionDetails = getCloudFrontDetails()
 						url = 'https://' + cloudFrontDistributionDetails['Distribution']
@@ -218,7 +218,7 @@ node()  {
 					environmentDeploymentMetadata.setEnvironmentEndpoint(url)
 					send_status_email('COMPLETED', svc_status)
 
-					events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("aws", url, "endpoint_url", service_config),environment)
+					events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap(service_config['provider'], url, "endpoint_url", service_config),environment)
 					events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
 					events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
 					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)

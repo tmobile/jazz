@@ -249,7 +249,7 @@ node() {
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
 					def lambdaARN = getLambdaARN(stackName);
-					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], lambdaARN, "lambda", config), environment_logical_id);
 
 					if (fileExists('swagger/swagger.json')) {
 						echo "Generating swagger file for environment: ${env_key}"
@@ -287,7 +287,7 @@ node() {
 						def apiArns = getAPIGatewayResourceARNs(aws_api_id, environment_logical_id)
 						if(apiArns) {
 							for (arn in apiArns) {
-								events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
+								events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], arn, "apigateway", config), environment_logical_id);
 							}
 						}
 
@@ -300,7 +300,7 @@ node() {
 						echo "completed deployment........."
 
 						def swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
-						events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
+						events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], swaggerDocUrl, "swagger_url", config), environment_logical_id);
 
 						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
 						send_status_email(config, 'COMPLETED', svc_status)
@@ -322,7 +322,7 @@ node() {
 
 			env_metadata["AWS_API_ID"] = aws_api_id
 
-			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
+			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], endpointUrl, "endpoint_url", config), environment_logical_id);
 			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, env_metadata), environment_logical_id)
 			events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
 			events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)

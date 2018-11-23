@@ -249,7 +249,7 @@ node() {
             def eventsArns = getEventsArn(config, environment_logical_id)
             for (def i = 0; i < eventsArns.size(); i++) {
               def arn = eventsArns[i]
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "cloudwatch_event", config), environment_logical_id);
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], arn, "cloudwatch_event", config), environment_logical_id);
             }
           }
 
@@ -276,25 +276,25 @@ node() {
             if (config['event_source_s3']) {
               def bucket_arn = "arn:aws:s3:::${config['event_source_s3']}"
               def s3_bucket_arn = lambdaEvents.getEventResourceNamePerEnvironment(bucket_arn, environment_logical_id, "-")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", s3_bucket_arn, "s3", config), environment_logical_id);
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], s3_bucket_arn, "s3", config), environment_logical_id);
             } else if (config['event_source_sqs']) {
               def event_source_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_sqs'], environment_logical_id, "_")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", event_source_sqs_arn, "sqs", config), environment_logical_id);
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], event_source_sqs_arn, "sqs", config), environment_logical_id);
             } else if (config['event_source_kinesis']) {
               def event_source_kinesis_stream_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_kinesis'], environment_logical_id, "_")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", event_source_kinesis_stream_arn, "kinesis_stream", config), environment_logical_id);
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], event_source_kinesis_stream_arn, "kinesis_stream", config), environment_logical_id);
             } else if (config['event_source_dynamodb']) {
               def dynamodbTableName = lambdaEvents.splitAndGetResourceName(config['event_source_dynamodb'], environment_logical_id)
               def stream_details = lambdaEvents.getDynamoDbStreamDetails(dynamodbTableName)
               def event_source_dynamodb_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_dynamodb'], environment_logical_id, "_")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", event_source_dynamodb_arn, "dynamodb", config), environment_logical_id);
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", stream_details.StreamArn, "dynamodb_stream", config), environment_logical_id);
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], event_source_dynamodb_arn, "dynamodb", config), environment_logical_id);
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], stream_details.StreamArn, "dynamodb_stream", config), environment_logical_id);
             }
           }
 
           def function_arn = getLambdaARN(stackName);
           lambdaARN = function_arn.split(":(?!.*:.*)")[0]
-          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], lambdaARN, "lambda", config), environment_logical_id);
 
           echo "lambdaARN: ${lambdaARN}"
 
@@ -306,7 +306,7 @@ node() {
           if (config['event_source_dynamodb'] || config['event_source_sqs']) {
             def role_name = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
             def role_arn = lambdaEvents.getRoleArn(role_name)
-            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", role_arn, "iam_role", config), environment_logical_id);
+            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], role_arn, "iam_role", config), environment_logical_id);
           }
 
           // reset Credentials
@@ -415,7 +415,7 @@ def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_
           error "Dynamodb stream contains a different function trigger already. Please remove the existing function trigger and try again."
         }
       } else {
-        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", stream_details.StreamArn, "dynamodb_stream", service_config), environment_logical_id);
+        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], stream_details.StreamArn, "dynamodb_stream", service_config), environment_logical_id);
       }
       lambdaEvents.updateDynamoDbResourceServerless(stream_details.StreamArn)
       deleteAndRedeployService(environment_logical_id, envBucketKey)

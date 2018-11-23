@@ -279,7 +279,7 @@ def archiveAssetDetails(env) {
   def assets = utilModule.getAssets(assets_api, auth_token, service_config, env)
   def assetList = parseJsonMap(assets)
   for (asset in assetList.data.assets) {
-    events.sendCompletedEvent('UPDATE_ASSET', "Environment cleanup for ${env} completed", utilModule.generateAssetMap("aws", asset.provider_id , asset.asset_type, service_config), env)
+    events.sendCompletedEvent('UPDATE_ASSET', "Environment cleanup for ${env} completed", utilModule.generateAssetMap(asset.provider, asset.provider_id , asset.asset_type, service_config), env)
   }
 }
 
