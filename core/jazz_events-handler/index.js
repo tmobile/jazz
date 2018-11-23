@@ -14,30 +14,25 @@
 // limitations under the License.
 // =========================================================================
 
-const async = require("async");
 const AWS = require('aws-sdk');
 
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const fcodes = require('./utils/failure-codes.js');
 
-const dynamodb = new AWS.DynamoDB();
-var docClient = new AWS.DynamoDB.DocumentClient();
+var processedEvents = [];
+var failedEvents = [];
+var failureCodes = fcodes();
 
 function handler(event, context, cb) {
-
   //Initializations
   let config = configModule.getConfig(event, context);
 
-  let processedEvents = [];
-  let failedEvents = [];
-
-  let interestedEvents = [];
-  let failureCodes = fcodes();
-
   exportable.getEvents(config)
-    .then(() => exportable.processRecords(config))
-    .then((result) => { return cb(null, { "processed_events": processedEvents.length, "failed_events": failedEvents.length }); })
+    .then(res => exportable.processRecords(config, event, res))
+    .then(() => { 
+      return cb(null, { "processed_events": processedEvents.length, "failed_events": failedEvents.length }); 
+    })
     .catch(err => {
       return logger.error('Error inside events handler ' + JSON.stringify(err));
     });
@@ -45,6 +40,8 @@ function handler(event, context, cb) {
 
 function getEvents(config) {
   return new Promise((resolve, reject) => {
+    const docClient = new AWS.DynamoDB.DocumentClient();
+    let interestedEvents = [];
     let params = {
       TableName: config.EVENT_NAME_TABLE,
       ProjectionExpression: "EVENT_NAME",
@@ -52,7 +49,7 @@ function getEvents(config) {
       ReturnConsumedCapacity: "TOTAL"
     };
 
-    let scanExecute = function (callback) {
+    let scanExecute = function () {
       docClient.scan(params, function (err, result) {
         if (err) {
           return reject({ "db_error": "Unable to scan Event Names table to fetch interested events" });
@@ -64,37 +61,36 @@ function getEvents(config) {
 
           if (result.LastEvaluatedKey) {
             params.ExclusiveStartKey = result.LastEvaluatedKey;
-            scanExecute(callback);
+            scanExecute();
           } else {
             return resolve(interestedEvents);
           }
         }
       });
     };
-    scanExecute(callback);
+    scanExecute();
   })
 }
 
-function processRecords(config) {
-  return new Promise((resolve, reject) => {
+function processRecords(config, event, res) {
+  return new Promise((resolve, reject) => {    
     let processEachEventPromises = [];
     for (let i = 0; i < event.Records.length; i++) {
-      processEachEventPromises.push(exportable.processEachEvent(event.Records[i], config));
+      processEachEventPromises.push(exportable.processEachEvent(event.Records[i], config, res));
     }
-
     Promise.all(processEachEventPromises)
-    .then((result) => {
-      return resolve(result);
-    })
-    .catch((error) => {
-      return resolve();
-    });
+      .then((result) => {
+        return resolve(result);
+      })
+      .catch((error) => {
+        return resolve();
+      });
   });
-
 }
 
-function processEachEvent(record, config) {
-  return new Promise((resolve, reject) => {
+function processEachEvent(record, config, interestedEvents) {
+  const docClient = new AWS.DynamoDB.DocumentClient();
+  return new Promise((resolve, reject) => {    
     let sequenceNumber = record.kinesis.sequenceNumber;
     let encodedPayload = record.kinesis.data;
     let payload = new Buffer(encodedPayload, 'base64').toString('ascii');
@@ -104,7 +100,7 @@ function processEachEvent(record, config) {
       params.ReturnConsumedCapacity = "TOTAL";
       params.TableName = config.EVENT_TABLE;
 
-      dynamodb.putItem(params, function (err, data) {
+      docClient.put(params, function (err, data) {
         if (err) {
           logger.error('Unable to store event in events table, message: ' + JSON.stringify(err));
           failedEvents.push({

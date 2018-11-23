@@ -6,17 +6,16 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "nyc mocha"
+    "test": "mocha"
   },
   "dependencies": {
-    "deasync": "*",
-    "async": "*"
   },
   "devDependencies": {
     "chai": "^3.5.0",
     "mocha": "^v3.0.0",
     "aws-sdk": "*",
     "aws-lambda-mock-context": "^3.2.1",
+    "aws-sdk-mock": "^4.2.0",
     "sinon": "^7.1.0"
   }
 }
