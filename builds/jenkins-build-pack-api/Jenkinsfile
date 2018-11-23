@@ -221,9 +221,9 @@ node() {
 				events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
-					def randomString = Util.generateRequestId();
+					def randomString = utilModule.generateRequestId();
 					def cloudApi = "jazz-${randomString}";
-					sh "aws configure set profile.${cloudApi}.region ${Configs.AWS.REGION}"
+					sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
 					sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
 					sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -260,7 +260,7 @@ node() {
 						echo "Deploying to API Gateway environment.."
 						sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile ${cloudApi}"
 						sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile ${cloudApi}"
-						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile${cloudApi}"
+						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile ${cloudApi}"
 
 						if("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
 							sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
@@ -323,7 +323,7 @@ node() {
 	}//dir ends here
 }
 
-def getLambdaARN(String stackName) {
+def getLambdaARN(String stackName, cloudApi) {
 	def ARN = "";
 	try {
 		def cloudformation_resources = "";
@@ -497,6 +497,16 @@ def buildLambda(runtime) {
 		pip install pytest
 		"""
 	}
+	else if (runtime.indexOf("go") > -1 ){
+    //Installing dependencies using dep ensure
+    //golang build scripts
+   	withEnv(["GOPATH=${env.WORKSPACE}"]) {
+      sh "mkdir -p $GOPATH/src"
+      sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
+      sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
+      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/"+ repo_name+"/main.go"
+    }
+  }
 }
 
 
@@ -582,7 +592,7 @@ def validateDeploymentConfigurations(def prop) {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"]
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8", "go1.x"]
 			def flag = false
 			for (int i = 0; i < validRuntimes.size(); i++) {
 				if (_runtime == validRuntimes[i]) {
@@ -658,7 +668,9 @@ def loadServerlessConfig(config) {
 		sh "cp _config/serverless-java.yml ./serverless.yml"
 	} else if (config['providerRuntime'].indexOf("python") > -1) {
 		sh "cp _config/serverless-python.yml ./serverless.yml"
-	}
+	} else if (runtime.indexOf("go") > -1){
+    	sh "cp _config/serverless-go.yml ./serverless.yml"
+  	}
 
 	if ((config['service'] == 'cloud-logs-streamer' || config['service'] == 'logs') && config['domain'] == 'jazz') {
 		//addVpcDetails()
@@ -837,7 +849,9 @@ def runValidation(String runtime) {
 		sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
 	} else if (runtime.indexOf("python") > -1) {
 		echo "running validations for $runtime"
-	}
+	} else if (runtime.indexOf("go") > -1) {
+    	echo "running validations for $runtime"
+  	}
 }
 
 /**

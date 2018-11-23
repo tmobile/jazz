@@ -17,6 +17,7 @@ import { Jazz } from '../page-objects/jazzservices.po';
 import { CONFIGURATIONS } from '../../src/config/configuration';
 import { Register } from '../page-objects/register.po';
 
+
 const timeOutHigh = 180000;
 const config = CONFIGURATIONS.optional.general.e2e;
 

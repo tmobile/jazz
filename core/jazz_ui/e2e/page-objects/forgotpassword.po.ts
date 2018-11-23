@@ -21,17 +21,17 @@ export class ForgotPassword{
 
   }
   getLoginPassButton(){
-    return element(by.xpath('//btn-jazz-primary[@newclass="login"]/button[text()="LOGIN"]'));                   
+    return element(by.css('div.login'));                   
   }
 
   getForgotPasswordButton(){
-    return element(by.xpath('//div[@class="forgot-password"]/a[text()="Forgot Password"]'));                   
+    return element(by.css('div.forgot-password'));                   
   }
   getForgotPasswordSubmit(){
-    return element(by.xpath('//btn-jazz-primary[@newclass="loginbutton"]/button[text()="SUBMIT"]'));                   
+    return element(by.css('div.btn-wrp'));                   
   }
  
   getBackToLogin(){
-    return element(by.xpath('//div[@class="forgot-password"]/a[text()="Back to login"]'));                   
+    return element(by.css('div.forgot-password'));                   
   }
 }
