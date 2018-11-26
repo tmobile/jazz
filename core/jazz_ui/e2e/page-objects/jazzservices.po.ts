@@ -76,7 +76,8 @@ export class Jazz {
      return element(by.css('section.footer-btn>btn-jazz-primary'));
     }
   getServiceNameHeader() {
-     return element(by.css('div.page-title-wrap.hide-for-mobile>h1.page-hdr.bold-title'));
+     
+	 return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/h1[@class="page-hdr bold-title"]'));
   }
   getProdName(){
     return element(by.xpath('//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
@@ -91,7 +92,7 @@ export class Jazz {
     return element(by.xpath('//div/div[2]/div/section[1]/div/div[2]/section/env-assets-section/div/div[1]/div[2]/div[1]/div[1]/span[2]'));
   }
   getRefresh(){ 
-    return element(by.css('div.tab-component>div.refresh-button'));
+    return element(by.xpath('*//div[@class="refresh-button"]'));
   }
   getServiceFromAsset(){
     return element(by.xpath('//div[@class="navigation-item"]/span[@class="icon-icon-back hide"]/following-sibling::a[text()="Services"]'));
@@ -107,6 +108,12 @@ export class Jazz {
   }
   getAssetStatusVerify(){
     return element(by.xpath('//li[@class="x caps active"]'));
+  }
+  getLamdaName(){
+    return element(by.xpath('//div[@class="table-row pointer"]/div[text()="function"]/preceding-sibling::div'));
+  }
+  getOverviewStatus(){
+    return element(by.xpath('//li[@class="x caps active" and contains(text(),"overview")]'));  
   }
   
  }
