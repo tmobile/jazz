@@ -180,7 +180,7 @@ node() {
 		stage('Build') {
 			try {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
-				buildLambda(runtime)
+				buildLambda(runtime, repo_name)
 			} catch (ex) {
 				events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -478,7 +478,7 @@ def LoadConfiguration() {
 /**
 	Build project based on runtime
 */
-def buildLambda(runtime) {
+def buildLambda(String runtime, String repo_name) {
 	echo "installing dependencies for $runtime"
 	if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
@@ -668,7 +668,7 @@ def loadServerlessConfig(config) {
 		sh "cp _config/serverless-java.yml ./serverless.yml"
 	} else if (config['providerRuntime'].indexOf("python") > -1) {
 		sh "cp _config/serverless-python.yml ./serverless.yml"
-	} else if (runtime.indexOf("go") > -1){
+	} else if (config['providerRuntime'].indexOf("go") > -1){
     	sh "cp _config/serverless-go.yml ./serverless.yml"
   	}
 
