@@ -146,9 +146,9 @@ node()  {
 			events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 				echo "AWS Configure ......."
-				sh "aws configure set profile.${clouApi}.region ${configLoader.AWS.REGION}"
-				sh "aws configure set profile.${clouApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-				sh "aws configure set profile.${clouApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+				sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
+				sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+				sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 				sh "aws configure set preview.cloudfront true"
 
                 generateAssetInfo()
@@ -222,7 +222,7 @@ node()  {
 
 			}
 			// reset Credentials
-			resetCredentials(clouApi)
+			resetCredentials(cloudApi)
 		}
 	}
 }
