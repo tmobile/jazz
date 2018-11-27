@@ -668,9 +668,9 @@ def loadServerlessConfig(config) {
 		sh "cp _config/serverless-java.yml ./serverless.yml"
 	} else if (config['providerRuntime'].indexOf("python") > -1) {
 		sh "cp _config/serverless-python.yml ./serverless.yml"
-	} else if (config['providerRuntime'].indexOf("go") > -1){
-    	sh "cp _config/serverless-go.yml ./serverless.yml"
-  	}
+	} else if (config['providerRuntime'].indexOf("go") > -1) {
+    sh "cp _config/serverless-go.yml ./serverless.yml"
+  }
 
 	if ((config['service'] == 'cloud-logs-streamer' || config['service'] == 'logs') && config['domain'] == 'jazz') {
 		//addVpcDetails()
