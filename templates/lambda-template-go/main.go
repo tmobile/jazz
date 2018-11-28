@@ -9,7 +9,6 @@ package main
 //Imports
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	logging "github.com/op/go-logging"
@@ -29,10 +28,10 @@ type Request struct {
 	Value  string  `json:"value,omitempty"`
 }
 
-//Response Model
+//Response Model sruct
 type Response struct {
-	Message string `json:"message,omitempty"`
-	Ok      bool   `json:"ok,omitempty"`
+	Data  map[string]string `json:"data,omitempty"`
+	Input Request           `json:"input,omitempty"`
 }
 
 //Following code snippet describes how to log messages within your code:
@@ -47,12 +46,19 @@ type Response struct {
 //Handler Function for Aws Lambda which accepts Requests and Produce the response in json.
 func Handler(ctx context.Context, event Request) (Response, error) {
 	// stdout and stderr are sent to AWS CloudWatch Logs
+	//Loading the Configuration Files
+	response := make(map[string]string)
 	log.Info("Processing Lambda request %f\n", event.ID)
 
-	return Response{
-		Message: fmt.Sprintf("Process Request Id is %f", event.ID),
-		Ok:      true,
-	}, nil
+	response["foo"] = "foo-value"
+	response["bar"] = "bar-value"
+
+	data := Response{
+		Data:  response,
+		Input: event,
+	}
+
+	return data, nil
 }
 
 //Main function Starts
