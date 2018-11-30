@@ -109,7 +109,7 @@ node ()  {
 
       sh "sed -i 's/AWS API Gateway/\"AWS API Gateway\"/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/aws_apigateway/\"aws_apigateway\"/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/APIGEE/\"APIGEE\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/GCP_APIGEE/\"GCP_APIGEE\"/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/gcp_apigee/\"gcp_apigee\"/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/AWS Lambda/\"AWS Lambda\"/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/aws_lambda/\"aws_lambda\"/g' ./src/environments/environment.oss.ts"
