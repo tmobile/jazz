@@ -49,7 +49,7 @@
   "devDependencies": {
     "@angular/cli": "^1.7.3",
     "@angular/compiler-cli": "^2.4.10",
-    "@types/jasmine": "2.5.38",
+    "@types/jasmine": "2.5.51",
     "@types/jquery": "^3.2.13",
     "@types/node": "^6.0.42",
     "@types/jasminewd2": "~2.0.2",
