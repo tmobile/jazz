@@ -10,3 +10,5 @@ export * from './request.service';
 export * from './route-guard.service';
 export * from './datacache.service';
 export * from './message.service';
+export * from './utils.service';
+
