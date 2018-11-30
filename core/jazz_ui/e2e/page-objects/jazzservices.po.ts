@@ -81,8 +81,7 @@ export class Jazz {
   }
   getProdName(){
     return element(by.xpath('//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
-	//return element(by.cssContainingText('.stageDisp', 'prod'));
-  }
+	}
   getProdHeader(){
     return element(by.xpath('//div[@class="servie-details-container"]/h1[@class="page-hdr bold-title relative" and contains(text(),"prod")]'));
   }
@@ -123,19 +122,19 @@ export class Jazz {
     return element(by.css('section > env-logs-section > div > div > div.drp-wrp > div:nth-child(2) > div > div > div > div > span'));
   }
   getDay(){
-    return element(by.css('div.eachFilter.slider-wrap > dropdown > div > ul > li:nth-child(1) > a'));
+    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Day")]'));
   }
   getWeek(){
-    return element(by.css('div.eachFilter.slider-wrap > dropdown > div > ul > li:nth-child(2) > a'));
+    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Week")]'));
   }
   getMonth(){
-    return element(by.css('div.eachFilter.slider-wrap > dropdown > div > ul > li:nth-child(3) > a'));
+    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Month")]'));
   }
   getYear(){
-    return element(by.css('div.eachFilter.slider-wrap > dropdown > div > ul > li:nth-child(4) > a'));
+    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Year")]'));
   }
 
   getDropDown(){
-    return element(by.css('div.eachFilter.slider-wrap > dropdown > div > button'));
+    return element(by.xpath('//div[@class="dropdown open"]'));
   }
  }
