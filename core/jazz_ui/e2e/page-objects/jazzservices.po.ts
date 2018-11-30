@@ -49,7 +49,7 @@ export class Jazz {
       return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[1]'));
   }
   getAPIType() {
-      return element(by.xpath('//div[@class="table-row pointer"]//div[text()="api"]'));
+	  return element(by.xpath('//div[@class="table-row pointer"]//div[text()="api"]'));
   }
   getFunctionType() {
       return element(by.xpath('//div[@class="table-row pointer"]//div[text()="function"]'));
@@ -81,12 +81,13 @@ export class Jazz {
   }
   getProdName(){
     return element(by.xpath('//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
+	//return element(by.cssContainingText('.stageDisp', 'prod'));
   }
   getProdHeader(){
     return element(by.xpath('//div[@class="servie-details-container"]/h1[@class="page-hdr bold-title relative" and contains(text(),"prod")]'));
   }
   getAsset(){
-    return element(by.xpath('//div/div[2]/div/section[1]/div/div[2]/tabs/div/ul/li[3]'));
+    return element(by.xpath('//li[@class="x caps" and contains(text(),"assets")]'));
   }
   getAssetHeader(){
     return element(by.xpath('//div/div[2]/div/section[1]/div/div[2]/section/env-assets-section/div/div[1]/div[2]/div[1]/div[1]/span[2]'));
@@ -115,5 +116,26 @@ export class Jazz {
   getOverviewStatus(){
     return element(by.xpath('//li[@class="x caps active" and contains(text(),"overview")]'));  
   }
-  
+  getLogs(){
+    return element(by.xpath('//li[@class="x caps" and contains(text(),"logs")]'));
+  }
+  getFilterIcon(){
+    return element(by.css('section > env-logs-section > div > div > div.drp-wrp > div:nth-child(2) > div > div > div > div > span'));
+  }
+  getDay(){
+    return element(by.css('div.eachFilter.slider-wrap > dropdown > div > ul > li:nth-child(1) > a'));
+  }
+  getWeek(){
+    return element(by.css('div.eachFilter.slider-wrap > dropdown > div > ul > li:nth-child(2) > a'));
+  }
+  getMonth(){
+    return element(by.css('div.eachFilter.slider-wrap > dropdown > div > ul > li:nth-child(3) > a'));
+  }
+  getYear(){
+    return element(by.css('div.eachFilter.slider-wrap > dropdown > div > ul > li:nth-child(4) > a'));
+  }
+
+  getDropDown(){
+    return element(by.css('div.eachFilter.slider-wrap > dropdown > div > button'));
+  }
  }
