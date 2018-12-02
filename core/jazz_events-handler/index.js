@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // =========================================================================
+'use strict';
 
 const AWS = require('aws-sdk');
 
@@ -52,7 +53,7 @@ function getEvents(config) {
         if (err) {
           return reject({ "db_error": "Unable to scan Event Names table to fetch interested events" });
         } else {
-          for (i = 0; i < result.Items.length; i++) {
+          for (let i = 0; i < result.Items.length; i++) {
             interestedEvents.push(result.Items[i].EVENT_NAME);
           }
           if (result.LastEvaluatedKey) {
@@ -112,7 +113,9 @@ function processEachEvent(record, config, interestedEvents) {
     let payload = new Buffer(encodedPayload, 'base64').toString('ascii');
 
     if (interestedEvents.indexOf(record.kinesis.partitionKey) !== -1) {
-      let params = JSON.parse(payload);
+      let data = JSON.parse(payload);
+      data.Item = AWS.DynamoDB.Converter.unmarshall(data.Item);
+      let params = data;
       params.ReturnConsumedCapacity = "TOTAL";
       params.TableName = config.EVENT_TABLE;
 
