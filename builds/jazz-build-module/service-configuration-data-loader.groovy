@@ -77,6 +77,8 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/global-config.json"
         }
 
         if (service_name.trim() == "jazz_codeq") {
@@ -203,6 +205,8 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./event.json"
         }
 
         if (service_name.trim() == "jazz_deployments-event-handler") {
@@ -301,6 +305,9 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/local-config.json"
+
         }
 
         if (service_name.trim() == "jazz_is-service-available") {
@@ -349,6 +356,8 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./event.json"
 
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
                 sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/dev-config.json"
