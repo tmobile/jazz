@@ -99,7 +99,7 @@ node() {
   }
 
   if(!config.provider) {
-    service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
+    config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
   }
 
   dir(repo_name) {

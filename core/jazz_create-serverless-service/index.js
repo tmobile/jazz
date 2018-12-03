@@ -20,11 +20,11 @@ const request = require('request');
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const CronParser = require("./components/cron-parser.js");
-const configModule = require("./components/config.js"); 
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const util = require('util');
 const validateARN = require("./components/validate-arn.js");
-const crud = require("./components/crud")(); 
+const crud = require("./components/crud")();
 
 /**
     Serverless create service
@@ -208,7 +208,6 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             "DESCRIPTION": service_creation_data.description,
             "TYPE": service_creation_data.service_type,
             "RUNTIME": service_creation_data.runtime,
-            "REGION": service_creation_data.region,
             "USERNAME": user_id,
             "IS_PUBLIC_ENDPOINT": service_creation_data.is_public_endpoint || false,
             "STATUS": "creation_started"
@@ -216,20 +215,24 @@ var getServiceData = (service_creation_data, authToken, configData) => {
 
         var serviceMetadataObj = {};
         if (service_creation_data.tags) {
-            inputs.TAGS = service_creation_data.tags;
+          inputs.TAGS = service_creation_data.tags;
         }
 
         if (service_creation_data.email) {
-            inputs.EMAIL = service_creation_data.email;
+          inputs.EMAIL = service_creation_data.email;
         }
 
         if (service_creation_data.slack_channel) {
-            inputs.SLACKCHANNEL = service_creation_data.slack_channel;
+          inputs.SLACKCHANNEL = service_creation_data.slack_channel;
         }
 
         if ((service_creation_data.service_type === "api" || service_creation_data.service_type === "function") && (service_creation_data.require_internal_access)) {
-            serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
+          serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
         }
+
+        serviceMetadataObj.accountId = service_creation_data.accountId || configData.ACCOUNT_ID
+        serviceMetadataObj.provider = service_creation_data.provider || configData.PROVIDER
+        serviceMetadataObj.region = service_creation_data.region || configData.REGION
 
         // Pass the flag to enable authentication on API
         if (service_creation_data.service_type === "api") {

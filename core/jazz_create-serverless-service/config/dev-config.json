@@ -3,12 +3,14 @@
     "JOB_TOKEN": "{job_token}",
     "API_TOKEN": "{api_token}",
     "SVC_USER": "{ci_user}",
-    "REGION": "{conf-region}",
     "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
     "SERVICE_API_RESOURCE": "/dev/jazz/services",
     "TOKEN_URL": "/dev/jazz/login",
     "SERVICE_USER": "{jazz_admin}",
     "TOKEN_CREDS": "{jazz_admin_creds}",
+    "PROVIDER": "{default_provider}",
+    "ACCOUNT_ID": "{default_accountId}",
+    "REGION": "{default_region}",
     "EVENT_SOURCE_NAME": {
         "s3": {
             "minLength": 3,
