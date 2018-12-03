@@ -205,7 +205,8 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             "REGION": service_creation_data.region,
             "USERNAME": user_id,
             "IS_PUBLIC_ENDPOINT": service_creation_data.is_public_endpoint || false,
-            "STATUS": "creation_started"
+            "STATUS": "creation_started",
+            "PLATFORM": service_creation_data.platform
         };
 
         var serviceMetadataObj = {};
