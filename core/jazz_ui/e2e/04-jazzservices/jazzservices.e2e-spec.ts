@@ -90,9 +90,31 @@ describe('Overview', () => {
       it('Verify API Asset' ,  () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getAsset()), timeOutHigh);
             jazzServices_po.getAsset().click();
+            expect(jazzServices_po.getAssetStatusVerify().getText()).toEqual('ACTIVE');
             browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
             browser.sleep(4000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
+            
+      });
+
+      it('Verify Logs' ,  () => {
+            browser.wait(EC.visibilityOf(jazzServices_po.getLogs()), timeOutHigh);
+            jazzServices_po.getLogs().click();
+            browser.wait(EC.visibilityOf(jazzServices_po.getFilterIcon()), timeOutHigh);
+            browser.driver.switchTo().activeElement();
+            jazzServices_po.getFilterIcon().click();
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getDay().click();
+            browser.sleep(2000);
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getWeek().click();
+            browser.sleep(2000);
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getMonth().click();
+            browser.sleep(2000);
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getYear().click();
+            browser.sleep(2000);
             jazzServices_po.getServiceFromAsset().click();
       });
       
@@ -133,7 +155,6 @@ describe('Overview', () => {
       it('Verify Lamda Prod Name' ,  () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
             jazzServices_po.getProdName().click();
-            expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
             browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
             browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
             browser.driver.switchTo().activeElement();
@@ -144,7 +165,7 @@ describe('Overview', () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
             jazzServices_po.getDeploymentStatusVerify();
-            expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('successful');
+            expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
       });
 
       it('Verify Lamda Asset' ,  () => {
@@ -157,10 +178,29 @@ describe('Overview', () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
             browser.sleep(4000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
-            jazzServices_po.getServiceFromAsset().click();
       });
 
-     
+      it('Verify Logs' ,  () => {
+            browser.wait(EC.visibilityOf(jazzServices_po.getLogs()), timeOutHigh);
+            jazzServices_po.getLogs().click();
+            browser.wait(EC.visibilityOf(jazzServices_po.getFilterIcon()), timeOutHigh);
+            browser.driver.switchTo().activeElement();
+            jazzServices_po.getFilterIcon().click();
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getDay().click();
+            browser.sleep(2000);
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getWeek().click();
+            browser.sleep(2000);
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getMonth().click();
+            browser.sleep(2000);
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getYear().click();
+            browser.sleep(2000);
+            jazzServices_po.getServiceFromAsset().click();
+      });
+      
       it('Create Website Service', () => {
             browser.driver.switchTo().activeElement();
             browser.driver.sleep(5000);
@@ -217,6 +257,26 @@ describe('Overview', () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
             browser.sleep(4000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
+      });
+
+      it('Verify Logs' ,  () => {
+            browser.wait(EC.visibilityOf(jazzServices_po.getLogs()), timeOutHigh);
+            jazzServices_po.getLogs().click();
+            browser.wait(EC.visibilityOf(jazzServices_po.getFilterIcon()), timeOutHigh);
+            browser.driver.switchTo().activeElement();
+            jazzServices_po.getFilterIcon().click();
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getDay().click();
+            browser.sleep(2000);
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getWeek().click();
+            browser.sleep(2000);
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getMonth().click();
+            browser.sleep(2000);
+            jazzServices_po.getDropDown().click();
+            jazzServices_po.getYear().click();
+            browser.sleep(2000);
             jazzServices_po.getServiceFromAsset().click();
       });
 
