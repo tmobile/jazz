@@ -59,6 +59,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/global-config.json"
 
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
@@ -78,7 +79,6 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 
-             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/global-config.json"
         }
 
         if (service_name.trim() == "jazz_codeq") {
@@ -197,6 +197,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./event.json"
 
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
@@ -206,7 +207,6 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./event.json"
         }
 
         if (service_name.trim() == "jazz_deployments-event-handler") {
@@ -290,7 +290,7 @@ def loadServiceConfigurationData() {
 
         }
 
-        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer")) {
+        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout")) {
             sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
@@ -306,9 +306,27 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/local-config.json"
-
         }
+
+        if (service_name.trim() == "jazz_cognito-authorizer") {
+
+            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
+             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/local-config.json"
+
+            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
+
+            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+        }
+
 
         if (service_name.trim() == "jazz_is-service-available") {
             sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
