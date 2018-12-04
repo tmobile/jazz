@@ -105,16 +105,16 @@ describe('Overview', () => {
             jazzServices_po.getFilterIcon().click();
             jazzServices_po.getDropDown().click();
             jazzServices_po.getDay().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getWeek().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getMonth().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getYear().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getServiceFromAsset().click();
       });
       
@@ -188,16 +188,16 @@ describe('Overview', () => {
             jazzServices_po.getFilterIcon().click();
             jazzServices_po.getDropDown().click();
             jazzServices_po.getDay().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getWeek().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getMonth().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getYear().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getServiceFromAsset().click();
       });
       
@@ -267,16 +267,16 @@ describe('Overview', () => {
             jazzServices_po.getFilterIcon().click();
             jazzServices_po.getDropDown().click();
             jazzServices_po.getDay().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getWeek().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getMonth().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getYear().click();
-            browser.sleep(4000);
+            browser.sleep(2000);
             jazzServices_po.getServiceFromAsset().click();
       });
 
