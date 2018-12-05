@@ -256,17 +256,11 @@ export class LoginComponent implements OnInit {
                         this.forgot_password = false;
                         this.onChange(e);
                         this.model.password = this.model.verificationCode = '';
-                        let successMsg = this.toastmessage.customMessage('success', 'reset');
+                        let successMsg = this.toastmessage.customMessage('success', 'resetPwd');
                         this.toast_pop('success', 'Success!', successMsg);
-                        
                     }, err => {
                         let error = JSON.parse(err._body);
-                        let errorMessage=this.toastmessage.errorMessage(err, 'reset');
-                        try{
-                            errorMessage = error.message;
-                        } catch(e) {
-                            console.log(e);
-                        }
+                        let errorMessage=this.toastmessage.errorMessage(err, 'resetPwd');
                         this.toast_pop('error', 'Oops!', errorMessage);
                     });
             } else if (this.new_pwd_req) {
@@ -299,17 +293,12 @@ export class LoginComponent implements OnInit {
                             this.regist='Forgot Password';
                             this.onChange(e);
                             this.userEmail=this.model.password=this.model.verificationCode="";
-                            let successMsg = this.toastmessage.customMessage('success', 'updatepwd');
+                            let successMsg = this.toastmessage.customMessage('success', 'updatePwd');
                             this.toast_pop('success', 'Success!', successMsg);
                     },
                     err => {
                         let error = JSON.parse(err._body);
-                        let errorMessage=this.toastmessage.errorMessage(err, 'updatepwd');
-                        try{
-                            errorMessage = error.message;
-                        } catch(e) {
-                            console.log(e);
-                        }
+                        let errorMessage=this.toastmessage.errorMessage(err, 'updatePwd');
                         this.toast_pop('error', 'Oops!', errorMessage);
                     });
             }

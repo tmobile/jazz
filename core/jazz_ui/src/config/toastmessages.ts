@@ -95,7 +95,15 @@ export const toastMessage = {
         "error400":"Your registration failed. Seems like something went wrong.",
         "error401":"Token expired",
         "error404":"Your registration failed. Seems like something went wrong.",
-        "error500":"Your registration failed. Seems like something went wrong."},
+        "error500":"Your registration failed. Seems like something went wrong."
+    },
+    "resetPwd":{
+        "success":"A verification code is sent to your registered email.",
+        "error400":"Cannot reset password for the user as there is no registered/verified email or phone_number.",
+        "error401":"Something went wrong while resetting the password. Please try again!",
+        "error404":"Something went wrong while resetting the password. Please try again!",
+        "error500":"Something went wrong while resetting the password. Please try again!"
+    },
     "error404":{
         "errorTxt":"Uh-oh, looks like you took a wrong turn, let's see if we can turn around.",
         "errorHdr":"Are you lost?"
@@ -140,7 +148,13 @@ export const toastMessage = {
         "error400":"Something went wrong while updating the environment details. Please try again!",
         "error404":"Something went wrong while updating the environment details. Please try again!",
         "error500":"Something went wrong while updating the environment details. Please try again!"
-        
+    },
+    "updatePwd":{
+        "success":"Password updated successfully.",
+        "error400":"Invalid verification code provided, please try again.",
+        "error401":"Something went wrong while updating the password. Please try again!",
+        "error404":"Something went wrong while updating the password. Please try again!",
+        "error500":"Something went wrong while updating the password. Please try again!"
     },
     "updateService":{
         "success":"updated successfully.",
