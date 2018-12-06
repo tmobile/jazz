@@ -21,6 +21,7 @@ import groovy.json.JsonSlurperClassic
 @Field def serviceMetadataLoader
 @Field def environmentMetadataLoader
 @Field def sonarModule
+@Field def lambdaEvents
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -162,6 +163,7 @@ node {
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
 							}
+              archiveAssetDetails(_envId)
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
 							echo "Environment Deletion failed for envId: $_envId . Error Details:" + ex
@@ -179,12 +181,6 @@ node {
           for (_envId in environmentIds) {
 						current_environment_id = _envId
 
-						def asset_url = g_base_url + "/jazz/assets"
-						def assetsList = getAssetsList(asset_url, current_environment_id)
-						if (assetsList != null && assetsList.manuallyCreatedAssets.size()) {
-							deleteAndUpdateAssets(asset_url, auth_token, assetsList.manuallyCreatedAssets, service_config, configLoader.AWS.REGION)
-						}
-
             try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
@@ -194,16 +190,19 @@ node {
 							}
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+
+							if (service_config['event_source_s3']) { // check service for S3 Bucket and make empty if not. //
+								checkBucket(current_environment_id);
+							}
 							echo 'undeploying function for environment: ' + _envId
-							unDeployService(_envId)
+
+              cleanupEventSourceMapping(_envId)
+              unDeployService(_envId)
+
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
 							}
-              if (assetsList != null && assetsList.slsAssets.size()) {
-								for (eachSlsAsset in assetsList.slsAssets) {
-									updateAssetTable(asset_url, auth_token, eachSlsAsset, "ARCHIVED")
-							  }
-							}
+              archiveAssetDetails(_envId)
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
 							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
@@ -233,6 +232,7 @@ node {
 								cleanupCloudFrontDistribution(_envId)
 							}
 							unDeployWebsite(_envId)
+              archiveAssetDetails(_envId)
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
 							echo "error occured when deleting environment: " + ex
@@ -240,7 +240,6 @@ node {
 							error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
 						}
 					}
-
 				}
 				break
 		}
@@ -252,121 +251,57 @@ node {
 			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
 		}
 	}
-
 }
 
-// get manually created assets list by filtering from sls resources.
-def getAssetsList(asset_url, current_environment_id) {
-  withCredentials([
+def cleanupEventSourceMapping(env) {
+  def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
+  def assets_api = g_base_url + "/jazz/assets"
+  lambdaEvents.deleteEventSourceMapping(lambda_arn, assets_api, auth_token,service_config, env)
+}
+
+def archiveAssetDetails(env) {
+  def assets_api = g_base_url + "/jazz/assets"
+  def assets = utilModule.getAssets(assets_api, auth_token, service_config, env)
+  def assetList = parseJsonMap(assets)
+  for (asset in assetList.data.assets) {
+    events.sendCompletedEvent('UPDATE_ASSET', "Environment cleanup for ${env} completed", utilModule.generateAssetMap("aws", asset.provider_id , asset.asset_type, service_config), env)
+  }
+}
+
+/**
+ * Check bucket existance and content in it. if yes then empty it for SLS delete
+ * @param  stage
+ * @return
+ */
+def checkBucket(stage) {
+	withCredentials([
 		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
-    try{
-      sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-      sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-      sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+		try {
+			sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-      def env_key
-
-      if (current_environment_id != "stg"){
-        if (current_environment_id.endsWith("-dev")) {
-          env_key = current_environment_id
-        } else {
-          env_key = "prod"
-        }
-
-        def stackName = "${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env_key}"
-        def listResource = sh(returnStdout: true, script: "aws cloudformation list-stack-resources --stack-name ${stackName} --region ${configLoader.AWS.REGION} --output json")
-        def sls_created_assets = []
-
-        listResourceJson = parseJsonMap(listResource)
-        for (eachResource in listResourceJson.StackResourceSummaries) {
-          sls_created_assets.push(eachResource.PhysicalResourceId)
-        }
-        echo " sls_created_assets: $sls_created_assets"
-        def getAssetsJson = filterAssetsList(asset_url, auth_token, service_config, configLoader.AWS.REGION, sls_created_assets, env_key)
-        return getAssetsJson
+			// Empty bucket
+			def targetBucket = service_config['event_source_s3'];
+			if(stage != "prod"){
+				targetBucket = service_config['event_source_s3'] + "-" + stage;
+			}
+      def s3Exists = true;
+      try {
+          sh "aws s3api head-bucket --bucket ${targetBucket} --output json"
+      } catch (ex) {
+          echo "Bucket does not exist"
+          s3Exists = false
       }
-    } catch (ex) {
-      echo "$ex"
-    }
-  }
-}
-
-// categorize the list of service assets from assets catalog as 'manuallyCreatedAssets' and 'slsAssets'.
-def filterAssetsList(assets_api, auth_token, service_config, region, sls_created_assets, env) {
-  try{
-    def getAssets = sh (
-      script: "curl GET  \
-			-H \"Content-Type: application/json\" \
-			-H \"Authorization: $auth_token\" \
-			\"${assets_api}?domain=${service_config['domain']}&service=${service_config['service']}&environemnt=${env}\"",
-      returnStdout: true
-    ).trim()
-    def getAssetsJson = parseJsonMap(getAssets)
-    def assetsList = [
-      manuallyCreatedAssets: [],
-      slsAssets : []
-    ]
-
-    for (eachAsset in getAssetsJson.data.assets) {
-      def count = 0
-      for (eachResource in sls_created_assets) {
-        count = count + 1;
-        if (eachResource.indexOf(eachAsset.provider_id) >= 0) {
-          assetsList.slsAssets.push(eachAsset)
-        }
-        if (count == sls_created_assets.size()) {
-          assetsList.manuallyCreatedAssets.push(eachAsset)
-        }
-      }
-    }
-    return assetsList
-  } catch(ex) {
-      echo "$ex"
-  }
-}
-
-// Delete manually created asstes and update the assets status.
-def deleteAndUpdateAssets(assets_api, auth_token, manuallyCreatedAssets, service_config, region) {
-  withCredentials([
-    [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-  ]) {
-    try {
-      sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-      sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-      sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
-      for (asset in manuallyCreatedAssets) {
-        if (asset.asset_type == "dynamodb_stream_arn") {
-          def tableName = service_config['event_source_dynamodb'].tokenize("/").last()
-          def tableDetails = sh(
-            script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=false --region ${region} --output json",
-            returnStdout: true
-          ).trim()
-          def tableDetailsJson = parseJsonMap(tableDetails)
-          updateAssetTable(assets_api, auth_token, asset, "ARCHIVED")
-        }
-      }
-    } catch (ex) {
-      echo "$ex"
-    }
-  }
-}
-
-// Update assets staus in assets catalog.
-def updateAssetTable(assets_api, auth_token, asset, status) {
-  def params = [
-    "status": status
-  ]
-  def payload = JsonOutput.toJson(params)
-  def apiId = assets_api + "/${asset.id}"
-  def updateAssets = sh(script: "curl -X PUT \
-						${apiId} \
-						-H 'authorization: $auth_token' \
-						-H 'Content-type: application/json' \
-						-d '$payload'", returnStdout: true).trim()
-  def updatedAsset = parseJsonMap(updateAssets)
-  echo "updatedAsset: $updatedAsset"
+     if(s3Exists && (!isBucketEmpty(targetBucket))) {
+					sh "aws s3 rm s3://${targetBucket}/ --recursive --exclude '/'"
+					echo "Removing items from bucket"
+			}
+		} catch (ex) {
+			handleFailureEvent(ex.getMessage())
+		}
+	}
 }
 
 def cleanupCodeQualityReports(){
@@ -448,8 +383,6 @@ def checkoutSCM(repo_name) {
  * @return
  */
 def updateServiceNameConfig() {
-	sh "rm serverless.yml"
-	sh "cp serverless-temp.yml serverless.yml"
 	try {
 		sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}/g' serverless.yml"
 		sh "sed -i -- 's/name: \${self:service}/name: ${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}/g' serverless.yml"
@@ -1127,7 +1060,6 @@ def loadServerlessConfig() {
     removeEventResources ()
   }
 
-	sh "cp serverless.yml serverless-temp.yml"
 }
 
 def removeEventResources(){
@@ -1258,6 +1190,11 @@ def loadBuildModules(buildModuleUrl){
 
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
+
+    lambdaEvents = load "aws-lambda-events-module.groovy"
+    lambdaEvents.initialize(configLoader, utilModule)
+    echo "Lambda event module loaded successfully."
+
 	}
 }
 
