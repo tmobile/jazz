@@ -290,7 +290,7 @@ def loadServiceConfigurationData() {
 
         }
 
-        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout")) {
+        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer")) {
             sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
@@ -309,22 +309,7 @@ def loadServiceConfigurationData() {
         }
 
         if (service_name.trim() == "jazz_cognito-authorizer") {
-
-            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/local-config.json"
-
-            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-
-            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
-            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
         }
 
 
