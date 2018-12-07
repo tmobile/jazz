@@ -260,8 +260,13 @@ export class LoginComponent implements OnInit {
                         this.toast_pop('success', 'Success!', successMsg);
                     }, err => {
                         let error = JSON.parse(err._body);
-                        let errorMessage=this.toastmessage.errorMessage(err, 'resetPwd');
-                        this.toast_pop('error', 'Oops!', errorMessage);
+                        let errorMessage = error.message;
+                        try {
+                            errorMessage = this.toastmessage.errorMessage(err, 'resetPwd');
+                        } catch (e) {
+                            console.log(e);
+                        }
+                        !!errorMessage && this.toast_pop('error', 'Oops!', errorMessage);
                     });
             } else if (this.new_pwd_req) {
                 if(!this.model.username){
@@ -298,8 +303,13 @@ export class LoginComponent implements OnInit {
                     },
                     err => {
                         let error = JSON.parse(err._body);
-                        let errorMessage=this.toastmessage.errorMessage(err, 'updatePwd');
-                        this.toast_pop('error', 'Oops!', errorMessage);
+                        let errorMessage = error.message;
+                        try {
+                            errorMessage = this.toastmessage.errorMessage(err, 'updatePwd');
+                        } catch (e) {
+                            console.log(e);
+                        }
+                        !!errorMessage && this.toast_pop('error', 'Oops!', errorMessage);
                     });
             }
         }

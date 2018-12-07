@@ -99,7 +99,7 @@ export const toastMessage = {
     },
     "resetPwd":{
         "success":"A verification code is sent to your registered email.",
-        "error400":"Cannot reset password for the user as there is no registered/verified email or phone_number.",
+        "error400":"Cannot reset password for the user as there is no registered/verified email.",
         "error401":"Something went wrong while resetting the password. Please try again!",
         "error404":"Something went wrong while resetting the password. Please try again!",
         "error500":"Something went wrong while resetting the password. Please try again!"
