@@ -482,17 +482,32 @@ def buildLambda(runtime) {
 	} else if (runtime.indexOf("java") > -1) {
 		sh "mvn package"
 	} else if (runtime.indexOf("python") > -1) {
-		// install requirements.txt in library folder, these python modules
-		// will be a part of deployment package
-		sh "pip install -r requirements.txt -t library"
+		// install requirements.txt in library folder, these python modules will be a part of deployment package
+		sh "rm -rf library"
+		sh "mkdir library"
+		sh "touch library/__init__.py"
 
-		// create virtual environment and install dev-requirements
-		sh """
-		pip install virtualenv
-		virtualenv venv
-		. venv/bin/activate
-		pip install pytest
-		"""
+		if (runtime == 'python3.6'){
+      		// Installing dependencies
+      		sh "pip3 install -r requirements.txt -t library"
+      		// create virtual environment and install pytest
+      		sh """
+			python3 -m venv virtualenv
+			. virtualenv/bin/activate
+			pip3 install pytest
+			pytest test
+		  	"""
+    	}else{
+			// Installing dependencies
+      		sh "pip install -r requirements.txt -t library"
+      		// create virtual environment and install pytest
+		  	sh """
+		  	pip install virtualenv
+		  	virtualenv venv
+		  	. venv/bin/activate
+		  	pip install pytest
+	  		"""
+    	}
 	}
 }
 
