@@ -107,7 +107,7 @@ export class Jazz {
     return element(by.xpath('//div[@class="column status-col"]/div[@class="green"]'));
   }
   getAssetStatusVerify(){
-    return element(by.xpath('//li[@class="x caps active"]'));
+    return element(by.xpath('//div[@class="det-value"]'));
   }
   getLamdaName(){
     return element(by.xpath('//div[@class="table-row pointer"]/div[text()="function"]/preceding-sibling::div'));
@@ -119,10 +119,10 @@ export class Jazz {
     return element(by.xpath('//li[@class="x caps" and contains(text(),"logs")]'));
   }
   getFilterIcon(){
-    return element(by.css('section > env-logs-section > div > div > div.drp-wrp > div:nth-child(2) > div > div > div > div > span'));
+	 return element(by.css('section > env-logs-section > div > div > div.drp-wrp > div:nth-child(2) > div > div > div > div > span'));
   }
   getDay(){
-    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Day")]'));
+   return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Day")]'));
   }
   getWeek(){
     return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Week")]'));
@@ -133,7 +133,6 @@ export class Jazz {
   getYear(){
     return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Year")]'));
   }
-
   getDropDown(){
     return element(by.xpath('//div[@class="dropdown open"]'));
   }
