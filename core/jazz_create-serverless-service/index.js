@@ -230,7 +230,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
           serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
         }
 
-        serviceMetadataObj.accountId = service_creation_data.accountId || configData.ACCOUNT_ID
+        serviceMetadataObj.accountId = service_creation_data.accountId || configData.ACCOUNTID
         serviceMetadataObj.provider = service_creation_data.provider || configData.PROVIDER
         serviceMetadataObj.region = service_creation_data.region || configData.REGION
 

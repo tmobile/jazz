@@ -95,7 +95,7 @@ node {
     }
 
     if(!service_config.accountId) {
-      service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNT_ID
+      service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
     }
 
     if(!service_config.provider) {
@@ -467,12 +467,9 @@ def updateSwaggerConfig() {
 			def role = "${configLoader.AWS.ROLEID}"
 			def roleARN = role.replaceAll("/", "\\\\/")
 
-			// TODO: the below couple of statements will be replaced with regular expression in very near future;
-			def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
-
 			sh "sed -i -- 's/{conf-role}/${roleARN}/g' ./swagger/swagger.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
-			sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-accId}/${service_config['accountId']}/g' ./swagger/swagger.json"
 		}
 	} catch (ex) {
 		handleFailureEvent(ex.getMessage())

@@ -13,7 +13,7 @@ echo "Service configuration module loaded successfully"
 @Field def config_loader
 @Field def role_arn
 @Field def region
-@Field def role_id
+@Field def accountId
 @Field def jenkins_url
 @Field def current_environment
 @Field def es_hostname
@@ -23,11 +23,11 @@ echo "Service configuration module loaded successfully"
 /**
  * Initialize the module
  */
-def initialize(config, role_arn, region, role_id, jenkins_url, current_environment, service_name, utilModule) {
-    config_loader = config
+def initialize(configLoader, role_arn, region, accountId, jenkins_url, current_environment, service_name, utilModule) {
+    config_loader = configLoader
     setRoleARN(role_arn)
     setRegion(region)
-    setRoleId(role_id)
+    setAccountId(accountId)
     setJenkinsUrl(jenkins_url)
     setCurrentEnvironment(current_environment)
     setServiceName(service_name)
@@ -46,7 +46,7 @@ def loadServiceConfigurationData() {
             echo "Updating the Swagger SEDs"
             sh "sed -i -- 's/{conf-role}/${role_arn}/g' ./swagger/swagger.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
-            sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
+            sh "sed -i -- 's/{conf-accId}/${accountId}/g' ./swagger/swagger.json"
         }
 
         if ((config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_is-slack-channel-available")) {
@@ -331,9 +331,9 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{default_provider}/${config_loader.AWS.DEFAULTS.PROVIDER}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{default_provider}/${config_loader.AWS.DEFAULTS.PROVIDER}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{default_accountId}/${config_loader.AWS.DEFAULTS.ACCOUNT_ID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{default_accountId}/${config_loader.AWS.DEFAULTS.ACCOUNT_ID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{default_accountId}/${config_loader.AWS.DEFAULTS.ACCOUNT_ID}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{default_accountId}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{default_accountId}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{default_accountId}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/prod-config.json"
 
             sh "sed -i -- 's/{default_region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{default_region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./config/stg-config.json"
@@ -498,8 +498,8 @@ def setRoleARN(roleArn){
 def setRegion(rgn){
     region = rgn
 }
-def setRoleId(roleId){
-    role_id = roleId
+def setAccountId(account_id){
+    accountId = account_id
 }
 def setJenkinsUrl(jenkinsUrl){
     jenkins_url = jenkinsUrl
@@ -524,7 +524,7 @@ def setKinesisStream(config){
         ).trim()
         echo "$event_source_list"
         if (event_source_list == "[]") {
-            sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$role_id:stream/${config_loader.INSTANCE_PREFIX}-events-hub-" + current_environment + " --function-name arn:aws:lambda:$region:$role_id:function:$function_name --starting-position LATEST --region " + region
+            sh "aws lambda  create-event-source-mapping --event-source-arn arn:aws:kinesis:$region:$accountId:stream/${config_loader.INSTANCE_PREFIX}-events-hub-" + current_environment + " --function-name arn:aws:lambda:$region:$accountId:function:$function_name --starting-position LATEST --region " + region
         }
 
     }
@@ -535,7 +535,7 @@ def setLogStreamPermission(config){
         echo "set permission for cloud-logs-streamer"
         try {
             def rd = sh(script: "openssl rand -hex 4", returnStdout: true).trim()
-            sh "aws lambda add-permission --function-name arn:aws:lambda:${region}:${role_id}:function:${function_name} --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs.${region}.amazonaws.com --region ${region}"
+            sh "aws lambda add-permission --function-name arn:aws:lambda:${region}:${accountId}:function:${function_name} --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs.${region}.amazonaws.com --region ${region}"
             echo "set permission for cloud-logs-streamer - success"
         } catch (ss) {
             //ignore if already registered permissions

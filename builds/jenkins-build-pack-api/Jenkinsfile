@@ -89,7 +89,7 @@ node() {
   }
 
   if(!config.accountId) {
-    config.accountId = configLoader.AWS.DEFAULTS.ACCOUNT_ID
+    config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
   }
 
   if(!config.provider) {
@@ -131,9 +131,6 @@ node() {
 		def internalAccess = config['require_internal_access']
 		def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
 
-		// @TODO: the below statement will be replaced with regular expression in very near future;
-		def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
-
 		sonarModule.initialize(configLoader, config, branch)
 
 		loadServerlessConfig(config)
@@ -142,7 +139,7 @@ node() {
 			stage('Update Service Template'){
 				echo "Inside Update service template"
 				try {
-					updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)
+					updatePlatformServiceTemplate(config, roleARN, current_environment, repo_name)
 				}
 				catch (error) {
 					error "Error occured while updating service template."
@@ -292,7 +289,7 @@ node() {
 						}
 
 						if (domain != "jazz") {
-							createSubscriptionFilters(stackName, config['region'], roleId);
+							createSubscriptionFilters(stackName);
 						}
 
 						updateApiDocUrl(current_environment)
@@ -522,12 +519,9 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
 	sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
 	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
 
-	// TODO: the below couple of statements will be replaced with regular expression in very near future;
-	def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
-
 	sh "sed -i -- 's/{conf-role}/${roleARN}/g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-region}/${config['region']}/g' ./swagger/swagger.json"
-	sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
+	sh "sed -i -- 's/{conf-accId}/${config['accountId']}/g' ./swagger/swagger.json"
 }
 
 def writeServerlessFile(config, environment_logical_id){
@@ -711,16 +705,16 @@ def updateApiDocUrl(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, region, roleId) {
+def createSubscriptionFilters(stackName) {
 	def lambda = "/aws/lambda/${stackName}"
-	def logStreamer = "arn:aws:lambda:${config['region']}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
+	def logStreamer = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
 	try {
-		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
+		sh "aws logs create-log-group --log-group-name ${lambda} --region ${config['region']}"
 	} catch (Exception ex) { }// ignore if already existing
 
 	try {
 		filter_json = sh(
-			script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${region}",
+			script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${config['region']}",
 			returnStdout: true
 		).trim()
 		echo "${filter_json}"
@@ -728,12 +722,12 @@ def createSubscriptionFilters(stackName, region, roleId) {
 		filtername = resultJson.subscriptionFilters[0].filterName
 		echo "removing existing filter... $filtername"
 		if (filtername != "" && !filtername.equals(lambda)) {
-			sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --region ${region}"
+			sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --region ${config['region']}"
 		}
 	} catch (Exception ex) { }// ignore error if not created yet
 
 	try {
-		sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region}"
+		sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${config['region']}"
 	} catch (Exception ex) {
 		echo "error occured: " + ex.getMessage()
 	}
@@ -857,10 +851,10 @@ def clearVirtualEnv() {
 	sh "rm -rf venv" // just delete the venv folder
 }
 
-def updatePlatformServiceTemplate(config, roleARN, roleId, environment_logical_id, repo_name)	{
+def updatePlatformServiceTemplate(config, roleARN, environment_logical_id, repo_name)	{
 	echo "loadServerlessConfig......."
 	def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-	serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, environment_logical_id, repo_name, utilModule)
+	serviceConfigdata.initialize(configLoader, roleARN, config['region'], config['accountId'], jenkinsURL, environment_logical_id, repo_name, utilModule)
 	serviceConfigdata.loadServiceConfigurationData()
 }
 
