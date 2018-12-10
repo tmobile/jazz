@@ -34,7 +34,7 @@ module.exports.handler = (event, context, cb) => {
       .then(() => processACL(event))
       .catch(err => {
         logger.error(JSON.stringify(err));
-				return cb(JSON.stringify(err));
+        return cb(JSON.stringify(err));
       });
 
   } catch (e) {
