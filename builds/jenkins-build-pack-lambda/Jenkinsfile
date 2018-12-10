@@ -550,7 +550,7 @@ def buildLambda(String runtime) {
 			pip3 install pytest
 			pytest test
 		  """
-    }else{
+    } else {
       // Installing dependencies
       sh "pip install -r requirements.txt -t library"
       // create virtual environment and install pytest
