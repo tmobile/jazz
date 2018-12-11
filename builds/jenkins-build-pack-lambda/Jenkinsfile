@@ -23,6 +23,7 @@ import groovy.transform.Field
 @Field def sonarModule
 
 @Field def auth_token = ''
+@Field def config
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def current_environment = ''
@@ -50,7 +51,6 @@ node() {
     repo_name = params.domain + "_" + params.service_name
   }
 
-  def config
   def domain = params.domain
 
   stage('Checkout code base') {
@@ -81,6 +81,11 @@ node() {
 
     if (configObj.service_id) {
       config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
+      if (config['domain'] && config['domain'] == "jazz") {
+          config['iamRoleID'] = configLoader.AWS.PLATFORMSERVICES_ROLEID
+      } else {
+          config['iamRoleID'] = configLoader.AWS.USERSERVICES_ROLEID
+      }
     } else {
       error "Service Id is not available."
     }
@@ -89,6 +94,8 @@ node() {
   if (!config) {
     error "Failed to fetch service metadata from catalog"
   }
+
+  config['iamRoleARN'] = config['iamRoleID'].replaceAll("/", "\\\\/")
 
   dir(repo_name) {
     scmModule.setServiceConfig(config)
@@ -128,7 +135,8 @@ node() {
   def isEventSchdld = false
   def internalAccess = config['require_internal_access']
   domain = config['domain']
-  def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
+  def roleARN = config['iamRoleARN']
+  
   // @TODO: the below statement will be replaced with regular expression in very near future;
   def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
