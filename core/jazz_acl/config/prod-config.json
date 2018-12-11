@@ -1,7 +1,7 @@
 {
   "TOKEN_URL": "/prod/jazz/login",
-	"SERVICE_USER": "{jazz_admin}",
-	"TOKEN_CREDS": "{jazz_admin_creds}",
+  "SERVICE_USER": "{jazz_admin}",
+  "TOKEN_CREDS": "{jazz_admin_creds}",
   "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
   "CASBIN": {
     "TYPE": "{casbin_type}",
