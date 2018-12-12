@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for jazz_create-serverless-service/components/logger.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../prettify.css" />
+    <link rel="stylesheet" href="../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../index.html">All files</a> / <a href="index.html">jazz_create-serverless-service/components</a> logger.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">65.12% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>28/43</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">45% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>9/20</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">60% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>6/10</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">65.12% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>28/43</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line medium'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">13x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+&nbsp;
+/**
+    Nodejs Template Project
+    @module: logger.js
+    @description: a simple logging module for nodejs
+    @author:
+    @version: 1.0
+**/
+&nbsp;
+&nbsp;
+/*
+USAGE
+&nbsp;
+    logger = require('./components/logger.js')
+&nbsp;
+    logger.init(event, context); // by default logging level is info
+&nbsp;
+    logger.warn('The following waring message will be logged');
+    logger.verbose('The following waring message will not be logged')
+&nbsp;
+&nbsp;
+    // Sample logging messages.
+    logger.error('Runtime errors or unexpected conditions.');
+    logger.warn('Runtime situations that are undesirable or unexpected, but not necessarily "wrong".');
+    logger.info('Interesting runtime events (Eg. connection established, data fetched etc).');
+    logger.verbose('Generally speaking, most lines logged by your application should be written as verbose.');
+    logger.debug('Detailed information on the flow through the system.);
+&nbsp;
+    // Alternate usage
+    logger.log('error', 'message');
+    logger.log('info', 'message');
+&nbsp;
+*/
+&nbsp;
+module.exports = function () {
+    var logLevels = {
+        error: 4,
+        warn: 3,
+        info: 2,
+        verbose: 1,
+        debug: 0
+    };
+&nbsp;
+    var config = {
+        curLogLevel: 'info',
+        requestDetails: ''
+    };
+&nbsp;
+    // set logLevel, RequestDetails
+    var init = function (event, context) {
+        setLevel();
+    };
+&nbsp;
+    // To add request specific details, which will be prepended in all the logs for ease of debugging in CloudWatch logs
+    var setRequestDetails = <span class="fstat-no" title="function not covered" >fu</span>nction (someContextSpecificId) {
+<span class="cstat-no" title="statement not covered" >        return;</span>
+&nbsp;
+        // Timestamp and requestID are prepended in cloudwatch log by default; If any other details are required it can be done here.
+&nbsp;
+        /*
+        if (someContextSpecificId != undefined &amp;&amp; someContextSpecificId != '') {
+            config.someContextSpecificId = someContextSpecificId;
+            config.requestDetails = 'someContextSpecificId : ' + someContextSpecificId + ' =&gt;\t'
+        } else{
+            config.requestDetails = ''
+        };
+        */
+    };
+&nbsp;
+    // set current logLevel; Only logs which are above the curLogLevel will be logged;
+    var setLevel = function (level) {
+        // LOG_LEVEL is 'info' by default
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (level !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >logLevels[level] !== undefined)</span> {
+            // If LOG_LEVEL if explicitly specified , set it as the curLogLevel
+<span class="cstat-no" title="statement not covered" >            config.curLogLevel = level;</span>
+<span class="cstat-no" title="statement not covered" >            return level;</span>
+        } else {
+            // Get LOG_LEVEL from the environment variables (if defined)
+            try {
+                level = process.env.LOG_LEVEL;
+            } catch (e) {
+<span class="cstat-no" title="statement not covered" >                error('error trying to access LOG_LEVEL');</span>
+            }
+            <span class="missing-if-branch" title="if path not taken" >I</span>if (level !== undefined &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >logLevels[level] !== undefined)</span> {
+<span class="cstat-no" title="statement not covered" >                config.curLogLevel = level;</span>
+<span class="cstat-no" title="statement not covered" >                return level;</span>
+            }
+        }
+        return null;
+    };
+&nbsp;
+    var log = function (level, message) {
+        /*
+            @TODO: format message as per requirement.
+            Will it be just a string / json. Should we except error object also?
+        */
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (logLevels[level] &gt;= logLevels[config.curLogLevel]) {
+            if (level == 'error') {
+                console.error('[ERROR] =&gt;\t', config.requestDetails, message);
+                /*
+                    If required, add custom actions here; Such as send a mail, etc...
+                */
+            } else <span class="missing-if-branch" title="if path not taken" >I</span>if (level == 'warn') {
+<span class="cstat-no" title="statement not covered" >                console.warn('[WARN]  =&gt;\t', config.requestDetails, message);</span>
+            } else <span class="missing-if-branch" title="else path not taken" >E</span>if (level == 'info') {
+                console.info('[INFO]  =&gt;\t', config.requestDetails, message);
+            } else <span class="cstat-no" title="statement not covered" >if (level == 'verbose') {</span>
+<span class="cstat-no" title="statement not covered" >                console.info('[VERBOSE]  =&gt;\t', config.requestDetails, message);</span>
+            } else <span class="cstat-no" title="statement not covered" >if (level == 'debug') {</span>
+<span class="cstat-no" title="statement not covered" >                console.info('[DEBUG]  =&gt;\t', config.requestDetails, message);</span>
+            } else {
+<span class="cstat-no" title="statement not covered" >                console.log(level, '[] =&gt;\t', config.requestDetails, message);</span>
+            }
+        }
+        return null;
+    };
+&nbsp;
+    var error = function (message) {
+        log('error', message);
+    };
+    var warn = <span class="fstat-no" title="function not covered" >fu</span>nction (message) {
+<span class="cstat-no" title="statement not covered" >        log('warn', message);</span>
+    };
+    var info = function (message) {
+        log('info', message);
+    };
+    var verbose = <span class="fstat-no" title="function not covered" >fu</span>nction (message) {
+<span class="cstat-no" title="statement not covered" >        log('verbose', message);</span>
+    };
+    var debug = <span class="fstat-no" title="function not covered" >fu</span>nction (message) {
+<span class="cstat-no" title="statement not covered" >        log('debug', message);</span>
+    };
+&nbsp;
+    return {
+        init: init,
+        setLevel: setLevel,
+        log: log,
+        error: error,
+        warn: warn,
+        info: info,
+        verbose: verbose,
+        debug: debug,
+        logLevel: config.curLogLevel
+    };
+}();
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Wed Dec 12 2018 13:54:38 GMT+0530 (IST)
+</div>
+</div>
+<script src="../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../sorter.js"></script>
+</body>
+</html>

@@ -20,11 +20,11 @@ const request = require('request');
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const CronParser = require("./components/cron-parser.js");
-const configModule = require("./components/config.js"); 
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const util = require('util');
 const validateARN = require("./components/validate-arn.js");
-const crud = require("./components/crud")(); 
+const crud = require("./components/crud")();
 
 /**
     Serverless create service
@@ -34,6 +34,7 @@ const crud = require("./components/crud")();
 var user_id;
 var serviceId;
 var serviceDataObject;
+var authToken;
 var handler = (event, context, cb) => {
 
     var errorHandler = errorHandlerModule();
@@ -72,7 +73,8 @@ var handler = (event, context, cb) => {
         getToken(config)
             .then((authToken) => getServiceData(service_creation_data, authToken, config))
             .then((inputs) => createService(inputs))
-            .then((service_id) => startServiceOnboarding(service_creation_data, config, service_id))
+            .then(() => updateAclPolicy(serviceId, authToken, user_id, "admin", "service_manage", config))
+            .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
             .then((result) => {
                 cb(null, responseObj(result, service_creation_data));
             })
@@ -357,10 +359,44 @@ var validateEventName = (eventType, sourceName, config) => {
   }
 };
 
+var updateAclPolicy = (serviceId, authToken, user_id, permission, category, config) => {
+    return new Promise((resolve, reject) => {
+        let svcPayload = {
+            uri: config.SERVICE_API_URL + config.ACL_ENDPOINT,
+            method: 'POST',
+            headers: { 'Authorization': authToken },
+            json: [
+                {
+                    "serviceId": serviceId,
+                    "details": [
+                        {
+                            "userId": user_id,
+                            "permission": permission,
+                            "category": category
+                        }
+                    ]
+                }
+            ],
+            rejectUnauthorized: false
+        };
+
+        request(svcPayload, (error, response, body) => {
+            if(error) {
+                logger.error(`Error while updating policies t ACL: ${error}`);
+                reject(error);
+            } else {
+                logger.info(`ACL response: ${JSON.stringify(response)}`);
+                resolve();
+            }
+        })
+    })
+}
+
 module.exports = {
     handler: handler,
     startServiceOnboarding: startServiceOnboarding,
     getToken: getToken,
     createService: createService,
-    getServiceData: getServiceData
+    getServiceData: getServiceData,
+    updateAclPolicy: updateAclPolicy
 }

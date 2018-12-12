@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for jazz_create-serverless-service/components/crud/create.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../prettify.css" />
+    <link rel="stylesheet" href="../../../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../../../index.html">All files</a> / <a href="index.html">jazz_create-serverless-service/components/crud</a> create.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">84.44% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>38/45</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">60.47% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>26/43</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">100% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>3/3</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">93.75% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>30/32</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+const request = require('request');
+&nbsp;
+module.exports = (inputs, callback) =&gt; {
+&nbsp;
+	var jsonBody = getServiceData(inputs);
+	var svcPayload = {
+		uri: inputs.SERVICE_API_URL + inputs.SERVICE_API_RESOURCE,
+		method: 'POST',
+		headers: { 'Authorization': inputs.TOKEN },
+		json: jsonBody,
+		rejectUnauthorized: false
+	};
+&nbsp;
+	request(svcPayload, function (error, response, body) {
+		if (response.statusCode === 200 &amp;&amp; typeof body !== undefined &amp;&amp; typeof body.data !== undefined) {
+			return callback(null, body);
+		} else {
+			return callback({
+				"error": "Error creating service " + inputs.DOMAIN + "." + inputs.SERVICE_NAME + " in service catalog",
+				"details": response.body.message
+			});
+		}
+	});
+&nbsp;
+	function getServiceData(inputs) {
+		var jsonBody = {};
+		<span class="missing-if-branch" title="else path not taken" >E</span>if (inputs.SERVICE_NAME) { jsonBody.service = inputs.SERVICE_NAME }
+		<span class="missing-if-branch" title="else path not taken" >E</span>if (inputs.DOMAIN) { jsonBody.domain = inputs.DOMAIN }
+		<span class="missing-if-branch" title="if path not taken" >I</span>if (inputs.DESCRIPTION) { <span class="cstat-no" title="statement not covered" >jsonBody.description = inputs.DESCRIPTION </span>}
+		<span class="missing-if-branch" title="else path not taken" >E</span>if (inputs.TYPE) { jsonBody.type = inputs.TYPE }
+		<span class="missing-if-branch" title="else path not taken" >E</span>if (inputs.RUNTIME) { jsonBody.runtime = inputs.RUNTIME }
+		if (inputs.REGION) {
+			<span class="missing-if-branch" title="if path not taken" >I</span>if (typeof inputs.REGION === 'array' || inputs.REGION instanceof Array) {
+<span class="cstat-no" title="statement not covered" >				jsonBody.region = inputs.REGION;</span>
+			} else <span class="missing-if-branch" title="else path not taken" >E</span>if (typeof inputs.REGION === 'string' || <span class="branch-1 cbranch-no" title="branch not covered" >inputs.REGION instanceof String)</span> {
+				var region = [];
+				<span class="missing-if-branch" title="else path not taken" >E</span>if (inputs.REGION.indexOf(',') !== -1) {
+					region = inputs.REGION.split(',');
+				} else {
+<span class="cstat-no" title="statement not covered" >					region.push(inputs.REGION);</span>
+				}
+				jsonBody.region = region;
+			}
+&nbsp;
+		}
+		<span class="missing-if-branch" title="if path not taken" >I</span>if (inputs.REPOSITORY) { <span class="cstat-no" title="statement not covered" >jsonBody.repository = inputs.REPOSITORY </span>}
+		<span class="missing-if-branch" title="else path not taken" >E</span>if (inputs.USERNAME) { jsonBody.created_by = inputs.USERNAME }
+		<span class="missing-if-branch" title="if path not taken" >I</span>if (inputs.EMAIL) { <span class="cstat-no" title="statement not covered" >jsonBody.email = inputs.EMAIL </span>}
+		<span class="missing-if-branch" title="else path not taken" >E</span>if (inputs.SLACKCHANNEL) { jsonBody.slack_channel = inputs.SLACKCHANNEL }
+		<span class="missing-if-branch" title="if path not taken" >I</span>if (inputs.TAGS) { <span class="cstat-no" title="statement not covered" >jsonBody.tags = inputs.TAGS </span>}
+		<span class="missing-if-branch" title="else path not taken" >E</span>if (inputs.METADATA) { jsonBody.metadata = inputs.METADATA }
+		<span class="missing-if-branch" title="if path not taken" >I</span>if (inputs.IS_PUBLIC_ENDPOINT) { <span class="cstat-no" title="statement not covered" >jsonBody.is_public_endpoint = inputs.IS_PUBLIC_ENDPOINT </span>}
+		<span class="missing-if-branch" title="else path not taken" >E</span>if (inputs.STATUS) { jsonBody.status = inputs.STATUS }
+&nbsp;
+		return jsonBody;
+	}
+};
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Wed Dec 12 2018 13:54:38 GMT+0530 (IST)
+</div>
+</div>
+<script src="../../../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../../../sorter.js"></script>
+</body>
+</html>

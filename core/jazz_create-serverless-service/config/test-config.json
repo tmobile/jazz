@@ -3,6 +3,8 @@
     "JOB_TOKEN": "{job_token}",
     "API_TOKEN": "{api_token}",
     "SVC_USER": "{ci_user}",
+    "SERVICE_API_URL": "https://test.execute-api.test-region.amazonaws.com",
+    "ACL_ENDPOINT": "/test/jazz/acl",
     "EVENT_SOURCE_NAME": {
       "s3": {
           "minLength": 3,

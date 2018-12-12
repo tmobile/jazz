@@ -1,0 +1,1271 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <title>Code coverage report for jazz_create-serverless-service/index.js</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../prettify.css" />
+    <link rel="stylesheet" href="../base.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+<body>
+<div class='wrapper'>
+  <div class='pad1'>
+    <h1>
+      <a href="../index.html">All files</a> / <a href="index.html">jazz_create-serverless-service</a> index.js
+    </h1>
+    <div class='clearfix'>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">84.95% </span>
+        <span class="quiet">Statements</span>
+        <span class='fraction'>158/186</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">79.66% </span>
+        <span class="quiet">Branches</span>
+        <span class='fraction'>94/118</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">96% </span>
+        <span class="quiet">Functions</span>
+        <span class='fraction'>24/25</span>
+      </div>
+      <div class='fl pad1y space-right2'>
+        <span class="strong">84.78% </span>
+        <span class="quiet">Lines</span>
+        <span class='fraction'>156/184</span>
+      </div>
+    </div>
+  </div>
+  <div class='status-line high'></div>
+<pre><table class="coverage">
+<tr><td class="line-count quiet">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403</td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">10x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">// =========================================================================
+// Copyright © 2017 T-Mobile USA, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+// =========================================================================
+&nbsp;
+'use strict';
+&nbsp;
+const request = require('request');
+const errorHandlerModule = require("./components/error-handler.js");
+const responseObj = require("./components/response.js");
+const CronParser = require("./components/cron-parser.js");
+const configModule = require("./components/config.js");
+const logger = require("./components/logger.js");
+const util = require('util');
+const validateARN = require("./components/validate-arn.js");
+const crud = require("./components/crud")();
+&nbsp;
+/**
+    Serverless create service
+    @author:
+    @version: 1.0
+**/
+var user_id;
+var serviceId;
+var serviceDataObject;
+var authToken;
+var handler = (event, context, cb) =&gt; {
+&nbsp;
+    var errorHandler = errorHandlerModule();
+    var config = configModule.getConfig(event, context);
+    logger.init(event, context);
+    var service_creation_data = event.body;
+    try {
+        var isValidName = function (name) {
+            return /^[A-Za-z0-9\-]+$/.test(name);
+        };
+&nbsp;
+        if (!service_creation_data) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("Service inputs are not defined")));
+        } else if (!service_creation_data.service_type) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_type' is not defined")));
+        } else if (!service_creation_data.service_name || !isValidName(service_creation_data.service_name)) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_name' is not defined or has invalid characters")));
+        } else if (service_creation_data.service_type !== "website" &amp;&amp; (!service_creation_data.runtime)) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'runtime' is not defined")));
+        } else if (service_creation_data.domain &amp;&amp; !isValidName(service_creation_data.domain)) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("Namespace is not appropriate")));
+        } else if (service_creation_data.service_name &amp;&amp; service_creation_data.service_name.length &gt; 20) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'Service Name' can have up to 20 characters")));
+        } else if (service_creation_data.domain &amp;&amp; service_creation_data.domain.length &gt; 20) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
+        }
+&nbsp;
+        user_id = event.principalId;
+        if (!user_id) {
+            logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
+            return cb(JSON.stringify(errorHandler.throwUnAuthorizedError("User is not authorized to access this service")));
+        }
+&nbsp;
+        logger.info("Request event: " + JSON.stringify(event));
+&nbsp;
+        getToken(config)
+            .then((authToken) =&gt; getServiceData(service_creation_data, authToken, config))
+            .then((inputs) =&gt; createService(inputs))
+            .then(() =&gt; updateAclPolicy(serviceId, authToken, user_id, "admin", "service_manage", config))
+            .then(() =&gt; startServiceOnboarding(service_creation_data, config, serviceId))
+            .then(<span class="fstat-no" title="function not covered" >(r</span>esult) =&gt; {
+<span class="cstat-no" title="statement not covered" >                cb(null, responseObj(result, service_creation_data));</span>
+            })
+            .catch(function (err) {
+                logger.error('Error while creating service : ' + JSON.stringify(err));
+                <span class="missing-if-branch" title="else path not taken" >E</span>if (err.jenkins_api_failure) {
+                    serviceDataObject.body = {
+                        "STATUS": "creation_failed"
+                    };
+                    crud.update(serviceId, serviceDataObject, (serviceUpdateError, results) =&gt; {
+                        <span class="missing-if-branch" title="if path not taken" >I</span>if (serviceUpdateError) {
+                            var errorMessage = <span class="cstat-no" title="statement not covered" >{</span>
+                                "message": "Error occurred while updating service with failed status.",
+                                "error": err
+                            };
+<span class="cstat-no" title="statement not covered" >                            return cb(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));</span>
+                        } else {
+                            logger.error("Updated service catalog with failed status.");
+                            return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+                        }
+                    });
+                } else <span class="cstat-no" title="statement not covered" >if (err.result === 'inputError') {</span>
+<span class="cstat-no" title="statement not covered" >                    return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));</span>
+                }else {
+<span class="cstat-no" title="statement not covered" >                    return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));</span>
+                }
+            });
+&nbsp;
+    } catch (e) {
+<span class="cstat-no" title="statement not covered" >        logger.error(e);</span>
+<span class="cstat-no" title="statement not covered" >        cb(JSON.stringify(errorHandler.throwInternalServerError(e)));</span>
+    }
+}
+&nbsp;
+var startServiceOnboarding = (service_creation_data, config, service_id) =&gt; {
+    return new Promise((resolve, reject) =&gt; {
+        try {
+            var base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.API_TOKEN)).toString("base64");
+            var userlist = "";
+            var approvers = service_creation_data.approvers;
+&nbsp;
+            userlist = approvers.reduce((stringSoFar, approver) =&gt; {
+                return stringSoFar + util.format("name=%s&amp;", approver);
+            }, "");
+&nbsp;
+            var input = {
+                token: config.JOB_TOKEN,
+                admin_group: userlist,
+                service_id: service_id
+            };
+            request({
+                url: config.JOB_BUILD_URL,
+                method: 'POST',
+                headers: {
+                    "Authorization": base_auth_token
+                },
+                qs: input
+            }, function (err, response, body) {
+                if (err) {
+                    logger.error('Error while starting service onboarding: ' + err);
+                    err.jenkins_api_failure = true;
+                    reject(err);
+                } else {
+                    if (response.statusCode &lt;= 299) { // handle all 2xx response codes as success
+                        resolve("Successfully created your service.");
+                    } else {
+                        logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
+                        var message = {
+                            'message': "Failed to kick off service onboarding job.",
+                            'jenkins_api_failure': true
+                        };
+                        reject(message);
+                    }
+                }
+            });
+        } catch (e) {
+<span class="cstat-no" title="statement not covered" >            logger.error('Error during startServiceOnboarding: ' + e.message);</span>
+<span class="cstat-no" title="statement not covered" >            reject(e);</span>
+        }
+    });
+}
+&nbsp;
+var getToken = (configData) =&gt; {
+    return new Promise((resolve, reject) =&gt; {
+        var svcPayload = {
+            uri: configData.SERVICE_API_URL + configData.TOKEN_URL,
+            method: 'post',
+            json: {
+                "username": configData.SERVICE_USER,
+                "password": configData.TOKEN_CREDS
+            },
+            rejectUnauthorized: false
+        };
+&nbsp;
+        request(svcPayload, (error, response, body) =&gt; {
+            if (response.statusCode === 200 &amp;&amp; body &amp;&amp; body.data) {
+                var authToken = body.data.token;
+                return resolve(authToken);
+            } else {
+                return reject({
+                    "error": "Could not get authentication token for updating service catalog.",
+                    "message": response.body.message
+                });
+            }
+        });
+    });
+}
+&nbsp;
+var createService = (service_data) =&gt; {
+    return new Promise((resolve, reject) =&gt; {
+        crud.create(service_data, (err, results) =&gt; {
+            if (err) {
+                reject({
+                    "message": err.error
+                });
+            } else {
+                logger.info("created a new service in service catalog.");
+                serviceId = results.data.service_id;
+                resolve(results.data.service_id);
+            }
+        });
+    });
+}
+&nbsp;
+var getServiceData = (service_creation_data, authToken, configData) =&gt; {
+    return new Promise((resolve, reject) =&gt; {
+        var inputs = {
+            "TOKEN": authToken,
+            "SERVICE_API_URL": configData.SERVICE_API_URL,
+            "SERVICE_API_RESOURCE": configData.SERVICE_API_RESOURCE,
+            "SERVICE_NAME": service_creation_data.service_name.toLowerCase(),
+            "DOMAIN": service_creation_data.domain.toLowerCase(),
+            "DESCRIPTION": service_creation_data.description,
+            "TYPE": service_creation_data.service_type,
+            "RUNTIME": service_creation_data.runtime,
+            "REGION": service_creation_data.region,
+            "USERNAME": user_id,
+            "IS_PUBLIC_ENDPOINT": service_creation_data.is_public_endpoint || false,
+            "STATUS": "creation_started"
+        };
+&nbsp;
+        var serviceMetadataObj = {};
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (service_creation_data.tags) {
+<span class="cstat-no" title="statement not covered" >            inputs.TAGS = service_creation_data.tags;</span>
+        }
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (service_creation_data.email) {
+<span class="cstat-no" title="statement not covered" >            inputs.EMAIL = service_creation_data.email;</span>
+        }
+&nbsp;
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (service_creation_data.slack_channel) {
+            inputs.SLACKCHANNEL = service_creation_data.slack_channel;
+        }
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if ((service_creation_data.service_type === "api" || service_creation_data.service_type === "function") &amp;&amp; (service_creation_data.require_internal_access)) {
+<span class="cstat-no" title="statement not covered" >            serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;</span>
+        }
+&nbsp;
+        // Pass the flag to enable authentication on API
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (service_creation_data.service_type === "api") {
+<span class="cstat-no" title="statement not covered" >            serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;</span>
+<span class="cstat-no" title="statement not covered" >            if (service_creation_data.authorizer_arn) {</span>
+                // Validate ARN format - arn:aws:lambda:region:account-id:function:function-name
+<span class="cstat-no" title="statement not covered" >                if (!validateARN(service_creation_data.authorizer_arn)) {</span>
+<span class="cstat-no" title="statement not covered" >                    return cb(JSON.stringify(errorHandler.throwInputValidationError("authorizer arn is invalid, expected format=arn:aws:lambda:region:account-id:function:function-name")));</span>
+                } else {
+<span class="cstat-no" title="statement not covered" >                    serviceMetadataObj.authorizer_arn = service_creation_data.authorizer_arn;</span>
+                }
+            }
+        }
+&nbsp;
+        // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (service_creation_data.service_type === "api" &amp;&amp; <span class="branch-1 cbranch-no" title="branch not covered" >service_creation_data.is_public_endpoint)</span> {
+<span class="cstat-no" title="statement not covered" >            serviceMetadataObj.require_internal_access = false;</span>
+<span class="cstat-no" title="statement not covered" >            serviceMetadataObj.enable_api_security = false;</span>
+        }
+&nbsp;
+        <span class="missing-if-branch" title="if path not taken" >I</span>if (service_creation_data.service_type === "website") {
+            var create_cloudfront_url = <span class="cstat-no" title="statement not covered" >"true";</span>
+<span class="cstat-no" title="statement not covered" >            serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;</span>
+<span class="cstat-no" title="statement not covered" >            inputs.RUNTIME = 'n/a';</span>
+        }
+        // Add rate expression to the propertiesObject;
+        <span class="missing-if-branch" title="else path not taken" >E</span>if (service_creation_data.service_type === "function") {
+            if (service_creation_data.rateExpression) {
+                var cronExpValidator = CronParser.validateCronExpression(service_creation_data.rateExpression);
+                if (cronExpValidator.result === 'valid') {
+                    var rate_expression = service_creation_data.rateExpression;
+                    var enable_eventschedule;
+                    <span class="missing-if-branch" title="if path not taken" >I</span>if (service_creation_data.enableEventSchedule === false) {
+<span class="cstat-no" title="statement not covered" >                        enable_eventschedule = service_creation_data.enableEventSchedule;</span>
+                    } else {
+                        enable_eventschedule = true;
+                    }
+&nbsp;
+                    <span class="missing-if-branch" title="else path not taken" >E</span>if (rate_expression &amp;&amp; rate_expression.trim() !== "") {
+                        serviceMetadataObj["eventScheduleRate"] = "cron(" + rate_expression + ")";
+                    }
+                    <span class="missing-if-branch" title="else path not taken" >E</span>if (enable_eventschedule &amp;&amp; enable_eventschedule !== "") {
+                        serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
+                    }
+&nbsp;
+                } else {
+                    logger.error('cronExpValidator : ', cronExpValidator);
+                    reject(cronExpValidator);
+                }
+            }
+&nbsp;
+            if (service_creation_data.events &amp;&amp; service_creation_data.events.length) {
+                //Process events into properties
+                for (let idx = 0; idx &lt; service_creation_data.events.length; idx++) {
+                    var eachEvent, eventSrc, eventAction;
+                    eachEvent = service_creation_data.events[idx];
+                    logger.info('event: ', JSON.stringify(eachEvent));
+                    let isEventNameValid = validateEventName(eachEvent.type, eachEvent.source, configData);
+                    if (isEventNameValid &amp;&amp; isEventNameValid.result) {
+                      eventSrc = "event_source_" + eachEvent.type;
+                      eventAction = "event_action_" + eachEvent.type;
+                      serviceMetadataObj[eventSrc] = eachEvent.source;
+                      serviceMetadataObj[eventAction] = eachEvent.action;
+                    } else {
+                      <span class="missing-if-branch" title="if path not taken" >I</span>if (!isEventNameValid) {
+<span class="cstat-no" title="statement not covered" >                        isEventNameValid["message"] = `${eachEvent.type} is invalid.`</span>
+                      }
+                      reject({result: 'inputError', message: isEventNameValid.message});
+                    }
+&nbsp;
+                }
+            }
+        }
+&nbsp;
+        inputs.METADATA = serviceMetadataObj;
+        serviceDataObject = inputs;
+        resolve(inputs);
+    });
+}
+&nbsp;
+var validateEventName = (eventType, sourceName, config) =&gt; {
+  let eventSourceName = '', sourceType = eventType.toLowerCase(), logicalIdLen = 15,
+  resultObj = {
+      result: "",
+      message: ""
+  };
+&nbsp;
+  if(!eventType || !sourceName) {
+    resultObj.result = false;
+    resultObj.message =  `Event type and/or source name cannot be empty.`;
+    return resultObj;
+  }
+&nbsp;
+  let eventSourceObject = {
+    's3': sourceName,
+    'sqs': sourceName.split(':').pop(),
+    'dynamodb': sourceName.split('/').pop(),
+    'kinesis': sourceName.split('/').pop()
+  };
+&nbsp;
+  eventSourceName = eventSourceObject[sourceType];
+  if (!eventSourceName) {
+    resultObj.result = false;
+    resultObj.message =  `Event type '${eventType}' is invalid.`;
+    return resultObj;
+  }
+&nbsp;
+  if (eventSourceName &amp;&amp; (eventSourceName.startsWith("-") || eventSourceName.startsWith("_") || eventSourceName.startsWith(".") || eventSourceName.endsWith("-") || eventSourceName.endsWith("_") || eventSourceName.endsWith("."))) {
+    resultObj.result = false;
+    resultObj.message =  `${eventSourceName} cannot begin or end with special character`;
+    return resultObj;
+  }
+&nbsp;
+  let mapType = config.EVENT_SOURCE_NAME[sourceType];
+  let regexPattern = new RegExp(mapType.regexPattern);
+&nbsp;
+  <span class="missing-if-branch" title="else path not taken" >E</span>if (eventSourceName.length &gt;= mapType.minLength &amp;&amp; eventSourceName.length &lt;= (mapType.maxLength - logicalIdLen) &amp;&amp; (regexPattern).test(eventSourceName)) {
+    resultObj.result = true;
+    resultObj.message =  `Source name of ${eventType} is valid.`;
+    return resultObj;
+  } else {
+<span class="cstat-no" title="statement not covered" >    resultObj.result = false;</span>
+<span class="cstat-no" title="statement not covered" >    resultObj.message =  `Source name of ${eventType} is invalid. '${eventSourceName}' should have valid length and/or pattern.`;</span>
+<span class="cstat-no" title="statement not covered" >    return resultObj;</span>
+  }
+};
+&nbsp;
+var updateAclPolicy = (serviceId, authToken, user_id, permission, category, config) =&gt; {
+    return new Promise((resolve, reject) =&gt; {
+        let svcPayload = {
+            uri: config.SERVICE_API_URL + config.ACL_ENDPOINT,
+            method: 'POST',
+            headers: { 'Authorization': authToken },
+            json: [
+                {
+                    "serviceId": serviceId,
+                    "details": [
+                        {
+                            "userId": user_id,
+                            "permission": permission,
+                            "category": category
+                        }
+                    ]
+                }
+            ],
+            rejectUnauthorized: false
+        };
+&nbsp;
+        request(svcPayload, (error, response, body) =&gt; {
+            if(error) {
+                logger.error(`Error while updating policies t ACL: ${error}`);
+                reject(error);
+            } else {
+                logger.info(`ACL response: ${JSON.stringify(response)}`);
+                resolve();
+            }
+        })
+    })
+}
+&nbsp;
+module.exports = {
+    handler: handler,
+    startServiceOnboarding: startServiceOnboarding,
+    getToken: getToken,
+    createService: createService,
+    getServiceData: getServiceData,
+    updateAclPolicy: updateAclPolicy
+}
+&nbsp;</pre></td></tr>
+</table></pre>
+<div class='push'></div><!-- for sticky footer -->
+</div><!-- /wrapper -->
+<div class='footer quiet pad2 space-top1 center small'>
+  Code coverage
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Wed Dec 12 2018 13:54:38 GMT+0530 (IST)
+</div>
+</div>
+<script src="../prettify.js"></script>
+<script>
+window.onload = function () {
+        if (typeof prettyPrint === 'function') {
+            prettyPrint();
+        }
+};
+</script>
+<script src="../sorter.js"></script>
+</body>
+</html>
