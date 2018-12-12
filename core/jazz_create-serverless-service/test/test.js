@@ -565,9 +565,9 @@ describe('create-serverless-service', function () {
           source: "temp-" + each + "-source",
           action: "temp-" + each + "-action"
         }
-        
+
         service_creation_data.events = [eachEvent]
-        
+
         index.getServiceData(service_creation_data, authToken, config)
         .then((input) => {
           let action = 'event_action_' + each;
@@ -594,7 +594,12 @@ describe('create-serverless-service', function () {
 
         index.getServiceData(service_creation_data, authToken, config)
         .catch(error => {
-          expect(error).to.include({ result: 'inputError', message: each + ' name is invalid.' });
+          if(each) {
+            expect(error).to.include({ result: 'inputError', message: `Event type \'${each}\' is invalid.` });
+          } else {
+            expect(error).to.include({ result: 'inputError', message: 'Event type and/or source name cannot be empty.' });
+          }
+
         });
       })
     });
@@ -616,7 +621,7 @@ describe('create-serverless-service', function () {
 
         index.getServiceData(service_creation_data, authToken, config)
         .catch(error => {
-          expect(error).to.include({ result: 'inputError', message: 'S3 name is invalid.' });
+          expect(error).to.include({ result: 'inputError', message: `${each} cannot begin or end with special character` });
         });
       })
     })
@@ -850,5 +855,45 @@ describe('create-serverless-service', function () {
       reqStub.restore()
     })
 
+  })
+  describe("updateAclPolicy", () => {
+    let event, config
+    beforeEach(() => {
+      event = {
+        'stage': 'test'
+      }
+      config = configModule.getConfig(event, context);
+    })
+    it("should indicate error when jazz acl request fails", () => {
+      let error = {errType: "invalidError", errMessage: "error occoured"}
+      let reqStub = sinon.stub(request, "Request", (obj) => {
+        return obj.callback(error, null, null);
+      });
+      index.updateAclPolicy("random-id", 'temp-token', 'user', 'temp-permission', 'temp-cat', config)
+      .catch(err => {
+        expect(err).to.include(error);
+        sinon.assert.calledOnce(reqStub);
+        reqStub.restore();
+      })
+
+    })
+
+    it("should indicate error when jazz acl request fails", () => {
+      let responseObject = {
+        statusCode: 200,
+        body: {
+          data: {}
+        }
+      };
+      let reqStub = sinon.stub(request, "Request", (obj) => {
+        return obj.callback(null, responseObject, responseObject.body);
+      });
+      index.updateAclPolicy("random-id", 'temp-token', 'user', 'temp-permission', 'temp-cat', config)
+      .then((res) => {
+        expect(res).to.be.empty;
+        sinon.assert.calledOnce(reqStub);
+        reqStub.restore();
+      })
+    })
   })
 })
