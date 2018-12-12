@@ -717,14 +717,15 @@ def echoServiceInfo(String env) {
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
   def lambda = "/aws/lambda/${stackName}"
-  def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
+  def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
+
   try {
     sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
   } catch (Exception ex) { } // ignore if already existing
 
   try {
     filter_json = sh(
-      script: "aws logs describe-subscription-filters --output json --log-group-name \"" + lambda + "\" --region " + region,
+      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${region}",
       returnStdout: true
     ).trim()
     echo "${filter_json}"
@@ -732,11 +733,11 @@ def createSubscriptionFilters(stackName, region, roleId) {
     filtername = resultJson.subscriptionFilters[0].filterName
     echo "removing existing filter... $filtername"
     if (filtername != "" && !filtername.equals(lambda)) {
-      sh "aws logs delete-subscription-filter --output json --log-group-name \"" + lambda + "\" --filter-name \"" + filtername + "\" --region " + region
+      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${region}"
     }
   } catch (Exception ex) { } // ignore error if not created yet
   try {
-    sh "aws logs put-subscription-filter --output json --log-group-name \"" + lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
+    sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn \"arn:aws:iam::${roleId}:role/${configLoader.INSTANCE_PREFIX}_basic_execution\""
   } catch (Exception ex) {
     echo "error occured: " + ex.getMessage()
   }
