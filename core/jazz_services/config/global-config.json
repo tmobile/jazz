@@ -97,7 +97,14 @@
             "editable": true,
             "isEmptyAllowed": false,
             "type": "Object"
-        }       
+        },
+        {
+          "key": "platform",
+          "required": true,
+          "editable": false,
+          "isEmptyAllowed": false,
+          "type": "String"
+        }
     ],
     "SERVICE_STATUS": [
         "creation_started",

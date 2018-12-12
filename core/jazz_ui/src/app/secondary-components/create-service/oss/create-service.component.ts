@@ -34,7 +34,7 @@ export class CreateServiceComponent implements OnInit {
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
   typeOfPlatform:string = "aws";
-  disablePlatform = true;
+  disablePlatform = false;
   selected:string = "Minutes";
   runtime:string = 'nodejs';
   eventSchedule:string = 'fixedRate';
@@ -298,7 +298,8 @@ export class CreateServiceComponent implements OnInit {
                 "service_name": this.model.serviceName,
                 "approvers": approversPayload,
                 "domain": this.model.domainName,
-                "description":this.model.serviceDescription
+                "description":this.model.serviceDescription,
+                "platform":this.typeOfPlatform
             };
 
     if (this.typeOfService == 'api') {
