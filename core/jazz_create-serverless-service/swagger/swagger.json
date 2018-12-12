@@ -283,7 +283,8 @@
                     "enum": [
                         "nodejs",
                         "java",
-                        "python"
+                        "python2.7",
+                        "python3.6"
                     ]
                 },
                 "approvers": {

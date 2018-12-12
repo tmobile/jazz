@@ -109,7 +109,7 @@
         "active",
         "inactive"
     ],
-    "SERVICE_RUNTIMES": ["nodejs", "python", "java", "c#"],
+    "SERVICE_RUNTIMES": ["nodejs", "python2.7", "python3.6", "java", "c#"],
     "TYPE_FIELD_KEY": "type",
     "SERVICE_INTER_DEPENDENT_FIELDS_MAP": [
         {
