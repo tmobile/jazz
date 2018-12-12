@@ -81,11 +81,6 @@ node() {
 
     if (configObj.service_id) {
       config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
-      if (config['domain'] && config['domain'] == "jazz") {
-          config['iamRoleID'] = configLoader.AWS.PLATFORMSERVICES_ROLEID
-      } else {
-          config['iamRoleID'] = configLoader.AWS.USERSERVICES_ROLEID
-      }
     } else {
       error "Service Id is not available."
     }
@@ -95,6 +90,11 @@ node() {
     error "Failed to fetch service metadata from catalog"
   }
 
+  if (config['domain'] && config['domain'] == "jazz") {
+    config['iamRoleID'] = configLoader.AWS.PLATFORMSERVICES_ROLEID
+  } else {
+    config['iamRoleID'] = configLoader.AWS.USERSERVICES_ROLEID
+  }
   config['iamRoleARN'] = config['iamRoleID'].replaceAll("/", "\\\\/")
 
   dir(repo_name) {
@@ -135,10 +135,9 @@ node() {
   def isEventSchdld = false
   def internalAccess = config['require_internal_access']
   domain = config['domain']
-  def roleARN = config['iamRoleARN']
   
   // @TODO: the below statement will be replaced with regular expression in very near future;
-  def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
+  def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
 
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
@@ -163,7 +162,7 @@ node() {
       stage('Update Service Template') {
         echo "Inside Update service template"
         try {
-          updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)
+          updatePlatformServiceTemplate(config, config['iamRoleARN'], roleId, current_environment, repo_name)
         } catch (error) {
           error "Error occured while updating service template."
         }
