@@ -33,8 +33,8 @@
                         <div class="eachFilter slider-wrap" *ngIf='advanced_filter_input.time_range.show'>
                             <div><div class='hori-line'></div>TIME RANGE</div>
                             <dropdown class="dropdown-3" title="Select range" [dropdwnContent]="rangeList" [selected]="selectedTimeRange" (onSelected)="onRangeListSelected($event)"></dropdown>
-                            <ion-range-slider #sliderElement id='sliderElement'  min=1 [max]='sliderMax' [from]='sliderFrom' (onFinish)='getRange($event)' (onUpdate)="onClickFilter()"></ion-range-slider>
-                            
+                            <div><div class='hori-line'></div>PERIOD</div>
+                            <dropdown class="dropdown-3" title="Select period" [dropdwnContent]="timePeriodList" [selected]="selectedTimePeriod" (onSelected)="onTimePeriodSelected($event)"></dropdown>
                         </div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.period.show'>
                             <div><div class='hori-line'></div>PERIOD</div>
