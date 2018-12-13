@@ -542,11 +542,11 @@ def buildLambda(String runtime) {
     sh "touch library/__init__.py"
     // create virtual environment and install pytest
     sh """
-    pip install virtualenv
-    virtualenv venv
-      .venv / bin / activate
-    pip install pytest
-    """
+		pip install virtualenv
+		virtualenv venv
+		. venv/bin/activate
+		pip install pytest
+		"""
   }
 }
 
