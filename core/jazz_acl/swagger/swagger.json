@@ -693,13 +693,10 @@
         "parameters": [{
           "name": "body",
           "in": "body",
-          "description": "list of <serviceId,list of <details>>",
+          "description": "serviceId, <list of policies>",
           "required": true,
           "schema": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/Policy"
-            }
+            "$ref": "#/definitions/Policy"
           }
         }],
         "produces": [
@@ -907,10 +904,7 @@
           "200": {
             "description": "Successful Execution",
             "schema": {
-              "type": "array",
-              "items": {
                 "$ref": "#/definitions/Policy"
-              }
             },
             "headers": {
               "Access-Control-Allow-Headers": {
@@ -1112,7 +1106,7 @@
       "type": "object",
       "properties": {
         "data": {
-          "$ref": "#/definitions/OutputObj"
+          "$ref": "#/definitions/SuccessObj"
         },
         "input": {
           "$ref": "#/definitions/Policy"
@@ -1214,10 +1208,10 @@
         },
         "category": {
           "type": "string",
-          "example": "service_manage",
+          "example": "manage",
           "description": "access level",
           "enum": [
-            "service_manage",
+            "manage",
             "code",
             "deploy"
           ]
@@ -1232,10 +1226,10 @@
     },
     "Service": {
       "properties": {
-        "service": {
+        "serviceId": {
           "type": "string",
           "example": "HelloWorld",
-          "description": "name of the object"
+          "description": "Service Id"
         },
         "permission": {
           "type": "string",
@@ -1249,16 +1243,12 @@
         }
       }
     },
-    "OutputObj": {
+    "SuccessObj": {
       "type": "object",
       "properties": {
-        "foo": {
+        "message": {
           "type": "string",
-          "description": "Sample key in the output object"
-        },
-        "bar": {
-          "type": "string",
-          "description": "Sample key in the output object"
+          "example": "true"
         }
       }
     }
