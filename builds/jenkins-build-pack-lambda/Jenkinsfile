@@ -90,13 +90,6 @@ node() {
     error "Failed to fetch service metadata from catalog"
   }
 
-  if (config['domain'] && config['domain'] == "jazz") {
-    config['iamRoleID'] = configLoader.AWS.PLATFORMSERVICES_ROLEID
-  } else {
-    config['iamRoleID'] = configLoader.AWS.USERSERVICES_ROLEID
-  }
-  config['iamRoleARN'] = config['iamRoleID'].replaceAll("/", "\\\\/")
-
   dir(repo_name) {
     scmModule.setServiceConfig(config)
     def envApi = "${g_base_url}/jazz/environments"

@@ -44,7 +44,7 @@ def loadServiceConfigurationData() {
         if (fileExists('swagger/swagger.json')) {
             //Swagger SEDs
             echo "Updating the Swagger SEDs"
-            sh "sed -i -- 's/{conf-role}/${role_arn}/g' ./swagger/swagger.json"
+            sh "sed -i -- 's|{conf-role}|${role_arn}|g' ./swagger/swagger.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
             sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
         }

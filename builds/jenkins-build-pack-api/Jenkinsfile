@@ -84,13 +84,6 @@ node() {
 		error "Failed to fetch service metadata from catalog"
 	}
 
-	if (config['domain'] && config['domain'] == "jazz") {
-		config['iamRoleID'] = configLoader.AWS.PLATFORMSERVICES_ROLEID
-	} else {
-		config['iamRoleID'] = configLoader.AWS.USERSERVICES_ROLEID
-	}
-	config['iamRoleARN'] = config['iamRoleID'].replaceAll("/", "\\\\/")
-
 	dir(repo_name)
 	{
 		scmModule.setServiceConfig(config)
@@ -238,7 +231,7 @@ node() {
 
 					writeServerlessFile(config, environment_logical_id)
 					
-					setLambdaExecutionRole(config['iamRoleID']);
+					setLambdaExecutionRole(config['iamRoleARN']);
 
 					echo "serverless deploy......."
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
@@ -532,7 +525,7 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;
 	def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
 
-	sh "sed -i -- 's/{conf-role}/${config['iamRoleARN']}/g' ./swagger/swagger.json"
+	sh "sed -i -- 's|{conf-role}|${config['iamRoleARN']}|g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-region}/${configLoader.AWS.REGION}/g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 }
