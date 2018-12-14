@@ -520,14 +520,6 @@ def LoadConfiguration() {
   return prop
 }
 
-
-/** Run validation based on runtime
- */
-/*def runValidation(String runtime) {
-
-
-} */
-
 /**	Build project based on runtime
  */
 def buildLambda(String runtime, String repo_name) {
@@ -585,7 +577,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8", "go1.x"] //@TODO. Add more runtime supports.
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "java8", "go1.x"] //@TODO. Add more runtime supports.
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {
@@ -715,15 +707,16 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
-  def lambda = "/aws/lambda/${stackName}" 
-  def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
+  def lambda = "/aws/lambda/${stackName}"
+  def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
+
   try {
     sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
   } catch (Exception ex) { } // ignore if already existing
 
   try {
     filter_json = sh(
-      script: "aws logs describe-subscription-filters --output json --log-group-name \"" + lambda + "\" --region " + region,
+      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${region}",
       returnStdout: true
     ).trim()
     echo "${filter_json}"
@@ -731,11 +724,11 @@ def createSubscriptionFilters(stackName, region, roleId) {
     filtername = resultJson.subscriptionFilters[0].filterName
     echo "removing existing filter... $filtername"
     if (filtername != "" && !filtername.equals(lambda)) {
-      sh "aws logs delete-subscription-filter --output json --log-group-name \"" + lambda + "\" --filter-name \"" + filtername + "\" --region " + region
+      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${region}"
     }
   } catch (Exception ex) { } // ignore error if not created yet
   try {
-    sh "aws logs put-subscription-filter --output json --log-group-name \"" + lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
+    sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn \"arn:aws:iam::${roleId}:role/${configLoader.INSTANCE_PREFIX}_basic_execution\""
   } catch (Exception ex) {
     echo "error occured: " + ex.getMessage()
   }
@@ -962,8 +955,10 @@ def runValidation(String runtime) {
     echo "running validations for $runtime"
     sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
   } else if (runtime.indexOf("python") > -1) {
+    // placeholder for adding runtime specific validations
     echo "running validations for $runtime"
   } else if (runtime.indexOf("go") > -1) {
+    // placeholder for adding runtime specific validations
     echo "running validations for $runtime"
   }
 }

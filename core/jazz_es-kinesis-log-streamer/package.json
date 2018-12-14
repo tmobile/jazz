@@ -1,0 +1,23 @@
+{
+  "name": "jazz_es-kinesis-log-streamer",
+  "version": "0.0.1",
+  "description": "Cloud Logs Streamer Services",
+  "main": "index.js",
+  "private": true,
+  "author": {
+    "name": "Jazz"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "aws-lambda-mock-context": "^3.2.1",
+    "sinon": "^6.3.4",
+    "unicode-byte-truncate": "*",
+    "request": "*"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0"
+  }
+}
