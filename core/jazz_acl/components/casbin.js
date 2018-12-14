@@ -34,25 +34,8 @@ async function dbConnection(config) {
 }
 
 async function addPermissionForUser(serviceId, policies) {
-  const result = {};
+  //TODO implement addPermissionForUser
 
-  try {
-    const conn = await dbConnection(config);
-    const enforcer = await Enforcer.newEnforcer('../config/rbac_model.conf', conn);
-
-    policies.map(policy => {
-      await enforcer.addPolicy(policy.userId, serviceId, policy.category, policy.permission);
-    })
-
-    // Save the policy back to DB.
-    result.success = await enforcer.savePolicy();
-  } catch(err) {
-    result = {
-      "success": false,
-      "error": err.message
-    };
-  }
-  conn.close();
   return true;
 }
 
@@ -64,25 +47,7 @@ async function enforce(policy) {
 
 /* Get the policies from casbin given the value*/
 async function getFilteredPolicy(index, values, config) {
-  const result = {};
-
-  try {
-    const conn = await dbConnection(config);
-    const enforcer = await Enforcer.newEnforcer('../config/rbac_model.conf', conn);
-
-    const policies = values.map(value => enforcer.getFilteredPolicy(index, value));
-    result = {
-      "success": true,
-      "data": policies
-    };
-  } catch(err) {
-    result = {
-      "success": false,
-      "error": err.message
-    };
-  }
-
-  conn.close();
+  //TODO Implement getFilteredPolicy
   return result;
 }
 

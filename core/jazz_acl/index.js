@@ -52,14 +52,7 @@ async function processACL(event) {
 
   //1. POST the policy when service is created
   if (event.method === 'POST' && event.path === 'policies') {
-    const serviceId = event.body.serviceId;
-    const policies = event.body.policies;
-
-    const result = await casbinUtil.addPermissionForUser(serviceId, policies);
-
-    if (result && result.error) {
-      throw new Error(`Error adding the policy for user ${policy.user} with category ${policy.category}. ${result.error}`);
-    }
+    //TODO Implement method here
 
     return true;
   }
@@ -67,8 +60,7 @@ async function processACL(event) {
   //2. GET the policy for the given service id
   if (event.method === 'GET' && event.path === 'policies' && serviceId) {
 
-    const values = [`${serviceId}_manage`, `${serviceId}_code`, `${serviceId}_deploy`];
-    const result = await casbinUtil.getFilteredPolicy(1, values, config);
+    //TODO Implement method here
     return result;
   }
 
