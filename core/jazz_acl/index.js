@@ -21,7 +21,7 @@ const logger = require("./components/logger.js");
 const validation = require("./components/validation.js");
 const casbinUtil = require("./components/casbin.js");
 
-module.exports.handler = (event, context, cb) => {
+module.exports.handler = async(event, context) => {
 
   //Initializations
   const errorHandler = errorHandlerModule();
@@ -30,17 +30,18 @@ module.exports.handler = (event, context, cb) => {
 
   try {
 
-    validation.validateInput(event)
-      .then(() => processACL(event))
-      .then((result) => cb(null, responseObj(result, event.body)))
-      .catch(err => {
-        logger.error(JSON.stringify(err));
-				return cb(JSON.stringify(err));
-      });
+    await validation.validateInput(event);
+    const aclResult = await processACL(event);
 
-  } catch (e) {
+    return responseObj(aclResult, event.body);
+
+  } catch (err) {
     logger.error()
-    cb(JSON.stringify(errorHandler.throwInternalServerError(e.message)));
+
+    return {
+      status: 503,
+      body: errorHandler.throwInternalServerError(err.message)
+    };
   }
 };
 
@@ -51,23 +52,15 @@ async function processACL(event) {
 
   //1. POST the policy when service is created
   if (event.method === 'POST' && event.path === 'policies') {
-    const policies = event.body;
-    const policy = {};
-    //TODO Implement the code here
+    const serviceId = event.body.serviceId;
+    const policies = event.body.policies;
 
-    /*policies.map(p => {
-      policy = {
-        user: p.user,
-        serviceId: p.serviceId,
-        permission: p.permission,
-        category: p.category
-      };
+    const result = await casbinUtil.addPermissionForUser(serviceId, policies);
 
-      const result = await casbinUtil.addPermissionForUser(policy);
-      if (!result) {
-        throw new Error(`Error adding the policy for user ${policy.user} with category ${policy.category}`);
-      }
-    });*/
+    if (result && result.error) {
+      throw new Error(`Error adding the policy for user ${policy.user} with category ${policy.category}. ${result.error}`);
+    }
+
     return true;
   }
 

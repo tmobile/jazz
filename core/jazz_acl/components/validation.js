@@ -14,26 +14,23 @@
 // limitations under the License.
 // =========================================================================
 
-const errorHandlerModule = require("./error-handler.js");
+const errorHandlerModule = require("./error-handler.js")();
 
-function validateInput(userInput) {
-
-	return new Promise((resolve, reject) => {
+async function validateInput(userInput) {
 
 		if (!userInput || !userInput.method) {
-			return reject(errorHandlerModule.throwInputValidationError("Invalid or missing arguments"));
+			throw (errorHandlerModule.throwInputValidationError("Invalid or missing arguments"));
     }
 
     if (!userInput.resourcePath) {
-			return reject(errorHandlerModule.throwInputValidationError("Missing the resource path"));
+			throw (errorHandlerModule.throwInputValidationError("Missing the resource path"));
 		}
 
 		if (!userInput.principalId) {
-			return reject(errorHandlerModule.throwForbiddenError("You aren't authorized to access this resource"));
+			throw (errorHandlerModule.throwForbiddenError("You aren't authorized to access this resource"));
 		}
 
-		resolve(userInput);
-	});
+		return true;
 }
 
 module.exports = {
