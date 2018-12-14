@@ -454,8 +454,8 @@ def updateSwaggerConfig() {
 			sh "sed -i -- 's/{domain}/${service_config['domain']}/g' swagger/swagger.json"
 
 			def region = "${configLoader.AWS.REGION}"
-			def role = "${configLoader.AWS.ROLEID}"
-			def roleARN = role.replaceAll("/", "\\\\/")
+      
+			def roleARN = service_config['iamRoleARN'].replaceAll("/", "\\\\/")
 
 			// TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))

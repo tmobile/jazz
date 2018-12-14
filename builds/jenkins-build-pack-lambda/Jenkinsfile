@@ -23,6 +23,7 @@ import groovy.transform.Field
 @Field def sonarModule
 
 @Field def auth_token = ''
+@Field def config
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def current_environment = ''
@@ -50,7 +51,6 @@ node() {
     repo_name = params.domain + "_" + params.service_name
   }
 
-  def config
   def domain = params.domain
 
   stage('Checkout code base') {
@@ -128,9 +128,9 @@ node() {
   def isEventSchdld = false
   def internalAccess = config['require_internal_access']
   domain = config['domain']
-  def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
+  
   // @TODO: the below statement will be replaced with regular expression in very near future;
-  def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
+  def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
 
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
@@ -155,7 +155,7 @@ node() {
       stage('Update Service Template') {
         echo "Inside Update service template"
         try {
-          updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)
+          updatePlatformServiceTemplate(config, config['iamRoleARN'], roleId, current_environment, repo_name)
         } catch (error) {
           error "Error occured while updating service template."
         }
