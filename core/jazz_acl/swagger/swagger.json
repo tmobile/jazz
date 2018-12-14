@@ -707,7 +707,7 @@
           "200": {
             "description": "Successful Execution",
             "schema": {
-              "$ref": "#/definitions/200SuccessResponse"
+              "$ref": "#/definitions/200PostSuccessResponse"
             },
             "headers": {
               "Access-Control-Allow-Headers": {
@@ -1102,6 +1102,18 @@
     }
   },
   "definitions": {
+    "200PostSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/PostSuccessObj"
+        },
+        "input": {
+          "$ref": "#/definitions/Policy"
+        }
+      },
+      "title": "Success Response"
+    },
     "200SuccessResponse": {
       "type": "object",
       "properties": {
@@ -1179,9 +1191,9 @@
       "properties": {
         "serviceId": {
           "type": "string",
-          "example": "helloWorld_manage"
+          "example": "helloworld"
         },
-        "details": {
+        "policies": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/PolicyDetails"
@@ -1231,22 +1243,52 @@
           "example": "HelloWorld",
           "description": "Service Id"
         },
+        "policies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PermissionDetails"
+          }
+        }
+      }
+    },
+    "PermissionDetails": {
+      "type": "object",
+      "properties": {
         "permission": {
           "type": "string",
           "example": "admin",
-          "description": "allowed permission",
+          "description": "type of role",
           "enum": [
             "read",
             "write",
             "admin"
           ]
+        },
+        "category": {
+          "type": "string",
+          "example": "manage",
+          "description": "access level",
+          "enum": [
+            "manage",
+            "code",
+            "deploy"
+          ]
+        }
+      }
+    },
+    "PostSuccessObj": {
+      "type": "object",
+      "properties": {
+        "success": {
+          "type": "string",
+          "example": "true"
         }
       }
     },
     "SuccessObj": {
       "type": "object",
       "properties": {
-        "message": {
+        "authorized": {
           "type": "string",
           "example": "true"
         }

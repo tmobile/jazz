@@ -16,6 +16,7 @@
 
 const Enforcer = require('casbin').Enforcer;
 const TypeORMAdapter = require('typeorm-adapter');
+const logger = require('./logger.js');
 
 async function dbConnection(config) {
   const conn = await TypeORMAdapter.default.newAdapter({
@@ -28,12 +29,30 @@ async function dbConnection(config) {
     timeout: config.CASBIN.TIMEOUT
   });
 
-  return conn;
+  const enforcer = await Enforcer.newEnforcer('../config/rbac_model.conf', conn);
+  return enforcer;
 }
 
-async function addPermissionForUser(policy) {
-  //TODO: implement the add permission policy for user
+async function addPermissionForUser(serviceId, policies) {
+  const result = {};
 
+  try {
+    const conn = await dbConnection(config);
+    const enforcer = await Enforcer.newEnforcer('../config/rbac_model.conf', conn);
+
+    policies.map(policy => {
+      await enforcer.addPolicy(policy.userId, serviceId, policy.category, policy.permission);
+    })
+
+    // Save the policy back to DB.
+    result.success = await enforcer.savePolicy();
+  } catch(err) {
+    result = {
+      "success": false,
+      "error": err.message
+    };
+  }
+  conn.close();
   return true;
 }
 
@@ -43,14 +62,28 @@ async function enforce(policy) {
   return true;
 }
 
-/* Get the policies from casbin given the list of values*/
+/* Get the policies from casbin given the value*/
 async function getFilteredPolicy(index, values, config) {
-  const conn = await dbConnection(config);
-  const enforcer = await Enforcer.newEnforcer('../config/rbac_model.conf', conn);
+  const result = {};
 
-  const policies = values.map(value => enforcer.getFilteredPolicy(index, value));
+  try {
+    const conn = await dbConnection(config);
+    const enforcer = await Enforcer.newEnforcer('../config/rbac_model.conf', conn);
 
-  return policies;
+    const policies = values.map(value => enforcer.getFilteredPolicy(index, value));
+    result = {
+      "success": true,
+      "data": policies
+    };
+  } catch(err) {
+    result = {
+      "success": false,
+      "error": err.message
+    };
+  }
+
+  conn.close();
+  return result;
 }
 
 async function removeFilteredPolicy(index, value) {
