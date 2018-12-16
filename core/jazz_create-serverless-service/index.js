@@ -73,7 +73,7 @@ var handler = (event, context, cb) => {
         getToken(config)
             .then((authToken) => getServiceData(service_creation_data, authToken, config))
             .then((inputs) => createService(inputs))
-            .then(() => updateAclPolicy(serviceId, authToken, user_id, "admin", "service_manage", config))
+            .then(() => updateAclPolicy(serviceId, authToken, user_id, "admin", "manage", config))
             .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
             .then((result) => {
                 cb(null, responseObj(result, service_creation_data));
@@ -368,7 +368,7 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
             json: [
                 {
                     "serviceId": serviceId,
-                    "details": [
+                    "policies": [
                         {
                             "userId": user_id,
                             "permission": permission,
@@ -385,11 +385,16 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
                 logger.error(`Error while updating policies t ACL: ${error}`);
                 reject(error);
             } else {
-                logger.info(`ACL response: ${JSON.stringify(response)}`);
-                resolve();
+                logger.debug(`ACL response: ${JSON.stringify(response)}`);
+                if(body && body.data && body.data.success) {
+                    resolve();
+                } else {
+                    logger.error(`Error while updating policies t ACL: ${JSON.stringify(response)}`);
+                    reject(response);
+                }
             }
-        })
-    })
+        });
+    });
 }
 
 module.exports = {
