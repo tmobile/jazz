@@ -11,8 +11,12 @@
     },
 =======
     "SERVICE_API_URL": "https://test.execute-api.test-region.amazonaws.com",
+<<<<<<< HEAD
     "ACL_ENDPOINT": "/test/jazz/acl",
 >>>>>>> create-service api updates for ACL
+=======
+    "ACL_ENDPOINT": "/test/jazz/acl/policies",
+>>>>>>> ACL implementation in service-onboarding jenkins file to update permission for code and deploy.
     "EVENT_SOURCE_NAME": {
       "s3": {
           "minLength": 3,
