@@ -33,7 +33,6 @@ import {BrowserModule} from '@angular/platform-browser';
 // import {ToasterModule} from 'angular2-toaster';
 import {DatePickerModule} from '../primary-components/daterange-picker/ng2-datepicker';
 import {MomentModule} from 'angular2-moment';
-// import {IonRangeSliderModule} from 'ng2-ion-range-slider';
 
 // Importing The Required Components via Barrel
 // import * as CommonServiceComponents from './shared.module.declarations.common';
