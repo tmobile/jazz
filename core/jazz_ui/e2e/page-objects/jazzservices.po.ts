@@ -119,21 +119,33 @@ export class Jazz {
     return element(by.xpath('//li[@class="x caps" and contains(text(),"logs")]'));
   }
   getFilterIcon(){
-	 return element(by.css('section > env-logs-section > div > div > div.drp-wrp > div:nth-child(2) > div > div > div > div > span'));
+	 return element(by.xpath('//div[@class="filter-icon relative"]'));
   }
   getDay(){
-   return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Day")]'));
+   return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[(text()="Day")]'));
   }
   getWeek(){
-    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Week")]'));
+    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[(text()="Week")]'));
   }
   getMonth(){
-    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Month")]'));
+    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[(text()="Month")]'));
   }
   getYear(){
-    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[contains(text(),"Year")]'));
+    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[(text()="Year")]'));
   }
   getDropDown(){
-    return element(by.xpath('//div[@class="dropdown open"]'));
+    return element(by.xpath('//div[text()="TIME RANGE"]/following-sibling::dropdown[@title="Select range"]/div[@class="dropdown"]/button[@class="btn dropdown-btn dropdown-toggle"]'));
+  }
+  getWeekVerify()
+  {
+	return element(by.xpath('//div[@class="row"]/div[contains(text(),"Time Range")]/b[text()="Week"]'));
+  }
+  getMonthVerify()
+  {
+	return element(by.xpath('//div[@class="row"]/div[contains(text(),"Time Range")]/b[text()="Month"]'));
+  }
+  getYearVerify()
+  {
+	return element(by.xpath('//div[@class="row"]/div[contains(text(),"Time Range")]/b[text()="Year"]'));
   }
  }
