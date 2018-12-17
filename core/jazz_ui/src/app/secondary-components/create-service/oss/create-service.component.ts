@@ -413,7 +413,7 @@ export class CreateServiceComponent implements OnInit {
     this.rateExpression.type = 'none';
     this.rateExpression.duration = "5";
     this.eventExpression.type = 'awsEventsNone';
-    this.runtime = 'nodejs';
+    this.runtime = this.runtimeKeys[0];
   }
 
   // function to navigate from success or error screen to create service screen
