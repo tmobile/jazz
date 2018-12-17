@@ -14,67 +14,106 @@
 // limitations under the License.
 // =========================================================================
 
-const errorHandlerModule = require("./components/error-handler.js");
-const responseObj = require("./components/response.js");
+const errorHandlerModule = require("./components/error-handler.js")();
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const validation = require("./components/validation.js");
 const casbinUtil = require("./components/casbin.js");
 
-module.exports.handler = async(event, context) => {
+async function handler(event, context) {
 
   //Initializations
-  const errorHandler = errorHandlerModule();
   const config = configModule.getConfig(event, context);
   logger.init(event, context);
 
   try {
-
-    await validation.validateInput(event);
-    const aclResult = await processACL(event);
-
-    return responseObj(aclResult, event.body);
-
-  } catch (err) {
-    logger.error()
+    validation.validateBasicInput(event);
+    const aclResult = await exportable.processACLRequest(event, config);
 
     return {
-      status: 503,
-      body: errorHandler.throwInternalServerError(err.message)
+      data: aclResult
+    };
+  } catch (err) {
+    logger.error(err.message);
+
+    return {
+      data: err.message
     };
   }
 };
 
-async function processACL(event) {
+async function processACLRequest(event, config) {
 
-  const query = event.query;
-  const serviceId = query.serviceId;
-
-  //1. POST the policy when service is created
+  //1. POST - add and delete the policy
   if (event.method === 'POST' && event.path === 'policies') {
-    //TODO Implement method here
+    validation.validatePostPoliciesInput(event);
 
-    return true;
+    const serviceId = event.body.serviceId;
+    let result = {};
+
+    //add policies
+    if (event.body.policies && event.body.policies.length) {
+      const policies = event.body.policies;
+      result = await casbinUtil.addOrRemovePolicy(serviceId, config, 'add', policies);
+
+      if (result && result.error) {
+        throw (errorHandlerModule.throwInternalServerError(`Error adding the policy for service ${serviceId}. ${result.error}`));
+      }
+    } else {//delete policies
+      result = await casbinUtil.addOrRemovePolicy(serviceId, config, 'remove');
+
+      if (result && result.error) {
+        throw (errorHandlerModule.throwInternalServerError(result.error));
+      }
+    }
+
+    return { "success" : true };
   }
 
   //2. GET the policy for the given service id
-  if (event.method === 'GET' && event.path === 'policies' && serviceId) {
+  if (event.method === 'GET' && event.path === 'policies') {
 
-    //TODO Implement method here
-    return result;
+    validation.validateGetPoliciesInput(event);
+    const serviceId = event.query.serviceId;
+    const result = await casbinUtil.getPolicies(serviceId, config);
+
+    if (result && result.error) {
+      throw (errorHandlerModule.throwInternalServerError(result.error));
+    }
+
+    let policies = [];
+    result.forEach(policyArr =>
+      policyArr.forEach(policy => policies.push({
+        userId: policy[0],
+        permission: policy[2],
+        category: policy[1]
+      })
+    ));
+
+    return {
+      serviceId: serviceId,
+      policies: policies
+    };
   }
 
   //3. GET the permissions for a given user
-  if(event.method === 'GET' && event.path === 'services' && query.userId) {
+  if (event.method === 'GET' && event.path === 'services') {
     //TODO implement the method here
 
     return [];
   }
 
   //4. GET the permissions for a specific service for a given user
-  if(event.method === 'GET' && event.path === 'checkPermission' && serviceId && query.userId && query.permission && query.category) {
+  if (event.method === 'GET' && event.path === 'checkPermission') {
     //TODO implement the method here
 
     return [];
   }
 }
+
+const exportable = {
+  handler,
+  processACLRequest
+};
+
+module.exports = exportable;

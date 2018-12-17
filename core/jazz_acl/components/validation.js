@@ -16,23 +16,63 @@
 
 const errorHandlerModule = require("./error-handler.js")();
 
-async function validateInput(userInput) {
-
-		if (!userInput || !userInput.method) {
-			throw (errorHandlerModule.throwInputValidationError("Invalid or missing arguments"));
+function validateBasicInput(userInput) {
+    if (!userInput) {
+      throw (errorHandlerModule.throwInternalServerError("Input parameters are missing"));
+    }
+		if (!userInput.method) {
+			throw (errorHandlerModule.throwInputValidationError("Method is missing"));
     }
 
-    if (!userInput.resourcePath) {
+    if (!userInput.path) {
 			throw (errorHandlerModule.throwInputValidationError("Missing the resource path"));
 		}
 
 		if (!userInput.principalId) {
 			throw (errorHandlerModule.throwForbiddenError("You aren't authorized to access this resource"));
 		}
+}
 
-		return true;
+function validateGetPoliciesInput(userInput) {
+  if (!userInput.query.serviceId) {
+    throw (errorHandlerModule.throwInputValidationError("Service Id is missing"));
+  }
+}
+
+function validatePostPoliciesInput(userInput) {
+  if (!userInput.body) {
+    throw (errorHandlerModule.throwInternalServerError("Body is missing"));
+  }
+
+  if (!userInput.body.serviceId) {
+    throw (errorHandlerModule.throwInputValidationError("Service Id is missing"));
+  }
+
+  if (!userInput.body.policies) {
+    throw (errorHandlerModule.throwInputValidationError("Policy details are missing"));
+  }
+
+  if (userInput.body.policies && userInput.body.policies.length) {
+    let missingFields = [];
+    userInput.body.policies.forEach(policy => {
+      if (!policy.userId) {
+        missingFields.push("userId");
+      }
+      if (!policy.permission) {
+        missingFields.push("permission");
+      }
+      if (!policy.category) {
+        missingFields.push("category");
+      }
+    });
+    if (missingFields.length) {
+      throw (errorHandlerModule.throwInputValidationError(`Policy details are missing values for ${missingFields.join(', ')}`));
+    }
+  }
 }
 
 module.exports = {
-  validateInput
+  validateBasicInput,
+  validateGetPoliciesInput,
+  validatePostPoliciesInput
 };
