@@ -36,7 +36,7 @@ export class CreateServiceComponent implements OnInit {
   typeOfPlatform:string = "aws";
   disablePlatform = true;
   selected:string = "Minutes";
-  runtime:string = 'nodejs';
+  runtime:string = Object.keys(env_oss.envLists)[0];
   eventSchedule:string = 'fixedRate';
   private slackSelected: boolean = false;
   private ttlSelected: boolean = false;
