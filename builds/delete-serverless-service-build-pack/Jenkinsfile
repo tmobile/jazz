@@ -261,7 +261,7 @@ node {
 
 	if (is_service_deletion) {
 		stage('Cleanup SCM') {
-			cleanup(repo_name)
+			cleanup(configObj.service_id)
 			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
 		}
 	}
@@ -488,10 +488,10 @@ def updateSwaggerConfig() {
  * @param  repoName
  * @return
  */
-def cleanup(repoName) {
+def cleanup(serviceId) {
 
 	try {
-		scmModule.deleteProject(repoName)
+		removePermissionAndDeleteRepo(serviceId)
 		send_status_email("COMPLETED")
 	} catch (ex) {
 		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
@@ -1268,4 +1268,26 @@ def parseJsonMap(jsonString) {
 	def lazyMap = [:]
 	lazyMap.putAll(jsonObj)
 	return lazyMap
+}
+
+def removePermissionAndDeleteRepo(serviceId) {
+	try {
+		def body = JsonOutput.toJson([
+			serviceId: serviceId
+		]);
+		def updatePermission = sh(script: "curl -X POST \
+				${g_base_url}/jazz/acl/policies \
+				-k -v -H \"Authorization: $auth_token\" \
+				-H \"Content-Type: application/json\" \
+				-d \'${body}\'", returnStdout: true).trim()
+		def responseJSON = parseJson(updatePermission)
+
+		if (responseJSON.data && responseJSON.data.success) {
+			echo "Successfully removed permissions and deleted repository."
+		} else {
+			echo "Something went wrong while removing permissions or repository deletion."
+		}
+	} catch(ex) {
+		echo "ex: $ex"
+	}
 }
