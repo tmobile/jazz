@@ -31,6 +31,17 @@ You can try out public preview version of Jazz by registering with your email ad
 
 For more details, see the [Wiki](https://github.com/tmobile/jazz/wiki).
 
+## Development
+### Branching/release flow
+
+1. Breaking/nontrivial features first go into named feature branches cut from `develop`
+2. When/if a feature branch is chosen to be included in the next release, it is merged into `develop`
+3. Release testing happens in `develop`
+4. When confirmed/vetted, `develop` is merged into `master`, and `master` becomes the current release.
+5. Small fixes explicitly intended for the next release can be PRed directly into `develop` without first needing a feature branch.
+
+tl;dr `master` is always the current release, `develop` is always the current state of the next release. If you want to contribute a PR, recommend you fork and work in a branch off of `develop`, then PR against `develop`. Project owners will move you into a feature branch if they deem it necessary.
+
 ## License
 
 Jazz is released under the [Apache 2.0 License](https://github.com/tmobile/jazz/blob/master/LICENSE)
