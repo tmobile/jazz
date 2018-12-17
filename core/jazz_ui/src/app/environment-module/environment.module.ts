@@ -30,8 +30,7 @@ import {RelaxedJsonService} from "../core/helpers/relaxed-json.service";
     MomentModule,
     PopoverModule,
     ChartsModule,
-    IonRangeSliderModule,
-    SharedModule,
+    SharedModule
   ],
   declarations: [
     EnvironmentDetailComponent,
