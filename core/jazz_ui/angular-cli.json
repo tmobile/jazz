@@ -20,15 +20,11 @@
         "styles": [
             "styles.css",
             "styles/smacss/main.scss",
-            "../node_modules/bootstrap/dist/css/bootstrap.min.css",
-            "../node_modules/ion-rangeslider/css/ion.rangeSlider.css",
-            "../node_modules/ion-rangeslider/css/ion.rangeSlider.skinFlat.css"
+	    "../node_modules/bootstrap/dist/css/bootstrap.min.css"
         ],
         "scripts": [
             "../node_modules/jquery/dist/jquery.min.js",
             "../node_modules/bootstrap/dist/js/bootstrap.min.js",
-
-            "../node_modules/ion-rangeslider/js/ion.rangeSlider.min.js",
             "../node_modules/kotlin/kotlin.js/",
             "../node_modules/really-relaxed-json/src/umd.bundle.js"
         ],
