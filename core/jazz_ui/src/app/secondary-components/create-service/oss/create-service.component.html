@@ -72,36 +72,38 @@
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <div class="input-field-container">
+                        <!-- runtime values should be updated on environment file-->
                         <section class="col-lg-3 col-md-3 pad-left0">
                             <div class="radio-container">
-                                <input type="radio" class='test-focus' name="runtime" id="nodejs" [value]="nodejs" [checked]="runtime == 'nodejs'" (click)="onSelectionChange('nodejs')">
-                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (8.10)</label>
+                                <input type="radio" class='test-focus' name="runtime" id="runtimeKeys[0]" [value]="runtimeKeys[0]" [checked]="runtime == runtimeKeys[0]" (click)="onSelectionChange(runtimeKeys[0])">
+                                <label for="runtimeKeys[0]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[0]]}}</label>
                             </div>
                         </section>
                         <section class="col-lg-3 col-md-3 pad-left0">
                             <div class="radio-container">
-                                <input type="radio" name="runtime" id="java" [value]="java" [checked]="runtime == 'java'" (click)="onSelectionChange('java')">
-                                <label for="java"><span class='outer'></span><span class="background"></span>Java 8</label>
+                                <input type="radio" name="runtime" id="runtimeKeys[1]" [value]="runtimeKeys[1]" [checked]="runtime == runtimeKeys[1]" (change)="onSelectionChange(runtimeKeys[1])">
+                                <label for="runtimeKeys[1]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[1]]}}</label>
                             </div>
                         </section>
                         <section class="col-lg-3 col-md-3 pad-left0">
                             <div class="radio-container">
-                                <input type="radio" name="runtime" id="python2.7" [value]="python2.7" [checked]="runtime == 'python2.7'" (change)="onSelectionChange('python2.7')">
-                                <label for="python2.7"><span class='outer'></span><span class="background"></span>Python (2.7)</label>
+                                <input type="radio" name="runtime" id="runtimeKeys[2]" [value]="runtimeKeys[2]" [checked]="runtime == runtimeKeys[2]" (change)="onSelectionChange(runtimeKeys[2])">
+                                <label for="runtimeKeys[2]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[2]]}}</label>
                             </div>
                         </section>
                         <section class="col-lg-3 col-md-3 pad-left0">
                             <div class="radio-container">
-                                <input type="radio" name="runtime" id="python3.6" [value]="python3.6" [checked]="runtime == 'python3.6'" (change)="onSelectionChange('python3.6')">
-                                <label for="python3.6"><span class='outer'></span><span class="background"></span>Python (2.7)</label>
+                                <input type="radio" name="runtime" id="runtimeKeys[3]" [value]="runtimeKeys[3]" [checked]="runtime == runtimeKeys[3]" (click)="onSelectionChange(runtimeKeys[3])">
+                                <label for="runtimeKeys[3]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[3]]}}</label>
                             </div>
                         </section>
-                        <section class="col-lg-3 col-md-3 pad-left0">
+                        <!-- Commenting this, as we are not supporting this now-->
+                        <!--<section class="col-lg-3 col-md-3 pad-left0">
                             <div class="radio-container" class="disable-event">
                                 <input type="radio" disabled='disabled' name="runtime" id="cshell" [value]="cshell" [checked]="runtime == 'cshell'" (click)="onSelectionChange('cshell')">
                                 <label for="cshell"><span class='outer'></span><span class="background"></span>C#</label>
                             </div>
-                        </section>
+                        </section> -->
                     </div>
                 </div>
             </div>
