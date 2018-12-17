@@ -231,7 +231,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
         }
 
-        // Adding providerRuntime key in service catalog
+        //Adding providerRuntime key in service catalog
         if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
             serviceMetadataObj.providerRuntime = service_creation_data.runtime;
         }
