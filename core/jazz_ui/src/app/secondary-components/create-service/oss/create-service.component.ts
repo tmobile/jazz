@@ -91,6 +91,8 @@ export class CreateServiceComponent implements OnInit {
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
   invalidEventName:boolean = false;
+  runtimeKeys : any;
+  runtimeObject : any;
 
 
   constructor (
@@ -103,6 +105,8 @@ export class CreateServiceComponent implements OnInit {
     private authenticationservice: AuthenticationService
   ) {
     this.toastmessage = messageservice;
+    this.runtimeObject = env_oss.envLists;
+    this.runtimeKeys = Object.keys(this.runtimeObject);
   }
 
   public focusDynamo = new EventEmitter<boolean>();
