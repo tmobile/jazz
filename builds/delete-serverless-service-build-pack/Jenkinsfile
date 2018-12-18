@@ -1245,7 +1245,7 @@ def removePermissionAndDeleteRepo(serviceId) {
 				-d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJson(updatePermission)
 
-		if (responseJSON.data && responseJSON.data.success) {
+		if (responseJSON && responseJSON.success) {
 			echo "Successfully removed permissions and deleted repository."
 		} else {
 			echo "Something went wrong while removing permissions or repository deletion."
