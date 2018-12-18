@@ -460,7 +460,7 @@ def updateAclPermission(serviceId, userId) {
 		for (category in categoryList) {
 			def eachPolicy = [
 				userId: userId,
-				permission: 'admin',
+				permission: 'write',
 				category: category
 			]
 			policiesList.add(eachPolicy)

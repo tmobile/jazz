@@ -382,14 +382,14 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
 
         request(svcPayload, (error, response, body) => {
             if(error) {
-                logger.error(`Error while updating policies t ACL: ${error}`);
+                logger.error(`Error while updating policies using ACL: ${error}`);
                 reject(error);
             } else {
                 logger.debug(`ACL response: ${JSON.stringify(response)}`);
                 if(body && body.data && body.data.success) {
                     resolve();
                 } else {
-                    logger.error(`Error while updating policies t ACL: ${JSON.stringify(response)}`);
+                    logger.error(`Error while updating policies using ACL: ${JSON.stringify(response)}`);
                     reject(response);
                 }
             }
