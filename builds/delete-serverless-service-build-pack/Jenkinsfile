@@ -1236,7 +1236,8 @@ def parseJsonMap(jsonString) {
 def removePermissionAndDeleteRepo(serviceId) {
 	try {
 		def body = JsonOutput.toJson([
-			serviceId: serviceId
+			serviceId: serviceId,
+			policies: []
 		]);
 		def updatePermission = sh(script: "curl -X POST \
 				${g_base_url}/jazz/acl/policies \
