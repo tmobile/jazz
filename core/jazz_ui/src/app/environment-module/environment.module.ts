@@ -11,7 +11,6 @@ import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'ng2-dropdown';
 import { DatePickerModule } from '../primary-components/daterange-picker/ng2-datepicker';
 import { MomentModule } from 'angular2-moment';
-import { IonRangeSliderModule } from 'ng2-ion-range-slider';
 import { SharedModule } from '../shared-module/shared.module';
 import { RouterModule } from '@angular/router';
 import { routes } from './environment.route';

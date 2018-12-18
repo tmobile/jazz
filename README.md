@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/tmobile/jazz.svg?branch=master)](https://travis-ci.org/tmobile/jazz)
 [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://github.com/tmobile/jazz/blob/master/LICENSE)
+[![Gitter](https://img.shields.io/gitter/room/badges/shields.svg)](https://gitter.im/TMO-OSS/Jazz)
+[![Slack Chat](https://img.shields.io/badge/Chat-Slack-ff69b4.svg)](https://tmo-oss-getinvite.herokuapp.com/)
 
 **Seamlessly build, deploy & manage cloud-native applications.**
 
@@ -28,6 +30,17 @@ You can try out public preview version of Jazz by registering with your email ad
 ## User Guide
 
 For more details, see the [Wiki](https://github.com/tmobile/jazz/wiki).
+
+## Development
+### Branching/release flow
+
+1. Breaking/nontrivial features first go into named feature branches cut from `develop`
+2. When/if a feature branch is chosen to be included in the next release, it is merged into `develop`
+3. Release testing happens in `develop`
+4. When confirmed/vetted, `develop` is merged into `master`, and `master` becomes the current release.
+5. Small fixes explicitly intended for the next release can be PRed directly into `develop` without first needing a feature branch.
+
+tl;dr `master` is always the current release, `develop` is always the current state of the next release. If you want to contribute a PR, recommend you fork and work in a branch off of `develop`, then PR against `develop`. Project owners will move you into a feature branch if they deem it necessary.
 
 ## License
 

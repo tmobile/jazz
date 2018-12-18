@@ -9,6 +9,6 @@
   },
   "GITLAB": {
     "CONFIG_FILE_PATH": "/slf/jazz-build-module/raw/master/jazz-installer-vars.json",
-    "PRIVATE_TOKEN": "{private-token}"
+    "PRIVATE_TOKEN": "{private_token}"
   }
 }
