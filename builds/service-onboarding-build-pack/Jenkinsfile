@@ -483,7 +483,7 @@ def updateAclPermission(serviceId, userId) {
 				-d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJson(updatePermission)
 
-		if (responseJSON.data && responseJSON.data.success) {
+		if (responseJSON && responseJSON.success) {
 			echo "Successfully updated permissions for code and deploy."
 		} else {
 			echo "Something went wrong while updating permissions for code and deploy."
