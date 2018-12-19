@@ -255,7 +255,18 @@ node  {
 				try {
 					events.sendStartedEvent("ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO", 'adding write permission to repo started', context_map)
 					def aclUrl = "${g_base_url}/jazz/acl/policies"
-					scmModule.updateAclPermission(service_id, service_config['created_by'], auth_token, aclUrl)
+					def categoryList = ['code', 'deploy']
+					def policiesList = []
+					for (category in categoryList) {
+						def eachPolicy = [
+							userId: service_config['created_by'],
+							permission: 'write',
+							category: category
+						]
+						policiesList.add(eachPolicy)
+					}
+					echo "policiesList: $policiesList"
+					scmModule.updateAclPermission(service_id, policiesList, auth_token, aclUrl)
 					events.sendCompletedEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO', 'adding write permission to repo started', context_map)
 				}
 				catch (ex) {

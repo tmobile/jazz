@@ -338,20 +338,8 @@ def getRepoCommitterInfo(commitHash) {
     }
 }
 
-def updateAclPermission(serviceId, userId, auth_token, aclUrl) {
+def updateAclPermission(serviceId, policiesList, auth_token, aclUrl) {
 	try {
-		def categoryList = ['code', 'deploy']
-		def policiesList = []
-		for (category in categoryList) {
-			def eachPolicy = [
-				userId: userId,
-				permission: 'write',
-				category: category
-			]
-			policiesList.add(eachPolicy)
-		}
-		echo "policiesList: $policiesList"
-
 		def body = JsonOutput.toJson([
 			serviceId: serviceId,
 			policies: policiesList
