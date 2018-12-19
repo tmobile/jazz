@@ -433,7 +433,7 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
                     resolve("success");
                 } else {
                     logger.error(`Error while updating policies using ACL: ${JSON.stringify(response)}`);
-                    reject(`Error while updating policies using ACL: ${JSON.stringify(response)}`);
+                    reject(`Error while updating policies using ACL.`);
                 }
             }
         });
