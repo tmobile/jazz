@@ -245,7 +245,8 @@ node  {
 
 				try {
 					events.sendStartedEvent("ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO", 'adding write permission to repo started', context_map)
-					updateAclPermission(service_id, service_config['created_by'])
+					def aclUrl = "${g_base_url}/jazz/acl/policies"
+					scmModule.updateAclPermission(service_id, service_config['created_by'], auth_token, aclUrl)
 					events.sendCompletedEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO', 'adding write permission to repo started', context_map)
 				}
 				catch (ex) {
@@ -451,39 +452,4 @@ def getBuildModuleUrl() {
 def jsonParse(jsonString) {
     def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
     return nonLazyMap
-}
-
-def updateAclPermission(serviceId, userId) {
-	try {
-		def categoryList = ['code', 'deploy']
-		def policiesList = []
-		for (category in categoryList) {
-			def eachPolicy = [
-				userId: userId,
-				permission: 'write',
-				category: category
-			]
-			policiesList.add(eachPolicy)
-		}
-		echo "policiesList: $policiesList"
-
-		def body = JsonOutput.toJson([
-			serviceId: serviceId,
-			policies: policiesList
-		]);
-		def updatePermission = sh(script: "curl -X POST \
-				${g_base_url}/jazz/acl/policies \
-				-k -v -H \"Authorization: $auth_token\" \
-				-H \"Content-Type: application/json\" \
-				-d \'${body}\'", returnStdout: true).trim()
-		def responseJSON = parseJson(updatePermission)
-
-		if (responseJSON && responseJSON.success) {
-			echo "Successfully updated permissions for code and deploy."
-		} else {
-			echo "Something went wrong while updating permissions for code and deploy."
-		}
-	} catch(ex) {
-		echo "ex: $ex"
-	}
 }

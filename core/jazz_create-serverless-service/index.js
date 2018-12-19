@@ -386,11 +386,11 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
                 reject(error);
             } else {
                 logger.debug(`ACL response: ${JSON.stringify(response)}`);
-                if(body && body.data && body.data.success) {
-                    resolve();
+                if(body && body.success) {
+                    resolve("success");
                 } else {
                     logger.error(`Error while updating policies using ACL: ${JSON.stringify(response)}`);
-                    reject(response);
+                    reject(`Error while updating policies using ACL: ${JSON.stringify(response)}`);
                 }
             }
         });
