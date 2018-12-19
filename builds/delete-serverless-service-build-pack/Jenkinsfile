@@ -491,7 +491,8 @@ def updateSwaggerConfig() {
 def cleanup(serviceId) {
 
 	try {
-		removePermissionAndDeleteRepo(serviceId)
+		def aclUrl = "${g_base_url}/jazz/acl/policies"
+		scmModule.updateAclPermission(serviceId, [], auth_token, aclUrl)
 		send_status_email("COMPLETED")
 	} catch (ex) {
 		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
@@ -1268,27 +1269,4 @@ def parseJsonMap(jsonString) {
 	def lazyMap = [:]
 	lazyMap.putAll(jsonObj)
 	return lazyMap
-}
-
-def removePermissionAndDeleteRepo(serviceId) {
-	try {
-		def body = JsonOutput.toJson([
-			serviceId: serviceId,
-			policies: []
-		]);
-		def updatePermission = sh(script: "curl -X POST \
-				${g_base_url}/jazz/acl/policies \
-				-k -v -H \"Authorization: $auth_token\" \
-				-H \"Content-Type: application/json\" \
-				-d \'${body}\'", returnStdout: true).trim()
-		def responseJSON = parseJson(updatePermission)
-
-		if (responseJSON && responseJSON.success) {
-			echo "Successfully removed permissions and deleted repository."
-		} else {
-			echo "Something went wrong while removing permissions or repository deletion."
-		}
-	} catch(ex) {
-		echo "ex: $ex"
-	}
 }
