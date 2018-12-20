@@ -204,7 +204,7 @@
     </div>
     <div class='metadata-body-advanced'>
       <div *ngIf='disp_show2' class='metadata-buttons-wrap second-wrap'>
-          <btn-jazz-secondary text="EDIT" (click)='onEditClickAdvanced()'></btn-jazz-secondary>
+          <btn-jazz-secondary text="EDIT" [disablebtn]="service.eventScheduleRate == undefined" (click)='onEditClickAdvanced()'></btn-jazz-secondary>
       </div>
       <div *ngIf='disp_show2' class='metadata-row first-row'>
         <ul>
