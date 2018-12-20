@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ const logger = require("../components/logger.js");
 const CronParser = require("../components/cron-parser.js");
 const configModule = require("../components/config.js");
 
-let event, context, callback, spy, stub, checkCase, authStub,service_creation_data;
+let event, context, callback, spy, stub, checkCase, authStub, service_creation_data;
 
 //setup a spy to wrap around async logic/logic that need extraneous sources
 spy = sinon.spy();
@@ -116,7 +116,7 @@ describe('create-serverless-service', function () {
       if (stub) {
         stub.restore();
       }
-    })
+    });
 
 
     /*
@@ -231,7 +231,7 @@ describe('create-serverless-service', function () {
       let invalidName = "service-name-with-more-than-20-characters"
       let errMessage = "'Service Name' can have up to 20 characters";
       let errType = "BadRequest";
-      let allCases =  checkCase("body", "service_name", invalidName, errMessage, errType)
+      let allCases = checkCase("body", "service_name", invalidName, errMessage, errType)
       assert.isTrue(allCases);
     });
 
@@ -354,11 +354,16 @@ describe('create-serverless-service', function () {
 
       //trigger the spy wrapping the logger by calling handler() with valid params
       index.handler(event, context, (err, res) => {
+<<<<<<< HEAD
         sinon.assert.calledTwice(configstub);
         configstub.restore();
         reqStub.restore()
         expect(res.data).to.be.equal("Successfully created your service.");
 
+=======
+        reqStub.restore();
+        expect(res.data).to.be.equal("Successfully created your service.");
+>>>>>>> Worked on review comments.
       });
     });
 
@@ -397,6 +402,12 @@ describe('create-serverless-service', function () {
           data: "Service catalog updated"
         }
       };
+      let acl_response = {
+        statusCode: 200,
+        body: {
+          success: true
+        }
+      };
       event.stage = "dev";
       let config = configModule.getConfig(event, context);
       // wrapping requests
@@ -412,11 +423,13 @@ describe('create-serverless-service', function () {
             jenkins_api_failure: true
           }
           return obj.callback(errObject, responseObject_serviceOnboarding, responseObject_serviceOnboarding.body);
-        } else if (obj.uri = 'https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services/ghd93-3240-2343') {
+        } else if (obj.uri === 'https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services/ghd93-3240-2343') {
           obj.callback(null, responseObject_update, responseObject_update.body);
+        } else if (obj.uri === ("https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/acl/policies")) {
+          return obj.callback(null, acl_response, acl_response.body);
         }
       });
-      let callFunction = index.handler(event, context, (err, res) => {
+      index.handler(event, context, (err, res) => {
         err = JSON.parse(err);
         if (err.message == "Service onboarding jenkings build Failed") {
           bool = true;
@@ -424,9 +437,10 @@ describe('create-serverless-service', function () {
         sinon.assert.callCount(configstub, 2);
         configstub.restore();
         assert.isTrue(bool);
-      })
-    })
-  })
+      });
+    });
+  });
+
   describe("getToken", () => {
     let config, event;
     beforeEach(() => {
@@ -450,7 +464,7 @@ describe('create-serverless-service', function () {
         }
       };
       config = configModule.getConfig(event, context);
-    })
+    });
 
     it("Should Return authToken when called with valid paramenters", () => {
       let bool = false;
@@ -470,10 +484,10 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
-    })
+    });
 
     it("Should Return error message  when called with invalid paramenters", () => {
       let bool = false;
@@ -497,12 +511,12 @@ describe('create-serverless-service', function () {
           bool = true
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
-    })
+    });
+  });
 
-  })
   describe("getServiceData", () => {
     beforeEach(function () {
       event = {
@@ -548,15 +562,14 @@ describe('create-serverless-service', function () {
             bool = true;
           }
           assert.isTrue(bool);
-        })
+        });
       }
-
     });
 
     it("should return input object with METADATA values for valid input parameters for service type function (for different event sources)", () => {
       let authToken = "temp-auth-token";
       let eventsList = ["s3", "dynamodb", "sqs", "kinesis"];
-      service_creation_data.rateExpression = ""
+      service_creation_data.rateExpression = "";
       let config = configModule.getConfig(event, context);
 
       eventsList.forEach(each => {
@@ -566,21 +579,21 @@ describe('create-serverless-service', function () {
           action: "temp-" + each + "-action"
         }
 
-        service_creation_data.events = [eachEvent]
+        service_creation_data.events = [eachEvent];
 
         index.getServiceData(service_creation_data, authToken, config)
-        .then((input) => {
-          let action = 'event_action_' + each;
-          let source = 'event_source_' + each;
-          expect(input.METADATA).to.have.all.keys(action, source)
-        });
-      })
+          .then((input) => {
+            let action = 'event_action_' + each;
+            let source = 'event_source_' + each;
+            expect(input.METADATA).to.have.all.keys(action, source)
+          });
+      });
     });
 
     it("should return input error for invalid input parameters for service type function (for different event sources)", () => {
       let authToken = "temp-auth-token";
       let eventsList = ["", "invalidEvent"];
-      service_creation_data.rateExpression = ""
+      service_creation_data.rateExpression = "";
       let config = configModule.getConfig(event, context);
 
       eventsList.forEach(each => {
@@ -589,19 +602,23 @@ describe('create-serverless-service', function () {
           source: each,
           action: "temp-" + each + "-action"
         }
-
         service_creation_data.events = [eachEvent]
 
         index.getServiceData(service_creation_data, authToken, config)
-        .catch(error => {
-          if(each) {
-            expect(error).to.include({ result: 'inputError', message: `Event type \'${each}\' is invalid.` });
-          } else {
-            expect(error).to.include({ result: 'inputError', message: 'Event type and/or source name cannot be empty.' });
-          }
-
-        });
-      })
+          .catch(error => {
+            if (each) {
+              expect(error).to.include({
+                result: 'inputError',
+                message: `Event type \'${each}\' is invalid.`
+              });
+            } else {
+              expect(error).to.include({
+                result: 'inputError',
+                message: 'Event type and/or source name cannot be empty.'
+              });
+            }
+          });
+      });
     });
 
     it("should return input error for invalid input parameters for service type function (for invalid event source name)", () => {
@@ -616,58 +633,15 @@ describe('create-serverless-service', function () {
           source: each,
           action: "temp-" + each + "-action"
         }
-
-        service_creation_data.events = [eachEvent]
+        service_creation_data.events = [eachEvent];
 
         index.getServiceData(service_creation_data, authToken, config)
-        .catch(error => {
-          expect(error).to.include({ result: 'inputError', message: `${each} cannot begin or end with special character` });
-        });
-      })
-    })
-
-    it("should return input object with deployment target when input paramter is provided with valid values for api service type ", () => {
-      const authToken = "temp-auth-token";
-      let bool = false;
-      service_creation_data["service_type"] = "api";
-      service_creation_data["deployment_targets"] = {"api": "gcp_apigee"};
-      const config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config, {"api": "gcp_apigee"})
-      .then(input => {
-        if (input.DEPLOYMENT_TARGETS["api"] === "gcp_apigee") {
-          bool = true;
-        }
-        assert.isTrue(bool);
-      });
-    });
-
-    it("should return input object with deployment target when input paramter is provided with valid values for function service type ", () => {
-      const authToken = "temp-auth-token";
-      let bool = false;
-      service_creation_data["service_type"] = "function";
-      service_creation_data["deployment_targets"] = {"function": "aws_lambda"};
-      const config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config, {"function": "aws_lambda"})
-      .then(input => {
-        if (input.DEPLOYMENT_TARGETS["function"] === "aws_lambda") {
-          bool = true;
-        }
-        assert.isTrue(bool);
-      });
-    });
-
-    it("should return input object with deployment target when input paramter is provided with valid values for website service type ", () => {
-      const authToken = "temp-auth-token";
-      let bool = false;
-      service_creation_data["service_type"] = "website";
-      service_creation_data["deployment_targets"] = {"website": "aws_cloudfront"};
-      const config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config, {"website": "aws_cloudfront"})
-      .then(input => {
-        if (input.DEPLOYMENT_TARGETS["website"] === "aws_cloudfront") {
-          bool = true;
-        }
-        assert.isTrue(bool);
+          .catch(error => {
+            expect(error).to.include({
+              result: 'inputError',
+              message: `${each} cannot begin or end with special character`
+            });
+          });
       });
     });
   });
@@ -695,7 +669,7 @@ describe('create-serverless-service', function () {
         },
         DEPLOYMENT_TARGETS: {"api": "apigee"}
       }
-    })
+    });
 
     it("should send an http POST given valid input parameters ", () => {
       stub = sinon.stub(request, "Request", spy);
@@ -724,10 +698,10 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
-    })
+    });
 
     it("Should Return error when service creation failed", () => {
       let bool = false;
@@ -748,12 +722,12 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
+  });
 
-  })
   describe("startServiceOnboarding", () => {
     let config, service_id, event;
     beforeEach(() => {
@@ -776,7 +750,7 @@ describe('create-serverless-service', function () {
           "deployment_targets": {"api": "apigee"}
         }
       };
-      service_creation_data =  event.body;
+      service_creation_data = event.body;
       config = configModule.getConfig(event, context);
       service_id = "ghd93-3240-2343";
     })
@@ -803,14 +777,14 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
-    })
+    });
 
     it("should return error message when jenkins job has failed", () => {
       let bool = false;
-      let errMessage = "Failed to kick off service onboarding job."
+      let errMessage = "Failed to kick off service onboarding job.";
       let responseObject = {
         statusCode: 401,
         body: {
@@ -827,10 +801,10 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
-    })
+    });
 
     it("should return success message when jenkins job has executed succesfully", () => {
       let bool = false;
@@ -845,55 +819,75 @@ describe('create-serverless-service', function () {
         return obj.callback(null, responseObject, responseObject.body);
       });
       index.startServiceOnboarding(service_creation_data, config, service_id).then((res) => {
-
         if (res && res === Message) {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
-      reqStub.restore()
-    })
+      reqStub.restore();
+    });
+  });
 
-  })
   describe("updateAclPolicy", () => {
-    let event, config
+    let event, config;
     beforeEach(() => {
       event = {
         'stage': 'test'
-      }
+      };
       config = configModule.getConfig(event, context);
-    })
+    });
+
     it("should indicate error when jazz acl request fails", () => {
-      let error = {errType: "invalidError", errMessage: "error occoured"}
+      let error = {
+        errType: "invalidError",
+        errMessage: "error occoured"
+      };
       let reqStub = sinon.stub(request, "Request", (obj) => {
         return obj.callback(error, null, null);
       });
       index.updateAclPolicy("random-id", 'temp-token', 'user', 'temp-permission', 'temp-cat', config)
-      .catch(err => {
-        expect(err).to.include(error);
-        sinon.assert.calledOnce(reqStub);
-        reqStub.restore();
-      })
+        .catch(err => {
+          expect(err).to.include(error);
+          sinon.assert.calledOnce(reqStub);
+          reqStub.restore();
+        });
+    });
 
-    })
-
-    it("should indicate error when jazz acl request fails", () => {
+    it("should successfully send request to jazz acl to update permissions", () => {
       let responseObject = {
         statusCode: 200,
         body: {
-          data: {}
+          success: true
         }
       };
       let reqStub = sinon.stub(request, "Request", (obj) => {
         return obj.callback(null, responseObject, responseObject.body);
       });
       index.updateAclPolicy("random-id", 'temp-token', 'user', 'temp-permission', 'temp-cat', config)
-      .then((res) => {
-        expect(res).to.be.empty;
-        sinon.assert.calledOnce(reqStub);
-        reqStub.restore();
-      })
-    })
-  })
-})
+        .then((res) => {
+          expect(res).to.eq("success");
+          sinon.assert.calledOnce(reqStub);
+          reqStub.restore();
+        });
+    });
+
+    it("should indicate error from jazz acl request while updating the permissions", () => {
+      let responseObject = {
+        statusCode: 200,
+        body: {
+          success: false
+        }
+      };
+      let reqStub = sinon.stub(request, "Request", (obj) => {
+        return obj.callback(null, responseObject, responseObject.body);
+      });
+      index.updateAclPolicy("random-id", 'temp-token', 'user', 'temp-permission', 'temp-cat', config)
+        .catch((err) => {
+          expect(err).to.eq("Error while updating policies using ACL.");
+          sinon.assert.calledOnce(reqStub);
+          reqStub.restore();
+        });
+    });
+  });
+});
