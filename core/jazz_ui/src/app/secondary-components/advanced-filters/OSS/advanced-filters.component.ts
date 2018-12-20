@@ -84,6 +84,18 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         this.periodSelected=this.periodList[0];
     }
 
+    setSlider(event){
+        this.sliderMax=event;
+        // update time period list when sliderMax changes
+        var timePeriodList = [];
+        for (var i = this.sliderFrom; i <= this.sliderMax; i ++){
+            timePeriodList.push(i);
+        }
+        this.timePeriodList = timePeriodList;
+        this.sliderFrom=1;
+        this.sliderPercentFrom=0;
+    }
+
     onRangeListSelected(range){
         this.selectedTimeRange = range;
         this.selectFilter["key"]='range';
