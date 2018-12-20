@@ -1,7 +1,5 @@
 #!groovy?
-import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
-import groovy.transform.Field
 
 def deletePolicies(serviceId, auth_token, aclUrl) {
 	try {
