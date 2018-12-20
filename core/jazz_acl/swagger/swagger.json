@@ -1106,7 +1106,7 @@
       "type": "object",
       "properties": {
         "data": {
-          "$ref": "#/definitions/PostSuccessObj"
+          "$ref": "#/definitions/SuccessObj"
         }
       },
       "title": "Success Response"
@@ -1115,7 +1115,7 @@
       "type": "object",
       "properties": {
         "data": {
-          "$ref": "#/definitions/SuccessObj"
+          "$ref": "#/definitions/AuthorizationCheck"
         }
       },
       "title": "Success Response"
@@ -1270,21 +1270,21 @@
         }
       }
     },
-    "PostSuccessObj": {
-      "type": "object",
-      "properties": {
-        "success": {
-          "type": "string",
-          "example": "true"
-        }
-      }
-    },
     "SuccessObj": {
       "type": "object",
       "properties": {
+        "success": {
+          "type": "boolean",
+          "example": true
+        }
+      }
+    },
+    "AuthorizationCheck": {
+      "type": "object",
+      "properties": {
         "authorized": {
-          "type": "string",
-          "example": "true"
+          "type": "boolean",
+          "example": true
         }
       }
     }
