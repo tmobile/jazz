@@ -984,6 +984,19 @@ export class ServiceOverviewComponent implements OnInit {
     this.envComponent.refresh();
   }
 
+  setEventScheduleRate() {
+    let localEvenSchedule = this.service.eventScheduleRate;
+    localEvenSchedule = localEvenSchedule.replace(/[\(\)']+/g,' ');
+    localEvenSchedule = localEvenSchedule.split(' ');
+    this.rateExpression.type = localEvenSchedule[0];
+    this.cronObj.minutes = localEvenSchedule[1];
+    this.cronObj.hours = localEvenSchedule[2];
+    this.cronObj.dayOfMonth = localEvenSchedule[3];
+    this.cronObj.month = localEvenSchedule[4];
+    this.cronObj.dayOfWeek = localEvenSchedule[5];
+    this.cronObj.year = localEvenSchedule[6];
+}
+
 
   internal_build: boolean = true;
 
@@ -995,6 +1008,10 @@ export class ServiceOverviewComponent implements OnInit {
     this.stgEnv = {};
 
     this.check_empty_fields();
+
+    if(this.service.eventScheduleRate){
+      this.setEventScheduleRate();
+    }
 
     setTimeout(() => {
       this.islink = this.ValidURL(this.service.repository);
