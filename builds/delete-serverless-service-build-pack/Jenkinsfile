@@ -455,7 +455,7 @@ def updateSwaggerConfig() {
 
 			def region = "${configLoader.AWS.REGION}"
       
-			def roleARN = service_config['iamRoleARN'].replaceAll("/", "\\\\/")
+			def roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
 			// TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))

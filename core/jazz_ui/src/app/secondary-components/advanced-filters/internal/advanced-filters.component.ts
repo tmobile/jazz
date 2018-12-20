@@ -18,8 +18,6 @@ export class AdvancedFiltersComponent implements OnInit {
     @Input() assets:boolean = false;
 
     @Input() service: any = {};
-
-    
     @Output() onFilterSelect:EventEmitter<any> = new EventEmitter<any>();
 
 
@@ -85,21 +83,31 @@ export class AdvancedFiltersComponent implements OnInit {
         this.periodList=event;
         this.periodSelected=this.periodList[0];
     }
+    setSlider(event){
+        this.sliderMax=event;
+        var timePeriodList = [];
+        for (var i = this.sliderFrom; i <= this.sliderMax; i ++){
+            timePeriodList.push(i);
+        }
+        this.timePeriodList = timePeriodList;
+        this.sliderFrom=1;
+        this.sliderPercentFrom=0;
+    }
 
     onTimePeriodSelected(period){
-      this.selectedTimePeriod = period;
-      this.selectFilter["key"]='slider';
-      this.sliderFrom = period;
-      this.sliderPercentFrom = this.sliderMax > 1 ? (period - 1) / (this.sliderMax - 1) : 1;
-      var event = {
-          value: period,
-          from: period,
-          from_percent: this.sliderPercentFrom
-      };
+        this.selectedTimePeriod = period;
+        this.selectFilter["key"]='slider';
+        this.sliderFrom = period;
+        this.sliderPercentFrom = this.sliderMax > 1 ? (period - 1) / (this.sliderMax - 1) : 1;
+        var event = {
+            value: period,
+            from: period,
+            from_percent: this.sliderPercentFrom
+        };
 
-      this.selectFilter["value"] = event;
-      this.onFilterSelect.emit(this.selectFilter);
-  }
+        this.selectFilter["value"] = event;
+        this.onFilterSelect.emit(this.selectFilter);
+    }
     onRangeListSelected(range){
     
         this.selectedTimeRange = range;
