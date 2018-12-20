@@ -12,6 +12,7 @@
     "jshint": "jshint --exclude ./node_modules ."
   },
   "dependencies": {
+    "aws-sdk": "^2.380.0",
     "nodemailer": "*"
   },
   "devDependencies": {
