@@ -6,7 +6,6 @@ import org.junit.Test;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.slf.model.Response;
-import com.slf.model.Request;
 
 public class HandlerTest {
 
@@ -14,10 +13,9 @@ public class HandlerTest {
 
 	// private input = Request;
 	 public  Context context;
-	 public  Request request;
 
 	@Test
 	public void handlerSaysHello() {
-		assertTrue(true); //@TODO: Write assertions here
+		assertTrue(true); //@TODO: Write assertions here 
 	}
 }

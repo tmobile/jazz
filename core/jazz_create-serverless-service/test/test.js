@@ -172,6 +172,14 @@ describe('create-serverless-service', function () {
       assert.isTrue(allCases);
     });
 
+    it("should inform user of error if given an event with an invalid body.service_name (more than 20 characters)", () => {
+      let invalidName = "service-name-with-more-than-20-characters"
+      let errMessage = "'Service Name' can have up to 20 characters";
+      let errType = "BadRequest";
+      let allCases =  checkCase("body", "service_name", invalidName, errMessage, errType)
+      assert.isTrue(allCases);
+    });
+
     /*
      * Given an event indicating a lambda or api service but no runtime, handler() informs of missing Runtime
      * @param {object} event, contains a service type that isn't "website", and no body.runtime
@@ -202,6 +210,14 @@ describe('create-serverless-service', function () {
       let errMessage = "Namespace is not appropriate";
       let errType = "BadRequest";
       let invalidCase = checkCase("body", "domain", invalidName2, errMessage, errType);
+      assert.isTrue(invalidCase);
+    });
+
+    it("should inform user of error if invalid domain value (more than 20 characters)", () => {
+      let invalidName = "domain-with-more-than-20-characters";
+      let errMessage = "'Namespace' can have up to 20 characters";
+      let errType = "BadRequest";
+      let invalidCase = checkCase("body", "domain", invalidName, errMessage, errType);
       assert.isTrue(invalidCase);
     });
 
@@ -454,74 +470,71 @@ describe('create-serverless-service', function () {
 
     });
 
-    it("should return input object with METADATA values for valid input parameters for service type function (event_source e2c)", () => {
+    it("should return input object with METADATA values for valid input parameters for service type function (for different event sources)", () => {
       let authToken = "temp-auth-token";
-      let bool = false;
-      service_creation_data["enableEventSchedule"] = true;
-      service_creation_data.event_source_ec2 = "temp-url";
-      service_creation_data.event_action_ec2 = "temp-url";
-      service_creation_data.event_source_ec2 = "sample-test-data"
+      let eventsList = ["s3", "dynamodb", "sqs", "kinesis"];
+      service_creation_data.rateExpression = ""
       let config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config).then((input) => {
-        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
-          if (input.METADATA.event_action_ec2 && input.METADATA.event_action_ec2 != null) {
-            bool = true;
-          }
+
+      eventsList.forEach(each => {
+        let eachEvent = {
+          type: each,
+          source: "temp-" + each + "-source",
+          action: "temp-" + each + "-action"
         }
-        assert.isTrue(bool);
+        
+        service_creation_data.events = [eachEvent]
+        
+        index.getServiceData(service_creation_data, authToken, config)
+        .then((input) => {
+          let action = 'event_action_' + each;
+          let source = 'event_source_' + each;
+          expect(input.METADATA).to.have.all.keys(action, source)
+        });
       })
     });
 
-    it("should return input object with METADATA values for valid input parameters for service type function (event_source s3)", () => {
+    it("should return input error for invalid input parameters for service type function (for different event sources)", () => {
       let authToken = "temp-auth-token";
-      let bool = false;
-      service_creation_data["enableEventSchedule"] = true;
-      service_creation_data.event_action_s3 = "temp-url";
-      service_creation_data.event_source_s3 = "sample-test-data"
+      let eventsList = ["", "invalidEvent"];
+      service_creation_data.rateExpression = ""
       let config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config).then((input) => {
-        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
-          if (input.METADATA.event_action_s3 && input.METADATA.event_action_s3 != null) {
-            bool = true;
-          }
+
+      eventsList.forEach(each => {
+        let eachEvent = {
+          type: each,
+          source: each,
+          action: "temp-" + each + "-action"
         }
-        assert.isTrue(bool);
+
+        service_creation_data.events = [eachEvent]
+
+        index.getServiceData(service_creation_data, authToken, config)
+        .catch(error => {
+          expect(error).to.include({ result: 'inputError', message: each + ' name is invalid.' });
+        });
       })
     });
 
-    it("should return input object with METADATA values for valid input parameters for service type function (event source dynamoDB)", () => {
+    it("should return input error for invalid input parameters for service type function (for invalid event source name)", () => {
       let authToken = "temp-auth-token";
-      let bool = false;
-      service_creation_data["enableEventSchedule"] = true;
-      service_creation_data.event_source_dynamodb = "temp-url";
-      service_creation_data.event_action_dynamodb = "temp-url";
-      service_creation_data.event_source_dynamodb = "sample-test-data"
+      let eventsList = ["-startWithInvalidChar", "_startWithInvalidChar", ".startWithInvalidChar", "endWithInvalidChar-", "endWithInvalidChar_", "endWithInvalidChar."];
+      service_creation_data.rateExpression = ""
       let config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config).then((input) => {
-        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
-          if (input.METADATA.event_action_dynamodb && input.METADATA.event_action_dynamodb != null) {
-            bool = true;
-          }
-        }
-        assert.isTrue(bool);
-      })
-    });
 
-    it("should return input object with METADATA values for valid input parameters for service type function (event source stream", () => {
-      let authToken = "temp-auth-token";
-      let bool = false;
-      service_creation_data["enableEventSchedule"] = true;
-      service_creation_data.event_source_stream = "temp-url";
-      service_creation_data.event_action_stream = "temp-url";
-      service_creation_data.event_source_stream = "sample-test-data"
-      let config = configModule.getConfig(event, context);
-      index.getServiceData(service_creation_data, authToken, config).then((input) => {
-        if (input.METADATA.eventScheduleEnable && input.METADATA.eventScheduleRate != null && input.METADATA.eventScheduleRate != "") {
-          if (input.METADATA.event_action_stream && input.METADATA.event_action_stream != null) {
-            bool = true;
-          }
+      eventsList.forEach(each => {
+        let eachEvent = {
+          type: "S3",
+          source: each,
+          action: "temp-" + each + "-action"
         }
-        assert.isTrue(bool);
+
+        service_creation_data.events = [eachEvent]
+
+        index.getServiceData(service_creation_data, authToken, config)
+        .catch(error => {
+          expect(error).to.include({ result: 'inputError', message: 'S3 name is invalid.' });
+        });
       })
     })
 

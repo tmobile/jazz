@@ -6,7 +6,6 @@ import { RequestService, MessageService , AuthenticationService } from '../../co
 import { Router } from '@angular/router';
 import { DataCacheService } from '../../core/services/index';
 import { FilterTagsComponent } from '../../secondary-components/filter-tags/filter-tags.component';
-import { IonRangeSliderModule } from "ng2-ion-range-slider"
 import { AdvancedFiltersComponent } from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
 import { AdvancedFilterService } from './../../advanced-filter.service';
 import { AdvFilters } from './../../adv-filter.directive';
@@ -26,11 +25,9 @@ import {environment as env_internal} from './../../../environments/environment.i
 export class ServiceCostComponent implements OnInit {
 
 	@Input() service: any = {};
-	@ViewChild('sliderElement') sliderElement: IonRangeSliderModule;
 	@ViewChild(AdvFilters) advFilters: AdvFilters;
 	
 	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
-	// @ViewChild('advanced_filters') advanced_filters: advanced_filter;
 	componentFactoryResolver:ComponentFactoryResolver;
 	 private subscription:any;
 	 advanced_filter_input:any = {
@@ -489,23 +486,6 @@ export class ServiceCostComponent implements OnInit {
   getRange(e){
     this.FilterTags.notify('filter-TimeRangeSlider',e);
 }
-  onClickFilter(){
-
-		
-    
-    var slider = document.getElementById('sliderElement');
-    
-    slider.getElementsByClassName('irs-line-mid')[0].setAttribute('style','border-radius:10px;')
-    slider.getElementsByClassName('irs-bar-edge')[0].setAttribute('style',' background: none;background-color: #ed008c;border-bottom-left-radius:10px;border-top-left-radius:10px;width: 10px;');
-    slider.getElementsByClassName('irs-single')[0].setAttribute('style',' background: none;background-color: #ed008c;left:'+this.sliderPercentFrom+'%');
-    slider.getElementsByClassName('irs-bar')[0].setAttribute('style',' background: none;left:10px;background-color: #ed008c;width:'+this.sliderPercentFrom+'%');
-    slider.getElementsByClassName('irs-slider single')[0].setAttribute('style','width: 20px;top: 20px;height: 20px;border-radius: 50%;cursor:pointer;background: none; background-color: #fff;left:'+this.sliderPercentFrom+'%');
-    slider.getElementsByClassName('irs-max')[0].setAttribute('style','background: none');
-		slider.getElementsByClassName('irs-min')[0].setAttribute('style','background: none');
-		
-		
-    
-  }
   processServiceList(serviceCost,serviceInput){
 	if (serviceCost === undefined || serviceCost.cost.length === undefined) {
 		return [];

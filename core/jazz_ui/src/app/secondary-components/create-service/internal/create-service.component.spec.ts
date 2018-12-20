@@ -76,7 +76,6 @@ import { HttpModule , BaseRequestOptions, Connection} from '@angular/http';
 import { AuthenticationService, RouteGuard, DataCacheService, RequestService, MessageService } from '../../../core/services';
 import { RouterModule, Routes } from '@angular/router';
 import { RouterTestingModule } from '@angular/router/testing';
-import { IonRangeSliderModule } from 'ng2-ion-range-slider';
 import { environment } from '../../../../environments/environment';
 import { Http, Headers, Response, RequestOptions,ResponseOptions } from '@angular/http';
 import {  } from '@angular/http'

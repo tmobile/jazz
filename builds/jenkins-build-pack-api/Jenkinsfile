@@ -21,6 +21,7 @@ import groovy.transform.Field
 @Field def sonarModule
 
 @Field def auth_token = ''
+@Field def config
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def g_base_url = ''
 @Field def environment_logical_id = ''
@@ -47,7 +48,6 @@ node() {
 		repo_name = params.domain + "_" + params.service_name
 	}
 
-	def config
 	def domain = params.domain
 
 	stage('Checkout code base') {
@@ -117,10 +117,9 @@ node() {
 		def stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
 		def internalAccess = config['require_internal_access']
-		def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
 
 		// @TODO: the below statement will be replaced with regular expression in very near future;
-		def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
+		def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
 
 		sonarModule.initialize(configLoader, config, branch)
 
@@ -130,7 +129,7 @@ node() {
 			stage('Update Service Template'){
 				echo "Inside Update service template"
 				try {
-					updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)
+					updatePlatformServiceTemplate(config, config['iamRoleARN'], roleId, current_environment, repo_name)
 				}
 				catch (error) {
 					error "Error occured while updating service template."
@@ -180,7 +179,7 @@ node() {
 		stage('Build') {
 			try {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
-				buildLambda(runtime)
+				buildLambda(runtime, repo_name)
 			} catch (ex) {
 				events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -221,22 +220,24 @@ node() {
 				events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 				withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 					echo "AWS Configure ......."
-					sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-					sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-					sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+					def randomString = utilModule.generateRequestId();
+					def cloudApi = "jazz-${randomString}";
+					sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
+					sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+					sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
 					// Generate serverless yml file with domain added in function name
 					echo "Generate deployment env with domain for ${env_key}"
 
 					writeServerlessFile(config, environment_logical_id)
-
-					setLambdaExecutionRole(configLoader.AWS.ROLEID);
+					
+					setLambdaExecutionRole(config['iamRoleARN']);
 
 					echo "serverless deploy......."
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
-					def lambdaARN = getLambdaARN(stackName);
+					def lambdaARN = getLambdaARN(stackName, cloudApi);
 					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
 					if (fileExists('swagger/swagger.json')) {
@@ -256,9 +257,9 @@ node() {
 						sh "cat swagger/swagger.json "
 
 						echo "Deploying to API Gateway environment.."
-						sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile cloud-api"
-						sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile cloud-api"
-						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+						sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile ${cloudApi}"
+						sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile ${cloudApi}"
+						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile ${cloudApi}"
 
 						if("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
 							sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
@@ -294,9 +295,11 @@ node() {
 						send_status_email(config, 'COMPLETED', svc_status)
 
 					}
-
+					resetCredentials(cloudApi)
+					
 					if (domain && domain == "jazz") {
 						serviceConfigdata.setLogStreamPermission(config)
+	
 					}
 				}
 			} catch (ex) {
@@ -319,12 +322,11 @@ node() {
 	}//dir ends here
 }
 
-def getLambdaARN(String stackName) {
+def getLambdaARN(String stackName, cloudApi) {
 	def ARN = "";
-
 	try {
 		def cloudformation_resources = "";
-		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
+		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${cloudApi}")
 
 		def parsedObject = parseJson(cloudformation_resources);
 		def outputs = parsedObject.Stacks[0].Outputs;
@@ -475,7 +477,7 @@ def LoadConfiguration() {
 /**
 	Build project based on runtime
 */
-def buildLambda(runtime) {
+def buildLambda(String runtime, String repo_name) {
 	echo "installing dependencies for $runtime"
 	if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
@@ -494,6 +496,16 @@ def buildLambda(runtime) {
 		pip install pytest
 		"""
 	}
+	else if (runtime.indexOf("go") > -1 ){
+    //Installing dependencies using dep ensure
+    //golang build scripts
+   	withEnv(["GOPATH=${env.WORKSPACE}"]) {
+      sh "mkdir -p $GOPATH/src"
+      sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
+      sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
+      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/"+ repo_name+"/main.go"
+    }
+  }
 }
 
 
@@ -508,19 +520,20 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
 	sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
-	def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
+
 
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;
-	def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
+	def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
 
-	sh "sed -i -- 's/{conf-role}/${roleARN}/g' ./swagger/swagger.json"
+	sh "sed -i -- 's|{conf-role}|${configLoader.AWS.PLATFORMSERVICES_ROLEID}|g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-region}/${configLoader.AWS.REGION}/g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 }
 
 def writeServerlessFile(config, environment_logical_id){
 	sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
-	sh "sed -i -- 's/{env-stage}/${environment_logical_id}/g' serverless.yml"
+	sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
+  sh "sed -i -- 's/{env-stage}/${environment_logical_id}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
@@ -528,10 +541,10 @@ def writeServerlessFile(config, environment_logical_id){
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
-	sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${config['eventScheduleRate']}|g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
+  sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
+  sh "sed -i -- '/#Start:isScheduleEnabled/,/#End:isScheduleEnabled/d' ./serverless.yml"
 
 	if (config['artifact']) {
 		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
@@ -539,7 +552,6 @@ def writeServerlessFile(config, environment_logical_id){
 	if (config['mainClass']) {
 		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
 	}
-
 }
 
 /**
@@ -549,13 +561,13 @@ def setLambdaExecutionRole(role) {
 	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#${role}#g' serverless.yml"
 }
 
-/**
+/** 
 	Reset credentials
-*/
-def resetCredentials() {
-	echo "resetting AWS credentials"
-	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXX"
+ */
+def resetCredentials(cloudApi) {
+  echo "resetting AWS credentials"
+	sh "aws configure set profile.${cloudApi}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  sh "aws configure set profile.${cloudApi}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
 }
 
 /**
@@ -579,7 +591,7 @@ def validateDeploymentConfigurations(def prop) {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"]
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "java8", "go1.x"]
 			def flag = false
 			for (int i = 0; i < validRuntimes.size(); i++) {
 				if (_runtime == validRuntimes[i]) {
@@ -655,7 +667,9 @@ def loadServerlessConfig(config) {
 		sh "cp _config/serverless-java.yml ./serverless.yml"
 	} else if (config['providerRuntime'].indexOf("python") > -1) {
 		sh "cp _config/serverless-python.yml ./serverless.yml"
-	}
+	} else if (config['providerRuntime'].indexOf("go") > -1) {
+    sh "cp _config/serverless-go.yml ./serverless.yml"
+  }
 
 	if ((config['service'] == 'cloud-logs-streamer' || config['service'] == 'logs') && config['domain'] == 'jazz') {
 		//addVpcDetails()
@@ -701,8 +715,9 @@ def updateApiDocUrl(String env) {
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
 	def lambda = "/aws/lambda/${stackName}"
-	def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
-	try {
+    def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
+
+    try {
 		sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
 	} catch (Exception ex) { }// ignore if already existing
 
@@ -721,7 +736,7 @@ def createSubscriptionFilters(stackName, region, roleId) {
 	} catch (Exception ex) { }// ignore error if not created yet
 
 	try {
-		sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region}"
+		sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID}"
 	} catch (Exception ex) {
 		echo "error occured: " + ex.getMessage()
 	}
@@ -834,7 +849,9 @@ def runValidation(String runtime) {
 		sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
 	} else if (runtime.indexOf("python") > -1) {
 		echo "running validations for $runtime"
-	}
+	} else if (runtime.indexOf("go") > -1) {
+    	echo "running validations for $runtime"
+  	}
 }
 
 /**

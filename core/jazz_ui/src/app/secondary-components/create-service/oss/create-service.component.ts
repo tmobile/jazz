@@ -27,9 +27,9 @@ import { environment as env_oss } from './../../../../environments/environment.o
 export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
-  sqsStreamString:string = "arn:aws:sqs:us-west-2:" + env_oss.aws.account_number + ":stream/";
-  kinesisStreamString:string = "arn:aws:kinesis:us-west-2:" + env_oss.aws.account_number + ":stream/";
-  dynamoStreamString:string = "arn:aws:dynamo:us-west-2:" + env_oss.aws.account_number + ":stream/";
+  sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
+  kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
+  dynamoStreamString:string = "arn:aws:dynamo:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/";
   SlackEnabled:boolean = false;
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
@@ -69,7 +69,15 @@ export class CreateServiceComponent implements OnInit {
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
-
+  eventMaxLength:any = {
+    "stream_name":0,
+    "table_name":0,
+    "queue_name":0,
+    "bucket_name":0
+  };
+  serviceLimit:number;
+  domainLimit:number;
+  servicePatterns:any;
 
   model = new ServiceFormData('','','', '','','');
   cronObj = new CronObject('0/5','*','*','*','?','*')
@@ -82,6 +90,7 @@ export class CreateServiceComponent implements OnInit {
   errMessage: any;
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
+  invalidEventName:boolean = false;
 
 
   constructor (
@@ -159,9 +168,17 @@ export class CreateServiceComponent implements OnInit {
   // function called on event schedule change(radio)
   onEventScheduleChange(val){
     this.rateExpression.type = val;
+    if(val !== `none`){
+      this.eventExpression.type = 'awsEventsNone';
+    }
   }
   onAWSEventChange(val){
+    this.invalidEventName = false;
+    this.eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
     this.eventExpression.type = val;
+    if(val !== `none`){
+      this.rateExpression.type = 'none';
+    }
   }
   onSelectedDr(selected){
     this.rateExpression.interval = selected;
@@ -179,6 +196,12 @@ export class CreateServiceComponent implements OnInit {
 
   }
 
+  //function to validate event source names
+  validateEvents(value){
+    if(value != null && ((value[0] === '-' || value[value.length - 1] === '-') || (value[0] === '.' || value[value.length - 1] === '.') || (value[0] === '_' || value[value.length - 1] === '_'))){
+      this.invalidEventName = true;
+    }
+  }
   // function to validate slack channel
   public validateChannelName() {
 
@@ -315,16 +338,16 @@ export class CreateServiceComponent implements OnInit {
         var event = {};
         event["type"] = this.eventExpression.type;
         if(this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:us-west-2:"+env_oss.aws.account_number+":table/" + this.eventExpression.dynamoTable;
+          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":table/" + this.eventExpression.dynamoTable;
           event["action"] = "PutItem";
         } else if(this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:us-west-2:"+env_oss.aws.account_number+":stream/" + this.eventExpression.streamARN;
+          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":stream/" + this.eventExpression.streamARN;
           event["action"] = "PutRecord";
         } else if(this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;
-          event["action"] = "S3:" + this.eventExpression.S3BucketName + ":*";
+          event["action"] = "s3:ObjectCreated:*";
         } else if (this.eventExpression.type === "sqs") {
-          event["source"] = "arn:aws:sqs:us-west-2:"+env_oss.aws.account_number+":stream/" + this.eventExpression.SQSstreamARN;
+          event["source"] = "arn:aws:sqs:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":"+ this.eventExpression.SQSstreamARN;
         }
         payload["events"] = [];
         payload["events"].push(event);
@@ -353,6 +376,7 @@ export class CreateServiceComponent implements OnInit {
           var index = output.data.indexOf("https://");
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
+          this.resetEvents();
        },
         (error) => {
           this.isLoading = false;
@@ -361,6 +385,8 @@ export class CreateServiceComponent implements OnInit {
           this.serviceRequestFailure = true;
           this.errBody = error._body;
           this.errMessage = this.toastmessage.errorMessage(error, 'createService');
+          this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+          this.rateExpression.error = undefined;
           try {
             this.parsedErrBody = JSON.parse(this.errBody);
             if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
@@ -371,6 +397,19 @@ export class CreateServiceComponent implements OnInit {
             }
         }
       );
+  }
+
+  resetEvents(){
+    this.eventExpression.dynamoTable = "";
+    this.eventExpression.streamARN = "";
+    this.eventExpression.S3BucketName = "";
+    this.eventExpression.SQSstreamARN = "";
+    this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+    this.rateExpression.error = undefined;
+    this.rateExpression.type = 'none';
+    this.rateExpression.duration = "5";
+    this.eventExpression.type = 'awsEventsNone';
+    this.runtime = 'nodejs';
   }
 
   // function to navigate from success or error screen to create service screen
@@ -494,6 +533,9 @@ export class CreateServiceComponent implements OnInit {
     if(this.invalidServiceName || this.invalidDomainName){
       return true
     }
+    if(this.invalidEventName){
+      return true
+    }
     return false;
   }
 
@@ -558,8 +600,20 @@ export class CreateServiceComponent implements OnInit {
     document.getElementById('approverName').focus();
   }
 
+  loadMaxLength(){
+    let maxEnvIfLength = 15;
+    this.serviceLimit = env_oss.charachterLimits.serviceName;
+    this.domainLimit = env_oss.charachterLimits.domainName;
+    this.eventMaxLength.stream_name = env_oss.charachterLimits.eventMaxLength.stream_name - maxEnvIfLength;
+    this.eventMaxLength.table_name = env_oss.charachterLimits.eventMaxLength.table_name - maxEnvIfLength;
+    this.eventMaxLength.queue_name = env_oss.charachterLimits.eventMaxLength.queue_name - maxEnvIfLength;
+    this.eventMaxLength.bucket_name = env_oss.charachterLimits.eventMaxLength.bucket_name - maxEnvIfLength;
+    this.servicePatterns = env_oss.servicePatterns;
+  }
+
   ngOnInit() {
     this.getData();
+    this.loadMaxLength();
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
     // cron validation related functions //

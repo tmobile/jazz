@@ -30,11 +30,15 @@
 		"dynamodb",
 		"cloudwatch_event",
 		"swagger_url",
-		"endpoint_url"
+		"endpoint_url",
+    "dynamodb_stream",
+    "iam_role",
+    "sqs",
+    "kinesis_stream"
 	],
 	"ASSET_STATUS": [
 		"active",
-		"deleted"
+		"archived"
 	],
 	"CASE_SENSITIVE_FIELDS": [
 		"environment",
