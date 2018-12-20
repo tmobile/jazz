@@ -1,7 +1,7 @@
 #!groovy?
 import groovy.json.JsonOutput
 
-def updateAclPermission(serviceId, auth_token, aclUrl) {
+def updateServiceACL(serviceId, auth_token, aclUrl) {
 	try {
 		def categoryList = ['code', 'deploy']
 		def policiesList = []
