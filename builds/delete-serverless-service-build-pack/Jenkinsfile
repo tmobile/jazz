@@ -1196,7 +1196,7 @@ def loadBuildModules(buildModuleUrl){
 		lambdaEvents.initialize(configLoader, utilModule)
 		echo "Lambda event module loaded successfully."
 
-    	aclModule = load "acl-module.groovy"
+		aclModule = load "acl-module.groovy"
 		echo "ACL module loaded successfully."
 	}
 }
