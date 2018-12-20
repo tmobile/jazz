@@ -803,8 +803,7 @@ p.learn-more {
 }
 
 .runtime-option {
-  padding: 0 0.5em 0 12px;
-  width: 20%;
+  padding:0 20px 0 0;
 }
 
 .padding-right-0 {
@@ -828,4 +827,7 @@ p.learn-more {
 }
 .aw-events-s3{
   width:32.5rem;
+}
+.runtime-aln{
+  display: flex;
 }
