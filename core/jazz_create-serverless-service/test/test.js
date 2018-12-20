@@ -354,16 +354,8 @@ describe('create-serverless-service', function () {
 
       //trigger the spy wrapping the logger by calling handler() with valid params
       index.handler(event, context, (err, res) => {
-<<<<<<< HEAD
-        sinon.assert.calledTwice(configstub);
-        configstub.restore();
-        reqStub.restore()
-        expect(res.data).to.be.equal("Successfully created your service.");
-
-=======
         reqStub.restore();
         expect(res.data).to.be.equal("Successfully created your service.");
->>>>>>> Worked on review comments.
       });
     });
 
