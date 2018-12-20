@@ -416,7 +416,7 @@ def updateDynamoDbResourceServerless(event_stream_arn){
 
   sh "sed -i -- '/#Start:dynamoDbstreamGetArn/,/#End:dynamoDbstreamGetArn/d' ./policyFile.yml"
   sh "sed -i -- 's|{event_dynamodb_stream_arn}|${event_stream_arn}|g' ./policyFile.yml"
-  sh  "sed -i -- 's/#ResourceDynoDisabled/Resource/g' ./policyFile.yml"
+  sh  "sed -i -- 's/#ResourceDynamoDbDisabled/Resource/g' ./policyFile.yml"
 }
 
 def getDynamoDbStreamDetails(event_source_dynamodb) {

@@ -69,7 +69,7 @@ dynamoDbRole:
               #Start:dynamoDbstreamGetArn
               Resource: { Fn::GetAtt: [ sourceDynamoDbTable, StreamArn ] }
               #End:dynamoDbstreamGetArn
-              #ResourceDynoDisabled: {event_dynamodb_stream_arn}
+              #ResourceDynamoDbDisabled: {event_dynamodb_stream_arn}
             - Effect: "Allow"
               Action:
                 - "logs:CreateLogGroup"
