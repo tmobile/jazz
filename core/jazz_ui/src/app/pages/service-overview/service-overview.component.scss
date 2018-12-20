@@ -1151,6 +1151,7 @@ padding-bottom: 4rem;
 }
 ul{
   display:flex;
+  margin-top: 4vh;
   &:nth-child(1){
     li{
       &:nth-child(1){
@@ -1358,11 +1359,11 @@ padding:4rem 3rem;
   border:none;
 }
 .rate-field.arrow_box:after{
-  left: 14.5%;
+  left: 15%;  
 }
 
 .cron-fields.arrow_box:after {
-  left: 36%;
+  left: calc( 35% - 5px );
 }
 .cron-field {
   margin-left: 0;
