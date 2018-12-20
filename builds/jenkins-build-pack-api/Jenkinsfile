@@ -525,7 +525,7 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
 	// TODO: the below couple of statements will be replaced with regular expression in very near future;
 	def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
 
-	sh "sed -i -- 's|{conf-role}|${config['iamRoleARN']}|g' ./swagger/swagger.json"
+	sh "sed -i -- 's|{conf-role}|${configLoader.AWS.PLATFORMSERVICES_ROLEID}|g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-region}/${configLoader.AWS.REGION}/g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 }
@@ -736,7 +736,7 @@ def createSubscriptionFilters(stackName, region, roleId) {
 	} catch (Exception ex) { }// ignore error if not created yet
 
 	try {
-		sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn \"arn:aws:iam::${roleId}:role/${configLoader.INSTANCE_PREFIX}_basic_execution\""
+		sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID}"
 	} catch (Exception ex) {
 		echo "error occured: " + ex.getMessage()
 	}
