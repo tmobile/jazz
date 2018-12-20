@@ -41,6 +41,7 @@ functions:
     runtime: ${file(deployment-env.yml):providerRuntime}
     memorySize: ${file(deployment-env.yml):providerMemorySize}
     timeout: ${file(deployment-env.yml):providerTimeout}
+    #Start:events
     eventsDisabled:
       #Start:isScheduleEnabled
       - schedule:
@@ -89,6 +90,7 @@ functions:
           bucket: {event_source_s3}
           event: {event_action_s3}
       #End:isS3EventEnabled
+    #End:events
 
     vpcDisabled:
       securityGroupIds:
@@ -103,6 +105,12 @@ functions:
 #Start:resources
 resourcesDisabled:
   Resources:
+    #Start:S3CustomRole
+    customEventRole: ${file(policyFile.yml):s3Role}
+    #End:S3CustomRole
+    #Start:isStreamEnabled
+    customEventRole: ${file(policyFile.yml):kinesisRole}
+    #End:isStreamEnabled
     #Start:isDynamoDbEnabled
     customEventRole: ${file(policyFile.yml):dynamoDbRole}
     #End:isDynamoDbEnabled
