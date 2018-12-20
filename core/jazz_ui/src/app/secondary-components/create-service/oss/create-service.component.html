@@ -98,8 +98,8 @@
                         </section>
                         <section class="col-lg-2 col-md-2 pad-left0 runtime-option">
                             <div class="radio-container">
-                                <input type="radio" name="runtime" id="go" [value]="go1.x" [checked]="runtime == 'go1.x'" (change)="onSelectionChange('go1.x')">
-                                <label for="go1.x"><span class='outer'></span><span class="background"></span>Go 1.x</label>
+                                <input type="radio" name="runtime" id="go" [value]="'go1.x'" [checked]="runtime == 'go1.x'" (change)="onSelectionChange('go1.x')">
+                                <label [for]="'go'"><span class='outer'></span><span class="background"></span>Go 1.x</label>
                             </div>
                         </section>
                     </div>
