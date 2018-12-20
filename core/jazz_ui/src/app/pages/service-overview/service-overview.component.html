@@ -194,9 +194,9 @@
 
       </div>
     </summary>
-    <div *ngIf="!disp_show2" class="warn-msg top-shift">
+    <div *ngIf="disp_show2" class="warn-msg top-shift">
       <div>!</div>
-      <div>Any saved changes will trigger a deployment for the service.</div>
+      <div>Changes are not effective immediately. Your next deployment will use these changes.</div>
     </div>
     <div *ngIf='!disp_show2' class='down-btn-wrap down-btn-wrap-advanced'>
       <btn-jazz-primary text="SAVE" (click)='onAdvancedSaveClick()'></btn-jazz-primary>
@@ -204,7 +204,7 @@
     </div>
     <div class='metadata-body-advanced'>
       <div *ngIf='disp_show2' class='metadata-buttons-wrap second-wrap'>
-        <btn-jazz-secondary text="EDIT" [disablebtn]="true" (click)='onEditClickAdvanced()'></btn-jazz-secondary>
+        <btn-jazz-secondary text="EDIT" (click)='onEditClickAdvanced()'></btn-jazz-secondary>
       </div>
       <div *ngIf='disp_show2' class='metadata-row first-row'>
         <ul>
@@ -244,7 +244,7 @@
                                 <label for="fixedRate"><span></span><span class="background"></span>Fixed Rate of</label>
                             </div>
                         </section>
-                        <section class="   pad-left0">
+                        <section class="pad-left0">
                             <div class="radio-container">
                                 <input type="radio" name="EventSchedule" id="cron" [value]="cron" [checked]="rateExpression.type == 'cron'" (click)="onEventScheduleChange('cron')">
                                 <label for="cron"><span></span><span class="background"></span>Cron Expression</label>
@@ -314,7 +314,7 @@
             </li>
           </ul>
           <ul>
-              <li *ngIf="service.serviceType == 'function'">
+              <li *ngIf="service.serviceType == 'function' && false">
                   <div class='det-label'>AWS events</div>
                   <div *ngIf='!disp_show2' class='det-value'>
                       <div class="input-field-container event-schedule-radio row zero-margin">
