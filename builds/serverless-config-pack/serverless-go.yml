@@ -111,10 +111,32 @@ resourcesDisabled:
     #End:isSqsResourceNotExist
     #End:isSQSEventEnabled
     #Start:isStreamEnabled
-    {event_source_kinesis}:
-      Type: AWS::Kinesis::Stream
-      Properties:
-        Name: {event_source_kinesis}
-        ShardCount: 1
-   #End:isStreamEnabled
+    #Start:isKinesisStreamNotExist
+    sourceKinesisStreams:
+       Type: AWS::Kinesis::Stream
+       Properties:
+         Name: {event_source_kinesis}
+         ShardCount: 1
+    #End:isKinesisStreamNotExist
+    #End:isStreamEnabled
+    #Start:isDynamoDbEnabled
+    #Start:isDynamoDbtableNotExist
+    sourceDynamoDbTable:
+       Type: AWS::DynamoDB::Table
+       Properties:
+         TableName: {event_source_dynamodb}
+         AttributeDefinitions:
+           - AttributeName: ID
+             AttributeType: S
+         KeySchema:
+           - AttributeName: ID
+             KeyType: HASH
+         ProvisionedThroughput:
+           ReadCapacityUnits: 5
+           WriteCapacityUnits: 5
+         StreamSpecification:
+           StreamViewType: NEW_AND_OLD_IMAGES
+    #End:isDynamoDbtableNotExist
+    #End:isDynamoDbEnabled
 #End:resources
+

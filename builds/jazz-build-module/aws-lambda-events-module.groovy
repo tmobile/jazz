@@ -40,7 +40,7 @@ def checkKinesisStreamExists(stream_name) {
 }
 
 def updateKinesisResourceServerless(event_stream_arn){
-  sh "sed -i -- 's/resources/resourcesDisabled/g' ./serverless.yml"
+  sh "sed -i -- '/#Start:isKinesisStreamNotExist/,/#End:isKinesisStreamNotExist/d' ./serverless.yml"
   sh "sed -i -- '/#Start:streamGetArn/,/#End:streamGetArn/d' ./serverless.yml"
   sh "sed -i -- 's/arnDisabled/arn/g' ./serverless.yml"
   sh "sed -i -- 's|{event_stream_arn}|${event_stream_arn}|g' ./serverless.yml"

@@ -125,11 +125,13 @@ resourcesDisabled:
     #End:isSqsResourceNotExist
     #End:isSQSEventEnabled
     #Start:isStreamEnabled
+    #Start:isKinesisStreamNotExist
     sourceKinesisStreams:
        Type: AWS::Kinesis::Stream
        Properties:
          Name: {event_source_kinesis}
          ShardCount: 1
+    #End:isKinesisStreamNotExist
     #End:isStreamEnabled
     #Start:isDynamoDbEnabled
     #Start:isDynamoDbtableNotExist
