@@ -45,7 +45,7 @@ function handler(event, context, cb) {
 
 		exportable.validateInput(event)
 			.then(() => exportable.sendEmail(config, event.body))
-			.then((result) => { return cb(null, responseObj({ result: "success", message: result.messageId }, event.body)); })
+			.then((result) => { return cb(null, responseObj({ result: "success", message: result.messageId })); })
 			.catch(function (err) {
 				logger.error("Failed while sending email: " + JSON.stringify(err));
 
