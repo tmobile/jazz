@@ -456,7 +456,7 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
   }
   if (!isS3EventEnabled) {
     sedCommand = sedCommand + "; /#Start:isS3EventEnabled/,/#End:isS3EventEnabled/d"
-    sedCommand = sedCommand + "; /#Start:S3CustomRole/,/#End:S3CustomRole/d"
+    sedCommand = sedCommand + "; /#Start:isS3EventRoleEnabled/,/#End:isS3EventRoleEnabled/d"
   }
   if (!isSQSEventEnabled) {
     sedCommand = sedCommand + "; /#Start:isSQSEventEnabled/,/#End:isSQSEventEnabled/d"
