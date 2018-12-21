@@ -65,8 +65,8 @@ node  {
 		context_map = [created_by : service_config['created_by']]
 
 		events.sendStartedEvent("VALIDATE_INPUT", 'input validation starts', context_map)
-		if (service_config['type'] == "api" || service_config['type'] == "lambda" || service_config['type'] == "function" || service_config['type'] == "website") {
-			if (service_config['runtime'] == "nodejs" || service_config['runtime'] == "python" || service_config['runtime'] == "java" || service_config['runtime'] == "go" || service_config['runtime'] == "n/a") {
+		if (service_config['type'] == "api" || service_config['type'] == "function" || service_config['type'] == "website") {
+			if (service_config['runtime'] == "nodejs" || service_config['runtime'] == "python" || service_config['runtime'] == "java" || service_config['runtime'] == "go1.x" || service_config['runtime'] == "n/a") {
 
 				switch (service_config['type']) {
 					case "api":
@@ -79,12 +79,11 @@ node  {
 						else if (service_config['runtime'] == "java") {
 							service_template = 'api-template-java'
 						}
-						else if (service_config['runtime'] == "go") {
+						else if (service_config['runtime'] == "go1.x") {
 							service_template = 'api-template-go'
 						}
 						break
 
-					case "lambda":
 					case "function":
 						if (service_config['runtime'] == "nodejs") {
 							service_template = "lambda-template-nodejs"
@@ -95,7 +94,7 @@ node  {
 						else if (service_config['runtime'] == "java") {
 							service_template = 'lambda-template-java'
 						}
-						else if (service_config['runtime'] == "go") {
+						else if (service_config['runtime'] == "go1.x") {
 							service_template = 'lambda-template-go'
 						}
 						break
