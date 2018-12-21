@@ -44,6 +44,10 @@ def updateKinesisResourceServerless(event_stream_arn){
   sh "sed -i -- '/#Start:streamGetArn/,/#End:streamGetArn/d' ./serverless.yml"
   sh "sed -i -- 's/arnDisabled/arn/g' ./serverless.yml"
   sh "sed -i -- 's|{event_stream_arn}|${event_stream_arn}|g' ./serverless.yml"
+
+  sh "sed -i -- '/#Start:kinesisStreamGetArn/,/#End:kinesisStreamGetArn/d' ./policyFile.yml"
+  sh "sed -i -- 's|{event_kinesis_stream_arn}|${event_stream_arn}|g' ./policyFile.yml"
+  sh  "sed -i -- 's/#ResourceKinesisDisabled/Resource/g' ./policyFile.yml"
 }
 
 def getRoleArn(role_name) {
@@ -412,7 +416,7 @@ def updateDynamoDbResourceServerless(event_stream_arn){
 
   sh "sed -i -- '/#Start:dynamoDbstreamGetArn/,/#End:dynamoDbstreamGetArn/d' ./policyFile.yml"
   sh "sed -i -- 's|{event_dynamodb_stream_arn}|${event_stream_arn}|g' ./policyFile.yml"
-  sh  "sed -i -- 's/#ResourceDisabled/Resource/g' ./policyFile.yml"
+  sh  "sed -i -- 's/#ResourceDynamoDbDisabled/Resource/g' ./policyFile.yml"
 }
 
 def getDynamoDbStreamDetails(event_source_dynamodb) {

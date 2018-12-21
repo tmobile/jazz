@@ -132,7 +132,7 @@ node {
 				}
 			} else {
 				error "Invalid project configuration"
-				
+
 			}
 		}
 	}
@@ -454,7 +454,7 @@ def updateSwaggerConfig() {
 			sh "sed -i -- 's/{domain}/${service_config['domain']}/g' swagger/swagger.json"
 
 			def region = "${configLoader.AWS.REGION}"
-      
+
 			def roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
 			// TODO: the below couple of statements will be replaced with regular expression in very near future;
@@ -1081,8 +1081,9 @@ def loadServerlessConfig() {
 
 }
 
-def removeEventResources(){
+def removeEventResources() {
    sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
+   sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
 }
 
 

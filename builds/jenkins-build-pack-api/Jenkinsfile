@@ -230,7 +230,7 @@ node() {
 					echo "Generate deployment env with domain for ${env_key}"
 
 					writeServerlessFile(config, environment_logical_id)
-					
+
 					setLambdaExecutionRole(config['iamRoleARN']);
 
 					echo "serverless deploy......."
@@ -292,14 +292,13 @@ node() {
 						events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
 
 						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
-						send_status_email(config, 'COMPLETED', svc_status)
-
+            send_status_email(config, 'COMPLETED', svc_status)
 					}
 					resetCredentials(cloudApi)
-					
+
 					if (domain && domain == "jazz") {
 						serviceConfigdata.setLogStreamPermission(config)
-	
+
 					}
 				}
 			} catch (ex) {
@@ -561,7 +560,7 @@ def setLambdaExecutionRole(role) {
 	sh "sed -i -- 's#DEFAULT_LAMBDA_EXE_ROLE#${role}#g' serverless.yml"
 }
 
-/** 
+/**
 	Reset credentials
  */
 def resetCredentials(cloudApi) {
@@ -675,8 +674,14 @@ def loadServerlessConfig(config) {
 		//addVpcDetails()
 	}
 
+  removeEventResources()
 
 	echoServerlessFile()
+}
+
+def removeEventResources() {
+   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
+   sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
 }
 
 /**
