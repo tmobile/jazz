@@ -292,6 +292,13 @@
                         "type": "string"
                     }
                 },
+                "deployment_accounts": {
+                  "description": "Array of provider/accountId/region information to deploy the service",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/DeploymentAccount"
+                  }
+                },
                 "events": {
                   "description": "Array of events requested for function consisting of type, source and action",
                   "type": "array",
@@ -312,6 +319,38 @@
                     "description":"Does service require access to internal SLF network and resources"
                 }
             }
+        },
+        "DeploymentAccount": {
+          "type": "object",
+          "description": "Object representing target cloud provider/account/region for the serverless application",
+          "required": [
+            "accountId",
+            "region",
+            "provider"
+          ],
+          "properties": {
+            "accountId": {
+              "type": "string",
+              "description": "Identifier for Account(AWS), Subscription(Azure) or Project(GCP)"
+            },
+            "region": {
+              "type": "string",
+              "description": "Target region where the serverless application should be deployed to"
+            },
+            "provider": {
+              "type": "string",
+              "description": "Target cloud provider where the serverless application should be deployed to",
+              "enum": [
+                "aws",
+                "azure",
+                "gcp"
+              ]
+            },
+            "primary": {
+              "type": "boolean",
+              "description": "Flag that determines if this is the primary deployment account"
+            }
+          }
         }
     }
 }

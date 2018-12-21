@@ -327,17 +327,20 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{default_provider}/${config_loader.AWS.DEFAULTS.PROVIDER}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{default_provider}/${config_loader.AWS.DEFAULTS.PROVIDER}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{default_provider}/${config_loader.AWS.DEFAULTS.PROVIDER}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{conf-region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{conf-region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./config/test-config.json"
 
-            sh "sed -i -- 's/{default_accountId}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{default_accountId}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{default_accountId}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-account}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{conf-account}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{conf-account}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-account}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/test-config.json"
 
-            sh "sed -i -- 's/{default_region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{default_region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{default_region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-provider}/${config_loader.JAZZ.DEFAULTS.PROVIDER}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{conf-provider}/${config_loader.JAZZ.DEFAULTS.PROVIDER}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{conf-provider}/${config_loader.JAZZ.DEFAULTS.PROVIDER}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-provider}/${config_loader.JAZZ.DEFAULTS.PROVIDER}/g' ./config/test-config.json"
         }
 
         if ((service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service")

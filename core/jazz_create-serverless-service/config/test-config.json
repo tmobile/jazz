@@ -3,6 +3,11 @@
     "JOB_TOKEN": "{job_token}",
     "API_TOKEN": "{api_token}",
     "SVC_USER": "{ci_user}",
+    "PRIMARY_DEPLOYMENT_ACCOUNT": {
+      "accountId": "{conf-account}",
+      "region": "{conf-region}",
+      "provider": "{conf-provider}"
+    },
     "EVENT_SOURCE_NAME": {
       "s3": {
           "minLength": 3,
