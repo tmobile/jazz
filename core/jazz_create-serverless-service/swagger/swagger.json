@@ -283,7 +283,8 @@
                     "enum": [
                         "nodejs",
                         "java",
-                        "python"
+                        "python",
+                        "go1.x"
                     ]
                 },
                 "approvers": {
