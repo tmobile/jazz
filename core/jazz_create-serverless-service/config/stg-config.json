@@ -6,6 +6,7 @@
     "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
     "SERVICE_API_RESOURCE": "/stg/jazz/services",
     "TOKEN_URL": "/stg/jazz/login",
+    "ACL_ENDPOINT": "/stg/jazz/acl/policies",
     "SERVICE_USER": "{jazz_admin}",
     "TOKEN_CREDS": "{jazz_admin_creds}",
     "EVENT_SOURCE_NAME": {
