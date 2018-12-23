@@ -22,6 +22,7 @@ import groovy.json.JsonSlurperClassic
 @Field def environmentMetadataLoader
 @Field def sonarModule
 @Field def lambdaEvents
+@Field def aclModule
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -248,6 +249,7 @@ node {
 	if (is_service_deletion) {
 		stage('Cleanup SCM') {
 			cleanup(repo_name)
+			aclModule.deletePolicies(configObj.service_id, auth_token, "${g_base_url}/jazz/acl/policies")
 			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
 		}
 	}
@@ -471,9 +473,8 @@ def updateSwaggerConfig() {
  * @return
  */
 def cleanup(repoName) {
-
 	try {
-		scmModule.deleteProject(repoName)
+    	scmModule.deleteProject(repoName)
 		send_status_email("COMPLETED")
 	} catch (ex) {
 		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
@@ -1191,10 +1192,12 @@ def loadBuildModules(buildModuleUrl){
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
 
-    lambdaEvents = load "aws-lambda-events-module.groovy"
-    lambdaEvents.initialize(configLoader, utilModule)
-    echo "Lambda event module loaded successfully."
+		lambdaEvents = load "aws-lambda-events-module.groovy"
+		lambdaEvents.initialize(configLoader, utilModule)
+		echo "Lambda event module loaded successfully."
 
+		aclModule = load "acl-module.groovy"
+		echo "ACL module loaded successfully."
 	}
 }
 
