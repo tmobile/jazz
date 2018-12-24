@@ -96,15 +96,15 @@ module.exports = function () {
 
     const log = (level, message) => {
       const timestamp = new Date().toISOString();
-      if (level == 'error') {
+      if (level === 'error') {
           console.error(timestamp, 'ERROR \t', config.requestDetails, message);
-      } else if (level == 'warn') {
+      } else if (level === 'warn') {
           console.warn(timestamp, 'WARN  \t', config.requestDetails, message);
-      } else if (level == 'info') {
+      } else if (level === 'info') {
           console.info(timestamp, 'INFO  \t', config.requestDetails, message);
-      } else if (level == 'verbose') {
+      } else if (level === 'verbose') {
           console.info(timestamp, 'VERBOSE  \t', config.requestDetails, message);
-      } else if (level == 'debug') {
+      } else if (level === 'debug') {
           console.debug(timestamp, 'DEBUG  \t', config.requestDetails, message);
       } else {
           console.log(timestamp, level, '\t', config.requestDetails, message);
