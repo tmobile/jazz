@@ -1,1 +1,1 @@
-Sample text.
+Root authorizer for admin access.
