@@ -1,5 +1,0 @@
-{
-  "USER_POOL_ID":"{conf-user-pool-id}",
-  "REGION": "{conf-region}",
-  "JAZZ_ADMIN": "{jazz_admin}"
-}
