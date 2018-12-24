@@ -88,22 +88,20 @@ module.exports = function () {
   const log = (level, message) => {
     const timestamp = new Date().toISOString();
 
-    const logLevelMessageTypes = {
-      'error': `${timestamp} ERROR \t${config.requestDetails} ${message}`,
-      'warn': `${timestamp} WARN \t${config.requestDetails} ${message}`,
-      'info': `${timestamp} INFO \t${config.requestDetails} ${message}`,
-      'verbose': `${timestamp} VERBOSE \t${config.requestDetails} ${message}`,
-      'debug': `${timestamp} DEBUG \t${config.requestDetails} ${message}`,
-      'log': `${timestamp} ${level} \t${config.requestDetails} ${message}`
-    };
-    /*
-        @TODO: format message as per requirement.
-        Will it be just a string / json. Should we except error object also?
-    */
-    try {
-      console[level](logLevelMessageTypes[level]);
-    } catch (ex) {
-      console.log(logLevelMessageTypes.log);
+    if (logLevels[level] >= logLevels[config.curLogLevel]) {
+      if (level == 'error') {
+        console.error(timestamp, 'ERROR \t', config.requestDetails, message);
+      } else if (level == 'warn') {
+        console.warn(timestamp, 'WARN  \t', config.requestDetails, message);
+      } else if (level == 'info') {
+        console.info(timestamp, 'INFO  \t', config.requestDetails, message);
+      } else if (level == 'verbose') {
+        console.info(timestamp, 'VERBOSE  \t', config.requestDetails, message);
+      } else if (level == 'debug') {
+        console.debug(timestamp, 'DEBUG  \t', config.requestDetails, message);
+      } else {
+        console.log(timestamp, level, '\t', config.requestDetails, message);
+      }
     }
 
     return null;
