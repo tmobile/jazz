@@ -2,26 +2,35 @@ import sys
 import os
 import json
 
-from components.errors import CustomErrors  # noqa
+sys.path.insert(0, 'library')
+
+from components.errors import CustomErrors
 from components.response import CustomResponse
 from components.logger import Logger
 from components.config import Config
 
+# import packages
+import requests
 
 def handler(event, context):
     try:
 
-        # initialze logger module
+        # initialize logger module
         logger = Logger(event, context)
 
         # Load config handler.
         config = Config(event)
 
-        logger.error('Runtime errors or unexpected conditions.')
-        logger.warn('Runtime situations that are undesirable, but not wrong')
-        logger.info('Interesting runtime events eg. connection established)')
-        logger.verbose('Generally speaking, most log lines should be verbose.')
-        logger.debug('Detailed information on the flow through the system.')
+        ## ==== Sample code to fetch environment specific configurations ====
+        # myconfig = config.get_config('default')
+        # logger.info ('One of the environment configuration: config_key => ' + myconfig['config_key'])
+        
+        ## ==== Log message samples ====
+        # logger.error('Runtime errors or unexpected conditions.')
+        # logger.warn('Runtime situations that are undesirable, but not wrong')
+        # logger.info('Interesting runtime events eg. connection established)')
+        # logger.verbose('Generally speaking, most log lines should be verbose.')
+        # logger.debug('Detailed information on the flow through the system.')
 
         # This is the happy path
         data = {
