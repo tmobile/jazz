@@ -1,1 +1,1 @@
-Root authorizer for admin access.
+Cognito authorizer for admin access.
