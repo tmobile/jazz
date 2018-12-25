@@ -85,16 +85,6 @@ export class AdvancedFiltersComponent implements OnInit {
         this.periodList=event;
         this.periodSelected=this.periodList[0];
     }
-    setSlider(event){
-        this.sliderMax=event;
-        var timePeriodList = [];
-        for (var i = this.sliderFrom; i <= this.sliderMax; i ++){
-            timePeriodList.push(i);
-        }
-        this.timePeriodList = timePeriodList;
-        this.sliderFrom=1;
-        this.sliderPercentFrom=0;
-    }
 
     onTimePeriodSelected(period){
       this.selectedTimePeriod = period;
