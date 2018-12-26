@@ -55,6 +55,38 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
         }
 
+        if (service_name.trim() == "jazz_acl") {
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.ACL.DATABASE.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+                sh "sed -i -- 's/{casbin_user}/${UNAME}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{casbin_user}/${UNAME}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{casbin_user}/${UNAME}/g' ./config/prod-config.json"
+
+                sh "sed -i -- 's/{casbin_password}/${PWD}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{casbin_password}/${PWD}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{casbin_password}/${PWD}/g' ./config/prod-config.json"
+            }
+
+            sh "sed -i -- 's/{casbin_host}/${config_loader.ACL.ENDPOINT}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{casbin_host}/${config_loader.ACL.ENDPOINT}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{casbin_host}/${config_loader.ACL.ENDPOINT}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{casbin_port}/${config_loader.ACL.PORT}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{casbin_port}/${config_loader.ACL.PORT}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{casbin_port}/${config_loader.ACL.PORT}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{casbin_database}/${config_loader.ACL.NAME}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{casbin_database}/${config_loader.ACL.NAME}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{casbin_database}/${config_loader.ACL.NAME}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{casbin_type}/${config_loader.ACL.TYPE}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{casbin_type}/${config_loader.ACL.TYPE}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{casbin_type}/${config_loader.ACL.TYPE}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{casbin_timeout}/${config_loader.ACL.TIMEOUT}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{casbin_timeout}/${config_loader.ACL.TIMEOUT}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{casbin_timeout}/${config_loader.ACL.TIMEOUT}/g' ./config/prod-config.json"
+        }
+
         if (service_name.trim() == "jazz_metrics") {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
