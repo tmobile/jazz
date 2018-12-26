@@ -931,11 +931,10 @@ def getEventsArn(config, env) {
 
 def getLambdaARN(stackName, credsId) {
   def ARN = "";
-
-	try {
-		def cloudformation_resources = "";
-		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId}")
-
+  
+  try {
+    def cloudformation_resources = "";
+    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId}")
     def parsedObject = parseJson(cloudformation_resources);
     def outputs = parsedObject.Stacks[0].Outputs;
 
