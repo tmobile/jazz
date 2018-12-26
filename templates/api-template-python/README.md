@@ -1,4 +1,4 @@
-## This is a python api template
+## Python API template
 
 * requirements.txt contains python packages that your function needs during its execution.
 * requirements-dev.txt contains development dependencies such as pytest which are only required during local development and for running unit tests.

@@ -1,4 +1,4 @@
-## This is a python function template
+## Python Function template
 
 * requirements.txt contains python packages that your function needs during its execution.
 * requirements-dev.txt contains development dependencies such as pytest which are only required during local development and for running unit tests.
