@@ -308,7 +308,6 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/local-config.json"
         }
 
-
         if (service_name.trim() == "jazz_is-service-available") {
             sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
