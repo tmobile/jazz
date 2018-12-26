@@ -66,25 +66,25 @@ def loadServiceConfigurationData() {
                 sh "sed -i -- 's/{casbin_password}/${PWD}/g' ./config/prod-config.json"
             }
 
-            sh "sed -i -- 's/{casbin_host}/${config_loader.ACL.ENDPOINT}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{casbin_host}/${config_loader.ACL.ENDPOINT}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{casbin_host}/${config_loader.ACL.ENDPOINT}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{casbin_host}/${config_loader.ACL.DATABASE.ENDPOINT}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{casbin_host}/${config_loader.ACL.DATABASE.ENDPOINT}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{casbin_host}/${config_loader.ACL.DATABASE.ENDPOINT}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{casbin_port}/${config_loader.ACL.PORT}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{casbin_port}/${config_loader.ACL.PORT}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{casbin_port}/${config_loader.ACL.PORT}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{casbin_port}/${config_loader.ACL.DATABASE.PORT}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{casbin_port}/${config_loader.ACL.DATABASE.PORT}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{casbin_port}/${config_loader.ACL.DATABASE.PORT}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{casbin_database}/${config_loader.ACL.NAME}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{casbin_database}/${config_loader.ACL.NAME}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{casbin_database}/${config_loader.ACL.NAME}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{casbin_database}/${config_loader.ACL.DATABASE.NAME}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{casbin_database}/${config_loader.ACL.DATABASE.NAME}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{casbin_database}/${config_loader.ACL.DATABASE.NAME}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{casbin_type}/${config_loader.ACL.TYPE}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{casbin_type}/${config_loader.ACL.TYPE}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{casbin_type}/${config_loader.ACL.TYPE}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{casbin_type}/${config_loader.ACL.DATABASE.TYPE}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{casbin_type}/${config_loader.ACL.DATABASE.TYPE}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{casbin_type}/${config_loader.ACL.DATABASE.TYPE}/g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{casbin_timeout}/${config_loader.ACL.TIMEOUT}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{casbin_timeout}/${config_loader.ACL.TIMEOUT}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{casbin_timeout}/${config_loader.ACL.TIMEOUT}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{casbin_timeout}/${config_loader.ACL.DATABASE.TIMEOUT}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{casbin_timeout}/${config_loader.ACL.DATABASE.TIMEOUT}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{casbin_timeout}/${config_loader.ACL.DATABASE.TIMEOUT}/g' ./config/prod-config.json"
         }
 
         if (service_name.trim() == "jazz_metrics") {
