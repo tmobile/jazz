@@ -17,7 +17,7 @@ Jazz, a serverless platform, accelerates adoption of serverless technology withi
 * **Deployment Targets** - Currently Jazz can deploy to AWS managed services like (Lambda, API Gateway, S3, CloudFront etc.). We plan to support related services in Azure and GCP in the near future.
 * **Deployment & CI/CD** - Jazz comes with CI/CD by default. It creates a code repository per service and adds a web hook to trigger build/deployment workflows whenever it sees a commit. We leverage [Jenkins](https://github.com/jenkinsci/jenkins) open source for build process and [Serverless Framework](http://www.serverless.com) for deploying these services.
 * **Other Features** - Other useful features/integrations like SCM (Gitlab/Bitbucket), monitoring (CloudWatch), logging (ElasticSearch), authentication (Cognito), code quality metrics (SonarQube) comes with Jazz by default.
-* **Extensions** - Jazz is designed to integrate and work well with other systems that your enterprise needs. You can check out our optional extensions like Slack, Splunk etc. Centralized configuration helps Jazz admins to easily enable/disable these features as per your needs.
+* **Extensions** - Jazz is designed to integrate and work well with other systems that your enterprise needs. You can check out our optional extensions like Slack, Splunk etc. Centralized configuration helps Jazz admins to easily enable/disable these features as per their needs.
 
 Jazz is [open-sourced](http://opensource.t-mobile.com) and under active development by T-Mobile's Cloud Center of Excellence.
 
