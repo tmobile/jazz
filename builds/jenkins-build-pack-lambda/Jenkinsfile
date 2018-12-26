@@ -129,15 +129,14 @@ node() {
   def internalAccess = config['require_internal_access']
   domain = config['domain']
 
-  // @TODO: the below statement will be replaced with regular expression in very near future;
   def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
 
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
   if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled || isSQSEventEnabled){
-		isEventSchdld = true
-	}
+    isEventSchdld = true
+  }
 
   def requestId = utilModule.generateRequestId()
   if (requestId != null) {
@@ -224,10 +223,10 @@ node() {
         try {
           // initialize aws credentials
           def randomString = utilModule.generateRequestId();
-          def cloudApi = "jazz-${randomString}";
-          sh "aws configure set profile.${cloudApi}.region ${configLoader.AWS.REGION}"
-          sh "aws configure set profile.${cloudApi}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-          sh "aws configure set profile.${cloudApi}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+          def credsId = "jazz-${randomString}";
+          sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+          sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+          sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
           loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
 
@@ -281,7 +280,7 @@ node() {
             }
           }
 
-          def function_arn = getLambdaARN(stackName, cloudApi);
+          def function_arn = getLambdaARN(stackName, credsId);
           lambdaARN = function_arn.split(":(?!.*:.*)")[0]
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
@@ -299,7 +298,7 @@ node() {
           }
 
           // reset Credentials
-          resetCredentials(cloudApi)
+          resetCredentials(credsId)
           if (domain != "jazz") {
             createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
           }
@@ -474,8 +473,8 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
 }
 
 def removeEventResources(){
-   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
-   sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
+  sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
+  sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
 }
 
 
@@ -525,8 +524,8 @@ def LoadConfiguration() {
 /**	Build project based on runtime
  */
 def buildLambda(String runtime, String repo_name) {
-	echo "installing dependencies for $runtime"
-	if (runtime.indexOf("nodejs") > -1) {
+  echo "installing dependencies for $runtime"
+  if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
 	} else if (runtime.indexOf("java") > -1) {
 		sh "mvn package"
@@ -543,24 +542,24 @@ def buildLambda(String runtime, String repo_name) {
 		. venv/bin/activate
 		pip install pytest
 		"""
-	} else if (runtime.indexOf("go") > -1 ){
-    //Installing dependencies using dep ensure
-    //golang build scripts
+	} else if (runtime.indexOf("go") > -1 ) {
+    // Installing dependencies using dep ensure
+    // golang build scripts
    	withEnv(["GOPATH=${env.WORKSPACE}"]) {
       sh "mkdir -p $GOPATH/src"
-      sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
+      sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + " $GOPATH/src"
       sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
-      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/"+ repo_name+"/main.go"
+      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/" + repo_name + "/main.go"
     }
   }
 }
 
 /** Reset credentials
  */
-def resetCredentials(cloudApi) {
+def resetCredentials(credsId) {
   echo "resetting AWS credentials"
-	sh "aws configure set profile.${cloudApi}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-  sh "aws configure set profile.${cloudApi}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+  sh "aws configure set profile.${credsId}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  sh "aws configure set profile.${credsId}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
 }
 
 /** Validate basic configurations in the deployment yaml file and error if any keys are
@@ -579,7 +578,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "java8", "go1.x"] //@TODO. Add more runtime supports.
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "java8", "go1.x"]
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {
@@ -670,8 +669,8 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
  	}
 
   if(!isEventSchdld) {
-		removeEventResources()
-	}
+    removeEventResources()
+  }
 
   echoServerlessFile()
 }
@@ -699,10 +698,11 @@ def echoServiceInfo(String env) {
     echo "==============================================================================================="
     echo svc_response
     echo "==============================================================================================="
-
+    
     return svc_response
+
   } catch (Exception ex) {
-    echo " Error while getting service info : " + ex.getMessage()
+    echo "Error while getting service info: " + ex.getMessage()
   }
 }
 
@@ -764,10 +764,10 @@ def writeServerlessFile(config, env) {
 
   if (config['event_source_s3']) {
     def event_source_s3 =  lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], env, "-")
-		def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
-		sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
-		sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
-		sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
+    def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
+    sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
+    sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
+    sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
   }
 
@@ -929,12 +929,12 @@ def getEventsArn(config, env) {
   }
 }
 
-def getLambdaARN(String stackName, cloudApi) {
-	def ARN = "";
+def getLambdaARN(stackName, credsId) {
+  def ARN = "";
 
 	try {
 		def cloudformation_resources = "";
-		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${cloudApi}")
+		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId}")
 
     def parsedObject = parseJson(cloudformation_resources);
     def outputs = parsedObject.Stacks[0].Outputs;
@@ -954,18 +954,15 @@ def getLambdaARN(String stackName, cloudApi) {
 /** Run validation based on runtime
  */
 def runValidation(String runtime) {
+  echo "running validations for $runtime"
   if (runtime.indexOf("nodejs") > -1) {
-    echo "running validations for $runtime"
     sh "jshint *.js"
   } else if (runtime.indexOf("java") > -1) {
-    echo "running validations for $runtime"
     sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
   } else if (runtime.indexOf("python") > -1) {
     // placeholder for adding runtime specific validations
-    echo "running validations for $runtime"
   } else if (runtime.indexOf("go") > -1) {
     // placeholder for adding runtime specific validations
-    echo "running validations for $runtime"
   }
 }
 
