@@ -19,7 +19,6 @@ import {DaterangePickerComponent} from '../primary-components/daterange-picker/d
 import {FiltersComponent} from '../secondary-components/filters/filters.component';
 import {FilterTagsComponent} from '../secondary-components/filter-tags/filter-tags.component';
 import {FilterTagsServicesComponent} from '../secondary-components/filter-tags-services/filter-tags-services.component';
-//import {AdvancedFiltersComponent} from './../secondary-components/advanced-filters/advanced-filters.component';
 import {TabsComponent} from '../primary-components/tabs/tabs.component';
 import {JenkinsStatusComponent} from '../pages/jenkins-status/jenkins-status.component';
 import {FocusDirective} from '../secondary-components/create-service/focus.directive';

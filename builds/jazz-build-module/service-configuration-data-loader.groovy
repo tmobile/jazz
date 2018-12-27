@@ -44,7 +44,6 @@ def loadServiceConfigurationData() {
         if (fileExists('swagger/swagger.json')) {
             //Swagger SEDs
             echo "Updating the Swagger SEDs"
-            sh "sed -i -- 's/{conf-role}/${role_arn}/g' ./swagger/swagger.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
             sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
         }
@@ -59,6 +58,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/global-config.json"
 
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
@@ -77,6 +77,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
         }
 
         if (service_name.trim() == "jazz_codeq") {
@@ -195,6 +196,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./event.json"
 
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
@@ -203,6 +205,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+
         }
 
         if (service_name.trim() == "jazz_deployments-event-handler") {
@@ -298,6 +301,11 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+        }
+
+        if (service_name.trim() == "jazz_cognito-authorizer") {
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/local-config.json"
         }
 
         if (service_name.trim() == "jazz_is-service-available") {
@@ -331,6 +339,8 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./event.json"
 
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
                 sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/dev-config.json"
