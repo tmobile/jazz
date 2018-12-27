@@ -66,35 +66,34 @@ node  {
 
 		events.sendStartedEvent("VALIDATE_INPUT", 'input validation starts', context_map)
 		if (service_config['type'] == "api" || service_config['type'] == "function" || service_config['type'] == "website") {
-			if (service_config['runtime'] == "nodejs" || service_config['runtime'] == "python" || service_config['runtime'] == "java" || service_config['runtime'] == "go1.x" || service_config['runtime'] == "n/a") {
-
+			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'] == "n/a") {
 				switch (service_config['type']) {
 					case "api":
-						if (service_config['runtime'] == "nodejs") {
+						if (service_config['runtime'].startsWith("nodejs")) {
 							service_template = "api-template-nodejs"
 						}
-						else if (service_config['runtime'] == "python") {
-							service_template = 'api-template-python'
+						else if (service_config['runtime'].startsWith("python")){
+							service_template = 'api-template-python'	
 						}
-						else if (service_config['runtime'] == "java") {
+						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'api-template-java'
 						}
-						else if (service_config['runtime'] == "go1.x") {
+						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'api-template-go'
 						}
 						break
 
 					case "function":
-						if (service_config['runtime'] == "nodejs") {
+						if (service_config['runtime'].startsWith("nodejs")) {
 							service_template = "lambda-template-nodejs"
 						}
-						else if (service_config['runtime'] == "python") {
-							service_template = 'lambda-template-python'
+						else if (service_config['runtime'].startsWith("python")){
+							service_template = 'lambda-template-python'	
 						}
-						else if (service_config['runtime'] == "java") {
+						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'lambda-template-java'
 						}
-						else if (service_config['runtime'] == "go1.x") {
+						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'lambda-template-go'
 						}
 						break
@@ -102,15 +101,12 @@ node  {
 					case "website":
 						service_template = 'static-website-template'
 						break
-
 				}
-
 			} else {
 				send_status_email("FAILED")
 				events.sendFailureEvent('VALIDATE_INPUT', "Invalid runtime: ${service_config['runtime']}", context_map)
 				error "Invalid runtime: ${service_config['runtime']}"
 			}
-
 		} else {
 			send_status_email("FAILED")
 			events.sendFailureEvent('VALIDATE_INPUT', "Invalid service type", context_map)

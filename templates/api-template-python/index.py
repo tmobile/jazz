@@ -14,7 +14,6 @@ import requests
 
 def handler(event, context):
     try:
-
         # initialize logger module
         logger = Logger(event, context)
 
