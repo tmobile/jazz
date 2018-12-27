@@ -17,10 +17,10 @@ import (
 
 var loglevels = map[string]int{
 	"Error": 4,
-    "Warn": 3,
-    "Info": 2,
-    "Trace": 1,
-    "Debug": 0,
+  "Warn": 3,
+  "Info": 2,
+  "Trace": 1,
+  "Debug": 0,
 }
 
 var config = map[string]string {
@@ -124,5 +124,4 @@ func logWithFormater(logLevel string , message string){
 	// Set the Ouptut Formatter
 	log.SetOutput(logger)
 	log.Println(message)
-	//logger.Println(message)
 }

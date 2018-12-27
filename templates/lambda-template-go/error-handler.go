@@ -12,11 +12,13 @@ package main
 type InputValidationError struct {
     message string
 }
+
 func NewInputValidationError(message string) *InputValidationError {
     return &InputValidationError{
         message: message,
     }
 }
+
 func (e *InputValidationError) Error() string {
     return e.message
 }
@@ -25,11 +27,13 @@ func (e *InputValidationError) Error() string {
 type ForbiddenError struct {
     message string
 }
+
 func NewForbiddenError(message string) *ForbiddenError {
     return &ForbiddenError{
         message: message,
     }
 }
+
 func (e *ForbiddenError) Error() string {
     return e.message
 }
@@ -44,6 +48,7 @@ func NewUnauthorizedError(message string) *UnauthorizedError {
         message: message,
     }
 }
+
 func (e *UnauthorizedError) Error() string {
     return e.message
 }
@@ -51,11 +56,13 @@ func (e *UnauthorizedError) Error() string {
 type NotFoundError struct {
 	message string
 }
+
 func NewNotFoundError(message string) *NotFoundError {
     return &NotFoundError{
         message: message,
     }
 }
+
 func (e *NotFoundError) Error() string {
     return e.message
 }
@@ -64,11 +71,13 @@ func (e *NotFoundError) Error() string {
 type InternalServerError struct {
 	message string
 }
+
 func NewInternalServerError(message string) *InternalServerError {
     return &InternalServerError{
         message: message,
     }
 }
+
 func (e *InternalServerError) Error() string {
     return e.message
 }

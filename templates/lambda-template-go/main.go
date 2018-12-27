@@ -65,5 +65,4 @@ func main() {
 	//Start function to trigger Lambda
 	lambda.Start(Handler)
 	
-	
 }

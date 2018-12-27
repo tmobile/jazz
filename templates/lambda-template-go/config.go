@@ -39,9 +39,9 @@ func (c *Config) LoadConfiguration(ctx context.Context, event map[string]interfa
 		fnName := string(FunctionName [strings.LastIndex(FunctionName , "-") + 1 :len(FunctionName )])
 		if (strings.HasPrefix(fnName, "dev")){
 			stage = "dev"
-		}else if (strings.HasPrefix(fnName, "stg")){
+		} else if (strings.HasPrefix(fnName, "stg")){
 			stage = "stg"
-		}else if (strings.HasPrefix(fnName, "prod")){
+		} else if (strings.HasPrefix(fnName, "prod")){
 			stage = "prod"
 		}
 	}
@@ -52,7 +52,7 @@ func (c *Config) LoadConfiguration(ctx context.Context, event map[string]interfa
 		if err := viper.ReadInConfig(); err != nil {
     		log.Fatalf("Error reading config file, %s", err)
 		}
-	}else{
+	} else {
 		log.Fatalf("Error! No stage Defined")
 	}
 	

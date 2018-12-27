@@ -22,7 +22,7 @@ func TestHandler(t *testing.T) {
 		args    args
 		want    Response
 		wantErr bool
-	}{
+	} {
 		// TODO: Add test cases.
 	}
 	for _, tt := range tests {
