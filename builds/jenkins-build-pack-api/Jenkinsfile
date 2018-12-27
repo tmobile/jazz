@@ -271,7 +271,7 @@ node() {
 							endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
 						}
 
-						def apiArns = getAPIGatewayResourceARNs(aws_api_id, environment_logical_id)
+						def apiArns = getAPIGatewayResourceARNs(aws_api_id, current_environment)
 						if(apiArns) {
 							for (arn in apiArns) {
 								events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
