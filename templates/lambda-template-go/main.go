@@ -45,7 +45,7 @@ func Handler(ctx context.Context, event map[string]interface{}) (Response, error
 		"foo": "foo-value",
 		"bar": "bar-value",
 		"configKeys": configValue,
-	  };
+	};
 
 	if len(event) == 0{
 		// If payload is empty send the Inputvalidation Error resposne

@@ -24,7 +24,7 @@ type Config struct {
 
 // Load Configuration file 
 func (c *Config) LoadConfiguration(ctx context.Context, event map[string]interface{}) {
-    c.ctx = ctx
+  c.ctx = ctx
 	c.event = event
 
 	var stage string
@@ -50,7 +50,7 @@ func (c *Config) LoadConfiguration(ctx context.Context, event map[string]interfa
 		viper.SetConfigFile("./configs/"+stage+"-config.json")
 		// Searches for config file in given paths and read it
 		if err := viper.ReadInConfig(); err != nil {
-    		log.Fatalf("Error reading config file, %s", err)
+    	log.Fatalf("Error reading config file, %s", err)
 		}
 	} else {
 		log.Fatalf("Error! No stage Defined")

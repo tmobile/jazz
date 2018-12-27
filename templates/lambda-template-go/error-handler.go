@@ -14,13 +14,13 @@ type InputValidationError struct {
 }
 
 func NewInputValidationError(message string) *InputValidationError {
-    return &InputValidationError{
-        message: message,
-    }
+  return &InputValidationError{
+    message: message,
+  }
 }
 
 func (e *InputValidationError) Error() string {
-    return e.message
+  return e.message
 }
 
 // Handle ForbiddenError 
@@ -29,13 +29,13 @@ type ForbiddenError struct {
 }
 
 func NewForbiddenError(message string) *ForbiddenError {
-    return &ForbiddenError{
-        message: message,
-    }
+  return &ForbiddenError{
+    message: message,
+  }
 }
 
 func (e *ForbiddenError) Error() string {
-    return e.message
+  return e.message
 }
 
 // Unauthorized Error
@@ -44,13 +44,13 @@ type UnauthorizedError struct {
 }
 
 func NewUnauthorizedError(message string) *UnauthorizedError {
-    return &UnauthorizedError{
-        message: message,
-    }
+  return &UnauthorizedError{
+    message: message,
+  }
 }
 
 func (e *UnauthorizedError) Error() string {
-    return e.message
+  return e.message
 }
 // NotFound Error
 type NotFoundError struct {
@@ -58,13 +58,13 @@ type NotFoundError struct {
 }
 
 func NewNotFoundError(message string) *NotFoundError {
-    return &NotFoundError{
-        message: message,
-    }
+  return &NotFoundError{
+    message: message,
+ }
 }
 
 func (e *NotFoundError) Error() string {
-    return e.message
+  return e.message
 }
 
 // InternalServerError Error
@@ -74,7 +74,7 @@ type InternalServerError struct {
 
 func NewInternalServerError(message string) *InternalServerError {
     return &InternalServerError{
-        message: message,
+      message: message,
     }
 }
 
