@@ -278,6 +278,7 @@ node  {
 		}
 	}
 }
+
 /**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
@@ -287,15 +288,12 @@ def getAuthToken() {
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 
 		def loginUrl = g_base_url + "/jazz/login"
-		def login_json = []
-
-		login_json = [
+		def login_json = [
 			'username': UNAME,
 			'password': PWD
 		]
-		def tokenJson_token = null
 		def payload = JsonOutput.toJson(login_json)
-
+		
 		try {
 			def token = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
@@ -303,12 +301,10 @@ def getAuthToken() {
 				-d \'${payload}\'", returnStdout:true).trim()
 
 			def tokenJson = jsonParse(token)
-			tokenJson_token = tokenJson.data.token
-
-			return tokenJson_token
+			return tokenJson.data.token
 		}
 		catch (e) {
-			error "error occured: " + e.getMessage()
+			error "Failed while getting auth token for user: $UNAME, error:  " + e.getMessage()
 		}
 	}
 
@@ -391,7 +387,7 @@ def send_status_email (build_status) {
    	try {
 		def sendMail = sh(script: "curl -X POST \
 						${g_base_url}/jazz/email \
-						-k -v -H \"Authorization: $g_login_token\" \
+						-k -v -H \"Authorization: $auth_token\" \
 						-H \"Content-Type: application/json\" \
 						-d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJson(sendMail)
