@@ -11,7 +11,7 @@
     "https"
   ],
   "paths": {
-    "/{service_name}/services": {
+    "/{service_name}/services/{serviceId}": {
       "options": {
         "description": "CORS Support",
         "consumes": [
@@ -102,6 +102,13 @@
           "name": "userId",
           "in": "query",
           "description": "user",
+          "required": true,
+          "type": "string"
+        },
+        {
+          "name": "serviceId",
+          "in": "path",
+          "description": "service id",
           "required": true,
           "type": "string"
         }],

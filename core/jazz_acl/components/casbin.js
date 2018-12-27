@@ -84,15 +84,14 @@ async function getFilteredPolicy(index, values, config) {
 /* Check permissions for a user */
 async function checkPermissions(userId, serviceId, category, permission, config) {
   let result = {};
-
+  let conn;
   try {
-    const conn = await dbConnection(config);
+    conn = await dbConnection(config);
     const enforcer = await Enforcer.newEnforcer('./config/rbac_model.conf', conn);
-    result.authorized = enforcer.enforce(userId, `${serviceId}_${category}`, permission);
+    enforcer.enforce(userId, `${serviceId}_${category}`, permission);
   } catch(err) {
     logger.error(err.message);
     result = {
-      authorized: false,
       error: err.message
     };
   } finally {
@@ -139,7 +138,7 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
         if (action === 'add' && removeResult.length === totalPolicies) {
           let savedPolicies = policies.map(async policy => await enforcer.addPolicy(policy.userId, `${serviceId}_${policy.category}`, policy.permission));
           savedPolicies = await Promise.all(savedPolicies);
-          
+
           if (savedPolicies.length === policies.length) {
             await enforcer.savePolicy();
           } else if (!savedPolicies.length) { //rollback deletion
@@ -168,6 +167,8 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
 
 /* Get the permissions for a user */
 async function getPolicyForServiceUser(serviceId, userId, config) {
+  const objects = [`${serviceId}_manage`, `${serviceId}_code`, `${serviceId}_deploy`];
+
   const result = await getFilteredPolicy(1, serviceId, config);
 
   return result;
