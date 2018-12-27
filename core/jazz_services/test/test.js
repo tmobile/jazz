@@ -68,7 +68,7 @@ describe('platform_services', function() {
         "domain" : "k!ngd0m",
         "region" : "mewni",
         "type" : "api",
-        "runtime" : "nodejs",
+        "runtime" : "nodejs8.10",
         "created_by" : "g10$saryck",
         "status" : "active"
       },
