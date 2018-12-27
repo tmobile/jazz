@@ -71,29 +71,35 @@
                     <p class="step-title">Choose your runtime<span>*</span></p>
                 </div>
                 <div class="col-lg-8 col-md-8">
-                    <div class="input-field-container">
-                        <section class="col-lg-3 col-md-3 pad-left0">
+                    <div class="col-lg-12  pad-left0 input-field-container runtime-aln">
+                        <section class="runtime-option">
                             <div class="radio-container">
                                 <input type="radio" class='test-focus' name="runtime" id="nodejs" [value]="nodejs" [checked]="runtime == 'nodejs'" (click)="onSelectionChange('nodejs')">
-                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (6.10)</label>
+                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (8.10)</label>
                             </div>
                         </section>
-                        <section class="col-lg-3 col-md-3 pad-left0">
+                        <section class="runtime-option">
                             <div class="radio-container">
                                 <input type="radio" name="runtime" id="java" [value]="java" [checked]="runtime == 'java'" (click)="onSelectionChange('java')">
                                 <label for="java"><span class='outer'></span><span class="background"></span>Java 8</label>
                             </div>
                         </section>
-                        <section class="col-lg-3 col-md-3 pad-left0">
+                        <section class="runtime-option">
                             <div class="radio-container">
                                 <input type="radio" name="runtime" id="python" [value]="python" [checked]="runtime == 'python'" (change)="onSelectionChange('python')">
                                 <label for="python"><span class='outer'></span><span class="background"></span>Python (2.7)</label>
                             </div>
                         </section>
-                        <section class="col-lg-3 col-md-3 pad-left0">
+                        <section class="runtime-option">
                             <div class="radio-container" class="disable-event">
                                 <input type="radio" disabled='disabled' name="runtime" id="cshell" [value]="cshell" [checked]="runtime == 'cshell'" (click)="onSelectionChange('cshell')">
                                 <label for="cshell"><span class='outer'></span><span class="background"></span>C#</label>
+                            </div>
+                        </section>
+                        <section class="runtime-option">
+                            <div class="radio-container" class="disable-event">
+                                <input type="radio" disabled='disabled' name="runtime" id="go1.x" [value]="'go1.x'" [checked]="runtime == 'go1.x'" (change)="onSelectionChange('go1.x')">
+                                <label [for]="'go1.x'"><span class='outer'></span><span class="background"></span>Go 1.x</label>
                             </div>
                         </section>
                     </div>
