@@ -8,20 +8,24 @@
     "name": "Jazz"
   },
   "scripts": {
-    "test": "mocha",
+    "test": "nyc --reporter=html --reporter=text mocha",
     "jshint": "jshint --exclude ./node_modules ."
   },
-  "dependencies": {
+  "dependencies": {    
     "lodash": "*",
     "request": "*",
     "request-promise-native": "^1.0.5"
-    
   },
   "devDependencies": {
-    "mocha": "^v3.0.0",
+    "amazon-cognito-identity-js": "^3.0.2",
+    "aws-lambda-mock-context": "^3.2.1",
+    "aws-sdk": "*",
+    "aws-sdk-mock": "^4.2.0",
     "chai": "^3.5.0",
     "lambda-local": "^1.4.2",
-    "aws-sdk": "*"
+    "mocha": "^v3.0.0",
+    "nyc": "^13.0.1",
+    "sinon": "^5.0.7"
   },
   "engines": {
     "node": "6.10"

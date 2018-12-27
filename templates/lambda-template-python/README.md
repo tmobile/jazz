@@ -1,17 +1,19 @@
-## This is a python function template
+## Python Function template
 
-* requirements.txt contains python packages that your function needs
-* requirements-dev.txt contains development dependencies such as pytest which are only required locally for running tests, etc
+* requirements.txt contains python packages that your function needs during its execution.
+* requirements-dev.txt contains development dependencies such as pytest which are only required during local development and for running unit tests.
 
 ### To run unit tests locally, follow these steps -
 
-#### Python2.7
+#### Python 2.7
+
 ```python
+
     # install requirements in library folder
     mkdir library
     pip install -r requirements.txt -t library
 
-    # create __init__.py in library, to make Python treat the 'library' as a package
+    # create __init__.py in library
     touch library/__init__.py
 
     # create & activate virtual environment
@@ -25,7 +27,33 @@
     # run tests
     pytest test
 ```
-#### Python3.6
+
+#### Python 2.7 (Windows)
+
+```python
+
+    # install requirements in library folder
+    mkdir library
+    pip install -r requirements.txt -t library
+
+    # create __init__.py in library
+    echo. 2>library/__init__.py
+
+    # create & activate virtual environment
+    pip install virtualenv
+    virtualenv venv
+    venv\Scripts\activate.bat
+
+    # install dev dependencies (includes pytest by default)
+    pip install -r requirements-dev.txt
+
+    # run tests
+    pytest test
+
+```
+
+#### Python 3.6
+
 ```python
     # install requirements in library folder
     mkdir library
@@ -45,19 +73,4 @@
     pytest test
 ```
 
-### [Windows] To run unit tests, follow these steps -
 
-#### Python2.7
-
-```python
-    mkdir library
-    pip install -r requirements.txt -t library
-    echo. 2>library/__init__.py
-
-    pip install virtualenv
-    virtualenv venv
-    venv\Scripts\activate.bat
-
-    pip install pytest
-    pytest test
-```
