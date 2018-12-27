@@ -396,7 +396,7 @@ def send_status_email (build_status) {
    	try {
 		def sendMail = sh(script: "curl -X POST \
 						${g_base_url}/jazz/email \
-						-k -v -H \"Authorization: $g_login_token\" \
+						-k -v -H \"Authorization: $auth_token\" \
 						-H \"Content-Type: application/json\" \
 						-d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJson(sendMail)
