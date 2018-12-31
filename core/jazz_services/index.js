@@ -92,6 +92,7 @@ module.exports.handler = (event, context, cb) => {
         // 1: GET service by id (/services/{service_id})
         if (event.method === 'GET' && service_id) {
             logger.info('GET service by ID : ' + service_id);
+            let servicePermission = event.context[0].permissions;
 
             async.series({
                 // Get service by SERVICE_ID
@@ -107,8 +108,9 @@ module.exports.handler = (event, context, cb) => {
                 }
                 if (data.getServiceByServiceId) {
                     var service_obj = data.getServiceByServiceId;
+                    service_obj.data["permissions"] = servicePermission;
                     logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
-                    return handleResponse(error, data.getServiceByServiceId.data, event.path);
+                    return handleResponse(error, service_obj.data, event.path);
                 } else {
                     return handleResponse(error, data, event.path);
                 }
