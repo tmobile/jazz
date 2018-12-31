@@ -77,7 +77,14 @@ describe('platform_services', function() {
         "email" : "gonnaGetALittle@Wild.com",
 		    "metadata":{"service":"test-service2","securityGroupIds":"sg-cdb65db9"}
       },
-      "principalId": "g10$saryck"
+      "principalId": "g10$saryck",
+      "context": [{
+        "permissions": {
+          "manage": "read",
+          "code": "write",
+          "deploy": "write"
+        }
+      }]
     };
     context = awsContext();
     callback = (err, responseObj) => {

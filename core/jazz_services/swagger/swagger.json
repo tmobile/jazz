@@ -1372,6 +1372,24 @@
                         "type": "string"
                     },
                     "description": "Tags for the service"
+                },
+                "permissions": {
+                    "type": "object",
+                    "properties": {
+                        "manage": {
+                            "type": "string",
+                            "description": "permission for manage"
+                        },
+                        "code": {
+                            "type": "string",
+                            "description": "permission for code"
+                        },
+                        "deploy": {
+                            "type": "string",
+                            "description": "permission for deploy"
+                        }
+                    },
+                    "descriprion": "Permissions for the service"
                 }
             }
         },
