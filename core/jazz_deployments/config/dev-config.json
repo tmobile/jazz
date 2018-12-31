@@ -28,6 +28,7 @@
     "JOB_TOKEN": "{job_token}",
     "API_TOKEN": "{api_token}",
     "ddb_region": "{conf-region}",
+    "EVENT_API_URL": "/dev/jazz/events",
     "JOB_BUILD_URL": "{conf-jenkins-host}/job/",
     "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
     "SERVICE_API_RESOURCE": "/dev/jazz/services",

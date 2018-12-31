@@ -67,7 +67,7 @@ function handler(event, context, cb) {
 
 			if (method === "POST" && Object.keys(path).length) {
 				logger.info("GET Deployment details using deployment Id :" + path.id);
-				exportable.processDeploymentRebuild(config, path.id, deploymentTableName)
+				exportable.processDeploymentRebuild(config, event, path.id, deploymentTableName)
 					.then((res) => {
 						logger.info("Re-build result:" + JSON.stringify(res));
 						return cb(null, responseObj(res, path));
@@ -237,10 +237,11 @@ function processDeploymentCreation(config, deployment_details, deploymentTableNa
 	});
 }
 
-function processDeploymentRebuild(config, deploymentId, deploymentTableName) {
-	logger.debug("processDeploymentRebuild")
+function processDeploymentRebuild(config, event, deploymentId, deploymentTableName) {
+	logger.debug("processDeploymentRebuild");
 	return new Promise((resolve, reject) => {
 		exportable.getDeploymentDetailsById(deploymentTableName, deploymentId)
+			.then((res) => exportable.sendCreateDepolymentEvent(config, res, event))
 			.then((res) => exportable.reBuildDeployment(res, config))
 			.then((res) => {
 				resolve(res);
@@ -248,6 +249,55 @@ function processDeploymentRebuild(config, deploymentId, deploymentTableName) {
 			.catch((error) => {
 				reject(error)
 			});
+	});
+}
+
+function sendCreateDepolymentEvent(config, res, event) {
+	return new Promise((resolve, reject) => {
+		var context_json = {
+			'environment_logical_id': res.environment_logical_id,
+			'status': "STARTED",
+			'domain': res.domain_name,
+			'request_id': request_id
+		};
+
+		var event_json = {
+			'request_id': request_id,
+			'event_handler': "JENKINS",
+			'event_name': "CREATE_DEPLOYMENT",
+			'service_name': res.service_name,
+			'service_id': res.service_id,
+			'event_status': "STARTED",
+			'event_type': "SERVICE_DEPLOYMENT",
+			'username': event.principalId,
+			'event_timestamp': moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS'),
+			'service_context': context_json
+		};
+		var options = {
+			url: configData.SERVICE_API_URL + config.EVENT_API_URL,
+			method: 'POST',
+			rejectUnauthorized: false,
+			headers: {
+				'Accept': 'application/json',
+			},
+			json: event_json
+		};
+		request(options, (error, response, body) => {
+			if (response && response.statusCode === 200 && body && body.data) {
+				resolve(res);
+			} else {
+				var message = "";
+				if (error) {
+					message = error.message
+				} else {
+					message = response.body.message
+				}
+				reject({
+					"error": "Could not able to trigger the Event Api.",
+					"message": message
+				});
+			}
+		});
 	});
 }
 
@@ -529,7 +579,8 @@ const exportable = {
 	reBuildDeployment,
 	getToken,
 	getServiceDetails,
-	buildNowRequest
+	buildNowRequest,
+	sendCreateDepolymentEvent
 }
 
 module.exports = exportable;
