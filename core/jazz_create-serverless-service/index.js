@@ -96,7 +96,7 @@ var handler = (event, context, cb) => {
             .then((authToken) => updateAclPolicy(serviceId, authToken, user_id, "admin", "manage", config))
             .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
             .then((result) => {
-                cb(null, responseObj(result, service_creation_data));
+                return cb(null, responseObj(result, service_creation_data));
             })
             .catch(function (err) {
                 logger.error(`Error while creating service : ${JSON.stringify(err)}`);
@@ -433,7 +433,7 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
                     resolve("success");
                 } else {
                     logger.error(`Error while updating policies using ACL: ${JSON.stringify(response)}`);
-                    reject(`Error while updating policies using ACL.`);
+                    reject({result: "internalError", message: `Error while updating policies using ACL.`});
                 }
             }
         });
