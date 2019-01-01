@@ -54,7 +54,7 @@ func Handler(ctx context.Context, event map[string]interface{}) (Response, error
 		// Response to be sent 
 		return Response{
 			Data: sampleResponse,
-			Input:  event,
+			Input:  event["body"].(map[string]interface{}),
 		},nil
 
 	}
