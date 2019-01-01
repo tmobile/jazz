@@ -93,7 +93,7 @@ var handler = (event, context, cb) => {
         getToken(config)
             .then((authToken) => getServiceData(service_creation_data, authToken, config, deploymentTargets))
             .then((inputs) => createService(inputs))
-            .then(() => updateAclPolicy(serviceId, authToken, user_id, "admin", "manage", config))
+            .then((authToken) => updateAclPolicy(serviceId, authToken, user_id, "admin", "manage", config))
             .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
             .then((result) => {
                 cb(null, responseObj(result, service_creation_data));
