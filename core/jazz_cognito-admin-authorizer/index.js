@@ -218,7 +218,7 @@ module.exports.handler = (event, context, cb) => {
    * @class AuthPolicy
    * @constructor
    */
-  var AuthPolicy = (principal, awsAccountId, apiOptions) => {
+  function AuthPolicy(principal, awsAccountId, apiOptions) {
     /**
      * The AWS account id the policy will be generated for. This is used to create
      * the method ARNs.
@@ -312,7 +312,7 @@ module.exports.handler = (event, context, cb) => {
      * @param {Object} The conditions object in the format specified by the AWS docs.
      * @return {void}
      */
-    var addMethod = (effect, verb, resource, conditions) => {
+    function addMethod(effect, verb, resource, conditions) {
       if (verb !== "*" && !AuthPolicy.HttpVerb.hasOwnProperty(verb)) {
         throw new Error(`Invalid HTTP verb ${verb}. Allowed verbs in AuthPolicy.HttpVerb`);
       }
@@ -402,7 +402,7 @@ module.exports.handler = (event, context, cb) => {
        *
        * @method allowAllMethods
        */
-      allowAllMethods: () => {
+      allowAllMethods: function () {
         addMethod.call(this, "allow", "*", "*", null);
       },
 
@@ -411,7 +411,7 @@ module.exports.handler = (event, context, cb) => {
        *
        * @method denyAllMethods
        */
-      denyAllMethods: () => {
+      denyAllMethods: function () {
         addMethod.call(this, "deny", "*", "*", null);
       },
 
@@ -425,7 +425,7 @@ module.exports.handler = (event, context, cb) => {
        * @param {string} The resource path. For example "/pets"
        * @return {void}
        */
-      allowMethod: (verb, resource) => {
+      allowMethod: function(verb, resource) {
         addMethod.call(this, "allow", verb, resource, null);
       },
 
@@ -439,7 +439,7 @@ module.exports.handler = (event, context, cb) => {
        * @param {string} The resource path. For example "/pets"
        * @return {void}
        */
-      denyMethod: (verb, resource) => {
+      denyMethod: function(verb, resource) {
         addMethod.call(this, "deny", verb, resource, null);
       },
 
@@ -455,7 +455,7 @@ module.exports.handler = (event, context, cb) => {
        * @param {Object} The conditions object in the format specified by the AWS docs
        * @return {void}
        */
-      allowMethodWithConditions: (verb, resource, conditions) => {
+      allowMethodWithConditions: function(verb, resource, conditions) {
         addMethod.call(this, "allow", verb, resource, conditions);
       },
 
@@ -471,7 +471,7 @@ module.exports.handler = (event, context, cb) => {
        * @param {Object} The conditions object in the format specified by the AWS docs
        * @return {void}
        */
-      denyMethodWithConditions: (verb, resource, conditions) => {
+      denyMethodWithConditions: function(verb, resource, conditions) {
         addMethod.call(this, "deny", verb, resource, conditions);
       },
 
@@ -484,7 +484,7 @@ module.exports.handler = (event, context, cb) => {
        * @method build
        * @return {Object} The policy object that can be serialized to JSON.
        */
-      build: () => {
+      build: function() {
         if ((!this.allowMethods || this.allowMethods.length === 0) &&
           (!this.denyMethods || this.denyMethods.length === 0)) {
           throw new Error("No statements defined for the policy");
