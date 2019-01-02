@@ -80,7 +80,7 @@ module.exports.handler = (event, context, cb) => {
     ValidateToken(pems, event, context, config, cb);
   }
 
-  var ValidateToken = (pems, event, context, config, cb) => {
+  function ValidateToken(pems, event, context, config, cb) {
     logger.info("Inside ValidateToken");
     let token = event.authorizationToken;
     //Fail if the token is not jwt
