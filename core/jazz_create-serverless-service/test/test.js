@@ -482,9 +482,9 @@ describe('create-serverless-service', function () {
           source: "temp-" + each + "-source",
           action: "temp-" + each + "-action"
         }
-        
+
         service_creation_data.events = [eachEvent]
-        
+
         index.getServiceData(service_creation_data, authToken, config)
         .then((input) => {
           let action = 'event_action_' + each;

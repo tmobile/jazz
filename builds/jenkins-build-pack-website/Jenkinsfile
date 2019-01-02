@@ -78,7 +78,7 @@ node()  {
   }
 
   if(!service_config.accountId) {
-    service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNT_ID
+    service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
   }
 
   if(!service_config.provider) {
