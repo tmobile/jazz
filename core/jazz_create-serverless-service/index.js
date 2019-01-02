@@ -73,7 +73,7 @@ var handler = (event, context, cb) => {
         getToken(config)
             .then((authToken) => getServiceData(service_creation_data, authToken, config))
             .then((inputs) => createService(inputs))
-            .then((authToken) => updateAclPolicy(serviceId, authToken, user_id, "admin", "manage", config))
+            .then(() => updateAclPolicy(serviceId, authToken, user_id, "admin", "manage", config))
             .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
             .then((result) => {
                 return cb(null, responseObj(result, service_creation_data));
@@ -171,7 +171,7 @@ var getToken = (configData) => {
 
         request(svcPayload, (error, response, body) => {
             if (response.statusCode === 200 && body && body.data) {
-                var authToken = body.data.token;
+                authToken = body.data.token;
                 return resolve(authToken);
             } else {
                 return reject({
