@@ -51,21 +51,6 @@ async function getPolicies(serviceId, config) {
   return result;
 }
 
-function massagePolicies(policies) {
-  if (policies && !policies.error) {
-    let filteredPolicies = policies.filter(el => el.length >=1);
-    if (filteredPolicies.length) {
-      filteredPolicies =
-      policies = filteredPolicies.map(policyArr => policyArr.map(policy => [policy[0], policy[1].split('_')[1], policy[2]]));;
-    } else {
-      policies = [];
-    }
-  }
-
-  return policies;
-}
-
-
 /* Get the policies from casbin given the values and index*/
 async function getFilteredPolicy(index, values, config) {
   let result = {};
@@ -95,7 +80,7 @@ async function checkPermissions(userId, serviceId, category, permission, config)
   try {
     conn = await dbConnection(config);
     const enforcer = await Enforcer.newEnforcer('./config/rbac_model.conf', conn);
-    enforcer.enforce(userId, `${serviceId}_${category}`, permission);
+    result.authorized = enforcer.enforce(userId, `${serviceId}_${category}`, permission);
   } catch(err) {
     logger.error(err.message);
     result = {
@@ -175,22 +160,52 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
 /* Get the permissions for a service given a userId */
 async function getPolicyForServiceUser(serviceId, userId, config) {
   const result = await getPolicies(serviceId, config);
-
   let policies = formatPolicies(result);
   let userPolicies = policies.filter(policy => policy.userId === userId);
   userPolicies = userPolicies.forEach(policy => delete policy.userId);
 
-  return userPolicies;
+  return [{serviceId: serviceId, policies: userPolicies}];
 }
 
-/* Get the permissions for a userId*/
+/* Get the policies for a userId*/
 async function getPolicyForUser(userId, config) {
-
   let result = await getFilteredPolicy(0, userId, config);
-  result = massagePolicies(result);
+  let serviceIdSeen = new Set();
+  let policies = [];
 
-  let policies = formatPolicies(result);
-  policies = policies.forEach(policy => delete policy.userId);
+  result.forEach(item => {
+    const serviceId = item[1].split('_')[0];
+    const policy = {
+      category: item[1].split('_')[1],
+      permission: item[2]
+    };
+    if (serviceIdSeen.has(serviceId)) {
+      const foundPolicies = policies.find(r => r.serviceId === serviceId);
+      if (foundPolicies) {
+        foundPolicies.policies.push(policy);
+      }
+    } else {
+      const policyObj = {};
+      policyObj['serviceId'] = serviceId;
+      policyObj['policies'] = [policy];
+      policies.push(policyObj);
+    }
+    serviceIdSeen.add(serviceId);
+  });
+
+  return policies;
+}
+
+function massagePolicies(policies) {
+  if (policies && !policies.error) {
+    let filteredPolicies = policies.filter(el => el.length >=1);
+    if (filteredPolicies.length) {
+      filteredPolicies =
+      policies = filteredPolicies.map(policyArr => policyArr.map(policy => [policy[0], policy[1].split('_')[1], policy[2]]));
+    } else {
+      policies = [];
+    }
+  }
 
   return policies;
 }
