@@ -100,7 +100,12 @@ async function processACLRequest(event, config) {
   if (event.method === 'GET' && event.path === 'services') {
     //TODO implement the method here
     validation.validateGetServicesInput(event);
-    const result = await casbinUtil.getPolicyForServiceUser(event.path.serviceId, event.query.userId);
+    let result;
+    if (event.path.serviceId) {
+      result = await casbinUtil.getPolicyForServiceUser(event.path.serviceId, event.query.userId, config);
+    } else {
+      result = await casbinUtil.getPolicyForUser(event.query.userId, config);
+    }
 
     if(result && result.error) {
       throw (errorHandlerModule.throwInternalServerError(result.error));

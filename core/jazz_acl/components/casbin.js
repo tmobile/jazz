@@ -45,19 +45,26 @@ async function dbConnection(config) {
 /* Get the policies from casbin given the serviceId*/
 async function getPolicies(serviceId, config) {
   const values = [`${serviceId}_manage`, `${serviceId}_code`, `${serviceId}_deploy`];
-  const result = await getFilteredPolicy(1, values, config);
-  if (result && result.success) {
-    let filteredPolicies = result.filter(el => el.length >=1);
-    if (filteredPolicies.length) {
-      filteredPolicies = filteredPolicies.map(policyArr => policyArr.map(policy => [policy[0], policy[1].split('_')[1], policy[2]]));
-      result = filteredPolicies;
-    } else {
-      result = [];
-    }
-  }
+  let result = await getFilteredPolicy(1, values, config);
+  result = massagePolicies(result);
 
   return result;
 }
+
+function massagePolicies(policies) {
+  if (policies && !policies.error) {
+    let filteredPolicies = policies.filter(el => el.length >=1);
+    if (filteredPolicies.length) {
+      filteredPolicies =
+      policies = filteredPolicies.map(policyArr => policyArr.map(policy => [policy[0], policy[1].split('_')[1], policy[2]]));;
+    } else {
+      policies = [];
+    }
+  }
+
+  return policies;
+}
+
 
 /* Get the policies from casbin given the values and index*/
 async function getFilteredPolicy(index, values, config) {
@@ -165,18 +172,46 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
   return result;
 }
 
-/* Get the permissions for a user */
+/* Get the permissions for a service given a userId */
 async function getPolicyForServiceUser(serviceId, userId, config) {
-  const objects = [`${serviceId}_manage`, `${serviceId}_code`, `${serviceId}_deploy`];
+  const result = await getPolicies(serviceId, config);
 
-  const result = await getFilteredPolicy(1, serviceId, config);
+  let policies = formatPolicies(result);
+  let userPolicies = policies.filter(policy => policy.userId === userId);
+  userPolicies = userPolicies.forEach(policy => delete policy.userId);
 
-  return result;
+  return userPolicies;
+}
+
+/* Get the permissions for a userId*/
+async function getPolicyForUser(userId, config) {
+
+  let result = await getFilteredPolicy(0, userId, config);
+  result = massagePolicies(result);
+
+  let policies = formatPolicies(result);
+  policies = policies.forEach(policy => delete policy.userId);
+
+  return policies;
+}
+
+function formatPolicies(result) {
+  let policies = [];
+  result.forEach(policyArr =>
+    policyArr.forEach(policy => policies.push({
+      userId: policy[0],
+      permission: policy[2],
+      category: policy[1]
+    })
+  ));
+
+  return policies;
 }
 
 module.exports = {
   addOrRemovePolicy,
   getPolicies,
   getPolicyForServiceUser,
+  getPolicyForUser,
   checkPermissions
 };
