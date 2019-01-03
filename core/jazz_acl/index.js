@@ -98,7 +98,6 @@ async function processACLRequest(event, config) {
 
   //3. GET the permissions for a given user
   if (event.method === 'GET' && event.path === 'services') {
-    //TODO implement the method here
     validation.validateGetServicesInput(event);
     let result;
     if (event.path.serviceId) {
@@ -116,7 +115,6 @@ async function processACLRequest(event, config) {
 
   //4. GET the permissions for a specific service for a given user
   if (event.method === 'GET' && event.path === 'checkPermission') {
-    //TODO implement the method here
     validation.validateGetCheckPermsInput(event);
     const query = event.query;
     const result = await casbinUtil.checkPermissions(query.userId, query.serviceId, query.category, query.permission, config);
