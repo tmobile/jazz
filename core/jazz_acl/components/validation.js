@@ -90,8 +90,8 @@ function validateGetCheckPermsInput(userInput) {
 }
 
 function validateGetServicesInput(userInput) {
-  if (!userInput.path.serviceId) {
-    throw (errorHandlerModule.throwInputValidationError("Service Id is missing"));
+  if (!userInput.query.userId) {
+    throw (errorHandlerModule.throwInputValidationError("User Id is missing"));
   }
 }
 

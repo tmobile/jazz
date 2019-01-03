@@ -69,107 +69,217 @@ describe("Validation tests", () => {
 
 
 describe('processACLRequest tests', () => {
-  let postEvent;
-  let getEvent;
+  describe('policies path tests', () => {
+    let postEvent;
+    let getEvent;
 
-  beforeEach(() => {
-    postEvent = {
-      method: 'POST',
-      path: 'policies',
-      body: {
+    beforeEach(() => {
+      postEvent = {
+        method: 'POST',
+        resourcePath: 'policies',
+        body: {
+          serviceId: "324234234",
+          policies: [{userId: "data", category: "manage", permission: "read"}]
+        }
+      };
+
+      getEvent = {
+        method: 'GET',
+        resourcePath: 'policies',
+        query: {
+          serviceId: "324234234",
+        }
+      };
+    });
+
+    afterEach(() => {
+      postEvent = {};
+      getEvent = {};
+    });
+
+    it('POST policies - add user successfully', async() => {
+      // arrange
+      const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
+      const config = {};
+
+      // act
+      const result = await index.processACLRequest(postEvent, config);
+
+      // assert
+      expect(result.success).to.equal(true);
+      sinon.assert.calledOnce(addOrRemovePolicyStub);
+      addOrRemovePolicyStub.restore();
+    });
+
+    it('POST policies - add user error', async() => {
+      // arrange
+      const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves({error: "Error"});
+      const config = {};
+
+      // act & assert
+      await expect(index.processACLRequest(postEvent, config)).to.be.rejected;
+      sinon.assert.calledOnce(addOrRemovePolicyStub);
+      addOrRemovePolicyStub.restore();
+    });
+
+    it('POST policies - remove users successfully', async() => {
+      // arrange
+      const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
+      const config = {};
+      postEvent.body.policies = [];
+
+      // act
+      const result = await index.processACLRequest(postEvent, config);
+
+      // assert
+      expect(result.success).to.equal(true);
+      sinon.assert.calledOnce(addOrRemovePolicyStub);
+      addOrRemovePolicyStub.restore();
+    });
+
+    it('POST policies - remove users throws error', async() => {
+      // arrange
+      const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves({error: "Error"});
+      const config = {};
+      postEvent.body.policies = [];
+
+      // act & assert
+      await expect(index.processACLRequest(postEvent, config)).to.be.rejected;
+      sinon.assert.calledOnce(addOrRemovePolicyStub);
+      addOrRemovePolicyStub.restore();
+    });
+
+    it('GET policies - get user throws error', async() => {
+      // arrange
+      const getPoliciesStub = sinon.stub(casbinUtil, "getPolicies").resolves({error: "Error"});
+      const config = {};
+
+      // act & assert
+      await expect(index.processACLRequest(getEvent, config)).to.be.rejected;
+      sinon.assert.calledOnce(getPoliciesStub);
+      getPoliciesStub.restore();
+    });
+
+    it('GET policies - get user policies', async() => {
+      // arrange
+      const policies = [[["user1", "admin", "manage"]]];
+      const getPoliciesStub = sinon.stub(casbinUtil, "getPolicies").resolves(policies);
+      const config = {};
+
+      // act
+      const result = await index.processACLRequest(getEvent, config);
+
+      // assert
+      expect(result.policies[0].userId).to.eq("user1");
+      expect(result.serviceId).to.eq(getEvent.query.serviceId);
+      sinon.assert.calledOnce(getPoliciesStub);
+      getPoliciesStub.restore();
+    });
+  });
+
+  describe('checkPermission path tests', () => {
+    let getEvent;
+
+    beforeEach(() => {
+      getEvent = {
+        method: 'GET',
+        resourcePath: 'checkpermission',
+        query: {
+          userId: "3423",
+          serviceId: "324234234",
+          category: "manage",
+          permission: "write"
+        }
+      };
+    });
+
+    afterEach(() => {
+      getEvent = {};
+    });
+
+    it('GET checkpermission - authorize true', async() => {
+      // arrange
+      const getCheckPermissionsStub = sinon.stub(casbinUtil, "checkPermissions").resolves({authorized: true});
+      const config = {};
+
+      // act
+      const result = await index.processACLRequest(getEvent, config);
+
+      // assert
+      expect(result.authorized).to.eq(true);
+      sinon.assert.calledOnce(getCheckPermissionsStub);
+      getCheckPermissionsStub.restore();
+    });
+
+    it('GET checkpermission - throws error', async() => {
+      // arrange
+      const getCheckPermissionsStub = sinon.stub(casbinUtil, "checkPermissions").resolves({error: "Error"});
+      const config = {};
+
+      // act & assert
+      expect(index.processACLRequest(getEvent, config)).to.be.rejected;
+      sinon.assert.calledOnce(getCheckPermissionsStub);
+      getCheckPermissionsStub.restore();
+    });
+  });
+
+  describe('services path tests', () => {
+    let getEvent;
+
+    beforeEach(() => {
+      getEvent = {
+        method: 'GET',
+        resourcePath: 'services',
+        path: {
+          serviceId: "sdadaada"
+        },
+        query: {
+          userId: "3423"
+        }
+      };
+    });
+
+    afterEach(() => {
+      getEvent = {};
+    });
+
+    it('GET services - with service id for a given user', async() => {
+      // arrange
+      const policies = [{
         serviceId: "324234234",
-        policies: [{userId: "data", category: "manage", permission: "read"}]
-      }
-    };
+        policies: [{category: "manage", permission: "read"}]
+      }];
 
-    getEvent = {
-      method: 'GET',
-      path: 'policies',
-      query: {
+      const getCheckPermissionsStub = sinon.stub(casbinUtil, "getPolicyForServiceUser").resolves(policies);
+      const config = {};
+
+      // act
+      const result = await index.processACLRequest(getEvent, config);
+
+      // assert
+      expect(result[0].serviceId).to.eq("324234234");
+      sinon.assert.calledOnce(getCheckPermissionsStub);
+      getCheckPermissionsStub.restore();
+    });
+
+    it('GET services - for a given user', async() => {
+      // arrange
+      getEvent.path = {};
+      const policies = [{
         serviceId: "324234234",
-      }
-    }
-  });
+        policies: [{category: "manage", permission: "read"}]
+      }];
 
-  afterEach(() => {
-    postEvent = {};
-    getEvent = {};
-  });
+      const getCheckPermissionsStub = sinon.stub(casbinUtil, "getPolicyForUser").resolves(policies);
+      const config = {};
 
-  it('POST policies - add user successfully', async() => {
-    // arrange
-    const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
-    const config = {};
+      // act
+      const result = await index.processACLRequest(getEvent, config);
 
-    // act
-    const result = await index.processACLRequest(postEvent, config);
-
-    // assert
-    expect(result.success).to.equal(true);
-    sinon.assert.calledOnce(addOrRemovePolicyStub);
-    addOrRemovePolicyStub.restore();
-  });
-
-  it('POST policies - add user error', async() => {
-    // arrange
-    const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves({error: "Error"});
-    const config = {};
-
-    // act & assert
-    await expect(index.processACLRequest(postEvent, config)).to.be.rejected;
-    sinon.assert.calledOnce(addOrRemovePolicyStub);
-    addOrRemovePolicyStub.restore();
-  });
-
-  it('POST policies - remove users successfully', async() => {
-    // arrange
-    const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
-    const config = {};
-    postEvent.body.policies = [];
-
-    // act
-    const result = await index.processACLRequest(postEvent, config);
-
-    // assert
-    expect(result.success).to.equal(true);
-    sinon.assert.calledOnce(addOrRemovePolicyStub);
-    addOrRemovePolicyStub.restore();
-  });
-
-  it('POST policies - remove users throws error', async() => {
-    // arrange
-    const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves({error: "Error"});
-    const config = {};
-    postEvent.body.policies = [];
-
-    // act & assert
-    await expect(index.processACLRequest(postEvent, config)).to.be.rejected;
-    sinon.assert.calledOnce(addOrRemovePolicyStub);
-    addOrRemovePolicyStub.restore();
-  });
-
-  it('GET policies - get user throws error', async() => {
-    // arrange
-    const getPoliciesStub = sinon.stub(casbinUtil, "getPolicies").resolves({error: "Error"});
-    const config = {};
-
-    // act & assert
-    await expect(index.processACLRequest(getEvent, config)).to.be.rejected;
-    sinon.assert.calledOnce(getPoliciesStub);
-    getPoliciesStub.restore();
-  });
-
-  it('GET policies - get user policies', async() => {
-    // arrange
-    const policies = [[["user1", "admin", "manage"]]];
-    const getPoliciesStub = sinon.stub(casbinUtil, "getPolicies").resolves(policies);
-    const config = {};
-
-    // act
-    const result = await index.processACLRequest(getEvent, config);
-    expect(result.policies[0].userId).to.eq("user1");
-    expect(result.serviceId).to.eq(getEvent.query.serviceId);
-    sinon.assert.calledOnce(getPoliciesStub);
-    getPoliciesStub.restore();
+      // assert
+      expect(result[0].serviceId).to.eq("324234234");
+      sinon.assert.calledOnce(getCheckPermissionsStub);
+      getCheckPermissionsStub.restore();
+    });
   });
 });
