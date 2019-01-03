@@ -1,8 +1,9 @@
 {
-  "TOKEN_URL": "/dev/jazz/login",
+  "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev",
+  "SERVICE_API": "/jazz/services",
+  "LOGIN_API": "/jazz/login",
   "SERVICE_USER": "{jazz_admin}",
   "TOKEN_CREDS": "{jazz_admin_creds}",
-  "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
   "CASBIN": {
     "TYPE": "{casbin_type}",
     "HOST": "{casbin_host}",

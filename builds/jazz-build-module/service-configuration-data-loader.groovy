@@ -61,6 +61,20 @@ def loadServiceConfigurationData() {
             updateConfigValue("{casbin_database}", config_loader.ACL.DATABASE.NAME)
             updateConfigValue("{casbin_type}", config_loader.ACL.DATABASE.DB_TYPE)
             updateConfigValue("{casbin_timeout}", config_loader.ACL.DATABASE.TIMEOUT)
+
+            sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/global-config.json"
+            sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/global-config.json"
+
+            if (config_loader.SCM.TYPE == "bitbucket") {
+              withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
+                  sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/global-config.json"
+                  sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/global-config.json"
+              }
+            }
+
+            if (config_loader.SCM.TYPE == "gitlab") {
+              sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/global-config.json"
+            }
         }
 
         if (service_name.trim() == "jazz_metrics") {
@@ -155,7 +169,8 @@ def loadServiceConfigurationData() {
             }
         }
 
-        if ((service_name.trim() == "jazz_services-handler") || (service_name.trim() == "jazz_create-serverless-service")) {
+        if ((service_name.trim() == "jazz_services-handler") || (service_name.trim() == "jazz_create-serverless-service")
+          || (service_name.trim() == "jazz_acl")) {
             updateCoreAPI()
             updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
             updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)

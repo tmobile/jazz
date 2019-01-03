@@ -19,6 +19,10 @@ const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const validation = require("./components/validation.js");
 const casbinUtil = require("./components/casbin.js");
+const scmUtil = require("./components/scm/index.js");
+const services = require("./components/scm/services.js");
+const auth = require("./components/scm/login.js");
+const scmConfig = require("./config/global-config.json");
 
 async function handler(event, context) {
 
@@ -62,15 +66,19 @@ async function processACLRequest(event, config) {
       if (result && result.error) {
         throw (errorHandlerModule.throwInternalServerError(`Error adding the policy for service ${serviceId}. ${result.error}`));
       }
+
+      await processScmPermissions(config, serviceId, policies, 'add');
     } else {//delete policies
       result = await casbinUtil.addOrRemovePolicy(serviceId, config, 'remove');
 
       if (result && result.error) {
         throw (errorHandlerModule.throwInternalServerError(result.error));
       }
+
+      await processScmPermissions(config, serviceId, policies, 'remove');
     }
 
-    return { success: true };
+    return { "success": true };
   }
 
   //2. GET the policy for the given service id
@@ -91,7 +99,7 @@ async function processACLRequest(event, config) {
         permission: policy[2],
         category: policy[1]
       })
-    ));
+      ));
 
     return {
       serviceId: serviceId,
@@ -130,9 +138,20 @@ async function processACLRequest(event, config) {
   }
 }
 
+async function processScmPermissions(config, serviceId, policies, key) {
+  let scm = new scmUtil(scmConfig);
+  let authToken = await auth.getAuthToken(config);
+  let serviceData = await services.getServiceMetadata(config, authToken, serviceId);
+  let res = await scm.processScmPermissions(serviceData, policies, key);
+  return (res);
+}
+
+
+
 const exportable = {
   handler,
-  processACLRequest
+  processACLRequest,
+  processScmPermissions
 };
 
 module.exports = exportable;
