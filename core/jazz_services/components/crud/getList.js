@@ -76,7 +76,7 @@ module.exports = (query, getAllRecords, onComplete) => {
                     };
                 });
             } else if (query[key]) {
-                filter = filter + key_name + " = :" + key_name + insertAnd;
+                filter = filter + `contains(${key_name}, :${key_name})` + insertAnd;
                 attributeValues[(":" + key_name)] = {
                     'S': query[key]
                 };
