@@ -43,9 +43,12 @@ async function handler(event, context) {
 };
 
 async function processACLRequest(event, config) {
+  let resourcePath = event.resourcePath.split("/");
+  let pathString = resourcePath.pop();
+  let path = pathString.toLowerCase();
 
   //1. POST - add and delete the policy
-  if (event.method === 'POST' && event.path === 'policies') {
+  if (event.method === 'POST' && path === 'policies') {
     validation.validatePostPoliciesInput(event);
 
     const serviceId = event.body.serviceId;
@@ -71,7 +74,7 @@ async function processACLRequest(event, config) {
   }
 
   //2. GET the policy for the given service id
-  if (event.method === 'GET' && event.path === 'policies') {
+  if (event.method === 'GET' && path === 'policies') {
 
     validation.validateGetPoliciesInput(event);
     const serviceId = event.query.serviceId;
@@ -97,7 +100,7 @@ async function processACLRequest(event, config) {
   }
 
   //3. GET the permissions for a given user
-  if (event.method === 'GET' && event.path === 'services') {
+  if (event.method === 'GET' && path === 'services') {
     validation.validateGetServicesInput(event);
     let result;
     if (event.path.serviceId) {
@@ -114,7 +117,7 @@ async function processACLRequest(event, config) {
   }
 
   //4. GET the permissions for a specific service for a given user
-  if (event.method === 'GET' && event.path === 'checkPermission') {
+  if (event.method === 'GET' && path === 'checkpermission') {
     validation.validateGetCheckPermsInput(event);
     const query = event.query;
     const result = await casbinUtil.checkPermissions(query.userId, query.serviceId, query.category, query.permission, config);
@@ -123,7 +126,7 @@ async function processACLRequest(event, config) {
       throw (errorHandlerModule.throwInternalServerError(result.error));
     }
 
-    return { authorized: true };
+    return result;
   }
 }
 
