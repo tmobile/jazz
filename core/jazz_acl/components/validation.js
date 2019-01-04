@@ -71,8 +71,34 @@ function validatePostPoliciesInput(userInput) {
   }
 }
 
+function validateGetCheckPermsInput(userInput) {
+  if (!userInput.query.userId) {
+    throw (errorHandlerModule.throwInputValidationError("User Id is missing"));
+  }
+
+  if (!userInput.query.serviceId) {
+    throw (errorHandlerModule.throwInputValidationError("Service Id is missing"));
+  }
+
+  if (!userInput.query.permission) {
+    throw (errorHandlerModule.throwInputValidationError("Permission is missing"));
+  }
+
+  if (!userInput.query.category) {
+    throw (errorHandlerModule.throwInputValidationError("Category is is missing"));
+  }
+}
+
+function validateGetServicesInput(userInput) {
+  if (!userInput.query.userId) {
+    throw (errorHandlerModule.throwInputValidationError("User Id is missing"));
+  }
+}
+
 module.exports = {
   validateBasicInput,
   validateGetPoliciesInput,
-  validatePostPoliciesInput
+  validatePostPoliciesInput,
+  validateGetCheckPermsInput,
+  validateGetServicesInput
 };
