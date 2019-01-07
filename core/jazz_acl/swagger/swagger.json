@@ -13,6 +13,7 @@
   "paths": {
     "/{service_name}/services": {
       "options": {
+        "operationId": "optionsServicesUserId",
         "description": "CORS Support",
         "consumes": [
           "application/json"
@@ -94,7 +95,7 @@
           "acl"
         ],
         "description": "GET method to retrieve the list of services for a user based on ACL permissions",
-        "operationId": "getServices",
+        "operationId": "getServicesUserId",
         "produces": [
           "application/json"
         ],
@@ -298,6 +299,7 @@
     },
     "/{service_name}/services/{serviceId}": {
       "options": {
+        "operationId": "optionsServicesServiceUserId",
         "description": "CORS Support",
         "consumes": [
           "application/json"
@@ -308,6 +310,13 @@
         "tags": [
           "CORS"
         ],
+        "parameters": [{
+          "name": "serviceId",
+          "in": "path",
+          "description": "service id",
+          "required": true,
+          "type": "string"
+        }],
         "x-amazon-apigateway-integration": {
           "type": "mock",
           "requestTemplates": {
@@ -379,7 +388,7 @@
           "acl"
         ],
         "description": "GET method to retrieve the list of services for a user based on ACL permissions",
-        "operationId": "getServices",
+        "operationId": "getServicesServiceUserId",
         "produces": [
           "application/json"
         ],
@@ -590,6 +599,7 @@
     },
     "/{service_name}/checkpermission": {
       "options": {
+        "operationId": "optionsPermission",
         "description": "CORS Support",
         "consumes": [
           "application/json"
@@ -896,6 +906,7 @@
     },
     "/{service_name}/policies": {
       "options": {
+        "operationId": "optionsPolicy",
         "description": "CORS Support",
         "consumes": [
           "application/json"
@@ -977,7 +988,7 @@
           "acl"
         ],
         "description": "POST method to add policies for a user on service",
-        "operationId": "addPolicy",
+        "operationId": "updatePolicy",
         "consumes": [
           "application/json",
           "application/xml"
