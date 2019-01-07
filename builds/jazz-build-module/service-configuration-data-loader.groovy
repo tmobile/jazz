@@ -61,7 +61,7 @@ def loadServiceConfigurationData() {
             updateConfigValue("{casbin_host}", config_loader.ACL.DATABASE.ENDPOINT)
             updateConfigValue("{casbin_port}", config_loader.ACL.DATABASE.PORT)
             updateConfigValue("{casbin_database}", config_loader.ACL.DATABASE.NAME)
-            updateConfigValue("{casbin_type}", config_loader.ACL.DATABASE.DB_TYPE)
+            updateConfigValue("{casbin_type}", config_loader.ACL.DATABASE.TYPE_DB)
             updateConfigValue("{casbin_timeout}", config_loader.ACL.DATABASE.TIMEOUT)
 
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/global-config.json"
