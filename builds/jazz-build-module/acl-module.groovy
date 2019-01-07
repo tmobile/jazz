@@ -1,4 +1,5 @@
 #!groovy?
+import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 
 def updateServiceACL(serviceId, auth_token, aclUrl) {
@@ -19,21 +20,52 @@ def updateServiceACL(serviceId, auth_token, aclUrl) {
 			serviceId: serviceId,
 			policies: policiesList
 		]);
-		def updatePermission = sh(script: "curl -X POST \
+		def updatePermission = sh(script: "curl POST \
 					${aclUrl} \
 					-k -v -H \"Authorization: $auth_token\" \
 					-H \"Content-Type: application/json\" \
 					-d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJson(updatePermission)
 
-		if (responseJSON && responseJSON.success) {
+		if (responseJSON && responseJSON.data.success == true) {
 			echo "Successfully updated permissions for code and deploy."
 		} else {
 			echo "Something went wrong while updating permissions for code and deploy."
 		}
 	} catch (ex) {
+    echo "ex: $ex"
+  }
+}
+
+def deletePolicies(serviceId, auth_token, aclUrl) {
+	try {
+		def body = JsonOutput.toJson([
+			serviceId: serviceId,
+			policies: []
+		]);
+		def updatePermission = sh(script: "curl POST \
+				${aclUrl} \
+				-k -v -H \"Authorization: $auth_token\" \
+				-H \"Content-Type: application/json\" \
+				-d \'${body}\'", returnStdout: true).trim()
+		def responseJSON = parseJson(updatePermission)
+
+		if (responseJSON && responseJSON.data.success == true) {
+			echo "Successfully deleted permissions."
+		} else {
+			echo "Something went wrong while deleting the permissions."
+		}
+	} catch(ex) {
 		echo "ex: $ex"
 	}
+}
+
+@NonCPS
+def parseJson(jsonString) {
+	def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+	def m = [:]
+	m.putAll(lazyMap)
+	return m
 }
 
 return this
