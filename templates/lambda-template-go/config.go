@@ -11,7 +11,6 @@ Go Template Project
 
 import (
 	"github.com/spf13/viper"
-	"github.com/gologme/log"
 	"context"
 	"os"
 	"strings"
@@ -24,12 +23,12 @@ type Config struct {
 
 // Load Configuration file 
 func (c *Config) LoadConfiguration(ctx context.Context, event map[string]interface{}) {
-  c.ctx = ctx
+	c.ctx = ctx
 	c.event = event
-
+	
 	var stage string
 	var FunctionName string
-
+	
 	if value, ok := event["stage"]; ok {
 		//get stage value from payload
 		stage = value.(string)
@@ -45,17 +44,16 @@ func (c *Config) LoadConfiguration(ctx context.Context, event map[string]interfa
 			stage = "prod"
 		}
 	}
-
+	
 	if len(stage) > 0 {
-		viper.SetConfigFile("./configs/"+stage+"-config.json")
+		viper.SetConfigFile("./config/"+stage+"-config.json")
 		// Searches for config file in given paths and read it
 		if err := viper.ReadInConfig(); err != nil {
-    	log.Fatalf("Error reading config file, %s", err)
+			logger.ERROR("Error reading config file")
 		}
 	} else {
-		log.Fatalf("Error! No stage Defined")
+		logger.ERROR("Error! No stage Defined")
 	}
-	
 }
 
 

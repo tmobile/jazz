@@ -9,14 +9,14 @@ Go Template Project
 **/
 
 import (
-	"log"
-	"os"
-	"fmt"
-	"time"
+  "log"
+  "os"
+  "fmt"
+  "time"
 )
 
 var loglevels = map[string]int{
-	"Error": 4,
+  "Error": 4,
   "Warn": 3,
   "Info": 2,
   "Trace": 1,
@@ -24,17 +24,17 @@ var loglevels = map[string]int{
 }
 
 var config = map[string]string {
-	"curLogLevel" : "Info",
-	"requestDetails" : " ",
+  "curLogLevel" : "Info",
+  "requestDetails" : " ",
 }
 
 // For Custom Formatter of Log Messages
 type logWriter struct {
-	levelName string
+  levelName string
 }
 
 func (lw *logWriter) init (levelName string){
-	lw.levelName = levelName
+  lw.levelName = levelName
 }
 
 func (writer *logWriter) Write(bytes []byte) (int, error) {

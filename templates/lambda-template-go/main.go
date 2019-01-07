@@ -20,21 +20,24 @@ type Response struct {
 	Input map[string]interface{}   `json:"input,omitempty"`
 }
 
+// Declare logger variable
+var logger *Logger
+
 //Handler Function for Aws Lambda which accepts Requests and Produce the response in json.
 func Handler(ctx context.Context, event map[string]interface{}) (Response, error) {
 	// Initialize Logging Components
-	log := new(Logger)
-	log.init("Info")
+	logger := new(Logger)
+	logger.init("Info")
 
 	//Following code snippet describes how to log messages within your code:
 /*
-	log.ERROR('Runtime errors or unexpected conditions.');
-	log.WARN('Runtime situations that are undesirable or unexpected, but not necessarily "wrong".');
-	log.INFO('Interesting runtime events (Eg. connection established, data fetched etc.)');
-	log.TRACE('Generally speaking, most lines logged by your application should be written as verbose.');
-	log.DEBUG('Detailed information on the flow through the system.');
+	logger.ERROR('Runtime errors or unexpected conditions.');
+	logger.WARN('Runtime situations that are undesirable or unexpected, but not necessarily "wrong".');
+	logger.INFO('Interesting runtime events (Eg. connection established, data fetched etc.)');
+	logger.TRACE('Generally speaking, most lines logged by your application should be written as verbose.');
+	logger.DEBUG('Detailed information on the flow through the system.');
 */
-	log.INFO("Interesting runtime events (Eg. connection established, data fetched etc.)");
+	logger.INFO("Interesting runtime events (Eg. connection established, data fetched etc.)");
 	// Initialize Config Components
 	configModule := new(Config)
 	configModule.LoadConfiguration(ctx , event )
