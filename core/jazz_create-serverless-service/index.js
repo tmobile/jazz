@@ -73,7 +73,7 @@ var handler = (event, context, cb) => {
         getToken(config)
             .then((authToken) => getServiceData(service_creation_data, authToken, config))
             .then((inputs) => createService(inputs))
-            .then((authToken) => updateAclPolicy(serviceId, authToken, user_id, "admin", "manage", config))
+            .then(() => updateAclPolicy(serviceId, authToken, user_id, "admin", "manage", config))
             .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
             .then((result) => {
                 return cb(null, responseObj(result, service_creation_data));
@@ -171,7 +171,7 @@ var getToken = (configData) => {
 
         request(svcPayload, (error, response, body) => {
             if (response.statusCode === 200 && body && body.data) {
-                var authToken = body.data.token;
+                authToken = body.data.token;
                 return resolve(authToken);
             } else {
                 return reject({
@@ -365,18 +365,16 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
             uri: config.SERVICE_API_URL + config.ACL_ENDPOINT,
             method: 'POST',
             headers: { 'Authorization': authToken },
-            json: [
-                {
-                    "serviceId": serviceId,
-                    "policies": [
-                        {
-                            "userId": user_id,
-                            "permission": permission,
-                            "category": category
-                        }
-                    ]
-                }
-            ],
+            json: {
+                "serviceId": serviceId,
+                "policies": [
+                    {
+                        "userId": user_id,
+                        "permission": permission,
+                        "category": category
+                    }
+                ]
+            },
             rejectUnauthorized: false
         };
 
@@ -386,7 +384,7 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
                 reject(error);
             } else {
                 logger.debug(`ACL response: ${JSON.stringify(response)}`);
-                if(body && body.success) {
+                if(response.statusCode === 200 && body.data && body.data.success) {
                     resolve("success");
                 } else {
                     logger.error(`Error while updating policies using ACL: ${JSON.stringify(response)}`);
