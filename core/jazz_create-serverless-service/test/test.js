@@ -397,7 +397,7 @@ describe('create-serverless-service', function () {
       let acl_response = {
         statusCode: 200,
         body: {
-          success: true
+          data: {success: true}
         }
       };
       event.stage = "dev";
@@ -850,7 +850,7 @@ describe('create-serverless-service', function () {
       let responseObject = {
         statusCode: 200,
         body: {
-          success: true
+          data: {success: true}
         }
       };
       let reqStub = sinon.stub(request, "Request", (obj) => {
@@ -868,7 +868,7 @@ describe('create-serverless-service', function () {
       let responseObject = {
         statusCode: 200,
         body: {
-          success: false
+          data: {success: false}
         }
       };
       let reqStub = sinon.stub(request, "Request", (obj) => {
@@ -876,7 +876,7 @@ describe('create-serverless-service', function () {
       });
       index.updateAclPolicy("random-id", 'temp-token', 'user', 'temp-permission', 'temp-cat', config)
         .catch((err) => {
-          expect(err).to.eq("Error while updating policies using ACL.");
+          expect(err).to.include({ result: 'internalError', message: 'Error while updating policies using ACL.' });
           sinon.assert.calledOnce(reqStub);
           reqStub.restore();
         });
