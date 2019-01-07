@@ -365,18 +365,16 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
             uri: config.SERVICE_API_URL + config.ACL_ENDPOINT,
             method: 'POST',
             headers: { 'Authorization': authToken },
-            json: [
-                {
-                    "serviceId": serviceId,
-                    "policies": [
-                        {
-                            "userId": user_id,
-                            "permission": permission,
-                            "category": category
-                        }
-                    ]
-                }
-            ],
+            json: {
+                "serviceId": serviceId,
+                "policies": [
+                    {
+                        "userId": user_id,
+                        "permission": permission,
+                        "category": category
+                    }
+                ]
+            },
             rejectUnauthorized: false
         };
 
@@ -386,7 +384,7 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
                 reject(error);
             } else {
                 logger.debug(`ACL response: ${JSON.stringify(response)}`);
-                if(body && body.success) {
+                if(response.statusCode === 200 && body.data && body.data.success) {
                     resolve("success");
                 } else {
                     logger.error(`Error while updating policies using ACL: ${JSON.stringify(response)}`);
