@@ -76,7 +76,7 @@ var handler = (event, context, cb) => {
             .then(() => updateAclPolicy(serviceId, authToken, user_id, "admin", "manage", config))
             .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
             .then((result) => {
-                cb(null, responseObj(result, service_creation_data));
+                return cb(null, responseObj(result, service_creation_data));
             })
             .catch(function (err) {
                 logger.error('Error while creating service : ' + JSON.stringify(err));
@@ -171,7 +171,7 @@ var getToken = (configData) => {
 
         request(svcPayload, (error, response, body) => {
             if (response.statusCode === 200 && body && body.data) {
-                var authToken = body.data.token;
+                authToken = body.data.token;
                 return resolve(authToken);
             } else {
                 return reject({
@@ -365,18 +365,16 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
             uri: config.SERVICE_API_URL + config.ACL_ENDPOINT,
             method: 'POST',
             headers: { 'Authorization': authToken },
-            json: [
-                {
-                    "serviceId": serviceId,
-                    "policies": [
-                        {
-                            "userId": user_id,
-                            "permission": permission,
-                            "category": category
-                        }
-                    ]
-                }
-            ],
+            json: {
+                "serviceId": serviceId,
+                "policies": [
+                    {
+                        "userId": user_id,
+                        "permission": permission,
+                        "category": category
+                    }
+                ]
+            },
             rejectUnauthorized: false
         };
 
@@ -386,11 +384,11 @@ var updateAclPolicy = (serviceId, authToken, user_id, permission, category, conf
                 reject(error);
             } else {
                 logger.debug(`ACL response: ${JSON.stringify(response)}`);
-                if(body && body.success) {
+                if(response.statusCode === 200 && body.data && body.data.success) {
                     resolve("success");
                 } else {
                     logger.error(`Error while updating policies using ACL: ${JSON.stringify(response)}`);
-                    reject(`Error while updating policies using ACL.`);
+                    reject({result: "internalError", message: `Error while updating policies using ACL.`});
                 }
             }
         });
