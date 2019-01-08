@@ -162,7 +162,7 @@ async function getPolicyForServiceUser(serviceId, userId, config) {
   const result = await getPolicies(serviceId, config);
   let policies = formatPolicies(result);
   let userPolicies = policies.filter(policy => policy.userId === userId);
-  userPolicies = userPolicies.forEach(policy => delete policy.userId);
+  userPolicies = userPolicies.map(policy => { return { permission: policy.permission, category: policy.category } });
 
   return [{serviceId: serviceId, policies: userPolicies}];
 }
@@ -173,24 +173,26 @@ async function getPolicyForUser(userId, config) {
   let serviceIdSeen = new Set();
   let policies = [];
 
-  result.forEach(item => {
-    const serviceId = item[1].split('_')[0];
-    const policy = {
-      category: item[1].split('_')[1],
-      permission: item[2]
-    };
-    if (serviceIdSeen.has(serviceId)) {
-      const foundPolicies = policies.find(r => r.serviceId === serviceId);
-      if (foundPolicies) {
-        foundPolicies.policies.push(policy);
+  result.forEach(policy => {
+    policy.forEach(item => {
+      const serviceId = item[1].split('_')[0];
+      const policy = {
+        category: item[1].split('_')[1],
+        permission: item[2]
+      };
+      if (serviceIdSeen.has(serviceId)) {
+        const foundPolicies = policies.find(r => r.serviceId === serviceId);
+        if (foundPolicies) {
+          foundPolicies.policies.push(policy);
+        }
+      } else {
+        const policyObj = {};
+        policyObj['serviceId'] = serviceId;
+        policyObj['policies'] = [policy];
+        policies.push(policyObj);
       }
-    } else {
-      const policyObj = {};
-      policyObj['serviceId'] = serviceId;
-      policyObj['policies'] = [policy];
-      policies.push(policyObj);
-    }
-    serviceIdSeen.add(serviceId);
+      serviceIdSeen.add(serviceId);
+    });
   });
 
   return policies;
