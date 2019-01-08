@@ -42,6 +42,7 @@ node() {
 
   def branch = params.scm_branch
   def repo_name = params.service_name
+  def request_id = params.request_id
   def gitCommitOwner
   def gitCommitHash
   def context_map
@@ -138,15 +139,25 @@ node() {
     isEventSchdld = true
   }
 
-  def requestId = utilModule.generateRequestId()
-  if (requestId != null) {
-    events.setRequestId(requestId)
-    environmentDeploymentMetadata.setRequestId(requestId)
+  if(request_id == 'none') {
+    requestId = utilModule.generateRequestId()
+    if (requestId != null) {
+        events.setRequestId(requestId)
+        environmentDeploymentMetadata.setRequestId(requestId)
+    } else {
+        error "Request Id Generation failed"
+      }
   } else {
-    error "Request Id Generation failed"
+    echo "Setting up request_id"
+    requestId = request_id
   }
 
-  events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
+
+  if(request_id == 'none') {
+		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, , gitCommitHash), environment)
+  } else {
+      echo "Skipped re-create deplyoment with r_id" + request_id
+  }
 
   dir(repo_name) {
     loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
@@ -530,32 +541,18 @@ def buildLambda(String runtime, String repo_name) {
 	} else if (runtime.indexOf("java") > -1) {
 		sh "mvn package"
 	} else if (runtime.indexOf("python") > -1) {
-	  // install requirements.txt in library folder, these python modules will be a part of deployment package
+		// install requirements.txt in library folder, these python modules will be a part of deployment package
 		sh "rm -rf library"
 		sh "mkdir library"
+		sh "pip install -r requirements.txt -t library"
 		sh "touch library/__init__.py"
-
-    if (runtime == 'python3.6'){
-      // Installing dependencies
-      sh "pip3 install -r requirements.txt -t library"
-      // create virtual environment and install pytest
-      sh """
-			python3 -m venv virtualenv
-			. virtualenv/bin/activate
-			pip3 install pytest
-			pytest test
-		  """
-    } else {
-      // Installing dependencies
-      sh "pip install -r requirements.txt -t library"
-      // create virtual environment and install pytest
-		  sh """
-		  pip install virtualenv
-		  virtualenv venv
-		  . venv/bin/activate
-		  pip install pytest
-	  	"""
-    }
+		// create virtual environment and install pytest
+		sh """
+		pip install virtualenv
+		virtualenv venv
+		. venv/bin/activate
+		pip install pytest
+		"""
 	} else if (runtime.indexOf("go") > -1 ) {
     // Installing dependencies using dep ensure
     // golang build scripts
@@ -592,7 +589,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"]
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "java8", "go1.x"]
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {
