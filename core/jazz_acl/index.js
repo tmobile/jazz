@@ -78,7 +78,7 @@ async function processACLRequest(event, config) {
       await processScmPermissions(config, serviceId, policies, 'remove');
     }
 
-    return { "success": true };
+    return { success: true };
   }
 
   //2. GET the policy for the given service id
@@ -99,7 +99,7 @@ async function processACLRequest(event, config) {
         permission: policy[2],
         category: policy[1]
       })
-      ));
+    ));
 
     return {
       serviceId: serviceId,
@@ -145,8 +145,6 @@ async function processScmPermissions(config, serviceId, policies, key) {
   let res = await scm.processScmPermissions(serviceData, policies, key);
   return (res);
 }
-
-
 
 const exportable = {
   handler,
