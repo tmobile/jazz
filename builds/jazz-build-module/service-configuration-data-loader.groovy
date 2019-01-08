@@ -174,10 +174,8 @@ def loadServiceConfigurationData() {
             updateCoreAPI()
             updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
             updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
-
-            if(service_name.trim() == "jazz_services-handler") {
-                updateConfigValue("{conf-region}", region)
-            }
+            updateConfigValue("{conf-region}", region)
+        }
 
         if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer") || (service_name.trim() == "jazz_cognito-admin-authorizer")) {
             updateConfigValue("{conf-user-pool-id}", config_loader.AWS.COGNITO.USER_POOL_ID)
