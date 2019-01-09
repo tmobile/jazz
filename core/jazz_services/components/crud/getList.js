@@ -25,7 +25,7 @@
 const utils = require("../utils.js")();
 const _ = require("lodash");
 
-module.exports = (query, getAllRecords, onComplete) => {
+module.exports = (query, getAllRecords, servicesList, onComplete) => {
     // initialize dynamodb
     var dynamodb = utils.initDynamodb();
 
@@ -38,6 +38,36 @@ module.exports = (query, getAllRecords, onComplete) => {
         "ReturnConsumedCapacity": "TOTAL",
         "Limit": "500"
     };
+
+    let servicesIdList = servicesList.map(item => (item.serviceId))
+    console.log("servicesIdList", servicesIdList);
+
+    // filter = filter + "#serviceId IN (:id_1, :id_2)"
+
+    // attributeValues = {
+    //     ":id_1": {
+    //         "S": "4168f957-cb52-9fd5-af39-6be9b8bc0b41"
+    //     },
+    //     ":id2": {
+    //         "S": "3fea4cb5-7722-2183-0093-bc199358daf9"
+    //     }
+    // }
+
+    let svcIdStr = "#serviceId IN ("
+    for (let i in servicesIdList) {
+        let attrValKey = `:id_${i}`
+        svcIdStr += `${attrValKey}, `
+        attributeValues[attrValKey] = {
+            'S': servicesIdList[i]
+        }
+    }
+    filter = `${svcIdStr.substring(0, svcIdStr.length - 2)})`
+    let attributeNames = {
+        "#serviceId": "SERVICE_ID"
+    }
+
+    console.log("filter:", filter);
+    console.log("attributeValues: ", attributeValues);
 
     var filter_key = utils.getDatabaseKeyName(global.config.service_filter_key);
 
@@ -84,23 +114,25 @@ module.exports = (query, getAllRecords, onComplete) => {
         });
     }
 
-    if (!getAllRecords || (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()))) {
-        var ddb_created_by = utils.getDatabaseKeyName("created_by");
+    // if (!getAllRecords || (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()))) {
+    //     var ddb_created_by = utils.getDatabaseKeyName("created_by");
 
-        // filter for services created by current user
-        filter = filter + ddb_created_by + " = :" + ddb_created_by + insertAnd;
-        attributeValues[(":" + ddb_created_by)] = {
-            'S': global.userId
-        };
-    }
+    //     // filter for services created by current user
+    //     filter = filter + ddb_created_by + " = :" + ddb_created_by + insertAnd;
+    //     attributeValues[(":" + ddb_created_by)] = {
+    //         'S': global.userId
+    //     };
+    // }
 
     if (filter !== "") {
         filter = filter.substring(0, filter.length - insertAnd.length); // remove insertAnd at the end
 
         scanparams.FilterExpression = filter;
         scanparams.ExpressionAttributeValues = attributeValues;
+        scanparams.ExpressionAttributeNames = attributeNames;
     }
 
+    console.log("scanparams: " + JSON.stringify(scanparams));
     query.limit = query.limit || 10;
     query.offset = query.offset || 0;
     query.filter = query.filter || "";

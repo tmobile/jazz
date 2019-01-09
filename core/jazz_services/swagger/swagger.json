@@ -1529,23 +1529,23 @@
                     },
                     "description": "Tags for the service"
                 },
-                "permissions": {
-                    "type": "object",
-                    "properties": {
-                        "manage": {
-                            "type": "string",
-                            "description": "permission for manage"
-                        },
-                        "code": {
-                            "type": "string",
-                            "description": "permission for code"
-                        },
-                        "deploy": {
-                            "type": "string",
-                            "description": "permission for deploy"
+                "policies": {
+                    "type": "array",
+                    "description": "User policies for the sevice",
+                    "items": {
+                        "type": "object",
+                        "description": "List of categories and permissions",
+                        "properties": {
+                            "permission": {
+                                "type": "string",
+                                "enum": ["admin", "write", "read"]
+                                },
+                            "category": {
+                                "type": "string",
+                                "enum": ["manage", "code", "deploy"]
+                            }
                         }
-                    },
-                    "descriprion": "Permissions for the service"
+                    }
                 }
             }
         },
