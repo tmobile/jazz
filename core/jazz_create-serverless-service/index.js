@@ -93,7 +93,6 @@ var handler = (event, context, cb) => {
         getToken(config)
             .then((authToken) => getServiceData(service_creation_data, authToken, config, deploymentTargets))
             .then((inputs) => createService(inputs))
-            .then(() => updateAclPolicy(serviceId, authToken, user_id, "admin", "manage", config))
             .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
             .then((result) => {
                 return cb(null, responseObj(result, service_creation_data));
@@ -402,47 +401,10 @@ var validateEventName = (eventType, sourceName, config) => {
   }
 };
 
-var updateAclPolicy = (serviceId, authToken, user_id, permission, category, config) => {
-    return new Promise((resolve, reject) => {
-        let svcPayload = {
-            uri: config.SERVICE_API_URL + config.ACL_ENDPOINT,
-            method: 'POST',
-            headers: { 'Authorization': authToken },
-            json: {
-                "serviceId": serviceId,
-                "policies": [
-                    {
-                        "userId": user_id,
-                        "permission": permission,
-                        "category": category
-                    }
-                ]
-            },
-            rejectUnauthorized: false
-        };
-
-        request(svcPayload, (error, response, body) => {
-            if(error) {
-                logger.error(`Error while updating policies using ACL: ${error}`);
-                reject(error);
-            } else {
-                logger.debug(`ACL response: ${JSON.stringify(response)}`);
-                if(response.statusCode === 200 && body.data && body.data.success) {
-                    resolve("success");
-                } else {
-                    logger.error(`Error while updating policies using ACL: ${JSON.stringify(response)}`);
-                    reject({result: "internalError", message: `Error while updating policies using ACL.`});
-                }
-            }
-        });
-    });
-}
-
 module.exports = {
     handler: handler,
     startServiceOnboarding: startServiceOnboarding,
     getToken: getToken,
     createService: createService,
-    getServiceData: getServiceData,
-    updateAclPolicy: updateAclPolicy
+    getServiceData: getServiceData
 }

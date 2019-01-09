@@ -4,12 +4,15 @@ import groovy.json.JsonOutput
 
 def updateServiceACL(serviceId, auth_token, aclUrl) {
 	try {
-		def categoryList = ['code', 'deploy']
+		def categoryList = ['manage','code', 'deploy']
 		def policiesList = []
+
 		for (category in categoryList) {
+			let permission = 'write';
+			if(category === 'manage') permission = 'admin'
 			def eachPolicy = [
 				userId: service_config['created_by'],
-				permission: 'write',
+				permission: permission,
 				category: category
 			]
 			policiesList.add(eachPolicy)
