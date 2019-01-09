@@ -122,7 +122,7 @@ module.exports.handler = (event, context, cb) => {
         // 3: GET Filtered services (/services?field1=value&field2=value2&...)
         if (event.method === 'GET' && !service_id) {
             let servicesList = event.services;
-            // logger.info('GET services');
+
             async.series({
                 // fetch services list from dynamodb, filter if required
                 fetchServices: function (onComplete) {
