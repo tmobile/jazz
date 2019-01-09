@@ -8,8 +8,8 @@ def updateServiceACL(serviceId, auth_token, aclUrl) {
 		def policiesList = []
 
 		for (category in categoryList) {
-			let permission = 'write';
-			if(category === 'manage') permission = 'admin'
+			def permission = 'write';
+			if(category == 'manage') permission = 'admin'
 			def eachPolicy = [
 				userId: service_config['created_by'],
 				permission: permission,
