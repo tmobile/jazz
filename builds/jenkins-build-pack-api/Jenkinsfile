@@ -146,16 +146,11 @@ node() {
 			} else {
 				error "Request Id Generation failed"
 			}
+			events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, , gitCommitHash), environment)
 		} else {
 			echo "Setting up request_id"
 			requestId = request_id
     	}
-
-		if(request_id == 'none') {
-			events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, , gitCommitHash), environment)
-		} else {
-			echo "Skipped re-create deplyoment with r_id" + request_id 
-		}
 
 		stage('Pre-Build Validation') {
 			try {

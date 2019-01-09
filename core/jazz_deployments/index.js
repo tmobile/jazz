@@ -70,7 +70,7 @@ function handler(event, context, cb) {
 
 			if (method === "POST" && Object.keys(path).length) {
 				logger.info("GET Deployment details using deployment Id :" + path.id);
-				exportable.processDeploymentRebuild(config, event, path.id, deploymentTableName)
+				exportable.processDeploymentRebuild(config, event.principalId, path.id, deploymentTableName)
 					.then((res) => {
 						logger.info("Re-build result:" + JSON.stringify(res));
 						return cb(null, responseObj(res, path));
@@ -240,12 +240,12 @@ function processDeploymentCreation(config, deployment_details, deploymentTableNa
 	});
 }
 
-function processDeploymentRebuild(config, event, deploymentId, deploymentTableName) {
+function processDeploymentRebuild(config, principalId, deploymentId, deploymentTableName) {
 	logger.debug("processDeploymentRebuild");
 	const request_id =  Uuid();
 	return new Promise((resolve, reject) => {
 		exportable.getDeploymentDetailsById(deploymentTableName, deploymentId)
-			.then((res) => exportable.sendCreateDepolymentEvent(config, res, request_id ,event))
+			.then((res) => exportable.sendCreateDepolymentEvent(config, res, request_id ,principalId))
 			.then((res) => exportable.reBuildDeployment(res, config, request_id))
 			.then((res) => {
 				resolve(res);
@@ -289,17 +289,16 @@ function processDeploymentsUpdate(config, body, deploymentTableName, deploymentI
 	});
 }
 //custom function
-function sendCreateDepolymentEvent(config, res, request_id, event) {
-	logger.info("inside send depolyment");
+function sendCreateDepolymentEvent(config, res, request_id, principalId) {
+	logger.debug("inside send depolyment");
 	return new Promise((resolve, reject) => {
-		var context_json = {
+		let context_json = {
 			'environment_logical_id': res.environment_logical_id,
 			'status': "started",
 			'domain': res.domain_name,
 			'request_id': request_id
 		};
-		logger.info("inside send depolyment"+JSON.stringify(context_json));
-		var event_json = {
+		let event_json = {
 			'request_id': request_id,
 			'event_handler': "JENKINS",
 			'event_name': "CREATE_DEPLOYMENT",
@@ -307,12 +306,11 @@ function sendCreateDepolymentEvent(config, res, request_id, event) {
 			'service_id': res.service_id,
 			'event_status': "STARTED",
 			'event_type': "SERVICE_DEPLOYMENT",
-			'username': event.principalId,
+			'username': principalId,
 			'event_timestamp': moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS'),
 			'service_context': context_json
 		};
-		logger.info("inside send event"+JSON.stringify(event_json));
-		var options = {
+		let options = {
 			url: config.SERVICE_API_URL + config.EVENT_API_URL,
 			method: 'POST',
 			rejectUnauthorized: false,
@@ -321,7 +319,6 @@ function sendCreateDepolymentEvent(config, res, request_id, event) {
 			},
 			json: event_json
 		};
-		logger.info("inside send option"+JSON.stringify(options));
 		request(options, (error, response, body) => {
 			if (response && response.statusCode === 200 && body && body.data) {
 				resolve(res);
@@ -533,7 +530,7 @@ function buildNowRequest(serviceDetails, config, refDeployment, request_id) {
 		if (build_url) {
 			var options = {
 				url: rebuild_url,
-				method: 'POST',
+					method: 'POST',
 				rejectUnauthorized: false,
 				headers: {
 					'Accept': 'application/json',
