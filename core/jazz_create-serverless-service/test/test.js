@@ -394,12 +394,7 @@ describe('create-serverless-service', function () {
           data: "Service catalog updated"
         }
       };
-      let acl_response = {
-        statusCode: 200,
-        body: {
-          data: {success: true}
-        }
-      };
+
       event.stage = "dev";
       let config = configModule.getConfig(event, context);
       // wrapping requests
