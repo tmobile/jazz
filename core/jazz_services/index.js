@@ -92,7 +92,7 @@ module.exports.handler = (event, context, cb) => {
         // 1: GET service by id (/services/{service_id})
         if (event.method === 'GET' && service_id) {
             logger.info('GET service by ID : ' + service_id);
-            let servicePermission = event.context[0].policies;
+            let servicePermission = event.services[0].policies;
 
             async.series({
                 // Get service by SERVICE_ID
@@ -121,7 +121,7 @@ module.exports.handler = (event, context, cb) => {
         // 2: GET all services (/services)
         // 3: GET Filtered services (/services?field1=value&field2=value2&...)
         if (event.method === 'GET' && !service_id) {
-            let servicesList = event.context;
+            let servicesList = event.services;
             // logger.info('GET services');
             async.series({
                 // fetch services list from dynamodb, filter if required
