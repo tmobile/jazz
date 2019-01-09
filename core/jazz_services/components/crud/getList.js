@@ -40,18 +40,6 @@ module.exports = (query, getAllRecords, servicesList, onComplete) => {
     };
 
     let servicesIdList = servicesList.map(item => (item.serviceId))
-    console.log("servicesIdList", servicesIdList);
-
-    // filter = filter + "#serviceId IN (:id_1, :id_2)"
-
-    // attributeValues = {
-    //     ":id_1": {
-    //         "S": "4168f957-cb52-9fd5-af39-6be9b8bc0b41"
-    //     },
-    //     ":id2": {
-    //         "S": "3fea4cb5-7722-2183-0093-bc199358daf9"
-    //     }
-    // }
 
     let svcIdStr = "#serviceId IN ("
     for (let i in servicesIdList) {
@@ -65,11 +53,6 @@ module.exports = (query, getAllRecords, servicesList, onComplete) => {
     let attributeNames = {
         "#serviceId": "SERVICE_ID"
     }
-
-    console.log("filter:", filter);
-    console.log("attributeValues: ", attributeValues);
-
-    var filter_key = utils.getDatabaseKeyName(global.config.service_filter_key);
 
     if (query !== undefined && query !== null) {
 
@@ -114,16 +97,6 @@ module.exports = (query, getAllRecords, servicesList, onComplete) => {
         });
     }
 
-    // if (!getAllRecords || (global.userId && !_.includes(global.config.admin_users, global.userId.toLowerCase()))) {
-    //     var ddb_created_by = utils.getDatabaseKeyName("created_by");
-
-    //     // filter for services created by current user
-    //     filter = filter + ddb_created_by + " = :" + ddb_created_by + insertAnd;
-    //     attributeValues[(":" + ddb_created_by)] = {
-    //         'S': global.userId
-    //     };
-    // }
-
     if (filter !== "") {
         filter = filter.substring(0, filter.length - insertAnd.length); // remove insertAnd at the end
 
@@ -132,7 +105,6 @@ module.exports = (query, getAllRecords, servicesList, onComplete) => {
         scanparams.ExpressionAttributeNames = attributeNames;
     }
 
-    console.log("scanparams: " + JSON.stringify(scanparams));
     query.limit = query.limit || 10;
     query.offset = query.offset || 0;
     query.filter = query.filter || "";
