@@ -25,12 +25,13 @@
 const utils = require("../utils.js")();
 const _ = require("lodash");
 
-module.exports = (query, getAllRecords, servicesList, onComplete) => {
+module.exports = (query, servicesList, onComplete) => {
     // initialize dynamodb
     var dynamodb = utils.initDynamodb();
 
     var filter = "";
     var attributeValues = {};
+    let attributeNames = {};
     var insertAnd = " AND ";
 
     var scanparams = {
@@ -39,20 +40,24 @@ module.exports = (query, getAllRecords, servicesList, onComplete) => {
         "Limit": "500"
     };
 
-    let servicesIdList = servicesList.map(item => (item.serviceId))
 
-    let svcIdStr = "#serviceId IN ("
-    for (let i in servicesIdList) {
-        let attrValKey = `:id_${i}`
-        svcIdStr += `${attrValKey}, `
-        attributeValues[attrValKey] = {
-            'S': servicesIdList[i]
+    if (servicesList && servicesList.length) {
+        let servicesIdList = servicesList.map(item => (item.serviceId))
+
+        let svcIdStr = "#serviceId IN ("
+        for (let i in servicesIdList) {
+            let attrValKey = `:id_${i}`
+            svcIdStr += `${attrValKey}, `
+            attributeValues[attrValKey] = {
+                'S': servicesIdList[i]
+            }
+        }
+        filter = `${svcIdStr.substring(0, svcIdStr.length - 2)}) AND `
+        attributeNames = {
+            "#serviceId": "SERVICE_ID"
         }
     }
-    filter = `${svcIdStr.substring(0, svcIdStr.length - 2)})`
-    let attributeNames = {
-        "#serviceId": "SERVICE_ID"
-    }
+
 
     if (query !== undefined && query !== null) {
 
@@ -114,7 +119,7 @@ module.exports = (query, getAllRecords, servicesList, onComplete) => {
             if (err) {
                 onComplete(err);
             } else {
-                var items_formatted = [];
+                var items_formatted = [], finalList = [];
                 items.Items.forEach(function (item) {
                     items_formatted.push(utils.formatService(item, true));
                 });
@@ -129,14 +134,18 @@ module.exports = (query, getAllRecords, servicesList, onComplete) => {
                         if (query.filter) {
                             items_formatted = utils.filterUtil(items_formatted, query.filter);
                         }
+
                         count = items_formatted.length;
                         if (query.limit && query.offset) {
                             items_formatted = utils.paginateUtil(items_formatted, parseInt(query.limit), parseInt(query.offset));
                         }
+
+                        finalList = appendPolicies(items_formatted, servicesList);
+
                     }
                     var obj = {
                         count: count,
-                        services: items_formatted
+                        services: finalList
                     };
 
                     onComplete(null, obj);
@@ -145,4 +154,18 @@ module.exports = (query, getAllRecords, servicesList, onComplete) => {
         });
     };
     scanExecute(onComplete);
+
+    function appendPolicies(filteredList, servicesList) {
+        if (servicesList && servicesList.lengtht) {
+            for (filteredItem of filteredList) {
+                for (serviceItem of servicesList) {
+                    if (serviceItem.serviceId === filteredItem.id) {
+                        filteredItem["policies"] = serviceItem.policies
+                    }
+                }
+            }
+        }
+
+        return filteredList
+    };
 };

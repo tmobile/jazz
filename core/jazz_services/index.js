@@ -80,15 +80,6 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("service id is required")));
         }
 
-        global.userId = event.principalId;
-        var getAllRecords;
-        if (event.query && event.query.isAdmin) {
-            getAllRecords = true;
-        }
-        else {
-            getAllRecords = false;
-        }
-
         // 1: GET service by id (/services/{service_id})
         if (event.method === 'GET' && service_id) {
             logger.info('GET service by ID : ' + service_id);
@@ -127,7 +118,7 @@ module.exports.handler = (event, context, cb) => {
                 // fetch services list from dynamodb, filter if required
                 fetchServices: function (onComplete) {
                     var query = event.query;
-                    crud.getList(query, getAllRecords, servicesList,onComplete);
+                    crud.getList(query, servicesList,onComplete);
                 }
             }, function (error, result) {
                 // Handle error
