@@ -42,6 +42,7 @@ node() {
 
   def branch = params.scm_branch
   def repo_name = params.service_name
+  def request_id = params.request_id
   def gitCommitOwner
   def gitCommitHash
   def context_map
@@ -138,15 +139,25 @@ node() {
     isEventSchdld = true
   }
 
-  def requestId = utilModule.generateRequestId()
-  if (requestId != null) {
-    events.setRequestId(requestId)
-    environmentDeploymentMetadata.setRequestId(requestId)
+  if(request_id == 'none') {
+    requestId = utilModule.generateRequestId()
+    if (requestId != null) {
+        events.setRequestId(requestId)
+        environmentDeploymentMetadata.setRequestId(requestId)
+    } else {
+        error "Request Id Generation failed"
+      }
   } else {
-    error "Request Id Generation failed"
+    echo "Setting up request_id"
+    requestId = request_id
   }
 
-  events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
+
+  if(request_id == 'none') {
+		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, , gitCommitHash), environment)
+  } else {
+      echo "Skipped re-create deplyoment with r_id" + request_id
+  }
 
   dir(repo_name) {
     loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
