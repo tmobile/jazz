@@ -92,7 +92,7 @@ module.exports.handler = (event, context, cb) => {
         // 1: GET service by id (/services/{service_id})
         if (event.method === 'GET' && service_id) {
             logger.info('GET service by ID : ' + service_id);
-            let servicePermission = event.context[0].permissions;
+            let servicePermission = event.context[0].policies;
 
             async.series({
                 // Get service by SERVICE_ID
@@ -108,7 +108,7 @@ module.exports.handler = (event, context, cb) => {
                 }
                 if (data.getServiceByServiceId) {
                     var service_obj = data.getServiceByServiceId;
-                    service_obj.data["permissions"] = servicePermission;
+                    service_obj.data["policies"] = servicePermission;
                     logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
                     return handleResponse(error, service_obj.data, event.path);
                 } else {
@@ -121,12 +121,13 @@ module.exports.handler = (event, context, cb) => {
         // 2: GET all services (/services)
         // 3: GET Filtered services (/services?field1=value&field2=value2&...)
         if (event.method === 'GET' && !service_id) {
+            let servicesList = event.context;
             // logger.info('GET services');
             async.series({
                 // fetch services list from dynamodb, filter if required
                 fetchServices: function (onComplete) {
                     var query = event.query;
-                    crud.getList(query, getAllRecords, onComplete);
+                    crud.getList(query, getAllRecords, servicesList,onComplete);
                 }
             }, function (error, result) {
                 // Handle error
