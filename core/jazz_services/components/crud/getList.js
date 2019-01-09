@@ -156,7 +156,7 @@ module.exports = (query, servicesList, onComplete) => {
     scanExecute(onComplete);
 
     function appendPolicies(filteredList, servicesList) {
-        if (servicesList && servicesList.lengtht) {
+        if (servicesList && servicesList.length) {
             for (filteredItem of filteredList) {
                 for (serviceItem of servicesList) {
                     if (serviceItem.serviceId === filteredItem.id) {
