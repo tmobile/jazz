@@ -14,7 +14,7 @@
 // limitations under the License.
 // =========================================================================
 
-const Enforcer = require('casbin').Enforcer;
+const casbin = require('casbin');
 const TypeORMAdapter = require('typeorm-adapter');
 const logger = require('./logger.js');
 const errorHandlerModule = require("./error-handler.js")();
@@ -58,7 +58,7 @@ async function getFilteredPolicy(index, values, config) {
 
   try {
     conn = await dbConnection(config);
-    enforcer = await Enforcer.newEnforcer("./config/rbac_model.conf", conn);
+    enforcer = await casbin.newEnforcer("./config/rbac_model.conf", conn);
 
     const promisedPolicies = values.map(async value => await enforcer.getFilteredPolicy(index, value));
     const policies = await Promise.all(promisedPolicies);
@@ -79,7 +79,7 @@ async function checkPermissions(userId, serviceId, category, permission, config)
   let conn;
   try {
     conn = await dbConnection(config);
-    const enforcer = await Enforcer.newEnforcer('./config/rbac_model.conf', conn);
+    const enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
     result.authorized = enforcer.enforce(userId, `${serviceId}_${category}`, permission);
   } catch(err) {
     logger.error(err.message);
@@ -108,7 +108,7 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
 
       if (totalPolicies) {
         conn = await dbConnection(config);
-        const enforcer = await Enforcer.newEnforcer('./config/rbac_model.conf', conn);
+        const enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
 
         // remove (incase of add remove first)
         if (action === 'remove' || action === 'add') {
