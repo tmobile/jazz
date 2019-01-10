@@ -139,13 +139,13 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
 				def config = LoadConfiguration()
 				def roleARN
-				
+
 				if (service_config['domain'] && service_config['domain'] == "jazz") {
 					roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID
 				} else {
 					roleARN = configLoader.AWS.USERSERVICES_ROLEID
 				}
-				
+
 				def serviceMetadataJson = [
 					"securityGroupIds": configLoader.AWS.SECURITY_GROUP_IDS,
 					"subnetIds": configLoader.AWS.SUBNET_IDS,
@@ -259,7 +259,7 @@ node  {
 
 				try {
 					events.sendStartedEvent("ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO", 'adding write permission to repo started', context_map)
-					aclModule.updateServiceACL(service_id, auth_token, "${g_base_url}/jazz/acl/policies")
+					aclModule.updateServiceACL(service_id, auth_token, "${g_base_url}/jazz/acl/policies", service_config['created_by'])
 					events.sendCompletedEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO', 'adding write permission to repo started', context_map)
 				}
 				catch (ex) {

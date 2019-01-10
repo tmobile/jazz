@@ -318,12 +318,7 @@ describe('create-serverless-service', function () {
           data: "Service catalog updated"
         }
       };
-      let acl_response = {
-        statusCode: 200,
-        body: {
-          data: {success: true}
-        }
-      };
+
       event.stage = "dev";
       let config = configModule.getConfig(event, context);
       // wrapping requests
@@ -341,8 +336,6 @@ describe('create-serverless-service', function () {
           return obj.callback(errObject, responseObject_serviceOnboarding, responseObject_serviceOnboarding.body);
         } else if (obj.uri === 'https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services/ghd93-3240-2343') {
           obj.callback(null, responseObject_update, responseObject_update.body);
-        } else if (obj.uri === ("https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/acl/policies")) {
-          return obj.callback(null, acl_response, acl_response.body);
         }
       });
       index.handler(event, context, (err, res) => {
@@ -740,65 +733,4 @@ describe('create-serverless-service', function () {
     });
   });
 
-  describe("updateAclPolicy", () => {
-    let event, config;
-    beforeEach(() => {
-      event = {
-        'stage': 'test'
-      };
-      config = configModule.getConfig(event, context);
-    });
-
-    it("should indicate error when jazz acl request fails", () => {
-      let error = {
-        errType: "invalidError",
-        errMessage: "error occoured"
-      };
-      let reqStub = sinon.stub(request, "Request", (obj) => {
-        return obj.callback(error, null, null);
-      });
-      index.updateAclPolicy("random-id", 'temp-token', 'user', 'temp-permission', 'temp-cat', config)
-        .catch(err => {
-          expect(err).to.include(error);
-          sinon.assert.calledOnce(reqStub);
-          reqStub.restore();
-        });
-    });
-
-    it("should successfully send request to jazz acl to update permissions", () => {
-      let responseObject = {
-        statusCode: 200,
-        body: {
-          data: {success: true}
-        }
-      };
-      let reqStub = sinon.stub(request, "Request", (obj) => {
-        return obj.callback(null, responseObject, responseObject.body);
-      });
-      index.updateAclPolicy("random-id", 'temp-token', 'user', 'temp-permission', 'temp-cat', config)
-        .then((res) => {
-          expect(res).to.eq("success");
-          sinon.assert.calledOnce(reqStub);
-          reqStub.restore();
-        });
-    });
-
-    it("should indicate error from jazz acl request while updating the permissions", () => {
-      let responseObject = {
-        statusCode: 200,
-        body: {
-          data: {success: false}
-        }
-      };
-      let reqStub = sinon.stub(request, "Request", (obj) => {
-        return obj.callback(null, responseObject, responseObject.body);
-      });
-      index.updateAclPolicy("random-id", 'temp-token', 'user', 'temp-permission', 'temp-cat', config)
-        .catch((err) => {
-          expect(err).to.include({ result: 'internalError', message: 'Error while updating policies using ACL.' });
-          sinon.assert.calledOnce(reqStub);
-          reqStub.restore();
-        });
-    });
-  });
 });
