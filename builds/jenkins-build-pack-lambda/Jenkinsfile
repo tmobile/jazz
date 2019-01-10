@@ -138,7 +138,7 @@ node() {
   if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled || isSQSEventEnabled){
     isEventSchdld = true
   }
-
+  def requestId
   if(request_id == 'none') {
     requestId = utilModule.generateRequestId()
     events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash),  environment_logical_id)
