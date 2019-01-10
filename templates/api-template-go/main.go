@@ -53,10 +53,18 @@ func Handler(ctx context.Context, event map[string]interface{}) (Response, error
 		// If payload is empty send the Inputvalidation Error resposne
 		return Response{},NewInputValidationError("Sample Error Response")
 	} else {
-		// Response to be sent 
+		var payLoad map[string]interface{}
+		// Your GET method should be handled here
+		if (event["method"].(string) == "GET"){
+			payLoad = event["query"].(map[string]interface{})
+		}
+		//Your POST method should be handled here
+		if (event["method"].(string) == "POST"){
+			payLoad = event["body"].(map[string]interface{})
+		}
 		return Response{
 			Data: sampleResponse,
-			Input:  event["body"].(map[string]interface{}),
+			Input: payLoad,
 		},nil
 
 	}

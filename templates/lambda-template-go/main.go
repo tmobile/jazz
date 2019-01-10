@@ -50,17 +50,11 @@ func Handler(ctx context.Context, event map[string]interface{}) (Response, error
 		"configKeys": configValue,
 	};
 
-	if len(event) == 0{
-		// If payload is empty send the Inputvalidation Error resposne
-		return Response{},NewInputValidationError("Sample Error Response")
-	}else{
-		// Response to be sent 
-		return Response{
-			Data: sampleResponse,
-			Input:  event,
-		},nil
-
-	}
+	// Response to be sent 
+	return Response{
+		Data: sampleResponse,
+		Input:  event,
+	},nil
 }
 
 //Main function Starts
