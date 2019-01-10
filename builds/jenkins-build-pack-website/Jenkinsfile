@@ -101,24 +101,24 @@ node()  {
 	gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 
 	def requestId 
-  	if(request_id == 'none') {
-      requestId = utilModule.generateRequestId()
-      if (requestId != null) {
-          events.setRequestId(requestId)
-          environmentDeploymentMetadata.setRequestId(requestId)
-      } else {
-          error "Request Id Generation failed"
-      }
-	  events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, gitCommitHash), environment)
-
-    }
-    else {
-     echo "Skipped re-create deplyoment with r_id" + request_id
-     requestId = request_id
-    }
+		if(request_id == 'none') {
+			requestId = utilModule.generateRequestId()
+			events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, gitCommitHash), environment)
+		} else {
+			echo "Setting up request_id"
+			requestId = request_id
+    	}
+    if (requestId != null) {
+				events.setRequestId(requestId)
+				environmentDeploymentMetadata.setRequestId(requestId)
+			} else {
+				error "Request Id Generation failed"
+			}
 
 	dir(repo_name)
 	{
+	
+
 		stage('Pre-Build Validation'){
 
 			events.sendStartedEvent("VALIDATE_INPUT", 'pre-build validation starts', context_map)

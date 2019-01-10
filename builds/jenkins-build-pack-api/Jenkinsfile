@@ -138,19 +138,21 @@ node() {
 		}
 
 		def requestId 
+		echo "request_id: $request_id"
 		if(request_id == 'none') {
 			requestId = utilModule.generateRequestId()
-			if (requestId != null) {
-				events.setRequestId(requestId)
-				environmentDeploymentMetadata.setRequestId(requestId)
-			} else {
-				error "Request Id Generation failed"
-			}
 			events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, gitCommitHash), environment)
 		} else {
 			echo "Setting up request_id"
 			requestId = request_id
     	}
+        
+        if (requestId != null) {
+            events.setRequestId(requestId)
+            environmentDeploymentMetadata.setRequestId(requestId)
+        } else {
+            error "Request Id Generation failed"
+        }
 
 		stage('Pre-Build Validation') {
 			try {
