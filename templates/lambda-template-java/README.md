@@ -1,1 +1,1 @@
-This is a sample Java template project
+## Java Function template

@@ -23,6 +23,7 @@ import groovy.transform.Field
 @Field def sonarModule
 
 @Field def auth_token = ''
+@Field def config
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def current_environment = ''
@@ -50,7 +51,6 @@ node() {
     repo_name = params.domain + "_" + params.service_name
   }
 
-  def config
   def domain = params.domain
 
   stage('Checkout code base') {
@@ -128,14 +128,13 @@ node() {
   def isEventSchdld = false
   def internalAccess = config['require_internal_access']
   domain = config['domain']
-  def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
-  // @TODO: the below statement will be replaced with regular expression in very near future;
-  def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
+
+  def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
 
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
-  if (isScheduleEnabled || isEc2EventEnabled || isDynamoDbEnabled || isSQSEventEnabled || isStreamEnabled) {
+  if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled || isSQSEventEnabled){
     isEventSchdld = true
   }
 
@@ -155,7 +154,7 @@ node() {
       stage('Update Service Template') {
         echo "Inside Update service template"
         try {
-          updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name)
+          updatePlatformServiceTemplate(config, config['iamRoleARN'], roleId, current_environment, repo_name)
         } catch (error) {
           error "Error occured while updating service template."
         }
@@ -193,7 +192,7 @@ node() {
     stage('Build') {
       events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
       try {
-        buildLambda(runtime)
+        buildLambda(runtime, repo_name)
       } catch (ex) {
         events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -223,9 +222,11 @@ node() {
       ]) {
         try {
           // initialize aws credentials
-          sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-          sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-          sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+          def randomString = utilModule.generateRequestId();
+          def credsId = "jazz-${randomString}";
+          sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+          sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+          sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
           loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
 
@@ -279,7 +280,7 @@ node() {
             }
           }
 
-          def function_arn = getLambdaARN(stackName);
+          def function_arn = getLambdaARN(stackName, credsId);
           lambdaARN = function_arn.split(":(?!.*:.*)")[0]
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
 
@@ -290,14 +291,14 @@ node() {
             lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, event_source_s3, config['event_action_s3'])
           }
 
-          if (config['event_source_dynamodb'] || config['event_source_sqs']) {
+          if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
             def role_name = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
             def role_arn = lambdaEvents.getRoleArn(role_name)
             events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", role_arn, "iam_role", config), environment_logical_id);
           }
 
           // reset Credentials
-          resetCredentials()
+          resetCredentials(credsId)
           if (domain != "jazz") {
             createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
           }
@@ -454,6 +455,7 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
   }
   if (!isS3EventEnabled) {
     sedCommand = sedCommand + "; /#Start:isS3EventEnabled/,/#End:isS3EventEnabled/d"
+    sedCommand = sedCommand + "; /#Start:isS3EventRoleEnabled/,/#End:isS3EventRoleEnabled/d"
   }
   if (!isSQSEventEnabled) {
     sedCommand = sedCommand + "; /#Start:isSQSEventEnabled/,/#End:isSQSEventEnabled/d"
@@ -472,6 +474,7 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
 
 def removeEventResources(){
   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
+  sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
 }
 
 
@@ -518,120 +521,134 @@ def LoadConfiguration() {
   return prop
 }
 
-
-/** Run validation based on runtime
- */
-/*def runValidation(String runtime) {
-
-
-} */
-
 /**	Build project based on runtime
  */
-def buildLambda(String runtime) {
+def buildLambda(String runtime, String repo_name) {
   echo "installing dependencies for $runtime"
   if (runtime.indexOf("nodejs") > -1) {
-    sh "npm install --save"
-  } else if (runtime.indexOf("java") > -1) {
-    sh "mvn package"
-  } else if (runtime.indexOf("python") > -1) {
-    // install requirements.txt in library folder, these python modules will be a part of deployment package
-    sh "rm -rf library"
-    sh "mkdir library"
-    sh "pip install -r requirements.txt -t library"
-    sh "touch library/__init__.py"
-    // create virtual environment and install pytest
-    sh """
-    pip install virtualenv
-    virtualenv venv
-      .venv / bin / activate
-    pip install pytest
-    """
+		sh "npm install --save"
+	} else if (runtime.indexOf("java") > -1) {
+		sh "mvn package"
+	} else if (runtime.indexOf("python") > -1) {
+	  // install requirements.txt in library folder, these python modules will be a part of deployment package
+		sh "rm -rf library"
+		sh "mkdir library"
+		sh "touch library/__init__.py"
+
+    if (runtime == 'python3.6'){
+      // Installing dependencies
+      sh "pip3 install -r requirements.txt -t library"
+      // create virtual environment and install pytest
+      sh """
+			python3 -m venv virtualenv
+			. virtualenv/bin/activate
+			pip3 install pytest
+			pytest test
+		  """
+    } else {
+      // Installing dependencies
+      sh "pip install -r requirements.txt -t library"
+      // create virtual environment and install pytest
+		  sh """
+		  pip install virtualenv
+		  virtualenv venv
+		  . venv/bin/activate
+		  pip install pytest
+	  	"""
+    }
+	} else if (runtime.indexOf("go") > -1 ) {
+    // Installing dependencies using dep ensure
+    // golang build scripts
+   	withEnv(["GOPATH=${env.WORKSPACE}"]) {
+      sh "mkdir -p $GOPATH/src"
+      sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + " $GOPATH/src"
+      sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
+      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/" + repo_name + "/main.go"
+    }
   }
 }
 
 /** Reset credentials
  */
-def resetCredentials() {
+def resetCredentials(credsId) {
   echo "resetting AWS credentials"
-  sh "aws configure set profile.tmoDevOps.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-  sh "aws configure set profile.tmoDevOps.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+  sh "aws configure set profile.${credsId}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  sh "aws configure set profile.${credsId}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
 }
 
 /** Validate basic configurations in the deployment yaml file and error if any keys are
 	missing.
 */
 def validateDeploymentConfigurations(def prop) {
-  if (prop.containsKey("service")) {
-    if (prop['service'] == "") {
-      error "Wrong configuration. Value for Key 'service' is missing in the configuration"
-    }
-  } else {
-    error "Wrong configuration. Key 'service' is missing in the configuration"
-  }
-  if (prop.containsKey("providerRuntime")) {
-    def _runtime = prop['providerRuntime']
-    if (_runtime == "") {
-      error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
-    } else {
-      def validRuntimes = ["nodejs4.3", "nodejs6.10", "python2.7", "java8"] //@TODO. Add more runtime supports.
-      def flag = false
+	if (prop.containsKey("service")) {
+		if (prop['service'] == "") {
+			error "Wrong configuration. Value for Key 'service' is missing in the configuration"
+		}
+	} else {
+		error "Wrong configuration. Key 'service' is missing in the configuration"
+	}
+	if (prop.containsKey("providerRuntime")) {
+		def _runtime = prop['providerRuntime']
+		if (_runtime == "") {
+			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
+		} else {
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"]
+			def flag = false
 
-      for (int i = 0; i < validRuntimes.size(); i++) {
-        if (_runtime == validRuntimes[i]) {
-          flag = true
-        }
-      }
+			for (int i = 0; i < validRuntimes.size(); i++) {
+				if (_runtime == validRuntimes[i]) {
+					flag = true
+				}
+			}
 
-      if (!flag) {
-        echo "$flag"
-        error "Runtime given in the configuration is not valid."
-      }
-    }
-  } else {
-    error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
-  }
-  if (prop.containsKey("providerTimeout")) {
-    if (prop['providerTimeout'] == "") {
-      error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
-    } else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
-      error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
-    }
-  } else {
-    error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
-  }
+			if (!flag) {
+				echo "$flag"
+				error "Runtime given in the configuration is not valid."
+			}
+		}
+	} else {
+		error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
+	}
+	if (prop.containsKey("providerTimeout")) {
+		if (prop['providerTimeout'] == "") {
+			error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
+		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
+			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
+		}
+	} else {
+		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
+	}
 
-  if (prop.containsKey("region")) {
-    if (prop['region'] == "") {
-      error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-    } else if (prop['region'] != configLoader.AWS.REGION) {
-      error "Wrong configuration. Value for Key 'region' should be ${region}"
-    }
-  } else {
-    error "Wrong configuration. Key 'region' is missing in the configuration"
-  }
+	if (prop.containsKey("region")) {
+		if (prop['region'] == "") {
+			error "Wrong configuration. Value for Key 'region' is missing in the configuration"
+		} else if (prop['region'] != configLoader.AWS.REGION) {
+			error "Wrong configuration. Value for Key 'region' should be ${region}"
+		}
+	} else {
+		error "Wrong configuration. Key 'region' is missing in the configuration"
+	}
 
-  def runtime = prop['providerRuntime']
-  if (runtime.indexOf("java") > -1) {
+	def runtime = prop['providerRuntime']
+	if (runtime.indexOf("java") > -1) {
 
-    if (prop.containsKey("artifact")) {
-      if (prop['artifact'] == "") {
-        error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
-      }
-    } else {
-      error "Wrong configuration. Key 'artifact' is missing in the configuration"
-    }
+		if (prop.containsKey("artifact")) {
+			if (prop['artifact'] == "") {
+				error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
+			}
+		} else {
+			error "Wrong configuration. Key 'artifact' is missing in the configuration"
+		}
 
-    if (prop.containsKey("mainClass")) {
-      if (prop['mainClass'] == "") {
-        error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
-      }
-    } else {
-      error "Wrong configuration. Key 'mainClass' is missing in the configuration"
-    }
-  }
+		if (prop.containsKey("mainClass")) {
+			if (prop['mainClass'] == "") {
+				error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
+			}
+		} else {
+			error "Wrong configuration. Key 'mainClass' is missing in the configuration"
+		}
+	}
 }
-
 
 def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
 
@@ -645,7 +662,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
       ]])
   }
 
-  echo "isEventSchdld: $isEventSchdld,isScheduleEnabled: $isScheduleEnabled, isEc2EventEnabled: $isEc2EventEnabled,  isS3EventEnabled: $isS3EventEnabled, isStreamEnabled: $isStreamEnabled, isDynamoDbEnabled: $isDynamoDbEnabled"
+  echo "isEventSchdld: $isEventSchdld,isScheduleEnabled: $isScheduleEnabled, isEc2EventEnabled: $isEc2EventEnabled,  isS3EventEnabled: $isS3EventEnabled, isStreamEnabled: $isStreamEnabled, isDynamoDbEnabled: $isDynamoDbEnabled, isSQSEventEnabled: $isSQSEventEnabled"
 
   if (runtime.indexOf("nodejs") > -1) {
     sh "cp _config/serverless-nodejs.yml ./serverless.yml"
@@ -653,17 +670,19 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     sh "cp _config/serverless-java.yml ./serverless.yml"
   } else if (runtime.indexOf("python") > -1) {
     sh "cp _config/serverless-python.yml ./serverless.yml"
+  } else if (runtime.indexOf("go") > -1){
+    sh "cp _config/serverless-go.yml ./serverless.yml"
   }
 
-  if (isDynamoDbEnabled || isSQSEventEnabled) {
-    sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
-  }
-
-  if (isEventSchdld || isS3EventEnabled) {
+  if (isEventSchdld == true) {
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
-  }
+	}
 
-  if (!isEventSchdld && !isS3EventEnabled) {
+	if (isS3EventEnabled || isSQSEventEnabled || isDynamoDbEnabled || isStreamEnabled) {
+    sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
+ 	}
+
+  if(!isEventSchdld) {
     removeEventResources()
   }
 
@@ -693,8 +712,11 @@ def echoServiceInfo(String env) {
     echo "==============================================================================================="
     echo svc_response
     echo "==============================================================================================="
+    
+    return svc_response
+
   } catch (Exception ex) {
-    echo " Error while getting service info : " + ex.getMessage()
+    echo "Error while getting service info: " + ex.getMessage()
   }
 }
 
@@ -703,14 +725,15 @@ def echoServiceInfo(String env) {
 **/
 def createSubscriptionFilters(stackName, region, roleId) {
   def lambda = "/aws/lambda/${stackName}"
-  def logStreamer = "arn:aws:lambda:${configLoader.AWS.REGION}:${roleId}:function:${configLoader.INSTANCE_PREFIX}-jazz-cloud-logs-streamer-prod"
+  def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
+
   try {
     sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
   } catch (Exception ex) { } // ignore if already existing
 
   try {
     filter_json = sh(
-      script: "aws logs describe-subscription-filters --output json --log-group-name \"" + lambda + "\" --region " + region,
+      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${region}",
       returnStdout: true
     ).trim()
     echo "${filter_json}"
@@ -718,11 +741,11 @@ def createSubscriptionFilters(stackName, region, roleId) {
     filtername = resultJson.subscriptionFilters[0].filterName
     echo "removing existing filter... $filtername"
     if (filtername != "" && !filtername.equals(lambda)) {
-      sh "aws logs delete-subscription-filter --output json --log-group-name \"" + lambda + "\" --filter-name \"" + filtername + "\" --region " + region
+      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${region}"
     }
   } catch (Exception ex) { } // ignore error if not created yet
   try {
-    sh "aws logs put-subscription-filter --output json --log-group-name \"" + lambda + "\" --filter-name \"" + lambda + "\" --filter-pattern \"\" --destination-arn \"" + logStreamer + "\" --region " + region
+    sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID}"
   } catch (Exception ex) {
     echo "error occured: " + ex.getMessage()
   }
@@ -754,9 +777,12 @@ def writeServerlessFile(config, env) {
   }
 
   if (config['event_source_s3']) {
-    def event_source_s3 = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], env, "-")
+    def event_source_s3 =  lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], env, "-")
+    def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
     sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
     sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
+    sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
+    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
   }
 
   if (config['event_source_sqs']) {
@@ -780,7 +806,7 @@ def writeServerlessFile(config, env) {
     sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
   }
 
-  if (config['event_source_dynamodb'] || config['event_source_sqs']) {
+  if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
   } else {
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
@@ -917,13 +943,12 @@ def getEventsArn(config, env) {
   }
 }
 
-def getLambdaARN(String stackName) {
+def getLambdaARN(stackName, credsId) {
   def ARN = "";
-
+  
   try {
     def cloudformation_resources = "";
-    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile cloud-api")
-
+    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId}")
     def parsedObject = parseJson(cloudformation_resources);
     def outputs = parsedObject.Stacks[0].Outputs;
 
@@ -942,14 +967,15 @@ def getLambdaARN(String stackName) {
 /** Run validation based on runtime
  */
 def runValidation(String runtime) {
+  echo "running validations for $runtime"
   if (runtime.indexOf("nodejs") > -1) {
-    echo "running validations for $runtime"
     sh "jshint *.js"
   } else if (runtime.indexOf("java") > -1) {
-    echo "running validations for $runtime"
     sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
   } else if (runtime.indexOf("python") > -1) {
-    echo "running validations for $runtime"
+    // placeholder for adding runtime specific validations
+  } else if (runtime.indexOf("go") > -1) {
+    // placeholder for adding runtime specific validations
   }
 }
 
