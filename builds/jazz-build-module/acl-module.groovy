@@ -2,7 +2,7 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 
-def updateServiceACL(serviceId, auth_token, aclUrl) {
+def updateServiceACL(serviceId, auth_token, aclUrl, user) {
 	try {
 		def categoryList = ['manage','code', 'deploy']
 		def policiesList = []
@@ -11,7 +11,7 @@ def updateServiceACL(serviceId, auth_token, aclUrl) {
 			def permission = 'write';
 			if(category == 'manage') permission = 'admin'
 			def eachPolicy = [
-				userId: service_config['created_by'],
+				userId: user,
 				permission: permission,
 				category: category
 			]
