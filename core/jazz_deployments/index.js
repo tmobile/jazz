@@ -547,7 +547,8 @@ function buildNowRequest(serviceDetails, config, refDeployment, request_id) {
 						logger.info("successfully deployment started.");
 						resolve({
 							result: 'success',
-							message: "deployment started."
+							message: "deployment started.",
+							request_id: request_id
 						});
 					} else if (res.statusCode === 404) {
 						logger.error("Service not available.");

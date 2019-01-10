@@ -138,20 +138,21 @@ node() {
   if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled || isSQSEventEnabled){
     isEventSchdld = true
   }
-
+  def requestId 
   if(request_id == 'none') {
     requestId = utilModule.generateRequestId()
-    if (requestId != null) {
-        events.setRequestId(requestId)
-        environmentDeploymentMetadata.setRequestId(requestId)
-    } else {
-        error "Request Id Generation failed"
-      }
-      events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, gitCommitHash), environment)
+    events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash),  environment_logical_id)
   } else {
     echo "Setting up request_id"
     requestId = request_id
   }
+  if (requestId != null) {
+      events.setRequestId(requestId)
+      environmentDeploymentMetadata.setRequestId(requestId)
+  } else {
+      error "Request Id Generation failed"
+    }
+  
   dir(repo_name) {
     loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
     if (domain && domain == "jazz") {

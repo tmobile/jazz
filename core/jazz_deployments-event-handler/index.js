@@ -171,14 +171,18 @@ function processCreateEvent(eventPayload, configData, authToken) {
 function processUpdateEvent(eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
-		logger.info("svcContext: " + JSON.stringify(svcContext));
+		logger.info("svcContext: " + JSON.stringify(eventPayload));
 
 		var deploymentPayload = utils.getDeploymentPayload(svcContext);
 		deploymentPayload.service_id = eventPayload.SERVICE_ID.S
 		deploymentPayload.service = eventPayload.SERVICE_NAME.S
+		logger.info("deploymentPayload in processUpdateEvent: " + JSON.stringify(deploymentPayload));
+// 		deploymentPayload.provider_build_url = svcContext.provider_build_url
+// 		deploymentPayload.provider_build_id = svcContext.provider_build_id
+// 		deploymentPayload.scm_branch = svcContext.scm_branch
 
 		exportable.getDeployments(deploymentPayload, configData, authToken)
-			.then(result => { return exportable.updateDeployments(result, deploymentPayload, configData, authToken); })
+			.then(result => { return exportable.updateDeployments(result, deploymentPayload, configData, authToken, svcContext); })
 			.then(result => { return resolve(result); })
 			.catch(err => {
 				logger.error("processUpdateEvent failed: " + JSON.stringify(err));
@@ -217,14 +221,13 @@ function updateDeployments(res, deploymentPayload, configData, authToken) {
 			var deploymentData;
 
 			for (var idx in deploymentsCollection) {
-				if (deploymentsCollection[idx].provider_build_url === deploymentPayload.provider_build_url &&
-					deploymentsCollection[idx].provider_build_id === deploymentPayload.provider_build_id) {
+				if (deploymentsCollection[idx].request_id === deploymentPayload.request_id) {
 					deploymentData = deploymentsCollection[idx];
 				}
 			}
 			if (deploymentData && deploymentData.deployment_id) {
 				Object.keys(deploymentPayload).forEach(function (key) {
-					if (key !== 'status') {
+					if (!(configData.DEPLOYMENT_KEY_LIST.includes(key))) {
 						deploymentPayload[key] = deploymentData[key];
 					}
 				});

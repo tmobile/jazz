@@ -5,10 +5,11 @@
         "service",
         "domain",
         "environment_logical_id",
-        "status"
+        "status",
+        "request_id"
     ],
     "REQUIRED_PARAMS": ["service", "domain", "environment"],
-    "OPTIONAL_PARAMS": ["status", "offset", "limit", "request_id", "provider_build_url", "provider_build_id", "scm_commit_hash", "scm_url","scm_branch"],
+    "OPTIONAL_PARAMS": ["status", "offset", "limit", "provider_build_url", "provider_build_id", "scm_commit_hash", "scm_url","scm_branch"],
     "ARCHIVED_DEPLOYMENT_STATUS": "archived",
     "DEPLOYMENTS_SORTING_KEY": "provider_build_id",
     "DEPLOYMENTS_SORTING_ORDER": "desc",
