@@ -21,52 +21,29 @@ export class ServiceAccessControlComponent implements OnInit {
     'name': '',
     'accessType':'read'
   }
-  
+  showDisplay:Boolean = true;
   // list groups which has access for specific action//
   groupsAccess: any = {
     'api': [{
-        'name': 'group one',
-        'readOnly':true
-    },
-    {
-        'name': 'group two',
-        'readOnly':true
-    },
-    {
-        'name': 'group three',
-        'readOnly':true
+        'name': 'John Smith (jSmith)',
+        'readOnly':false,
+        "userType": 'Admin'
     }],
     'code' : [{
-        'name': 'group one',
+        'name': 'John Smith (jSmith)',
         'accessType':'read',
-        'readOnly':true
-    },
-    {
-        'name': 'group two',
-        'accessType':'admin',
-        'readOnly':true
-    },
-    {
-        'name': 'group three',
-        'accessType':'manage',
-        'readOnly':true
-    },
-    {
-        'name': 'group four',
-        'accessType':'manage',
-        'readOnly':true
+        'readOnly':true,
+        'userType':"Read Only"
     }],
     'deploy' : [{
-        'name': 'group one',
+        'name': 'John Smith (jSmith)',
         'readOnly':true
-    },
-    {
-        'name': 'group two',
-        'readOnly':true
-    },
-    {
-        'name': 'group three',
-        'readOnly':true
+    },{
+      'name': 'John Smith (jSmith)',
+      'readOnly':true
+    },{
+      'name': 'John Smith (jSmith)',
+      'readOnly':true
     }]
   }
 
@@ -105,7 +82,17 @@ export class ServiceAccessControlComponent implements OnInit {
        this.groupsAccess.deploy.push({'name': '','accessType':'read'});
     } 
   }
-  
+
+  onEditClick(){
+     this.showDisplay = false;
+  }
+
+  onSaveClick(){
+     this.showDisplay = true;
+  }
+  onCancelClick(){
+   this.showDisplay = true;
+  }
   refresh(){
 
   }
