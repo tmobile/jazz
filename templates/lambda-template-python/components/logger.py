@@ -75,7 +75,7 @@ class Logger(object):
             self.config['context_details'] = ''
 
     def print_file(self, fil):
-        print self.get_linenumber()
+        print (self.get_linenumber())
 
     def get_linenumber(self):
         """
