@@ -147,7 +147,7 @@ node() {
     } else {
         error "Request Id Generation failed"
       }
-      events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, , gitCommitHash), environment)
+      events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, gitCommitHash), environment)
   } else {
     echo "Setting up request_id"
     requestId = request_id
