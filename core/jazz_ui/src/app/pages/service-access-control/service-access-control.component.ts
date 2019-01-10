@@ -6,6 +6,7 @@
 
 import { Component, OnInit } from '@angular/core';
 
+
 @Component({
   selector: 'service-access-control',
   templateUrl: './service-access-control.component.html',
@@ -115,7 +116,8 @@ export class ServiceAccessControlComponent implements OnInit {
       this.groupsAccess.code[index].accessType = value;
   }
 
-  constructor() { }
+  constructor() { 
+  }
 
   ngOnInit() {
   }
