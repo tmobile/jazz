@@ -48,7 +48,7 @@
                  </div>
                 </div>
                 
-                <!-- <div class="form-row bottom-2" *ngIf="!forgot_password || register || new_pwd_req"> -->
+              
                         <div class="form-row bottom-2" *ngIf="!forgot_password || register || new_pwd_req">
                         <div class="form-label">Password </div>
                         <input required minlength="8" [class.err-border]='err_password_brd || (model.password && (!password.valid && (password.dirty || password.touched))) && (register || new_pwd_req)' type="password" name='password' [(ngModel)]="model.password"  (ngModelChange)="onChange($event)" #password='ngModel'>
