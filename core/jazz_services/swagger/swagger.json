@@ -110,11 +110,6 @@
                     "in": "query",
                     "required": false,
                     "type": "string"
-                }, {
-                    "name": "isAdmin",
-                    "in": "query",
-                    "required": false,
-                    "type": "string"
                 },{
                     "name": "limit",
                     "in": "query",
@@ -832,11 +827,6 @@
                     "schema": {
                         "$ref": "#/definitions/UpdateServiceObj"
                     }
-                }, {
-                    "name": "isAdmin",
-                    "in": "query",
-                    "required": false,
-                    "type": "string"
                 }],
                 "consumes": [
                     "application/json",
@@ -1528,6 +1518,24 @@
                         "type": "string"
                     },
                     "description": "Tags for the service"
+                },
+                "policies": {
+                    "type": "array",
+                    "description": "User policies for the sevice",
+                    "items": {
+                        "type": "object",
+                        "description": "List of categories and permissions",
+                        "properties": {
+                            "permission": {
+                                "type": "string",
+                                "enum": ["admin", "write", "read"]
+                                },
+                            "category": {
+                                "type": "string",
+                                "enum": ["manage", "code", "deploy"]
+                            }
+                        }
+                    }
                 }
             }
         },

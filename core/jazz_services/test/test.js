@@ -77,6 +77,19 @@ describe('platform_services', function() {
         "email" : "gonnaGetALittle@Wild.com",
 		    "metadata":{"service":"test-service2","securityGroupIds":"sg-cdb65db9"}
       },
+      "services": [{
+        "serviceId": "k!ngd0m_0f_Mewni",
+        "policies": [{
+          "category": "manage",
+          "permission": 'admin'
+        },{
+          "category": "code",
+          "permission": 'write'
+        },{
+          "category": "deploy",
+          "permission": 'write'
+        }]
+      }],
       "principalId": "g10$saryck"
     };
     context = awsContext();
@@ -296,36 +309,6 @@ describe('platform_services', function() {
     var allCases = filterExp.includes(filterString) &&
                     expAttrVals[scanParamBefore][dataType] == before &&
                     expAttrVals[scanParamAfter][dataType] == after;
-    AWS.restore("DynamoDB");
-    assert.isTrue(allCases);
-  });
-
-  /*
-  * Given a userID that IS-NOT not listed among admin_users, dynamoDB only scans for specific user's services
-  * @param {object} event->event.method="GET", event.path.id is undefined
-  * @params {object, function} default aws context, and callback function as defined in beforeEach
-  */
-  it("should return only the user's relevant service data if user is not an admin", function(){
-    event.method = "GET";
-    event.path.id = undefined;
-    event.query.created_by = undefined;
-
-    //user that is not listed among admin_users
-    var userId = "Mete0ra";
-
-    event.principalId = userId;
-    var dataType = "S";
-    var filterString = "SERVICE_CREATED_BY" + " = :" + "SERVICE_CREATED_BY";
-    var scanParam = ":SERVICE_CREATED_BY";
-    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-    AWS.mock("DynamoDB", "scan", spy);
-    //trigger spy by calling index.handler()
-    var callFunction = index.handler(event, context, callback);
-    //assigning the item filter values passed to DynamoDB.scan as values to check against
-    var filterExp = spy.args[0][0].FilterExpression;
-    var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
-    var allCases = filterExp.includes(filterString) &&
-                    expAttrVals[scanParam][dataType] == userId;
     AWS.restore("DynamoDB");
     assert.isTrue(allCases);
   });
@@ -651,7 +634,7 @@ describe('platform_services', function() {
     assert.isTrue(logCheck);
 });
 
-  /* 
+  /*
   * Given a successful attempt at a dynamo service update, handler() should indicate metadata updated successfully
   * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
@@ -690,7 +673,7 @@ describe('platform_services', function() {
   assert.isTrue(logCheck);
   });
 
-  /* 
+  /*
   * Given a successful attempt at a dynamo service update, handler() should indicate array updated successfully
   * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
