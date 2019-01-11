@@ -107,7 +107,9 @@ module.exports = (query, servicesList, onComplete) => {
 
         scanparams.FilterExpression = filter;
         scanparams.ExpressionAttributeValues = attributeValues;
-        scanparams.ExpressionAttributeNames = attributeNames;
+        if (Object.keys(attributeNames).length) {
+            scanparams.ExpressionAttributeNames = attributeNames;
+        }
     }
 
     query.limit = query.limit || 10;
