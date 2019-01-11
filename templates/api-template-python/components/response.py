@@ -7,7 +7,6 @@ class CustomResponse:
         self.input = value
 
     def get_json(self):
-        print "#CustomResponse get_json", self.data, self.input
         obj = {
             'data': self.data,
             'input': self.input
