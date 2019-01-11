@@ -63,7 +63,7 @@ node {
 	}
 
 
-	auth_token = setCredentials()
+	auth_token = getAuthToken()
 
 	stage("Initialization") {
 
@@ -848,9 +848,9 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 /** Reset credentials
  */
 def resetCredentials(credsId) {
-  echo "resetting AWS credentials"
+	echo "resetting AWS credentials"
 	sh "aws configure set profile.${credsId}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-  sh "aws configure set profile.${credsId}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+	sh "aws configure set profile.${credsId}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
 }
 @NonCPS
 def updateBucketPolicy(policy_json, bucketName){
@@ -1092,32 +1092,28 @@ def removeEventResources() {
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
  */
-def setCredentials() {
-	def url = g_base_url + '/jazz/login'
+def getAuthToken() {
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-		echo "user name is $UNAME"
-		def login_json = []
-		login_json = [
+		def loginUrl = g_base_url + "/jazz/login"
+		def login_json = [
 			'username': UNAME,
 			'password': PWD
 		]
-		def tokenJson_token = null
 		def payload = JsonOutput.toJson(login_json)
 		try {
 			def token = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
-				 $url \
-				-d \'${payload}\'", returnStdout: true).trim()
+					$loginUrl \
+				-d \'${payload}\'", returnStdout:true).trim()
 
 			def tokenJson = jsonParse(token)
-			tokenJson_token = tokenJson.data.token
-
-			return tokenJson_token
+			return tokenJson.data.token
 		}
 		catch (e) {
-			echo "Failed to fetch authentication details."
+			error "Failed while getting auth token for user: $UNAME, error:  " + e.getMessage()
 		}
 	}
+
 }
 
 /**
@@ -1161,7 +1157,7 @@ def send_status_email(build_status) {
 	try {
 		def sendMail = sh(script: "curl -X POST \
 					 ${g_base_url}/jazz/email \
-					 -k -v -H \"Authorization: $g_login_token\" \
+					 -k -v -H \"Authorization: $auth_token\" \
 					 -H \"Content-Type: application/json\" \
 					 -d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJsonMap(sendMail)

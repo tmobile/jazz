@@ -341,7 +341,7 @@ def setEventSourceMapping(eventSourceArn, config) {
   ).trim()
   echo "$event_source_list"
   if (event_source_list == "[]") {
-      sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$role_id:function:$function_name --starting-position LATEST --region $region"
+      sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$role_id:function:$function_name --enabled --starting-position LATEST --region $region"
   }
 }
 
