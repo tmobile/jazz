@@ -25,9 +25,10 @@ export class ServiceAccessControlComponent implements OnInit {
   showDisplay:Boolean = true;
   // list groups which has access for specific action//
   groupsAccess: any = {
-    'api': [{
+    'manage': [{
         'name': 'John Smith (jSmith)',
         'readOnly':false,
+        'accessType':'admin',
         "userType": 'Admin'
     }],
     'code' : [{
@@ -53,8 +54,8 @@ export class ServiceAccessControlComponent implements OnInit {
   
   // function to show group list(auto-complete)
   ongrpNameChange(category, i){
-    if(category == 'api'){
-       this.groupsAccess.api[i].showGroups = true;
+    if(category == 'manage'){
+       this.groupsAccess.manage[i].showGroups = true;
     } else if(category == 'code'){
        this.groupsAccess.code[i].showGroups = true;
     } else if(category == 'deploy'){
@@ -64,8 +65,8 @@ export class ServiceAccessControlComponent implements OnInit {
   
   //function for deleting group
   deletegroup(i,category){
-    if(category == 'api'){
-       this.groupsAccess.api.splice(i,1);
+    if(category == 'manage'){
+       this.groupsAccess.manage.splice(i,1);
     } else if(category == 'code'){
        this.groupsAccess.code.splice(i,1);
     } else if(category == 'deploy'){
@@ -75,8 +76,8 @@ export class ServiceAccessControlComponent implements OnInit {
   
   //function for adding group
   addgroup(i,category){
-    if(category == 'api'){
-       this.groupsAccess.api.push({'name': '','accessType':'read'});
+    if(category == 'manage'){
+       this.groupsAccess.manage.push({'name': '','accessType':'read'});
     } else if(category == 'code'){
        this.groupsAccess.code.push({'name': '','accessType':'read'});
     } else if(category == 'deploy'){
@@ -99,9 +100,9 @@ export class ServiceAccessControlComponent implements OnInit {
   }
   //function for selecting group from list of groups//
   selectApprovers(group, index , category){
-     if(category == 'api'){
-       this.groupsAccess.api[index].name = group.givenName;
-       this.groupsAccess.api[index].showGroups = false;
+     if(category == 'manage'){
+       this.groupsAccess.manage[index].name = group.givenName;
+       this.groupsAccess.manage[index].showGroups = false;
     } else if(category == 'code'){
        this.groupsAccess.code[index].name = group.givenName;
        this.groupsAccess.code[index].showGroups = false;
@@ -116,8 +117,14 @@ export class ServiceAccessControlComponent implements OnInit {
       this.groupsAccess.code[index].accessType = value;
   }
 
-  constructor() { 
+  onManagementChange(value,index){
+   this.groupsAccess.manage[index].accessType = value;
   }
+
+
+  constructor() {
+   
+   }
 
   ngOnInit() {
   }
