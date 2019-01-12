@@ -20,11 +20,12 @@ function validateBasicInput(userInput) {
     if (!userInput) {
       throw (errorHandlerModule.throwInternalServerError("Input parameters are missing"));
     }
+
 		if (!userInput.method) {
 			throw (errorHandlerModule.throwInputValidationError("Method is missing"));
     }
 
-    if (!userInput.path) {
+    if (!userInput.resourcePath) {
 			throw (errorHandlerModule.throwInputValidationError("Missing the resource path"));
 		}
 
