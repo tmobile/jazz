@@ -67,7 +67,9 @@ async function getFilteredPolicy(index, values, config) {
     logger.error(err.message);
     result.error = err.message;
   } finally {
-    await conn.close();
+    if (conn) {
+      await conn.close();
+    }
   }
 
   return result;
@@ -87,7 +89,9 @@ async function checkPermissions(userId, serviceId, category, permission, config)
       error: err.message
     };
   } finally {
-    await conn.close();
+    if (conn) {
+      await conn.close();
+    }
   }
 
   return result;
@@ -98,19 +102,19 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
   let result = {};
   let conn;
   const objects = [`${serviceId}_manage`, `${serviceId}_code`, `${serviceId}_deploy`];
-  let totalPolices = 0;
+  let totalPolicies = 0;
   try {
     const getPolicies = await getFilteredPolicy(1, objects, config);
 
-    if (getPolicies) {
-      totalPolicies = getPolicies.length;
+    if (getPolicies) {//found previous policies to be removed
+      totalPolicies = getPolicies.filter(policy => policy.length > 0).length;
       let removeResult = [];
 
       if (totalPolicies) {
         conn = await dbConnection(config);
         const enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
 
-        // remove (incase of add remove first)
+        // remove (incase of add, remove first)
         if (action === 'remove' || action === 'add') {
           removeResult = await getPolicies.map(async policies => {
             return policies.map(async policy => {
@@ -128,22 +132,13 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
 
         // add (after remove)
         if (action === 'add' && removeResult.length === totalPolicies) {
-          let savedPolicies = policies.map(async policy => await enforcer.addPolicy(policy.userId, `${serviceId}_${policy.category}`, policy.permission));
-          savedPolicies = await Promise.all(savedPolicies);
-
-          if (savedPolicies.length === policies.length) {
-            await enforcer.savePolicy();
-          } else if (!savedPolicies.length) { //rollback deletion
-            result.error = `Rollback transaction - could not add any policy`;
-          } else if(savedPolicies.length !== policies.length) {
-            result.error = `Rollback transaction - could add ${savedPolicies.length} of ${policies.length}`;
-          } else {
-            result.error = `Rollback transaction - failed to add/remove policies`;
-          }
+          result = await addPolicy(serviceId, policies, enforcer);
         }
       }
-    } else {
-      result.error = `No policies found for service id - ${serviceId}`;
+    } else {//only add (nothing to remove)
+      if (action === 'add') {
+        result = await addPolicy(serviceId, policies, enforcer);
+      }
     }
   } catch(err) {
     logger.error(err.message);
@@ -152,6 +147,24 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
     if (totalPolicies) {
       await conn.close();
     }
+  }
+
+  return result;
+}
+
+async function addPolicy(serviceId, policies, enforcer) {
+  let result = {};
+  let savedPolicies = policies.map(async policy => await enforcer.addPolicy(policy.userId, `${serviceId}_${policy.category}`, policy.permission));
+  savedPolicies = await Promise.all(savedPolicies);
+
+  if (savedPolicies.length === policies.length) {
+    await enforcer.savePolicy();
+  } else if (!savedPolicies.length) { //rollback deletion
+    result.error = `Rollback transaction - could not add any policy`;
+  } else if(savedPolicies.length !== policies.length) {
+    result.error = `Rollback transaction - could add ${savedPolicies.length} of ${policies.length}`;
+  } else {
+    result.error = `Rollback transaction - failed to add/remove policies`;
   }
 
   return result;
