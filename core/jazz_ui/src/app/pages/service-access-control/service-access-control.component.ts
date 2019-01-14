@@ -106,8 +106,6 @@ export class ServiceAccessControlComponent implements OnInit {
          this.disableManage = true;
       else
          this.disableManage = false;
-
-      console.log(this.groupsAccess);
     } else if(category == 'code'){
          if(this.groupsAccess.code[i].accessType == 'read')
             this.groupsAccess.code.push({'name': '','accessType':'read', 'userType':"Read Only"});
