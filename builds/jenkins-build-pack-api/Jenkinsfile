@@ -140,7 +140,7 @@ node() {
 		echo "requestId: requestId"
 		if(requestId != 'none' && requestId != null) {
         	echo "Setting up requestId"
-			requestId = requestId
+			    requestId = requestId
         	events.setRequestId(requestId)
         	environmentDeploymentMetadata.setRequestId(requestId)
 			
