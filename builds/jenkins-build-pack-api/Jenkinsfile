@@ -145,7 +145,7 @@ node() {
         	environmentDeploymentMetadata.setRequestId(requestId)
 			
 		} else {
-			requestId = utilModule.generateRequestId()
+			      requestId = utilModule.generateRequestId()
             events.setRequestId(requestId)
             environmentDeploymentMetadata.setRequestId(requestId)
             events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
