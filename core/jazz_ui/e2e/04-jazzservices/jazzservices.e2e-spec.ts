@@ -153,43 +153,66 @@ describe('Overview', () => {
             jazzServices_po.getTestAPI().click();
             browser.sleep(10000);
             browser.getAllWindowHandles().then(function(handles){
-                  browser.switchTo().window(handles[1]).then(function(){
-                        jazzServices_po.getAPIGET().click();
-                        browser.sleep(5000);
-                        jazzServices_po.getTryOut().click();
-                        browser.sleep(5000);
-                        jazzServices_po.getStringA().sendKeys('Testing');
-                        jazzServices_po.getStringB().sendKeys('Jazz');
-                        browser.sleep(5000);
-                        jazzServices_po.getExecute().click();
-                        jazzServices_po.getAPIGET().click();
-                        browser.close();
-                  });
-                  browser.switchTo().window(handles[0]).then(function(){
-                        browser.sleep(15000);
-                        browser.wait(EC.visibilityOf(jazzServices_po.getMetrices()), timeOutHigh);
-                        jazzServices_po.getMetrices().click();
-                        browser.sleep(15000);
-                        jazzServices_po.getMetricsChildOne().click();
-                        browser.sleep(4000);
-                        jazzServices_po.getMetricsChildTwo().click();
-                        browser.sleep(4000);
-                        jazzServices_po.getMetricsChildThree().click();
-                        browser.sleep(4000);
-                        jazzServices_po.getMetricsChildFour().click();
-                        browser.sleep(4000);
-                        jazzServices_po.getMetricsChildFive().click();
-                        browser.sleep(4000);
-                        jazzServices_po.getMetricsChildSix().click();
-                        browser.sleep(4000);
-                        jazzServices_po.getMetricsChildSeven().click();
-                        browser.sleep(4000);
+                browser.switchTo().window(handles[1]).then(function(){
+                    jazzServices_po.getAPIGET().click();
+                    browser.sleep(5000);
+					jazzServices_po.getTryOut().click();
+                    browser.sleep(5000);
+                    jazzServices_po.getStringA().sendKeys('Testing');
+                    jazzServices_po.getStringB().sendKeys('Jazz');
+                    browser.sleep(5000);
+                    jazzServices_po.getExecute().click();
+                    jazzServices_po.getAPIGET().click();
+                    browser.close();
+                });
+                browser.switchTo().window(handles[0]).then(function(){
+                    browser.sleep(15000);
+                    browser.wait(EC.visibilityOf(jazzServices_po.getMetrices()), timeOutHigh);
+                    jazzServices_po.getMetrices().click();
+                    browser.sleep(15000);
+                    jazzServices_po.getMetricsChildOne().click();
+                    browser.sleep(4000);
+                    jazzServices_po.getMetricsChildTwo().click();
+                    browser.sleep(4000);
+                    jazzServices_po.getMetricsChildThree().click();
+                    browser.sleep(4000);
+                    jazzServices_po.getMetricsChildFour().click();
+                    browser.sleep(4000);
+                    jazzServices_po.getMetricsChildFive().click();
+                    browser.sleep(4000);
+                    jazzServices_po.getMetricsChildSix().click();
+                    browser.sleep(4000);
+                    jazzServices_po.getMetricsChildSeven().click();
+                    browser.sleep(4000);
 		  
-                  });
+                });
               });
               browser.sleep(2000);
               jazzServices_po.getServiceFromAsset().click();            
-      });      
+      });   
+
+	it('Verify METRICS COUNT' , () => {
+            // Navigation to services
+            browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
+            browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+            //To Navigate to the particular service and verifying the Page
+            jazzServices_po.getAwsServiceName().click();
+            browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+            browser.sleep(15000);
+            browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
+            jazzServices_po.getRefresh().click();
+            browser.sleep(15000);
+            jazzServices_po.getProdName().click();
+            browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
+            browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
+            browser.driver.switchTo().activeElement();
+            browser.sleep(15000);
+            jazzServices_po.getMetrices().click();
+            expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
+            browser.sleep(2000);
+            jazzServices_po.getServiceFromAsset().click();            
+      });
+	  
       it('Create Lamda Service', () => {
             browser.driver.switchTo().activeElement();
             browser.driver.sleep(5000);

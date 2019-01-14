@@ -198,9 +198,6 @@ export class Jazz {
   getExecute() {
     return element(by.css('div.execute-wrapper>button'));
   }
-  getMetricesCount() {
-    return element(by.css('div.metrics-card:nth-child(4)>div.metrics-card-content'));
-  }
   getTestFunction() {
    return element(by.xpath('//btn-jazz-secondary[@class="testApiBtn"]/button[text()="TEST FUNCTION"]'));
   }
@@ -219,5 +216,9 @@ export class Jazz {
   getWebsiteLink(){
     return element(by.xpath('//btn-jazz-secondary[@class="testApiBtn"]/button[text()="GO TO WEBSITE"]'));
   }
+  getMetricesCount() {
+    return element(by.xpath('//div[@class="metrics-card-content"][contains(text(),"1")]'));
+  }
+
  
 }
