@@ -622,8 +622,8 @@ describe("updateDeployments", () => {
     });
     index.updateDeployments(JSON.stringify(res), deploymentPayload, configData, "temp_auth").then((obj) => {
       sinon.assert.calledOnce(processRequestStub);
-      processRequestStub.restore();
     })
+    processRequestStub.restore();
   })
   it("should call return error if  processRequest is unsucesfull", () => {
     var processRequestStub = sinon.stub(index, "processRequest").rejects({

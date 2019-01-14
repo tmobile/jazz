@@ -27,6 +27,7 @@
 
 .groups-wrap {
   display: flex;
+  margin-bottom: -4px;
   input[type="radio"] {
     margin: .8rem 0 0;
   }
@@ -38,7 +39,7 @@
   span {
     position: absolute;
     bottom: 0;
-    bottom: 1.9rem;
+    bottom: 2.6rem;
     font-size: 1.33rem;
     cursor: pointer;
   }
@@ -51,6 +52,7 @@
 
 .header-sec {
   padding: 0;
+  display: flex;
   h1 {
     display: inline-block;
     font-size: 1.5rem;
@@ -155,6 +157,7 @@ input[type="text"] {
 
 .step-title {
   font-size: 1.15rem;
+  padding: 0px 0px 5px 10px;
 }
 
 .cb-status-dets {
@@ -188,4 +191,53 @@ input[type="text"] {
 
 .icon-icon-close {
   color: #ed008c;
+}
+
+.manage-wrapper{
+  background-color: #ed008c;
+  width: inherit;
+}
+
+.textForm{
+  width: 100%;
+}
+
+.radio-button-wrapper{
+  padding-top: 6px;
+  background-color: #F3F2F3;
+  height: 54px;
+  border-radius: 0px 8px 8px 0px;
+}
+.input-wrapper{
+  padding: 7px;
+  background-color: #F3F2F3;
+  border-radius: 8px 0px 0px 8px;
+}
+.border-wrapper{
+  border-radius: 8px 8px 8px 8px;
+}
+.custom-save-btn-wrap{
+  display: flex;
+  flex-direction: row-reverse;
+  width: 50%;
+  align-items: center;
+  padding-bottom: 10px
+}
+.cancel-wrapper{
+  margin-right: 20px;
+  cursor: pointer;
+}
+.usertype{
+  font-style: italic;
+  color: #BAAAB1;
+  padding-left: 5px;
+}
+.step-title-edit{
+  font-size: 15px;
+}
+.access-label{
+  
+}
+.step-title-head{
+  padding: 0px 0px 16px 0px;
 }
