@@ -85,7 +85,7 @@ describe('Overview', () => {
       });
 	  
 	it('Verify API Deployments' , () => {
-		browser.sleep(4000);
+			browser.sleep(4000);
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
             jazzServices_po.getDeploymentStatusVerify();
@@ -102,7 +102,7 @@ describe('Overview', () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
             browser.sleep(4000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
-		browser.refresh();
+			browser.refresh();
       });
 	
       it('Verify Logs' ,  () => {
@@ -129,7 +129,7 @@ describe('Overview', () => {
             jazzServices_po.getServiceFromAsset().click();
       });
       
-      it('Verify METRICS' , () => {
+      it('Verify METRICS and Navigation to Swagger' , () => {
             // Navigation to services
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
@@ -281,7 +281,7 @@ describe('Overview', () => {
             jazzServices_po.getServiceFromAsset().click();
       });
 
-      it('Verify METRICS' , () => {
+      it('Verify METRICS and Navigation to Swagger' , () => {
             // Navigation to services
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
@@ -387,7 +387,7 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
       });
 
-      it('Verify METRICS' , () => {
+      it('Verify METRICS and Navigation to Swagger' , () => {
             // Navigation to services
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
