@@ -99,6 +99,18 @@ describe('handler', () => {
     });
   })
 
+  it("should NOT call invokeLambda for http endpoint", (done) => {
+    event.body.functionARN = "https://";
+    var tempobj = {};
+    var invokeLambdaStub = sinon.stub(index, 'invokeLambda').resolves(tempobj);
+    index.handler(event, context, (error, records) => {
+      sinon.assert.notCalled(invokeLambdaStub);
+      invokeLambdaStub.restore();
+      done();
+    });
+  })
+
+
   it("should return execStatus success if lambda execution is succesfull", (done) => {
     var tempobj = {
       "StatusCode": 200,
