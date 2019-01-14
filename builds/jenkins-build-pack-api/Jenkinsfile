@@ -136,21 +136,20 @@ node() {
 				}
 			}
 		}
-
 		echo "requestId: requestId"
 		if(requestId != 'none' && requestId != null) {
         	echo "Setting up requestId"
-			    requestId = requestId
+			requestId = requestId
         	events.setRequestId(requestId)
         	environmentDeploymentMetadata.setRequestId(requestId)
-			
+
 		} else {
-	        requestId = utilModule.generateRequestId()
-          events.setRequestId(requestId)
-          environmentDeploymentMetadata.setRequestId(requestId)
-          events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
-    	}
-        
+			requestId = utilModule.generateRequestId()
+			events.setRequestId(requestId)
+			environmentDeploymentMetadata.setRequestId(requestId)
+			events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
+		}
+
         if (requestId == null) {
             error "Request Id Generation failed"
         }
