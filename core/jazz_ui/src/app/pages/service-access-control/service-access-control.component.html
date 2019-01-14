@@ -46,6 +46,13 @@
                         <div class="groups-input toggle-class" [ngClass]="{'disabled': accessGranted}">
                             <div class="input-wrapper" [ngClass]="{'read-only': group.readOnly}">
                                 <input name="api_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.name" (ngModelChange)="ongrpNameChange('api' ,i)" [readonly]="group.readOnly">
+                                <div *ngIf="group.showGroups" class="approvers-list-wrap" (clickOutside)="group.showGroups = false">
+                                    <div class="approvers-list typeShow open">
+                                        <div class="approvers-dets" *ngFor="let approverss of groupList;let j = index;" (focus)=" j==focusindex " [ngClass]="{pinkfocususers : j==focusindex }" [ngStyle]="scrollList" >
+                                        <div (click)="selectApprovers(approverss);$event.stopPropagation();" index="{j}" [attr.displayName]='approverss.displayName' [attr.userId]='approverss.userId' [attr.userEmail]='approverss.userEmail'><div class="approvers-text">{{approverss.userId}}</div></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="radio-button-wrapper">
@@ -63,7 +70,7 @@
                             </div>
                         </div>
 
-                        <div class="delete-grp">
+                        <div class="delete-grp" *ngIf="!disableManage">
                             <span (click)="deletegroup(i,'manage')" class="icon-icon-close toggle-class" [ngClass]="{'disabled': accessGranted}"></span>
                         </div>
                     </div>
@@ -109,6 +116,13 @@
                         <div class="groups-input">
                             <div class="input-wrapper" [ngClass]="{'read-only': group.readOnly}">
                                 <input name="code_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.name" (ngModelChange)="ongrpNameChange('code' ,i)" [readonly]="group.readOnly">
+                                <div *ngIf="group.showGroups" class="approvers-list-wrap" (clickOutside)="group.showGroups = false">
+                                    <div class="approvers-list typeShow open">
+                                        <div class="approvers-dets" *ngFor="let approvers of groupList | myfilter:group.name">
+                                            <div (click)="selectApprovers(approvers, i , 'code')">{{approvers.givenName}}</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                          <div class="radio-button-wrapper">
@@ -125,7 +139,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="delete-grp">
+                        <div class="delete-grp" *ngIf="!disableCode">
                             <span (click)="deletegroup(i,'code')" class="icon-icon-close"></span>
                         </div>
                     </div>
@@ -163,9 +177,16 @@
                         <div class="groups-input">
                             <div class="input-wrapper border-wrapper" [ngClass]="{'read-only': group.readOnly}">
                                 <input name="deploy_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.name" (ngModelChange)="ongrpNameChange('deploy' ,i)" [readonly]="group.readOnly">
+                                <div *ngIf="group.showGroups" class="approvers-list-wrap" (clickOutside)="group.showGroups = false">
+                                    <div class="approvers-list typeShow open">
+                                        <div class="approvers-dets" *ngFor="let approvers of groupList | myfilter:group.userId">
+                                            <div (click)="selectApprovers(approvers, i , 'deploy')">{{approverss.userId}}</div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="delete-grp">
+                        <div class="delete-grp" *ngIf="!disableDeploy" >
                             <span (click)="deletegroup(i,'deploy')" class="icon-icon-close"></span>
                         </div>
                     </div>
