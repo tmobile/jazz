@@ -109,20 +109,20 @@ export class ServiceAccessControlComponent implements OnInit {
 
       console.log(this.groupsAccess);
     } else if(category == 'code'){
-      if(this.groupsAccess.code[i].accessType == 'read')
-       this.groupsAccess.code.push({'name': '','accessType':'read', 'userType':"Read Only"});
-       else
-       this.groupsAccess.code.push({'name': '','accessType':'write', 'userType':"Write"});
-       if(this.groupsAccess.code.length == 1)
-         this.disableCode = true;
-      else
-         this.disableCode = false;
+         if(this.groupsAccess.code[i].accessType == 'read')
+            this.groupsAccess.code.push({'name': '','accessType':'read', 'userType':"Read Only"});
+         else
+            this.groupsAccess.code.push({'name': '','accessType':'write', 'userType':"Write"});
+         if(this.groupsAccess.code.length == 1)
+            this.disableCode = true;
+         else
+            this.disableCode = false;
     } else if(category == 'deploy'){
-       this.groupsAccess.deploy.push({'name': '','accessType':'read', 'userType':"Read Only"});
-       if(this.groupsAccess.code.length == 1)
-         this.disableDeploy = true;
-      else
-         this.disableDeploy = false;
+         this.groupsAccess.deploy.push({'name': '','accessType':'read', 'userType':"Read Only"});
+         if(this.groupsAccess.code.length == 1)
+            this.disableDeploy = true;
+         else
+            this.disableDeploy = false;
     } 
   }
 
@@ -140,21 +140,20 @@ export class ServiceAccessControlComponent implements OnInit {
 
   }
   
-    onSelectionChange(value,index){
+   onSelectionChange(value,index){
       this.groupsAccess.code[index].accessType = value;
       if(this.groupsAccess.manage[index].accessType == 'read')
-      this.groupsAccess.code[index].userType = "Read Only";
+         this.groupsAccess.code[index].userType = "Read Only";
       else
-      this.groupsAccess.code[index].userType = "Write";
-      
+         this.groupsAccess.code[index].userType = "Write";   
   }
 
   onManagementChange(value,index){
-   this.groupsAccess.manage[index].accessType = value;
-   if(this.groupsAccess.manage[index].accessType == 'read')
-   this.groupsAccess.manage[index].userType = "Read Only";
-   else
-   this.groupsAccess.manage[index].userType = "Admin";
+      this.groupsAccess.manage[index].accessType = value;
+      if(this.groupsAccess.manage[index].accessType == 'read')
+         this.groupsAccess.manage[index].userType = "Read Only";
+      else
+         this.groupsAccess.manage[index].userType = "Admin";
   }
 
   constructor() {
@@ -163,17 +162,19 @@ export class ServiceAccessControlComponent implements OnInit {
 
   ngOnInit() {
    if(this.groupsAccess.code.length == 1)
-         this.disableCode = true;
-      else
-         this.disableCode = false;
-    if(this.groupsAccess.manage.length == 1)
-         this.disableManage = true;
-      else
-         this.disableManage = false;
-    if(this.groupsAccess.deploy.length == 1)
-         this.disableDeploy = true;
-      else
-         this.disableDeploy = false;
+      this.disableCode = true;
+   else
+      this.disableCode = false;
+   
+   if(this.groupsAccess.manage.length == 1)
+      this.disableManage = true;
+   else
+      this.disableManage = false;
+
+   if(this.groupsAccess.deploy.length == 1)
+      this.disableDeploy = true;
+   else
+      this.disableDeploy = false;
   }
 
 }
