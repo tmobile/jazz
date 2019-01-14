@@ -126,7 +126,7 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
               await enforcer.savePolicy();
             }
           } else {
-            result.error = `Rollback transaction - could delete ${removeResult.length} of ${totalPolices} policies`;
+            result.error = `Rollback transaction - could delete ${removeResult.length} of ${totalPolicies} policies`;
           }
         }
 
