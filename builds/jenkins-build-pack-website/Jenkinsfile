@@ -99,25 +99,23 @@ node()  {
 	scmModule.setServiceConfig(service_config)
 	gitCommitHash = scmModule.getRepoCommitHash()
 	gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
-    	
     echo "requestId: $requestId"
     
     if(requestId != 'none' && requestId != null) {
-               echo "Setting up requestId"
-               events.setRequestId(requestId)
-               environmentDeploymentMetadata.setRequestId(requestId)
+        echo "Setting up requestId"
+        events.setRequestId(requestId)
+        environmentDeploymentMetadata.setRequestId(requestId)
     } else {
-               requestId = utilModule.generateRequestId()
-               events.setRequestId(requestId)
-               environmentDeploymentMetadata.setRequestId(requestId)
-               events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
-       	}
+        requestId = utilModule.generateRequestId()
+        events.setRequestId(requestId)
+        environmentDeploymentMetadata.setRequestId(requestId)
+        events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
+    }
     
 
 	dir(repo_name)
 	{
 	
-
 		stage('Pre-Build Validation'){
 
 			events.sendStartedEvent("VALIDATE_INPUT", 'pre-build validation starts', context_map)

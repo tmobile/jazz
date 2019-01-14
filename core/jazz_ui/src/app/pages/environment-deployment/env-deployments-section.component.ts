@@ -315,7 +315,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
               countStarted = countStarted + 1;
             }
            }
-           if(countStarted == 0){
+           if(countStarted){
              this.disableBuild = false;
            }
            if(this.deployments.length !=0){
