@@ -41,7 +41,7 @@ node()  {
 	def domain = params.domain
 	def service = params.service_name
 	def repo_name = params.service_name
-	def request_id = params.request_id
+	def requestId = params.request_id
 	def gitCommitOwner
 	def gitCommitHash
 
@@ -99,21 +99,20 @@ node()  {
 	scmModule.setServiceConfig(service_config)
 	gitCommitHash = scmModule.getRepoCommitHash()
 	gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
-
-	def requestId 
-		if(request_id == 'none') {
-			requestId = utilModule.generateRequestId()
-			events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, gitCommitHash), environment)
-		} else {
-			echo "Setting up request_id"
-			requestId = request_id
-    	}
-    if (requestId != null) {
-				events.setRequestId(requestId)
-				environmentDeploymentMetadata.setRequestId(requestId)
-			} else {
-				error "Request Id Generation failed"
-			}
+    	
+    echo "requestId: $requestId"
+    
+    if(requestId != 'none' && requestId != null) {
+               echo "Setting up requestId"
+               events.setRequestId(requestId)
+               environmentDeploymentMetadata.setRequestId(requestId)
+    } else {
+               requestId = utilModule.generateRequestId()
+               events.setRequestId(requestId)
+               environmentDeploymentMetadata.setRequestId(requestId)
+               events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
+       	}
+    
 
 	dir(repo_name)
 	{

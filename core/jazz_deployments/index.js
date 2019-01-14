@@ -530,7 +530,7 @@ function buildNowRequest(serviceDetails, config, refDeployment, request_id) {
 		if (build_url) {
 			var options = {
 				url: rebuild_url,
-				method: 'POST',
+					method: 'POST',
 				rejectUnauthorized: false,
 				headers: {
 					'Accept': 'application/json',
