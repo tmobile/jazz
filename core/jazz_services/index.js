@@ -83,7 +83,10 @@ module.exports.handler = (event, context, cb) => {
         // 1: GET service by id (/services/{service_id})
         if (event.method === 'GET' && service_id) {
             logger.info('GET service by ID : ' + service_id);
-            let servicePermission = event.services[0].policies;
+            let servicePermission =[];
+            if (event.services && event.services.length) {
+                servicePermission = event.services[0].policies;
+            }
 
             async.series({
                 // Get service by SERVICE_ID
