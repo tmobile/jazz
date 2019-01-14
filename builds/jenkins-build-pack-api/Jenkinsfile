@@ -137,22 +137,17 @@ node() {
 			}
 		}
 		echo "requestId: requestId"
-		if(requestId != 'none' && requestId != null) {
-        	echo "Setting up requestId"
+		if (requestId != 'none' && requestId != null) {
+			echo "Setting up requestId"
 			requestId = requestId
-        	events.setRequestId(requestId)
-        	environmentDeploymentMetadata.setRequestId(requestId)
-
+			events.setRequestId(requestId)
+			environmentDeploymentMetadata.setRequestId(requestId)
 		} else {
 			requestId = utilModule.generateRequestId()
 			events.setRequestId(requestId)
 			environmentDeploymentMetadata.setRequestId(requestId)
 			events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 		}
-
-        if (requestId == null) {
-            error "Request Id Generation failed"
-        }
 
 		stage('Pre-Build Validation') {
 			try {
@@ -674,7 +669,7 @@ def loadServerlessConfig(config) {
 	} else if (config['providerRuntime'].indexOf("go") > -1) {
 		sh "cp _config/serverless-go.yml ./serverless.yml"
 	}
-	
+
 	removeEventResources()
 	echoServerlessFile()
 }
