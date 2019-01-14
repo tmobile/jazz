@@ -5,6 +5,8 @@
 */
 
 import { Component, OnInit } from '@angular/core';
+import { ToasterService } from 'angular2-toaster';
+
 
 @Component({
   selector: 'service-access-control',
@@ -17,56 +19,42 @@ export class ServiceAccessControlComponent implements OnInit {
   i: number = 0;
   groupStatus:any = ['Read' , 'Manage' , 'Admin'];
   grpName:string;
+  resMessage : any;
+  approversListShow: any;
+  private http: any;
+  private toastmessage: any = '';
+  approversListRes: any;
+  disableCode: boolean = false;
+  disableManage: boolean = false;
+  disableDeploy: boolean = false;
   public newGroup: any = {
     'name': '',
     'accessType':'read'
   }
-  
+  showDisplay:Boolean = true;
   // list groups which has access for specific action//
   groupsAccess: any = {
-    'api': [{
-        'name': 'group one',
-        'readOnly':true
-    },
-    {
-        'name': 'group two',
-        'readOnly':true
-    },
-    {
-        'name': 'group three',
-        'readOnly':true
+    'manage': [{
+        'name': 'John Smith (jSmith)',
+        'readOnly':false,
+        'accessType':'admin',
+        "userType": 'Admin'
     }],
     'code' : [{
-        'name': 'group one',
+        'name': 'John Smith (jSmith)',
         'accessType':'read',
-        'readOnly':true
-    },
-    {
-        'name': 'group two',
-        'accessType':'admin',
-        'readOnly':true
-    },
-    {
-        'name': 'group three',
-        'accessType':'manage',
-        'readOnly':true
-    },
-    {
-        'name': 'group four',
-        'accessType':'manage',
-        'readOnly':true
+        'readOnly':false,
+        'userType':"Read Only"
     }],
     'deploy' : [{
-        'name': 'group one',
-        'readOnly':true
-    },
-    {
-        'name': 'group two',
-        'readOnly':true
-    },
-    {
-        'name': 'group three',
-        'readOnly':true
+        'name': 'John Smith (jSmith)',
+        'readOnly':false
+    },{
+      'name': 'John Smith (jSmith)',
+      'readOnly':false
+    },{
+      'name': 'John Smith (jSmith)',
+      'readOnly':false
     }]
   }
 
@@ -75,8 +63,8 @@ export class ServiceAccessControlComponent implements OnInit {
   
   // function to show group list(auto-complete)
   ongrpNameChange(category, i){
-    if(category == 'api'){
-       this.groupsAccess.api[i].showGroups = true;
+    if(category == 'manage'){
+       this.groupsAccess.manage[i].showGroups = true;
     } else if(category == 'code'){
        this.groupsAccess.code[i].showGroups = true;
     } else if(category == 'deploy'){
@@ -86,51 +74,99 @@ export class ServiceAccessControlComponent implements OnInit {
   
   //function for deleting group
   deletegroup(i,category){
-    if(category == 'api'){
-       this.groupsAccess.api.splice(i,1);
+    if(category == 'manage'){
+       this.groupsAccess.manage.splice(i,1);
+       if(this.groupsAccess.manage.length == 1)
+         this.disableManage = true;
+      else
+         this.disableManage = false
     } else if(category == 'code'){
        this.groupsAccess.code.splice(i,1);
+       if(this.groupsAccess.code.length == 1)
+       this.disableCode = true;
+    else
+       this.disableCode = false;
     } else if(category == 'deploy'){
        this.groupsAccess.deploy.splice(i,1);
+         if(this.groupsAccess.deploy.length == 1)
+       this.disableDeploy = true;
+       else 
+         this.disableDeploy = false;
     } 
   }
   
   //function for adding group
-  addgroup(i,category){
-    if(category == 'api'){
-       this.groupsAccess.api.push({'name': '','accessType':'read'});
+ addgroup(i,category){
+    if(category == 'manage'){
+       this.groupsAccess.manage.push({'name': '','accessType':'read', 'userType':"Read Only"});
+       if(this.groupsAccess.manage.length == 1)
+         this.disableManage = true;
+      else
+         this.disableManage = false;
     } else if(category == 'code'){
-       this.groupsAccess.code.push({'name': '','accessType':'read'});
+         this.groupsAccess.code.push({'name': '','accessType':'read', 'userType':"Read Only"});
+         if(this.groupsAccess.code.length == 1)
+            this.disableCode = true;
+         else
+            this.disableCode = false;
     } else if(category == 'deploy'){
-       this.groupsAccess.deploy.push({'name': '','accessType':'read'});
+         this.groupsAccess.deploy.push({'name': '','accessType':'read', 'userType':"Read Only"});
+         if(this.groupsAccess.deploy.length == 1)
+            this.disableDeploy = true;
+         else
+            this.disableDeploy = false;
     } 
   }
-  
+
+  onEditClick(){
+     this.showDisplay = false;
+  }
+
+  onSaveClick(){
+     this.showDisplay = true;
+  }
+  onCancelClick(){
+   this.showDisplay = true;
+  }
   refresh(){
 
   }
-  //function for selecting group from list of groups//
-  selectApprovers(group, index , category){
-     if(category == 'api'){
-       this.groupsAccess.api[index].name = group.givenName;
-       this.groupsAccess.api[index].showGroups = false;
-    } else if(category == 'code'){
-       this.groupsAccess.code[index].name = group.givenName;
-       this.groupsAccess.code[index].showGroups = false;
-    } else if(category == 'deploy'){
-       this.groupsAccess.deploy[index].name = group.givenName;
-       this.groupsAccess.deploy[index].showGroups = false;
-    } 
-  }
   
-  // function to update data whenever radio status is changed(read , manage, admin)
-  onSelectionChange(value,index){
+   onSelectionChange(value,index){
       this.groupsAccess.code[index].accessType = value;
+      if(this.groupsAccess.code[index].accessType == 'read')
+         this.groupsAccess.code[index].userType = "Read Only";
+      else
+         this.groupsAccess.code[index].userType = "Write";   
   }
 
-  constructor() { }
+  onManagementChange(value,index){
+      this.groupsAccess.manage[index].accessType = value;
+      if(this.groupsAccess.manage[index].accessType == 'read')
+         this.groupsAccess.manage[index].userType = "Read Only";
+      else
+         this.groupsAccess.manage[index].userType = "Admin";
+  }
+
+  constructor() {
+   
+   }
 
   ngOnInit() {
+   if(this.groupsAccess.code.length == 1)
+      this.disableCode = true;
+   else
+      this.disableCode = false;
+   
+   if(this.groupsAccess.manage.length == 1)
+      this.disableManage = true;
+   else
+      this.disableManage = false;
+
+   if(this.groupsAccess.deploy.length == 1)
+      this.disableDeploy = true;
+   else
+      this.disableDeploy = false;
   }
 
 }
