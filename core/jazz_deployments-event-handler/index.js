@@ -171,7 +171,7 @@ function processCreateEvent(eventPayload, configData, authToken) {
 function processUpdateEvent(eventPayload, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
-		logger.info("svcContext: " + JSON.stringify(svcContext);
+		logger.info("svcContext: " + JSON.stringify(svcContext));
 
 		var deploymentPayload = utils.getDeploymentPayload(svcContext);
 		deploymentPayload.service_id = eventPayload.SERVICE_ID.S
