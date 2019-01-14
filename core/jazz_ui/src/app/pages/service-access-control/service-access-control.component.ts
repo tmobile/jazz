@@ -98,26 +98,20 @@ export class ServiceAccessControlComponent implements OnInit {
   //function for adding group
  addgroup(i,category){
     if(category == 'manage'){
-       if(this.groupsAccess.manage[i].accessType == 'read')
        this.groupsAccess.manage.push({'name': '','accessType':'read', 'userType':"Read Only"});
-       else
-       this.groupsAccess.manage.push({'name': '','accessType':'admin', 'userType':"Admin"});
        if(this.groupsAccess.manage.length == 1)
          this.disableManage = true;
       else
          this.disableManage = false;
     } else if(category == 'code'){
-         if(this.groupsAccess.code[i].accessType == 'read')
-            this.groupsAccess.code.push({'name': '','accessType':'read', 'userType':"Read Only"});
-         else
-            this.groupsAccess.code.push({'name': '','accessType':'write', 'userType':"Write"});
+         this.groupsAccess.code.push({'name': '','accessType':'read', 'userType':"Read Only"});
          if(this.groupsAccess.code.length == 1)
             this.disableCode = true;
          else
             this.disableCode = false;
     } else if(category == 'deploy'){
          this.groupsAccess.deploy.push({'name': '','accessType':'read', 'userType':"Read Only"});
-         if(this.groupsAccess.code.length == 1)
+         if(this.groupsAccess.deploy.length == 1)
             this.disableDeploy = true;
          else
             this.disableDeploy = false;
@@ -140,7 +134,7 @@ export class ServiceAccessControlComponent implements OnInit {
   
    onSelectionChange(value,index){
       this.groupsAccess.code[index].accessType = value;
-      if(this.groupsAccess.manage[index].accessType == 'read')
+      if(this.groupsAccess.code[index].accessType == 'read')
          this.groupsAccess.code[index].userType = "Read Only";
       else
          this.groupsAccess.code[index].userType = "Write";   

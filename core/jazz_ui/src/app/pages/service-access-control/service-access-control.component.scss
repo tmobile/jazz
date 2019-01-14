@@ -241,3 +241,6 @@ input[type="text"] {
 .step-title-head{
   padding: 0px 0px 16px 0px;
 }
+.textForm::placeholder{
+  opacity: 0.6;
+}
