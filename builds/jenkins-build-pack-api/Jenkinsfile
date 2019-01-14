@@ -139,10 +139,10 @@ node() {
 
 		echo "requestId: requestId"
 		if(requestId != 'none' && requestId != null) {
-            echo "Setting up requestId"
+        	echo "Setting up requestId"
 			requestId = requestId
-            events.setRequestId(requestId)
-            environmentDeploymentMetadata.setRequestId(requestId)
+        	events.setRequestId(requestId)
+        	environmentDeploymentMetadata.setRequestId(requestId)
 			
 		} else {
 			requestId = utilModule.generateRequestId()
