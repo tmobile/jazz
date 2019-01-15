@@ -18,7 +18,6 @@
 
 const request = require("request");
 const rp = require('request-promise-native');
-const _ = require("lodash");
 
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
@@ -29,7 +28,7 @@ var processedEvents = [];
 var failedEvents = [];
 var errorHandler = errorHandlerModule(logger);
 
-function handler(event, context, cb){
+function handler(event, context, cb) {
   var config = configModule.getConfig(event, context);
   logger.info("event: " + JSON.stringify(event))
 
@@ -130,8 +129,8 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
     var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
     logger.info("event payload: " + JSON.stringify(kinesisPayload));
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
-      if (_.includes(config.EVENTS.EVENT_TYPE, kinesisPayload.Item.EVENT_TYPE.S) &&
-        _.includes(config.EVENTS.EVENT_NAMES, kinesisPayload.Item.EVENT_NAME.S)) {
+      if (config.EVENTS.EVENT_TYPE.indexOf(kinesisPayload.Item.EVENT_TYPE.S) > -1 &&
+        config.EVENTS.EVENT_NAMES.indexOf(kinesisPayload.Item.EVENT_NAME.S > -1)) {
         logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
         return resolve({
           "interested_event": true,
@@ -204,7 +203,7 @@ function processCreateAsset(eventPayload, configData, authToken) {
       "domain": svcContext.domain,
       "asset_type": svcContext.type
     };
-    if (_.includes(configData.EVENTS.EVENT_STATUS, eventPayload.EVENT_STATUS.S)) {
+    if (configData.EVENTS.EVENT_STATUS.indexOf(eventPayload.EVENT_STATUS.S) > -1) {
       assetApiPayload["status"] = configData.EVENTS.CREATE_ASSET_COMPLETED
     } else {
       logger.error("Error in creating assets. Invalid status value in the payload");
@@ -246,7 +245,7 @@ function processUpdateAsset(record, eventPayload, configData, authToken) {
       "tags": svcContext.tags,
       "asset_type": svcContext.type
     };
-    if (_.includes(configData.EVENTS.EVENT_STATUS, eventPayload.EVENT_STATUS.S)) {
+    if (configData.EVENTS.EVENT_STATUS.indexOf(eventPayload.EVENT_STATUS.S) > -1) {
       var event_status = eventPayload.EVENT_NAME.S + "_" + eventPayload.EVENT_STATUS.S
       assetApiPayload["status"] = configData.EVENTS[event_status]
     } else {
@@ -292,7 +291,7 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
     };
 
     var svcPostSearchPayload = {
-      uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE+ "?domain=" + searchAssetPayload.domain + "&service=" + searchAssetPayload.service + "&provider_id=" +searchAssetPayload.provider_id + "&asset_type=" +searchAssetPayload.asset_type,
+      uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE + "?domain=" + searchAssetPayload.domain + "&service=" + searchAssetPayload.service + "&provider_id=" + searchAssetPayload.provider_id + "&asset_type=" + searchAssetPayload.asset_type,
       method: "GET",
       headers: { Authorization: authToken },
       rejectUnauthorized: false
@@ -303,9 +302,9 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
       logger.debug("response" + JSON.stringify(response));
       if (response && response.statusCode && response.statusCode === 200) {
         var responseBody = JSON.parse(body);
-        if(responseBody && responseBody.data && responseBody.data.count > 0) {
-           logger.debug("Asset found: " + JSON.stringify(body));
-           return resolve(responseBody.data.assets[0]);
+        if (responseBody && responseBody.data && responseBody.data.count > 0) {
+          logger.debug("Asset found: " + JSON.stringify(body));
+          return resolve(responseBody.data.assets[0]);
         } else {
           logger.error("No assets found. " + JSON.stringify(response));
           return reject({
@@ -315,10 +314,10 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
         }
 
       } else {
-        if (error){
+        if (error) {
           return reject(error);
         }
-        else{
+        else {
           logger.error("No assets found. " + JSON.stringify(response));
           return reject({
             "error": "No assets found. " + JSON.stringify(response),
