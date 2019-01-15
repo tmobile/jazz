@@ -75,7 +75,7 @@ async function processACLRequest(event, config) {
         throw (errorHandlerModule.throwInternalServerError(result.error));
       }
 
-      await processScmPermissions(config, serviceId, policies, 'remove');
+      await processScmPermissions(config, serviceId, null, 'remove');
     }
 
 

@@ -22,7 +22,7 @@ const addRepoPermission = async (config, serviceInfo, policies) => {
   const repo_name = `${serviceInfo.domain}_${serviceInfo.service}`;
   const repo_id = await getGitLabsProjectId(config, repo_name);
   let users_list = [];
-  for (const policy of policies.details) {
+  for (const policy of policies) {
     try {
       let repoInfo = {
         "permission": config.ACCESS_LEVEL[policy.permission],
