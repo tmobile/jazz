@@ -22,10 +22,11 @@ const addRepoPermissionInBitbucket = async (config, serviceInfo, policies) => {
   await removeAllRepoUsers(config, serviceInfo);
   for (const policy of policies) {
     try {
+      let permission = policy.permission.toUpperCase()
       const repoInfo = {
         "repo_name": `${serviceInfo.domain}_${serviceInfo.service}`,
         "repo_user": policy.userId,
-        "permission": `REPO_${policy.permission}`
+        "permission": `REPO_${permission}`
       };
       if (config.PERMISSION_CATEGORIES.includes(policy.category)) {
         await addPermsInBitbucketRepo(config, repoInfo);
