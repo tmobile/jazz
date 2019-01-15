@@ -46,6 +46,9 @@ async function dbConnection(config) {
 async function getPolicies(serviceId, config) {
   const values = [`${serviceId}_manage`, `${serviceId}_code`, `${serviceId}_deploy`];
   let result = await getFilteredPolicy(1, values, config);
+  if (result && result.error) {
+    return result;
+  }
   result = massagePolicies(result);
 
   return result;
@@ -106,7 +109,10 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
   try {
     const getPolicies = await getFilteredPolicy(1, objects, config);
 
-    if (getPolicies) {//found previous policies to be removed
+    if (getPolicies && getPolicies.error) {//if there was any error capture that
+      result.error = getPolicies.error;
+    }
+    else if (getPolicies && !getPolicies.error) {//found previous policies to be removed
       totalPolicies = getPolicies.filter(policy => policy.length > 0).length;
       let removeResult = [];
 
@@ -173,6 +179,9 @@ async function addPolicy(serviceId, policies, enforcer) {
 /* Get the permissions for a service given a userId */
 async function getPolicyForServiceUser(serviceId, userId, config) {
   const result = await getPolicies(serviceId, config);
+  if (result && result.error) {
+    return result;
+  }
   let policies = formatPolicies(result);
   let userPolicies = policies.filter(policy => policy.userId === userId);
   userPolicies = userPolicies.map(policy => { return { permission: policy.permission, category: policy.category } });
@@ -185,6 +194,10 @@ async function getPolicyForUser(userId, config) {
   let result = await getFilteredPolicy(0, userId, config);
   let serviceIdSeen = new Set();
   let policies = [];
+
+  if (result && result.error) {
+    return result;
+  }
 
   result.forEach(policy => {
     policy.forEach(item => {
