@@ -20,7 +20,7 @@ const logger = require("../logger.js");
 const addRepoPermissionInBitbucket = async (config, serviceInfo, policies) => {
   let users_list = [];
   await removeAllRepoUsers(config, serviceInfo);
-  for (const policy of policies.details) {
+  for (const policy of policies) {
     try {
       const repoInfo = {
         "repo_name": `${serviceInfo.domain}_${serviceInfo.service}`,
