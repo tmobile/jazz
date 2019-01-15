@@ -171,20 +171,13 @@ describe('Overview', () => {
                     jazzServices_po.getMetrices().click();
                     browser.sleep(15000);
                     jazzServices_po.getMetricsChildOne().click();
-                    browser.sleep(4000);
                     jazzServices_po.getMetricsChildTwo().click();
-                    browser.sleep(4000);
                     jazzServices_po.getMetricsChildThree().click();
-                    browser.sleep(4000);
                     jazzServices_po.getMetricsChildFour().click();
-                    browser.sleep(4000);
                     jazzServices_po.getMetricsChildFive().click();
-                    browser.sleep(4000);
                     jazzServices_po.getMetricsChildSix().click();
-                    browser.sleep(4000);
                     jazzServices_po.getMetricsChildSeven().click();
-                    browser.sleep(4000);
-		  
+                    	  
                 });
               });
               browser.sleep(2000);
@@ -326,25 +319,41 @@ describe('Overview', () => {
             jazzServices_po.getDeploymentStatus().click();
             browser.wait(EC.elementToBeClickable(jazzServices_po.getTestFunction()), timeOutHigh);
             jazzServices_po.getTestFunction().click();
-            jazzServices_po.getTestArea().sendKeys("1");
+			jazzServices_po.getTestArea().sendKeys(String.valueOf('1'));
             jazzServices_po.getTestButton().click();
             jazzServices_po.getClose().click();
             browser.refresh();
             jazzServices_po.getMetrices().click();
             jazzServices_po.getMetricsChildOne().click();
-            browser.sleep(4000);
             jazzServices_po.getMetricsChildTwo().click();
-            browser.sleep(4000);
             jazzServices_po.getMetricsChildThree().click();
-            browser.sleep(4000);
             jazzServices_po.getMetricsChildFour().click();
-            browser.sleep(4000);
             jazzServices_po.getMetricsChildFive().click();
-            browser.sleep(4000);
             jazzServices_po.getMetricsChildSix().click();
-            browser.sleep(4000);
             jazzServices_po.getServiceFromAsset().click();
       });
+	  
+	  it('Verify METRICS COUNT for Python2.7_Runtime' , () => {
+			// Navigation to services
+			browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
+			browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+			//To Navigate to the particular service and verifying the Page
+			jazzServices_po.getAwsServiceName().click();
+			browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+			browser.sleep(15000);
+			browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
+			jazzServices_po.getRefresh().click();
+			browser.sleep(15000);
+			jazzServices_po.getProdName().click();
+			browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
+			browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
+			browser.driver.switchTo().activeElement();
+			browser.sleep(15000);
+			jazzServices_po.getMetrices().click();
+			expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
+			browser.sleep(2000);
+			jazzServices_po.getServiceFromAsset().click();            
+	  });
            
       it('Create Website Service', () => {
             browser.driver.switchTo().activeElement();
@@ -436,17 +445,11 @@ describe('Overview', () => {
             browser.refresh();
             jazzServices_po.getMetrices().click();
             jazzServices_po.getMetricsChildOne().click();
-            browser.sleep(4000);
             jazzServices_po.getMetricsChildTwo().click();
-            browser.sleep(4000);
             jazzServices_po.getMetricsChildThree().click();
-            browser.sleep(4000);
             jazzServices_po.getMetricsChildFour().click();
-            browser.sleep(4000);
             jazzServices_po.getMetricsChildFive().click();
-            browser.sleep(4000);
             jazzServices_po.getMetricsChildSix().click();
-            browser.sleep(4000);
             jazzServices_po.getServiceFromAsset().click();
       });
       
