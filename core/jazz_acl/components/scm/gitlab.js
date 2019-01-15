@@ -24,8 +24,9 @@ const addRepoPermission = async (config, serviceInfo, policies) => {
   let users_list = [];
   for (const policy of policies) {
     try {
+      let permission = policy.permission.toUpperCase()
       let repoInfo = {
-        "permission": config.ACCESS_LEVEL[policy.permission],
+        "permission": config.ACCESS_LEVEL[permission],
         "gitlabRepoId": repo_id
       };
       if (config.PERMISSION_CATEGORIES.includes(policy.category)) {
@@ -170,8 +171,8 @@ const sendRequest = async (payload) => {
         logger.error("sendRequest error" + JSON.stringify(error));
         return reject(error);
       } else {
-        if (((response.statusCode === 200 || response.statusCode === 204 ||
-          response.statusCode === 201) && (response.body)) || response.statusCode === 404) { // Adding 404, since it is a valid condition
+        if (((response.statusCode === 200 || response.statusCode === 201) && (response.body)) ||
+          response.statusCode === 204 || response.statusCode === 404) { // Adding 404, since it is a valid condition
           return resolve(response);
         }
         return reject({ "error": "Error occured while executing request." });
