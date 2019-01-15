@@ -12,7 +12,9 @@
     "request": "*"
   },
   "devDependencies": {
+    "aws-lambda-mock-context": "^3.2.1",
+    "chai": "^3.5.0",
     "mocha": "^v3.0.0",
-    "chai": "^3.5.0"
+    "sinon": "^7.1.0"
   }
 }

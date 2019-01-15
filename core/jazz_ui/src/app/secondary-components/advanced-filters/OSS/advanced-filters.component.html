@@ -1,11 +1,11 @@
 <div class="filter-wrp" [class.hide]='assets'> 
     <div class="filter-section-right">
         <div class="filter-icon relative">
-            <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; onClickFilter()"></span>
+            <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected;"></span>
             <div [class.show]='filterSelected' class="filter-wrap">
                 <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>                    
                 <div class='filter-inner'>
-                    <div class="filter-inner-wrap first-child">
+                    <div class="filter-inner-wrap first-child" [class.hide]='service.islogs'>
                         <div class='view-label'>Filter by:</div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.path.show'>
                             <div><div class='hori-line'></div>PATH</div>
@@ -13,7 +13,7 @@
                         </div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.environment.show'>
                             <div><div class='hori-line'></div>ENVIRONMENT</div>
-                            <dropdown class="dropdown-1"  [dropdwnContent]="envList" title="Select enviroment" [selected]="envSelected" (onSelected)="onEnvSelected($event)"></dropdown>            
+                            <dropdown class="dropdown-1"  [dropdwnContent]="envList" title="Select environment" [selected]="envSelected" (onSelected)="onEnvSelected($event)"></dropdown>
                         </div>
                         <div class="eachFilter no-border-no-padding" *ngIf='advanced_filter_input.method.show'>
                             <div><div class='hori-line'></div>METHOD</div>
@@ -33,8 +33,9 @@
                         <div class="eachFilter slider-wrap" *ngIf='advanced_filter_input.time_range.show'>
                             <div><div class='hori-line'></div>TIME RANGE</div>
                             <dropdown class="dropdown-3" title="Select range" [dropdwnContent]="rangeList" [selected]="selectedTimeRange" (onSelected)="onRangeListSelected($event)"></dropdown>
-                            <ion-range-slider #sliderElement id='sliderElement'  min=1 [max]='sliderMax' [from]='sliderFrom' (onFinish)='getRange($event)' (onUpdate)="onClickFilter()"></ion-range-slider>
-                            
+
+                            <div><div class='hori-line'></div>PERIOD</div>
+                                <dropdown class="dropdown-3" title="Select period" [dropdwnContent]="timePeriodList" [selected]="selectedTimePeriod" (onSelected)="onTimePeriodSelected($event)"></dropdown>
                         </div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.period.show'>
                             <div><div class='hori-line'></div>PERIOD</div>
