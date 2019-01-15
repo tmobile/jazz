@@ -130,7 +130,7 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
     logger.info("event payload: " + JSON.stringify(kinesisPayload));
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
       if (config.EVENTS.EVENT_TYPE.indexOf(kinesisPayload.Item.EVENT_TYPE.S) > -1 &&
-        config.EVENTS.EVENT_NAMES.indexOf(kinesisPayload.Item.EVENT_NAME.S > -1)) {
+        config.EVENTS.EVENT_NAMES.indexOf(kinesisPayload.Item.EVENT_NAME.S) > -1) {
         logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
         return resolve({
           "interested_event": true,
