@@ -107,13 +107,16 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
   const objects = [`${serviceId}_manage`, `${serviceId}_code`, `${serviceId}_deploy`];
   let totalPolicies = 0;
   try {
-    const getPolicies = await getFilteredPolicy(1, objects, config);
+    let getPolicies = await getFilteredPolicy(1, objects, config);
 
     if (getPolicies && getPolicies.error) {//if there was any error capture that
       result.error = getPolicies.error;
+      return result;
     }
-    else if (getPolicies && !getPolicies.error) {//found previous policies to be removed
-      totalPolicies = getPolicies.filter(policy => policy.length > 0).length;
+
+    getPolicies = getPolicies.filter(policy => policy.length > 0);
+    totalPolicies = getPolicies.length;
+    if (getPolicies && getPolicies.length) {//found previous policies to be removed
       let removeResult = [];
 
       if (totalPolicies) {
