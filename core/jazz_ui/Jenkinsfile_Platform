@@ -5,6 +5,9 @@ import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" except for config_loader. instance_prefix, jazz_bucket_web to be taken from the config_loader.
 @Field def repo_credential_id
+@Field def aws_credential_id
+@Field def region
+@Field def instance_prefix
 @Field def repo_base
 @Field def repo_core
 @Field def scm_type
@@ -144,9 +147,9 @@ def loadBuildModules(buildModuleUrl){
 				[credentialsId: repo_credential_id, url: buildModuleUrl]
 			]])
 
-      def result_json_string = readFile("jazz-installer-vars.json")
-      config_module = load "config-loader.groovy"
-      config_loader = config_module.initialize(result_json_string)
+      configModule = load "config-loader.groovy"
+		  configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
+		  echo "config loader loaded successfully."
 
 			scmModule = load "scm-module.groovy"
 			scmModule.initialize(config_loader)
