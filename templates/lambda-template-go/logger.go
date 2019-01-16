@@ -89,7 +89,7 @@ func setLevel(level string)(string){
 
 
 func logthis(level string , message string){
-	if(loglevels[config["curLogLevel"]] >= loglevels[level]){
+	if(loglevels[level] >= loglevels[config["curLogLevel"]] ){
 
 		if( level == "Verbose") {
 			logWithFormater("VERBOSE", message)
