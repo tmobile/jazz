@@ -202,7 +202,7 @@ export class Jazz {
    return element(by.xpath('//btn-jazz-secondary[@class="testApiBtn"]/button[text()="TEST FUNCTION"]'));
   }
   getTestArea() {
-    return element(by.xpath('//textarea[@class="input-textarea ng-pristine ng-valid ng-touched"]')); 
+    return element(by.xpath('//textarea[contains(@class,"input-textarea")]')); 
   }
   getTestButton() {
     return element(by.xpath('//div/button[@class="btn-round primary start-button"]'));

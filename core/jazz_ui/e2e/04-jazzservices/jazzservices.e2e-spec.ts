@@ -83,9 +83,9 @@ describe('Overview', () => {
             browser.driver.switchTo().activeElement();
             browser.sleep(40000);
       });
-	  
-	it('Verify API Deployments' , () => {
-			browser.sleep(4000);
+      
+    it('Verify API Deployments' , () => {
+            browser.sleep(4000);
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
             jazzServices_po.getDeploymentStatusVerify();
@@ -102,9 +102,9 @@ describe('Overview', () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
             browser.sleep(4000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
-			browser.refresh();
+            browser.refresh();
       });
-	
+    
       it('Verify Logs' ,  () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getLogs()), timeOutHigh);
             jazzServices_po.getLogs().click();
@@ -156,7 +156,7 @@ describe('Overview', () => {
                 browser.switchTo().window(handles[1]).then(function(){
                     jazzServices_po.getAPIGET().click();
                     browser.sleep(5000);
-					jazzServices_po.getTryOut().click();
+                    jazzServices_po.getTryOut().click();
                     browser.sleep(5000);
                     jazzServices_po.getStringA().sendKeys('Testing');
                     jazzServices_po.getStringB().sendKeys('Jazz');
@@ -177,14 +177,14 @@ describe('Overview', () => {
                     jazzServices_po.getMetricsChildFive().click();
                     jazzServices_po.getMetricsChildSix().click();
                     jazzServices_po.getMetricsChildSeven().click();
-                    	  
+                          
                 });
               });
               browser.sleep(2000);
               jazzServices_po.getServiceFromAsset().click();            
       });   
 
-	it('Verify METRICS COUNT' , () => {
+    it('Verify METRICS COUNT' , () => {
             // Navigation to services-Metrics
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
@@ -201,11 +201,11 @@ describe('Overview', () => {
             browser.driver.switchTo().activeElement();
             browser.sleep(15000);
             jazzServices_po.getMetrices().click();
-            expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
+            xpect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
             browser.sleep(2000);
             jazzServices_po.getServiceFromAsset().click();            
       });
-	  
+      
       it('Create Lamda Service', () => {
             browser.driver.switchTo().activeElement();
             browser.driver.sleep(5000);
@@ -319,7 +319,7 @@ describe('Overview', () => {
             jazzServices_po.getDeploymentStatus().click();
             browser.wait(EC.elementToBeClickable(jazzServices_po.getTestFunction()), timeOutHigh);
             jazzServices_po.getTestFunction().click();
-			jazzServices_po.getTestArea().sendKeys(String.valueOf('1'));
+            jazzServices_po.getTestArea().sendKeys('1');
             jazzServices_po.getTestButton().click();
             jazzServices_po.getClose().click();
             browser.refresh();
@@ -332,28 +332,28 @@ describe('Overview', () => {
             jazzServices_po.getMetricsChildSix().click();
             jazzServices_po.getServiceFromAsset().click();
       });
-	  
-	  it('Verify METRICS COUNT for Python2.7_Runtime' , () => {
-			// Navigation to services
-			browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
-			browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
-			//To Navigate to the particular service and verifying the Page
-			jazzServices_po.getAwsServiceName().click();
-			browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
-			browser.sleep(15000);
-			browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
-			jazzServices_po.getRefresh().click();
-			browser.sleep(15000);
-			jazzServices_po.getProdName().click();
-			browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
-			browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
-			browser.driver.switchTo().activeElement();
-			browser.sleep(15000);
-			jazzServices_po.getMetrices().click();
-			expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
-			browser.sleep(2000);
-			jazzServices_po.getServiceFromAsset().click();            
-	  });
+      
+      it('Verify METRICS COUNT' , () => {
+            // Navigation to services
+            browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
+            browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+            //To Navigate to the particular service and verifying the Page
+            jazzServices_po.getAwsServiceName().click();
+            browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+            browser.sleep(15000);
+            browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
+            jazzServices_po.getRefresh().click();
+            browser.sleep(15000);
+            jazzServices_po.getProdName().click();
+            browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
+            browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
+            browser.driver.switchTo().activeElement();
+            browser.sleep(15000);
+            jazzServices_po.getMetrices().click();
+            expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
+            browser.sleep(2000);
+            jazzServices_po.getServiceFromAsset().click();            
+      });
            
       it('Create Website Service', () => {
             browser.driver.switchTo().activeElement();
