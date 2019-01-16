@@ -20,7 +20,27 @@
   @version: 1.0
 **/
 
-module.exports = (inputs, callback) => {
+const utils = require("../utils.js");
 
+module.exports = (configs, input, callback) => {
+  let new_config = utils.searchAndAdd(configs, input);
 
+  // initialize dynamodb docClient
+  const docClient = utils.initDocClient();
+
+  let params = {
+    Item: new_config,
+    ReturnConsumedCapacity: "TOTAL",
+    TableName: global.config.TABLE_NAME
+  };
+
+  docClient.put(params, function (err, data) {
+    if (err) {
+      onComplete(err, null);
+    } else {
+      onComplete(null, {
+        "result": "success"
+      });
+    }
+  });
 };

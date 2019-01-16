@@ -35,22 +35,66 @@ const handler = (event, context, cb) => {
   logger.init(event, context);
 
   try {
-    let apiResponseObj = {};
+
+    if (event && !event.method) {
+      return cb(JSON.stringify(errorHandler.throwInputValidationError("Method cannot be empty")));
+    }
+
+    if (event && !event.principalId) {
+      return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service|Authorization Incomplete")));
+    }
+
+    if (event && event.principalId != config.ADMIN_ID) {
+      return cb(JSON.stringify(errorHandler.throwUnauthorizedError("This user is not authorized to access this service.")));
+    }
+
     if (event && event.method && event.method === 'GET') {
-      if (!event.principalId) {
-        logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
-        return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service|Authorization Incomplete")));
+      let apiResponseObj = {};
+      exportable.getConfiguration()
+        .then((res) => {
+          apiResponseObj.config = res;
+          return cb(null, responseObj(apiResponseObj, event.body));
+        }).catch((error) => {
+          logger.error("Failed to load admin configuration :" + JSON.stringify(error));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load admin configuration.")));
+        });
+
+    } else if (event && event.method && event.method === 'POST') {
+      if (event && !event.body) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty")));
       }
-      if (event.principalId != config.ADMIN_ID) {
-        return cb(JSON.stringify(errorHandler.throwUnauthorizedError("This user is not authorized to access this service.")));
+      exportable.getConfiguration()
+        .then((res) => exportable.addConfiguration(res, event.body))
+        .then((res) => {
+          return cb(null, responseObj(res, event.body));
+        }).catch((error) => {
+          logger.error("Failed to add admin configuraion:" + JSON.stringify(error));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to add admin configuraion.")));
+        });
+
+    } else if (event && event.method && event.method === 'PUT') {
+      if (event && !event.body) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty")));
       }
       exportable.getConfiguration(config)
+      .then((res) => exportable.updateConfiguration(res, event.body))
         .then((data) => {
           apiResponseObj.config = data;
           return cb(null, responseObj(apiResponseObj, event.body));
         }).catch((error) => {
-          logger.error("Failed to load admin config file:" + JSON.stringify(error));
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load config file.")));
+          logger.error("Failed to update admin configuraion:" + JSON.stringify(error));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to update admin configuraion.")));
+        });
+
+    } else if (event && event.method && event.method === 'DELETE') {
+      exportable.getConfiguration(config)
+      .then((res) => exportable.deleteConfiguration(res, event.body))
+        .then((data) => {
+          apiResponseObj.config = data;
+          return cb(null, responseObj(apiResponseObj, event.body));
+        }).catch((error) => {
+          logger.error("Failed to delete the specified admin configuraion:" + JSON.stringify(error));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to delete the specified admin configuraion.")));
         });
 
     } else {
@@ -74,9 +118,49 @@ const getConfiguration = () => {
   });
 }
 
+const addConfiguration = (configs, new_config) => {
+  return new Promise((resolve, reject) => {
+    crud.post(configs, new_config, function (err, data) {
+      if (err) {
+        return reject(err);
+      } else {
+        return resolve(data);
+      }
+    });
+  });
+}
+
+const updateConfiguration = (configs, new_config) => {
+  return new Promise((resolve, reject) => {
+    crud.put(configs, new_config, function (err, data) {
+      if (err) {
+        return reject(err);
+      } else {
+        return resolve(data);
+      }
+    });
+  });
+}
+
+const deleteConfiguration = (configs, key) => {
+  return new Promise((resolve, reject) => {
+    crud.put(configs, key, function (err, data) {
+      if (err) {
+        return reject(err);
+      } else {
+        return resolve(data);
+      }
+    });
+  });
+}
+
+
 const exportable = {
   handler,
-  getConfiguration
+  getConfiguration,
+  addConfiguration,
+  updateConfiguration,
+  deleteConfiguration
 }
 
 module.exports = exportable;

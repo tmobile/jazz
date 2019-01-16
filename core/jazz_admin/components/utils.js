@@ -91,8 +91,46 @@ const formatData = (data) => {
   return config_obj;
 };
 
-module.exports =  {
-    initDynamodb: initDynamodb,
-    initDocClient: initDocClient,
-    formatData: formatData
+const searchAndAdd = (configs, input) => {
+  Object.keys(input).forEach((key) => {
+    let key_list = key.split(".");
+    let value = configs;
+    for (k in key_list) {
+      value = travers(value, k);
+    }
+
+    if (value) {
+      if (value.constructor === Array) {
+        value.push(input[key]);
+      } else if (value.constructor === Object) {
+        for (k in input[key]) {
+          value.k = input[key].k;
+        }
+      }
+
+      for (ky in configs) {
+        for (k in key_list) {
+          pos = config
+        }
+      }
+    }
+  });
+}
+
+const travers = (data, key) => {
+  let value;
+  for (k in data) {
+    if (k === key) {
+      value = data[key];
+    }
+  }
+  return value;
+}
+
+
+module.exports = {
+  initDynamodb: initDynamodb,
+  initDocClient: initDocClient,
+  formatData: formatData,
+  searchAndAdd: searchAndAdd
 };

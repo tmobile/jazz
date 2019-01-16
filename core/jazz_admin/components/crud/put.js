@@ -14,23 +14,23 @@
 // limitations under the License.
 // =========================================================================
 
-/**
-  CRUD APIs for Config Catalog
-  @author:
-  @version: 1.0
-**/
+const utils = require("../utils.js");
 
-const _get = require('./get.js');
-const _post = require('./post.js');
-const _put = require('./put.js');
-const _delete = require('./delete.js');
+module.exports = (onComplete) => {
+  // initialize dynamodb
+  let dynamodb = utils.initDynamodb();
+  let scanparams = {
+    TableName: global.config.TABLE_NAME,
+    "ReturnConsumedCapacity": "TOTAL"
+  };
 
 
-module.exports = () => {
-  return {
-    get: _get,
-    post: _post,
-    put: _put,
-    delete: _delete
-  }
-}
+  dynamodb.scan(scanparams, (err, data) => {
+    if (err) {
+      onComplete(err);
+    } else {
+      let config_data = utils.formatData(data.Items[0]);
+      onComplete(null, config_data);
+    }
+  });
+};
