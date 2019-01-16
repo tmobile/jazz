@@ -185,7 +185,7 @@ describe('Overview', () => {
       });   
 
 	it('Verify METRICS COUNT' , () => {
-            // Navigation to services
+            // Navigation to services-Metrics
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
             //To Navigate to the particular service and verifying the Page
