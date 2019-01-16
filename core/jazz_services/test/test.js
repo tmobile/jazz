@@ -332,7 +332,7 @@ describe('platform_services', function() {
 
   /*
   * Given an event.method = get and service and domain values to query, service and domain info should be added to the filter
-  * @param {object} event->event.method="GET", event.path.id is undefined, query.last_update_before/after are defined
+  * @param {object} event->event.method="GET", event.path.id is undefined, query values of service & domain are defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   */
   it("should include service and domain info in dynamodb filter if given specific event props", function(){
