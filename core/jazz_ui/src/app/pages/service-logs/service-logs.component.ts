@@ -406,8 +406,11 @@ export class ServiceLogsComponent implements OnInit {
 
 			if (i == index) {
 				rowData['expanded'] = !rowData['expanded'];
-			} else{
-				rowData['expanded'] = false;
+			}
+			if(rowData['expanded'] == false) {
+				this.expandText='Expand all';
+			} else {
+				this.expandText='Collapse all';
 			}
 		}
 	}
