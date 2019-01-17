@@ -25,15 +25,17 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
-const request = require('request');
-function handler(event, context, cb) {
+const crud = require("./components/crud")();
+
+const handler = (event, context, cb) => {
   //Initializations
-  var errorHandler = errorHandlerModule();
-  var config = configObj.getConfig(event, context);
+  let errorHandler = errorHandlerModule();
+  let config = configObj.getConfig(event, context);
+  global.config = config;
   logger.init(event, context);
 
   try {
-    var apiResponseObj = {};
+    let apiResponseObj = {};
     if (event && event.method && event.method === 'GET') {
       if (!event.principalId) {
         logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
@@ -42,13 +44,15 @@ function handler(event, context, cb) {
       if (event.principalId != config.ADMIN_ID) {
         return cb(JSON.stringify(errorHandler.throwUnauthorizedError("This user is not authorized to access this service.")));
       }
-      exportable.getInstallerVarsJSON(config).then((data) => {
-        apiResponseObj.config = data;
-        return cb(null, responseObj(apiResponseObj, event.body));
-      }).catch((error) => {
-        logger.error("Failed to load admin config file:"+ JSON.stringify(error));
-        return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load config file.")));
-      });
+      exportable.getConfiguration(config)
+        .then((data) => {
+          apiResponseObj.config = data;
+          return cb(null, responseObj(apiResponseObj, event.body));
+        }).catch((error) => {
+          logger.error("Failed to load admin config file:" + JSON.stringify(error));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to load config file.")));
+        });
+
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("The requested method is not supported")));
     }
@@ -58,55 +62,21 @@ function handler(event, context, cb) {
   }
 }
 
-function buildRequestOption(config) {
-  if (config.SCM_TYPE === "gitlab") {
-    return {
-      uri: config.BASE_URL + config.GITLAB.CONFIG_FILE_PATH,
-      method: 'get',
-      headers: {
-        "Private-Token": config.GITLAB.PRIVATE_TOKEN
-      },
-      rejectUnauthorized: false
-    };
-  } else {
-    return {
-      uri: config.BASE_URL + config.BITBUCKET.CONFIG_FILE_PATH,
-      method: 'get',
-      headers: {
-        "Authorization": 'Basic ' + new Buffer(config.BITBUCKET.USERNAME + ':' + config.BITBUCKET.PASSWORD).toString('base64')
-      },
-      rejectUnauthorized: false
-    };
-  }
-}
-
-function getInstallerVarsJSON(config) {
+const getConfiguration = () => {
   return new Promise((resolve, reject) => {
-    try {
-      var params = buildRequestOption(config);
-      request(params, (error, response, body) => {
-        if (error) {
-          reject(error);
-        } else {
-          if (response.statusCode != 200) {
-            logger.error("Error processing request: " + JSON.stringify(response));
-            return reject(response.body.message);
-          }
-          var data = JSON.parse(response.body);
-          resolve(data);
-        }
-      });
-    }
-    catch (error) {
-      reject(error);
-    }
+    crud.get(function (err, data) {
+      if (err) {
+        return reject(err);
+      } else {
+        return resolve(data);
+      }
+    });
   });
 }
 
 const exportable = {
   handler,
-  getInstallerVarsJSON,
-  buildRequestOption
+  getConfiguration
 }
 
 module.exports = exportable;

@@ -410,7 +410,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{region}/${region}/g' ./config/prod-config.json"
         }
 
-        if (( service_name.trim() == "jazz_usermanagement") || (service_name.trim() == "jazz_admin")) {
+        if (( service_name.trim() == "jazz_usermanagement")) {
 
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/stg-config.json"
@@ -443,6 +443,14 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+
+            sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/dev-config.json"
+            sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/stg-config.json"
+            sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/prod-config.json"
         }
 
         if (service_name.trim() == "jazz_email") {

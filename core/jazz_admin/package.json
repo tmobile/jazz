@@ -9,7 +9,6 @@
     "test": "mocha"
   },
   "dependencies": {
-    "request": "*"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.2.1",
