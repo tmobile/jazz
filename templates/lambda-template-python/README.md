@@ -26,7 +26,6 @@
 
     # run tests
     pytest test
-
 ```
 
 #### Python 2.7 (Windows)
@@ -52,3 +51,26 @@
     pytest test
 
 ```
+
+#### Python 3.6
+
+```python
+    # install requirements in library folder
+    mkdir library
+    pip3 install -r requirements.txt -t library
+
+    # create __init__.py in library, to make Python treat the 'library' as a package
+    touch library/__init__.py
+
+    # create & activate virtual environment
+    python3 -m venv virtualenv
+    . virtualenv/bin/activate
+
+    # install dev dependencies (includes pytest by default)
+    pip install -r requirements-dev.txt
+
+    # run tests
+    pytest test
+```
+
+
