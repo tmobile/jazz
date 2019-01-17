@@ -38,11 +38,7 @@ export const environment = {
     registrationMessage: 'Please contact your Jazz Admin(s) to get a registration code.'
   },
   aws: {
-<<<<<<< HEAD
-    account_number: "{account_number}"
-=======
     account_number:'{account_number}',
     region:"{region}",
->>>>>>> develop
   }
 };
