@@ -262,10 +262,21 @@ node {
 
 	if (is_service_deletion) {
 		stage('Cleanup SCM') {
+			events.sendStartedEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', "Remove policies and repo write permission of service_id: " + service_config['service_id'] + " started", null, "prod")
+			deletePolicies(service_config['service_id'], auth_token, "${g_base_url}/jazz/acl/policies")
+			events.sendCompletedEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', "Remove policies and repo write permission of service_id: " + service_config['service_id'] + " completed", null, "prod")
 			cleanup(repo_name)
-			aclModule.deletePolicies(service_config['service_id'], auth_token, "${g_base_url}/jazz/acl/policies")
 			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
 		}
+	}
+}
+
+def deletePolicies(serviceId, authToken, aclUrl) {
+	try {
+		aclModule.deletePolicies(serviceId, authToken, aclUrl)
+	} catch(ex) {
+		echo "ex: $ex"
+		events.sendFailureEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', ex.getMessage(), context_map)
 	}
 }
 

@@ -254,13 +254,13 @@ node  {
 				}
 
 				try {
-					events.sendStartedEvent("ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO", 'adding write permission to repo started', context_map)
+					events.sendStartedEvent("ADD_POLICIES_AND_REPO_PERMISSIONS", 'adding policies and write permission to repo started', context_map)
 					aclModule.updateServiceACL(service_id, auth_token, "${g_base_url}/jazz/acl/policies", service_config['created_by'])
-					events.sendCompletedEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO', 'adding write permission to repo started', context_map)
+					events.sendCompletedEvent('ADD_POLICIES_AND_REPO_PERMISSIONS', 'adding policies and write permission to repo started', context_map)
 				}
 				catch (ex) {
 					send_status_email("FAILED")
-					events.sendFailureEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO', ex.getMessage(), context_map)
+					events.sendFailureEvent('ADD_POLICIES_AND_REPO_PERMISSIONS', ex.getMessage(), context_map)
 					error ex.getMessage()
 				}
 
