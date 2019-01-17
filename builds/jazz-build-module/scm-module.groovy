@@ -162,9 +162,17 @@ def setRepoPermissions(repo_owner, repo_name, admin_group) {
 
     } else if (config_loader.SCM.TYPE == "bitbucket") {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-          sh "curl -X PUT -G -k -v -u \"${UNAME}:${PWD}\" -d \"name=$admin_group\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/groups?permission=REPO_ADMIN&\""
+          def addGpOutputStr = sh(
+              script: "curl -X PUT -G -k -v -u \"${UNAME}:${PWD}\" -d \"name=$admin_group\" \"${scm_user_services_api_endpoint}${repo_name}/permissions/groups?permission=REPO_ADMIN&\"",
+              returnStdout: true
+          ).trim()
+
           def encoded_creator = URLEncoder.encode(repo_owner, "utf-8")
-          sh "curl -X PUT -G -k -v -u \"${UNAME}:${PWD}\" -d \"name=$encoded_creator\" \"${scm_user_services_api_endpoint}/${repo_name}/permissions/users?permission=REPO_ADMIN\""
+          def repoPermissionOutputStr = sh(
+              script: "curl -X PUT -G -k -v -u \"${UNAME}:${PWD}\" -d \"name=$encoded_creator\" \"${scm_user_services_api_endpoint}${repo_name}/permissions/users?permission=REPO_ADMIN\"",
+              returnStdout: true
+          ).trim()
+
         }
     }
 }

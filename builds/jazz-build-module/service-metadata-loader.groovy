@@ -24,17 +24,15 @@ def initialize(configData){
  *
  */
 def loadServiceMetadata(service_id){
-	
 	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
 		credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-			
+
 		def table_name = "${configLoader.INSTANCE_PREFIX}_services_prod"
 		def service_Object = sh (
 				script: "aws --region ${configLoader.AWS.REGION} dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
 				returnStdout: true
 			).trim()
-		
-		
+
 		if(service_Object){
 			def service_data = parseJson(service_Object)
 			def data = service_data.Item.SERVICE_METADATA.M
@@ -42,10 +40,11 @@ def loadServiceMetadata(service_id){
 			def metadata = [:]
 			def catalog_metadata = [:]
 			def deployment_targets_metadata = [:]
-			
+
+
 			for(item in data){
-				metadata[item.key] = item.value.S
-				catalog_metadata[item.key] = item.value.S				
+				metadata[item.key] = parseValue(item.value)
+				catalog_metadata[item.key] = parseValue(item.value)
 			}
 			for (target in deployment_targets) {
 				deployment_targets_metadata[target.key] = target.value.S
@@ -60,11 +59,19 @@ def loadServiceMetadata(service_id){
 			metadata['catalog_metadata'] = catalog_metadata
 			metadata['deployment_targets'] = deployment_targets_metadata
 			if(service_data.Item.SERVICE_SLACK_CHANNEL)
-				metadata['slack_channel'] = service_data.Item.SERVICE_SLACK_CHANNEL.S			
-			
+				metadata['slack_channel'] = service_data.Item.SERVICE_SLACK_CHANNEL.S
+
 			return metadata
 		}
 	}
+}
+
+def parseValue(data) {
+  def parsedValue
+  for (d in data){
+    parsedValue = d.value
+  }
+  return parsedValue
 }
 
 @NonCPS

@@ -2,20 +2,32 @@ language: node_js
 node_js:
  - "node"
 env:
+ - PLATFORM_SERVICE=core/jazz_admin
+ - PLATFORM_SERVICE=core/jazz_asset-event-handler
+ - PLATFORM_SERVICE=core/jazz_assets
  - PLATFORM_SERVICE=core/jazz_codeq
  - PLATFORM_SERVICE=core/jazz_create-serverless-service
  - PLATFORM_SERVICE=core/jazz_delete-serverless-service
  - PLATFORM_SERVICE=core/jazz_deployments
  - PLATFORM_SERVICE=core/jazz_deployments-event-handler
- - PLATFORM_SERVICE=core/jazz_environments
+ - PLATFORM_SERVICE=core/jazz_email
  - PLATFORM_SERVICE=core/jazz_environment-event-handler
+ - PLATFORM_SERVICE=core/jazz_environments
  - PLATFORM_SERVICE=core/jazz_events
+ - PLATFORM_SERVICE=core/jazz_events-handler
  - PLATFORM_SERVICE=core/jazz_is-service-available
+ - PLATFORM_SERVICE=core/jazz_is-slack-channel-available
  - PLATFORM_SERVICE=core/jazz_login
  - PLATFORM_SERVICE=core/jazz_logout 
+ - PLATFORM_SERVICE=core/jazz_logs 
+ - PLATFORM_SERVICE=core/jazz_metrics 
  - PLATFORM_SERVICE=core/jazz_scm-webhook
  - PLATFORM_SERVICE=core/jazz_services
  - PLATFORM_SERVICE=core/jazz_services-handler
+ - PLATFORM_SERVICE=core/jazz_slack-channel
+ - PLATFORM_SERVICE=core/jazz_slack-event-handler
+ - PLATFORM_SERVICE=core/jazz_test-lambda
+ - PLATFORM_SERVICE=core/jazz_usermanagement
 
 before_script:
   - npm prune

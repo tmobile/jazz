@@ -155,7 +155,6 @@
                                     <div class="eachFilter slider-wrap">
                                         <div><div class='hori-line'></div>TIME RANGE</div>
                                         <dropdown class="dropdown-3" title="Select range" [dropdwnContent]="rangeList" [selected]="selectedTimeRange" (onSelected)="onRangeListSelected($event)"></dropdown>
-                                        <ion-range-slider #sliderElement id='sliderElement'  min=1 [max]='sliderMax' [from]=1 (onFinish)='getRange($event)' (onUpdate)="onClickFilter()"></ion-range-slider>
                                     </div>
                                     <div class="eachFilter">
                                         <div><div class='hori-line'></div>PERIOD</div>

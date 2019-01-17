@@ -399,15 +399,6 @@ export class CreateServiceComponent implements OnInit {
       "approvers": approversPayload,
       "domain": this.model.domainName,
       "description": this.model.serviceDescription,
-      //     "git_clone":this.git_clone,
-      //     "git_url":this.git_url,
-      //     "git_private":this.git_private,
-      //     "git_creds":{
-      // "properties":{
-      //       "git_username":this.git_username,
-      //       "git_pwd":this.git_pwd
-      // }
-      //     }
 
     };
 
@@ -442,7 +433,7 @@ export class CreateServiceComponent implements OnInit {
           event["action"] = "PutRecord";
         } else if (this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;
-          event["action"] = "S3:" + this.eventExpression.S3BucketName + ":*";
+          event["action"] = "s3:" + this.eventExpression.S3BucketName + ":*";
         }
         payload["events"] = [];
         payload["events"].push(event);
@@ -453,11 +444,9 @@ export class CreateServiceComponent implements OnInit {
 
       if (this.gitCloneSelected == true) {
         payload["git_repository"] = {};
-        //payload["git_repository"]["git_url"] = this.git_url;
         obj = { "git_https_url": this.git_url, "git_creds": {} };
 
         if (this.git_private == true) {
-          //payload["git_private"] = this.git_private;
           this.git_creds = {
 
             "git_username": this.gitusername,
@@ -478,13 +467,6 @@ export class CreateServiceComponent implements OnInit {
     }
     if (this.typeOfService == 'api' && this.ttlSelected) {
     }
-
-    // if (this.typeOfService == 'function') {
-    //   payload["accounts"]=this.selectedAccount;
-    //   payload["regions"]=this.selectedRegion;
-    // }
-
-
     this.isLoading = true;
     this.http.post('/jazz/create-serverless-service', payload)
       .subscribe(
@@ -494,15 +476,10 @@ export class CreateServiceComponent implements OnInit {
         var reqId = Response.data.request_id;
         localStorage.setItem('request_id' + "_" + payload.service_name + "_" + payload.domain, JSON.stringify({ service: service, domain: domain, request_id: reqId }));
         var output = Response;
-        // this.cache.set("request_id", Response.data.request_id);
-        // this.cache.set("request_id_name", Response.input.service_name);
         this.serviceRequested = true;
         this.serviceRequestSuccess = true;
         this.serviceRequestFailure = false;
         this.isLoading = false;
-        // this.cache.set('request_id',output.data.request_id);
-        // var index = output.data.indexOf("https://");
-        // this.serviceLink = output.data.slice(index, output.data.length);
         this.resMessage = this.toastmessage.successMessage(Response, "createService");
         if (output.data != undefined && typeof (output.data) == 'string') {
           this.resMessage = output.data;
@@ -512,8 +489,6 @@ export class CreateServiceComponent implements OnInit {
         this.selectedApprovers = [];
         this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
         this.rateExpression.error = undefined;
-        // this.toasterService.pop('success', 'Success!!', output.data.create_service.data);
-        //this.toasterService.pop('success', resMessage);
       },
       (error) => {
         this.isLoading = false;
@@ -951,18 +926,6 @@ blurRegion(){
       event.preventDefault();
       var pinkElement;
       pinkElement = document.getElementsByClassName('pinkfocususers')[0].children;
-      // var pinkElementS = document.getElementsByClassName("pinkfocus")[0];
-      // if (pinkElementS == undefined)
-      // {
-      //   var p_ele = document.getElementsByClassName('pinkfocus')[2];
-      //   if(p_ele == undefined){
-
-      //   }
-      //   else pinkElement = document.getElementsByClassName('pinkfocus')[2].children;
-
-      // }
-      // else
-      //   pinkElement = pinkElementS.children;
       var approverObj = {
         displayName: pinkElement[0].attributes[2].value,
         givenName: pinkElement[0].attributes[3].value,
@@ -1014,18 +977,6 @@ blurRegion(){
       event.preventDefault();
       var pinkElement;
       pinkElement = document.getElementsByClassName("pinkfocuslack")[0].children;
-      // var pink_ele = document.getElementsByClassName("pinkfocus")[2];
-      // if(pink_ele != undefined){
-      //   alert('not undefined')
-      //   pinkElement = document.getElementsByClassName("pinkfocus")[2].children;
-
-      // }
-      // else{
-      //   alert('undefined')
-
-
-
-      // }
 
       var approverObj = {
         displayName: pinkElement[0].attributes[2].value,
@@ -1137,28 +1088,6 @@ blurRegion(){
 
   }
 
-  // check(event){
-  //   var gitClone = <HTMLInputElement> document.getElementById("checkbox-gitclone");
-
-  //   this.git_clone =  gitClone.checked;
-
-
-  // }
-
-  // checkk(event){
-  //   var gitClone = <HTMLInputElement> document.getElementById("checkbox-gitclone");
-
-  //     this.git_clone =  gitClone.checked;
-
-
-  //   var gitPrivate = <HTMLInputElement> document.getElementById("checkbox-gitprivate");
-
-  //   this.git_private =  gitPrivate.checked;
-
-  //   this.git_url = "https://"+this.gitRepo;
-  //
-  // }
-  // cron validation related functions //
 
   inputChanged(val) {
     this.Currentinterval = val;

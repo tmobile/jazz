@@ -1,19 +1,3 @@
-// =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//    http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-// =========================================================================
-
 /**
     Nodejs Template Project
     @module: logger.js
@@ -103,27 +87,25 @@ module.exports = function () {
     };
 
     const log = (level, message) => {
-        const timestamp = new Date().toISOString();
+      const timestamp = new Date().toISOString();
 
-        const logLevelMessageTypes = {
-            'error': `${timestamp}, 'ERROR \t', ${config.requestDetails}, ${message}`,
-            'warn': `${timestamp}, 'WARN \t', ${config.requestDetails}, ${message}`,
-            'info': `${timestamp}, 'INFO \t', ${config.requestDetails}, ${message}`,
-            'verbose': `${timestamp}, 'VERBOSE \t', ${config.requestDetails}, ${message}`,
-            'debug': `${timestamp}, 'DEBUG \t', ${config.requestDetails}, ${message}`,
-            'log': `${timestamp}, ${level} \t', ${config.requestDetails}, ${message}`
-        };
-        /*
-            @TODO: format message as per requirement.
-            Will it be just a string / json. Should we except error object also?
-        */
-        try {
-            console[level](logLevelMessageTypes[level]);
-        } catch(ex) {
-            console.log(logLevelMessageTypes.log);
+      if (logLevels[level] >= logLevels[config.curLogLevel]) {
+        if (level === 'error') {
+            console.error(timestamp, 'ERROR \t', config.requestDetails, message);
+        } else if (level === 'warn') {
+            console.warn(timestamp, 'WARN  \t', config.requestDetails, message);
+        } else if (level === 'info') {
+            console.info(timestamp, 'INFO  \t', config.requestDetails, message);
+        } else if (level === 'verbose') {
+            console.info(timestamp, 'VERBOSE  \t', config.requestDetails, message);
+        } else if (level === 'debug') {
+            console.debug(timestamp, 'DEBUG  \t', config.requestDetails, message);
+        } else {
+            console.log(timestamp, level, '\t', config.requestDetails, message);
         }
+      }
 
-        return null;
+      return null;
     };
 
     const error = (message) => log('error', message);

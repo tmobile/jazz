@@ -32,20 +32,19 @@ const logger = require("./components/logger.js");
 
 const scmFactory = require("./scm/scmFactory.js");
 
-module.exports.handler = (event, context, cb) => {
+function handler(event, context, cb)  {
 
 	var errorHandler = errorHandlerModule();
 	logger.init(event, context);
 
 	var config = configModule.getConfig(event, context);
 
-	if (!config || config.length) {
+	if (!config || config.length) { 	
 		logger.error("Cannot load config object, will stop processing");
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Internal error, please reach out to admins")));
 	}
 
 	global.config = config;
-
 	try {
 		logger.info(JSON.stringify(event));
 
@@ -63,17 +62,17 @@ module.exports.handler = (event, context, cb) => {
 		const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
 
 		if (subPath.indexOf('reset') > -1) {
-			logger.info('User password reset Request::' + JSON.stringify(service_data));
+			logger.info('User password reset Request:' + JSON.stringify(service_data));
 
-			validateResetParams(service_data)
-				.then(() => forgotPassword(cognito, config, service_data))
-				.then(() => function (result) {
-					logger.info("Password reset was successful for user: " + service_data.email);
-					return cb(null, responseObj({ result: "success", errorCode: "0", message: "Password reset was successful for user: " + service_data.email }));
-				})
-				.catch(function (err) {
+			exportable.validateResetParams(service_data)
+			.then(() => exportable.forgotPassword(cognito, config, service_data) )
+				.then(result => {
+						  logger.info("Password reset was successful for user: " + service_data.email);
+						  return cb(null, responseObj({ result: "success", errorCode: "0", message: "Password reset was successful for user: " + service_data.email }));
+					  })
+				.catch((err) => {
 					logger.error("Failed while resetting user password: " + JSON.stringify(err));
-
+					
 					if (err.errorType) {
 						// error has already been handled and processed for API gateway
 						return cb(JSON.stringify(err));
@@ -81,16 +80,15 @@ module.exports.handler = (event, context, cb) => {
 						if (err.code) {
 							return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
 						}
-
 						return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while resetting user password for: " + service_data.email)));
 					}
 				});
 		} else if (subPath.indexOf('updatepwd') > -1) {
 			logger.info('User password update Request::' + JSON.stringify(service_data));
 
-			validateUpdatePasswordParams(service_data)
-				.then(() => updatePassword(cognito, config, service_data))
-				.then(() => function (result) {
+			exportable.validateUpdatePasswordParams(service_data)
+				.then(() =>  exportable.updatePassword(cognito, config, service_data))
+				.then(result => {
 					logger.info("Successfully updated password for user: " + service_data.email);
 					return cb(null, responseObj({ result: "success", errorCode: "0", message: "Successfully updated password for user: " + service_data.email }));
 				})
@@ -111,10 +109,10 @@ module.exports.handler = (event, context, cb) => {
 		} else {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
 
-			validateCreaterUserParams(config, service_data)
-				.then((s) => createUser(cognito, config, s))
-				.then((s) => rp(getRequestToCreateSCMUser(config, service_data)))
-				.then(() => function (result) {
+			exportable.validateCreaterUserParams(config, service_data)
+				.then((s) => exportable.createUser(cognito, config, s))
+				.then((s) => rp(exportable.getRequestToCreateSCMUser(config, service_data)))
+				.then(result => {
 					logger.info("User: " + service_data.userid + " registered successfully!");
 					return cb(null, responseObj({ result: "success", errorCode: "0", message: "User registered successfully!" }));
 				})
@@ -179,7 +177,7 @@ function validateUpdatePasswordParams(userInput) {
 		var errorHandler = errorHandlerModule();
 
 		if (!userInput.email) {
-			logger.warn("no email address provided for password update");
+			logger.warn("no email address provided for password update"); 
 			return reject(errorHandler.throwInputValidationError("102", "Email is required field"));
 		}
 
@@ -193,7 +191,7 @@ function validateUpdatePasswordParams(userInput) {
 			return reject(errorHandler.throwInputValidationError("102", "Password is required"));
 		}
 		else {
-			resolve();
+			resolve('success');
 		}
 	});
 }
@@ -203,13 +201,13 @@ function validateUpdatePasswordParams(userInput) {
  * @param {object} userInput
  * @returns promise
  */
-function validateCreaterUserParams(config, userInput) {
+function validateCreaterUserParams(config, userInput) { 
 	var errorHandler = errorHandlerModule();
 
 	return new Promise((resolve, reject) => {
 
 		var missing_required_fields = _.difference(_.values(config.required_fields), _.keys(userInput));
-
+		
 		if (missing_required_fields.length > 0) {
 			logger.error("Following field(s) are required - " + missing_required_fields.join(", "));
 			return reject(errorHandler.throwInputValidationError("102", "Following field(s) are required - " + missing_required_fields.join(", ")));
@@ -259,7 +257,6 @@ function forgotPassword(cognitoClient, config, userData) {
 			ClientId: config.USER_CLIENT_ID,
 			Username: userData.email
 		};
-
 		cognitoClient.forgotPassword(cognitoParams, (err, result) => {
 			if (err)
 				reject(err);
@@ -292,3 +289,17 @@ function getRequestToCreateSCMUser(config, userData) {
 	var scm = new scmFactory(config);
 	return scm.addUserRequest(userData.userid.toLowerCase(), userData.userpassword);
 }
+
+
+const exportable = {	
+	handler,
+	validateResetParams,
+	validateUpdatePasswordParams,
+	validateCreaterUserParams,
+	createUser,
+	forgotPassword,
+	updatePassword,
+	getRequestToCreateSCMUser
+	
+};
+module.exports = exportable;

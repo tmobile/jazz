@@ -82,7 +82,7 @@
                         <section class="col-lg-3 col-md-3 pad-left0">
                             <div class="radio-container">
                                 <input type="radio" class='test-focus' name="runtime" id="nodejs" [value]="nodejs" [checked]="runtime == 'nodejs'" (click)="onSelectionChange('nodejs')">
-                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (6.10)</label>
+                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (8.10)</label>
                             </div>
                         </section>
                         <section class="col-lg-3 col-md-3 pad-left0">
@@ -125,7 +125,7 @@
                         <section class="col-lg-12  pad-left0">
                             <div class="input-field-container">
                                 <div class="input-wrapper" [ngClass]="{'available': serviceAvailable && !invalidServiceName && !invalidDomainName, 'unavailable': serviceNotAvailable || !serviceName.valid && (serviceName.dirty || serviceName.touched) || (serviceName.valid && invalidServiceName)}">
-                                    <input name="serviceName" pattern="^[A-Za-z0-9\-]+$" type="text" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (ngModelChange)="invalidServiceName = false;serviceAvailable=false" #serviceName='ngModel' (blur)="validateName($event)" >
+                                    <input name="serviceName" pattern="^[A-Za-z0-9\-]+$"  maxlength="20" type="text" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (ngModelChange)="invalidServiceName = false;serviceAvailable=false" #serviceName='ngModel' (blur)="validateName($event)" >
                                     <img class="input-loader ng-hide">
                                     <p class="termsConditions" *ngIf="!serviceName.valid && (serviceName.dirty || serviceName.touched)">Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
                                     <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && !isDomainDefined">Service name is available !</p>
@@ -134,7 +134,7 @@
                                     <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && isDomainDefined">Service name in the specified namespace is not available. Please try another combination of namespace & service name.</p>
                                     <!-- <p class="termsConditions" *ngIf="serviceName.valid && serviceNameError">Error in validating Slack Channel name. Please try again or contact administrator.</p> -->
                                     <p class="termsConditions" *ngIf="serviceName.valid && invalidServiceName">Service name should not start with number or hyphens and should not end with hyphens</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && invalidServiceNameNum">Service name should not start a number</p>                                                                        
+                                    <p class="termsConditions" *ngIf="serviceName.valid && invalidServiceNameNum">Service name should not start a number</p>
                                     <img *ngIf="serviceName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
                                 </div>
                             </div>
@@ -152,16 +152,16 @@
                         <section class="col-lg-12  pad-left0">
                             <div class="input-field-container">
                                 <div class="input-wrapper" [ngClass]="{'unavailable' : !domainName.valid && (domainName.dirty || domainName.touched) || (domainName.valid && invalidDomainName) }">
-                                    <input name="domainName" pattern="^[A-Za-z0-9\-]+$" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event)" (ngModelChange)="invalidDomainName=false" required>
+                                    <input name="domainName" pattern="^[A-Za-z0-9\-]+$" maxlength="20" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event)" (ngModelChange)="invalidDomainName=false" required>
                                     <p class="termsConditions" *ngIf="!domainName.valid && (domainName.dirty || domainName.touched)">Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
-                                    <p class="termsConditions" *ngIf="domainName.valid && invalidDomainName">Namespace should not start with number or hyphens and should not end with hyphens</p>                                    
-                                    <img *ngIf="serviceName.valid && domainName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">                                    
+                                    <p class="termsConditions" *ngIf="domainName.valid && invalidDomainName">Namespace should not start with number or hyphens and should not end with hyphens</p>
+                                    <img *ngIf="serviceName.valid && domainName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
                                 </div>
                             </div>
                         </section>
                     </div>
                 </div>
-    
+
             </section>
             <section class="each-step-wrap accounts hide" *ngIf="typeOfService == 'function'">
                 <div class="row">
@@ -311,28 +311,28 @@
                                                 <label for="checkbox-slack2"></label>
                                             </span>
                                         </div>
-                                        
+
                                         <img *ngIf="channelname.valid && slackChannelLoader" class="input-loader" src="../assets/images/icons/loading.png">
                                         <div class="CreateSlackWindow termsConditions arrow_box" *ngIf="channelname.valid && slackNotAvailble && createslackSelected">
-                                            
+
                                             <p>This channel will be public. Anyone on your team can view and join this channel.</p>
                                             <label for="slackName">Name<span class='magen'>*</span></label>
                                             <input name="slackName" pattern="^[a-z]" type="text" class="textForm slackForm" required placeholder="#name" [(ngModel)]="model.slackName" #createSlackModelname='ngModel' (blur)='checkSlackNameAvailability()'>
                                             <p class="slackForm">Names must be lowercase,  with no spaces,  and unique.</p>
-                                            
+
                                             <label for="slackPurpose">Purpose (optional)</label>
                                             <input name="slackPurpose"  type="text" class="textForm slackForm"   [(ngModel)]="createSlackModel.purpose">
                                             <p class="slackForm">What’s this channel about?</p>
-                                            
+
                                             <div class="" id='slackInvite'>
                                                 <div class="loading-row" [class.show]="isLoadingNewSlack">
                                                     <div class="loading-circle"></div>
                                                 </div>
                                                 <section class="pad-left0">
                                                     <div class="input-field-container">
-                                                        
+
                                                         <label for="slackInvite">Send invites to<span class='magen'>*</span></label>
-                                                        
+
                                                         <div class="selected-approvers whit  slackForm">
                                                             <ul (click)='focusInput2($event)'>
                                                                 <li *ngFor="let selected of selectedApprovers2;let i=index" >
@@ -340,7 +340,7 @@
                                                                     <span (click)="removeApprover2(i, selected)" class="icon-icon-close"></span>
                                                                 </li>
                                                                 <input (keydown)="keypress2($event);" autocomplete="off" id="approverName2" name="approverName2" type="text" class="textForm" [(ngModel)]="approverName2" (ngModelChange)="onApproverChange2($event)">
-                        
+
                                                             </ul>
                                                         </div>
                                                         <div [hidden]="!showApproversList2" class="approvers-list-wrap">
@@ -352,8 +352,8 @@
                                                         </div>
                                                     </div>
                                                 </section>
-                                            </div>                                         
-                                                                                      
+                                            </div>
+
                                             <!-- <input name="slackInvite" type="text" class="textForm slackForm" [(ngModel)]="createSlackModel.invites"> -->
                                             <div class='createSlackbtns'>
                                                 <a (click)='cancelCreateSlack()'>CANCEL</a>
@@ -531,7 +531,7 @@
                                         <input id="dynamoTable" name="dynamoTable" type="text" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" required>
                                   </div>
                                 </div>
-                                <p class="learn-more">Function would be triggered whenever the corresponding DynamoDB table is modified (e.g. a new entry is added)</p>
+                                <p class="learn-more">Function would be triggered whenever a new entry is added to the table. Note that the DynamoDB table should exist already and Jazz creates a new stream for this table</p>
                             </div>
 
                             <div class="kinesis-fields row zero-margin arrow_box" *ngIf="chkfrKinesis()">
@@ -623,7 +623,7 @@
                                     <input name="gitUsername" id="gitusername" type="text" class="textForm" placeholder="Enter Git username" required [(ngModel)]="gitusername">
                                     <input name="gitUserpwd" id="gituserpwd" type="password" class="textForm" placeholder="Enter Git password" required [(ngModel)]="gituserpwd">
                                 </div>
-                                
+
                             </div>
 
                         </section>
@@ -634,8 +634,8 @@
             <section class="each-step-wrap approvers">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Approvers<span>*</span></p>                     
-                        
+                        <p class="step-title">Approvers<span>*</span></p>
+
                         <p class="step-details">User(s) who are required to approve code changes, deployment activities etc. They should be part of CORP AD Domain.</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
@@ -681,7 +681,7 @@
                 </section>
                 <section >
                     <p class="refer">You can find more details on next steps <a target="_blank" href="{{docs_int_jazz}}">here</a>.</p>
-                    
+
                 </section>
             <section class="footer-btn">
                 <btn-jazz-primary text="DONE" newclass="back-btn" (click)="closeCreateService(serviceRequestSuccess)"></btn-jazz-primary>
