@@ -38,7 +38,7 @@ def updateServiceACL(serviceId, auth_token, aclUrl, user) {
 		}
 	} catch (ex) {
     echo "ex: $ex"
-    error ex.message()
+    error ex.getMessage()
   }
 }
 
@@ -64,7 +64,7 @@ def deletePolicies(serviceId, auth_token, aclUrl) {
 		}
 	} catch(ex) {
 		echo "ex: $ex"
-		error ex.message()
+		error ex.getMessage()
 	}
 }
 
