@@ -201,7 +201,7 @@ describe('Overview', () => {
             browser.driver.switchTo().activeElement();
             browser.sleep(15000);
             jazzServices_po.getMetrices().click();
-            Expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
+            expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
             browser.sleep(2000);
             jazzServices_po.getServiceFromAsset().click();            
       });
