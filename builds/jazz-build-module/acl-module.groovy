@@ -31,12 +31,14 @@ def updateServiceACL(serviceId, auth_token, aclUrl, user) {
 		def responseJSON = parseJson(updatePermission)
 
 		if (responseJSON && responseJSON.data && responseJSON.data.success == true) {
-			echo "Successfully updated permissions for code and deploy."
+			echo "Successfully updated service policies."
 		} else {
-			echo "Something went wrong while updating permissions for code and deploy."
+			echo "Something went wrong while updating service policies. Error: ${responseJSON.data}"
+			error responseJSON.data
 		}
 	} catch (ex) {
     echo "ex: $ex"
+    error ex.message()
   }
 }
 
@@ -54,12 +56,14 @@ def deletePolicies(serviceId, auth_token, aclUrl) {
 		def responseJSON = parseJson(updatePermission)
 
 		if (responseJSON && responseJSON.data && responseJSON.data.success == true) {
-			echo "Successfully deleted permissions."
+			echo "Successfully deleted service policies."
 		} else {
-			echo "Something went wrong while deleting the permissions."
+			echo "Something went wrong while deleting service policies. Error: ${responseJSON.data}"
+			error responseJSON.data
 		}
 	} catch(ex) {
 		echo "ex: $ex"
+		error ex.message()
 	}
 }
 
