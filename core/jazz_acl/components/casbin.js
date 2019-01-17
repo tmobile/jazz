@@ -62,7 +62,6 @@ async function getFilteredPolicy(index, values, config) {
   try {
     conn = await dbConnection(config);
     enforcer = await casbin.newEnforcer("./config/rbac_model.conf", conn);
-
     const promisedPolicies = values.map(async value => await enforcer.getFilteredPolicy(index, value));
     const policies = await Promise.all(promisedPolicies);
     result = policies;
@@ -103,7 +102,7 @@ async function checkPermissions(userId, serviceId, category, permission, config)
 /* Add and/or Remove filtered policy */
 async function addOrRemovePolicy(serviceId, config, action, policies) {
   let result = {};
-  let conn;
+  let conn, enforcer;
   const objects = [`${serviceId}_manage`, `${serviceId}_code`, `${serviceId}_deploy`];
   let totalPolicies = 0;
   try {
@@ -113,15 +112,14 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
       result.error = getPolicies.error;
       return result;
     }
-
     getPolicies = getPolicies.filter(policy => policy.length > 0);
     totalPolicies = getPolicies.length;
-    if (getPolicies && getPolicies.length) {//found previous policies to be removed
-      let removeResult = [];
 
+    if (getPolicies.length) {//found previous policies to be removed
+      let removeResult = [];
       if (totalPolicies) {
         conn = await dbConnection(config);
-        const enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
+        enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
 
         // remove (incase of add, remove first)
         if (action === 'remove' || action === 'add') {
@@ -146,7 +144,12 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
       }
     } else {//only add (nothing to remove)
       if (action === 'add') {
+        conn = await dbConnection(config);
+        enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
         result = await addPolicy(serviceId, policies, enforcer);
+        if (conn) {
+          await conn.close();
+        }
       }
     }
   } catch(err) {
