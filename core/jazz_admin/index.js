@@ -74,24 +74,25 @@ const handler = (event, context, cb) => {
 
     } else if (event && event.method && event.method === 'PUT') {
       if (event && !event.body) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty")));
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty.")));
       }
       exportable.getConfiguration(config)
       .then((res) => exportable.updateConfiguration(res, event.body))
-        .then((data) => {
-          apiResponseObj.config = data;
-          return cb(null, responseObj(apiResponseObj, event.body));
+        .then((res) => {
+          return cb(null, responseObj(res, event.body));
         }).catch((error) => {
           logger.error("Failed to update admin configuraion:" + JSON.stringify(error));
           return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to update admin configuraion.")));
         });
 
     } else if (event && event.method && event.method === 'DELETE') {
-      exportable.getConfiguration(config)
+      if (event && !event.body) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty. Please give list of keys to be deleted.")));
+      }
+      exportable.getConfiguration()
       .then((res) => exportable.deleteConfiguration(res, event.body))
-        .then((data) => {
-          apiResponseObj.config = data;
-          return cb(null, responseObj(apiResponseObj, event.body));
+        .then((res) => {
+          return cb(null, responseObj(res, event.body));
         }).catch((error) => {
           logger.error("Failed to delete the specified admin configuraion:" + JSON.stringify(error));
           return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to delete the specified admin configuraion.")));

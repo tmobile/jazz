@@ -95,31 +95,31 @@ const searchAndAdd = (configs, input) => {
   Object.keys(input).forEach((key) => {
     let key_list = key.split(".");
     let value = configs;
-    for (k in key_list) {
-      value = travers(value, k);
+    let childNode = "configs";
+
+    for (let k in key_list) {
+      value = travers(value, key_list[k]);
+      let node = key_list[k];
+      childNode = `${childNode}["${node}"]`;
     }
 
     if (value) {
       if (value.constructor === Array) {
         value.push(input[key]);
       } else if (value.constructor === Object) {
-        for (k in input[key]) {
-          value.k = input[key].k;
+        for (let k in input[key]) {
+          value[k] = input[key][k];
         }
       }
-
-      for (ky in configs) {
-        for (k in key_list) {
-          pos = config
-        }
-      }
+      eval("childNode = value");
     }
   });
+  return configs;
 }
 
 const travers = (data, key) => {
   let value;
-  for (k in data) {
+  for (let k in data) {
     if (k === key) {
       value = data[key];
     }
