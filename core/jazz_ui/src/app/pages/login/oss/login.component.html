@@ -48,7 +48,8 @@
                  </div>
                 </div>
                 
-                <div class="form-row bottom-2" *ngIf="!forgot_password || register || new_pwd_req">
+              
+                        <div class="form-row bottom-2" *ngIf="!forgot_password || register || new_pwd_req">
                         <div class="form-label">Password </div>
                         <input required minlength="8" [class.err-border]='err_password_brd || (model.password && (!password.valid && (password.dirty || password.touched))) && (register || new_pwd_req)' type="password" name='password' [(ngModel)]="model.password"  (ngModelChange)="onChange($event)" #password='ngModel'>
                         <ul class='login-form-errmsg' *ngIf="model.password && (!password.valid && (password.dirty || password.touched)) && (register || new_pwd_req)">
@@ -75,7 +76,7 @@
         </div>
 
         <div class="btn-wrp">
-            <btn-jazz-primary *ngIf="!register && !forgot_password && !new_pwd_req" [text]="buttonText" (click)="login($event)" newclass="loginbutton"></btn-jazz-primary>
+            <btn-jazz-primary *ngIf="!register && !forgot_password && !new_pwd_req" [text]="buttonText" (click)="login($event)" newclass="loginbutton"  [disablePrimaryBtn]=' (!model.password) || (!model.username)'></btn-jazz-primary>
             <btn-jazz-primary *ngIf="register && !forgot_password && !new_pwd_req" [text]="'REGISTER'" (click)="registerUser($event)" newclass="loginbutton" [disablePrimaryBtn]= '(!username.valid && (username.dirty || username.touched)) || (!password.valid && (password.dirty || password.touched)) || (!model.username) || (!model.password) || (!model.usercode)'></btn-jazz-primary>
             <btn-jazz-primary *ngIf="!register && (forgot_password || new_pwd_req)" [text]="'SUBMIT'" (click)="resetPassword($event)" newclass="loginbutton" [disablePrimaryBtn]='disableLoginBtn() || (!username.valid && (username.dirty || username.touched)) || (model.password && (!password.valid && (password.dirty || password.touched)))'></btn-jazz-primary>            
         </div>
