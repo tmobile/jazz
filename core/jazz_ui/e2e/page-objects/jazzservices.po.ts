@@ -219,6 +219,8 @@ export class Jazz {
   getMetricesCount() {
     return element(by.xpath('//div[@class="metrics-card-content"][contains(text(),"1")]'));
   }
+  getSuccessCountVerify() {
+    return element(by.xpath('//tr[@class="response response_current"]/td[@class="col response-col_status" and contains(text(),"200")]'));
+  }
 
- 
-}
+ }

@@ -162,6 +162,7 @@ describe('Overview', () => {
                     jazzServices_po.getStringB().sendKeys('Jazz');
                     browser.sleep(5000);
                     jazzServices_po.getExecute().click();
+                    expect(jazzServices_po.getSuccessCountVerify().getText()).toEqual('200');
                     jazzServices_po.getAPIGET().click();
                     browser.close();
                 });
