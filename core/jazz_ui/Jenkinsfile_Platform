@@ -109,6 +109,7 @@ node ()  {
       sh importUICommand
 
       sh "sed -i 's/AWS API Gateway/\"AWS API Gateway\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/APIGEE/\"APIGEE\"/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/aws_apigateway/\"aws_apigateway\"/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/GCP APIGEE/\"GCP APIGEE\"/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/gcp_apigee/\"gcp_apigee\"/g' ./src/environments/environment.oss.ts"
