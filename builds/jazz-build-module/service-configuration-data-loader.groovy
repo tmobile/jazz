@@ -239,7 +239,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global-config.json"
         }
 
-        if (service_name.trim() == "jazz_usermanagement") {
+        if (service_name.trim() == "jazz_usermanagement" || service_name.trim() == "jazz_users") {
             updateConfigValue("{user_pool_id}", config_loader.AWS.COGNITO.USER_POOL_ID)
             updateConfigValue("{user_client_id}", config_loader.AWS.COGNITO.CLIENT_ID)
             updateConfigValue("{region}", region)
