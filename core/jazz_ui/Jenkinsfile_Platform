@@ -152,7 +152,7 @@ def loadBuildModules(buildModuleUrl){
 		  echo "config loader loaded successfully."
 
 			scmModule = load "scm-module.groovy"
-			scmModule.initialize(config_loader)
+			scmModule.initialize(configLoader)
 
       utilModule = load "utility-loader.groovy"
 		}

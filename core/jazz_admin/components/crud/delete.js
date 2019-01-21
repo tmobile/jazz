@@ -23,7 +23,7 @@
 const utils = require("../utils.js");
 
 module.exports = (configs, input, onComplete) => {
-  let new_config = utils.searchAndAdd(configs, input);
+  let new_config = utils.searchAndRemove(configs, input);
 
   // initialize dynamodb docClient
   const docClient = utils.initDocClient();

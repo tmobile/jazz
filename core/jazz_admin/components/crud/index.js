@@ -20,13 +20,17 @@
   @version: 1.0
 **/
 
-var _get = require('./get.js');
-var _post = require('./post.js');
+const _get = require('./get.js');
+const _post = require('./post.js');
+const _put = require('./put.js');
+const _delete = require('./delete.js');
 
 
 module.exports = () => {
   return {
     get: _get,
-    post: _post
+    post: _post,
+    put: _put,
+    delete: _delete
   }
 }

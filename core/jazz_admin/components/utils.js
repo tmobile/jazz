@@ -91,8 +91,77 @@ const formatData = (data) => {
   return config_obj;
 };
 
-module.exports =  {
-    initDynamodb: initDynamodb,
-    initDocClient: initDocClient,
-    formatData: formatData
+const searchAndAdd = (configs, input) => {
+  Object.keys(input).forEach((key) => {
+    let key_list = key.split(".");
+    let value = configs;
+    let childNode = "configs";
+
+    for (let ky in key_list) {
+      value = travers(value, key_list[ky]);
+      let node = key_list[ky];
+      childNode = `${childNode}['${node}']`;
+    }
+
+    let parsed_value;
+    if (value) {
+      if (value.constructor === Array) {
+        parsed_value = value.concat(input[key]);
+      } else if (value.constructor === Object) {
+        parsed_value = value;
+        for (let k in input[key]) {
+          parsed_value[k] = input[key][k];
+        }
+      } else {
+        parsed_value = input[key]
+      }
+      eval(childNode + "= parsed_value");
+    }
+  });
+  return configs;
+}
+
+const searchAndReplace = (configs, input) => {
+  Object.keys(input).forEach((key) => {
+    let key_list = key.split(".");
+    let childNode = "configs";
+
+    for (let k in key_list) {
+      let node = key_list[k];
+      childNode = `${childNode}['${node}']`;
+    }
+    let parsed_value = input[key];
+
+    eval(childNode + "=parsed_value");
+  });
+  return configs;
+}
+
+const searchAndRemove = (configs, input) => {
+  for (let k in input) {
+    let node = input[k]
+    let childNode = `configs.${node}`;
+    eval("delete " + childNode);
+  };
+  return configs;
+}
+
+const travers = (data, key) => {
+  let node;
+  for (let d in data) {
+    if (d === key) {
+      node = data[key];
+    }
+  }
+  return node;
+}
+
+
+module.exports = {
+  initDynamodb: initDynamodb,
+  initDocClient: initDocClient,
+  formatData: formatData,
+  searchAndAdd: searchAndAdd,
+  searchAndReplace: searchAndReplace,
+  searchAndRemove: searchAndRemove
 };
