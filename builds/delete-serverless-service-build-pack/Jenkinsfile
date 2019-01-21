@@ -22,6 +22,7 @@ import groovy.json.JsonSlurperClassic
 @Field def environmentMetadataLoader
 @Field def sonarModule
 @Field def apigeeModule
+@Field def lambdaEvents
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -170,7 +171,7 @@ node {
 								default:
 									error "Deployment platform not recognized."
 							}
-							
+
 							cleanUpApiDocs(_envId)
 							unDeployService(_envId)
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
@@ -1218,12 +1219,17 @@ def loadBuildModules(buildModuleUrl){
 
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
-		
-		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {			
+
+		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {
 			apigeeModule = load "apigee-module.groovy"
 			apigeeModule.initialize(configLoader.APIGEE, events)
 			echo "Apigee module loaded successfully."
 		}
+
+    lambdaEvents = load "aws-lambda-events-module.groovy"
+    lambdaEvents.initialize(configLoader, utilModule)
+    echo "Lambda event module loaded successfully."
+
 	}
 }
 

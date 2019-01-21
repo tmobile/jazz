@@ -40,7 +40,8 @@ def loadServiceMetadata(service_id){
 			def metadata = [:]
 			def catalog_metadata = [:]
 			def deployment_targets_metadata = [:]
-			
+
+
 			for(item in data){
 				metadata[item.key] = parseValue(item.value)
 				catalog_metadata[item.key] = parseValue(item.value)

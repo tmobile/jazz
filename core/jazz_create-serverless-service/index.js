@@ -20,11 +20,11 @@ const request = require('request');
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const CronParser = require("./components/cron-parser.js");
-const configModule = require("./components/config.js"); 
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const util = require('util');
 const validateARN = require("./components/validate-arn.js");
-const crud = require("./components/crud")(); 
+const crud = require("./components/crud")();
 
 /**
     Serverless create service
@@ -47,15 +47,19 @@ var handler = (event, context, cb) => {
         };
 
         if (!service_creation_data) {
-            return cb(JSON.stringify(errorHandler.throwInputValidationError(`Service inputs are not defined`)));
+          return cb(JSON.stringify(errorHandler.throwInputValidationError("Service inputs are not defined")));
         } else if (!service_creation_data.service_type) {
-            return cb(JSON.stringify(errorHandler.throwInputValidationError(`'service_type' is not defined`)));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_type' is not defined")));
         } else if (!service_creation_data.service_name || !isValidName(service_creation_data.service_name)) {
-            return cb(JSON.stringify(errorHandler.throwInputValidationError(`'service_name' is not defined or has invalid characters`)));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'service_name' is not defined or has invalid characters")));
         } else if (service_creation_data.service_type !== "website" && (!service_creation_data.runtime)) {
-            return cb(JSON.stringify(errorHandler.throwInputValidationError(`'runtime' is not defined`)));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'runtime' is not defined")));
         } else if (service_creation_data.domain && !isValidName(service_creation_data.domain)) {
-            return cb(JSON.stringify(errorHandler.throwInputValidationError(`Namespace is not appropriate`)));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("Namespace is not appropriate")));
+        } else if (service_creation_data.service_name && service_creation_data.service_name.length > 20) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'Service Name' can have up to 20 characters")));
+        } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
         }
 
         // validate service types
@@ -64,7 +68,7 @@ var handler = (event, context, cb) => {
             logger.info(`Valid service type provided ${service_creation_data.service_type}`);
         } else {
             return cb(JSON.stringify(errorHandler.throwInputValidationError(`Invalid service type provided - ${service_creation_data.service_type}`)));
-        } 
+        }
 
         // validate deployment targets
         if (service_creation_data.deployment_targets && typeof service_creation_data.deployment_targets === "object") {
@@ -112,7 +116,7 @@ var handler = (event, context, cb) => {
                     });
                 } else if (err.result === 'inputError') {
                     return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-                }else {
+                } else {
                     return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
                 }
             });
@@ -251,7 +255,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
         if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
             serviceMetadataObj.providerRuntime = service_creation_data.runtime;
         }
-    
+
         // Pass the flag to enable authentication on API
         if (service_creation_data.service_type === "api") {
             inputs.DEPLOYMENT_TARGETS = deploymentTargets;
@@ -266,7 +270,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
             }
         }
 
-    
+
 
         // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
         if (service_creation_data.service_type === "api" && service_creation_data.is_public_endpoint) {
@@ -348,6 +352,53 @@ function validateDeploymentTargets(allowedSubServiceType, deployment_targets, sv
         return { error: `No deployment_targets are defined for this service type - ${svcType}` };
     }
 }
+
+var validateEventName = (eventType, sourceName, config) => {
+  let eventSourceName = '', sourceType = eventType.toLowerCase(), logicalIdLen = 15,
+  resultObj = {
+      result: "",
+      message: ""
+  };
+
+  if(!eventType || !sourceName) {
+    resultObj.result = false;
+    resultObj.message =  `Event type and/or source name cannot be empty.`;
+    return resultObj;
+  }
+
+  let eventSourceObject = {
+    's3': sourceName,
+    'sqs': sourceName.split(':').pop(),
+    'dynamodb': sourceName.split('/').pop(),
+    'kinesis': sourceName.split('/').pop()
+  };
+
+  eventSourceName = eventSourceObject[sourceType];
+  if (!eventSourceName) {
+    resultObj.result = false;
+    resultObj.message =  `Event type '${eventType}' is invalid.`;
+    return resultObj;
+  }
+
+  if (eventSourceName && (eventSourceName.startsWith("-") || eventSourceName.startsWith("_") || eventSourceName.startsWith(".") || eventSourceName.endsWith("-") || eventSourceName.endsWith("_") || eventSourceName.endsWith("."))) {
+    resultObj.result = false;
+    resultObj.message =  `${eventSourceName} cannot begin or end with special character`;
+    return resultObj;
+  }
+
+  let mapType = config.EVENT_SOURCE_NAME[sourceType];
+  let regexPattern = new RegExp(mapType.regexPattern);
+
+  if (eventSourceName.length >= mapType.minLength && eventSourceName.length <= (mapType.maxLength - logicalIdLen) && (regexPattern).test(eventSourceName)) {
+    resultObj.result = true;
+    resultObj.message =  `Source name of ${eventType} is valid.`;
+    return resultObj;
+  } else {
+    resultObj.result = false;
+    resultObj.message =  `Source name of ${eventType} is invalid. '${eventSourceName}' should have valid length and/or pattern.`;
+    return resultObj;
+  }
+};
 
 module.exports = {
     handler: handler,

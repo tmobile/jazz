@@ -113,8 +113,34 @@ export class ServiceDetailComponent implements OnInit {
         repository: service.repository,
         tags: service.tags,
         endpoints: service.endpoints,
-        deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type]
-      };
+        deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type],
+        is_public_endpoint: service.is_public_endpoint,
+        created_by: service.created_by
+      }
+      if (service.metadata) {
+        returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
+        returnObject["eventScheduleRate"] = service.metadata.eventScheduleRate;
+        if(service.metadata.event_source){
+          returnObject["event_source"] = service.metadata.event_source;
+        }
+        if(service.metadata.event_source_dynamodb){
+          returnObject["event_source_arn"] = service.metadata.event_source_dynamodb;
+        }
+        if(service.metadata.event_source_kinesis){
+          returnObject["event_source_arn"] = service.metadata.event_source_kinesis;
+        }
+        if(service.metadata.event_source_s3){
+          returnObject["event_source_arn"] = service.metadata.event_source_s3;
+        }
+        if(service.metadata.event_source_sqs){
+          returnObject["event_source_arn"] = service.metadata.event_source_sqs;
+        }
+      }
+      if(typeof returnObject["event_source_arn"] == "object"){
+        returnObject["event_source_arn"] = returnObject["event_source_arn"].S;
+      }
+      return returnObject;
+
     }
   };
 

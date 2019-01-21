@@ -333,7 +333,13 @@ export class ServicesListComponent implements OnInit {
     this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
     }
     } else if (col.filter['type'] === 'input') {
-    var colFilterVal = col.filter['value'];
+    // var colFilterVal = col.filter['value'];
+    if (col.filter['value'] != undefined) {
+      var colFilterVal = col.filter['value'].toLowerCase();
+    }
+    else {
+      var colFilterVal = col.filter['value'];
+    }
     if (event.keyCode == 13 && colFilterVal != undefined) {
     this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
     }

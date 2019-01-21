@@ -16,7 +16,7 @@ import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
 import {environment} from "../../../../environments/environment";
- 
+
 @Component({
   selector: 'create-service',
   templateUrl: './create-service.component.html',
@@ -91,6 +91,10 @@ export class CreateServiceComponent implements OnInit {
   errMessage: any;
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
+  invalidEventName:boolean = false;
+  runtimeKeys : any;
+  runtimeObject : any;
+
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
   public selectedDeploymentTarget = "";
