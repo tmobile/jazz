@@ -12,28 +12,47 @@ import {
   EventEmitter,
   ViewChild,
 } from '@angular/core';
-import { Router, ActivatedRoute } from '@angular/router';
+import {
+  Router,
+  ActivatedRoute
+} from '@angular/router';
 import {
   RequestService,
   DataCacheService,
   MessageService,
   AuthenticationService,
 } from '../../core/services/index';
-import { ToasterService } from 'angular2-toaster';
+import {
+  ToasterService
+} from 'angular2-toaster';
 import 'rxjs/Rx';
-import { Observable } from 'rxjs/Rx';
-import { Subscription } from 'rxjs/Subscription';
-import { ServiceDetailComponent } from '../service-detail/service-detail.component';
-import { environment } from './../../../environments/environment';
-import { environment as env_internal } from './../../../environments/environment.internal';
-import { environment as env_oss } from './../../../environments/environment.oss';
+import {
+  Observable
+} from 'rxjs/Rx';
+import {
+  Subscription
+} from 'rxjs/Subscription';
+import {
+  ServiceDetailComponent
+} from '../service-detail/service-detail.component';
+import {
+  environment
+} from './../../../environments/environment';
+import {
+  environment as env_internal
+} from './../../../environments/environment.internal';
+import {
+  environment as env_oss
+} from './../../../environments/environment.oss';
 import {
   ServiceFormData,
   RateExpression,
   CronObject,
   EventExpression,
 } from './../../secondary-components/create-service/service-form-data';
-import { CronParserService } from '../../core/helpers';
+import {
+  CronParserService
+} from '../../core/helpers';
 
 declare var $: any;
 
@@ -49,9 +68,9 @@ declare var $: any;
 export class ServiceOverviewComponent implements OnInit {
   @ViewChild('env') envComponent;
 
-  @Output() onload: EventEmitter<any> = new EventEmitter<any>();
-  @Output() onEnvGet: EventEmitter<any> = new EventEmitter<any>();
-  @Output() open_sidebar: EventEmitter<any> = new EventEmitter<any>();
+  @Output() onload: EventEmitter < any > = new EventEmitter < any > ();
+  @Output() onEnvGet: EventEmitter < any > = new EventEmitter < any > ();
+  @Output() open_sidebar: EventEmitter < any > = new EventEmitter < any > ();
 
   flag: boolean = false;
   @Input() service: any = {};
@@ -255,7 +274,7 @@ export class ServiceOverviewComponent implements OnInit {
   updateTags() {
     var payloag_tags;
     payloag_tags = this.tags_temp.split(',');
-    payloag_tags.forEach(function(item, index) {
+    payloag_tags.forEach(function (item, index) {
       payloag_tags[index] = item.trim();
     });
     this.update_payload.tags = payloag_tags;
@@ -513,9 +532,9 @@ export class ServiceOverviewComponent implements OnInit {
     this.eventExpression.type = val;
   }
 
-  public focusDynamo = new EventEmitter<boolean>();
-  public focusKinesis = new EventEmitter<boolean>();
-  public focusS3 = new EventEmitter<boolean>();
+  public focusDynamo = new EventEmitter < boolean > ();
+  public focusKinesis = new EventEmitter < boolean > ();
+  public focusS3 = new EventEmitter < boolean > ();
 
   chkDynamodb() {
     this.focusDynamo.emit(true);
@@ -593,7 +612,7 @@ export class ServiceOverviewComponent implements OnInit {
       this.subscription = this.http
         .get(
           '/jazz/is-slack-channel-available?slack_channel=' +
-            this.slackChannel_temp
+          this.slackChannel_temp
         )
         .subscribe(
           Response => {
@@ -730,7 +749,7 @@ export class ServiceOverviewComponent implements OnInit {
       )
       .subscribe(
         response => {
-          let dataResponse = <any>{};
+          let dataResponse = < any > {};
           dataResponse.list = response;
           var respStatus = dataResponse.list.data;
           if (respStatus.status.toLowerCase() === 'completed') {
@@ -904,9 +923,9 @@ export class ServiceOverviewComponent implements OnInit {
     this.http
       .get(
         '/jazz/environments?domain=' +
-          this.service.domain +
-          '&service=' +
-          this.service.name
+        this.service.domain +
+        '&service=' +
+        this.service.name
       )
       .subscribe(
         response => {
@@ -1017,7 +1036,7 @@ export class ServiceOverviewComponent implements OnInit {
   errorIncluded() {}
 
   submitFeedback(action) {
-    this.errorChecked = (<HTMLInputElement>(
+    this.errorChecked = ( < HTMLInputElement > (
       document.getElementById('checkbox-slack')
     )).checked;
     if (this.errorChecked == true) {
@@ -1043,8 +1062,7 @@ export class ServiceOverviewComponent implements OnInit {
     }
 
     var payload = {
-      title:
-        'Jazz: Issue reported by ' + this.authenticationservice.getUserId(),
+      title: 'Jazz: Issue reported by ' + this.authenticationservice.getUserId(),
       project_id: env_internal.urls.internal_acronym,
       priority: 'P4',
       description: this.json,
@@ -1239,7 +1257,7 @@ export class ServiceOverviewComponent implements OnInit {
       .subscribe(
         response => {
           this.createloader = false;
-          let dataResponse = <any>{};
+          let dataResponse = < any > {};
           dataResponse.list = response;
           var respStatus = dataResponse.list.data;
           if (respStatus.status.toLowerCase() === 'completed') {
