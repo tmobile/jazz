@@ -139,7 +139,7 @@
           </li>
           <li>
             <div class="det-label">Service Type</div>
-            <div class="det-value service-type">{{service.serviceType || 'Pick your service type'}}</div>
+            <div class="det-value service-type">{{ service.serviceType || 'Pick your service type'}}</div>
           </li>
           <li>
             <div class="det-label">Description</div>
@@ -215,8 +215,8 @@
       <div>Any saved changes will trigger a deployment for the service.</div>
     </div>
     <div *ngIf='!disp_show2' class='down-btn-wrap down-btn-wrap-advanced'>
-      <btn-jazz-primary text="SAVE" (click)='onAdvancedSaveClick()'></btn-jazz-primary>
-      <a (click)='onCancelClick()'>CANCEL</a>
+      <btn-jazz-primary text="Submit" (click)='onAdvancedSaveClick()'></btn-jazz-primary>
+      <a (click)='onCancelClick()'>Cancel</a>
     </div>
     <div class='metadata-body-advanced'>
       <div *ngIf='disp_show2' class='metadata-buttons-wrap second-wrap'>
