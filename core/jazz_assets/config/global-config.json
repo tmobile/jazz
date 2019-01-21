@@ -35,7 +35,7 @@
 	],
 	"ASSET_STATUS": [
 		"active",
-		"deleted"
+		"archived"
 	],
 	"CASE_SENSITIVE_FIELDS": [
 		"environment",

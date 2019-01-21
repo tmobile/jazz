@@ -3,17 +3,17 @@
  * @desc Service detail page
  * @author
  */
-import {Http, Headers, Response} from '@angular/http';
-import {Component, OnInit, Output, EventEmitter} from '@angular/core';
-import {Router, ActivatedRoute} from '@angular/router';
-import {SharedService} from "../../SharedService.service";
-import {AfterViewInit, ViewChild} from '@angular/core';
+import { Http, Headers, Response } from '@angular/http';
+import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { SharedService } from "../../SharedService.service";
+import { AfterViewInit, ViewChild } from '@angular/core';
 
-import {ToasterService} from 'angular2-toaster';
-import {BarGraphComponent} from '../../secondary-components/bar-graph/bar-graph.component';
-import {RequestService, DataCacheService, MessageService, AuthenticationService} from '../../core/services/index';
-import {ServiceMetricsComponent} from '../service-metrics/service-metrics.component';
-import {environment} from './../../../environments/environment';
+import { ToasterService } from 'angular2-toaster';
+import { BarGraphComponent } from '../../secondary-components/bar-graph/bar-graph.component';
+import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
+import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
+import { environment } from './../../../environments/environment';
 
 @Component({
   selector: 'service-detail',
@@ -43,7 +43,7 @@ export class ServiceDetailComponent implements OnInit {
 
   @Output() deleteServiceStatus: EventEmitter<boolean> = new EventEmitter<boolean>();
   @ViewChild('selectedTabComponent') selectedTabComponent;
-  isENVavailable:boolean = true;
+  isENVavailable: boolean = true;
   disblebtn: boolean = true;
   ServiceName: string;
   deleteServiceVal: boolean;
@@ -98,7 +98,8 @@ export class ServiceDetailComponent implements OnInit {
     if (service === undefined) {
       return {};
     } else {
-      return {
+      service.metadata = this.addEventSource(service.metadata);
+      let returnObject = {
         id: service.id,
         name: service.service,
         serviceType: service.type,
@@ -117,6 +118,15 @@ export class ServiceDetailComponent implements OnInit {
     }
   };
 
+  addEventSource(obj){
+    let keysList = Object.keys(obj);
+    for(let i =0; i < keysList.length ; i++){
+      if(keysList[i].includes("event_source_")) {
+        obj.event_source = keysList[i].replace("event_source_","");
+      }
+    }
+    return obj;
+  }
   onDataFetched(service) {
 
     if (service !== undefined && service !== "") {
@@ -160,23 +170,23 @@ export class ServiceDetailComponent implements OnInit {
   fetchService(id) {
     this.isLoadingService = true;
     this.http.get('/jazz/services/' + id).subscribe(response => {
-        let service = response.data;
-        this.cache.set(id, service);
-        this.onDataFetched(service);
-        this.isGraphLoading = false;
-        this.selectedTabComponent.refresh_env();
-        this.setTabs();
-      }, (err) => {
-        if (err.status == "404") {
-          this.router.navigateByUrl('404');
-        }
-        this.isLoadingService = false;
-        let errorMessage = 'OOPS! something went wrong while fetching data';
-        this.isGraphLoading = false;
-        errorMessage = this.toastmessage.errorMessage(err, "serviceDetail");
-        this.errMessage = errorMessage;
-        this.err_flag = true;
+      let service = response.data;
+      this.cache.set(id, service);
+      this.onDataFetched(service);
+      this.isGraphLoading = false;
+      this.selectedTabComponent.refresh_env();
+      this.setTabs();
+    }, (err) => {
+      if (err.status == "404") {
+        this.router.navigateByUrl('404');
       }
+      this.isLoadingService = false;
+      let errorMessage = 'OOPS! something went wrong while fetching data';
+      this.isGraphLoading = false;
+      errorMessage = this.toastmessage.errorMessage(err, "serviceDetail");
+      this.errMessage = errorMessage;
+      this.err_flag = true;
+    }
     )
 
 

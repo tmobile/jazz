@@ -15,8 +15,10 @@
     "nodemailer": "*"
   },
   "devDependencies": {
+    "aws-sdk": "^2.380.0",
     "mocha": "^v3.0.0",
     "chai": "^3.5.0",
-    "lambda-local": "^1.4.2"
+    "aws-lambda-mock-context": "^3.2.1",
+    "sinon": "^7.1.0"
   }
 }

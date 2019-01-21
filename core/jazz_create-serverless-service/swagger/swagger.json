@@ -239,6 +239,24 @@
                 }
             }
         },
+        "event": {
+          "type": "object",
+          "description": "Event object for each AWS event",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Type of event"
+            },
+            "source": {
+              "type": "string",
+              "description": "Source of event"
+            },
+            "action": {
+              "type": "string",
+              "description": "Action trigger for the event"
+            }
+          }
+        },
         "OnboardingAPIObject": {
             "type": "object",
             "properties": {
@@ -263,9 +281,11 @@
                     "type": "string",
                     "description": "The runtime framework for executing your code",
                     "enum": [
-                        "nodejs",
-                        "java",
-                        "python"
+                        "nodejs8.10",
+                        "java8",
+                        "python2.7",
+                        "python3.6",
+                        "go1.x"
                     ]
                 },
                 "approvers": {
@@ -274,9 +294,16 @@
                         "type": "string"
                     }
                 },
+                "events": {
+                  "description": "Array of events requested for function consisting of type, source and action",
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/event"
+                  }
+                },
                 "username": {
                     "type": "string",
-                    "description": "Username/NT ID for the service creator. This will be used for the bitbucket access"
+                    "description": "Username of the service creator"
                 },
                 "slack_channel": {
                     "type": "string",

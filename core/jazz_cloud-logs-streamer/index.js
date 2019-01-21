@@ -35,7 +35,7 @@ const globalConfig = require("./config/global_config.json"); //Import the Global
 module.exports.handler = (input, context, cb) => {
 
     logger.init(input, context);
-    var config = configModule.getConfig(event, context);
+    var config = configModule.getConfig(input, context);
 
     // decode input from base64
     var zippedInput = new Buffer(input.awslogs.data, 'base64');

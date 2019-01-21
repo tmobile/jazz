@@ -833,6 +833,9 @@ section:focus {
   font-weight: bold;
   color: #aaaaaa;
   text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .ErrEnv {

@@ -263,6 +263,7 @@ function updateLambdaAsset(newAssetObj, relativeId, arnString) {
 }
 
 function updateApigatewayAsset(newAssetObj, relativeId, assetEnvironment) {
+
   var parts = relativeId.split("/");
 
   var apiId = parts[0];
@@ -274,10 +275,9 @@ function updateApigatewayAsset(newAssetObj, relativeId, assetEnvironment) {
   var methodValue = parts[2];
   newAssetObj.asset_name.Method = methodValue;
 
-  var resourceValue = "/" + parts[3];
-  if (parts[4]) {
-    resourceValue += "/" + parts[4];
-  }
+  // rest of the parts belong to the actual resource
+  resourceValue = "/" + parts.slice(3, parts.length).join("/")
+
   newAssetObj.asset_name.Resource = resourceValue;
   return newAssetObj;
 }
