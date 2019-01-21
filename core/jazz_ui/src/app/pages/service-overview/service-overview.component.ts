@@ -143,6 +143,8 @@ export class ServiceOverviewComponent implements OnInit {
   eventExpression = new EventExpression("awsEventsNone", undefined, undefined, undefined, undefined);
   viewMode: boolean = true;
   cronFieldValidity: any;
+  showGeneralField: boolean = false;
+  generalAdvanceDisable: boolean = true;
 
   constructor(
     private router: Router,
@@ -232,9 +234,20 @@ export class ServiceOverviewComponent implements OnInit {
 
   }
 
+  shouldSaveEnable(){
+    if(this.desc_temp != this.service.description)
+      this.generalAdvanceDisable = false;
+    if(!this.hide_slack_error){
+        this.generalAdvanceDisable = true;
+    }
+  }
+
   openSidebar() {
     this.open_sidebar.emit(true);
+  }
 
+  onEditGeneral(){
+      this.showGeneralField = true;
   }
 
   private isCronObjValid(cronObj) {
@@ -297,11 +310,13 @@ export class ServiceOverviewComponent implements OnInit {
 
   onEditClick() {
     this.loadPlaceholders();
+    this.showGeneralField = false;
     this.disp_show = false;
   }
 
   onEditClickAdvanced() {
     this.disp_show2 = false;
+    this.showGeneralField = false;
     this.publicSelected = this.publicInitial;
     this.cdnConfigSelected = this.cdnConfigInitial;
 
@@ -314,6 +329,7 @@ export class ServiceOverviewComponent implements OnInit {
         (Response) => {
           // debugger
           this.isPUTLoading = false;
+          this.showGeneralField = false;
           this.disp_show = true;
           this.isLoadingService = true;
           this.serviceDetail.onDataFetched(Response.data.updatedService);
@@ -403,6 +419,7 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   onCancelClick() {
+    this.showGeneralField = false;
     this.update_payload = {};
     this.disp_show = true;
     this.disp_show2 = true;
@@ -993,6 +1010,7 @@ export class ServiceOverviewComponent implements OnInit {
     var obj;
     this.prodEnv = {};
     this.stgEnv = {};
+    this.desc_temp = this.service.description;
 
     this.check_empty_fields();
 
