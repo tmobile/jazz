@@ -10,6 +10,7 @@ import groovy.transform.Field
 @Field def repo_core
 @Field def scm_type
 
+@Field def apigeeModule
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
@@ -17,6 +18,8 @@ import groovy.transform.Field
 @Field def events
 @Field def serviceMetadataLoader
 @Field def utilModule
+@Field def awsAPIGatewayModule
+@Field def awsLambdaModule
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 
@@ -206,11 +209,13 @@ node() {
 			events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 
 			def endpointUrl = null
+			def api_deployment_target
 			def aws_api_id = null
 
 			if (env_metadata["AWS_API_ID"] != null) {
 				aws_api_id = env_metadata["AWS_API_ID"]
 			}
+      def swaggerDocUrl=""
 
 			try {
 
@@ -235,81 +240,114 @@ node() {
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
-					def lambdaARN = getLambdaARN(stackName, credsId);
-					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+					def lambdaARN = awsLambdaModule.getLambdaARN(stackName);
+					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN.arn, "lambda", config), environment_logical_id);
 
 					if (fileExists('swagger/swagger.json')) {
 						echo "Generating swagger file for environment: ${env_key}"
 
-						if (aws_api_id == null) {
-							aws_api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
-						}
+						addOperationId('swagger/swagger.json');
 
-						def apiHostName = "${aws_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com"
-						echo "API Host Name: $apiHostName"
-						generateSwaggerEnv(environment_logical_id, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName, config)
-						if (env_key.equals("DEV") && config['domain'] != 'jazz') {
-							updateStageForDev(environment_logical_id)
-						}
-
-						sh "cat swagger/swagger.json "
+						api_deployment_target = config.deployment_targets.api;
 
 						echo "Deploying to API Gateway environment.."
-						sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile ${credsId}"
-						sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile ${credsId}"
-						sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile ${credsId}"
+						def apiHostName
 
-						if("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
-							sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
-						} else {
-							sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${configLoader.AWS.REGION}"
+						switch (api_deployment_target) {
+							case 'aws_apigateway':
+								events.sendStartedEvent('DEPLOY_TO_AWS_APIGATEWAY', 'Deployment started for API Gateway', context_map, environment_logical_id)
+								if (aws_api_id == null) {
+									aws_api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
+								}
+
+								apiHostName ="${aws_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com"
+								echo "API Host Name: $apiHostName"
+								awsAPIGatewayModule.addApigatewayLambdaIntegration('swagger/swagger.json');
+								updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
+
+								sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'"+ " --profile cloud-api"
+								sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile cloud-api"
+								sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+								if("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
+									sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
+								} else {
+									sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${configLoader.AWS.REGION}"
+								}
+
+								if (current_environment == 'prod' || config['domain'] == 'jazz') {
+									endpointUrl = "https://${apiHostName}/${current_environment}/${config['domain']}/${config['service']}"
+								} else {
+									endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
+								}
+
+								def apiArns = getSwaggerResourceARNs(aws_api_id, environment_logical_id, "aws")
+								if (apiArns) {
+									for (arn in apiArns) {
+										events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
+									}
+								}
+								events.sendCompletedEvent('DEPLOY_TO_AWS_APIGATEWAY', 'Deployment completed for API Gateway', context_map, environment_logical_id)
+								break;
+
+							case 'gcp_apigee':
+								events.sendStartedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment started for APIGEE', context_map, environment_logical_id)
+								apiHostName ="${configLoader.APIGEE.API_ENDPOINTS[env_key].service_hostname}"
+								updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
+								endpointUrl = apigeeModule.deploy("swagger/swagger.json", lambdaARN, env_key, environment_logical_id, config, context_map)
+								echo "API Proxy created at: ${endpointUrl}"
+								events.sendCompletedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment complete for APIGEE', context_map, environment_logical_id)
+                //adding svc, domain and environment as the provider id since that is used as apiproxy(resource)
+                def apiResources = getSwaggerResourceARNs("${config['domain']}-${config['service']}-${environment_logical_id}", environment_logical_id, "gcp")
+                if(apiResources) {
+                  for (path in apiResources) {
+                    events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("gcp", "${config['domain']}-${config['service']}/${environment_logical_id}/${path}", "apigee_proxy", config), environment_logical_id);
+                  }
+                }
+								break;
+							default:
+								error "Deployment targets are not defined"
 						}
 
-						if (current_environment == 'prod' || config['domain'] == 'jazz') {
-							endpointUrl = "https://${apiHostName}/${current_environment}/${config['domain']}/${config['service']}"
-						} else {
-							endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
-						}
+            if (domain != "jazz") {
+              createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
+            }
 
-						def apiArns = getAPIGatewayResourceARNs(aws_api_id, current_environment)
-						if(apiArns) {
-							for (arn in apiArns) {
-								events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
-							}
-						}
+            updateApiDocUrl(current_environment)
+            sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
+            echo "completed deployment........."
 
-						if (domain != "jazz") {
-							createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
-						}
+            swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
 
-						updateApiDocUrl(current_environment)
-						sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
-						echo "completed deployment........."
+            def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
+            send_status_email(config, 'COMPLETED', svc_status)
 
-						def swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
-						events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
-
-						def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
-						send_status_email(config, 'COMPLETED', svc_status)
-					}
-					resetCredentials(credsId)
-
-					if (domain && domain == "jazz") {
-						serviceConfigdata.setLogStreamPermission(config)
-					}
+            if (domain && domain == "jazz") {
+                serviceConfigdata.setLogStreamPermission(config)
+            }
+				  }
+			  }
+      } catch (ex) {
+			    if (api_deployment_target == 'aws_apigateway') {
+					  events.sendFailureEvent('DEPLOY_TO_AWS_APIGATEWAY', ex.getMessage(), context_map, environment_logical_id)
+            events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+				} else if (api_deployment_target == 'gcp_apigee') {
+					  events.sendFailureEvent('DEPLOY_TO_GCP_APIGEE', ex.getMessage(), context_map, environment_logical_id)
 				}
-			} catch (ex) {
 				events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
 				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-				events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 				error ex.getMessage()
 			}
 			environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
 			def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
 
 			env_metadata["AWS_API_ID"] = aws_api_id
-
-			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
+      if (api_deployment_target == 'aws_apigateway') {
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", swaggerDocUrl, "swagger_url", config), environment_logical_id);
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpointUrl, "endpoint_url", config), environment_logical_id);
+      } else if (api_deployment_target == 'gcp_apigee') {
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", swaggerDocUrl, "swagger_url", config), environment_logical_id);
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", endpointUrl, "endpoint_url", config), environment_logical_id);
+      }
 			events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, env_metadata), environment_logical_id)
 			events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
 			events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
@@ -318,32 +356,11 @@ node() {
 	}//dir ends here
 }
 
-def getLambdaARN(stackName, credsId) {
-	def ARN = "";
-	try {
-		def cloudformation_resources = "";
-		cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId}")
-
-		def parsedObject = parseJson(cloudformation_resources);
-		def outputs = parsedObject.Stacks[0].Outputs;
-
-		for (output in outputs) {
-			if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
-				ARN = output.OutputValue
-			}
-		}
-	} catch (ex) {
-		error ex.getMessage();
-	}
-
-	return ARN;
-}
-
 /**
  * Get API Resource Arns
  *
  */
-def getAPIGatewayResourceARNs(apiId, deployStg){
+def getSwaggerResourceARNs(apiId, deployStg, deploymentTarget){
 	def basePath = getBasePath()
 	echo "basePath : $basePath"
 	basePath = basePath.replaceAll("^api/", "/");
@@ -355,7 +372,7 @@ def getAPIGatewayResourceARNs(apiId, deployStg){
 	if(resourcesMap) {
 		for (_map in resourcesMap){
 			for (path in _map) {
-				def arn = createApiGatewayResourceArn(apiId, deployStg, path.value, path.key, basePath)
+				def arn = createSwaggerResourceArn(apiId, deployStg, path.value, path.key, basePath, deploymentTarget)
 				resourceArns.add(arn)
 			}
 		}
@@ -411,7 +428,7 @@ def createPathMethodList() { //Creates a list consisting of all path-method comb
 /**
  * create apigateway arns pattern
  */
-def createApiGatewayResourceArn(apiId, deployStg, method, path, basePath) {
+def createSwaggerResourceArn(apiId, deployStg, method, path, basePath, deploymentTarget) {
 	def apiResourceArn = ""
 	def _region = configLoader.AWS.REGION
 	def _account = configLoader.AWS.ACCOUNTID
@@ -420,10 +437,23 @@ def createApiGatewayResourceArn(apiId, deployStg, method, path, basePath) {
 	def _method = method
 	def _path = path
 	def _basePath = basePath
+  if(deploymentTarget == 'gcp') {
+		apiResourceArn = _method + _basePath + _path
+		return apiResourceArn
+	}
 	apiResourceArn = "arn:aws:execute-api:"+_region+":"+_account+":"+_apiId+"/"+_stgName+"/"+_method+_basePath+_path
 	echo "apiResourceArn : $apiResourceArn"
 	return apiResourceArn;
 }
+
+def updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config) {
+	echo "API Host Name: $apiHostName"
+	generateSwaggerEnv(environment_logical_id, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName, config)
+	if (env_key.equals("DEV") && config['domain'] != 'jazz') {
+		updateStageForDev(environment_logical_id)
+	}
+}
+
 /**
 	Update context stage to use the dev properties file.
 */
@@ -521,11 +551,11 @@ def buildLambda(String runtime, String repo_name) {
 	Generate the swagger file specific to each environment
 */
 def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
-	sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
-	sh "sed -i -- 's/{api_deployment_node_title}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
-	sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
-	sh "sed -i -- 's/{api_host_name}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
-	sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
+  sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
+  sh "sed -i -- 's/{api_deployment_node_title}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
+  sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
+  sh "sed -i -- 's/{api_host_name}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
+  sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
 	sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
 
@@ -536,6 +566,51 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
 	sh "sed -i -- 's|{conf-role}|${configLoader.AWS.PLATFORMSERVICES_ROLEID}|g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-region}/${configLoader.AWS.REGION}/g' ./swagger/swagger.json"
 	sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
+}
+
+/* method to read the file and add operation id */
+def addOperationId(filePath) {
+	try {
+		def swaggerFileContent = readFile(filePath).trim()
+		def swaggerJson = updateOperationId(swaggerFileContent)
+		writeFile file: filePath, text: swaggerJson
+	} catch(ex) {
+		echo "Error adding operation id"
+		error "Error occured " + ex.getMessage()
+	}
+}
+
+/* method to add operation id */
+def updateOperationId(swaggerFileContent) {
+	echo "Parsing the swagger file"
+	def httpVerbs = ['get', 'post', 'delete', 'put', 'connect', 'head', 'options', 'patch', 'trace'];
+	def slurper = new groovy.json.JsonSlurper()
+	def inputJSON = slurper.parseText(swaggerFileContent)
+	def pathKeys = inputJSON.paths.keySet()
+
+	for (key in pathKeys) {
+		def pathMethods = inputJSON.paths[key].keySet()
+		for (method in pathMethods) {
+			def path = inputJSON.paths[key]
+
+			def foundMethod = httpVerbs.find { element -> element == method }
+			if (foundMethod != null) {
+				echo "Adding operation id for method $foundMethod"
+				if (path[foundMethod].operationId) {
+					if (path[foundMethod].operationId == "{operationId}") {
+						path[foundMethod].operationId = key.substring(1) + "_" + foundMethod
+					}
+				} else {
+					path[foundMethod] << [operationId: key.substring(1) + "_" + foundMethod]
+				}
+			}
+		}
+	}
+
+	def builder = new groovy.json.JsonBuilder(inputJSON)
+	def swaggerJson = builder.toPrettyString()
+
+	return swaggerJson
 }
 
 def writeServerlessFile(config, environment_logical_id){
@@ -912,6 +987,13 @@ def loadBuildModules(buildModuleUrl){
 		configLoader = configModule.initialize(resultJsonString)
 		echo "config loader loaded successfully."
 
+		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
+		awsAPIGatewayModule.initialize()
+		echo "AWS APIGateway module loaded successfully."
+
+		awsLambdaModule = load "aws-lambda-module.groovy"
+		echo "AWS Lambda module loaded successfully."
+
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
 		echo "SCM module loaded successfully."
@@ -935,5 +1017,10 @@ def loadBuildModules(buildModuleUrl){
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
 
+		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {
+			apigeeModule = load "apigee-module.groovy"
+			apigeeModule.initialize(configLoader.APIGEE, events)
+			echo "Apigee module loaded successfully."
+		}
 	}
 }

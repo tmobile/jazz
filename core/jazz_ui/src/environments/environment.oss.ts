@@ -1,5 +1,6 @@
 export const environment = {
   production: true,
+  INSTALLER_VARS: {INSTALLER_VARS},
   configFile: 'config/config.oss.json',
   baseurl: "https://uktaroef9c.execute-api.us-east-1.amazonaws.com/prod",
   api_doc_name: "https://{api_doc_name}.s3.amazonaws.com",
@@ -37,7 +38,6 @@ export const environment = {
     registrationMessage: 'Please contact your Jazz Admin(s) to get a registration code.'
   },
   aws: {
-    account_number:'{account_number}',
-    region:"{region}",
+    account_number: "{account_number}"
   }
 };

@@ -8,26 +8,9 @@
     "TOKEN_URL": "/stg/jazz/login",
     "SERVICE_USER": "{jazz_admin}",
     "TOKEN_CREDS": "{jazz_admin_creds}",
-    "EVENT_SOURCE_NAME": {
-      "s3": {
-          "minLength": 3,
-          "maxLength": 63,
-          "regexPattern": "^[a-z0-9-]+$"
-      },
-      "dynamodb": {
-          "minLength": 3,
-          "maxLength": 255,
-          "regexPattern": "^[a-zA-Z0-9_.-]+$"
-      },
-      "sqs": {
-          "minLength": 1,
-          "maxLength": 80,
-          "regexPattern": "^[a-zA-Z0-9-_]+$"
-      },
-      "kinesis": {
-          "minLength": 1,
-          "maxLength": 128,
-          "regexPattern": "^[a-zA-Z0-9_.-]+$"
-      }
-  }
+    "DEPLOYMENT_TARGETS": {
+      "api": ["{conf_deployment_targets_api}"],
+      "function": ["{conf_deployment_targets_function}"],
+      "website": ["{conf_deployment_targets_website}"]
+    }
 }
