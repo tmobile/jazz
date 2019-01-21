@@ -39,7 +39,7 @@ module.exports = (configs, input, onComplete) => {
       onComplete(err, null);
     } else {
       onComplete(null, {
-        "result": "success"
+        "message": "success"
       });
     }
   });
