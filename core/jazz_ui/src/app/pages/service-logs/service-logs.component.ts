@@ -401,16 +401,16 @@ export class ServiceLogsComponent implements OnInit {
 	}
 
 	onRowClicked(row, index) {
-		for (var i = 0; i < this.logs.length; i++) {
-			var rowData = this.logs[i]
-
-			if (i == index) {
-				rowData['expanded'] = !rowData['expanded'];
-			}
-			if(rowData['expanded'] == false) {
-				this.expandText='Expand all';
-			} else {
-				this.expandText='Collapse all';
+		var rowData = this.logs[index];
+		if (rowData) {
+			rowData['expanded'] = !rowData['expanded'];
+			this.expandText = 'Collapse all';
+			for (var i = 0; i < this.logs.length; i++) {
+				var rowData = this.logs[i];
+				if (rowData['expanded'] == false) {
+					this.expandText = 'Expand all';
+					break;
+				}
 			}
 		}
 	}
