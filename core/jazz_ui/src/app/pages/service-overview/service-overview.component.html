@@ -1,79 +1,57 @@
 <div class="feedback-overlay" *ngIf="openModal">
-  <div class="feedback-wrap relative">
-    <div class="feedback-hdr relative">Report an issue</div>
-    <div class="separator-row"></div>
-    <div class="loading-row" [class.show]="isLoading">
-      <div class="loading-circle"></div>
-    </div>
-    <div
-      class="feedback-text-wrap"
-      [class.invisible]="isLoading || feedbackRes"
-    >
-      <p>
-        Found a problem with the site? Please use the form below to describe the
-        issue and we will fix it soon.
-      </p>
-      <textarea
-        rows="5"
-        cols="50"
-        type="text"
-        name="userFeedback"
-        id="userFeedback"
-        placeholder="Report your issue here"
-        [(ngModel)]="model.userFeedback"
-        #userFeedback="ngModel"
-      ></textarea>
-    </div>
-    <div class="feedback-text-wrap feedbackRes" [class.show]="feedbackRes">
-      <div class="hide feedbackResSuccess" [class.show]="feedbackResSuccess">
-        <div>{{ feedbackMsg }}</div>
-      </div>
-      <div class="hide feedbackResErr" [class.show]="feedbackResErr">
-        Oops! {{ feedbackMsg }}
-        <span> or <a (click)="mailTo()"> contact us</a> via email.</span>
-      </div>
-    </div>
-    <div class="feedback-btn-wrap">
-      <!-- <div class="includeError">
-             <input type="checkbox">
-             <span></span>
-             </div> -->
-      <div
-        class="slack-checkbox custom-cb includeError"
-        [class.invisible]="isLoading || feedbackRes"
+	<div class="feedback-wrap relative">
+		<div class="feedback-hdr relative">Report an issue</div>
+		<div class="separator-row"></div>
+		<div class="loading-row" [class.show]="isLoading">
+			<div class="loading-circle"></div>
+		</div>
+		<div class="feedback-text-wrap" [class.invisible]="isLoading || feedbackRes">
+			<p>
+                Found a problem with the site? Please use the form below to describe the issue and we will fix it soon.
+            </p>
+			<textarea rows="5" cols="50" type="text" name="userFeedback" id="userFeedback" placeholder="Report your issue here" [(ngModel)]="model.userFeedback" #userFeedback="ngModel"></textarea>
+		</div>
+		<div class="feedback-text-wrap feedbackRes" [class.show]="feedbackRes">
+			<div class="hide feedbackResSuccess" [class.show]="feedbackResSuccess">
+				<div>{{ feedbackMsg }}</div>
+			</div>
+			<div class="hide feedbackResErr" [class.show]="feedbackResErr">
+                Oops! {{ feedbackMsg }}
+                
+				<span> or 
+					<a (click)="mailTo()"> contact us</a> via email.
+				</span>
+			</div>
+		</div>
+		<div class="feedback-btn-wrap">
+			<!-- <div class="includeError"><input type="checkbox"><span></span></div> -->
+			<div class="slack-checkbox custom-cb includeError" [class.invisible]="isLoading || feedbackRes">
+				<input type="checkbox" (click)="errorIncluded()" id="checkbox-slack" [checked]="errorInclude" />
+				<label for="checkbox-slack"></label>
+				<div class="cb-status-dets">Include error details</div>
+			</div>
+			<a (click)="openModal = !openModal; isLoading = false" [class.invisible]="isLoading || feedbackRes">CANCEL</a
       >
-        <input
-          type="checkbox"
-          (click)="errorIncluded()"
-          id="checkbox-slack"
-          [checked]="errorInclude"
-        />
-        <label for="checkbox-slack"></label>
-        <div class="cb-status-dets">Include error details</div>
-      </div>
-      <a
-        (click)="openModal = !openModal; isLoading = false"
-        [class.invisible]="isLoading || feedbackRes"
-        >CANCEL</a
-      >
-      <btn-jazz-primary
+			<btn-jazz-primary
         text="{{ buttonText }}"
         class="feedback-submit"
         [class.invisible]="isLoading"
         [disablePrimaryBtn]="!model.userFeedback && buttonText == 'SUBMIT'"
         (click)="submitFeedback(buttonText)"
       ></btn-jazz-primary>
-    </div>
-  </div>
+		</div>
+	</div>
 </div>
-
 <div class="current-status-wrap" *ngIf="creating && service_error">
-  <div class="current-meter-status saving">
-    <b>Current Status:</b> {{ statusInfo }}<span> .</span><span> .</span
-    ><span> .</span>
-  </div>
-  <div class="current-meter-bar">
-    <span
+	<div class="current-meter-status saving">
+		<b>Current Status:</b> {{ statusInfo }}
+		<span> .</span>
+		<span> .</span
+    >
+		<span> .</span>
+	</div>
+	<div class="current-meter-bar">
+		<span
       id="current-status-val"
       [ngClass]="
         statusCompleted || serviceStatusCompleted
@@ -82,23 +60,23 @@
       "
       [class.deletion-bar]="statusFailed"
     ></span>
-    <div
+		<div
       class="status-result"
       [ngClass]="serviceStatusStarted ? 'under-progress-bar' : 'under-progress'"
       [class.completed-bar]="statusCompleted"
       [class.deletion-status]="statusFailed"
     >
-      <div
+			<div
         class="status-icon icon-icon-confirmcheck"
         *ngIf="serviceStatusStarted"
       ></div>
-      <div
+			<div
         class="status-icon icon-icon-close"
         *ngIf="serviceStatusStartedD"
       ></div>
-      <div class="status-lable">Started</div>
-    </div>
-    <div
+			<div class="status-lable">Started</div>
+		</div>
+		<div
       class="status-result"
       [ngClass]="
         serviceStatusValidate ? 'under-progress-bar' : 'under-progress'
@@ -106,30 +84,30 @@
       [class.completed-bar]="statusCompleted"
       [class.deletion-status]="statusFailed"
     >
-      <div
+			<div
         class="status-icon icon-icon-confirmcheck"
         *ngIf="serviceStatusValidate"
       ></div>
-      <div
+			<div
         class="status-icon icon-icon-close"
         *ngIf="serviceStatusValidateD"
       ></div>
-      <div class="status-lable">Validation</div>
-    </div>
-    <div
+			<div class="status-lable">Validation</div>
+		</div>
+		<div
       class="status-result"
       [ngClass]="serviceStatusRepo ? 'under-progress-bar' : 'under-progress'"
       [class.completed-bar]="statusCompleted"
       [class.deletion-status]="statusFailed"
     >
-      <div
+			<div
         class="status-icon icon-icon-confirmcheck"
         *ngIf="serviceStatusRepo"
       ></div>
-      <div class="status-icon icon-icon-close" *ngIf="serviceStatusRepoD"></div>
-      <div class="status-lable repoCreation">Repository Creation</div>
-    </div>
-    <div
+			<div class="status-icon icon-icon-close" *ngIf="serviceStatusRepoD"></div>
+			<div class="status-lable repoCreation">Repository Creation</div>
+		</div>
+		<div
       class="status-result"
       [ngClass]="
         serviceStatusPermission ? 'under-progress-bar' : 'under-progress'
@@ -137,17 +115,17 @@
       [class.completed-bar]="statusCompleted"
       [class.deletion-status]="statusFailed"
     >
-      <div
+			<div
         class="status-icon icon-icon-confirmcheck"
         *ngIf="serviceStatusPermission"
       ></div>
-      <div
+			<div
         class="status-icon icon-icon-close"
         *ngIf="serviceStatusPermissionD"
       ></div>
-      <div class="status-lable">Permissions</div>
-    </div>
-    <div
+			<div class="status-lable">Permissions</div>
+		</div>
+		<div
       class="status-result"
       [ngClass]="
         serviceStatusCompleted ? 'under-progress-bar' : 'under-progress'
@@ -155,25 +133,28 @@
       [class.completed-bar]="statusCompleted"
       [class.deletion-status]="statusFailed"
     >
-      <div
+			<div
         class="status-icon icon-icon-confirmcheck"
         *ngIf="serviceStatusCompleted"
       ></div>
-      <div
+			<div
         class="status-icon icon-icon-close"
         *ngIf="serviceStatusCompletedD"
       ></div>
-      <div class="status-lable">Completed</div>
-    </div>
-  </div>
+			<div class="status-lable">Completed</div>
+		</div>
+	</div>
 </div>
 <div class="current-status-wrap" *ngIf="deleting && service_error">
-  <div class="current-meter-status saving">
-    <b>Current Status:</b> {{ DelstatusInfo }}<span> .</span><span> .</span
-    ><span> .</span>
-  </div>
-  <div class="current-meter-bar">
-    <span
+	<div class="current-meter-status saving">
+		<b>Current Status:</b> {{ DelstatusInfo }}
+		<span> .</span>
+		<span> .</span
+    >
+		<span> .</span>
+	</div>
+	<div class="current-meter-bar">
+		<span
       id="current-status-val"
       [ngClass]="
         statusCompleted || serviceStatusCompleted
@@ -182,23 +163,23 @@
       "
       [class.deletion-bar]="statusFailed"
     ></span>
-    <div
+		<div
       class="status-result-delete"
       [ngClass]="serviceStatusStarted ? 'under-progress-bar' : 'under-progress'"
       [class.completed-bar]="statusCompleted"
       [class.deletion-status]="statusFailed"
     >
-      <div
+			<div
         class="status-icon icon-icon-confirmcheck"
         *ngIf="serviceStatusStarted"
       ></div>
-      <div
+			<div
         class="status-icon icon-icon-close"
         *ngIf="serviceStatusStartedD"
       ></div>
-      <div class="status-lable">Deletion Started</div>
-    </div>
-    <div
+			<div class="status-lable">Deletion Started</div>
+		</div>
+		<div
       class="status-result-delete"
       [ngClass]="
         serviceStatusValidate ? 'under-progress-bar' : 'under-progress'
@@ -206,30 +187,30 @@
       [class.completed-bar]="statusCompleted"
       [class.deletion-status]="statusFailed"
     >
-      <div
+			<div
         class="status-icon icon-icon-confirmcheck"
         *ngIf="serviceStatusValidate"
       ></div>
-      <div
+			<div
         class="status-icon icon-icon-close"
         *ngIf="serviceStatusValidateD"
       ></div>
-      <div class="status-lable">Deleted Assets</div>
-    </div>
-    <div
+			<div class="status-lable">Deleted Assets</div>
+		</div>
+		<div
       class="status-result-delete"
       [ngClass]="serviceStatusRepo ? 'under-progress-bar' : 'under-progress'"
       [class.completed-bar]="statusCompleted"
       [class.deletion-status]="statusFailed"
     >
-      <div
+			<div
         class="status-icon icon-icon-confirmcheck"
         *ngIf="serviceStatusRepo"
       ></div>
-      <div class="status-icon icon-icon-close" *ngIf="serviceStatusRepoD"></div>
-      <div class="status-lable repoCreation">Backed Up Project</div>
-    </div>
-    <div
+			<div class="status-icon icon-icon-close" *ngIf="serviceStatusRepoD"></div>
+			<div class="status-lable repoCreation">Backed Up Project</div>
+		</div>
+		<div
       class="status-result-delete"
       [ngClass]="
         serviceStatusCompleted ? 'under-progress-bar' : 'under-progress'
@@ -237,232 +218,185 @@
       [class.completed-bar]="statusCompleted"
       [class.deletion-status]="statusFailed"
     >
-      <div
+			<div
         class="status-icon icon-icon-confirmcheck"
         *ngIf="serviceStatusCompleted"
       ></div>
-      <div
+			<div
         class="status-icon icon-icon-close"
         *ngIf="serviceStatusCompletedD"
       ></div>
-      <div class="status-lable">Deletion Completed</div>
-    </div>
-  </div>
+			<div class="status-lable">Deletion Completed</div>
+		</div>
+	</div>
 </div>
-
 <section [class.extra-bottom-padding]="!disp_show2" hide>
-  <div>
-    <div class="metadata-body metadata-body-border">
-      <div
+	<div>
+		<div class="metadata-body metadata-body-border">
+			<div
         [class]="
           service.serviceType != 'function'
             ? 'metadata-column fullWidth'
             : 'metadata-column'
         "
       >
-        <div class="metadata-heading-wrap">
-          <div
+				<div class="metadata-heading-wrap">
+					<div
             class="metadata-heading"
             [ngClass]="showGeneralField ? 'update-color' : ''"
           >
             General
-            <div
+            
+						<div
               class="edit-div"
               *ngIf="!showGeneralField"
               (click)="onEditGeneral()"
             >
-              <img class="pre-image" src="/assets/erser/icon-edit.png" />
-            </div>
-            <div *ngIf="showGeneralField" class="down-btn-wrap">
-              <div class="custom-save-btn-wrap">
-                <btn-jazz-primary
+							<img class="pre-image" src="/assets/erser/icon-edit.png" />
+						</div>
+						<div *ngIf="showGeneralField" class="down-btn-wrap">
+							<div class="custom-save-btn-wrap">
+								<btn-jazz-primary
                   class="save-btn-wrap"
                   [disablePrimaryBtn]="generalAdvanceDisable"
                   text="SAVE"
                   (click)="onSaveClick()"
                 ></btn-jazz-primary>
-                <a (click)="onCancelClick()">CANCEL</a>
-              </div>
-            </div>
-          </div>
+								<a (click)="onCancelClick()">CANCEL</a>
+							</div>
+						</div>
+					</div>
+				</div>
+				<ul>
+					<li>
+						<div class="det-label">Namespace</div>
+						<div class="det-value">{{ service.domain || 'Link a domain' }}</div>
+					</li>
+					<li>
+						<div class="det-label">Service</div>
+						<div class="det-value service-type">{{ service.name }}</div>
+					</li>
+					<li *ngIf="service.serviceType != 'website'">
+						<div class="det-label">Runtime</div>
+						<div class="det-value" [class.PlaceHolder]="runtime_empty">
+            {{ service.runtime }}
         </div>
-        <ul>
-          <li>
-            <div class="det-label">Namespace</div>
-            <div class="det-value">{{ service.domain || 'Link a domain' }}</div>
-          </li>
-          <li>
-            <div class="det-label">Service</div>
-            <div class="det-value service-type">{{ service.name }}</div>
-          </li>
-          <li *ngIf="service.serviceType != 'website'">
-            <div class="det-label">Runtime</div>
-            <div class="det-value" [class.PlaceHolder]="runtime_empty">
-              {{ service.runtime }}
-            </div>
-          </li>
-          <li>
-            <div class="det-label">Service Type</div>
-            <div class="det-value service-type">
-              {{ service.serviceType || 'Pick your service type' }}
-            </div>
-          </li>
-          <li>
-            <div class="det-label">Description</div>
-            <div
-              *ngIf="!showGeneralField"
-              class="det-value wrap"
-              [ngClass]="{ PlaceHolder: description_empty }"
-            >
-              {{ service.description || 'Give details for your service' }}
-            </div>
-            <textarea
-              *ngIf="showGeneralField"
-              [(ngModel)]="desc_temp"
-              (ngModelChange)="
+					</li>
+					<li>
+						<div class="det-label">Service Type</div>
+						<div class="det-value service-type">
+            {{ service.serviceType || 'Pick your service type' }}
+        </div>
+					</li>
+					<li>
+						<div class="det-label">Description</div>
+						<div *ngIf="!showGeneralField" class="det-value wrap" [ngClass]="{ PlaceHolder: description_empty }">
+            {{ service.description || 'Give details for your service' }}
+        </div>
+						<textarea *ngIf="showGeneralField" [(ngModel)]="desc_temp" (ngModelChange)="
                 update_payload.description = desc_temp; shouldSaveEnable()
-              "
-              class="det-value-input-txtarea"
-              placeholder="Give the details for your service"
-            ></textarea>
-          </li>
-          <li>
-            <div class="det-label">Creator</div>
-            <div class="det-value">{{ service.created_by }}</div>
-          </li>
-          <li>
-            <div class="det-label">Status</div>
-            <div class="det-value">{{ service.status }}</div>
-          </li>
-          <li>
-            <div class="det-label">Slack</div>
-            <div
-              *ngIf="!showGeneralField"
-              class="det-value"
-              [class.PlaceHolder]="slackChannel_empty"
-            >
-              {{
-                service.slackChannel || 'Feeling collaborative? Add it to slack'
-              }}
-            </div>
-            <div *ngIf="showGeneralField" class="det-value slack-relative">
-              <input
-                [(ngModel)]="slackChannel_temp"
-                type="text"
-                (blur)="checkSlackNameAvailability()"
-                (ngModelChange)="
-                  update_payload.slack_channel = slackChannel_temp
-                "
-                class="det-value-input"
-                placeholder="Feeling collaborative? Add it to slack"
-              />
-              <img
-                *ngIf="show_loader"
-                class="input-loader"
-                src="../assets/images/icons/loading.png"
-              />
-            </div>
-          </li>
-          <p class="email-err-msg" [class.hide]="hide_slack_error">
-            Slack channel is not available. Please provide a valid slack
-            channel.
-          </p>
-          <li class="padding-wrapper">
-            <div class="det-label">Repository</div>
-            <div
-              class="det-value repository-link"
-              [ngClass]="{ link: islink, PlaceHolder: repository_empty }"
-              (click)="openLink(repositorylink)"
-            >
-              {{ bitbucketRepo || 'Stay organized with a repository' }}
-            </div>
-          </li>
-        </ul>
-      </div>
-      <div class="metadata-column" *ngIf="service.serviceType == 'function'">
-        <div class="metadata-heading-wrap">
-          <div
-            class="metadata-heading"
-          >
-            Events
-          </div>
+              " class="det-value-input-txtarea" placeholder="Give the details for your service"></textarea>
+					</li>
+					<li>
+						<div class="det-label">Creator</div>
+						<div class="det-value">{{ service.created_by }}</div>
+					</li>
+					<li>
+						<div class="det-label">Status</div>
+						<div class="det-value">{{ service.status }}</div>
+					</li>
+					<li>
+						<div class="det-label">Slack</div>
+						<div *ngIf="!showGeneralField" class="det-value" [class.PlaceHolder]="slackChannel_empty">
+            {{ service.slackChannel || 'Feeling collaborative? Add it to slack' }}
         </div>
-        <ul>
-          <li *ngIf="service.serviceType == 'function'">
-            <div class="det-label">Event Schedule</div>
-            <div *ngIf="disp_show2" class="det-value">
-              {{ service.eventScheduleRate || 'NA' }}
+						<div *ngIf="showGeneralField" class="det-value slack-relative">
+							<input [(ngModel)]="slackChannel_temp" type="text" (blur)="checkSlackNameAvailability()" (ngModelChange)="
+                  update_payload.slack_channel = slackChannel_temp
+                " class="det-value-input" placeholder="Feeling collaborative? Add it to slack" />
+							<img *ngIf="show_loader" class="input-loader" src="../assets/images/icons/loading.png" />
+						</div>
+					</li>
+					<p class="email-err-msg" [class.hide]="hide_slack_error">
+        Slack channel is not available. Please provide a valid slack channel.
+    </p>
+					<li class="padding-wrapper">
+						<div class="det-label">Repository</div>
+						<div class="det-value repository-link" [ngClass]="{ link: islink, PlaceHolder: repository_empty }" (click)="openLink(repositorylink)">
+            {{ bitbucketRepo || 'Stay organized with a repository' }}
+        </div>
+					</li>
+				</ul>
+			</div>
+			<div class="metadata-column" *ngIf="service.serviceType == 'function'">
+				<div class="metadata-heading-wrap">
+					<div class="metadata-heading">
+            Events
+        </div>
+				</div>
+				<ul>
+					<li *ngIf="service.serviceType == 'function'">
+						<div class="det-label">Event Schedule</div>
+						<div *ngIf="disp_show2" class="det-value">
+                {{ service.eventScheduleRate || 'NA' }}
             </div>
-          </li>
-          <li *ngIf="service.serviceType == 'function'">
-            <div class="det-label">Event Source Type</div>
-            <div *ngIf="disp_show2" class="det-value">
-              {{ service.event_source || 'NA' }}
+					</li>
+					<li *ngIf="service.serviceType == 'function'">
+						<div class="det-label">Event Source Type</div>
+						<div *ngIf="disp_show2" class="det-value">
+                {{ service.event_source || 'NA' }}
             </div>
-          </li>
-          <li *ngIf="service.serviceType == 'function'">
-            <div class="det-label">Event Source</div>
-            <div *ngIf="disp_show2" class="det-value">
-              {{ service.event_source_arn || 'NA' }}
+					</li>
+					<li *ngIf="service.serviceType == 'function'">
+						<div class="det-label">Event Source</div>
+						<div *ngIf="disp_show2" class="det-value">
+                {{ service.event_source_arn || 'NA' }}
             </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <details class="border-top" *ngIf="false">
-    <summary class="summary-last-child">
-      <div class="metadata-heading-wrap">
-        <div class="metadata-heading">Advanced</div>
-      </div>
-    </summary>
-    <div *ngIf="!disp_show2" class="warn-msg top-shift">
-      <div>!</div>
-      <div>Any saved changes will trigger a deployment for the service.</div>
-    </div>
-    <div *ngIf="!disp_show2" class="down-btn-wrap down-btn-wrap-advanced">
-      <btn-jazz-primary
-        text="Submit"
-        (click)="onAdvancedSaveClick()"
-      ></btn-jazz-primary>
-      <a (click)="onCancelClick()">CANCEL</a>
-    </div>
-    <div class="metadata-body-advanced">
-      <div *ngIf="disp_show2" class="metadata-buttons-wrap second-wrap">
-        <btn-jazz-secondary
-          text="EDIT"
-          [disablebtn]="true"
-          (click)="onEditClickAdvanced()"
-        ></btn-jazz-secondary>
-      </div>
-      <div *ngIf="disp_show2" class="metadata-row first-row"><ul></ul></div>
-      <div *ngIf="!disp_show2" class="metadata-row second-row">
-        <ul>
-          <li *ngIf="service.serviceType == 'function'">
-            <div class="det-label">Event Schedule</div>
-            <div *ngIf="!disp_show2" class="det-value">
-              <div
-                class="input-field-container event-schedule-radio row zero-margin"
-              >
-                <section class="   pad-left0">
-                  <div class="radio-container">
-                    <input
-                      type="radio"
-                      name="EventSchedule"
-                      id="none"
-                      [value]="none"
-                      [checked]="rateExpression.type == 'none'"
-                      (click)="onEventScheduleChange('none')"
-                    />
-                    <label for="none"
-                      ><span></span><span class="background"></span>None</label
+					</li>
+				</ul>
+			</div>
+		</div>
+	</div>
+	<details class="border-top" *ngIf="false">
+		<summary class="summary-last-child">
+			<div class="metadata-heading-wrap">
+				<div class="metadata-heading">Advanced</div>
+			</div>
+		</summary>
+		<div *ngIf="!disp_show2" class="warn-msg top-shift">
+			<div>!</div>
+			<div>Any saved changes will trigger a deployment for the service.</div>
+		</div>
+		<div *ngIf="!disp_show2" class="down-btn-wrap down-btn-wrap-advanced">
+			<btn-jazz-primary text="Submit" (click)="onAdvancedSaveClick()"></btn-jazz-primary>
+			<a (click)="onCancelClick()">CANCEL</a>
+		</div>
+		<div class="metadata-body-advanced">
+			<div *ngIf="disp_show2" class="metadata-buttons-wrap second-wrap">
+				<btn-jazz-secondary text="EDIT" [disablebtn]="true" (click)="onEditClickAdvanced()"></btn-jazz-secondary>
+			</div>
+			<div *ngIf="disp_show2" class="metadata-row first-row">
+				<ul></ul>
+			</div>
+			<div *ngIf="!disp_show2" class="metadata-row second-row">
+				<ul>
+					<li *ngIf="service.serviceType == 'function'">
+						<div class="det-label">Event Schedule</div>
+						<div *ngIf="!disp_show2" class="det-value">
+							<div class="input-field-container event-schedule-radio row zero-margin">
+								<section class="   pad-left0">
+									<div class="radio-container">
+										<input type="radio" name="EventSchedule" id="none" [value]="none" [checked]="rateExpression.type == 'none'" (click)="onEventScheduleChange('none')" />
+										<label for="none">
+											<span></span>
+											<span class="background"></span>None
+										</label
                     >
-                  </div>
-                </section>
-                <section class="fixed-rate pad-left0">
-                  <div class="radio-container">
-                    <input
+									</div>
+								</section>
+								<section class="fixed-rate pad-left0">
+									<div class="radio-container">
+										<input
                       type="radio"
                       name="EventSchedule"
                       id="fixedRate"
@@ -470,15 +404,18 @@
                       [checked]="rateExpression.type == 'rate'"
                       (click)="onEventScheduleChange('rate')"
                     />
-                    <label for="fixedRate"
-                      ><span></span><span class="background"></span>Fixed Rate
-                      of</label
+										<label for="fixedRate"
+                      >
+											<span></span>
+											<span class="background"></span>Fixed Rate
+                      of
+										</label
                     >
-                  </div>
-                </section>
-                <section class="   pad-left0">
-                  <div class="radio-container">
-                    <input
+									</div>
+								</section>
+								<section class="   pad-left0">
+									<div class="radio-container">
+										<input
                       type="radio"
                       name="EventSchedule"
                       id="cron"
@@ -486,26 +423,29 @@
                       [checked]="rateExpression.type == 'cron'"
                       (click)="onEventScheduleChange('cron')"
                     />
-                    <label for="cron"
-                      ><span></span><span class="background"></span>Cron
-                      Expression</label
+										<label for="cron"
+                      >
+											<span></span>
+											<span class="background"></span>Cron
+                      Expression
+										</label
                     >
-                  </div>
-                </section>
-              </div>
-              <div
+									</div>
+								</section>
+							</div>
+							<div
                 class="col-lg-7 col-md-7 event-schedule-fields cron-field"
                 [ngClass]="{ 'zero-padding': rateExpression.type == 'none' }"
               >
-                <div class="clearfix">
-                  <div
+								<div class="clearfix">
+									<div
                     class="cron-fields row zero-margin arrow_box"
                     *ngIf="rateExpression.type == 'cron'"
                   >
-                    <div class="col-lg-2">
-                      <p class="sm-input-label">Minutes</p>
-                      <div class="input-wrapper">
-                        <input
+										<div class="col-lg-2">
+											<p class="sm-input-label">Minutes</p>
+											<div class="input-wrapper">
+												<input
                           name="rateMinute"
                           type="text"
                           class="textForm"
@@ -514,12 +454,12 @@
                           #rateMinute="ngModel"
                           (ngModelChange)="generateExpression(rateExpression)"
                         />
-                      </div>
-                    </div>
-                    <div class="col-lg-2">
-                      <p class="sm-input-label">Hours</p>
-                      <div class="input-wrapper">
-                        <input
+											</div>
+										</div>
+										<div class="col-lg-2">
+											<p class="sm-input-label">Hours</p>
+											<div class="input-wrapper">
+												<input
                           name="rateHour"
                           type="text"
                           class="textForm"
@@ -528,12 +468,12 @@
                           (ngModelChange)="generateExpression(rateExpression)"
                           required
                         />
-                      </div>
-                    </div>
-                    <div class="col-lg-2">
-                      <p class="sm-input-label">Day-of-month</p>
-                      <div class="input-wrapper">
-                        <input
+											</div>
+										</div>
+										<div class="col-lg-2">
+											<p class="sm-input-label">Day-of-month</p>
+											<div class="input-wrapper">
+												<input
                           name="rateDayofMonth"
                           type="text"
                           class="textForm"
@@ -542,12 +482,12 @@
                           (ngModelChange)="generateExpression(rateExpression)"
                           required
                         />
-                      </div>
-                    </div>
-                    <div class="col-lg-2">
-                      <p class="sm-input-label">Month</p>
-                      <div class="input-wrapper">
-                        <input
+											</div>
+										</div>
+										<div class="col-lg-2">
+											<p class="sm-input-label">Month</p>
+											<div class="input-wrapper">
+												<input
                           name="rateMonth"
                           type="text"
                           class="textForm"
@@ -556,12 +496,12 @@
                           (ngModelChange)="generateExpression(rateExpression)"
                           required
                         />
-                      </div>
-                    </div>
-                    <div class="col-lg-2">
-                      <p class="sm-input-label">Day-of-week</p>
-                      <div class="input-wrapper">
-                        <input
+											</div>
+										</div>
+										<div class="col-lg-2">
+											<p class="sm-input-label">Day-of-week</p>
+											<div class="input-wrapper">
+												<input
                           name="rateDayOfWeek"
                           type="text"
                           class="textForm"
@@ -570,12 +510,12 @@
                           (ngModelChange)="generateExpression(rateExpression)"
                           required
                         />
-                      </div>
-                    </div>
-                    <div class="col-lg-2">
-                      <p class="sm-input-label">Year</p>
-                      <div class="input-wrapper">
-                        <input
+											</div>
+										</div>
+										<div class="col-lg-2">
+											<p class="sm-input-label">Year</p>
+											<div class="input-wrapper">
+												<input
                           name="rateYear"
                           type="text"
                           class="textForm"
@@ -584,15 +524,15 @@
                           #rateYear="ngModel"
                           (ngModelChange)="generateExpression(rateExpression)"
                         />
-                      </div>
-                    </div>
-                  </div>
-                  <div
+											</div>
+										</div>
+									</div>
+									<div
                     class="rate-field row  zero-margin arrow_box"
                     *ngIf="rateExpression.type == 'rate'"
                   >
-                    <div class="col-lg-7 padding-right-0">
-                      <div
+										<div class="col-lg-7 padding-right-0">
+											<div
                         class="input-wrapper"
                         [ngClass]="{
                           available:
@@ -603,7 +543,7 @@
                             (rateField.dirty || rateField.touched)
                         }"
                       >
-                        <input
+												<input
                           name="rateField"
                           type="number"
                           class="textForm"
@@ -613,49 +553,50 @@
                           #rateField="ngModel"
                           OnlyNumber="true"
                         />
-                        <img class="input-loader ng-hide" />
-                      </div>
-                    </div>
-                    <div class="col-lg-5">
-                      <div class="input-wrapper">
-                        <dropdown
+												<img class="input-loader ng-hide" />
+											</div>
+										</div>
+										<div class="col-lg-5">
+											<div class="input-wrapper">
+												<dropdown
                           [dropdwnContent]="rateData"
                           title="Select interval"
                           [selected]="rateExpression.interval"
                           [statusFilter]="statusFilter"
                           (onSelected)="onSelectedDr($event)"
                         ></dropdown>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div
+											</div>
+										</div>
+									</div>
+								</div>
+								<div
                   class="form-error"
                   *ngIf="rateExpression.error != undefined"
                 >
                   {{ rateExpression.error }}
                 </div>
-                <p *ngIf="rateExpression.type != 'none'" class="learn-more">
-                  <a
+								<p *ngIf="rateExpression.type != 'none'" class="learn-more">
+									<a
                     href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html"
                     >Learn more</a
                   >
                   about CloudWatch Event schedules
-                </p>
-              </div>
-            </div>
-          </li>
-        </ul>
-        <ul>
-          <li *ngIf="service.serviceType == 'function'">
-            <div class="det-label">AWS events</div>
-            <div *ngIf="!disp_show2" class="det-value">
-              <div
+                
+								</p>
+							</div>
+						</div>
+					</li>
+				</ul>
+				<ul>
+					<li *ngIf="service.serviceType == 'function'">
+						<div class="det-label">AWS events</div>
+						<div *ngIf="!disp_show2" class="det-value">
+							<div
                 class="input-field-container event-schedule-radio row zero-margin"
               >
-                <section class="pad-left0">
-                  <div class="radio-container">
-                    <input
+								<section class="pad-left0">
+									<div class="radio-container">
+										<input
                       type="radio"
                       name="AWSEvents"
                       id="awsEventsNone"
@@ -663,14 +604,17 @@
                       [checked]="eventExpression.type == 'awsEventsNone'"
                       (click)="onAWSEventChange('awsEventsNone')"
                     />
-                    <label for="awsEventsNone"
-                      ><span></span><span class="background"></span>None</label
+										<label for="awsEventsNone"
+                      >
+											<span></span>
+											<span class="background"></span>None
+										</label
                     >
-                  </div>
-                </section>
-                <section class="pad-left0">
-                  <div class="radio-container">
-                    <input
+									</div>
+								</section>
+								<section class="pad-left0">
+									<div class="radio-container">
+										<input
                       type="radio"
                       name="AWSEvents"
                       id="dynamodb"
@@ -678,15 +622,18 @@
                       [checked]="eventExpression.type == 'dynamodb'"
                       (click)="onAWSEventChange('dynamodb')"
                     />
-                    <label for="dynamodb"
-                      ><span></span
-                      ><span class="background"></span>DynamoDB</label
+										<label for="dynamodb"
+                      >
+											<span></span
+                      >
+											<span class="background"></span>DynamoDB
+										</label
                     >
-                  </div>
-                </section>
-                <section class="pad-left0">
-                  <div class="radio-container">
-                    <input
+									</div>
+								</section>
+								<section class="pad-left0">
+									<div class="radio-container">
+										<input
                       type="radio"
                       name="AWSEvents"
                       id="kinesis"
@@ -694,15 +641,18 @@
                       [checked]="eventExpression.type == 'kinesis'"
                       (click)="onAWSEventChange('kinesis')"
                     />
-                    <label for="kinesis"
-                      ><span></span
-                      ><span class="background"></span>Kinesis</label
+										<label for="kinesis"
+                      >
+											<span></span
+                      >
+											<span class="background"></span>Kinesis
+										</label
                     >
-                  </div>
-                </section>
-                <section class="pad-left0">
-                  <div class="radio-container">
-                    <input
+									</div>
+								</section>
+								<section class="pad-left0">
+									<div class="radio-container">
+										<input
                       type="radio"
                       name="AWSEvents"
                       id="s3"
@@ -710,36 +660,39 @@
                       [checked]="eventExpression.type == 's3'"
                       (click)="onAWSEventChange('s3')"
                     />
-                    <label for="s3"
-                      ><span></span><span class="background"></span>S3</label
+										<label for="s3"
+                      >
+											<span></span>
+											<span class="background"></span>S3
+										</label
                     >
-                  </div>
-                </section>
-              </div>
-              <div
+									</div>
+								</section>
+							</div>
+							<div
                 class="aws-event-fields rate-exp-wrp zero-margin"
                 [ngClass]="{ 'zero-padding': eventExpression.type == 'none' }"
               >
-                <div
+								<div
                   class="dynamodb-fields row zero-margin arrow_box"
                   *ngIf="chkDynamodb()"
                 >
-                  <div class="col-lg-3 padding-right-0">
-                    <div class="text">Event</div>
-                    <div class="slct-bx-wrp">
-                      <div class="slct-bx-selected disabled">PutItem</div>
-                    </div>
-                  </div>
-                  <div class="col-lg-9">
-                    <div class="text">Table ARN</div>
-                    <div class="label-input slct-bx-selected input-wrapper">
-                      <input
+									<div class="col-lg-3 padding-right-0">
+										<div class="text">Event</div>
+										<div class="slct-bx-wrp">
+											<div class="slct-bx-selected disabled">PutItem</div>
+										</div>
+									</div>
+									<div class="col-lg-9">
+										<div class="text">Table ARN</div>
+										<div class="label-input slct-bx-selected input-wrapper">
+											<input
                         type="text"
                         disabled="disabled"
                         class="inline-input input-label aws-events-left-block"
                         value="arn:aws:dynamodb:us-west-2:302890901340:table/"
                       />
-                      <input
+											<input
                         id="dynamoTable"
                         name="dynamoTable"
                         type="text"
@@ -749,34 +702,33 @@
                         placeholder="Table Name"
                         required
                       />
-                    </div>
-                  </div>
-                  <p class="learn-more">
+										</div>
+									</div>
+									<p class="learn-more">
                     Function would be triggered whenever the corresponding
                     DynamoDB table is modified (e.g. a new entry is added)
                   </p>
-                </div>
-
-                <div
+								</div>
+								<div
                   class="kinesis-fields row zero-margin arrow_box"
                   *ngIf="chkfrKinesis()"
                 >
-                  <div class="col-lg-3  padding-right-0">
-                    <div class="text">Event</div>
-                    <div class="slct-bx-wrp">
-                      <div class="slct-bx-selected disabled">PutRecord</div>
-                    </div>
-                  </div>
-                  <div class="col-lg-9">
-                    <div class="text">Stream ARN</div>
-                    <div class="label-input slct-bx-selected input-wrapper">
-                      <input
+									<div class="col-lg-3  padding-right-0">
+										<div class="text">Event</div>
+										<div class="slct-bx-wrp">
+											<div class="slct-bx-selected disabled">PutRecord</div>
+										</div>
+									</div>
+									<div class="col-lg-9">
+										<div class="text">Stream ARN</div>
+										<div class="label-input slct-bx-selected input-wrapper">
+											<input
                         type="text"
                         disabled="disabled"
                         class="inline-input input-label stream aws-events-left-block"
                         value="arn:aws:kinesis:us-west-2:302890901340:stream/"
                       />
-                      <input
+											<input
                         id="streamARN"
                         name="streamARN"
                         type="text"
@@ -786,28 +738,27 @@
                         placeholder="Stream Name"
                         required
                       />
-                    </div>
-                  </div>
-                  <p class="learn-more">
+										</div>
+									</div>
+									<p class="learn-more">
                     Function would be triggered whenever the Lambda checkpoint
                     has not reached the end of the Kinesis stream
                   </p>
-                </div>
-
-                <div
+								</div>
+								<div
                   class="s3-fields row zero-margin arrow_box"
                   *ngIf="chkS3()"
                 >
-                  <div class="col-lg-3  padding-right-0">
-                    <div class="text">Event</div>
-                    <div class="slct-bx-wrp">
-                      <div class="slct-bx-selected disabled">PutItem</div>
-                    </div>
-                  </div>
-                  <div class="col-lg-9">
-                    <div class="text">Bucket Name</div>
-                    <div class="label-input slct-bx-selected input-wrapper">
-                      <input
+									<div class="col-lg-3  padding-right-0">
+										<div class="text">Event</div>
+										<div class="slct-bx-wrp">
+											<div class="slct-bx-selected disabled">PutItem</div>
+										</div>
+									</div>
+									<div class="col-lg-9">
+										<div class="text">Bucket Name</div>
+										<div class="label-input slct-bx-selected input-wrapper">
+											<input
                         id="S3BucketName"
                         name="S3BucketName"
                         type="text"
@@ -818,56 +769,55 @@
                         required
                         autofocus
                       />
-                    </div>
-                  </div>
-                  <p class="learn-more">
+										</div>
+									</div>
+									<p class="learn-more">
                     Function would be triggered when an object is added or
                     modified inside the bucket
                   </p>
-                </div>
-              </div>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </details>
-
-  <div
+								</div>
+							</div>
+						</div>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</details>
+	<div
     class="confirm-overlay"
     (click)="saveClicked = false; advancedSaveClicked = false"
     *ngIf="saveClicked || advancedSaveClicked"
   >
-    <div class="confirm-overlay-inner-wrap" (click)="$event.stopPropagation()">
-      <div class="overlay-header">Submitting Changes</div>
-      <div *ngIf="isPUTLoading" class="loader-confirmation">
-        <div class="loading-row-confirm show" [class.show]="isPUTLoading">
-          <div class="loading-circle"></div>
-        </div>
-      </div>
-
-      <div *ngIf="!isPUTLoading" class="overlay-body">
+		<div class="confirm-overlay-inner-wrap" (click)="$event.stopPropagation()">
+			<div class="overlay-header">Submitting Changes</div>
+			<div *ngIf="isPUTLoading" class="loader-confirmation">
+				<div class="loading-row-confirm show" [class.show]="isPUTLoading">
+					<div class="loading-circle"></div>
+				</div>
+			</div>
+			<div *ngIf="!isPUTLoading" class="overlay-body">
         Changes made to your services do not take immediate effect until they
-        are approved. Please wait a minimum <span><b> 1 hour</b> </span> for
+        are approved. Please wait a minimum 
+				<span>
+					<b> 1 hour</b>
+				</span> for
         approval.
-      </div>
-      <div class="overlay-btns">
-        <btn-jazz-primary
+      
+			</div>
+			<div class="overlay-btns">
+				<btn-jazz-primary
           text="COMPLETE"
           [disablePrimaryBtn]="!isPayloadAvailable"
           (click)="onCompleteClick()"
         ></btn-jazz-primary>
-      </div>
-    </div>
-  </div>
-
-  <div class="loading-row-edit" [class.show]="isLoadingService">
-    <div class="loading-circle"></div>
-  </div>
+			</div>
+		</div>
+	</div>
+	<div class="loading-row-edit" [class.show]="isLoadingService">
+		<div class="loading-circle"></div>
+	</div>
 </section>
-
 <div class="separator-row"></div>
-
 <service-overview-multienv
   #env
   *ngIf="multiENV"
