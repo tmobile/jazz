@@ -275,7 +275,7 @@ node() {
 							endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
 						}
 
-						def apiArns = getAPIGatewayResourceARNs(aws_api_id, environment_logical_id)
+						def apiArns = getAPIGatewayResourceARNs(aws_api_id, current_environment)
 						if(apiArns) {
 							for (arn in apiArns) {
 								events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
@@ -484,29 +484,42 @@ def buildLambda(String runtime, String repo_name) {
 	} else if (runtime.indexOf("java") > -1) {
 		sh "mvn package"
 	} else if (runtime.indexOf("python") > -1) {
-		// install requirements.txt in library folder, these python modules
-		// will be a part of deployment package
-		sh "pip install -r requirements.txt -t library"
-
-		// create virtual environment and install dev-requirements
-		sh """
-		pip install virtualenv
-		virtualenv venv
-		. venv/bin/activate
-		pip install pytest
-		"""
-	} else if (runtime.indexOf("go") > -1 ) {
-		// Installing dependencies using dep ensure
-		// golang build scripts
-		withEnv(["GOPATH=${env.WORKSPACE}"]) {
-			sh "mkdir -p $GOPATH/src"
-			sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + " $GOPATH/src"
-			sh "cd $GOPATH/src/" + repo_name + " && dep ensure"
-			sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/" + repo_name + "/main.go"
+		// install requirements.txt in library folder, these python modules will be a part of deployment package
+		sh "rm -rf library"
+		sh "mkdir library"
+		sh "touch library/__init__.py"
+		if (runtime == 'python3.6') {
+			//Installing dependencies
+			sh "pip3 install -r requirements.txt -t library"
+			// create virtual environment and install pytest
+			sh """
+			python3 -m venv virtualenv
+			. virtualenv/bin/activate
+			pip3 install pytest
+			pytest test
+		  	"""
+		} else {
+			//Installing dependencies
+			sh "pip install -r requirements.txt -t library"
+			// create virtual environment and install pytest
+			sh """
+		  	pip install virtualenv
+		  	virtualenv venv
+		  	. venv/bin/activate
+		  	pip install pytest
+	  		"""
 		}
-	}
+	} else if (runtime.indexOf("go") > -1 ){
+    //Installing dependencies using dep ensure
+    //golang build scripts
+   	withEnv(["GOPATH=${env.WORKSPACE}"]) {
+      sh "mkdir -p $GOPATH/src"
+      sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
+      sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
+      sh "cd $GOPATH/src/"+ repo_name+" && env GOOS=linux GOARCH=amd64 go build -o $GOPATH/"+ repo_name+"/main  *.go"
+    }
+  }
 }
-
 
 /**
 	Generate the swagger file specific to each environment
@@ -590,7 +603,7 @@ def validateDeploymentConfigurations(def prop) {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "java8", "go1.x"]
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"]
 			def flag = false
 			for (int i = 0; i < validRuntimes.size(); i++) {
 				if (_runtime == validRuntimes[i]) {

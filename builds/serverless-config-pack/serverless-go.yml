@@ -47,7 +47,20 @@ functions:
           enabled: ${file(deployment-env.yml):eventScheduleEnable}
       #End:isScheduleEnabled
       #Start:isDynamoDbEnabled
-      - stream: {event_source_dynamodb}
+      - stream:
+          type: dynamodb
+          #Start:dynamoDbstreamArn
+          streamArnDisabled: {event_dynamodb_stream_arn}
+          #End:dynamoDbstreamArn
+          #Start:dynamoDbstreamGetArn
+          arn:
+            Fn::GetAtt:
+              - sourceDynamoDbTable
+              - StreamArn
+          #End:dynamoDbstreamGetArn
+          batchSize: 1
+          startingPosition: LATEST
+          enabled: true
       #End:isDynamoDbEnabled
       #Start:isSQSEventEnabled
       - sqs:
@@ -62,7 +75,7 @@ functions:
           #Start:streamGetArn
           arn:
             Fn::GetAtt:
-              - {event_source_kinesis}
+              - sourceKinesisStreams
               - Arn
           #End:streamGetArn
           #Start:streamArn
@@ -96,7 +109,7 @@ resourcesDisabled:
     customEventRole: ${file(policyFile.yml):kinesisRole}
     #End:isStreamEnabled
     #Start:isDynamoDbEnabled
-    customEventRole: ${file(policyFile.yml):eventSubscribed}
+    customEventRole: ${file(policyFile.yml):dynamoDbRole}
     #End:isDynamoDbEnabled
     #Start:isSQSEventEnabled
     customEventRole: ${file(policyFile.yml):sqsRole}
