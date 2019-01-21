@@ -1241,8 +1241,7 @@ details {
   a {
     cursor: pointer;
     padding: 0px 5px;
-  }
-  a {
+    color: white;
     align-self: center;
   }
 }
@@ -1322,6 +1321,10 @@ details {
 btn-jazz-primary {
   /deep/button.btn-primary {
     padding: 5px 23px;
+  }
+  /deep/button.disableBtn {
+    color: white !important;
+    border-color: white !important;
   }
 }
 .selected-applications {
@@ -1424,4 +1427,9 @@ btn-jazz-primary {
 .custom-save-btn-wrap {
   display: flex;
   flex-direction: row-reverse;
+}
+.update-color {
+  background-color: #ed008c !important;
+}
+.save-btn-wrap {
 }
