@@ -40,6 +40,7 @@ module.exports.handler = (event, context, cb) => {
     if (event.method === "GET") {
       getList.listUsers(config)
       .then(res => {
+        logger.info("User list: " + JSON.stringify(res));
         return cb(null, responseObj(res, null));
       })
       .catch(err => {

@@ -24,6 +24,11 @@ function genericInputValidation(event) {
   if (!event.method) {
     throw (errorHandlerModule.throwInputValidationError("Method is missing."));
   }
+
+  if(!event.principalId) {
+    throw (errorHandlerModule.throwUnauthorizedError("Unauthorized."));
+  }
+
 }
 
 module.exports = {
