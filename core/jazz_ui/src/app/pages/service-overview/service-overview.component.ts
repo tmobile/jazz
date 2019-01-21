@@ -4,18 +4,35 @@
  * @author
  */
 
-import { Component, OnInit, Input, Output, EventEmitter, ViewChild } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  Output,
+  EventEmitter,
+  ViewChild,
+} from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
+import {
+  RequestService,
+  DataCacheService,
+  MessageService,
+  AuthenticationService,
+} from '../../core/services/index';
 import { ToasterService } from 'angular2-toaster';
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { Subscription } from 'rxjs/Subscription';
-import { ServiceDetailComponent } from '../service-detail/service-detail.component'
+import { ServiceDetailComponent } from '../service-detail/service-detail.component';
 import { environment } from './../../../environments/environment';
 import { environment as env_internal } from './../../../environments/environment.internal';
 import { environment as env_oss } from './../../../environments/environment.oss';
-import { ServiceFormData, RateExpression, CronObject, EventExpression } from './../../secondary-components/create-service/service-form-data';
+import {
+  ServiceFormData,
+  RateExpression,
+  CronObject,
+  EventExpression,
+} from './../../secondary-components/create-service/service-form-data';
 import { CronParserService } from '../../core/helpers';
 
 declare var $: any;
@@ -24,9 +41,11 @@ declare var $: any;
   selector: 'service-overview',
   templateUrl: './service-overview.component.html',
   providers: [RequestService, MessageService],
-  styleUrls: ['../service-detail/service-detail.component.scss', './service-overview.component.scss']
+  styleUrls: [
+    '../service-detail/service-detail.component.scss',
+    './service-overview.component.scss',
+  ],
 })
-
 export class ServiceOverviewComponent implements OnInit {
   @ViewChild('env') envComponent;
 
@@ -40,7 +59,7 @@ export class ServiceOverviewComponent implements OnInit {
   private subscription: any;
 
   multiENV: boolean = true;
-  list_env = []
+  list_env = [];
   list_inactive_env = [];
   copyLink: string = 'Copy Link';
   disp_edit: boolean = true;
@@ -69,11 +88,11 @@ export class ServiceOverviewComponent implements OnInit {
   ErrEnv: boolean = false;
   accounts = env_internal.urls.accounts;
   regions = env_internal.urls.regions;
-  errMessage = ''
+  errMessage = '';
   tags_temp: string = '';
   desc_temp: string = '';
-  bitbucketRepo: string = "";
-  repositorylink: string = "";
+  bitbucketRepo: string = '';
+  repositorylink: string = '';
   islink: boolean = false;
   showCancel: boolean = false;
   private toastmessage: any = '';
@@ -117,7 +136,7 @@ export class ServiceOverviewComponent implements OnInit {
   envList = ['prod', 'stg'];
   friendlist = ['prod', 'stg'];
   errorChecked: boolean = true;
-  errorInclude: any = "";
+  errorInclude: any = '';
   json: any = {};
   errorcase: boolean = false;
   Nerrorcase: boolean = true;
@@ -136,11 +155,24 @@ export class ServiceOverviewComponent implements OnInit {
   isPUTLoading: boolean = false;
   PutPayload: any;
   isPayloadAvailable: boolean = false;
-  selected: string = "Minutes";
+  selected: string = 'Minutes';
   eventSchedule: string = 'fixedRate';
-  cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
-  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
-  eventExpression = new EventExpression("awsEventsNone", undefined, undefined, undefined, undefined);
+  cronObj = new CronObject('0/5', '*', '*', '*', '?', '*');
+  rateExpression = new RateExpression(
+    undefined,
+    undefined,
+    'none',
+    '5',
+    this.selected,
+    ''
+  );
+  eventExpression = new EventExpression(
+    'awsEventsNone',
+    undefined,
+    undefined,
+    undefined,
+    undefined
+  );
   viewMode: boolean = true;
   cronFieldValidity: any;
   showGeneralField: boolean = false;
@@ -181,10 +213,10 @@ export class ServiceOverviewComponent implements OnInit {
     element = document.getElementById(id);
     element.select();
     try {
-      document.execCommand("copy");
-      this.copyLink = "Link Copied";
+      document.execCommand('copy');
+      this.copyLink = 'Link Copied';
       setTimeout(() => {
-        this.copyLink = "Copy Link";
+        this.copyLink = 'Copy Link';
       }, 3000);
     } finally {
       document.getSelection().removeAllRanges;
@@ -192,16 +224,13 @@ export class ServiceOverviewComponent implements OnInit {
   }
   openLink(link) {
     if (link) {
-      window.open(link, "_blank");
-
+      window.open(link, '_blank');
     }
   }
 
   stageClicked(stg) {
-
-    let url = '/services/' + this.service['id'] + '/' + stg
+    let url = '/services/' + this.service['id'] + '/' + stg;
     this.router.navigateByUrl(url);
-
   }
 
   ValidURL(str) {
@@ -213,12 +242,11 @@ export class ServiceOverviewComponent implements OnInit {
     }
   }
 
-  showService(s) {
-
-  }
+  showService(s) {}
 
   loadPlaceholders() {
-    if (this.service.tags != undefined) this.tags_temp = this.service.tags.join();
+    if (this.service.tags != undefined)
+      this.tags_temp = this.service.tags.join();
     this.desc_temp = this.service.description;
     this.email_temp = this.service.email;
     this.slackChannel_temp = this.service.slackChannel;
@@ -227,18 +255,17 @@ export class ServiceOverviewComponent implements OnInit {
   updateTags() {
     var payloag_tags;
     payloag_tags = this.tags_temp.split(',');
-    payloag_tags.forEach(function (item, index) {
+    payloag_tags.forEach(function(item, index) {
       payloag_tags[index] = item.trim();
     });
     this.update_payload.tags = payloag_tags;
-
   }
 
-  shouldSaveEnable(){
-    if(this.desc_temp != this.service.description)
+  shouldSaveEnable() {
+    if (this.desc_temp != this.service.description)
       this.generalAdvanceDisable = false;
-    if(!this.hide_slack_error){
-        this.generalAdvanceDisable = true;
+    if (!this.hide_slack_error) {
+      this.generalAdvanceDisable = true;
     }
   }
 
@@ -246,8 +273,8 @@ export class ServiceOverviewComponent implements OnInit {
     this.open_sidebar.emit(true);
   }
 
-  onEditGeneral(){
-      this.showGeneralField = true;
+  onEditGeneral() {
+    this.showGeneralField = true;
   }
 
   private isCronObjValid(cronObj) {
@@ -257,7 +284,7 @@ export class ServiceOverviewComponent implements OnInit {
       return true;
     }
     return false;
-  };
+  }
 
   generateExpression(rateExpression) {
     if (this.rateExpression !== undefined) {
@@ -275,27 +302,52 @@ export class ServiceOverviewComponent implements OnInit {
         this.rateExpression.error = 'Please enter a valid duration';
       } else {
         if (interval == 'Minutes') {
-          this.cronObj = new CronObject(('0/' + duration), '*', '*', '*', '?', '*');
+          this.cronObj = new CronObject(
+            '0/' + duration,
+            '*',
+            '*',
+            '*',
+            '?',
+            '*'
+          );
         } else if (interval == 'Hours') {
-          this.cronObj = new CronObject('0', ('0/' + duration), '*', '*', '?', '*');
+          this.cronObj = new CronObject(
+            '0',
+            '0/' + duration,
+            '*',
+            '*',
+            '?',
+            '*'
+          );
         } else if (interval == 'Days') {
-          this.cronObj = new CronObject('0', '0', ('1/' + duration), '*', '?', '*');
+          this.cronObj = new CronObject(
+            '0',
+            '0',
+            '1/' + duration,
+            '*',
+            '?',
+            '*'
+          );
         }
         this.rateExpression.isValid = true;
-        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+        this.rateExpression.cronStr = this.cronParserService.getCronExpression(
+          this.cronObj
+        );
       }
     } else if (rateExpression['type'] == 'cron') {
       var cronExpression;
       var cronObj = this.cronObj;
       var cronObjFields = this.cronParserService.cronObjFields;
-      var _isCronObjValid = this.isCronObjValid(cronObj)
+      var _isCronObjValid = this.isCronObjValid(cronObj);
 
       if (_isCronObjValid === false) {
         this.rateExpression.isValid = false;
         this.rateExpression.error = 'Please enter a valid cron expression';
       } else {
         this.rateExpression.isValid = true;
-        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+        this.rateExpression.cronStr = this.cronParserService.getCronExpression(
+          this.cronObj
+        );
       }
     }
 
@@ -319,14 +371,14 @@ export class ServiceOverviewComponent implements OnInit {
     this.showGeneralField = false;
     this.publicSelected = this.publicInitial;
     this.cdnConfigSelected = this.cdnConfigInitial;
-
   }
 
   onCompleteClick() {
     this.isPUTLoading = true;
-    this.http.put('/jazz/services/' + this.service.id, this.PutPayload)
+    this.http
+      .put('/jazz/services/' + this.service.id, this.PutPayload)
       .subscribe(
-        (Response) => {
+        Response => {
           // debugger
           this.isPUTLoading = false;
           this.showGeneralField = false;
@@ -334,24 +386,33 @@ export class ServiceOverviewComponent implements OnInit {
           this.isLoadingService = true;
           this.serviceDetail.onDataFetched(Response.data.updatedService);
           this.isLoadingService = false;
-          this.loadPlaceholders()
+          this.loadPlaceholders();
           this.disp_show = true;
           this.saveClicked = false;
-          let successMessage = this.toastmessage.successMessage(Response, "updateService");
-          this.toast_pop('success', "", "Data for service: " + this.service.name + " " + successMessage);
+          let successMessage = this.toastmessage.successMessage(
+            Response,
+            'updateService'
+          );
+          this.toast_pop(
+            'success',
+            '',
+            'Data for service: ' + this.service.name + ' ' + successMessage
+          );
         },
-        (Error) => {
+        Error => {
           this.isLoadingService = false;
           this.isPUTLoading = false;
           this.disp_show = true;
           this.saveClicked = false;
           this.edit_save = 'SAVE';
-          let errorMessage = this.toastmessage.errorMessage(Error, "updateService");
-          this.toast_pop('error', 'Oops!', errorMessage)
+          let errorMessage = this.toastmessage.errorMessage(
+            Error,
+            'updateService'
+          );
+          this.toast_pop('error', 'Oops!', errorMessage);
           // this.toast_pop('error','Oops!', "Data cannot be updated. Service Error.");
-        });
-
-
+        }
+      );
   }
 
   onAdvancedSaveClick() {
@@ -361,41 +422,54 @@ export class ServiceOverviewComponent implements OnInit {
 
     if (this.advancedSaveClicked) {
       if (this.rateExpression.type != 'none') {
-        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+        this.rateExpression.cronStr = this.cronParserService.getCronExpression(
+          this.cronObj
+        );
         if (this.rateExpression.cronStr == 'invalid') {
           return;
         } else if (this.rateExpression.cronStr !== undefined) {
-          payload["rateExpression"] = this.rateExpression.cronStr;
+          payload['rateExpression'] = this.rateExpression.cronStr;
         }
       }
 
-      if (this.eventExpression.type !== "awsEventsNone") {
+      if (this.eventExpression.type !== 'awsEventsNone') {
         var event = {};
-        event["type"] = this.eventExpression.type;
-        if (this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/" + this.eventExpression.dynamoTable;
-          event["action"] = "PutItem";
-        } else if (this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/" + this.eventExpression.streamARN;
-          event["action"] = "PutRecord";
-        } else if (this.eventExpression.type === "s3") {
-          event["source"] = this.eventExpression.S3BucketName;
-          event["action"] = "s3:ObjectCreated:*";
+        event['type'] = this.eventExpression.type;
+        if (this.eventExpression.type === 'dynamodb') {
+          event['source'] =
+            'arn:aws:dynamodb:' +
+            env_oss.aws.region +
+            ':' +
+            env_oss.aws.account_number +
+            ':table/' +
+            this.eventExpression.dynamoTable;
+          event['action'] = 'PutItem';
+        } else if (this.eventExpression.type === 'kinesis') {
+          event['source'] =
+            'arn:aws:kinesis:' +
+            env_oss.aws.region +
+            ':' +
+            env_oss.aws.account_number +
+            ':stream/' +
+            this.eventExpression.streamARN;
+          event['action'] = 'PutRecord';
+        } else if (this.eventExpression.type === 's3') {
+          event['source'] = this.eventExpression.S3BucketName;
+          event['action'] = 's3:ObjectCreated:*';
         }
-        payload["events"] = [];
-        payload["events"].push(event);
+        payload['events'] = [];
+        payload['events'].push(event);
       }
 
       if (this.publicSelected !== this.publicInitial) {
-        payload["is_public_endpoint"] = this.publicSelected;
+        payload['is_public_endpoint'] = this.publicSelected;
       }
       if (this.cdnConfigSelected !== this.cdnConfigInitial) {
-        payload["create_cloudfront_url"] = this.cdnConfigSelected;
+        payload['create_cloudfront_url'] = this.cdnConfigSelected;
       }
-
     }
     this.PutPayload = payload;
-    if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
+    if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true;
   }
 
   onSaveClick() {
@@ -405,17 +479,14 @@ export class ServiceOverviewComponent implements OnInit {
     let payload = {};
     if (this.saveClicked) {
       if (this.desc_temp != this.service.description) {
-        payload["description"] = this.desc_temp;
+        payload['description'] = this.desc_temp;
       }
       if (this.slackChannel_temp != this.service.slackChannel) {
-        payload["slack_channel"] = this.slackChannel_temp;
+        payload['slack_channel'] = this.slackChannel_temp;
       }
-
-
     }
     this.PutPayload = payload;
-    if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
-
+    if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true;
   }
 
   onCancelClick() {
@@ -479,11 +550,9 @@ export class ServiceOverviewComponent implements OnInit {
       var ele = document.getElementById(id);
       ele.classList.remove('endp-visible');
     }
-
   }
 
   checkSlackNameAvailability() {
-
     this.validateChannelName();
     return;
   }
@@ -491,64 +560,63 @@ export class ServiceOverviewComponent implements OnInit {
   check_email_valid() {
     var regex = /(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/;
 
-    if (this.email_temp == '' || this.email_temp == null || this.email_temp == undefined) {
+    if (
+      this.email_temp == '' ||
+      this.email_temp == null ||
+      this.email_temp == undefined
+    ) {
       this.hide_email_error = true;
       this.service.email = this.email_temp;
     } else {
-      if (!regex.test(this.email_temp)) //if it doesnt match with email pattern
-      {
+      if (!regex.test(this.email_temp)) {
+        //if it doesnt match with email pattern
         this.hide_email_error = false;
         this.email_valid = false;
       } else {
         this.hide_email_error = true;
 
         this.email_valid = true;
-
       }
     }
-
   }
 
   public validateChannelName() {
     this.isSlackAvailable = false;
     this.show_loader = true;
     if (this.slackChannel_temp == '' || this.slackChannel_temp == null) {
-
       this.hide_slack_error = true;
       this.show_loader = false;
     } else {
       if (this.subscription) {
         this.subscription.unsubscribe();
       }
-      this.subscription = this.http.get('/jazz/is-slack-channel-available?slack_channel=' + this.slackChannel_temp)
+      this.subscription = this.http
+        .get(
+          '/jazz/is-slack-channel-available?slack_channel=' +
+            this.slackChannel_temp
+        )
         .subscribe(
-          (Response) => {
+          Response => {
             let isAvailable = Response.data.is_available;
             this.isSlackAvailable = isAvailable;
-            if (isAvailable) //if valid
-            {
+            if (isAvailable) {
+              //if valid
               this.hide_slack_error = true;
-
             } else {
               this.hide_slack_error = false;
-
             }
             this.show_loader = false;
           },
-          (error) => {
+          error => {
             var err = error;
             // console.log(err);
             this.show_loader = false;
-
           }
-
         );
     }
-
   }
 
   disableSaveBtn() {
-
     if (!this.hide_slack_error) {
       return true;
     }
@@ -562,67 +630,106 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   slack_link() {
-
-    if (this.service.slackChannel == '' || this.service.slackChannel == undefined) {
+    if (
+      this.service.slackChannel == '' ||
+      this.service.slackChannel == undefined
+    ) {
       //do nothing
     } else {
-      this.slackChannel_link = env_internal.urls.slack_messages + this.service.slackChannel;
+      this.slackChannel_link =
+        env_internal.urls.slack_messages + this.service.slackChannel;
       this.openLink(this.slackChannel_link);
     }
   }
 
   check_empty_fields() {
-    if (this.service.description == undefined || this.service.description == null || this.service.description == '') {
+    if (
+      this.service.description == undefined ||
+      this.service.description == null ||
+      this.service.description == ''
+    ) {
       this.description_empty = true;
     } else {
       this.description_empty = false;
     }
-    if (this.service.approvers == undefined || this.service.approvers == null || this.service.approvers == '') {
+    if (
+      this.service.approvers == undefined ||
+      this.service.approvers == null ||
+      this.service.approvers == ''
+    ) {
       this.approvers_empty = false;
     }
-    if (this.service.domain == undefined || this.service.domain == null || this.service.domain == '') {
+    if (
+      this.service.domain == undefined ||
+      this.service.domain == null ||
+      this.service.domain == ''
+    ) {
       this.domain_empty = true;
     }
-    if (this.service.serviceType == undefined || this.service.serviceType == null || this.service.serviceType == '') {
+    if (
+      this.service.serviceType == undefined ||
+      this.service.serviceType == null ||
+      this.service.serviceType == ''
+    ) {
       this.serviceType_empty = true;
     }
-    if (this.service.email == undefined || this.service.email == null || this.service.email == '') {
+    if (
+      this.service.email == undefined ||
+      this.service.email == null ||
+      this.service.email == ''
+    ) {
       this.email_empty = true;
     } else {
       this.email_empty = false;
-      this.email_temp = this.service.email
+      this.email_temp = this.service.email;
     }
-    if (this.service.slackChannel == undefined || this.service.slackChannel == null || this.service.slackChannel == '') {
+    if (
+      this.service.slackChannel == undefined ||
+      this.service.slackChannel == null ||
+      this.service.slackChannel == ''
+    ) {
       this.slackChannel_empty = true;
     } else {
       this.slackChannel_empty = false;
-      this.slackChannel_temp = this.service.slackChannel
+      this.slackChannel_temp = this.service.slackChannel;
     }
-    if (this.service.repository == undefined || this.service.repository == null || this.service.repository == '') {
+    if (
+      this.service.repository == undefined ||
+      this.service.repository == null ||
+      this.service.repository == ''
+    ) {
       this.repository_empty = true;
     }
-    if (this.service.runtime == undefined || this.service.runtime == null || this.service.runtime == '') {
+    if (
+      this.service.runtime == undefined ||
+      this.service.runtime == null ||
+      this.service.runtime == ''
+    ) {
       this.runtime_empty = true;
     } else {
       this.runtime_empty = false;
     }
-    if (this.service.tags == undefined || this.service.tags == null || this.service.tags == '') {
+    if (
+      this.service.tags == undefined ||
+      this.service.tags == null ||
+      this.service.tags == ''
+    ) {
       this.tags_empty = true;
     } else {
       this.tags_empty = false;
     }
   }
 
-
   serviceCreationStatus() {
     this.statusprogress = 20;
     this.creating = true;
     this.deleting = false;
     this.intervalSubscription = Observable.interval(5000)
-      .switchMap((response) => this.http.get('/jazz/request-status?id=' + this.service_request_id))
+      .switchMap(response =>
+        this.http.get('/jazz/request-status?id=' + this.service_request_id)
+      )
       .subscribe(
         response => {
-
           let dataResponse = <any>{};
           dataResponse.list = response;
           var respStatus = dataResponse.list.data;
@@ -634,13 +741,15 @@ export class ServiceOverviewComponent implements OnInit {
             this.serviceStatusValidate = true;
             this.statusInfo = 'Wrapping things up';
             this.statusprogress = 100;
-            localStorage.removeItem('request_id' + "_" + this.service.name + "_" + this.service.domain);
+            localStorage.removeItem(
+              'request_id' + '_' + this.service.name + '_' + this.service.domain
+            );
             // alert('last stage');
-            this.http.get('/jazz/services/' + this.service.id).subscribe(
-              (response) => {
+            this.http
+              .get('/jazz/services/' + this.service.id)
+              .subscribe(response => {
                 this.serviceDetail.onDataFetched(response.data);
-              }
-            )
+              });
             this.intervalSubscription.unsubscribe();
             setTimeout(() => {
               this.service_error = false;
@@ -658,43 +767,59 @@ export class ServiceOverviewComponent implements OnInit {
             setTimeout(() => {
               this.service_error = false;
             }, 5000);
-
           } else {
             this.statusCompleted = false;
             respStatus.events.forEach(element => {
-              if (element.name === 'TRIGGER_FOLDERINDEX' && element.status === 'COMPLETED') {
+              if (
+                element.name === 'TRIGGER_FOLDERINDEX' &&
+                element.status === 'COMPLETED'
+              ) {
                 this.serviceStatusCompleted = true;
                 this.statusInfo = 'Wrapping things up';
                 this.statusprogress = 100;
-                localStorage.removeItem('request_id' + this.service.name + this.service.domain);
-              } else if (element.name === 'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO' && element.status === 'COMPLETED') {
+                localStorage.removeItem(
+                  'request_id' + this.service.name + this.service.domain
+                );
+              } else if (
+                element.name === 'ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO' &&
+                element.status === 'COMPLETED'
+              ) {
                 this.serviceStatusPermission = true;
                 this.statusInfo = 'Adding required permissions';
                 this.statusprogress = 85;
-              } else if (element.name === 'PUSH_TEMPLATE_TO_SERVICE_REPO' && element.status === 'COMPLETED') {
+              } else if (
+                element.name === 'PUSH_TEMPLATE_TO_SERVICE_REPO' &&
+                element.status === 'COMPLETED'
+              ) {
                 this.serviceStatusRepo = true;
                 this.statusInfo = 'Getting your code ready';
                 this.statusprogress = 60;
-              } else if (element.name === 'VALIDATE_INPUT' && element.status === 'COMPLETED') {
+              } else if (
+                element.name === 'VALIDATE_INPUT' &&
+                element.status === 'COMPLETED'
+              ) {
                 this.serviceStatusValidate = true;
                 this.statusInfo = 'Validating your request';
                 this.statusprogress = 35;
-              } else if (element.name === 'CALL_ONBOARDING_WORKFLOW' && element.status === 'COMPLETED') {
+              } else if (
+                element.name === 'CALL_ONBOARDING_WORKFLOW' &&
+                element.status === 'COMPLETED'
+              ) {
                 this.serviceStatusStarted = true;
                 this.statusInfo = 'Service Creation started';
                 this.statusprogress = 20;
               }
             });
           }
-          document.getElementById('current-status-val').setAttribute("style", "width:" + this.statusprogress + '%');
-
+          document
+            .getElementById('current-status-val')
+            .setAttribute('style', 'width:' + this.statusprogress + '%');
         },
         error => {
-
           this.service_error = false;
           this.serviceCreationStatus();
         }
-      )
+      );
   }
 
   modifyEnvArr() {
@@ -704,8 +829,14 @@ export class ServiceOverviewComponent implements OnInit {
 
     if (this.environ_arr != undefined) {
       for (var i = 0; i < this.environ_arr.length; i++) {
-        this.environ_arr[i].status = this.environ_arr[i].status.replace("_", " ");
-        if (this.environ_arr[i].logical_id == 'prd' || this.environ_arr[i].logical_id == 'prod') {
+        this.environ_arr[i].status = this.environ_arr[i].status.replace(
+          '_',
+          ' '
+        );
+        if (
+          this.environ_arr[i].logical_id == 'prd' ||
+          this.environ_arr[i].logical_id == 'prod'
+        ) {
           this.prodEnv = this.environ_arr[i];
           continue;
         }
@@ -727,8 +858,8 @@ export class ServiceOverviewComponent implements OnInit {
       }
       this.list = {
         env: this.envList,
-        friendly_name: this.friendlist
-      }
+        friendly_name: this.friendlist,
+      };
     }
 
     if (this.Environments.length == 0) {
@@ -742,8 +873,6 @@ export class ServiceOverviewComponent implements OnInit {
     }
 
     this.cache.set('envList', this.list);
-
-
   }
 
   sortEnvArr() {
@@ -755,72 +884,79 @@ export class ServiceOverviewComponent implements OnInit {
         this.list_env[j] = this.environ_arr[i];
 
         j++;
-
       }
       if (this.environ_arr[i].status == 'inactive') {
-
         this.list_inactive_env[k] = this.environ_arr[i];
         k++;
-
       }
-
     }
     this.environ_arr = this.list_env.slice(0, this.list_env.length);
 
     this.environ_arr.push.apply(this.environ_arr, this.list_inactive_env);
-
-
-
-
   }
 
   getenvData() {
     this.isenvLoading = true;
     this.ErrEnv = false;
     if (this.service == undefined) {
-      return
+      return;
     }
-    this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name).subscribe(
-      response => {
+    this.http
+      .get(
+        '/jazz/environments?domain=' +
+          this.service.domain +
+          '&service=' +
+          this.service.name
+      )
+      .subscribe(
+        response => {
+          this.isenvLoading = false;
+          this.environ_arr = response.data.environment;
+          if (this.environ_arr != undefined)
+            if (this.environ_arr.length == 0 || response.data == '') {
+              this.noEnv = true;
+            }
+          this.ErrEnv = false;
 
-        this.isenvLoading = false;
-        this.environ_arr = response.data.environment;
-        if (this.environ_arr != undefined)
-          if (this.environ_arr.length == 0 || response.data == '') {
-            this.noEnv = true;
-          }
-        this.ErrEnv = false;
+          this.modifyEnvArr();
+        },
+        err => {
+          this.isenvLoading = false;
 
-
-        this.modifyEnvArr();
-
-      },
-      err => {
-        this.isenvLoading = false;
-
-        console.log('error', err);
-        this.ErrEnv = true;
-        if (err.status == 404) this.err404 = true;
-        this.errMessage = "Something went wrong while fetching your data";
-        this.errMessage = this.toastmessage.errorMessage(err, "environment");
-        var payload = {
-          "domain": +this.service.domain,
-          "service": this.service.name
+          console.log('error', err);
+          this.ErrEnv = true;
+          if (err.status == 404) this.err404 = true;
+          this.errMessage = 'Something went wrong while fetching your data';
+          this.errMessage = this.toastmessage.errorMessage(err, 'environment');
+          var payload = {
+            domain: +this.service.domain,
+            service: this.service.name,
+          };
+          this.getTime();
+          this.errorURL = window.location.href;
+          this.errorAPI = environment.baseurl + '/jazz/environments';
+          this.errorRequest = payload;
+          this.errorUser = this.authenticationservice.getUserId();
+          this.errorResponse = JSON.parse(err._body);
         }
-        this.getTime();
-        this.errorURL = window.location.href;
-        this.errorAPI = environment.baseurl + "/jazz/environments";
-        this.errorRequest = payload;
-        this.errorUser = this.authenticationservice.getUserId();
-        this.errorResponse = JSON.parse(err._body);
-
-      })
-  };
+      );
+  }
 
   getTime() {
     var now = new Date();
-    this.errorTime = ((now.getMonth() + 1) + '/' + (now.getDate()) + '/' + now.getFullYear() + " " + now.getHours() + ':' +
-      ((now.getMinutes() < 10) ? ("0" + now.getMinutes()) : (now.getMinutes())) + ':' + ((now.getSeconds() < 10) ? ("0" + now.getSeconds()) : (now.getSeconds())));
+    this.errorTime =
+      now.getMonth() +
+      1 +
+      '/' +
+      now.getDate() +
+      '/' +
+      now.getFullYear() +
+      ' ' +
+      now.getHours() +
+      ':' +
+      (now.getMinutes() < 10 ? '0' + now.getMinutes() : now.getMinutes()) +
+      ':' +
+      (now.getSeconds() < 10 ? '0' + now.getSeconds() : now.getSeconds());
   }
 
   feedbackRes: boolean = false;
@@ -831,7 +967,7 @@ export class ServiceOverviewComponent implements OnInit {
   isFeedback: boolean = false;
   toast: any;
   model: any = {
-    userFeedback: ''
+    userFeedback: '',
   };
   buttonText: string = 'SUBMIT';
   isLoading: boolean = false;
@@ -839,16 +975,15 @@ export class ServiceOverviewComponent implements OnInit {
   djson: any = {};
 
   reportIssue() {
-
     this.json = {
-      "user_reported_issue": this.model.userFeedback,
-      "API": this.errorAPI,
-      "REQUEST": this.errorRequest,
-      "RESPONSE": this.errorResponse,
-      "URL": this.errorURL,
-      "TIME OF ERROR": this.errorTime,
-      "LOGGED IN USER": this.errorUser
-    }
+      user_reported_issue: this.model.userFeedback,
+      API: this.errorAPI,
+      REQUEST: this.errorRequest,
+      RESPONSE: this.errorResponse,
+      URL: this.errorURL,
+      'TIME OF ERROR': this.errorTime,
+      'LOGGED IN USER': this.errorUser,
+    };
 
     this.openModal = true;
     this.errorChecked = true;
@@ -870,23 +1005,31 @@ export class ServiceOverviewComponent implements OnInit {
   reportEmail: string;
 
   mailTo() {
-    location.href = 'mailto:' + this.reportEmail + '?subject=Jazz : Issue reported by' + " " + this.authenticationservice.getUserId() + '&body=' + this.sjson;
+    location.href =
+      'mailto:' +
+      this.reportEmail +
+      '?subject=Jazz : Issue reported by' +
+      ' ' +
+      this.authenticationservice.getUserId() +
+      '&body=' +
+      this.sjson;
   }
-  errorIncluded() { }
+  errorIncluded() {}
 
   submitFeedback(action) {
-
-    this.errorChecked = (<HTMLInputElement>document.getElementById("checkbox-slack")).checked;
+    this.errorChecked = (<HTMLInputElement>(
+      document.getElementById('checkbox-slack')
+    )).checked;
     if (this.errorChecked == true) {
       this.json = {
-        "user_reported_issue": this.model.userFeedback,
-        "API": this.errorAPI,
-        "REQUEST": this.errorRequest,
-        "RESPONSE": this.errorResponse,
-        "URL": this.errorURL,
-        "TIME OF ERROR": this.errorTime,
-        "LOGGED IN USER": this.errorUser
-      }
+        user_reported_issue: this.model.userFeedback,
+        API: this.errorAPI,
+        REQUEST: this.errorRequest,
+        RESPONSE: this.errorResponse,
+        URL: this.errorURL,
+        'TIME OF ERROR': this.errorTime,
+        'LOGGED IN USER': this.errorUser,
+      };
     } else {
       this.json = this.model.userFeedback;
     }
@@ -900,13 +1043,14 @@ export class ServiceOverviewComponent implements OnInit {
     }
 
     var payload = {
-      "title": "Jazz: Issue reported by " + this.authenticationservice.getUserId(),
-      "project_id": env_internal.urls.internal_acronym,
-      "priority": "P4",
-      "description": this.json,
-      "created_by": this.authenticationservice.getUserId(),
-      "issue_type": "bug"
-    }
+      title:
+        'Jazz: Issue reported by ' + this.authenticationservice.getUserId(),
+      project_id: env_internal.urls.internal_acronym,
+      priority: 'P4',
+      description: this.json,
+      created_by: this.authenticationservice.getUserId(),
+      issue_type: 'bug',
+    };
     this.http.post('/jazz/jira-issues', payload).subscribe(
       response => {
         this.buttonText = 'DONE';
@@ -915,8 +1059,9 @@ export class ServiceOverviewComponent implements OnInit {
         var respData = response.data;
         this.feedbackRes = true;
         this.feedbackResSuccess = true;
-        if (respData != undefined && respData != null && respData != "") {
-          this.feedbackMsg = "Thanks for reporting the issue. We’ll use your input to improve Jazz experience for everyone!";
+        if (respData != undefined && respData != null && respData != '') {
+          this.feedbackMsg =
+            'Thanks for reporting the issue. We’ll use your input to improve Jazz experience for everyone!';
         }
       },
       error => {
@@ -929,7 +1074,7 @@ export class ServiceOverviewComponent implements OnInit {
     );
   }
 
-  frndload(event) { }
+  frndload(event) {}
 
   is_multi_env: boolean = false;
   SlackEnabled: boolean = false;
@@ -937,35 +1082,45 @@ export class ServiceOverviewComponent implements OnInit {
   ngOnInit() {
     if (env_oss.slack_support) this.SlackEnabled = true;
     if (environment.envName == 'oss')
-      if (!environment.multi_env)
-        this.multiENV = false;
+      if (!environment.multi_env) this.multiENV = false;
     if (environment.multi_env) this.is_multi_env = true;
     if (environment.envName == 'oss') this.internal_build = false;
 
     this.service.accounts = env_internal.urls.accounts;
     this.service.regions = env_internal.urls.regions;
     this.createloader = true;
-    if (this.service.status == "deletion completed" || this.service.status == "deletion started") {
+    if (
+      this.service.status == 'deletion completed' ||
+      this.service.status == 'deletion started'
+    ) {
       this.showcanvas = true;
     } else {
       this.showcanvas = false;
     }
     this.showCancel = false;
 
-    if (this.service.status == 'creation started' || this.service.status == 'deletion started') {
+    if (
+      this.service.status == 'creation started' ||
+      this.service.status == 'deletion started'
+    ) {
       try {
-        this.reqJson = JSON.parse(localStorage.getItem('request_id' + "_" + this.service.name + "_" + this.service.domain));
+        this.reqJson = JSON.parse(
+          localStorage.getItem(
+            'request_id' + '_' + this.service.name + '_' + this.service.domain
+          )
+        );
 
         this.service_request_id = this.reqJson.request_id;
       } catch (e) {
-        console.log(e)
+        console.log(e);
       }
-
     } else {
-      localStorage.removeItem('request_id' + "_" + this.service.name + "_" + this.service.domain);
+      localStorage.removeItem(
+        'request_id' + '_' + this.service.name + '_' + this.service.domain
+      );
     }
     this.creation_status = this.service.status;
-    this.animatingDots = "...";
+    this.animatingDots = '...';
     this.testingStatus();
   }
 
@@ -973,25 +1128,20 @@ export class ServiceOverviewComponent implements OnInit {
     setInterval(() => {
       this.onload.emit(this.service.status);
     }, 500);
-
   }
   transform_env_oss(data) {
-    var arrEnv = data.data.environment
+    var arrEnv = data.data.environment;
     if (environment.multi_env) {
       for (var i = 0; i < arrEnv.length; i++) {
         arrEnv[i].status = arrEnv[i].status.replace('_', ' ');
-        if (arrEnv[i].logical_id == 'prod')
-          this.prodEnv = arrEnv[i];
-        else
-          this.Environments.push(arrEnv[i]);
+        if (arrEnv[i].logical_id == 'prod') this.prodEnv = arrEnv[i];
+        else this.Environments.push(arrEnv[i]);
       }
     } else {
       for (var i = 0; i < arrEnv.length; i++) {
         arrEnv[i].status = arrEnv[i].status.replace('_', ' ');
-        if (arrEnv[i].logical_id == 'prod')
-          this.prodEnv = arrEnv[i];
-        else
-          this.stgEnv = arrEnv[i];
+        if (arrEnv[i].logical_id == 'prod') this.prodEnv = arrEnv[i];
+        else this.stgEnv = arrEnv[i];
       }
     }
     // arrEnv[0].status.replace("_"," ");
@@ -1000,7 +1150,6 @@ export class ServiceOverviewComponent implements OnInit {
   refresh_env() {
     this.envComponent.refresh();
   }
-
 
   internal_build: boolean = true;
 
@@ -1018,60 +1167,75 @@ export class ServiceOverviewComponent implements OnInit {
       this.islink = this.ValidURL(this.service.repository);
       if (this.islink) {
         if (this.internal_build) {
-          this.bitbucketRepo = "View on Bitbucket";
-
+          this.bitbucketRepo = 'View on Bitbucket';
         } else {
-          this.bitbucketRepo = "Git Repo";
-
+          this.bitbucketRepo = 'Git Repo';
         }
         this.repositorylink = this.service.repository;
-      } else if (this.service.repository === "[Archived]") {
-        this.bitbucketRepo = "Archived";
-        this.repositorylink = "";
+      } else if (this.service.repository === '[Archived]') {
+        this.bitbucketRepo = 'Archived';
+        this.repositorylink = '';
       }
     }, 100);
 
-
-    if (this.service.status == 'creation started' || this.service.status == 'deletion started') {
+    if (
+      this.service.status == 'creation started' ||
+      this.service.status == 'deletion started'
+    ) {
       try {
-        this.reqJson = JSON.parse(localStorage.getItem('request_id' + "_" + this.service.name + "_" + this.service.domain));
+        this.reqJson = JSON.parse(
+          localStorage.getItem(
+            'request_id' + '_' + this.service.name + '_' + this.service.domain
+          )
+        );
 
         this.service_request_id = this.reqJson.request_id;
       } catch (e) {
-        console.log(e)
+        console.log(e);
       }
-
     } else {
-      localStorage.removeItem('request_id' + "_" + this.service.name + "_" + this.service.domain);
+      localStorage.removeItem(
+        'request_id' + '_' + this.service.name + '_' + this.service.domain
+      );
     }
     this.creation_status = this.service.status;
-    this.animatingDots = "...";
+    this.animatingDots = '...';
     this.testingStatus();
 
     // request status api call
-    if (this.service.status === 'creation started' && !this.serviceStatusCompleted && this.service_request_id != undefined) {
+    if (
+      this.service.status === 'creation started' &&
+      !this.serviceStatusCompleted &&
+      this.service_request_id != undefined
+    ) {
       this.serviceCreationStatus();
-
-    } else if (this.service.status === 'deletion started' && !this.serviceStatusCompleted) {
+    } else if (
+      this.service.status === 'deletion started' &&
+      !this.serviceStatusCompleted
+    ) {
       this.serviceDeletionStatus();
     }
   }
 
   ngOnDestroy() {
     //unsubscribe  request status api call
-    if ((this.service.status === 'creation started' || this.service.status === 'deletion started') && this.intervalSubscription) {
+    if (
+      (this.service.status === 'creation started' ||
+        this.service.status === 'deletion started') &&
+      this.intervalSubscription
+    ) {
       this.intervalSubscription.unsubscribe();
     }
   }
 
-
   serviceDeletionStatus() {
-
     this.creating = false;
     this.deleting = true;
 
     this.intervalSubscription = Observable.interval(5000)
-      .switchMap((response) => this.http.get('/jazz/request-status?id=' + this.service_request_id))
+      .switchMap(response =>
+        this.http.get('/jazz/request-status?id=' + this.service_request_id)
+      )
       .subscribe(
         response => {
           this.createloader = false;
@@ -1086,8 +1250,10 @@ export class ServiceOverviewComponent implements OnInit {
             this.serviceStatusValidate = true;
             this.DelstatusInfo = 'Wrapping things up';
             this.statusprogress = 100;
-            this.service.status = "deletion completed";
-            localStorage.removeItem('request_id' + "_" + this.service.name + "_" + this.service.domain);
+            this.service.status = 'deletion completed';
+            localStorage.removeItem(
+              'request_id' + '_' + this.service.name + '_' + this.service.domain
+            );
             setTimeout(() => {
               this.service_error = false;
               this.router.navigateByUrl('services');
@@ -1103,46 +1269,71 @@ export class ServiceOverviewComponent implements OnInit {
             this.serviceStatusRepoD = true;
             this.serviceStatusValidateD = true;
             this.DelstatusInfo = 'Deletion failed';
-            this.service.status = "deletion failed";
+            this.service.status = 'deletion failed';
             setTimeout(() => {
               this.service_error = false;
             }, 5000);
           } else {
             this.statusCompleted = false;
             respStatus.events.forEach(element => {
-              if (element.name === 'DELETE_PROJECT' && element.status === 'COMPLETED') {
+              if (
+                element.name === 'DELETE_PROJECT' &&
+                element.status === 'COMPLETED'
+              ) {
                 this.serviceStatusPermission = true;
                 this.DelstatusInfo = 'Wrapping things up';
                 this.statusprogress = 100;
-                localStorage.removeItem('request_id' + this.service.name + this.service.domain);
-              } else if (element.name === 'BACKUP_PROJECT' && element.status === 'COMPLETED') {
+                localStorage.removeItem(
+                  'request_id' + this.service.name + this.service.domain
+                );
+              } else if (
+                element.name === 'BACKUP_PROJECT' &&
+                element.status === 'COMPLETED'
+              ) {
                 this.serviceStatusRepo = true;
                 this.DelstatusInfo = 'Finishing up';
-                8
+                8;
                 this.statusprogress = 81;
-              } else if ((element.name === 'UNDEPLOY_WEBSITE' && element.status === 'COMPLETED') && (this.service.serviceType == "website")) {
+              } else if (
+                element.name === 'UNDEPLOY_WEBSITE' &&
+                element.status === 'COMPLETED' &&
+                this.service.serviceType == 'website'
+              ) {
                 this.serviceStatusValidate = true;
                 this.DelstatusInfo = 'Backing up code';
                 this.statusprogress = 48;
-              } else if ((element.name === 'DELETE_API_DOC' && element.status === 'COMPLETED') && (this.service.serviceType == "api")) {
+              } else if (
+                element.name === 'DELETE_API_DOC' &&
+                element.status === 'COMPLETED' &&
+                this.service.serviceType == 'api'
+              ) {
                 this.serviceStatusValidate = true;
                 this.DelstatusInfo = 'Backing up code';
                 this.statusprogress = 48;
-              } else if ((element.name === 'UNDEPLOY_LAMBDA' && element.status === 'COMPLETED') && (this.service.serviceType == "function")) {
+              } else if (
+                element.name === 'UNDEPLOY_LAMBDA' &&
+                element.status === 'COMPLETED' &&
+                this.service.serviceType == 'function'
+              ) {
                 this.serviceStatusValidate = true;
                 this.DelstatusInfo = 'Backing up code';
                 this.statusprogress = 48;
-              } else if (element.name === 'CALL_DELETE_WORKFLOW' && element.status === 'COMPLETED') {
+              } else if (
+                element.name === 'CALL_DELETE_WORKFLOW' &&
+                element.status === 'COMPLETED'
+              ) {
                 this.serviceStatusStarted = true;
                 this.DelstatusInfo = 'Deleting assets';
                 this.statusprogress = 20;
               }
             });
           }
-          document.getElementById('current-status-val').setAttribute("style", "width:" + this.statusprogress + '%');
+          document
+            .getElementById('current-status-val')
+            .setAttribute('style', 'width:' + this.statusprogress + '%');
         },
         error => {
-          if (error.status == "404") {
+          if (error.status == '404') {
             this.statusCompleted = false;
             this.statusFailed = true;
             this.serviceStatusStarted = false;
@@ -1159,7 +1350,7 @@ export class ServiceOverviewComponent implements OnInit {
           this.intervalSubscription.unsubscribe();
           // this.serviceDeletionStatus();
         }
-      )
+      );
   }
 
   public goToAbout(hash) {
@@ -1238,17 +1429,16 @@ export class ServiceOverviewComponent implements OnInit {
     if (hash.key == 'ArrowDown') {
       this.focusindex++;
       if (this.focusindex > 0) {
-        var pinkElements = document.getElementsByClassName("pinkfocus")[0];
+        var pinkElements = document.getElementsByClassName('pinkfocus')[0];
         if (pinkElements == undefined) {
           this.focusindex = 0;
         }
       }
       if (this.focusindex > 2) {
         this.scrollList = {
-          'position': 'relative',
-          'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem'
+          position: 'relative',
+          top: '-' + (this.focusindex - 2) * 2.9 + 'rem',
         };
-
       }
     } else if (hash.key == 'ArrowUp') {
       if (this.focusindex > -1) {
@@ -1256,26 +1446,24 @@ export class ServiceOverviewComponent implements OnInit {
 
         if (this.focusindex > 1) {
           this.scrollList = {
-            'position': 'relative',
-            'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem'
+            position: 'relative',
+            top: '-' + (this.focusindex - 2) * 2.9 + 'rem',
           };
         }
       }
       if (this.focusindex == -1) {
         this.focusindex = -1;
-
-
       }
     } else if (hash.key == 'Enter' && this.focusindex > -1) {
       event.preventDefault();
-      var pinkElement = document.getElementsByClassName("pinkfocus")[0].children;
+      var pinkElement = document.getElementsByClassName('pinkfocus')[0]
+        .children;
 
       var approverObj = pinkElement[0].attributes[2].value;
 
       this.selectAccount(approverObj);
 
       this.focusindex = -1;
-
     } else {
       this.focusindex = -1;
     }
@@ -1285,17 +1473,16 @@ export class ServiceOverviewComponent implements OnInit {
     if (hash.key == 'ArrowDown') {
       this.focusindex++;
       if (this.focusindex > 0) {
-        var pinkElements = document.getElementsByClassName("pinkfocus2")[0];
+        var pinkElements = document.getElementsByClassName('pinkfocus2')[0];
         if (pinkElements == undefined) {
           this.focusindex = 0;
         }
       }
       if (this.focusindex > 2) {
         this.scrollList = {
-          'position': 'relative',
-          'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem'
+          position: 'relative',
+          top: '-' + (this.focusindex - 2) * 2.9 + 'rem',
         };
-
       }
     } else if (hash.key == 'ArrowUp') {
       if (this.focusindex > -1) {
@@ -1303,26 +1490,24 @@ export class ServiceOverviewComponent implements OnInit {
 
         if (this.focusindex > 1) {
           this.scrollList = {
-            'position': 'relative',
-            'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem'
+            position: 'relative',
+            top: '-' + (this.focusindex - 2) * 2.9 + 'rem',
           };
         }
       }
       if (this.focusindex == -1) {
         this.focusindex = -1;
-
-
       }
     } else if (hash.key == 'Enter' && this.focusindex > -1) {
       event.preventDefault();
-      var pinkElement = document.getElementsByClassName("pinkfocus2")[0].children;
+      var pinkElement = document.getElementsByClassName('pinkfocus2')[0]
+        .children;
 
       var approverObj = pinkElement[0].attributes[2].value;
 
       this.selectRegion(approverObj);
 
       this.focusindex = -1;
-
     } else {
       this.focusindex = -1;
     }
