@@ -37,12 +37,10 @@ describe('jazz_admin', function () {
         return JSON.stringify(responseObj);
       }
     };
-
     err = {
       "errorType": "foo",
       "message": "bar"
     };
-
     callbackObj = {
       "callback": callback
     };
@@ -304,8 +302,8 @@ describe('jazz_admin', function () {
         "body": {}
       };
 
-      context = awsContext();
       config = configObj.getConfig(event, context);
+      context = awsContext();
     });
 
     it("should indicate internal server error when admin configuration is not fetched", () => {
@@ -353,16 +351,13 @@ describe('jazz_admin', function () {
     });
 
     it("should return success response on POST while giving valid input", () => {
-      event = {
-        "stage": "test",
-        "method": "POST",
-        "principalId": "test@test.com",
-        "body": {
-          "ABC.abc": {
-            "hdjshkjs": "sdhj"
-          }
+      event.method = "POST";
+      event.body = {
+        "ABC.abc": {
+          "hdjshkjs": "sdhj"
         }
       };
+
       let res = { "message": "success" }
       let configs = {
         "CRED_ID": "jazzaws",
@@ -456,14 +451,10 @@ describe('jazz_admin', function () {
     });
 
     it("should return success response on update while giving valid input", () => {
-      event = {
-        "stage": "test",
-        "method": "PUT",
-        "principalId": "test@test.com",
-        "body": {
-          "ABC.abc": {
-            "hdjshkjs": "sdhj"
-          }
+      event.method = "PUT";
+      event.body = {
+        "ABC.abc": {
+          "hdjshkjs": "sdhj"
         }
       };
       let res = { "message": "success" }
@@ -559,12 +550,8 @@ describe('jazz_admin', function () {
     });
 
     it("should return success response on DELETE while giving valid input", () => {
-      event = {
-        "stage": "test",
-        "method": "DELETE",
-        "principalId": "test@test.com",
-        "body": ["ABC.abc"]
-      }
+      event.method = "DELETE";
+      event.body = ["ABC.abc"];
 
       let res = { "message": "success" }
       let configs = {
