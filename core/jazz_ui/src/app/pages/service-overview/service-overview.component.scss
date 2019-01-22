@@ -363,7 +363,7 @@ section:focus {
 
 .email-err-msg {
     color: red;
-    margin-left: 155px;
+    margin-left: calc(14em - 7px);
     margin-top: -18px;
     font-size: 0.9rem;
 }
@@ -1028,7 +1028,7 @@ section:focus {
     button.btn-primary:active {
         background-color: #ed008c !important;
         color: #fff !important;
-        border: 1px solid #ed008c !important;
+        border: 1px solid #ffff !important;
     }
 }
 
@@ -1300,6 +1300,7 @@ details {
 btn-jazz-primary {
     /deep/button.btn-primary {
         padding: 5px 23px;
+        border: 1px solid #ed008c;
     }
 }
 
@@ -1329,6 +1330,8 @@ btn-jazz-primary {
 }
 
 .slack-relative {
+    display: flex;
+    width: 23%;
     position: relative;
     input {
         width: 150%;
@@ -1399,7 +1402,8 @@ btn-jazz-primary {
 }
 
 .edit-div {
-    padding-right: 10px;
+    padding-right: 1em;
+    cursor: pointer;
 }
 
 .fullWidth {

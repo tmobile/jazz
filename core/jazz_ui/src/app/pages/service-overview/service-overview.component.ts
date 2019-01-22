@@ -237,6 +237,8 @@ export class ServiceOverviewComponent implements OnInit {
   shouldSaveEnable(){
     if(this.desc_temp != this.service.description)
       this.generalAdvanceDisable = false;
+    else
+      this.generalAdvanceDisable = true;
     if(!this.hide_slack_error){
         this.generalAdvanceDisable = true;
     }
@@ -418,10 +420,18 @@ export class ServiceOverviewComponent implements OnInit {
 
   }
 
+  descriptionChange(){
+    this.update_payload.description = this.desc_temp;
+    this.shouldSaveEnable()
+  }
+
   onCancelClick() {
     this.showGeneralField = false;
+    this.generalAdvanceDisable = true;
     this.update_payload = {};
     this.disp_show = true;
+    this.slackChannel_temp = this.service.slackChannel;
+    this.desc_temp = this.service.description;
     this.disp_show2 = true;
     this.edit_save = 'EDIT';
     this.showCancel = false;
@@ -461,6 +471,11 @@ export class ServiceOverviewComponent implements OnInit {
     return this.eventExpression.type === 's3';
   }
 
+  changeSlack() {
+    this.generalAdvanceDisable = true;
+    this.update_payload.slack_channel = this.slackChannel_temp;
+  }
+
   toast_pop(error, oops, errorMessage) {
     var tst = document.getElementById('toast-container');
     tst.classList.add('toaster-anim');
@@ -483,7 +498,7 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   checkSlackNameAvailability() {
-
+    this.advancedSaveClicked = false;
     this.validateChannelName();
     return;
   }
@@ -533,6 +548,7 @@ export class ServiceOverviewComponent implements OnInit {
               this.hide_slack_error = false;
 
             }
+            this.shouldSaveEnable();
             this.show_loader = false;
           },
           (error) => {

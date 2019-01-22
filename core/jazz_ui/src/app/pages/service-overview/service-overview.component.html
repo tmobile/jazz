@@ -113,12 +113,12 @@
          <div class="metadata-heading" [ngClass]="showGeneralField ? 'update-color' : ''">
             General
             <div class="edit-div" *ngIf="!showGeneralField" (click)="onEditGeneral()">
-              <img class="pre-image" src="/assets/erser/icon-edit.png" />
+              <img class="pre-image" src="/assets/erser/icon-edit.svg" />
             </div>
               <div *ngIf="showGeneralField" class="down-btn-wrap">
               <div class="custom-save-btn-wrap">
                 <btn-jazz-primary class="save-btn-wrap" [disablePrimaryBtn]="generalAdvanceDisable"
-                  text="SAVE" (click)="onSaveClick()"></btn-jazz-primary>
+                  text="SUBMIT" (click)="onSaveClick()"></btn-jazz-primary>
                 <a (click)="onCancelClick()">CANCEL</a>
               </div>
             </div>
@@ -144,7 +144,7 @@
           <li>
             <div class="det-label">Description</div>
             <div *ngIf='!showGeneralField' class="det-value wrap" [ngClass]="{PlaceHolder:description_empty}">{{service.description || 'Give details for your service'}}</div>
-            <textarea *ngIf='showGeneralField' [(ngModel)]="desc_temp" (ngModelChange)='update_payload.description=desc_temp; shouldSaveEnable()' class="det-value-input-txtarea"
+            <textarea *ngIf='showGeneralField' [(ngModel)]="desc_temp" (ngModelChange)='descriptionChange()' class="det-value-input-txtarea"
               placeholder="Give the details for your service"></textarea>
           </li>
             <li>
@@ -159,7 +159,7 @@
             <div class='det-label'>Slack</div>
             <div *ngIf='!showGeneralField' class='det-value' [class.PlaceHolder]="slackChannel_empty">{{service.slackChannel || 'Feeling collaborative? Add it to slack'}}</div>
             <div *ngIf='showGeneralField' class='det-value slack-relative'>
-                <input [(ngModel)]="slackChannel_temp" type='text' (blur)="checkSlackNameAvailability()" (ngModelChange)='update_payload.slack_channel=slackChannel_temp'
+                <input [(ngModel)]="slackChannel_temp" type='text' (blur)="checkSlackNameAvailability()" (ngModelChange)='changeSlack()'
                 class="det-value-input" placeholder="Feeling collaborative? Add it to slack">
               <img *ngIf="show_loader" class="input-loader" src="../assets/images/icons/loading.png">
 
@@ -215,8 +215,8 @@
       <div>Any saved changes will trigger a deployment for the service.</div>
     </div>
     <div *ngIf='!disp_show2' class='down-btn-wrap down-btn-wrap-advanced'>
-      <btn-jazz-primary text="Submit" (click)='onAdvancedSaveClick()'></btn-jazz-primary>
-      <a (click)='onCancelClick()'>Cancel</a>
+      <btn-jazz-primary text="SUBMIT" (click)='onAdvancedSaveClick()'></btn-jazz-primary>
+      <a (click)='onCancelClick()'>CANCEL</a>
     </div>
     <div class='metadata-body-advanced'>
       <div *ngIf='disp_show2' class='metadata-buttons-wrap second-wrap'>
