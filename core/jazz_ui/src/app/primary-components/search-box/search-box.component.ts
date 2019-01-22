@@ -19,18 +19,20 @@ export class SearchBoxComponent implements OnInit {
     this.searchbar=value;
   }
   onServiceSearchkey(searchString,searchVal){
-    if(searchString.keyCode){
-      this.keyCodeVal = searchString.keyCode;
-      searchString = searchVal
-    }
-
-    if(this.keyCodeVal == "13"){
-      this.searchval = searchVal;
-      searchString = this.searchval;
-    if(searchVal == ""){
-      this.keyCodeVal = 13;
-    }
-     this.onChange.emit({"searchString":searchString,"keyCode":this.keyCodeVal})
+    if(searchVal) {
+      if (searchString.keyCode) {
+        this.keyCodeVal = searchString.keyCode;
+        searchString = searchVal
+      }
+  
+      if (this.keyCodeVal == "13") {
+        this.searchval = searchVal;
+        searchString = this.searchval;
+        if (searchVal == "") {
+          this.keyCodeVal = 13;
+        }
+        this.onChange.emit({ "searchString": searchString, "keyCode": this.keyCodeVal })
+      }
     }
   };
   
