@@ -382,20 +382,14 @@ describe('jazz_admin', function () {
           message: "Failed to add admin configuraion."
         }
       };
-      event = {
-        "stage": "test",
-        "method": "POST",
-        "principalId": "test@test.com",
-        "body": {
-          "ABC.abc": {
-            "hdjshkjs": "sdhj"
-          }
+
+      event.method = "POST";
+      event.body = {
+        "ABC.abc": {
+          "hdjshkjs": "sdhj"
         }
       };
-      let configs = {
-        "CRED_ID": "jazzaws",
-        "INST_PRE": "jazzsw"
-      }
+
       const getConfiguration = sinon.stub(index, "getConfiguration").rejects(responseObj.body.message);
       index.handler(event, context, (err, res) => {
         expect(err).to.include(responseObj.body.message);
@@ -412,16 +406,14 @@ describe('jazz_admin', function () {
           message: "Failed to add admin configuraion."
         }
       };
-      event = {
-        "stage": "test",
-        "method": "POST",
-        "principalId": "test@test.com",
-        "body": {
-          "ABC.abc": {
-            "hdjshkjs": "sdhj"
-          }
+
+      event.method = "POST";
+      event.body = {
+        "ABC.abc": {
+          "hdjshkjs": "sdhj"
         }
       };
+
       let configs = {
         "CRED_ID": "jazzaws",
         "INST_PRE": "jazzsw"
@@ -481,20 +473,14 @@ describe('jazz_admin', function () {
           message: "Failed to update admin configuraion."
         }
       };
-      event = {
-        "stage": "test",
-        "method": "PUT",
-        "principalId": "test@test.com",
-        "body": {
-          "ABC.abc": {
-            "hdjshkjs": "sdhj"
-          }
+
+      event.method = "PUT";
+      event.body = {
+        "ABC.abc": {
+          "hdjshkjs": "sdhj"
         }
       };
-      let configs = {
-        "CRED_ID": "jazzaws",
-        "INST_PRE": "jazzsw"
-      }
+
       const getConfiguration = sinon.stub(index, "getConfiguration").rejects(responseObj.body.message);
       index.handler(event, context, (err, res) => {
         expect(err).to.include(responseObj.body.message);
@@ -511,16 +497,14 @@ describe('jazz_admin', function () {
           message: "Failed to update admin configuraion."
         }
       };
-      event = {
-        "stage": "test",
-        "method": "PUT",
-        "principalId": "test@test.com",
-        "body": {
-          "ABC.abc": {
-            "hdjshkjs": "sdhj"
-          }
+
+      event.method = "PUT";
+      event.body = {
+        "ABC.abc": {
+          "hdjshkjs": "sdhj"
         }
       };
+
       let configs = {
         "CRED_ID": "jazzaws",
         "INST_PRE": "jazzsw"
@@ -577,16 +561,9 @@ describe('jazz_admin', function () {
           message: "Failed to delete the specified admin configuraion."
         }
       };
-      event = {
-        "stage": "test",
-        "method": "DELETE",
-        "principalId": "test@test.com",
-        "body": ["ABC.abc"]
-      };
-      let configs = {
-        "CRED_ID": "jazzaws",
-        "INST_PRE": "jazzsw"
-      }
+      event.method = "DELETE";
+      event.body = ["ABC.abc"];
+
       const getConfiguration = sinon.stub(index, "getConfiguration").rejects(responseObj.body.message);
       index.handler(event, context, (err, res) => {
         expect(err).to.include(responseObj.body.message);
@@ -603,20 +580,15 @@ describe('jazz_admin', function () {
           message: "Failed to delete the specified admin configuraion."
         }
       };
-      event = {
-        "stage": "test",
-        "method": "DELETE",
-        "principalId": "test@test.com",
-        "body": {
-          "ABC.abc": {
-            "hdjshkjs": "sdhj"
-          }
-        }
-      };
+
+      event.method = "DELETE";
+      event.body = ["ABC.abc"];
+
       let configs = {
         "CRED_ID": "jazzaws",
         "INST_PRE": "jazzsw"
       }
+
       const getConfiguration = sinon.stub(index, "getConfiguration").resolves(configs);
       const deleteConfiguration = sinon.stub(index, "deleteConfiguration").rejects(responseObj.body.message);
       index.handler(event, context, (err, res) => {
