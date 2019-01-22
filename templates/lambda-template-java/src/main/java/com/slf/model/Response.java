@@ -1,13 +1,12 @@
 package com.slf.model;
 
-import java.util.Map;
 
 public class Response {
 
 	private Object data;
-	private Request input;
+	private Object input;
 
-	public Response(Object data, Request input) {
+	public Response(Object data, Object input) {
 		this.data = data;
 		this.input = input;
 	}
@@ -23,11 +22,11 @@ public class Response {
 		this.data = data;
 	}
 
-	public Request getInput() {
+	public Object getInput() {
 		return input;
 	}
 
-	public void setInput(Request input) {
+	public void setInput(Object input) {
 		this.input = input;
 	}
 

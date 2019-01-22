@@ -209,7 +209,7 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 		'branch': g_branch,
 		'runtime': service_metadata['runtime'],
 		'domain': service_metadata['domain'],
-		'iam_role': config_loader.AWS.ROLEID,
+		'iam_role': service_metadata['iamRoleARN'],
 		'environment': g_environment,
 		'region': service_metadata['region'],
 		'message': message

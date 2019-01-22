@@ -145,16 +145,18 @@ module.exports.handler = (event, context, cb) => {
             logger.info('Update service service_id ' + service_id);
 
             var update_data = event.body;
+            var old_data;
 
             async.series({
                 validate: function (callback) {
                     validateUtils.validateUpdatePayload(service_id, update_data, function onValidate(error, data) {
+                        old_data = data;
                         callback(error, data);
                     });
                 },
                 // Update service by SERVICE_ID
                 updateServiceDataByServiceId: function (onComplete) {
-                    var new_update_data = utils.getUpdateData(update_data);
+                    var new_update_data = utils.getUpdateData(update_data, old_data);
                     if (new_update_data) {
                         crud.update(service_id, new_update_data, function onUpdate(error, data) {
                             onComplete(error, data);

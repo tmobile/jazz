@@ -284,9 +284,9 @@ describe('jazz_metrics', function () {
 
       var responseObj = {
         statusCode: 200,
-        body: {
+        body: JSON.stringify({
           data: [assetsList]
-        }
+        })
       };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObj, responseObj.body)
@@ -311,9 +311,9 @@ describe('jazz_metrics', function () {
       var authToken = "zaqwsxcderfv.qawsedrftg.qxderfvbhy";
       var responseObj = {
         statusCode: 200,
-        body: {
+        body: JSON.stringify({
           data: []
-        }
+        })
       };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObj, responseObj.body)

@@ -152,21 +152,20 @@ node()  {
 		}
 
 		stage("Deployment to ${current_environment} Env"){
+			def randomString = utilModule.generateRequestId();
+			def credsId = "jazz-${randomString}";
 			events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
 			events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
 			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-				echo "AWS Configure ......."
-
-				sh "aws configure set profile.cloud-api.region ${service_config['region']}"
-				sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-				sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+				sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+				sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+				sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 				sh "aws configure set preview.cloudfront true"
 
-                generateAssetInfo()
+				generateAssetInfo()
 				def assetInfo = "S3 Folder - /${asset_info}"
 
 				echo "Checking if the website already exists.."
-
 				if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
 					def isBucketExists = checkIfBucketExists(s3Bucket)
 					if (!isBucketExists) {
@@ -233,7 +232,7 @@ node()  {
 
 			}
 			// reset Credentials
-			resetCredentials()
+			resetCredentials(credsId)
 		}
 	}
 }
@@ -634,10 +633,10 @@ def LoadConfiguration() {
 /**
 	Reset credentials
 */
-def resetCredentials() {
-	echo "resetting AWS credentials"
-	sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-	sh "aws configure set profile.cloud-api.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+def resetCredentials(credsId) {
+  echo "resetting AWS credentials"
+	sh "aws configure set profile.${credsId}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
+  sh "aws configure set profile.${credsId}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
 }
 
 /**

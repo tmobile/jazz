@@ -45,10 +45,14 @@ def checkKinesisStreamExists(stream_name) {
 }
 
 def updateKinesisResourceServerless(event_stream_arn){
-  sh "sed -i -- 's/resources/resourcesDisabled/g' ./serverless.yml"
+  sh "sed -i -- '/#Start:isKinesisStreamNotExist/,/#End:isKinesisStreamNotExist/d' ./serverless.yml"
   sh "sed -i -- '/#Start:streamGetArn/,/#End:streamGetArn/d' ./serverless.yml"
   sh "sed -i -- 's/arnDisabled/arn/g' ./serverless.yml"
   sh "sed -i -- 's|{event_stream_arn}|${event_stream_arn}|g' ./serverless.yml"
+
+  sh "sed -i -- '/#Start:kinesisStreamGetArn/,/#End:kinesisStreamGetArn/d' ./policyFile.yml"
+  sh "sed -i -- 's|{event_kinesis_stream_arn}|${event_stream_arn}|g' ./policyFile.yml"
+  sh  "sed -i -- 's/#ResourceKinesisDisabled/Resource/g' ./policyFile.yml"
 }
 
 def getRoleArn(role_name) {
@@ -142,13 +146,13 @@ def removeS3EventsFromServerless(isEventSchdld){
 
 def checkS3BucketExists(s3BucketName){
   try {
-    sh "aws s3api head-bucket --bucket $s3BucketName --output json"
+    sh "aws s3api head-bucket --bucket $s3BucketName --profile cloud-api --output json"
     echo "Bucket exists and have access"
     return true
   } catch (ex) {//bucket exists but with no access
     def res
     try {
-      res = sh(script: "aws s3api head-bucket --bucket $s3BucketName --output json 2<&1 | grep -c 'Forbidden'", returnStdout: true).trim()
+      res = sh(script: "aws s3api head-bucket --bucket $s3BucketName --profile cloud-api --output json 2<&1 | grep -c 'Forbidden'", returnStdout: true).trim()
     } catch (e) {
       echo "Bucket does not exist "
       return false
@@ -167,7 +171,7 @@ def updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {
     def statementId = uuid.toString();
     sh "aws lambda --region ${service_config['region']} add-permission --function-name $lambdaARN --statement-id $statementId --action lambda:InvokeFunction --principal s3.amazonaws.com --source-arn arn:aws:s3:::$s3BucketName --output json"
     def existing_notifications = getbucketNotificationConfiguration(s3BucketName)
-    putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action)
+    checkAndUpdateS3BucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action)
   } catch (ex) {
     echo "Error while updating permission and lambda configuration"
     error ex.getMessage()
@@ -177,7 +181,7 @@ def updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {
 def getbucketNotificationConfiguration(s3BucketName){
   def existing_notifications = [:]
   try {
-    def existing_notificationsObj = sh(returnStdout: true, script: "aws s3api get-bucket-notification-configuration --bucket $s3BucketName --output json")
+    def existing_notificationsObj = sh(returnStdout: true, script: "aws s3api get-bucket-notification-configuration --bucket $s3BucketName --profile cloud-api --output json")
     echo "existing_notificationsObj: $existing_notificationsObj"
     existing_notifications = parseJson(existing_notificationsObj)
     return existing_notifications
@@ -186,7 +190,7 @@ def getbucketNotificationConfiguration(s3BucketName){
   }
 }
 
-def putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action){
+def checkAndUpdateS3BucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action){
   def new_lambda_configuration = [:]
   def new_s3_event_configuration = [:]
   def events = action.split(",")
@@ -206,10 +210,24 @@ def putbucketNotificationConfiguration(existing_notifications, lambdaARN, s3Buck
     new_s3_event_configuration.LambdaFunctionConfigurations = lambdaFunctionConfigurations
   }
 
-  echo "new existing_notifications : $new_s3_event_configuration"
+  echo "new notification configuration : $new_s3_event_configuration"
   if (new_s3_event_configuration != null && new_s3_event_configuration.size() > 0) {
-    def newNotificationJson = JsonOutput.toJson(new_s3_event_configuration)
-    def response = sh(returnStdout: true, script: "aws s3api put-bucket-notification-configuration --bucket $s3BucketName --notification-configuration \'${newNotificationJson}\' --output json")
+    putbucketNotificationConfiguration(s3BucketName, new_s3_event_configuration)
+  }
+}
+
+def putbucketNotificationConfiguration(s3BucketName, new_s3_event_configuration) {
+  try{
+    def newNotificationJson = "{}"
+    if (new_s3_event_configuration != null && new_s3_event_configuration.size() > 0) {
+      newNotificationJson = JsonOutput.toJson(new_s3_event_configuration)
+    }
+    def response = sh(
+          script: "aws s3api put-bucket-notification-configuration --bucket $s3BucketName --notification-configuration \'${newNotificationJson}\' --profile cloud-api --output json",
+          returnStdout: true
+        ).trim()
+  } catch(ex) {
+    error "Error occured while updating the s3 bucket event notification configuration." + ex.getMessage()
   }
 }
 
@@ -403,7 +421,7 @@ def updateDynamoDbResourceServerless(event_stream_arn){
 
   sh "sed -i -- '/#Start:dynamoDbstreamGetArn/,/#End:dynamoDbstreamGetArn/d' ./policyFile.yml"
   sh "sed -i -- 's|{event_dynamodb_stream_arn}|${event_stream_arn}|g' ./policyFile.yml"
-  sh  "sed -i -- 's/#ResourceDisabled/Resource/g' ./policyFile.yml"
+  sh  "sed -i -- 's/#ResourceDynamoDbDisabled/Resource/g' ./policyFile.yml"
 }
 
 def getDynamoDbStreamDetails(event_source_dynamodb) {
@@ -473,6 +491,7 @@ def deleteEventSourceMapping (lambda_arn, assets_api, auth_token, service_config
   try {
     def response = listEventFunctionMapping(lambda_arn)
     def mapping_details = parseJson(response)
+
     if(mapping_details.EventSourceMappings.size() > 0) {
       for (details in mapping_details.EventSourceMappings) {
         def delResponse = sh(
@@ -486,9 +505,55 @@ def deleteEventSourceMapping (lambda_arn, assets_api, auth_token, service_config
     if(service_config['event_source_dynamodb']) {
       checkAndDeleteDynamoDbStream(assets_api, auth_token, service_config, env)
     }
+    //Deleting s3 event notification configuration, which is created by jazz using aws cli
+    if(service_config['event_source_s3']) {
+      def s3BucketName = getEventResourceNamePerEnvironment(service_config['event_source_s3'], env, "-")
+      if(checkS3BucketExists(s3BucketName)) {
+        deleteS3EventNotificationConfiguration(lambda_arn, s3BucketName, env)
+      }
+    }
   } catch (ex){
-    echo "Exception occured while deleting event source mapping."
+    echo "Exception occured while deleting event source mapping." + ex.getMessage()
   }
+}
+
+def deleteS3EventNotificationConfiguration(lambdaARN, s3BucketName, env) {
+  def existing_notifications = getbucketNotificationConfiguration(s3BucketName)
+  def existing_event_configs = [:]
+  def existing_event_configs_copy = [:]
+  def cleanupIndex = -1
+  try {
+
+    for (item in existing_notifications) {
+      existing_event_configs[item.key] = item.value
+      existing_event_configs_copy[item.key] = item.value
+    }
+
+    if(existing_notifications.LambdaFunctionConfigurations) {
+      for (lambdaConfigs in existing_notifications.LambdaFunctionConfigurations) {
+        cleanupIndex++
+        if(lambdaConfigs.LambdaFunctionArn == lambdaARN ){
+          existing_event_configs.LambdaFunctionConfigurations[cleanupIndex] = null
+        }
+      }
+    }
+
+    for (item in existing_notifications) {
+      existing_event_configs[item.key].removeAll([null])
+    }
+
+    for (item in existing_event_configs) {
+      if (item.value.size() <= 0) {
+        existing_event_configs_copy.remove(item.key);
+      }
+    }
+
+    existing_event_configs_copy.values().remove(null)
+    putbucketNotificationConfiguration(s3BucketName, existing_event_configs_copy)
+  } catch(ex) {
+    echo "Exception occured while deleting the event notification configuration." + ex.getMessage()
+  }
+
 }
 
 def listEventFunctionMapping (lambda_arn) {
@@ -567,9 +632,11 @@ def splitAndGetResourceName(resource, env) {
 
 @NonCPS
 def parseJson(jsonString) {
-  def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
   def m = [:]
-  m.putAll(lazyMap)
+  if(jsonString) {
+    def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+    m.putAll(lazyMap)
+  }
   return m
 }
 

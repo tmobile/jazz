@@ -231,8 +231,8 @@ var getServiceData = (service_creation_data, authToken, configData) => {
     }
 
     // Set deployment_accounts to the propertiesObject variable
-    let primaryAccountCount = 0
-    let deployment_accounts = []
+    let primaryAccountCount = 0;
+    let deployment_accounts = [];
     // TODO: Make this field required when we support multiple accounts/regions/providers
     if (event.body.deployment_accounts) {
       for (let eachDeploymentAccount of event.body.deployment_accounts) {
@@ -244,16 +244,17 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             'provider': eachDeploymentAccount.provider || config.PRIMARY_DEPLOYMENT_ACCOUNT.provider,
             'primary': eachDeploymentAccount.primary
           }
-          deployment_accounts.push(deploymentAccount)
+          deployment_accounts.push(deploymentAccount);
         } else {
           if (eachDeploymentAccount.accountId && eachDeploymentAccount.region && eachDeploymentAccount.provider) {
-            deployment_accounts.push(eachDeploymentAccount)
+            deployment_accounts.push(eachDeploymentAccount);
           } else {
-            logger.error('accountId, region and provider are required for a non-primary deployment account')
-            return cb(JSON.stringify(errorHandler.throwInputValidationError('accountId, region and provider are required for a non-primary deployment account')))
+            logger.error('accountId, region and provider are required for a non-primary deployment account');
+            return cb(JSON.stringify(errorHandler.throwInputValidationError('accountId, region and provider are required for a non-primary deployment account')));
           }
         }
       }
+
       if (primaryAccountCount == 0) {
         logger.error('Invalid input! At least one primary deployment account is required')
         return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! At least one primary deployment account is required')))
@@ -263,6 +264,11 @@ var getServiceData = (service_creation_data, authToken, configData) => {
         return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! Only one primary deployment account is allowed')))
       }
       serviceMetadataObj["deployment_accounts"] = deployment_accounts
+    }
+
+    //Adding providerRuntime key in service catalog
+    if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
+      serviceMetadataObj.providerRuntime = service_creation_data.runtime;
     }
 
     // Pass the flag to enable authentication on API
@@ -276,6 +282,12 @@ var getServiceData = (service_creation_data, authToken, configData) => {
           serviceMetadataObj.authorizer_arn = service_creation_data.authorizer_arn;
         }
       }
+    }
+
+    // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
+    if (service_creation_data.service_type === "api" && service_creation_data.is_public_endpoint) {
+      serviceMetadataObj.require_internal_access = false;
+      serviceMetadataObj.enable_api_security = false;
     }
 
     // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
