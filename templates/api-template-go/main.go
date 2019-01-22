@@ -11,71 +11,74 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	logging "github.com/op/go-logging"
+	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/spf13/viper"
 )
 
-//Logging Configuration
-var log = logging.MustGetLogger("example")
-var format = logging.MustStringFormatter(
-	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
-)
-
-//Request Model struct
-type Request struct {
-	Stage  string  `json:"stage,omitempty"`
-	Method string  `json:"method,omitempty"`
-	ID     float64 `json:"id,omitempty"`
-	Value  string  `json:"value,omitempty"`
-}
-
-//Response Model sruct
+//Response Model
 type Response struct {
-	Data  map[string]string `json:"data,omitempty"`
-	Input Request           `json:"input,omitempty"`
+	Data map[string]string `json:"data,omitempty"`
+	Input map[string]interface{}   `json:"input,omitempty"`
 }
+// Declare logger variable
+var logger *Logger
+var AwsRequestID string
 
-//Following code snippet describes how to log messages within your code:
-/*
- log.error('Runtime errors or unexpected conditions.');
- log.warn('Runtime situations that are undesirable or unexpected, but not necessarily "wrong".');
- log.info('Interesting runtime events (Eg. connection established, data fetched etc.)');
- log.verbose('Generally speaking, most lines logged by your application should be written as verbose.');
- log.debug('Detailed information on the flow through the system.');
-*/
 
 //Handler Function for Aws Lambda which accepts Requests and Produce the response in json.
-func Handler(ctx context.Context, request Request) (Response, error) {
-	//Loading the Configuration Files
-	response := make(map[string]string)
+func Handler(ctx context.Context, event map[string]interface{}) (Response, error) {
+	// Initialize Logging Components
+	logger = new(Logger)
+	logger.init("Info")
+	// Get Request Id
+	lc, _ := lambdacontext.FromContext(ctx)
+  AwsRequestID = lc.AwsRequestID
 
-	// stdout and stderr are sent to AWS CloudWatch Logs
-	log.Info("Processing API Request for runtime Go")
+	//Following code snippet describes how to log messages within your code:
+/*
+	logger.ERROR("Runtime errors or unexpected conditions.");
+	logger.WARN("Runtime situations that are undesirable or unexpected, but not necessarily wrong");
+	logger.INFO("Interesting runtime events (Eg. connection established, data fetched etc.)");
+	logger.VERBOSE("Generally speaking, most lines logged by your application should be written as verbose.");
+	logger.DEBUG("Detailed information on the flow through the system.");
+*/
+	logger.INFO("Interesting runtime events (Eg. connection established, data fetched etc.)");
+	// Initialize Config Components
+	configModule := new(Config)
+	configModule.LoadConfiguration(ctx , event )
+	// Get Config values 
+	configValue := viper.Get("configKey").(string) // returns string
 
-	if len(request.Method) == 0 {
-		response["foo"] = "foo-value"
-		response["bar"] = "bar-value"
+	sampleResponse :=map[string]string {
+		"foo": "foo-value",
+		"bar": "bar-value",
+		"configKeys": configValue,
+	};
+
+	if len(event) == 0{
+		// If payload is empty send the Inputvalidation Error resposne
+		return Response{},NewInputValidationError("Sample Error Response")
 	} else {
-
-		if request.Method == "GET" {
-			response["foo"] = "foo-value"
-			response["bar"] = "bar-value"
-		} else if request.Method == "POST" {
-			response["foo"] = "foo-value"
-			response["bar"] = "bar-value"
+		var payLoad map[string]interface{}
+		// Your GET method should be handled here
+		if (event["method"].(string) == "GET"){
+			payLoad = event["query"].(map[string]interface{})
 		}
+		//Your POST method should be handled here
+		if (event["method"].(string) == "POST"){
+			payLoad = event["body"].(map[string]interface{})
+		}
+		return Response{
+			Data: sampleResponse,
+			Input: payLoad,
+		},nil
+
 	}
-
-	data := Response{
-		Data:  response,
-		Input: request,
-	}
-
-	return data, nil
-
 }
 
 //Main function Starts
 func main() {
 	//Start function to trigger Lambda
 	lambda.Start(Handler)
+	
 }
