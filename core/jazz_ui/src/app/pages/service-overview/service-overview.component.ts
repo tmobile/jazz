@@ -423,6 +423,12 @@ export class ServiceOverviewComponent implements OnInit {
 
   descriptionChange(){
     this.update_payload.description = this.desc_temp;
+    this.shouldSaveEnable();
+  }
+
+  onAdvanceClick(){
+    this.saveClicked = false;
+    this.advancedSaveClicked = false;
     this.shouldSaveEnable()
   }
 

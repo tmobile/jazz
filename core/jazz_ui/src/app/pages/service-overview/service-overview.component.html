@@ -407,7 +407,7 @@
     </div>
   </details>
 
-  <div class='confirm-overlay' (click)='saveClicked = false; advancedSaveClicked = false' *ngIf='saveClicked || advancedSaveClicked'>
+  <div class='confirm-overlay' (click)='onAdvanceClick()' *ngIf='saveClicked || advancedSaveClicked'>
     <div class='confirm-overlay-inner-wrap' (click)="$event.stopPropagation()">
         <div class='overlay-header'>Submitting Changes</div>
         <div *ngIf="isPUTLoading" class='loader-confirmation'>
@@ -416,9 +416,7 @@
             </div>
         </div>
         
-        <div *ngIf="!isPUTLoading" class='overlay-body'>  Changes made to your services do not take immediate effect until they
-        are approved. Please wait a minimum <span><b> 1 hour</b> </span> for
-        approval.</div>
+        <div *ngIf="!isPUTLoading" class='overlay-body'> Are you sure you want to make this edit?</div>
         <div class='overlay-btns'>
           <btn-jazz-primary text="COMPLETE" [disablePrimaryBtn]="!isPayloadAvailable" (click)='onCompleteClick()'></btn-jazz-primary>
         </div>
