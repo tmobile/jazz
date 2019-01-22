@@ -118,7 +118,7 @@ module.exports = (service_id, service_data, onComplete) => {
                 onComplete(error);
             } else {
                 logger.info("# Validate Update Payload Data:" + JSON.stringify(data));
-                onComplete(null);
+                onComplete(null, data);
             }
         });
 

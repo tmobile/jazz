@@ -80,9 +80,6 @@ module.exports.handler = (event, context, cb) => {
 
 			//Appending service name with Domain, Env and Jazz_type
 			service = domain + "-" + service
-			if (config.ENV_PREFIX) {
-				service = config.ENV_PREFIX + "-" + service
-			}
 
 			logger.info("Service name to fetch logs :" + service);
 
