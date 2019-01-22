@@ -18,5 +18,12 @@
         "create_event_name": "CREATE_DEPLOYMENT",
         "update_event_name": "UPDATE_DEPLOYMENT",
         "delete_event_name": "DELETE_DEPLOYMENT"
-    }
+    },
+    "DEPLOYMENT_KEY_LIST": [
+        "status",
+        "provider_build_url",
+        "provider_build_id",
+        "scm_commit_hash",
+        "scm_url",
+        "scm_branch"]
 }

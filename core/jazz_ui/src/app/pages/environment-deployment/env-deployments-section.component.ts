@@ -37,7 +37,8 @@ export class EnvDeploymentsSectionComponent implements OnInit {
   envResponseEmpty:boolean = false;
   envResponseTrue:boolean = false;
   envResponseError:boolean = false;
-	isLoading: boolean = true;
+  isLoading: boolean = true;
+  disableBuild: boolean = false;
   private subscription:any;
   private http:any;
   environment_object:any;
@@ -298,6 +299,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
           this.deployments =  response.data.deployments;
           this.deployedList =  this.deployments;
           this.length =  this.deployments.length;
+          var countStarted = 0;
           for(var i=0 ; i<this.length ; i++){
             this.time[i] = this.deployments[i].created_time.slice(0,-4).replace("T"," ");
             this.status[i] = this.deployments[i].status;
@@ -307,8 +309,14 @@ export class EnvDeploymentsSectionComponent implements OnInit {
             this.buildNo[i] = this.deployments[i].provider_build_id;
             this.buildurl[i] = this.deployments[i].provider_build_url;
             this.deployment_id[i] = this.deployments[i].deployment_id;
-            this.backupLogs = this.deployments
+            this.backupLogs = this.deployments;
             this.sort = new Sort(this.deployments);
+            if(this.deployments[i].status == "started"){
+              countStarted = countStarted + 1;
+            }
+           }
+           if(!countStarted){
+             this.disableBuild = false;
            }
            if(this.deployments.length !=0){
             var pageCount = response.data.count;
@@ -623,6 +631,7 @@ toast_pop(error,oops,errorMessage)
 
 rebuild(){
   this.rowclick = false;
+  this.disableBuild = true;
   var rebuild_url = '/jazz/deployments/';
   this.http.post(rebuild_url+this.rebuild_id+'/re-build').subscribe(
     (response) => {
@@ -631,7 +640,8 @@ rebuild(){
     },
     (error) => {
       let errorMessage = this.toastmessage.errorMessage(error, "retryDeploy");    
-      this.toast_pop('error', 'Oops!', errorMessage)
+      this.toast_pop('error', 'Oops!', errorMessage);
+      this.disableBuild = false;
     })
     this.isLoading = true;
     this.callServiceEnvdeployment();
