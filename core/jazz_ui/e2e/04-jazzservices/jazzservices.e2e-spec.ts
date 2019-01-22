@@ -26,6 +26,7 @@ describe('Overview', () => {
       const EC = protractor.ExpectedConditions;
       let winhandle;
       let servicename;
+      let Temp;
 
       beforeAll(() => {
             jazzServices_po = new Jazz();
@@ -129,7 +130,7 @@ describe('Overview', () => {
             jazzServices_po.getServiceFromAsset().click();
       });
       
-      it('Verify METRICS and Navigation to Swagger' , () => {
+      it('Verify METRICS and Navigation to Swagger-API' , () => {
             // Navigation to services
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
@@ -207,7 +208,7 @@ describe('Overview', () => {
             jazzServices_po.getServiceFromAsset().click();            
       });
       
-      it('Create Lamda Service', () => {
+      it('Create Lambda Service', () => {
             browser.driver.switchTo().activeElement();
             browser.driver.sleep(5000);
             browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
@@ -298,8 +299,9 @@ describe('Overview', () => {
             jazzServices_po.getServiceFromAsset().click();
       });
 
-      it('Verify METRICS and Navigation to Swagger' , () => {
+      it('Verify METRICS -Lambda' , () => {
             // Navigation to services
+            browser.sleep(45000);
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
             //To Navigate to the particular service and verifying the Page
@@ -321,8 +323,11 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.getTestFunction()), timeOutHigh);
             jazzServices_po.getTestFunction().click();
             jazzServices_po.getTestArea().sendKeys('1');
+            browser.wait(EC.elementToBeClickable(jazzServices_po.getTestButton()), timeOutHigh);
             jazzServices_po.getTestButton().click();
+            browser.wait(EC.elementToBeClickable(jazzServices_po.getClose()), timeOutHigh);
             jazzServices_po.getClose().click();
+            expect(jazzServices_po.getOutput().getText()).toContain('Function got triggered successfully');
             browser.refresh();
             jazzServices_po.getMetrices().click();
             jazzServices_po.getMetricsChildOne().click();
@@ -333,29 +338,7 @@ describe('Overview', () => {
             jazzServices_po.getMetricsChildSix().click();
             jazzServices_po.getServiceFromAsset().click();
       });
-      
-      it('Verify METRICS COUNT' , () => {
-            // Navigation to services
-            browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
-            browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
-            //To Navigate to the particular service and verifying the Page
-            jazzServices_po.getAwsServiceName().click();
-            browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
-            browser.sleep(15000);
-            browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
-            jazzServices_po.getRefresh().click();
-            browser.sleep(15000);
-            jazzServices_po.getProdName().click();
-            browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
-            browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
-            browser.driver.switchTo().activeElement();
-            browser.sleep(15000);
-            jazzServices_po.getMetrices().click();
-            expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
-            browser.sleep(2000);
-            jazzServices_po.getServiceFromAsset().click();            
-      });
-           
+                       
       it('Create Website Service', () => {
             browser.driver.switchTo().activeElement();
             browser.driver.sleep(5000);
@@ -420,7 +403,7 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
       });
 
-      it('Verify METRICS and Navigation to Swagger' , () => {
+      it('Verify METRICS -Website' , () => {
             // Navigation to services
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);

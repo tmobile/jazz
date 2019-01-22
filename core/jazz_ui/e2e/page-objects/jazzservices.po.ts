@@ -49,7 +49,7 @@ export class Jazz {
       return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[1]'));
   }
   getAPIType() {
-	  return element(by.xpath('//div[@class="table-row pointer"]//div[text()="api"]'));
+      return element(by.xpath('//div[@class="table-row pointer"]//div[text()="api"]'));
   }
   getFunctionType() {
       return element(by.xpath('//div[@class="table-row pointer"]//div[text()="function"]'));
@@ -77,11 +77,11 @@ export class Jazz {
     }
   getServiceNameHeader() {
      
-	 return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/h1[@class="page-hdr bold-title"]'));
+     return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/h1[@class="page-hdr bold-title"]'));
   }
   getProdName(){
     return element(by.xpath('//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
-	}
+    }
   getProdHeader(){
     return element(by.xpath('//div[@class="servie-details-container"]/h1[@class="page-hdr bold-title relative" and contains(text(),"prod")]'));
   }
@@ -89,7 +89,7 @@ export class Jazz {
     return element(by.xpath('//li[@class="x caps" and contains(text(),"assets")]'));
   }
   getMetrics(){
-	return element(by.xpath('//li[@class="x caps" and contains(text(),"metrics")]'));  
+    return element(by.xpath('//li[@class="x caps" and contains(text(),"metrics")]'));  
   }
   getMetricsChildOne(){
     return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(1)')); 
@@ -112,11 +112,11 @@ export class Jazz {
   getMetricsChildSix()
   {
     return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(6)')); 
-  }	
+  }    
   getMetricsChildSeven()
   {
     return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(7)')); 
-  }	
+  }    
   getAssetHeader(){
     return element(by.xpath('//div/div[2]/div/section[1]/div/div[2]/section/env-assets-section/div/div[1]/div[2]/div[1]/div[1]/span[2]'));
   }
@@ -148,7 +148,7 @@ export class Jazz {
     return element(by.xpath('//li[@class="x caps" and contains(text(),"logs")]'));
   }
   getFilterIcon(){
-	 return element(by.xpath('//div[@class="filter-icon relative"]'));
+     return element(by.xpath('//div[@class="filter-icon relative"]'));
   }
   getDay(){
    return element(by.xpath('//div[@class="dropdown open"]/ul[@class="dropdown-menu"]/li/a[(text()="Day")]'));
@@ -167,15 +167,15 @@ export class Jazz {
   }
   getWeekVerify()
   {
-	return element(by.xpath('//div[@class="row"]/div[contains(text(),"Time Range")]/b[text()="Week"]'));
+    return element(by.xpath('//div[@class="row"]/div[contains(text(),"Time Range")]/b[text()="Week"]'));
   }
   getMonthVerify()
   {
-	return element(by.xpath('//div[@class="row"]/div[contains(text(),"Time Range")]/b[text()="Month"]'));
+    return element(by.xpath('//div[@class="row"]/div[contains(text(),"Time Range")]/b[text()="Month"]'));
   }
   getYearVerify()
   {
-	return element(by.xpath('//div[@class="row"]/div[contains(text(),"Time Range")]/b[text()="Year"]'));
+    return element(by.xpath('//div[@class="row"]/div[contains(text(),"Time Range")]/b[text()="Year"]'));
   }
   getMetrices() {
     return element(by.css('div.tabs-wrap>ul>li:nth-child(4)'));
@@ -208,7 +208,7 @@ export class Jazz {
     return element(by.xpath('//div/button[@class="btn-round primary start-button"]'));
   }
   getClose() {
-    return element(by.xpath('//div[@class="title"]/div[@class="icon-icon-close pointer"]'));
+    return element(by.xpath('//div[@class="sidebar-frame"]/div[@class="title"]/div[@class="icon-icon-close pointer"]'));
   }
   getInvocations(){
     return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(1)')); 
@@ -221,6 +221,9 @@ export class Jazz {
   }
   getSuccessCountVerify() {
     return element(by.xpath('//tr[@class="response response_current"]/td[@class="col response-col_status" and contains(text(),"200")]'));
+  }
+  getOutput() {
+    return element(by.xpath('//span[contains(text(),"Function got triggered successfully")]'));
   }
 
  }
