@@ -402,6 +402,7 @@ export class ServiceOverviewComponent implements OnInit {
 
   onSaveClick() {
     this.saveClicked = true;
+    this.generalAdvanceDisable = true;
     this.advancedSaveClicked = false;
 
     let payload = {};
@@ -531,6 +532,7 @@ export class ServiceOverviewComponent implements OnInit {
 
       this.hide_slack_error = true;
       this.show_loader = false;
+      this.shouldSaveEnable();
     } else {
       if (this.subscription) {
         this.subscription.unsubscribe();
@@ -548,19 +550,19 @@ export class ServiceOverviewComponent implements OnInit {
               this.hide_slack_error = false;
 
             }
-            this.shouldSaveEnable();
             this.show_loader = false;
+            this.shouldSaveEnable();
           },
           (error) => {
             var err = error;
             // console.log(err);
             this.show_loader = false;
+            this.shouldSaveEnable();
 
           }
 
         );
     }
-
   }
 
   disableSaveBtn() {
