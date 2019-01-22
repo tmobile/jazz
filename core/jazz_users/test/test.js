@@ -31,6 +31,11 @@ describe('jazz_users', () => {
       expect(() => validation.genericInputValidation(event)).to.throw();
     });
 
+    it("throws error if method is defined but not GET", () => {
+      event.method = "POST";
+      expect(() => validation.genericInputValidation(event)).to.throw();
+    });
+
     it("throws error if method is undefined", () => {
       event.principalId = undefined;
       expect(() => validation.genericInputValidation(event)).to.throw();

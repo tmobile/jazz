@@ -25,6 +25,10 @@ function genericInputValidation(event) {
     throw (errorHandlerModule.throwInputValidationError("Method is missing."));
   }
 
+  if (event.method && event.method !== "GET") {
+    throw (errorHandlerModule.throwInputValidationError("Unsupported request."));
+  }
+
   if(!event.principalId) {
     throw (errorHandlerModule.throwUnauthorizedError("Unauthorized."));
   }
