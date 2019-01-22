@@ -1,26 +1,24 @@
-#   Python Template Project
-#   @Author:
-#   @version: 1.0
 import sys
 import os
 import json
+
+sys.path.insert(0, 'library')
 
 from components.logger import Logger
 from components.config import Config
 
 # import installed package
-from library import requests
-
+import requests
 
 def handler(event, context):
-    # initialze logger module
+    # initialize logger module
     logger = Logger(event, context)
 
     # Load config handler
     config = Config(context)
 
     ## ==== Sample code to fetch environment specific configurations ====
-    myconfig = config.get_config('default')
+    # myconfig = config.get_config('default')
     # logger.info ('One of the environment configuration: config_key => ' + myconfig['config_key'])
 
     ## ==== Log message samples ====

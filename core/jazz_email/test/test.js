@@ -259,20 +259,16 @@ describe('jazz_email', function () {
         message : "testId"
       }
       const validateInput = sinon.stub(index, "validateInput").resolves();
-      const sendEmail = sinon.stub(index, "sendEmail").resolves();
+      const sendEmail = sinon.stub(index, "sendEmail").resolves({messageId: 'testId'});
 
       index.handler(event, context, (error, data) => {
-        expect(data).to.equal(JSON.stringify(result));
+
+        expect(data.data).to.deep.equal(result)
         sinon.assert.calledOnce(validateInput);
         sinon.assert.calledOnce(sendEmail);
         validateInput.restore();
         sendEmail.restore();
       });
     });
-
-
-
-
-
   });
 });
