@@ -99,7 +99,7 @@
  <div class='row deployment-wrp'>
     <div class='table-cover-outer col-sm-12 slid-table'>
        <div class='widget-header-tb'  *ngIf="envResponseTrue">
-       <btn-jazz-primary class="rebuild" [disablePrimaryBtn]='status_val > 5' text='Build now' (click)="rebuild()"></btn-jazz-primary>
+       <btn-jazz-primary class="rebuild" [disablePrimaryBtn]='disableBuild && status_val > 5' text='Build now' (click)="rebuild()"></btn-jazz-primary>
 
     </div>
     <div id='slid-table'>

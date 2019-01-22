@@ -41,6 +41,7 @@ node()  {
 	def domain = params.domain
 	def service = params.service_name
 	def repo_name = params.service_name
+	def requestId = params.request_id
 	def gitCommitOwner
 	def gitCommitHash
 
@@ -99,18 +100,22 @@ node()  {
 	gitCommitHash = scmModule.getRepoCommitHash()
 	gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 
-	def requestId = utilModule.generateRequestId()
-	if (requestId != null) {
+	echo "requestId: $requestId"
+	if(requestId != 'none' && requestId != null) {
+		echo "Setting up requestId"
 		events.setRequestId(requestId)
 		environmentDeploymentMetadata.setRequestId(requestId)
 	} else {
-		error "Request Id Generation failed"
+		requestId = utilModule.generateRequestId()
+		events.setRequestId(requestId)
+		environmentDeploymentMetadata.setRequestId(requestId)
+		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 	}
+
 
 	dir(repo_name)
 	{
-		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, , gitCommitHash), environment)
-
+	
 		stage('Pre-Build Validation'){
 
 			events.sendStartedEvent("VALIDATE_INPUT", 'pre-build validation starts', context_map)

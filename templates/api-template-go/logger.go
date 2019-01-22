@@ -19,7 +19,7 @@ var loglevels = map[string]int{
   "Error": 4,
   "Warn": 3,
   "Info": 2,
-  "Trace": 1,
+  "Verbose": 1,
   "Debug": 0,
 }
 
@@ -38,7 +38,7 @@ func (lw *logWriter) init (levelName string){
 }
 
 func (writer *logWriter) Write(bytes []byte) (int, error) {
-  return fmt.Print(time.Now().UTC().Format("2006-01-02T15:04:05.999Z") + " ["+writer.levelName+"] " + string(bytes))
+  return fmt.Print(time.Now().UTC().Format("2006-01-02T15:04:05.999Z") + ""+writer.levelName+" \t " + AwsRequestID +""+  string(bytes))
 }
 
 // Logger Implementation
@@ -60,8 +60,8 @@ func(l *Logger) ERROR(message string){
 	logthis("Error", message)
 }
 
-func(l *Logger) TRACE(message string){
-	logthis("Trace", message)
+func(l *Logger) VERBOSE(message string){
+	logthis("Verbose", message)
 }
 
 func(l *Logger) DEBUG(message string){
@@ -72,7 +72,7 @@ func(l *Logger) DEBUG(message string){
 func setLevel(level string)(string){
 	// Default Log Level is INFO
 	var log_level string
-	_, isLevelPresent := loglevels["level"]
+	_, isLevelPresent := loglevels[level]
 
 	if isLevelPresent {
 		// Log Level is available
@@ -89,26 +89,26 @@ func setLevel(level string)(string){
 
 
 func logthis(level string , message string){
-	if( loglevels[level] >= loglevels[config["curLogLevel"]]){
+	if( loglevels[level] >= loglevels[config["curLogLevel"]] ){
 
-		if( level == "Trace") {
-			logWithFormater("Trace", message)
+		if( level == "Verbose") {
+			logWithFormater("VERBOSE", message)
 		}
 
 		if( level == "Info") {
-			logWithFormater("Info", message)
+			logWithFormater("INFO", message)
 		}
 
 		if( level == "Warn") {
-			logWithFormater("Warn", message)
+			logWithFormater("WARN", message)
 		}
 
 		if( level == "Debug") {
-			logWithFormater("Debug", message)
+			logWithFormater("DEBUG", message)
 		}
 
 		if( level == "Error") {
-			logWithFormater("Error", message)
+			logWithFormater("ERROR", message)
 		}
 
 	}
