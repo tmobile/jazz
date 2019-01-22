@@ -115,7 +115,7 @@
             <div class="edit-div" *ngIf="!showGeneralField" (click)="onEditGeneral()">
               <img class="pre-image" src="/assets/erser/icon-edit.svg" />
             </div>
-              <div *ngIf="showGeneralField" class="down-btn-wrap">
+              <div *ngIf="showGeneralField && !isLoadingService" class="down-btn-wrap">
               <div class="custom-save-btn-wrap">
                 <btn-jazz-primary class="save-btn-wrap" [disablePrimaryBtn]="generalAdvanceDisable"
                   text="SUBMIT" (click)="onSaveClick()"></btn-jazz-primary>
@@ -224,7 +224,7 @@
       </div>
       <div *ngIf='disp_show2' class='metadata-row first-row'>
         <ul>
-         
+
 
         </ul>
       </div>
@@ -415,7 +415,7 @@
                 <div class="loading-circle"></div>
             </div>
         </div>
-        
+
         <div *ngIf="!isPUTLoading" class='overlay-body'> Are you sure you want to make this edit?</div>
         <div class='overlay-btns'>
           <btn-jazz-primary text="COMPLETE" [disablePrimaryBtn]="!isPayloadAvailable" (click)='onCompleteClick()'></btn-jazz-primary>
