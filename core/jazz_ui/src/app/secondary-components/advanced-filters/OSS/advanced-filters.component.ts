@@ -62,7 +62,6 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         this.selectFilter["key"]='slider';
         this.selectFilter["value"]=e;
         this.onFilterSelect.emit(this.selectFilter);
-
         this.sliderFrom =e.from;
         this.sliderPercentFrom=e.from_percent;
     }
@@ -71,7 +70,6 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         this.sliderPercentFrom=0;
         this.sliderFrom=e;
     }
-      
     onPeriodSelected(period){
         this.periodSelected=period;
         this.selectFilter["key"]='period';
@@ -83,7 +81,17 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         this.periodList=event;
         this.periodSelected=this.periodList[0];
     }
-
+    setSlider(event){
+        this.sliderMax=event;
+        // update time period list when sliderMax changes
+        var timePeriodList = [];
+        for (var i = this.sliderFrom; i <= this.sliderMax; i ++){
+            timePeriodList.push(i);
+        }
+        this.timePeriodList = timePeriodList;
+        this.sliderFrom=1;
+        this.sliderPercentFrom=0;
+    }
     onRangeListSelected(range){
         this.selectedTimeRange = range;
         this.selectFilter["key"]='range';
@@ -92,20 +100,21 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         
     }
 
-  onTimePeriodSelected(period){
-      this.selectedTimePeriod = period;
-      this.selectFilter["key"]='slider';
-      this.sliderFrom = period;
-      this.sliderPercentFrom = this.sliderMax > 1 ? (period - 1) / (this.sliderMax - 1) : 1;
-      var event = {
-          value: period,
-          from: period,
-          from_percent: this.sliderPercentFrom
-      };
+    onTimePeriodSelected(period){
+        this.selectedTimePeriod = period;
+        this.selectFilter["key"]='slider';
+        this.sliderFrom = period;
+        this.sliderPercentFrom = this.sliderMax > 1 ? (period - 1) / (this.sliderMax - 1) : 1;
+        var event = {
+            value: period,
+            from: period,
+            from_percent: this.sliderPercentFrom
+        };
 
-      this.selectFilter["value"] = event;
-      this.onFilterSelect.emit(this.selectFilter);
-  }
+        this.selectFilter["value"] = event;
+        this.onFilterSelect.emit(this.selectFilter);
+    }
+    
     onEnvSelected(envt){
 
         this.envSelected = envt;
@@ -114,12 +123,12 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         this.onFilterSelect.emit(this.selectFilter);
         
     }
+    
     onStatisticSelected(statistics){
       this.statisticSelected = statistics;
       this.selectFilter["key"]='statistics';
       this.selectFilter["value"]=statistics;
       this.onFilterSelect.emit(this.selectFilter);
-
     }
 
     onMethodListSelected(method){
@@ -135,23 +144,22 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         this.selectFilter["value"]=path;
         this.onFilterSelect.emit(this.selectFilter);
     }
-   onaccSelected(event){
-    this.accSelected=event;
-    this.selectFilter["key"]='account';
-    this.selectFilter["value"]=event;
-    this.onFilterSelect.emit(this.selectFilter);
+    onaccSelected(event){
+        this.accSelected=event;
+        this.selectFilter["key"]='account';
+        this.selectFilter["value"]=event;
+        this.onFilterSelect.emit(this.selectFilter);
 
-   }
+    }
 
 	onregSelected(event){
-    this.regSelected=event;
-    this.selectFilter["key"]='region';
-    this.selectFilter["value"]=event;
-    this.onFilterSelect.emit(this.selectFilter);
+        this.regSelected=event;
+        this.selectFilter["key"]='region';
+        this.selectFilter["value"]=event;
+        this.onFilterSelect.emit(this.selectFilter);
    }
 
   environment_object:any;
-
 
     ngOnInit(){
         this.advanced_filter_input = this.data.advanced_filter_input;

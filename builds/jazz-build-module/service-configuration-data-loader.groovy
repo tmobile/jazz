@@ -308,7 +308,6 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/local-config.json"
         }
 
-
         if (service_name.trim() == "jazz_is-service-available") {
             sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
@@ -533,7 +532,7 @@ def setEventSourceMapping(eventSourceArn, config) {
   ).trim()
   echo "$event_source_list"
   if (event_source_list == "[]") {
-      sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$role_id:function:$function_name --starting-position LATEST --region $region"
+      sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$role_id:function:$function_name --enabled --starting-position LATEST --region $region"
   }
 }
 

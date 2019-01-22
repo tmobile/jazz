@@ -38,6 +38,7 @@ functions:
     runtime: ${file(deployment-env.yml):providerRuntime}
     memorySize: ${file(deployment-env.yml):providerMemorySize}
     timeout: ${file(deployment-env.yml):providerTimeout}
+    #Start:events
     eventsDisabled:
       #Start:isScheduleEnabled
       - schedule:
@@ -46,7 +47,20 @@ functions:
           enabled: ${file(deployment-env.yml):eventScheduleEnable}
       #End:isScheduleEnabled
       #Start:isDynamoDbEnabled
-      - stream: {event_source_dynamodb}
+      - stream:
+          type: dynamodb
+          #Start:dynamoDbstreamArn
+          streamArnDisabled: {event_dynamodb_stream_arn}
+          #End:dynamoDbstreamArn
+          #Start:dynamoDbstreamGetArn
+          arn:
+            Fn::GetAtt:
+              - sourceDynamoDbTable
+              - StreamArn
+          #End:dynamoDbstreamGetArn
+          batchSize: 1
+          startingPosition: LATEST
+          enabled: true
       #End:isDynamoDbEnabled
       #Start:isSQSEventEnabled
       - sqs:
@@ -61,7 +75,7 @@ functions:
           #Start:streamGetArn
           arn:
             Fn::GetAtt:
-              - {event_source_kinesis}
+              - sourceKinesisStreams
               - Arn
           #End:streamGetArn
           #Start:streamArn
@@ -73,6 +87,8 @@ functions:
           bucket: {event_source_s3}
           event: {event_action_s3}
       #End:isS3EventEnabled
+    #End:events
+
     vpcDisabled:
       securityGroupIds:
         "Fn::Split":
@@ -86,8 +102,14 @@ functions:
 #Start:resources
 resourcesDisabled:
   Resources:
+    #Start:isS3EventRoleEnabled
+    customEventRole: ${file(policyFile.yml):s3Role}
+    #End:isS3EventRoleEnabled
+    #Start:isStreamEnabled
+    customEventRole: ${file(policyFile.yml):kinesisRole}
+    #End:isStreamEnabled
     #Start:isDynamoDbEnabled
-    customEventRole: ${file(policyFile.yml):eventSubscribed}
+    customEventRole: ${file(policyFile.yml):dynamoDbRole}
     #End:isDynamoDbEnabled
     #Start:isSQSEventEnabled
     customEventRole: ${file(policyFile.yml):sqsRole}
@@ -102,10 +124,32 @@ resourcesDisabled:
     #End:isSqsResourceNotExist
     #End:isSQSEventEnabled
     #Start:isStreamEnabled
-    {event_source_kinesis}:
-      Type: AWS::Kinesis::Stream
-      Properties:
-        Name: {event_source_kinesis}
-        ShardCount: 1
-   #End:isStreamEnabled
+    #Start:isKinesisStreamNotExist
+    sourceKinesisStreams:
+       Type: AWS::Kinesis::Stream
+       Properties:
+         Name: {event_source_kinesis}
+         ShardCount: 1
+    #End:isKinesisStreamNotExist
+    #End:isStreamEnabled
+    #Start:isDynamoDbEnabled
+    #Start:isDynamoDbtableNotExist
+    sourceDynamoDbTable:
+       Type: AWS::DynamoDB::Table
+       Properties:
+         TableName: {event_source_dynamodb}
+         AttributeDefinitions:
+           - AttributeName: ID
+             AttributeType: S
+         KeySchema:
+           - AttributeName: ID
+             KeyType: HASH
+         ProvisionedThroughput:
+           ReadCapacityUnits: 5
+           WriteCapacityUnits: 5
+         StreamSpecification:
+           StreamViewType: NEW_AND_OLD_IMAGES
+    #End:isDynamoDbtableNotExist
+    #End:isDynamoDbEnabled
 #End:resources
+
