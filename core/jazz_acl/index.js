@@ -67,7 +67,7 @@ async function processACLRequest(event, config) {
         throw (errorHandlerModule.throwInternalServerError(`Error adding the policy for service ${serviceId}. ${result.error}`));
       }
 
-      await processScmPermissions(config, serviceId, policies, 'add');
+      await exportable.processScmPermissions(config, serviceId, policies, 'add');
     } else {//delete policies
       result = await casbinUtil.addOrRemovePolicy(serviceId, config, 'remove');
 
@@ -75,7 +75,7 @@ async function processACLRequest(event, config) {
         throw (errorHandlerModule.throwInternalServerError(result.error));
       }
 
-      await processScmPermissions(config, serviceId, null, 'remove');
+      await exportable.processScmPermissions(config, serviceId, null, 'remove');
     }
 
     return { success: true };
