@@ -376,7 +376,20 @@ def getLambdaARN(stackName, credsId) {
 		error ex.getMessage();
 	}
 
-	return ARN;
+	def tokens = ARN.split(':')
+	def version
+	def alias
+	if (tokens[7].substring(0,1).isNumber()) {
+		version = tokens[7]
+		alias = ""
+	} else {
+		version = ""
+		alias = tokens[7]
+	}
+    if (alias || version) {
+      ARN = ARN.substring(0, ARN.lastIndexOf(':'));
+    }
+	return [ arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias ]
 }
 
 /**
