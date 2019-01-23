@@ -170,6 +170,9 @@ export class ServiceDetailComponent implements OnInit {
       this.isLoadingService = false;
       if (service.status == 'deletion_completed' || service.status == 'deletion_started' || service.status == 'creation_started' || service.status == 'creation_failed')
         this.canDelete = false;
+      
+      if (!service.repository && service.domain == 'jazz')
+        this.canDelete = false;
     } else {
       this.isLoadingService = false;
       let errorMessage = this.toastmessage.successMessage(service, "serviceDetail");
@@ -235,7 +238,9 @@ export class ServiceDetailComponent implements OnInit {
   };
 
   env(event) {
-    if ((event != 'creation failed') && (event != 'creation started') && (event != 'deletion started') && (event != 'deletion completed')) {
+    if (!this.service.repository && this.service.domain == 'jazz') {
+      this.canDelete = false;
+    } else if ((event != 'creation failed') && (event != 'creation started') && (event != 'deletion started') && (event != 'deletion completed')) {
       this.canDelete = true;
     } else {
       this.canDelete = false;
