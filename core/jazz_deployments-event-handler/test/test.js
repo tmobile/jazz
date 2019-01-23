@@ -594,7 +594,8 @@ describe("updateDeployments", () => {
       service: 'test-02',
       environment_logical_id: 'temp_env_ID',
       provider_build_url: "http://temp_testing/dccdw.com",
-      provider_build_id: "temp_build_id"
+      provider_build_id: "temp_build_id",
+      request_id: "temp-reqid-0001"
     };
     res = {
       "data": {
@@ -624,6 +625,7 @@ describe("updateDeployments", () => {
       sinon.assert.calledOnce(processRequestStub);
       processRequestStub.restore();
     })
+
   })
   it("should call return error if  processRequest is unsucesfull", () => {
     var processRequestStub = sinon.stub(index, "processRequest").rejects({
