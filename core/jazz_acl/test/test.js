@@ -65,8 +65,31 @@ describe("Validation tests", () => {
       expect(() => validationUtil.validatePostPoliciesInput({body: {serviceId: '342342', policies: [{userId: '23222'}]}})).to.throw();
     });
   });
-});
 
+  describe("Validate get check perms input", () => {
+    it("validate throws error when userId is missing", () => {
+      expect(() => validationUtil.validateGetCheckPermsInput({query: {}})).to.throw();
+    });
+
+    it("validate throws error when service Id is missing", () => {
+      expect(() => validationUtil.validateGetCheckPermsInput({query: {"userId": "231313"}})).to.throw();
+    });
+
+    it("validate throws error when permission is missing", () => {
+      expect(() => validationUtil.validateGetCheckPermsInput({query: {"userId": "231313", "serviceId": "3432424"}})).to.throw();
+    });
+
+    it("validate throws error when category is missing", () => {
+      expect(() => validationUtil.validateGetCheckPermsInput({query: {"userId": "231313", "serviceId": "3432424", "permission": "write"}})).to.throw();
+    });
+  });
+
+  describe("Validate get services input", () => {
+    it("validate throws error when userId is missing", () => {
+      expect(() => validationUtil.validateGetServicesInput({query: {}})).to.throw();
+    });
+  });
+});
 
 describe('processACLRequest tests', () => {
   describe('policies path tests', () => {
@@ -100,6 +123,7 @@ describe('processACLRequest tests', () => {
     it('POST policies - add user successfully', async() => {
       // arrange
       const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
+      const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
       const config = {};
 
       // act
@@ -108,7 +132,9 @@ describe('processACLRequest tests', () => {
       // assert
       expect(result.success).to.equal(true);
       sinon.assert.calledOnce(addOrRemovePolicyStub);
+      sinon.assert.calledOnce(processScmPermissionsStub);
       addOrRemovePolicyStub.restore();
+      processScmPermissionsStub.restore();
     });
 
     it('POST policies - add user error', async() => {
@@ -125,6 +151,7 @@ describe('processACLRequest tests', () => {
     it('POST policies - remove users successfully', async() => {
       // arrange
       const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
+      const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
       const config = {};
       postEvent.body.policies = [];
 
@@ -134,7 +161,9 @@ describe('processACLRequest tests', () => {
       // assert
       expect(result.success).to.equal(true);
       sinon.assert.calledOnce(addOrRemovePolicyStub);
+      sinon.assert.calledOnce(processScmPermissionsStub);
       addOrRemovePolicyStub.restore();
+      processScmPermissionsStub.restore();
     });
 
     it('POST policies - remove users throws error', async() => {
