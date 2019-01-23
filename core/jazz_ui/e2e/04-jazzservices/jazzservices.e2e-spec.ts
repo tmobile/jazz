@@ -425,7 +425,9 @@ describe('Overview', () => {
             jazzServices_po.getDeploymentStatus().click();
             browser.wait(EC.elementToBeClickable(jazzServices_po.getWebsiteLink()), timeOutHigh);
             jazzServices_po.getWebsiteLink().click();
-            browser.close();
+			//Verifying the Website is ready to Get Start
+			expect(jazzServices_po.getWebsiteStartVerify().getText()).toEqual('Get Started !!');
+			browser.close();
             browser.refresh();
             jazzServices_po.getMetrices().click();
             jazzServices_po.getMetricsChildOne().click();

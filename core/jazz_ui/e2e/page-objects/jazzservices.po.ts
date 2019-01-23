@@ -225,5 +225,8 @@ export class Jazz {
   getOutput() {
     return element(by.xpath('//span[contains(text(),"Function got triggered successfully")]'));
   }
+  getWebsiteStartVerify() {
+	return element(by.xpath('//div[@class="header-content-inner"]/a[@class="btn btn-primary btn-lg"]'));  
+  }
 
  }
