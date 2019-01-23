@@ -101,7 +101,7 @@ node()  {
 	gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 
 	echo "requestId: $requestId"
-	if(requestId != 'none' && requestId != null) {
+	if(requestId && requestId instanceof String && !utilModule.isBuildAReplay()) {
 		echo "Setting up requestId"
 		events.setRequestId(requestId)
 		environmentDeploymentMetadata.setRequestId(requestId)
@@ -115,7 +115,7 @@ node()  {
 
 	dir(repo_name)
 	{
-	
+
 		stage('Pre-Build Validation'){
 
 			events.sendStartedEvent("VALIDATE_INPUT", 'pre-build validation starts', context_map)
@@ -154,7 +154,7 @@ node()  {
 				sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
 				sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 				sh "aws configure set preview.cloudfront true"
-				
+
 				generateAssetInfo()
 				def assetInfo = "S3 Folder - /${asset_info}"
 
