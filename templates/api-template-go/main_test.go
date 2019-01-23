@@ -14,8 +14,8 @@ import (
 
 func TestHandler(t *testing.T) {
 	type args struct {
-		ctx     context.Context
-		request Request
+		ctx   context.Context
+		event map[string]interface{}
 	}
 	tests := []struct {
 		name    string
@@ -27,7 +27,7 @@ func TestHandler(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := Handler(tt.args.ctx, tt.args.request)
+			got, err := Handler(tt.args.ctx, tt.args.event)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Handler() error = %v, wantErr %v", err, tt.wantErr)
 				return

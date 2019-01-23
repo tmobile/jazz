@@ -22,6 +22,8 @@
 
 const request = require('request');
 const util = require('util');
+const Uuid = require("uuid/v4");
+const moment = require('moment');
 
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
@@ -30,6 +32,7 @@ const logger = require("./components/logger.js")();
 const utils = require("./components/utils.js");
 const validateUtils = require("./components/validation.js");
 const crud = require("./components/crud")();
+
 
 function handler(event, context, cb) {
 	//Initializations
@@ -67,7 +70,7 @@ function handler(event, context, cb) {
 
 			if (method === "POST" && Object.keys(path).length) {
 				logger.info("GET Deployment details using deployment Id :" + path.id);
-				exportable.processDeploymentRebuild(config, path.id, deploymentTableName)
+				exportable.processDeploymentRebuild(config, event.principalId, path.id, deploymentTableName)
 					.then((res) => {
 						logger.info("Re-build result:" + JSON.stringify(res));
 						return cb(null, responseObj(res, path));
@@ -237,11 +240,13 @@ function processDeploymentCreation(config, deployment_details, deploymentTableNa
 	});
 }
 
-function processDeploymentRebuild(config, deploymentId, deploymentTableName) {
-	logger.debug("processDeploymentRebuild")
+function processDeploymentRebuild(config, principalId, deploymentId, deploymentTableName) {
+	logger.debug("processDeploymentRebuild");
+	const request_id =  Uuid();
 	return new Promise((resolve, reject) => {
 		exportable.getDeploymentDetailsById(deploymentTableName, deploymentId)
-			.then((res) => exportable.reBuildDeployment(res, config))
+			.then((res) => exportable.sendCreateDepolymentEvent(config, res, request_id ,principalId))
+			.then((res) => exportable.reBuildDeployment(res, config, request_id))
 			.then((res) => {
 				resolve(res);
 			})
@@ -250,7 +255,6 @@ function processDeploymentRebuild(config, deploymentId, deploymentTableName) {
 			});
 	});
 }
-
 function processDeploymentsList(config, query, deploymentTableName) {
 	return new Promise((resolve, reject) => {
 		var queryParams = {
@@ -284,6 +288,56 @@ function processDeploymentsUpdate(config, body, deploymentTableName, deploymentI
 			});
 	});
 }
+//custom function
+function sendCreateDepolymentEvent(config, res, request_id, principalId) {
+	logger.debug("inside send depolyment");
+	return new Promise((resolve, reject) => {
+		let context_json = {
+			'environment_logical_id': res.environment_logical_id,
+			'status': "started",
+			'domain': res.domain_name,
+			'request_id': request_id
+		};
+		let event_json = {
+			'request_id': request_id,
+			'event_handler': "JENKINS",
+			'event_name': "CREATE_DEPLOYMENT",
+			'service_name': res.service_name,
+			'service_id': res.service_id,
+			'event_status': "STARTED",
+			'event_type': "SERVICE_DEPLOYMENT",
+			'username': principalId,
+			'event_timestamp': moment().utc().format('YYYY-MM-DDTHH:mm:ss:SSS'),
+			'service_context': context_json
+		};
+		let options = {
+			url: config.SERVICE_API_URL + config.EVENT_API_URL,
+			method: 'POST',
+			rejectUnauthorized: false,
+			headers: {
+				'Accept': 'application/json',
+			},
+			json: event_json
+		};
+		request(options, (error, response, body) => {
+			if (response && response.statusCode === 200 && body && body.data) {
+				resolve(res);
+			} else {
+				var message = "";
+				if (error) {
+					message = error.message
+				} else {
+					message = response.body.message
+				}
+				reject({
+					"error": "Could not able to trigger the Event Api.",
+					"message": message
+				});
+			}
+		});
+	});
+}
+
 
 function processDeploymentsDeletion(deploymentTableName, deploymentId) {
 	return new Promise((resolve, reject) => {
@@ -383,12 +437,12 @@ function deleteServiceByID(getDeploymentDetails, deploymentTableName, deployment
 	})
 }
 
-function reBuildDeployment(refDeployment, config) {
+function reBuildDeployment(refDeployment, config, request_id) {
 	logger.debug("Inside reBuildDeployment" + JSON.stringify(refDeployment));
 	return new Promise((resolve, reject) => {
 		exportable.getToken(config)
 			.then((authToken) => exportable.getServiceDetails(config, refDeployment.service_id, authToken))
-			.then((res) => exportable.buildNowRequest(res, config, refDeployment))
+			.then((res) => exportable.buildNowRequest(res, config, refDeployment, request_id))
 			.then((res) => {
 				resolve(res);
 			})
@@ -460,7 +514,7 @@ function getServiceDetails(configData, serviceId, authToken) {
 	});
 }
 
-function buildNowRequest(serviceDetails, config, refDeployment) {
+function buildNowRequest(serviceDetails, config, refDeployment, request_id) {
 	logger.debug("Inside buildNowRequest:")
 	return new Promise((resolve, reject) => {
 		var data = serviceDetails.data,
@@ -468,9 +522,10 @@ function buildNowRequest(serviceDetails, config, refDeployment) {
 			domain = data.domain,
 			scm_branch = encodeURI(refDeployment.scm_branch),
 			build_url = config.JOB_BUILD_URL,
-			buildQuery = "/buildWithParameters?token=" + config.JOB_TOKEN + "&service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch,
+			buildQuery = "/buildWithParameters?token=" + config.JOB_TOKEN + "&service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch + "&request_id=" + request_id,
 			base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.API_TOKEN)).toString("base64"),
 			rebuild_url = "";
+	
 		rebuild_url = build_url + config.BUILDPACKMAP[data.type.toLowerCase()] + buildQuery;
 
 		if (build_url) {
@@ -493,7 +548,8 @@ function buildNowRequest(serviceDetails, config, refDeployment) {
 						logger.info("successfully deployment started.");
 						resolve({
 							result: 'success',
-							message: "deployment started."
+							message: "deployment started.",
+							request_id: request_id
 						});
 					} else if (res.statusCode === 404) {
 						logger.error("Service not available.");
@@ -529,7 +585,8 @@ const exportable = {
 	reBuildDeployment,
 	getToken,
 	getServiceDetails,
-	buildNowRequest
+	buildNowRequest,
+	sendCreateDepolymentEvent
 }
 
 module.exports = exportable;

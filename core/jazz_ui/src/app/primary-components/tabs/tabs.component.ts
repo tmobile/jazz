@@ -22,7 +22,7 @@ export class TabsComponent implements OnInit {
   @Input() beforeEnv: boolean = true;
   disableobj:any= {
 'overview':true,
-'access control':true,
+'access control':false,
 'cost':true,
 'metrics':true,
 'logs':true,

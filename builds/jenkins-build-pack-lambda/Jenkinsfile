@@ -42,6 +42,7 @@ node() {
 
   def branch = params.scm_branch
   def repo_name = params.service_name
+  def requestId = params.request_id
   def gitCommitOwner
   def gitCommitHash
   def context_map
@@ -138,15 +139,18 @@ node() {
     isEventSchdld = true
   }
 
-  def requestId = utilModule.generateRequestId()
-  if (requestId != null) {
+  echo "requestId: requestId"
+  if (requestId != 'none' && requestId != null) {
+    requestId = requestId
     events.setRequestId(requestId)
     environmentDeploymentMetadata.setRequestId(requestId)
   } else {
-    error "Request Id Generation failed"
+    requestId = utilModule.generateRequestId()
+    events.setRequestId(requestId)
+    environmentDeploymentMetadata.setRequestId(requestId)
+    events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
   }
 
-  events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
   dir(repo_name) {
     loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
@@ -563,7 +567,7 @@ def buildLambda(String runtime, String repo_name) {
       sh "mkdir -p $GOPATH/src"
       sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + " $GOPATH/src"
       sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
-      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/" + repo_name + "/main.go"
+      sh "cd $GOPATH/src/"+ repo_name+" && env GOOS=linux GOARCH=amd64 go build -o $GOPATH/"+ repo_name+"/main  *.go"
     }
   }
 }

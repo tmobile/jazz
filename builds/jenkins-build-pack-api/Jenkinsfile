@@ -40,6 +40,7 @@ node() {
 
 	def branch = params.scm_branch
 	def repo_name = params.service_name
+	def requestId = params.request_id
 	def gitCommitOwner
 	def gitCommitHash
 	def context_map
@@ -135,15 +136,18 @@ node() {
 				}
 			}
 		}
-
-		def requestId = utilModule.generateRequestId()
-		if (requestId != null) {
+		echo "requestId: requestId"
+		if (requestId != 'none' && requestId != null) {
+			echo "Setting up requestId"
+			requestId = requestId
 			events.setRequestId(requestId)
 			environmentDeploymentMetadata.setRequestId(requestId)
 		} else {
-			error "Request Id Generation failed"
+			requestId = utilModule.generateRequestId()
+			events.setRequestId(requestId)
+			environmentDeploymentMetadata.setRequestId(requestId)
+			events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 		}
-		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
 		stage('Pre-Build Validation') {
 			try {
@@ -505,16 +509,16 @@ def buildLambda(String runtime, String repo_name) {
 		  	pip install pytest
 	  		"""
 		}
-	} else if (runtime.indexOf("go") > -1 ) {
-		// Installing dependencies using dep ensure
-		// golang build scripts
-		withEnv(["GOPATH=${env.WORKSPACE}"]) {
-			sh "mkdir -p $GOPATH/src"
-			sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + " $GOPATH/src"
-			sh "cd $GOPATH/src/" + repo_name + " && dep ensure"
-			sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/" + repo_name + "/main.go"
-		}
-	}
+	} else if (runtime.indexOf("go") > -1 ){
+    //Installing dependencies using dep ensure
+    //golang build scripts
+   	withEnv(["GOPATH=${env.WORKSPACE}"]) {
+      sh "mkdir -p $GOPATH/src"
+      sh "rsync -a --exclude='.*' $GOPATH/"+ repo_name+"  $GOPATH/src"
+      sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
+      sh "cd $GOPATH/src/"+ repo_name+" && env GOOS=linux GOARCH=amd64 go build -o $GOPATH/"+ repo_name+"/main  *.go"
+    }
+  }
 }
 
 /**
@@ -678,7 +682,7 @@ def loadServerlessConfig(config) {
 	} else if (config['providerRuntime'].indexOf("go") > -1) {
 		sh "cp _config/serverless-go.yml ./serverless.yml"
 	}
-	
+
 	removeEventResources()
 	echoServerlessFile()
 }
