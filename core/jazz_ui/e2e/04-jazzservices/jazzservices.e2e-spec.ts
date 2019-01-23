@@ -85,7 +85,7 @@ describe('Overview', () => {
             browser.sleep(40000);
       });
       
-    it('Verify API Deployments' , () => {
+      it('Verify API Deployments' , () => {
             browser.sleep(4000);
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
