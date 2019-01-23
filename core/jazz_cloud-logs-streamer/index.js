@@ -167,7 +167,7 @@ function transform(payload) {
                         data.message = message;
                     }
                     data.log_level = utils.getSubInfo(logEvent.message, globalConfig.PATTERNS.log_level, 0);
-                    if (isEmpty(data.log_level)) {
+                    if (!data.log_level) {
                         data.log_level = globalConfig.DEFAULT_LOG_LEVEL;
                     }
                     if (!(data.message.startsWith("REPORT") || data.message.startsWith("START") || data.message.startsWith("END"))) {
@@ -327,10 +327,4 @@ function buildRequest(endpoint, body) {
     return request;
 }
 
-function isEmpty(value) {
-    return value === undefined ||
-        value === null ||
-        (typeof value === "object" && Object.keys(value).length === 0) ||
-        (typeof value === "string" && value.trim().length === 0)
-}
 
