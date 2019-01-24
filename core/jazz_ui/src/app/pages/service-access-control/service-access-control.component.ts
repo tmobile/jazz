@@ -1,19 +1,23 @@
-/** 
-  * @type Component 
+/**
+  * @type Component
   * @desc Service access control page
   * @author
 */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ToasterService } from 'angular2-toaster';
+import { RequestService, MessageService } from '../../core/services';
 
 
 @Component({
   selector: 'service-access-control',
   templateUrl: './service-access-control.component.html',
+  providers: [RequestService, MessageService],
   styleUrls: ['./service-access-control.component.scss']
 })
 export class ServiceAccessControlComponent implements OnInit {
+  "usestrict"
+  @Input() service: any = {};
 
   accessGranted:Boolean = false;
   i: number = 0;
@@ -27,6 +31,17 @@ export class ServiceAccessControlComponent implements OnInit {
   disableCode: boolean = false;
   disableManage: boolean = false;
   disableDeploy: boolean = false;
+  isLoading: boolean = false;
+  isAddOrDelete: boolean = false;
+  access:any = {
+    'manage': [],
+    'code': [],
+    'deploy': []
+  }
+  originalAccessDetails:any = {};
+  aclPayload:any = {};
+  restorePolicies:any = [];
+
   public newGroup: any = {
     'name': '',
     'accessType':'read'
@@ -59,8 +74,18 @@ export class ServiceAccessControlComponent implements OnInit {
   }
 
   // list of all the groups//
-  groupList: any = [{'givenName':'group one'}, {'givenName':'group two'}, {'givenName':'group three'},{'givenName':'group four'},{'givenName':'group five'},{'givenName':'group six'},{'givenName':'group seven'}]
-  
+  groupList: any = []
+  getUsersList() {
+    this.http.get('/jazz/users').subscribe(
+      response => {
+        console.log(response)
+        this.groupList = response.data;
+      },
+      error => {
+        console.log(error)
+      }
+    )
+  }
   // function to show group list(auto-complete)
   ongrpNameChange(category, i){
     if(category == 'manage'){
@@ -69,104 +94,176 @@ export class ServiceAccessControlComponent implements OnInit {
        this.groupsAccess.code[i].showGroups = true;
     } else if(category == 'deploy'){
        this.groupsAccess.deploy[i].showGroups = true;
-    } 
+    }
   }
-  
+
   //function for deleting group
-  deletegroup(i,category){
-    if(category == 'manage'){
-       this.groupsAccess.manage.splice(i,1);
-       if(this.groupsAccess.manage.length == 1)
-         this.disableManage = true;
-      else
-         this.disableManage = false
-    } else if(category == 'code'){
-       this.groupsAccess.code.splice(i,1);
-       if(this.groupsAccess.code.length == 1)
-       this.disableCode = true;
-    else
-       this.disableCode = false;
-    } else if(category == 'deploy'){
-       this.groupsAccess.deploy.splice(i,1);
-         if(this.groupsAccess.deploy.length == 1)
-       this.disableDeploy = true;
-       else 
-         this.disableDeploy = false;
-    } 
+  deletegroup(i,category, group){
+    this.access[category].splice(i, 1);
+    console.log("deleted group: ", group);
+    this.restorePolicies.push(group);
+    this.isAddOrDelete = true;
+
+    // if(category == 'manage'){
+    //   this.access.manage.splice(i,1);
+    //   if(this.access.manage.length == 1)
+    //     this.disableManage = true;
+    //   else
+    //     this.disableManage = false
+    // } else if(category == 'code'){
+    //   this.access.code.splice(i,1);
+    //   if(this.access.code.length == 1)
+    //    this.disableCode = true;
+    //   else
+    //    this.disableCode = false;
+    // } else if(category == 'deploy'){
+    //   this.access.deploy.splice(i,1);
+    //   if(this.access.deploy.length == 1)
+    //     this.disableDeploy = true;
+    //   else
+    //     this.disableDeploy = false;
+    // }
   }
-  
+
   //function for adding group
- addgroup(i,category){
-    if(category == 'manage'){
-       this.groupsAccess.manage.push({'name': '','accessType':'read', 'userType':"Read Only"});
-       if(this.groupsAccess.manage.length == 1)
-         this.disableManage = true;
-      else
-         this.disableManage = false;
-    } else if(category == 'code'){
-         this.groupsAccess.code.push({'name': '','accessType':'read', 'userType':"Read Only"});
-         if(this.groupsAccess.code.length == 1)
-            this.disableCode = true;
-         else
-            this.disableCode = false;
-    } else if(category == 'deploy'){
-         this.groupsAccess.deploy.push({'name': '','accessType':'read', 'userType':"Read Only"});
-         if(this.groupsAccess.deploy.length == 1)
-            this.disableDeploy = true;
-         else
-            this.disableDeploy = false;
-    } 
+ addgroup(i, category){
+   alert(category+  i);
+  //  if (this.access[category])
+   this.access[category].push({'userId': '','category': category, 'permission': 'read'});
+   this.isAddOrDelete = true;
+    // if(category == 'manage'){
+    //    this.access.manage.push({'userId': '','category':'manage', 'permission':"read"});
+    //    if(this.access.manage.length == 1)
+    //      this.disableManage = true;
+    //   else
+    //      this.disableManage = false;
+    // } else if(category == 'code'){
+    //      this.access.code.push({'userId': '','category':'code', 'permission':"read"});
+    //      if(this.access.code.length == 1)
+    //         this.disableCode = true;
+    //      else
+    //         this.disableCode = false;
+    // } else if(category == 'deploy'){
+    //      this.access.deploy.push({'userId': '','category':'deploy', 'permission':"read"});
+    //      if(this.access.deploy.length == 1)
+    //         this.disableDeploy = true;
+    //      else
+    //         this.disableDeploy = false;
+    // }
   }
 
   onEditClick(){
-     this.showDisplay = false;
+    this.showDisplay = false;
+
+    if (this.access.code.length == 1)
+      this.disableCode = true;
+    else
+        this.disableCode = false;
+
+    if (this.access.manage.length == 1)
+        this.disableManage = true;
+    else
+        this.disableManage = false;
+
+    if (this.access.deploy.length == 1)
+        this.disableDeploy = true;
+    else
+        this.disableDeploy = false;
   }
 
   onSaveClick(){
      this.showDisplay = true;
+     this.aclPayload["serviceId"] = this.service.id;
+
+     let policiesList = Object.keys(this.access).map(eachcat => (this.access[eachcat]))
+     console.log(policiesList)
+     this.aclPayload["policies"] = [].concat.apply([], policiesList);;
+     this.updateAclPolicies(this.aclPayload);
   }
+
   onCancelClick(){
+
+   if (this.restorePolicies.length) {
+    this.access = this.originalAccessDetails;
+   }
+   console.log(this.originalAccessDetails);
+   console.log(this.access);
+   if (this.isAddOrDelete) {
+     alert("add or delete")
+    this.access = this.originalAccessDetails;
+   }
    this.showDisplay = true;
   }
+
   refresh(){
-
-  }
-  
-   onSelectionChange(value,index){
-      this.groupsAccess.code[index].accessType = value;
-      if(this.groupsAccess.code[index].accessType == 'read')
-         this.groupsAccess.code[index].userType = "Read Only";
-      else
-         this.groupsAccess.code[index].userType = "Write";   
+    this.getAclPolicies(this.service.id);
   }
 
-  onManagementChange(value,index){
-      this.groupsAccess.manage[index].accessType = value;
-      if(this.groupsAccess.manage[index].accessType == 'read')
-         this.groupsAccess.manage[index].userType = "Read Only";
-      else
-         this.groupsAccess.manage[index].userType = "Admin";
+   onSelectionChange(value, index, category){
+      this.access[category][index].permission = value;
+      // if(this.groupsAccess.code[index].accessType == 'read')
+      //    this.groupsAccess.code[index].userType = "Read Only";
+      // else
+      //    this.groupsAccess.code[index].userType = "Write";
   }
 
-  constructor() {
-   
+  // onManagementChange(value,index){
+  //     this.access.manage[index].permission = value;
+  //     // if(this.access.manage[index].permission == 'read')
+  //     //    this.access.manage[index].userType = "Read Only";
+  //     // else
+  //     //    this.access.manage[index].userType = "Admin";
+  // }
+
+  constructor(
+    private request: RequestService
+  ) {
+    this.http = request;
    }
 
   ngOnInit() {
-   if(this.groupsAccess.code.length == 1)
-      this.disableCode = true;
-   else
-      this.disableCode = false;
-   
-   if(this.groupsAccess.manage.length == 1)
-      this.disableManage = true;
-   else
-      this.disableManage = false;
-
-   if(this.groupsAccess.deploy.length == 1)
-      this.disableDeploy = true;
-   else
-      this.disableDeploy = false;
+    this.getUsersList()
+    console.log(this.service);
+    this.getAclPolicies(this.service.id);
   }
 
+  getAclPolicies(serviceId) {
+    this.isLoading = true;
+    console.log("serviceId is: ", serviceId);
+    this.http.get(`/jazz/acl/policies?serviceId=${serviceId}`).subscribe(
+      response => {
+
+        console.log("response: " + JSON.stringify(response.data));
+        ['manage', 'code', 'deploy'].forEach(eachCat => {
+          this.originalAccessDetails[eachCat] = response.data.policies.filter(eachPolicy => {
+            return (eachPolicy.category === eachCat)
+          });
+        });
+        console.log(this.originalAccessDetails);
+        this.access = Object.assign({}, this.originalAccessDetails);
+
+        console.log(this.access);
+        this.isLoading = false;
+      },
+      error => {
+        console.log("error: " + JSON.stringify(error));
+        this.isLoading = false;
+      }
+    );
+  }
+
+  updateAclPolicies(payload) {
+    this.isLoading = true;
+    console.log("payload: ", payload);
+    this.http.post('/jazz/acl/policies', payload).subscribe(
+      response=> {
+        console.log("response: " + JSON.stringify(response.data));
+        this.isLoading = false;
+      },
+      error => {
+        console.log("error: " + JSON.stringify(error));
+        this.isLoading = false;
+      }
+    )
+  }
 }
