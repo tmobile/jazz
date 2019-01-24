@@ -173,15 +173,16 @@ export class ServiceAccessControlComponent implements OnInit {
     this.isLoading = true;
     this.http.post('/jazz/acl/policies', payload).subscribe(
       response=> {
-        this.isLoading = false;
         let successMessage = this.toastmessage.successMessage(response, "updateServicePolicies");
         this.toast_pop('success', "", "Policies for service: " + this.service.name + " are " + successMessage);
+        this.getAclPolicies(this.service.id)
       },
       error => {
-        this.isLoading = false;
         let errorMessage = this.toastmessage.errorMessage(error, "updateServicePolicies");
         this.toast_pop('error', 'Oops!', errorMessage)
+        this.getAclPolicies(this.service.id)
       }
     )
+
   }
 }
