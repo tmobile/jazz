@@ -19,7 +19,6 @@ import groovy.transform.Field
 @Field def serviceMetadataLoader
 @Field def utilModule
 @Field def awsAPIGatewayModule
-@Field def awsLambdaModule
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 
@@ -300,7 +299,7 @@ node() {
                 def apiResources = getSwaggerResourceARNs("${config['domain']}-${config['service']}-${environment_logical_id}", environment_logical_id, "gcp")
                 if(apiResources) {
                   for (path in apiResources) {
-                    events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("gcp", "${config['domain']}-${config['service']}/${environment_logical_id}/${path}", "apigee_proxy", config), environment_logical_id);
+                    events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", "${config['domain']}-${config['service']}/${environment_logical_id}/${path}", "apigee_proxy", config), environment_logical_id);
                   }
                 }
 								break;
@@ -1026,9 +1025,6 @@ def loadBuildModules(buildModuleUrl){
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
 		awsAPIGatewayModule.initialize()
 		echo "AWS APIGateway module loaded successfully."
-
-		awsLambdaModule = load "aws-lambda-module.groovy"
-		echo "AWS Lambda module loaded successfully."
 
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
