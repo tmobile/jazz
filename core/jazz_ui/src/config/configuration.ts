@@ -23,11 +23,11 @@ export const CONFIGURATIONS = {
         e2e: {
           EMAIL_ID: 'elizabeth.johnson178@t-mobile.com',
                     USER_NAME: 'serverless@t-mobile.com', 
-                    PASSWORD:  '1cBx@dUYZw',
+                    PASSWORD:  'GNfz1QkcE@',
                     REG_USER_NAME: 'uname' + Date.now() + '@t-mobile.com',
                     REG_PASS_WORD: 'passcode123',
                     REG_CODE: 'jazz',
-                    APPLN_URL: 'http://d1gz9wcy7wfb50.cloudfront.net'
+                    APPLN_URL: 'http://daue3x7w229fc.cloudfront.net'
         }
       }
   }
