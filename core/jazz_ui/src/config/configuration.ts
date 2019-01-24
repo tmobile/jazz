@@ -21,13 +21,13 @@ export const CONFIGURATIONS = {
     general: {
       ACCESS_MANAGEMENT_PORTAL_URL: '',
         e2e: {
-          EMAIL_ID: '{stack_email}',
-          USER_NAME: '{stack_username}', 
-          PASSWORD: '{stack_password}', 
-			    REG_USER_NAME: '{stack_reg_username}',
-          REG_PASS_WORD: '{stack_reg_password}',
-          REG_CODE: '{stack_reg_code}',
-          APPLN_URL: '{stack_jazz_url}'
+          EMAIL_ID: 'elizabeth.johnson178@t-mobile.com',
+                    USER_NAME: 'serverless@t-mobile.com', 
+                    PASSWORD:  '1cBx@dUYZw',
+                    REG_USER_NAME: 'uname' + Date.now() + '@t-mobile.com',
+                    REG_PASS_WORD: 'passcode123',
+                    REG_CODE: 'jazz',
+                    APPLN_URL: 'http://d1gz9wcy7wfb50.cloudfront.net'
         }
       }
   }

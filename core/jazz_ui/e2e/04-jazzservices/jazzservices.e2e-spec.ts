@@ -286,7 +286,7 @@ describe('Overview', () => {
             //Asset Tab Navigagation
             jazzServices_po.getAsset().click();
             //Checking Assets are Active
-            expect(jazzServices_po.getAssetStatusVerify().isDisplayed()).toBe(true);
+            expect(jazzServices_po.getAssetStatusVerify().getText().then(function(text){ return text.toLowerCase()})).toEqual('active'); 
             browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
             browser.sleep(4000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
