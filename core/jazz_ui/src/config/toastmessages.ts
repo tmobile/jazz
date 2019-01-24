@@ -162,7 +162,19 @@ export const toastMessage = {
         "error400":"Something went wrong while updating the service details. Please try again!",
         "error404":"Something went wrong while updating the service details. Please try again!",
         "error500":"Something went wrong while updating the service details. Please try again!"
-        
+    },
+    "updateServicePolicies":{
+      "success":"updated successfully.",
+      "error0": "Looks like we are having trouble reaching our servers. Please try later!",
+      "error400":"Something went wrong while updating the service details. Please try again!",
+      "error404":"Something went wrong while updating the service details. Please try again!",
+      "error500":"Something went wrong while updating the service details. Please try again!"
+    },
+    "listServicePolicies":{
+        "dataNull":"Something went wrong while we were fetching your service policy details!",
+        "error400":"Something went wrong while we were fetching your service policy details!",
+        "error401":"Token expired",
+        "error404":"Something went wrong while we were fetching your service policy details!",
+        "error500":"Something went wrong while we were fetching your service policy details!"
     }
-
 };

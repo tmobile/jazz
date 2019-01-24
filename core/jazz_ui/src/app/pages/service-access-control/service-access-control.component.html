@@ -1,5 +1,5 @@
 <div class="access-control-wrap relative">
-    <div>
+    <div *ngIf="!isLoading && !isDataNotAvailable && !isError">
         <section class="each-step-wrap header-sec">
             <h1>Update who can access your service</h1>
              <btn-jazz-primary newclass="loginbutton savechangesbtn" text="EDIT" *ngIf="showDisplay" (click)='onEditClick()'></btn-jazz-primary>
@@ -45,11 +45,11 @@
                     <div class="groups-wrap" [hidden]="accessGranted" *ngFor="let group of access.manage;let i=index">
                         <div class="groups-input toggle-class" [ngClass]="{'disabled': accessGranted}">
                             <div class="input-wrapper" [ngClass]="{'read-only': group.permission !== admin }">
-                                <input name="api_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.userId" (ngModelChange)="ongrpNameChange('api' ,i)">
-                                <div *ngIf="group.showGroups" class="approvers-list-wrap" (clickOutside)="group.showGroups = false">
+                                <input name="api_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.userId" (ngModelChange)="ongrpNameChange('manage' ,i)">
+                                <div *ngIf="showManageGroup && !group.userId" class="approvers-list-wrap" (clickOutside)="showManageGroup = false">
                                     <div class="approvers-list typeShow open">
-                                        <div class="approvers-dets" *ngFor="let approverss of groupList;let j = index;" (focus)=" j==focusindex " [ngClass]="{pinkfocususers : j==focusindex }" [ngStyle]="scrollList" >
-                                        <div (click)="selectApprovers(approverss);$event.stopPropagation();" index="{j}" [attr.displayName]='approverss.displayName' [attr.userId]='approverss.userId' [attr.userEmail]='approverss.userEmail'><div class="approvers-text">{{approverss.userId}}</div></div>
+                                        <div class="approvers-dets" *ngFor="let user of manageGroupList;let j = index;" (focus)=" j==focusindex " [ngClass]="{pinkfocususers : j==focusindex }" [ngStyle]="scrollList" >
+                                        <div (click)="selectApprovers(user, i, 'manage');$event.stopPropagation();" index="{j}" ><div class="approvers-text">{{user}}</div></div>
                                         </div>
                                     </div>
                                 </div>
@@ -116,10 +116,10 @@
                         <div class="groups-input">
                             <div class="input-wrapper" [ngClass]="{'read-only': group.permission == read}">
                                 <input name="code_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.userId" (ngModelChange)="ongrpNameChange('code' ,i)">
-                                <div *ngIf="group.showGroups" class="approvers-list-wrap" (clickOutside)="group.showGroups = false">
+                                <div *ngIf="showCodeGroup" class="approvers-list-wrap" (clickOutside)="showCodeGroup = false">
                                     <div class="approvers-list typeShow open">
-                                        <div class="approvers-dets" *ngFor="let approvers of groupList | myfilter:group.userId">
-                                            <div (click)="selectApprovers(approvers, i , 'code')">{{approvers.givenName}}</div>
+                                        <div class="approvers-dets" *ngFor="let user of codeGroupList">
+                                            <div (click)="selectApprovers(user, i , 'code')">{{user}}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -183,12 +183,13 @@
                 <div class="col-lg-8 col-md-8" *ngIf="!showDisplay">
                     <div class="groups-wrap" *ngFor="let group of access.deploy;let i=index">
                         <div class="groups-input">
-                            <div class="input-wrapper border-wrapper" [ngClass]="{'read-only': group.permission === 'read'}">
-                                <input name="deploy_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.userId" (ngModelChange)="ongrpNameChange('deploy' ,i)" [readonly]="group.readOnly">
-                                <div *ngIf="group.showGroups" class="approvers-list-wrap" (clickOutside)="group.showGroups = false">
-                                    <div class="approvers-list typeShow open">
-                                        <div class="approvers-dets" *ngFor="let approvers of groupList | myfilter:group.userId">
-                                            <div (click)="selectApprovers(approvers, i , 'deploy')">{{approverss.userId}}</div>
+                            <div class="input-wrapper" [ngClass]="{'read-only': group.permission === 'read'}">
+                                <input name="deploy_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.userId" (ngModelChange)="ongrpNameChange('deploy' ,i); showGroups = true">
+
+                                <div *ngIf="showDeployGroup" class="approvers-list-wrap" (clickOutside)="showDeployGroup = false">
+                                    <div class="approvers-list typeShow open">hello
+                                        <div class="approvers-dets" *ngFor="let user of deployGroupList">
+                                            <div (click)="selectApprovers(user, i , 'deploy')">{{user}}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -216,5 +217,26 @@
                 </div>
             </div>
         </section>
+    </div>
+    <div>
+      <div class="loading-row-cost" [class.show]="isLoading">
+        <div class="loading-circle"></div>
+      </div>
+      <div class="loading-row-cost" [class.show]="isDataNotAvailable">
+        <div class="empty-row nodata with-refresh relative">
+            <div class="icon-icon-nodata"></div>
+            <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
+        </div>
+      </div>
+      <div class="loading-row-cost" [class.show]="isError">
+          <div class="empty-row with-refresh relative">
+              <div class="icon-icon-server-error">
+                  <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span>
+              </div>
+              <div class='oops'>Oops!</div>
+              <div>{{errMessage}}<br><a (click)="refresh()">REFRESH</a> to give it another try.</div>
+              <br><div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
+          </div>
+      </div>
     </div>
 </div>
