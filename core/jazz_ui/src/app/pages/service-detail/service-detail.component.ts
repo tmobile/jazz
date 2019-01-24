@@ -168,11 +168,9 @@ export class ServiceDetailComponent implements OnInit {
           'link': ''
         }]
       this.isLoadingService = false;
-      if (service.status == 'deletion_completed' || service.status == 'deletion_started' || service.status == 'creation_started' || service.status == 'creation_failed')
+      if (service.status == 'deletion_completed' || service.status == 'deletion_started' || service.status == 'creation_started' || service.status == 'creation_failed' || (!service.repository && service.domain == 'jazz'))
         this.canDelete = false;
-      
-      if (!service.repository && service.domain == 'jazz')
-        this.canDelete = false;
+
     } else {
       this.isLoadingService = false;
       let errorMessage = this.toastmessage.successMessage(service, "serviceDetail");
