@@ -140,7 +140,7 @@ node() {
   }
 
   echo "requestId: $requestId"
-  if (requestId && requestId instanceof String && !utilModule.isBuildAReplay()) {
+  if (requestId != "none" && requestId != null && !utilModule.isReplayedBuild()) {
     requestId = requestId
     events.setRequestId(requestId)
     environmentDeploymentMetadata.setRequestId(requestId)

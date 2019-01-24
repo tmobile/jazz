@@ -101,7 +101,7 @@ node()  {
 	gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 
 	echo "requestId: $requestId"
-	if(requestId && requestId instanceof String && !utilModule.isBuildAReplay()) {
+	if(requestId != "none" && requestId != null && !utilModule.isReplayedBuild()) {
 		echo "Setting up requestId"
 		events.setRequestId(requestId)
 		environmentDeploymentMetadata.setRequestId(requestId)
