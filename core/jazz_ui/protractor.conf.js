@@ -4,6 +4,7 @@
 const SpecReporter = require('jasmine-spec-reporter').SpecReporter;
 var Jasmine2HtmlReporter = require('protractor-jasmine2-html-reporter');
 const JasmineConsoleReporter = require('jasmine-console-reporter');
+var JSONReporter = require('jasmine-json-test-reporter');
 const reporter = new JasmineConsoleReporter({
     colors: 1,           // (0|false)|(1|true)|2
     cleanStack: 1,       // (0|false)|(1|true)|2|3
@@ -51,6 +52,11 @@ exports.config = {
     });
     jasmine.getEnv().addReporter(new SpecReporter({ spec: { displayStacktrace: true } }));
     jasmine.getEnv().addReporter(new Jasmine2HtmlReporter({savePath: 'target/screenshots'}));
+    jasmine.getEnv().addReporter(new JSONReporter({
+      file: 'jasmine-test-results.json',
+      beautify: true,
+      indentationLevel: 4 
+    }));
     browser.manage().timeouts().implicitlyWait(2000000);
     browser.manage().window().setSize(1600, 1000);
     browser.manage().window().maximize();
