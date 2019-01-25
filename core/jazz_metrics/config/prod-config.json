@@ -3,5 +3,11 @@
   "ASSETS_URL": "/prod/jazz/assets",
   "TOKEN_URL": "/prod/jazz/login",
   "SERVICE_USER": "{jazz_admin}",
-  "TOKEN_CREDS": "{jazz_admin_creds}"
+  "TOKEN_CREDS": "{jazz_admin_creds}",
+  "AZURE": {
+    "SUBSCRIPTIONID": "azure_subscriptionid",
+    "CLIENTID": "azure_clientid",
+    "PASSWORD": "azure_password",
+    "TENANTID": "azure_tenantid"
+  }
 }

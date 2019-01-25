@@ -436,28 +436,39 @@ describe('jazz_metrics', function () {
   });
 
   describe("validateAssets", () => {
+
+    var stubAP, stubNS;
+    beforeEach(function () {
+      stubAP = sinon.stub(index, "getActualParam");
+      stubNS = sinon.stub(utils, "getNameSpaceAndMetricDimensons");
+    });
+
+    afterEach(function () {
+      index.getActualParam.restore();
+      utils.getNameSpaceAndMetricDimensons.restore();
+    });
+
     it("should successfully validate assets", () => {
       var assetsArray = [{
         type: 'lambda',
         asset_name: {
           FunctionName: 'jazztest_test-service'
         },
-        statistics: 'Average'
+        statistics: 'Average',
+        provider: 'aws'
       }];
-      const getActualParam = sinon.stub(index, "getActualParam").resolves("resObj");
-      const getNameSpaceAndMetricDimensons = sinon.stub(utils, "getNameSpaceAndMetricDimensons").returns({
+      const getActualParam = stubAP.resolves("resObj");
+      const getNameSpaceAndMetricDimensons = stubNS.returns({
         awsNameSpace: "namSpace",
         paramMetrics: ["metric1", "metric2"]
       });
       index.validateAssets(assetsArray, event.body)
         .then(res => {
-          expect(res[0]).to.have.all.deep.keys('actualParam', 'userParam');
+          expect(res[0]).to.have.all.deep.keys('actualParam', 'userParam','provider');
           expect(res[0].actualParam).to.not.be.empty;
           expect(res[0].userParam).to.not.be.empty;
           sinon.assert.calledOnce(getActualParam);
           sinon.assert.calledOnce(getNameSpaceAndMetricDimensons);
-          getActualParam.restore();
-          getNameSpaceAndMetricDimensons.restore();
         });
     });
 
@@ -467,10 +478,11 @@ describe('jazz_metrics', function () {
         asset_name: {
           FunctionName: 'jazztest_test-service'
         },
-        statistics: 'Average'
+        statistics: 'Average',
+        provider: 'aws'
       }];
-      const getActualParam = sinon.stub(index, "getActualParam").rejects(err);
-      const getNameSpaceAndMetricDimensons = sinon.stub(utils, "getNameSpaceAndMetricDimensons").returns({
+      const getActualParam = stubAP.rejects(err);
+      const getNameSpaceAndMetricDimensons = stubNS.returns({
         awsNameSpace: "namSpace",
         paramMetrics: ["metric1", "metric2"]
       });
@@ -479,8 +491,6 @@ describe('jazz_metrics', function () {
           expect(error).to.include(err);
           sinon.assert.calledOnce(getActualParam);
           sinon.assert.calledOnce(getNameSpaceAndMetricDimensons);
-          getActualParam.restore();
-          getNameSpaceAndMetricDimensons.restore();
         });
     })
 
@@ -504,7 +514,7 @@ describe('jazz_metrics', function () {
         asset_name: {},
         statistics: 'Average'
       }];
-      const getNameSpaceAndMetricDimensons = sinon.stub(utils, "getNameSpaceAndMetricDimensons").returns({
+      const getNameSpaceAndMetricDimensons = stubNS.returns({
         awsNameSpace: "Invalid",
         isError: true
       })
@@ -653,6 +663,7 @@ describe('jazz_metrics', function () {
 
   describe('getMetricsDetails', () => {
     var assetsArray = [];
+    var stubCW;
     beforeEach(function () {
       assetsArray = [{
         "actualParam": [{
@@ -676,6 +687,11 @@ describe('jazz_metrics', function () {
           "statistics": "Average"
         }
       }];
+      stubCW = sinon.stub(index, 'cloudWatchDetails');
+    });
+
+    beforeEach(function () {
+      index.cloudWatchDetails.restore();
     });
 
     it("should successfully get datapoints for each metrics", () => {
@@ -695,12 +711,11 @@ describe('jazz_metrics', function () {
         }]
       }
 
-      const cloudWatchDetails = sinon.stub(index, 'cloudWatchDetails').resolves(responseObj)
+      const cloudWatchDetails = stubCW.resolves(responseObj)
       index.getMetricsDetails(assetsArray)
         .then(res => {
           expect(res[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'metrics');
           sinon.assert.calledOnce(cloudWatchDetails);
-          cloudWatchDetails.restore();
         });
 
     });
@@ -710,12 +725,11 @@ describe('jazz_metrics', function () {
         code: 'InvalidParameterCombination',
         message: 'InvalidParameterCombination from cloudwatch.'
       }
-      const cloudWatchDetails = sinon.stub(index, 'cloudWatchDetails').rejects(errorObj)
+      const cloudWatchDetails = stubCW.rejects(errorObj)
       index.getMetricsDetails(assetsArray)
         .catch(error => {
           expect(error).to.include(errorObj);
           sinon.assert.calledOnce(cloudWatchDetails);
-          cloudWatchDetails.restore();
         });
     })
   });
@@ -973,13 +987,13 @@ describe('jazz_metrics', function () {
       assetsArray.forEach(asset => {
         var resObj = utils.getAssetsObj([asset], userStatistics);
         if (asset.asset_type === 's3') {
-          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics')
+          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics','provider')
           expect(resObj[0]).to.have.deep.property('asset_name.BucketName')
         } else if (asset.asset_type === 'cloudfront') {
-          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics')
+          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics','provider')
           expect(resObj[0]).to.have.deep.property('asset_name.DistributionId')
-        } else if (asset.asset_type === 'lambda' || asset.asset_type === 'apigateway') {
-          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics')
+        } else if (asset.asset_type === 'lambda' || asset.asset_type === 'apigateway','provider') {
+          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics','provider')
           expect(resObj[0]).to.include({
             type: asset.asset_type
           })
@@ -1017,7 +1031,7 @@ describe('jazz_metrics', function () {
       var userStatistics = 'average';
       assetsArray.forEach(asset => {
         var resObj = utils.getAssetsObj([asset], userStatistics);
-        expect(resObj[0]).to.have.all.deep.keys('isError')
+        expect(resObj[0]).to.have.all.deep.keys('isError', 'provider')
         expect(resObj[0]).to.include({
           isError: 'Metric not supported for asset type ' + asset.asset_type
         })
