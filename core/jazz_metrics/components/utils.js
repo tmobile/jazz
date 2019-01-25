@@ -122,6 +122,7 @@ function getAssetsObj(assetsArray, userStatistics) {
   var newAssetArr = [];
   var namespaces = metricConfig.namespaces;
 
+  //assetsArray.filter(asset => asset.provider == 'aws').forEach((asset) => {
   assetsArray.forEach((asset) => {
 
     var assetType = asset.asset_type;
@@ -148,19 +149,22 @@ function getAssetsObj(assetsArray, userStatistics) {
       var newAssetObj = {
         "type": assetType,
         "asset_name": dimensionObj,
-        "statistics": userStatistics
+        "statistics": userStatistics,
+        "provider": asset.provider
       };
       assetObj = updateNewAssetObj(newAssetObj, asset);
       newAssetArr.push(assetObj);
     } else if (assetType) {
       // type not supported
       newAssetArr.push({
-        "isError": "Metric not supported for asset type " + assetType
+        "isError": "Metric not supported for asset type " + assetType,
+        "provider": asset.provider
       });
     } else {
       // type not found
       newAssetArr.push({
-        "isError": "Asset type not found "
+        "isError": "Asset type not found ",
+        "provider": asset.provider
       });
     }
 
@@ -186,6 +190,10 @@ function updateNewAssetObj(newAssetObj, asset) {
 
     case "cloudfront":
       newAssetObj = updateCloudfrontAsset(newAssetObj, relativeId);
+      break;
+
+    case "storage_account":
+      newAssetObj = asset;
       break;
 
     default:
@@ -242,7 +250,8 @@ function updateCloudfrontAsset(newAssetObj, relativeId) {
 
 function getCloudWatch() {
   var cloudwatch = new AWS.CloudWatch({
-    apiVersion: '2010-08-01'
+    apiVersion: '2010-08-01',
+    region: global_config.CF_REGION
   });
   return cloudwatch;
 }
