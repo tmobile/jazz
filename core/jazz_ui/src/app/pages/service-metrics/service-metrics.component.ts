@@ -151,7 +151,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
         end_time: moment().toISOString(),
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
-        statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
+        statistics: this.filters.getFieldValueOfLabel('AGGREGATION'),
+        platform: this.service.platform
       }
     };
     return this.http.post(request.url, request.body)
@@ -178,7 +179,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       } else if (this.serviceType === 'function') {
         return asset.type === 'lambda'
       } else if (this.serviceType === 'website') {
-        return (asset.type === 's3') || (asset.type === 'cloudfront');
+        return (asset.type === 's3') || (asset.type === 'cloudfront') || (asset.type === 'storage_account');
       }
     })
   }
@@ -198,7 +199,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'website':
         let websiteAssets = _(this.queryDataRaw.assets).map('type').uniq().value();
-        this.filters.addField('Filter By:', 'ASSET', websiteAssets, null, 'cloudfront');
+        this.filters.addField('Filter By:', 'ASSET', websiteAssets, null, websiteAssets.filter(s => ['cloudfront', 'storage_account'].indexOf(s)>-1)[0].toString());
         break;
     }
   }
