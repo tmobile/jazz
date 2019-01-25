@@ -136,8 +136,8 @@ node() {
 				}
 			}
 		}
-		echo "requestId: requestId"
-		if (requestId != 'none' && requestId != null) {
+		echo "requestId: $requestId"
+		if (requestId != "none" && requestId != null && !utilModule.isReplayedBuild()) {
 			echo "Setting up requestId"
 			requestId = requestId
 			events.setRequestId(requestId)
