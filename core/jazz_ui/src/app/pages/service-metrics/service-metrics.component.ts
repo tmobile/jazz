@@ -151,8 +151,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
         end_time: moment().toISOString(),
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
-        statistics: this.filters.getFieldValueOfLabel('AGGREGATION'),
-        platform: this.service.platform
+        statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
       }
     };
     return this.http.post(request.url, request.body)
