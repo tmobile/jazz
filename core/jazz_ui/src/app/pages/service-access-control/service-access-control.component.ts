@@ -20,7 +20,6 @@ export class ServiceAccessControlComponent implements OnInit {
 
   accessGranted:Boolean = false;
   i: number = 0;
-  groupStatus:any = ['Read' , 'Manage' , 'Admin'];
   grpName:string;
   resMessage : any;
   approversListShow: any;
@@ -43,10 +42,24 @@ export class ServiceAccessControlComponent implements OnInit {
     'code': [],
     'deploy': []
   }
-  originalAccessDetails:any = {};
+  originalAccessDetails:any = [];
   aclPayload:any = {};
   showDisplay:Boolean = true;
-  groupList: any = []
+  groupList: any = [];
+  saveClicked:Boolean = false;
+  iSelected: number = 0;
+  removeUser: Boolean = false;
+  confirmationHeader:string = "";
+  confirmationText:string = "";
+
+  constructor(
+    private request: RequestService,
+    private toasterService: ToasterService,
+    private messageservice: MessageService
+  ) {
+    this.http = request;
+    this.toastmessage = messageservice;
+  }
 
   // list of all the groups//
   getUsersList() {
@@ -64,27 +77,45 @@ export class ServiceAccessControlComponent implements OnInit {
 
   // function to show group list(auto-complete)
   ongrpNameChange(category, i){
+    this.iSelected = i;
+    this.isAddOrDelete = true;
+    if(category == 'manage'){
+       this.showManageGroup = true;
+    } else if(category == 'code'){
+       this.showCodeGroup = true;
+    } else if(category == 'deploy'){
+       this.showDeployGroup = true;
+    }
+  }
 
-    // if(category == 'manage'){
-    //    this.showManageGroup = true;
-    // } else if(category == 'code'){
-    //    this.showCodeGroup = true;
-    // } else if(category == 'deploy'){
-    //    this.showDeployGroup = true;
-    // }
+  selectUser(user, i, category) {
+    this.access[category][i].userId = user;
+    if(category == 'manage'){
+      this.showManageGroup = false;
+    } else if(category == 'code'){
+      this.showCodeGroup = false;
+    } else if(category == 'deploy'){
+      this.showDeployGroup = false;
+    }
   }
 
   //function for deleting group
   deletegroup(i,category, group){
-    this.access[category].splice(i, 1);
-    this.isAddOrDelete = true;
+    if (this.access[category].length > 1) {
+      this.access[category].splice(i, 1);
+      this.isAddOrDelete = true;
+    } else {
+      this.removeUser = true;
+      this.confirmationHeader = this.toastmessage.customMessage("errorIndicationHeader", "aclConfirmation");
+      this.confirmationText = this.toastmessage.customMessage( "errorIndicationMsg", "aclConfirmation");
+    }
+
   }
 
   //function for adding group
  addgroup(i, category){
    this.access[category].push({'userId': '','category': category, 'permission': 'read'});
    this.isAddOrDelete = true;
-
   }
 
   onEditClick(){
@@ -92,11 +123,17 @@ export class ServiceAccessControlComponent implements OnInit {
   }
 
   onSaveClick(){
-     this.showDisplay = true;
-     this.aclPayload["serviceId"] = this.service.id;
-     let policiesList = Object.keys(this.access).map(eachcat => (this.access[eachcat]))
-     this.aclPayload["policies"] = [].concat.apply([], policiesList);;
-     this.updateAclPolicies(this.aclPayload);
+    this.saveClicked = true;
+    this.aclPayload["serviceId"] = this.service.id;
+    let policiesList = Object.keys(this.access).map(eachcat => (this.access[eachcat]))
+    let list = [].concat.apply([], policiesList);
+    let check = list.filter(each => {
+      return (!each.userId)
+    });
+    console.log(check);
+    this.aclPayload["policies"] = list;
+    this.confirmationHeader = this.toastmessage.customMessage("finalConfirmationHeader", "aclConfirmation");
+    this.confirmationText = this.toastmessage.customMessage("finalConfirmationMsg", "aclConfirmation");
   }
 
   onCancelClick(){
@@ -104,6 +141,20 @@ export class ServiceAccessControlComponent implements OnInit {
       this.access = this.restructureRes(this.originalAccessDetails);
     }
     this.showDisplay = true;
+    this.isAddOrDelete = false;
+  }
+
+  onCompleteClick() {
+    if (this.saveClicked) {
+      this.saveClicked = false;
+      this.updateAclPolicies(this.aclPayload);
+      this.showDisplay = true;
+    }
+
+    if (this.removeUser) {
+      this.removeUser = false;
+    }
+
   }
 
   refresh(){
@@ -114,16 +165,8 @@ export class ServiceAccessControlComponent implements OnInit {
 
   onSelectionChange(value, index, category){
     this.access[category][index].permission = value;
+    this.isAddOrDelete = true;
   }
-
-  constructor(
-    private request: RequestService,
-    private toasterService: ToasterService,
-    private messageservice: MessageService
-  ) {
-    this.http = request;
-    this.toastmessage = messageservice;
-   }
 
   ngOnInit() {
     this.getUsersList()
@@ -131,6 +174,7 @@ export class ServiceAccessControlComponent implements OnInit {
   }
 
   restructureRes(policies) {
+    console.log(policies)
     let catogarisedList ={};
     ['manage', 'code', 'deploy'].forEach(eachCat => {
       catogarisedList[eachCat] = policies.filter(eachPolicy => {
@@ -145,8 +189,8 @@ export class ServiceAccessControlComponent implements OnInit {
     this.http.get(`/jazz/acl/policies?serviceId=${serviceId}`).subscribe(
       response => {
         if (response && response.data && response.data.policies && response.data.policies.length) {
-          this.access = this.restructureRes(response.data.policies);
           this.originalAccessDetails = response.data.policies;
+          this.access = this.restructureRes(response.data.policies);
         } else {
           this.isDataNotAvailable = true;
         }
@@ -185,4 +229,5 @@ export class ServiceAccessControlComponent implements OnInit {
     )
 
   }
+
 }
