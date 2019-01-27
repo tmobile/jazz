@@ -21,8 +21,8 @@ export class TabsComponent implements OnInit {
   @Output() onSelected:EventEmitter<boolean> = new EventEmitter<boolean>();
   @Input() beforeEnv: boolean = true;
   disableobj:any= {
-'overview':true,
-'access control':true,
+'overview':false,
+'access control':false,
 'cost':true,
 'metrics':true,
 'logs':true,
@@ -40,10 +40,13 @@ export class TabsComponent implements OnInit {
   disabletabs(){
     var tabs;
 
-      tabs=environment.serviceTabs;
+    tabs=environment.serviceTabs;
     for(var i=0;i<tabs.length;i++){
       if(tabs[i] == 'overview') this.disableobj['overview']=false;
-      if(tabs[i] == 'access control') this.disableobj['access control']=false;
+      if(tabs[i] == 'access control') 
+      {this.disableobj['access control']=false;
+      console.log(this.disableobj['access control'])
+    }
       if(tabs[i] == 'cost') this.disableobj['cost']=false;
       if(tabs[i] == 'metrics') this.disableobj['metrics']=false;
       if(tabs[i] == 'logs') this.disableobj['logs']=false;

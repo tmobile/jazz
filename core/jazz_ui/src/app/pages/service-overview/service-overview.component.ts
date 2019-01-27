@@ -145,6 +145,7 @@ export class ServiceOverviewComponent implements OnInit {
   cronFieldValidity: any;
   showGeneralField: boolean = false;
   generalAdvanceDisable: boolean = true;
+  eventDisable  : boolean = true;
 
   constructor(
     private router: Router,
@@ -299,6 +300,13 @@ export class ServiceOverviewComponent implements OnInit {
         this.rateExpression.isValid = true;
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
       }
+    }if (this.rateExpression.type != 'none') {
+      this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+      let tempExp = `cron(${this.rateExpression.cronStr})`;
+      if( tempExp == this.service.eventScheduleRate){
+        this.eventDisable = true;
+      }
+      this.eventDisable = false;
     }
 
     if (this.rateExpression.isValid === undefined) {
@@ -308,6 +316,8 @@ export class ServiceOverviewComponent implements OnInit {
     } else if (this.rateExpression.isValid === true) {
       return this.rateExpression.cronStr;
     }
+    
+
   }
 
   onEditClick() {
@@ -333,6 +343,7 @@ export class ServiceOverviewComponent implements OnInit {
           this.isPUTLoading = false;
           this.showGeneralField = false;
           this.disp_show = true;
+          this.disp_show2 =true;
           this.isLoadingService = true;
           this.serviceDetail.onDataFetched(Response.data.updatedService);
           this.isLoadingService = false;
@@ -433,6 +444,7 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   onCancelClick() {
+    this.eventDisable  = true;
     this.showGeneralField = false;
     this.generalAdvanceDisable = true;
     this.update_payload = {};
@@ -452,8 +464,27 @@ export class ServiceOverviewComponent implements OnInit {
     this.disableSaveBtn();
   }
 
+  setEventScheduleRate() {
+    let localEvenSchedule = this.service.eventScheduleRate;
+    !!localEvenSchedule &&
+      (localEvenSchedule = localEvenSchedule.replace(/[\(\)']+/g, ' '));
+    localEvenSchedule = localEvenSchedule.split(' ');
+    this.rateExpression.type = localEvenSchedule[0];
+    this.cronObj.minutes = localEvenSchedule[1];
+    this.cronObj.hours = localEvenSchedule[2];
+    this.cronObj.dayOfMonth = localEvenSchedule[3];
+    this.cronObj.month = localEvenSchedule[4];
+    this.cronObj.dayOfWeek = localEvenSchedule[5];
+    this.cronObj.year = localEvenSchedule[6];
+  }
+
+
   onEventScheduleChange(val) {
     this.rateExpression.type = val;
+    this.eventExpression.type = 'awsEventsNone';
+    if (val == 'cron' && this.service.eventScheduleRate) {
+      this.setEventScheduleRate();
+    }
   }
   onAWSEventChange(val) {
     this.eventExpression.type = val;
@@ -1071,6 +1102,9 @@ export class ServiceOverviewComponent implements OnInit {
     this.creation_status = this.service.status;
     this.animatingDots = "...";
     this.testingStatus();
+    if (this.service.eventScheduleRate) {
+      this.setEventScheduleRate();
+    }
 
     // request status api call
     if (this.service.status === 'creation started' && !this.serviceStatusCompleted && this.service_request_id != undefined) {
@@ -1088,6 +1122,9 @@ export class ServiceOverviewComponent implements OnInit {
     }
   }
 
+  onEditEvents(){
+    this.disp_show2 = false;
+  }
 
   serviceDeletionStatus() {
 
