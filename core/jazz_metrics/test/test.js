@@ -284,9 +284,9 @@ describe('jazz_metrics', function () {
 
       var responseObj = {
         statusCode: 200,
-        body: {
+        body: JSON.stringify({
           data: [assetsList]
-        }
+        })
       };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObj, responseObj.body)
@@ -294,12 +294,13 @@ describe('jazz_metrics', function () {
       var getAssetRes = {
         "type": "assetType",
         "asset_name": "dimensionObj",
-        "statistics": "userStatistics"
+        "statistics": "userStatistics",
+        "provider": "aws"
       }
       const getAssetsObj = sinon.stub(utils, "getAssetsObj").returns(getAssetRes);
       index.getAssetsDetails(config, event.body, authToken)
         .then(res => {
-          expect(res).to.have.all.keys('type', 'asset_name', 'statistics');
+          expect(res).to.have.all.keys('type', 'asset_name', 'statistics', 'provider');
           sinon.assert.calledOnce(getAssetsObj);
           getAssetsObj.restore();
         });
@@ -311,9 +312,9 @@ describe('jazz_metrics', function () {
       var authToken = "zaqwsxcderfv.qawsedrftg.qxderfvbhy";
       var responseObj = {
         statusCode: 200,
-        body: {
+        body: JSON.stringify({
           data: []
-        }
+        })
       };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObj, responseObj.body)
@@ -436,7 +437,6 @@ describe('jazz_metrics', function () {
   });
 
   describe("validateAssets", () => {
-
     var stubAP, stubNS;
     beforeEach(function () {
       stubAP = sinon.stub(index, "getActualParam");
@@ -464,7 +464,7 @@ describe('jazz_metrics', function () {
       });
       index.validateAssets(assetsArray, event.body)
         .then(res => {
-          expect(res[0]).to.have.all.deep.keys('actualParam', 'userParam','provider');
+          expect(res[0]).to.have.all.deep.keys('actualParam', 'userParam', 'provider');
           expect(res[0].actualParam).to.not.be.empty;
           expect(res[0].userParam).to.not.be.empty;
           sinon.assert.calledOnce(getActualParam);
@@ -525,7 +525,6 @@ describe('jazz_metrics', function () {
             message: 'Unsupported metric type.'
           });
           sinon.assert.calledOnce(getNameSpaceAndMetricDimensons);
-          getNameSpaceAndMetricDimensons.restore();
         });
     });
 
@@ -662,8 +661,7 @@ describe('jazz_metrics', function () {
   });
 
   describe('getMetricsDetails', () => {
-    var assetsArray = [];
-    var stubCW;
+    var assetsArray = [], stubCW;
     beforeEach(function () {
       assetsArray = [{
         "actualParam": [{
@@ -685,14 +683,15 @@ describe('jazz_metrics', function () {
             "FunctionName": "jazztest_test-service"
           },
           "statistics": "Average"
-        }
+        },
+        "provider": "aws"
       }];
       stubCW = sinon.stub(index, 'cloudWatchDetails');
     });
 
-    beforeEach(function () {
+    afterEach(function (){
       index.cloudWatchDetails.restore();
-    });
+    })
 
     it("should successfully get datapoints for each metrics", () => {
       var responseObj = {
@@ -905,7 +904,7 @@ describe('jazz_metrics', function () {
     });
 
     describe('getNameSpaceAndMetricDimensons', () => {
-      it("should provide all metrics params  for provided namespace", () => {
+      it("should provide all metrics params for provided namespace", () => {
         var validNameSpace = ['apigateway', 'cloudfront', 'lambda', 's3'];
         validNameSpace.forEach(namespace => {
           var resObj = utils.getNameSpaceAndMetricDimensons(namespace);
@@ -987,13 +986,13 @@ describe('jazz_metrics', function () {
       assetsArray.forEach(asset => {
         var resObj = utils.getAssetsObj([asset], userStatistics);
         if (asset.asset_type === 's3') {
-          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics','provider')
+          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'provider')
           expect(resObj[0]).to.have.deep.property('asset_name.BucketName')
         } else if (asset.asset_type === 'cloudfront') {
-          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics','provider')
+          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'provider')
           expect(resObj[0]).to.have.deep.property('asset_name.DistributionId')
-        } else if (asset.asset_type === 'lambda' || asset.asset_type === 'apigateway','provider') {
-          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics','provider')
+        } else if (asset.asset_type === 'lambda' || asset.asset_type === 'apigateway') {
+          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'provider')
           expect(resObj[0]).to.include({
             type: asset.asset_type
           })
