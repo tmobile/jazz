@@ -1,16 +1,23 @@
 @import './../../../main-styles';
+
 .access-control-wrap {
   background-color: #fff;
   padding: 2rem 3rem 0 3rem;
   margin-top: 2.5rem;
   box-shadow: 0 2px 4px 0 rgba(180, 180, 211, 0.4);
   border-radius: 3px;
+
   .each-step-wrap {
     padding: 30px 0 20px 0;
+
     &.header-sec {
       padding: 0;
       width: 100%;
     }
+  }
+
+  input[readonly]{
+    color: #555;
   }
 }
 
@@ -28,6 +35,7 @@
 .groups-wrap {
   display: flex;
   margin-bottom: -4px;
+
   input[type="radio"] {
     margin: .8rem 0 0;
   }
@@ -36,6 +44,7 @@
 .delete-grp {
   position: relative;
   padding: 0 2.5rem;
+
   span {
     position: absolute;
     bottom: 0;
@@ -48,6 +57,7 @@
 .header-sec {
   padding: 0;
   display: flex;
+
   h1 {
     display: inline-block;
     font-size: 1.5rem;
@@ -90,6 +100,7 @@
   cursor: pointer;
   color: #ed008c;
   font-size: 1.15rem;
+
   span {
     transform: rotate(45deg) translateY(-3px);
     display: inline-block;
@@ -134,6 +145,7 @@
   line-height: 3rem;
   padding: 0 .85rem;
   font-size: 1.25rem;
+
   &:hover {
     background-color: #ed008c;
     color: #fff;
@@ -187,53 +199,58 @@ input[type="text"] {
   color: #ed008c;
 }
 
-.manage-wrapper{
+.manage-wrapper {
   background-color: #ed008c;
   width: inherit;
 }
 
-.textForm{
+.textForm {
   width: 100%;
 }
 
-.radio-button-wrapper{
+.radio-button-wrapper {
   padding-top: 6px;
   background-color: #F3F2F3;
   height: 54px;
   border-radius: 0px 8px 8px 0px;
 }
-.input-wrapper{
+
+.input-wrapper {
   padding: 7px;
   background-color: #F3F2F3;
   border-radius: 8px 0px 0px 8px;
 }
 
-.custom-save-btn-wrap{
+.custom-save-btn-wrap {
   display: flex;
   flex-direction: row-reverse;
   width: 50%;
   align-items: center;
   padding-bottom: 10px
 }
-.cancel-wrapper{
+
+.cancel-wrapper {
   margin-right: 20px;
   cursor: pointer;
 }
-.usertype{
+
+.usertype {
   font-style: italic;
   color: #BAAAB1;
   padding-left: 5px;
 }
-.step-title-edit{
+
+.step-title-edit {
   font-size: 15px;
 }
-.access-label{
 
-}
-.step-title-head{
+.access-label {}
+
+.step-title-head {
   padding: 0px 0px 16px 0px;
 }
-.textForm::placeholder{
+
+.textForm::placeholder {
   opacity: 0.6;
 }
 
@@ -246,9 +263,11 @@ input[type="text"] {
   background: #fff;
   top: 0;
   left: 0;
+
   .loading-circle {
     top: calc(50% - 1.5rem);
   }
+
   .error-text {
     position: relative;
     text-align: center;
@@ -283,7 +302,50 @@ input[type="text"] {
 .nodata {
   font-size: 14px;
   color: #555;
+
   b {
     font-size: 20px;
+  }
+}
+
+.confirm-overlay {
+  padding: 1rem;
+  position: fixed;
+  display: flex;
+  width: 100%;
+  height: 100vh;
+  top: 0;
+  left: 0;
+  background: rgba(0, 0, 0, 0.3);
+  justify-content: center;
+  z-index: 1;
+
+  .confirm-overlay-inner-wrap {
+    align-self: center;
+    background: white;
+  }
+
+  .overlay-header {
+    text-align: center;
+    padding: 1.5rem;
+    margin: 0rem 2rem;
+    font-weight: bold;
+    font-size: 1.5rem;
+    border-bottom: 1px solid #d3d3d3;
+  }
+
+  .overlay-body {
+    padding: 4rem 3rem;
+    width: 36rem;
+    text-align: center;
+  }
+
+  .overlay-btns {
+    display: flex;
+    justify-content: center;
+    padding: 0 0 2.5rem 0;
+    /deep/ btn-jazz-primary button.btn {
+      padding: 1rem 3.25rem
+    }
   }
 }
