@@ -2,5 +2,27 @@
     "JOB_BUILD_URL": "{conf-jenkins-host}/job/create-service/buildWithParameters",
     "JOB_TOKEN": "{job_token}",
     "API_TOKEN": "{api_token}",
-    "SVC_USER": "{ci_user}"
+    "SVC_USER": "{ci_user}",
+    "EVENT_SOURCE_NAME": {
+      "s3": {
+          "minLength": 3,
+          "maxLength": 63,
+          "regexPattern": "^[a-z0-9-]+$"
+      },
+      "dynamodb": {
+          "minLength": 3,
+          "maxLength": 255,
+          "regexPattern": "^[a-zA-Z0-9_.-]+$"
+      },
+      "sqs": {
+          "minLength": 1,
+          "maxLength": 80,
+          "regexPattern": "^[a-zA-Z0-9-_]+$"
+      },
+      "kinesis": {
+          "minLength": 1,
+          "maxLength": 128,
+          "regexPattern": "^[a-zA-Z0-9_.-]+$"
+      }
+  }
 }
