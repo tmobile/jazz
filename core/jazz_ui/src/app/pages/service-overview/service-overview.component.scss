@@ -44,7 +44,7 @@
 .stage-wrp {
     position: relative;
     background: #fff;
-    margin-right: 2rem;
+    margin-right: 1rem;
     cursor: pointer;
     flex-grow: 1;
     @media (max-width: $screen-lg) {
@@ -1152,9 +1152,7 @@ details summary::-webkit-details-marker {
     }
 }
 
-.extra-bottom-padding {
-    padding-bottom: 4rem;
-}
+.extra-bottom-padding {}
 
 .metadata-body-advanced {
     .metadata-row {}
