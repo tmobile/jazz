@@ -16,7 +16,7 @@
     }
   }
 
-  input[readonly]{
+  input[readonly] {
     color: #555;
   }
 }
@@ -129,7 +129,7 @@
   z-index: 10;
   position: absolute;
   background: #fff;
-  width: 100%;
+  width: calc(100% - 14px);
   cursor: pointer;
   border: 1px solid #ccc;
   border-radius: 2px;
@@ -344,8 +344,34 @@ input[type="text"] {
     display: flex;
     justify-content: center;
     padding: 0 0 2.5rem 0;
+
     /deep/ btn-jazz-primary button.btn {
       padding: 1rem 3.25rem
     }
   }
+}
+
+.pinkfocususers {
+  background-color: #ed008c;
+  color: #fff;
+}
+
+.empty-user-list {
+  color: #fff;
+  background-color: brown;
+  &:hover {
+    background-color: brown;
+  }
+}
+
+.list-empty-error {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  border-color: brown;
+}
+
+.unavailable-error {
+  border-color: brown;
+  border-bottom-left-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
 }
