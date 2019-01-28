@@ -67,9 +67,9 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-apikey-stg}/${apiKeyStg}/g' ./config/global-config.json"
             sh "sed -i -- 's/{conf-apikey-prod}/${apiKeyProd}/g' ./config/global-config.json"
 
-            sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_HOST}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_HOST}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_HOST}/g' ./config/prod-config.json"
+            sh "sed -i -- 's|{apigee_mgmt_host}|${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_HOST}|g' ./config/dev-config.json"
+            sh "sed -i -- 's|{apigee_mgmt_host}|${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_HOST}|g' ./config/stg-config.json"
+            sh "sed -i -- 's|{apigee_mgmt_host}|${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_HOST}|g' ./config/prod-config.json"
 
             sh "sed -i -- 's/{apigee_mgmt_org}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_ORG}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{apigee_mgmt_org}/${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_ORG}/g' ./config/stg-config.json"
