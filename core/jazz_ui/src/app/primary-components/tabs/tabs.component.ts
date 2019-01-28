@@ -39,7 +39,6 @@ export class TabsComponent implements OnInit {
   }
   disabletabs(){
     var tabs;
-    
     tabs=environment.serviceTabs;
     for(var i=0;i<tabs.length;i++){
       if(tabs[i] == 'overview') this.disableobj['overview']=false;
