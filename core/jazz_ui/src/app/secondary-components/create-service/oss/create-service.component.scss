@@ -831,3 +831,21 @@ p.learn-more {
 .runtime-aln{
   display: flex;
 }
+
+.account-region-wrap{
+  display: flex;
+  .each-section-accReg{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+  }
+  .accReg-label{
+    margin:0.5rem 0;
+  }
+  .accReg-dropdown{
+    /deep/.dropdown{
+      width: 15rem !important;
+    }
+  }
+
+}

@@ -142,6 +142,10 @@
             <textarea *ngIf='!disp_show' [(ngModel)]="desc_temp" (ngModelChange)='update_payload.description=desc_temp' class="det-value-input-txtarea"
               placeholder="Give the details for your service"></textarea>
           </li>
+          <li>
+            <div class="det-label">Account</div>
+            <div class="det-value">{{service.accountID}}</div>
+          </li>
         </ul>
       </div>
       <div class='metadata-column'>
@@ -166,7 +170,10 @@
 
           </li>
           <p class='email-err-msg' [class.hide]='hide_slack_error'>Slack channel is not available. Please provide a valid slack channel.</p>
-
+          <li>
+            <div class="det-label">Region</div>
+            <div class="det-value">{{service.region}}</div>
+          </li>
         </ul>
       </div>
       <div class='metadata-column'>

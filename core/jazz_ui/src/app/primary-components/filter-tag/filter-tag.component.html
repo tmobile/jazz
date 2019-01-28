@@ -1,0 +1,20 @@
+<div class='filter-tags-wrap'>
+  <div class="each-tag relative"  *ngFor="let item of allFilterTags">
+    <div>
+      <span class="filter-tag-key">{{item.key}}:</span>
+      <span>{{item.value}}</span>
+    </div>
+    <div>
+      <span class='icon-icon-close' [class.pointer-events-none]='item.value == "All"' (click)='cancelClicked(item)'></span>
+    </div>
+  </div>
+  <div class="each-tag relative" *ngFor="let each of checkboxFilterTags" >
+    <div>
+      <span class="filter-tag-key">{{each.key}}:</span>
+      <span>{{each.value}}</span>
+    </div>
+    <div>
+      <span class='icon-icon-close' [class.pointer-events-none]='each.value == "All"' (click)='cancelClicked(each)'></span>
+    </div>
+  </div>
+</div>

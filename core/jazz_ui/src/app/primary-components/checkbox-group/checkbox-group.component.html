@@ -1,0 +1,22 @@
+<div class="relative">
+  <div class="filter-clear-btn" (click)="clearFilter()">
+    Clear
+  </div>
+</div>
+<div class="dropdown" dropdown [dropdownToggle]="false" >
+  <button type="button" [class.drop-btn]='IsEnvList' (click)="drpBtnClick()" class="btn dropdown-btn dropdown-toggle" dropdown-open>
+      <span class="padding-right">
+        <span *ngIf='displayCount !== 0'>{{displayCount}} selected</span>
+        <span *ngIf='displayCount === 0'>All</span>
+      </span>
+      <span class="caret"></span>
+  </button>
+  <ul class="dropdown-menu"  [class.drop-menu]='IsEnvList' [class.keepitopen]='isopen' [class.closeit]="!isopen" (click)="isopen = true" aria-labelledby="dLabel" >
+    <li class="ckbx-container  custom-cb" *ngFor="let item of checkboxContent">
+      <input type="checkbox" [id]="item" [value]="item" [checked]="selectionObj[item] == item" (click)="onCheckboxSelect(item)" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false">
+      <label for="{{item}}"></label>
+      <div class='checkbox-text'>{{item}}</div>
+    </li>
+  </ul>
+</div>
+

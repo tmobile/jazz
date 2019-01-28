@@ -546,3 +546,17 @@ search-box{
     opacity:0.75;
 }
 
+.animate-filter{
+    max-height: 1000px !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+}
+
+.filter-clear-btn{
+  position: absolute;
+  top:-2.6rem;
+  right:0;
+  color:#ed008c;
+  font-size:1rem;
+  cursor: pointer;
+}

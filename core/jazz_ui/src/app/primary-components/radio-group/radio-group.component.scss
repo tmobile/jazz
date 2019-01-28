@@ -1,0 +1,19 @@
+@import './../../../main-styles';
+.radio-container{
+  margin: 0.3rem -1.3rem;
+}
+.label-text{
+  font-weight: normal;
+  font-style: normal;
+}
+
+.radio-group .background {
+  position: absolute;
+  left: 4px;
+  bottom: 4px;
+  border: none;
+  width: 11px;
+  height: 11px;
+  background-color: #fff;
+  margin: 0;
+}

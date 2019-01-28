@@ -1,0 +1,97 @@
+@import './../../../main-styles';
+@import './../../secondary-components/create-service/internal/create-service.component.scss';
+.ckbx-container{
+  margin: 0.3rem -1.3rem;
+}
+.dropdown-btn {
+  background-color: #fff;
+  min-width: 100%;
+  text-align: left;
+  position: relative;
+  -webkit-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+  -moz-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  padding-left: 15px;
+  font-size: 12px;
+  border-top:1px solid #eee;
+  .caret {
+      position: absolute;
+      top: 13px;
+      right: 12px;
+      border-top: 6px solid #ed008c;
+      border-right: 6px solid transparent;
+      border-left: 6px solid transparent;
+  }
+}
+
+.dropdown-menu {
+  min-width: 100%;
+  font-size: 12px;
+  a {
+      cursor: pointer;
+      line-height: 30px;
+      &:hover {
+          background-color: #ed008c;
+          color: #fff;
+      }
+  }
+  li {
+      height: 30px;
+      cursor: pointer;
+      padding: 0px 1.5rem;
+      margin: 0 0rem;
+      border-bottom: 1px solid #ddd;
+      &:last-child{
+        border:none;
+      }
+
+  }
+  ul {
+      margin: 0;
+  }
+}
+
+.drop-menu{
+  overflow-y: scroll;
+  max-height: 207px;
+}
+
+.drop-btn{
+  min-width: 142px;
+}
+
+// .dropdown {
+//     min-width: 200px;
+// }
+
+/deep/.padding-right{
+  padding-right: 1.5rem!important;
+}
+
+.custom-cb label {
+  cursor: pointer;
+  width: 1.5rem;
+  height: 1.5rem;
+  position: absolute;
+  top: 0.5rem;
+  background: transparent;
+  left: 1rem;
+  border: 1px solid;
+}
+.checkbox-text{
+  padding:0.5rem;
+  text-transform: capitalize;
+}
+
+.keepitopen{
+  display: block !important;
+}
+
+.closeit{
+  display: none !important;
+}
+
+.drop-btn{
+  min-width: 100%;
+}

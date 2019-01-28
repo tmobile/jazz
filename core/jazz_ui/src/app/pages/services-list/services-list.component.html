@@ -27,21 +27,26 @@
             <div class="search-filter-wrap">
                 
                 <search-box #searchbox (onChange)="onServiceSearch($event)"></search-box>
-                
-                <div class="filter-icon"> 
-                    <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
-                    </span>
-                </div>
+
                 <div class="filter-icon">
-                    <span class='pointer refresh icon-icon-refresh' title="Refresh" (click)='serviceCall()' height="19"></span>                
-            
+                    <span class='pointer refresh icon-icon-refresh' title="Refresh" (click)='serviceCall()' height="19"></span>
                 </div>
+                <div class="filter-icon-wrap relative">
+                    <button class="jz-btn jz-btn-icon z-index-2 filter-abs"
+                      [class.jz-toggled]="filters.opened"
+                      (click)="filters.toggleModal(); filterSelected = !filterSelected;">
+                      <span class="icon-icon-filter-unselected filter-icon-services" [class.filter-selected]="filterSelected"></span>
+                    </button>
+                    <div class="filter-modal-position service-list-filter" [class.animate-filter]="filterSelected">
+                      <filter-modal #filters [fields]="formFields" (formChange)="applyFilter($event)"></filter-modal>
+                    </div>
+                  </div>
             </div>
             <!-- <a class='magen pointer refresh' (click)='serviceCall()'>Refresh</a> -->
             
         </section>
-        <filter-tags-services #filtertags (OnCancel)='CancelFilters($event)'></filter-tags-services>
-        <table-template #tabletemplate class="table-container service-list-table" (onHere)='showService($event)' [isfromservice]= "fromService" [errcode]="errCode" [message]="errMessage" [state]="loadingState" (refreshData)="refreshData($event)" [header]="tableHeader2" [showFilters]="filterSelected" (onFilter)="onFilter($event)" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected" (paginatePage)="paginatePage($event)" [currentlyActive]="pageSelected" [totalPageNum]="totalPagesTable">
+        <filter-tag  #filterTag (filterCancelled)="filterCancelled($event)"></filter-tag>
+        <table-template #tabletemplate class="table-container service-list-table" (onHere)='showService($event)' [isfromservice]= "fromService" [errcode]="errCode" [message]="errMessage" [state]="loadingState" (refreshData)="refreshData($event)" [header]="tableHeader2" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected" (paginatePage)="paginatePage($event)" [currentlyActive]="pageSelected" [totalPageNum]="totalPagesTable">
             <div class="table-row table-empty" [class.hide]="!serviceListEmpty">{{tableEmptyMessage}}</div>
             <div class="table-row pointer" [class.hide]="serviceListEmpty" *ngFor="let row of serviceList; let i = index" (click)="onRowClicked(row, i)" [class.deletingRow]="row.id==deletedServiceId || row.status=='deletion started'">
                 <div class="column">{{row.name}}</div>
