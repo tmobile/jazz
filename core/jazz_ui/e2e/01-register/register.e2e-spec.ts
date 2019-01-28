@@ -18,7 +18,7 @@ import { CONFIGURATIONS } from '../../src/config/configuration';
 import { Register } from '../page-objects/register.po';
 
 
-const timeOutHigh = 180000;
+const timeOutHigh = 10000;
 const config = CONFIGURATIONS.optional.general.e2e;
 
 describe('register', () => {
@@ -39,7 +39,6 @@ describe('register', () => {
       browser.driver.switchTo().activeElement();
       browser.wait(EC.visibilityOf(register_po.getRegister()), timeOutHigh);
       register_po.getRegister().click();
-      browser.sleep(4000);
       register_po.getBackToLogin().click();
     });
 
@@ -48,12 +47,11 @@ describe('register', () => {
       browser.driver.switchTo().activeElement();
       register_po.getLoginButton().click();
       browser.driver.switchTo().activeElement();
-      browser.sleep(4000);
       register_po.getRegister().click();
       register_po.getUserName().sendKeys(config.REG_USER_NAME);
       register_po.getPassword().sendKeys(config.REG_PASS_WORD);
       register_po.getRegistrationCode().sendKeys(config.REG_CODE);
       register_po.getRegisterButton().click();
-      browser.sleep(4000);
+      
     });
 });

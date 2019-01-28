@@ -18,7 +18,7 @@ import { CONFIGURATIONS } from '../../src/config/configuration';
 import { Timeouts } from 'selenium-webdriver';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 
-const timeOutHigh = 180000;
+const timeOutHigh = 200000;
 const emailId = CONFIGURATIONS.optional.general.e2e.EMAIL_ID;
 
 describe('Overview', () => {
@@ -45,7 +45,6 @@ describe('Overview', () => {
       }
     
       it('Create API Service', () => {
-            browser.sleep(5000);
             browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
             winhandle = browser.getWindowHandle();
@@ -118,19 +117,15 @@ describe('Overview', () => {
             jazzServices_po.getFilterIcon().click();
             jazzServices_po.getDropDown().click();
             jazzServices_po.getDay().click();
-            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getWeek().click();
-            browser.sleep(2000);
             expect(jazzServices_po.getWeekVerify().getText()).toEqual('WEEK');
             jazzServices_po.getDropDown().click();
             jazzServices_po.getMonth().click();
-            browser.sleep(2000);
             expect(jazzServices_po.getMonthVerify().getText()).toEqual('MONTH');
             jazzServices_po.getDropDown().click();
             jazzServices_po.getYear().click();
             expect(jazzServices_po.getYearVerify().getText()).toEqual('YEAR');
-            browser.sleep(2000);
             jazzServices_po.getServiceFromAsset().click();
       });
       
@@ -289,19 +284,15 @@ describe('Overview', () => {
             jazzServices_po.getFilterIcon().click();
             jazzServices_po.getDropDown().click();
             jazzServices_po.getDay().click();
-            browser.sleep(2000);
             jazzServices_po.getDropDown().click();
             jazzServices_po.getWeek().click();
-            browser.sleep(2000);
             expect(jazzServices_po.getWeekVerify().getText()).toEqual('WEEK');
             jazzServices_po.getDropDown().click();
             jazzServices_po.getMonth().click();
-            browser.sleep(2000);
             expect(jazzServices_po.getMonthVerify().getText()).toEqual('MONTH');
             jazzServices_po.getDropDown().click();
             jazzServices_po.getYear().click();
             expect(jazzServices_po.getYearVerify().getText()).toEqual('YEAR');
-            browser.sleep(2000);
             jazzServices_po.getServiceFromAsset().click();
       });
 
@@ -331,9 +322,9 @@ describe('Overview', () => {
             jazzServices_po.getTestArea().sendKeys('1');
             browser.wait(EC.elementToBeClickable(jazzServices_po.getTestButton()), timeOutHigh);
             jazzServices_po.getTestButton().click();
+			expect(jazzServices_po.getOutput().getText()).toEqual('Function got triggered successfully');
             browser.wait(EC.elementToBeClickable(jazzServices_po.getClose()), timeOutHigh);
-            jazzServices_po.getClose().click();
-            expect(jazzServices_po.getOutput().getText()).toContain('Function got triggered successfully');
+			jazzServices_po.getClose().click();
             browser.refresh();
             jazzServices_po.getMetrices().click();
             jazzServices_po.getMetricsChildOne().click();

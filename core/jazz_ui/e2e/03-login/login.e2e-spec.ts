@@ -17,7 +17,7 @@ import { Login } from '../page-objects/login.po';
 import { Jazz } from '../page-objects/jazzservices.po';
 import { CONFIGURATIONS } from '../../src/config/configuration';
 
-const timeOutHigh = 180000;
+const timeOutHigh = 10000;
 const config = CONFIGURATIONS.optional.general.e2e;
 
 describe('login', () => {

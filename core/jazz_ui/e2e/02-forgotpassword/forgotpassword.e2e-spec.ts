@@ -15,7 +15,7 @@
 import { browser, element, by, protractor, $} from 'protractor';
 import { ForgotPassword } from '../page-objects/forgotpassword.po';
 
-const timeOutHigh = 180000;
+const timeOutHigh = 10000;
 
 describe('forgotpassword', () => {
     let forgotpassword_po: ForgotPassword;
