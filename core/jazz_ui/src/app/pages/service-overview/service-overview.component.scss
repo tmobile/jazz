@@ -1142,7 +1142,7 @@ details summary::-webkit-details-marker {
     display: flex;
     justify-content: space-between;
     .metadata-column {
-        width: calc(50% - 5px);
+        width: calc(50% - 1rem);
         background: white;
         border-radius: 10px;
     }
@@ -1399,7 +1399,7 @@ btn-jazz-primary {
 }
 
 .edit-div {
-    padding-right: 1em;
+    padding-right: 5px;
     cursor: pointer;
 }
 
