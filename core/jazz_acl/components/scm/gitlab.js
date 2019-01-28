@@ -18,9 +18,9 @@ const request = require("request");
 const logger = require("../logger.js");
 
 const addRepoPermission = async (config, serviceInfo, policies) => {
-  await removeAllRepoUsers(config, serviceInfo);
+  await exportable.removeAllRepoUsers(config, serviceInfo);
   const repo_name = `${serviceInfo.domain}_${serviceInfo.service}`;
-  const repo_id = await getGitLabsProjectId(config, repo_name);
+  const repo_id = await exportable.getGitLabsProjectId(config, repo_name);
   let users_list = [];
   for (const policy of policies) {
     try {
@@ -29,14 +29,15 @@ const addRepoPermission = async (config, serviceInfo, policies) => {
         "permission": config.ACCESS_LEVEL[permission],
         "gitlabRepoId": repo_id
       };
+
       if (config.PERMISSION_CATEGORIES.includes(policy.category)) {
-        const gitlab_useId = await getGitlabUserId(config, policy.userId);
+        const gitlab_useId = await exportable.getGitlabUserId(config, policy.userId);
         repoInfo.gitlabUserId = gitlab_useId;
-        let member_res = await getGitlabProjectMember(config, repoInfo);
+        let member_res = await exportable.getGitlabProjectMember(config, repoInfo);
         if (member_res.isMember)
-          await updateProjectMemberPerms(config, repoInfo);
+          await exportable.updateProjectMemberPerms(config, repoInfo);
         else
-          await addProjectMember(config, repoInfo);
+          await exportable.addProjectMember(config, repoInfo);
         users_list.push(policy.userId);
       }
     } catch (e) {
@@ -116,14 +117,14 @@ const getGitLabsProjectId = async (config, repo_name) => {
 const removeAllRepoUsers = async (config, serviceInfo) => {
   try {
     const repo_name = `${serviceInfo.domain}_${serviceInfo.service}`;
-    const repo_id = await getGitLabsProjectId(config, repo_name);
-    const response = await getAllRepoUsers(config, repo_id);
+    const repo_id = await exportable.getGitLabsProjectId(config, repo_name);
+    const response = await exportable.getAllRepoUsers(config, repo_id);
     const users = JSON.parse(response.body);
     let list = [];
     if (users.length > 0) {
       for (const user of users) {
         try {
-          await removeRepoUser(config, repo_id, user.id);
+          await exportable.removeRepoUser(config, repo_id, user.id);
           list.push(user.name);
         } catch (e) {
           logger.error("Remove user failed for user : " + user.name);
@@ -199,7 +200,17 @@ const getPayload = (config, url, method, dataString) => {
   return payload;
 }
 
-module.exports = {
+const exportable = {
   addRepoPermission,
-  removeAllRepoUsers
+  removeAllRepoUsers,
+  getGitlabProjectMember,
+  getAllRepoUsers,
+  removeRepoUser,
+  getGitLabsProjectId,
+  getGitlabUserId,
+  getGitlabProjectMember,
+  updateProjectMemberPerms,
+  addProjectMember
 };
+
+module.exports = exportable;
