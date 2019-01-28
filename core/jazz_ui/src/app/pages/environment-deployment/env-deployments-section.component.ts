@@ -315,9 +315,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
               countStarted = countStarted + 1;
             }
            }
-           if(!countStarted){
-             this.disableBuild = false;
-           }
+           this.disableBuild = countStarted ? true : false;
            if(this.deployments.length !=0){
             var pageCount = response.data.count;
             if(pageCount){
