@@ -161,7 +161,7 @@
       width: 92px;
     }
     &:nth-child(3) {
-      width: 120px;
+      width: 160px;
       display: none;
       @media (min-width: $screen-md) {
         display: block;
@@ -206,7 +206,6 @@
         font-weight: 700;
       }
       &:last-child {
-        max-width: 135px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;

@@ -399,7 +399,6 @@ export class ServiceOverviewComponent implements OnInit {
     }
     this.PutPayload = payload;
     if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
-
   }
 
   onCancelClick() {
