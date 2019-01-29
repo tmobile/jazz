@@ -197,7 +197,7 @@ async function getPolicyForServiceUser(serviceId, userId, config) {
 
 /* Get the policies for a userId*/
 async function getPolicyForUser(userId, config) {
-  let result = await getFilteredPolicy(0, userId, config);
+  let result = await getFilteredPolicy(0, [userId], config);
   let serviceIdSeen = new Set();
   let policies = [];
 
