@@ -11,59 +11,60 @@ import (
 	"context"
 
 	"github.com/aws/aws-lambda-go/lambda"
-	logging "github.com/op/go-logging"
+	"github.com/aws/aws-lambda-go/lambdacontext"
+	"github.com/spf13/viper"
 )
 
-//Logging Configuration
-var log = logging.MustGetLogger("example")
-var format = logging.MustStringFormatter(
-	`%{color}%{time:15:04:05.000} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
-)
-
-//Request Model struct
-type Request struct {
-	Stage  string  `json:"stage,omitempty"`
-	Method string  `json:"method,omitempty"`
-	ID     float64 `json:"id,omitempty"`
-	Value  string  `json:"value,omitempty"`
-}
-
-//Response Model sruct
+//Response Model
 type Response struct {
-	Data  map[string]string `json:"data,omitempty"`
-	Input Request           `json:"input,omitempty"`
+	Data map[string]string `json:"data,omitempty"`
+	Input map[string]interface{}   `json:"input,omitempty"`
 }
 
-//Following code snippet describes how to log messages within your code:
-/*
-	log.error('Runtime errors or unexpected conditions.');
-	log.warn('Runtime situations that are undesirable or unexpected, but not necessarily "wrong".');
-	log.info('Interesting runtime events (Eg. connection established, data fetched etc.)');
-	log.verbose('Generally speaking, most lines logged by your application should be written as verbose.');
-	log.debug('Detailed information on the flow through the system.');
-*/
+// Declare logger variable
+var logger *Logger
+var AwsRequestID string
 
 //Handler Function for Aws Lambda which accepts Requests and Produce the response in json.
-func Handler(ctx context.Context, event Request) (Response, error) {
-	// stdout and stderr are sent to AWS CloudWatch Logs
-	//Loading the Configuration Files
-	response := make(map[string]string)
-	log.Info("Processing Lambda request %f\n", event.ID)
+func Handler(ctx context.Context, event map[string]interface{}) (Response, error) {
+	// Initialize Logging Components
+	logger := new(Logger)
+	logger.init("Info")
+	// Get Request Id
+	lc, _ := lambdacontext.FromContext(ctx)
+  AwsRequestID = lc.AwsRequestID
 
-	response["foo"] = "foo-value"
-	response["bar"] = "bar-value"
+	//Following code snippet describes how to log messages within your code:
+/*
+	logger.ERROR("Runtime errors or unexpected conditions.");
+	logger.WARN("Runtime situations that are undesirable or unexpected, but not necessarily wrong");
+	logger.INFO("Interesting runtime events (Eg. connection established, data fetched etc.)");
+	logger.VERBOSE("Generally speaking, most lines logged by your application should be written as verbose.");
+	logger.DEBUG("Detailed information on the flow through the system.");
+*/
+	logger.INFO("Interesting runtime events (Eg. connection established, data fetched etc.)");
+	// Initialize Config Components
+	configModule := new(Config)
+	configModule.LoadConfiguration(ctx , event )
+	// Get Config values 
+	configValue := viper.Get("configKey").(string) // returns string
 
-	data := Response{
-		Data:  response,
-		Input: event,
-	}
+	sampleResponse :=map[string]string {
+		"foo": "foo-value",
+		"bar": "bar-value",
+		"configKeys": configValue,
+	};
 
-	return data, nil
+	// Response to be sent 
+	return Response{
+		Data: sampleResponse,
+		Input:  event,
+	},nil
 }
 
 //Main function Starts
 func main() {
 	//Start function to trigger Lambda
 	lambda.Start(Handler)
-
+	
 }
