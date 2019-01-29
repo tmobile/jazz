@@ -667,6 +667,7 @@ def getResourcePath() {
 			}
 		}
 		resourcepath = (basePath + "/" + pathInfo).replaceAll("//", "/")
+		resourcepath = resourcepath.replace(/\/{id}/, '') // to remove {id} from resourcepath in case of PUT,DELETE,GET/{id}
 		return resourcepath
 	} catch (ex) {
 		handleFailureEvent(ex.getMessage())

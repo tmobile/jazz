@@ -37,7 +37,7 @@ module.exports.handler = (event, context, cb) => {
     };
 
     //Your GET method should be handled here
-    if (event && event.method && event.method === 'GET') {
+    if (event && event.method && event.method === 'GET' && !event.path.id) {
       logger.verbose(sampleResponse);
       cb(null, responseObj(sampleResponse, event.query));
     }
@@ -45,6 +45,27 @@ module.exports.handler = (event, context, cb) => {
     //Your POST method should be handled here
     if (event && event.method && event.method === 'POST') {
       cb(null, responseObj(sampleResponse, event.body));
+    }
+
+    //Your Get method with id should be handle here
+    if (event && event.method && event.method === 'GET' && event.path.id) {
+      logger.verbose(sampleResponse);
+      sampleResponse.method = "GET with id as param";
+      cb(null, responseObj(sampleResponse, event.query));
+    }
+
+    //Your PUT method with id should be handle here
+    if (event && event.method && event.method === 'PUT' && event.path.id) {
+      logger.verbose(sampleResponse);
+      sampleResponse.method = "PUT with id as param";
+      cb(null, responseObj(sampleResponse, event.query));
+    }
+
+    //Your DELETE method with id should be handle here
+    if (event && event.method && event.method === 'DELETE' && event.path.id) {
+      logger.verbose(sampleResponse);
+      sampleResponse.method = "DELETE with id as param";
+      cb(null, responseObj(sampleResponse, event.query));
     }
 
   } catch (e) {
