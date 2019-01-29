@@ -139,8 +139,8 @@ node() {
     isEventSchdld = true
   }
 
-  echo "requestId: requestId"
-  if (requestId != 'none' && requestId != null) {
+  echo "requestId: $requestId"
+  if (requestId != "none" && requestId != null && !utilModule.isReplayedBuild()) {
     requestId = requestId
     events.setRequestId(requestId)
     environmentDeploymentMetadata.setRequestId(requestId)
@@ -716,7 +716,7 @@ def echoServiceInfo(String env) {
     echo "==============================================================================================="
     echo svc_response
     echo "==============================================================================================="
-    
+
     return svc_response
 
   } catch (Exception ex) {
@@ -949,7 +949,7 @@ def getEventsArn(config, env) {
 
 def getLambdaARN(stackName, credsId) {
   def ARN = "";
-  
+
   try {
     def cloudformation_resources = "";
     cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId}")
