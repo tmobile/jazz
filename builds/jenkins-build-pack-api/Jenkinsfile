@@ -290,7 +290,7 @@ node() {
 
 							case 'gcp_apigee':
 								events.sendStartedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment started for APIGEE', context_map, environment_logical_id)
-								apiHostName ="${configLoader.APIGEE.API_ENDPOINTS[env_key].service_hostname}"
+								apiHostName ="${configLoader.APIGEE.API_ENDPOINTS[env_key].SERVICE_HOSTNAME}"
 								updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
 								endpointUrl = apigeeModule.deploy("swagger/swagger.json", lambdaARN, env_key, environment_logical_id, config, context_map)
 								echo "API Proxy created at: ${endpointUrl}"
