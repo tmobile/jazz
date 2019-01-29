@@ -14,7 +14,7 @@
 // limitations under the License.
 // =========================================================================
 
-const errorHandlerModule = require("./components/error-handler.js")();
+const errorHandler = require("./components/error-handler.js")();
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const validation = require("./components/validation.js");
@@ -64,7 +64,7 @@ async function processACLRequest(event, config) {
       result = await casbinUtil.addOrRemovePolicy(serviceId, config, 'add', policies);
 
       if (result && result.error) {
-        throw (errorHandlerModule.throwInternalServerError(`Error adding the policy for service ${serviceId}. ${result.error}`));
+        throw (errorHandler.throwInternalServerError(`Error adding the policy for service ${serviceId}. ${result.error}`));
       }
 
       await exportable.processScmPermissions(config, serviceId, policies, 'add');
@@ -72,7 +72,7 @@ async function processACLRequest(event, config) {
       result = await casbinUtil.addOrRemovePolicy(serviceId, config, 'remove');
 
       if (result && result.error) {
-        throw (errorHandlerModule.throwInternalServerError(result.error));
+        throw (errorHandler.throwInternalServerError(result.error));
       }
 
       await exportable.processScmPermissions(config, serviceId, null, 'remove');
@@ -89,7 +89,7 @@ async function processACLRequest(event, config) {
     const result = await casbinUtil.getPolicies(serviceId, config);
 
     if (result && result.error) {
-      throw (errorHandlerModule.throwInternalServerError(result.error));
+      throw (errorHandler.throwInternalServerError(result.error));
     }
 
     let policies = [];
@@ -99,7 +99,7 @@ async function processACLRequest(event, config) {
         permission: policy[2],
         category: policy[1]
       })
-    ));
+      ));
 
     return {
       serviceId: serviceId,
@@ -117,8 +117,8 @@ async function processACLRequest(event, config) {
       result = await casbinUtil.getPolicyForUser(event.query.userId, config);
     }
 
-    if(result && result.error) {
-      throw (errorHandlerModule.throwInternalServerError(result.error));
+    if (result && result.error) {
+      throw (errorHandler.throwInternalServerError(result.error));
     }
 
     return result;
@@ -131,7 +131,7 @@ async function processACLRequest(event, config) {
     const result = await casbinUtil.checkPermissions(query.userId, query.serviceId, query.category, query.permission, config);
 
     if (result && result.error) {
-      throw (errorHandlerModule.throwInternalServerError(result.error));
+      throw (errorHandler.throwInternalServerError(result.error));
     }
 
     return result;
@@ -139,11 +139,15 @@ async function processACLRequest(event, config) {
 }
 
 async function processScmPermissions(config, serviceId, policies, key) {
-  let scm = new scmUtil(scmConfig);
-  let authToken = await auth.getAuthToken(config);
-  let serviceData = await services.getServiceMetadata(config, authToken, serviceId);
-  let res = await scm.processScmPermissions(serviceData, policies, key);
-  return (res);
+  try {
+    let scm = new scmUtil(scmConfig);
+    let authToken = await auth.getAuthToken(config);
+    let serviceData = await services.getServiceMetadata(config, authToken, serviceId);
+    let res = await scm.processScmPermissions(serviceData, policies, key);
+    return (res);
+  } catch (ex) {
+    throw (JSON.stringify(errorHandler.throwInternalServerError(ex)));
+  }
 }
 
 const exportable = {
