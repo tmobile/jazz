@@ -44,7 +44,7 @@
                     <div class="groups-wrap" *ngFor="let group of access.manage;let i=index">
                         <div class="groups-input toggle-class" >
                             <div class="input-wrapper" [ngClass]="{'read-only': group.permission !== admin }">
-                                <input name="api_text_{{i}}" [ngClass]="{'unavailable-error': !groupList[group.category].length && showManageGroup && i == iSelected}" (keydown)="keypress($event, i, group.category);" autocomplete="off" type="text" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" class="textForm" placeholder="User" [(ngModel)]="group.userId" (ngModelChange)="ongrpNameChange('manage' ,i)" #manageUser="ngModel" [readonly]= "(group.userId && manageUser.valid) ? true : false">
+                                <input name="api_text_{{i}}" [ngClass]="{'unavailable-error': !groupList[group.category].length && showManageGroup && i == iSelected}" (keydown)="keypress($event, i, group.category);" autocomplete="off" type="text" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{3,4}$" class="textForm" placeholder="User" [(ngModel)]="group.userId" (ngModelChange)="ongrpNameChange('manage' ,i)" #manageUser="ngModel" [readonly]= "(group.userId && manageUser.valid) ? true : false">
                                 <div *ngIf="showManageGroup && i == iSelected" class="approvers-list-wrap" (clickOutside)="showManageGroup = false">
                                     <div class="approvers-list typeShow open" [ngClass]="{'list-empty-error': !groupList[group.category].length}">
                                         <div class="approvers-dets" *ngFor="let user of groupList[group.category] | myfilter:group.userId;let k = index;" (focus)=" k==focusindex " [ngClass]="{pinkfocususers : k==focusindex }" [ngStyle]="scrollList">
@@ -216,7 +216,7 @@
                 </div>
             </div>
         </section>
-        <div class='confirm-overlay' *ngIf='saveClicked || removeUser' (click)="saveClicked = false">
+        <div class='confirm-overlay' *ngIf='saveClicked || removeUser' (click)="saveClicked = false; removeUser = false">
           <div class='confirm-overlay-inner-wrap' (click)="$event.stopPropagation()">
               <div class='overlay-header'>{{confirmationHeader}}</div>
               <div *ngIf="!isPUTLoading" class='overlay-body'>{{confirmationText}}</div>

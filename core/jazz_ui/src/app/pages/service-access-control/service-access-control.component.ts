@@ -226,8 +226,8 @@ export class ServiceAccessControlComponent implements OnInit {
     this.http.get(`/jazz/acl/policies?serviceId=${serviceId}`).subscribe(
       response => {
         if (response && response.data && response.data.policies && response.data.policies.length) {
-          this.originalAccessDetails = response.data.policies;
-          this.access = this.restructureRes(response.data.policies);
+          this.originalAccessDetails = JSON.parse(JSON.stringify(response.data.policies))
+          this.access = this.restructureRes(JSON.parse(JSON.stringify(response.data.policies)));
           this.removeExistingUser(this.originalAccessDetails);
         } else {
           this.isDataNotAvailable = true;
@@ -313,7 +313,7 @@ export class ServiceAccessControlComponent implements OnInit {
         }
       }
       if (this.focusindex == -1) {
-        this.focusindex = -1;
+        this.focusindex = 0;
       }
     }
     else if (hash.key == 'Enter' && this.focusindex > -1 && this.groupList[category].length) {
