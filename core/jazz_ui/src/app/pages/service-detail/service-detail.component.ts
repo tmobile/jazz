@@ -14,6 +14,7 @@ import { BarGraphComponent } from '../../secondary-components/bar-graph/bar-grap
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
 import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
 import { environment } from './../../../environments/environment';
+import { environment as env_oss } from './../../../environments/environment.oss';
 
 @Component({
   selector: 'service-detail',
@@ -114,7 +115,9 @@ export class ServiceDetailComponent implements OnInit {
         tags: service.tags,
         endpoints: service.endpoints,
         is_public_endpoint: service.is_public_endpoint,
-        created_by: service.created_by
+        created_by: service.created_by,
+        accountID: env_oss.defaults.account_id,
+        region: env_oss.defaults.region
       }
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;

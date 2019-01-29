@@ -93,6 +93,10 @@ export class CreateServiceComponent implements OnInit {
   invalidEventName:boolean = false;
   runtimeKeys : any;
   runtimeObject : any;
+  accountList = [];
+  regionList = [];
+  accountSelected;
+  regionSelected;
 
 
   constructor (
@@ -113,6 +117,13 @@ export class CreateServiceComponent implements OnInit {
   public focusKinesis = new EventEmitter<boolean>();
   public focusS3 = new EventEmitter<boolean>();
   public focusSQS = new EventEmitter<boolean>();
+
+  selectAccountsRegions(){
+    this.accountList = env_oss.accounts;
+    this.regionList = env_oss.regions;
+    this.accountSelected = this.accountList[0];
+    this.regionSelected = this.regionList[0];
+  }
 
   chkDynamodb() {
     this.focusDynamo.emit(true);
@@ -144,6 +155,13 @@ export class CreateServiceComponent implements OnInit {
     this.serviceRequestFailure = false;
     this.serviceRequestSuccess = false;
     this.onClose.emit(false);
+  }
+
+  onaccountSelected(event){
+
+  }
+  onregionSelected(event){
+
   }
 
 
@@ -616,6 +634,7 @@ export class CreateServiceComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();
     if(env_oss.slack_support) this.SlackEnabled=true;

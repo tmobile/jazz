@@ -1,11 +1,11 @@
 export const environment = {
   production: true,
   configFile: 'config/config.oss.json',
-  baseurl: "https://{API_GATEWAY_KEY_PROD}.execute-api.{inst_region}.amazonaws.com/prod",
+  baseurl: "https://tn8k9z56za.execute-api.us-east-1.amazonaws.com/prod",
   api_doc_name: "https://{api_doc_name}.s3.amazonaws.com",
   envName: "oss",
-  multi_env: {multi_env},
-  slack_support: {slack_support},
+  multi_env: true,
+  slack_support: true,
   envLists:  {"nodejs8.10": "Nodejs 8.10", "python2.7": "Python 2.7", "python3.6": "Python 3.6", "java8": "Java 8", "go1.x": "Go 1.x"},
   serviceTabs: ["{overview}", "{access control}", "{metrics}", "{logs}", "{cost}"],
   environmentTabs: ["{env_overview}", "{deployments}", "{code quality}", "{metrics}", "{assets}", "{env_logs}"],
@@ -39,5 +39,11 @@ export const environment = {
   aws: {
     account_number:'{account_number}',
     region:"{region}",
-  }
+  },
+  defaults: {
+    account_id: '302890901340',
+    region: 'us-west-2'
+  },
+  accounts: ['501-1230', '501-1231', '501-1232', '501-1233', '501-1234'],
+  regions: ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2'],
 };

@@ -176,6 +176,41 @@
                     </div>
                 </div>
             </section>
+
+             <section class="each-step-wrap Internal-access">
+              <div class="row">
+                  <div class="col-lg-4 col-md-4">
+                      <p class="step-title">Account &amp; Region</p>
+                      <p class="step-details">Choose the account and region you want your application deployed on</p>
+                  </div>
+                  <div class="col-lg-8 col-md-8">
+                      <section class="col-lg-12  pad-left0">
+                          <div class="account-region-wrap">
+                            <div class="each-section-accReg">
+                              <div class="accReg-label">
+                                Account
+                              </div>
+                              <div class="accReg-dropdown">
+                                <dropdown class='dropdown'  [dropdwnContent]="accountList" title="accountSelected" [selected]="accountSelected" (onSelected)="onaccountSelected($event)"></dropdown>
+
+                              </div>
+                            </div>
+                            <div class="">
+                              <div class="accReg-label">
+                                Region
+                              </div>
+                              <div class="accReg-dropdown">
+                                <dropdown class='dropdown'  [dropdwnContent]="regionList" title="regionSelected" [selected]="regionSelected" (onSelected)="onregionSelected($event)"></dropdown>
+
+                              </div>
+                            </div>
+
+                          </div>
+                      </section>
+                  </div>
+              </div>
+            </section>
+
             <section class="each-step-wrap slack-channel-integration">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
