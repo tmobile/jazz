@@ -85,7 +85,7 @@
             <!-- <span *ngIf='forgot_password && !new_pwd_req'> | </span> -->
             <a *ngIf="forgot_password && !new_pwd_req" (click)="new_pwd_req=true;forgot_password=false;disableLoginBtn()">Have verification code?</a>
         </div>
-        <div class="separator-row" *ngIf="!forgot_password && !register"></div>
+        <div class="separator-row" *ngIf="!forgot_password && !register && !new_pwd_req"></div>
         <div class="newUser" *ngIf="!register && !forgot_password && !new_pwd_req">
             <a (click)="toggleReg('register')">Register</a>
         </div>
