@@ -48,8 +48,7 @@ async function handler(event, context) {
 
 async function processACLRequest(event, config) {
   let resourcePath = event.resourcePath.split("/");
-  let pathString = resourcePath.pop();
-  let path = pathString.toLowerCase();
+  let path = resourcePath.length>0 ? resourcePath[0].toLowerCase(): '';
 
   //1. POST - add and delete the policy
   if (event.method === 'POST' && path === 'policies') {
@@ -111,8 +110,8 @@ async function processACLRequest(event, config) {
   if (event.method === 'GET' && path === 'services') {
     validation.validateGetServicesInput(event);
     let result;
-    if (event.path.serviceId) {
-      result = await casbinUtil.getPolicyForServiceUser(event.path.serviceId, event.query.userId, config);
+    if (resourcePath.length > 1) {
+      result = await casbinUtil.getPolicyForServiceUser(resourcePath[1], event.query.userId, config);
     } else {
       result = await casbinUtil.getPolicyForUser(event.query.userId, config);
     }
