@@ -278,7 +278,7 @@ describe('processACLRequest tests', () => {
         serviceId: "324234234",
         policies: [{category: "manage", permission: "read"}]
       }];
-
+      getEvent.resourcePath = 'services/123456';
       const getCheckPermissionsStub = sinon.stub(casbinUtil, "getPolicyForServiceUser").resolves(policies);
       const config = {};
 
