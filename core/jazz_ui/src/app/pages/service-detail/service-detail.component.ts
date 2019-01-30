@@ -371,7 +371,8 @@ export class ServiceDetailComponent implements OnInit {
 
 
   onServiceNameChange() {
-    if (this.ServiceName == this.service['name']) {
+    
+    if (this.ServiceName.toLowerCase() == this.service['name']) {
       this.disblebtn = false;
     }
     else {
