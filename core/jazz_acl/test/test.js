@@ -417,10 +417,10 @@ describe("ScmUtil -- Bitbucket", () => {
     const policies = [{ category: "code", permission: "read", userId: "test" }];
     const serviceInfo = { service: "dada", domain: "test" };
     const config = { "PERMISSION_CATEGORIES": ["code"] };
-    const removeAllRepoUsersStub = sinon.stub(bitbucketUtil, "removeAllRepoUsers").resolves(true);
-    const addPermsInBitbucketRepoStub = sinon.stub(bitbucketUtil, "addPermsInBitbucketRepo").resolves(true);
+    const removeAllRepoUsersStub = sinon.stub(bitbucketUtil, "removeAllRepoUsers").resolves();
+    const addPermsInBitbucketRepoStub = sinon.stub(bitbucketUtil, "addPermsInBitbucketRepo").resolves();
 
-    await expect(bitbucketUtil.addRepoPermissionInBitbucket(config, serviceInfo, policies)).to.be.resolves;
+    const result = await bitbucketUtil.addRepoPermissionInBitbucket(config, serviceInfo, policies);
     sinon.assert.calledOnce(removeAllRepoUsersStub);
     sinon.assert.calledOnce(addPermsInBitbucketRepoStub);
     removeAllRepoUsersStub.restore();
@@ -452,7 +452,7 @@ describe("ScmUtil -- Bitbucket", () => {
     const getRepoUsersStub = sinon.stub(bitbucketUtil, "getRepoUsers").resolves(res);
     const removeRepoUserStub = sinon.stub(bitbucketUtil, "removeRepoUser").resolves();
 
-    await expect(bitbucketUtil.removeAllRepoUsers(config, serviceInfo)).to.be.resolves;
+    const result = await bitbucketUtil.removeAllRepoUsers(config, serviceInfo);
     sinon.assert.calledOnce(getRepoUsersStub);
     sinon.assert.calledOnce(removeRepoUserStub);
     getRepoUsersStub.restore();
@@ -493,7 +493,7 @@ describe("ScmUtil -- Gitlab", () => {
     const getGitlabProjectMemberStub = sinon.stub(gitlabUtil, "getGitlabProjectMember").resolves({ isMember: false });
     const addProjectMemberStub = sinon.stub(gitlabUtil, "addProjectMember").resolves();
 
-    await expect(gitlabUtil.addRepoPermission(config, serviceInfo, policies)).to.be.resolves;
+    const result = await gitlabUtil.addRepoPermission(config, serviceInfo, policies);
     sinon.assert.calledOnce(getGitLabsProjectIdStub);
     sinon.assert.calledOnce(removeAllRepoUsersStub);
     removeAllRepoUsersStub.restore();
@@ -534,13 +534,13 @@ describe("ScmUtil -- Gitlab", () => {
   it('removeAllGitlabRepoUsers will remove all the permissions of the given service', async () => {
     const serviceInfo = { service: "dada", domain: "test" };
     const config = {};
-    const resp = { values: [{ user: { name: "test" } }] };
+    const resp = [{ id: "a", name: "test" }, { id: "b", name: "test2" }];
     const res = { body: JSON.stringify(resp) }
     const getAllRepoUsersStub = sinon.stub(gitlabUtil, "getAllRepoUsers").resolves(res);
     const getGitLabsProjectIdStub = sinon.stub(gitlabUtil, "getGitLabsProjectId").resolves("repo_id");
     const removeRepoUserStub = sinon.stub(gitlabUtil, "removeRepoUser").resolves();
 
-    await expect(gitlabUtil.removeAllRepoUsers(config, serviceInfo)).to.be.resolves;
+    const result = await gitlabUtil.removeAllRepoUsers(config, serviceInfo);
     sinon.assert.calledOnce(getAllRepoUsersStub);
     sinon.assert.calledOnce(getGitLabsProjectIdStub);
     getAllRepoUsersStub.restore();

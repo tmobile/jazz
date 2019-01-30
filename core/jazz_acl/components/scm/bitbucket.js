@@ -59,12 +59,11 @@ const removeAllRepoUsers = async (config, serviceInfo) => {
     let list = [];
     if (response.body) {
       const result = JSON.parse(response.body);
-      
       if (result.values.length > 0) {
         for (const res of result.values) {
-          let user 
-          try {   
-            user = res.user;         
+          let user
+          try {
+            user = res.user;
             await exportable.removeRepoUser(config, repo_name, user.name);
             list.push(user.name);
           } catch (e) {
