@@ -178,8 +178,8 @@ export const toastMessage = {
         "error500":"Something went wrong while we were fetching your service policy details!"
     },
     "aclConfirmation": {
-        "finalConfirmationMsg": "Changes made to your services do not take immediate effect until they are approved. Please wait a minimum 1 hour for approval.",
-        "finalConfirmationHeader": "Update Management",
+        "finalConfirmationMsg": "Are you sure you want to make this edit?",
+        "finalConfirmationHeader": "CONFIRMATION",
         "errorIndicationHeader": "Unable to Remove User",
         "errorIndicationMsg": "There must be at least one user delegated under each category. To add additional users, select \"Add User\" from the options below."
     }
