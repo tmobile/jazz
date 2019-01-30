@@ -28,7 +28,7 @@ const responseObj = require("./components/response.js");
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 
-module.exports.handler = (event, context, cb) => {
+function handler(event, context, cb) {
 
 	var errorHandler = errorHandlerModule();
 	logger.init(event, context);
@@ -43,8 +43,8 @@ module.exports.handler = (event, context, cb) => {
 	try {
 		logger.info(JSON.stringify(event));
 
-		validateInput(event)
-			.then(() => sendEmail(config, event.body))
+		exportable.validateInput(event)
+			.then(() => exportable.sendEmail(config, event.body))
 			.then((result) => { return cb(null, responseObj({ result: "success", message: result.messageId })); })
 			.catch(function (err) {
 				logger.error("Failed while sending email: " + JSON.stringify(err));
@@ -128,3 +128,11 @@ function sendEmail(config, userInput) {
 		});
 	});
 }
+
+const exportable = {
+	handler,
+	validateInput,
+	sendEmail
+  }
+
+  module.exports = exportable;

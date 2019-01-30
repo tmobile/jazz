@@ -42,7 +42,7 @@ function handler(event, context, cb) {
       if (event.principalId != config.ADMIN_ID) {
         return cb(JSON.stringify(errorHandler.throwUnauthorizedError("This user is not authorized to access this service.")));
       }
-      getInstallerVarsJSON(config).then((data) => {
+      exportable.getInstallerVarsJSON(config).then((data) => {
         apiResponseObj.config = data;
         return cb(null, responseObj(apiResponseObj, event.body));
       }).catch((error) => {
@@ -56,8 +56,8 @@ function handler(event, context, cb) {
     logger.error(JSON.stringify(error));
     cb(JSON.stringify(errorHandler.throwInternalServerError("Unknown Error")));
   }
-
 }
+
 function buildRequestOption(config) {
   if (config.SCM_TYPE === "gitlab") {
     return {
@@ -103,8 +103,10 @@ function getInstallerVarsJSON(config) {
   });
 }
 
-module.exports = {
+const exportable = {
   handler,
   getInstallerVarsJSON,
   buildRequestOption
-};
+}
+
+module.exports = exportable;
