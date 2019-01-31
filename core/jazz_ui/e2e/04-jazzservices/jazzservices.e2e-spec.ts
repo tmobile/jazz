@@ -64,6 +64,7 @@ describe('Overview', () => {
       });
 
       it('Verify API Service and Navigation', () => {
+            
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
             //To Navigate to the particular service and verifying the Page
@@ -74,10 +75,12 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
             jazzServices_po.getRefresh().click();
             browser.sleep(30000);
-            browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+            browser.wait(EC.visibilityOf(jazzServices_po.getProdName()), timeOutHigh);
             //To get the corresponding environment[Prod]
+            //browser.manage().timeouts().implicitlyWait(50000);
             jazzServices_po.getProdName().click();
             //Verifying the browser id at the Deployment Tab
+            browser.sleep(5000);
             expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
             browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
             browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
@@ -91,7 +94,10 @@ describe('Overview', () => {
             jazzServices_po.getDeploymentStatus().click();
             browser.sleep(15000);
             jazzServices_po.getRefresh().click();
-            jazzServices_po.getDeploymentStatusVerify();
+            //browser.manage().timeouts().implicitlyWait(50000);
+           // jazzServices_po.getDeploymentStatusVerify();
+            browser.sleep(15000);
+            browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatusVerify()), timeOutHigh);
             //Verifying the Deployment status
             expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
       });
@@ -127,7 +133,7 @@ describe('Overview', () => {
             jazzServices_po.getDropDown().click();
             jazzServices_po.getYear().click();
             expect(jazzServices_po.getYearVerify().getText()).toEqual('YEAR');
-            browser.sleep(2000);
+            browser.sleep(5000);
             jazzServices_po.getServiceFromAsset().click();
       });
       
@@ -167,9 +173,12 @@ describe('Overview', () => {
             jazzServices_po.getRefresh().click();
             browser.sleep(40000);
             //Moving to Production Environment
-            browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+            browser.wait(EC.visibilityOf(jazzServices_po.getProdName()), timeOutHigh);
+
+           // browser.manage().timeouts().implicitlyWait(50000);
+            
             jazzServices_po.getProdName().click();
-            browser.sleep(60000);
+            browser.sleep(10000);
             expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
             browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
             browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
@@ -183,7 +192,9 @@ describe('Overview', () => {
             jazzServices_po.getDeploymentStatus().click();
             browser.sleep(15000);
             jazzServices_po.getRefresh().click();
-            jazzServices_po.getDeploymentStatusVerify();
+            //browser.manage().timeouts().implicitlyWait(50000);
+            //jazzServices_po.getDeploymentStatusVerify();
+            browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatusVerify()), timeOutHigh);
             expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
             
       });
@@ -257,7 +268,8 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
             jazzServices_po.getRefresh().click();
             browser.sleep(30000);
-            browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
+            browser.wait(EC.visibilityOf(jazzServices_po.getProdName()), timeOutHigh);
+            //browser.manage().timeouts().implicitlyWait(50000);
             jazzServices_po.getProdName().click();
             //Verification of the Deployment tab
             expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
@@ -273,8 +285,10 @@ describe('Overview', () => {
             jazzServices_po.getDeploymentStatus().click();
             browser.sleep(15000);
             jazzServices_po.getRefresh().click();
-            jazzServices_po.getDeploymentStatusVerify();
+            //browser.manage().timeouts().implicitlyWait(50000);
+            //jazzServices_po.getDeploymentStatusVerify();
             //Checking the deployment is successful
+            browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatusVerify()), timeOutHigh);
             expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
       });
 
