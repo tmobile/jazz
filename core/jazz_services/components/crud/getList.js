@@ -93,7 +93,7 @@ module.exports = (query, getAllRecords, onComplete) => {
                 array.forEach(function (value) {
                     let modifiedAttributeValue = value;
                     modifiedAttributeValue = modifiedAttributeValue.replace(/-/g, '_');
-                    attributeValues[(":" + modifiedAttributeValue)] = {
+                    attributeValues[(`:${modifiedAttributeValue}`)] = {
                         'S': value
                     };
                 });
