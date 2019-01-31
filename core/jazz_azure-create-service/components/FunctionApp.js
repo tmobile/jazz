@@ -13,10 +13,10 @@ module.exports = class FunctionApp {
     }
 
     async create(data){
-        console.log(data);
         await this.login();
-        console.log(await ResourceFactory.createStorageAccount(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials));
-        console.log(await ResourceFactory.createHostingPlan(data.resourceGroupName, this.subscriptionId, this.credentials));
-        console.log(await ResourceFactory.createFunctionApp(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials));
+        await ResourceFactory.createStorageAccount(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials);
+        await ResourceFactory.createHostingPlan(data.resourceGroupName, this.subscriptionId, this.credentials);
+        await ResourceFactory.createFunctionApp(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials);
+        await ResourceFactory.upload(data.resourceGroupName, data.appName, data.zip, this.subscriptionId, this.credentials);
     }
 }

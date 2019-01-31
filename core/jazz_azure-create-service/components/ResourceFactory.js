@@ -2,7 +2,11 @@ const WebAppManagementClient = require('azure-arm-website');
 const resourceManagement = require('azure-arm-resource');
 const StorageManagementClient = require('azure-arm-storage');
 const ApiManagementClient = require("azure-arm-apimanagement");
+const Stream = require('stream');
 const utils = require('./Utils');
+// const request = require('request');
+const axios = require('axios');
+
 /**
  * 
  * 
@@ -19,7 +23,8 @@ module.exports = {
     getLatestApiVersionForResource,
     createOrUpdateApiGatewayWithSwaggerJson,
     deleteApi,
-    upload
+    upload,
+    addApiToProduct
 }
 
 async function createResourceGroup(resourceGroupName, subscriptionId, credentials, location = 'westus', tags = {} ) {          
@@ -139,11 +144,14 @@ async function getLatestApiVersionForResource(resource,subscriptionId, credentia
 }
 
 async function createOrUpdateApiGatewayWithSwaggerJson(resourceGroupName, serviceName, apiId, credentials, subscriptionId, swaggerString, basepath) {
+ console.log(JSON.stringify(swaggerString));
   var parameters = {
         "contentFormat": "swagger-json",
         "contentValue": JSON.stringify(swaggerString),
         "path": basepath
       };   
+      
+      console.log("parameters here: " + JSON.stringify(parameters));
  const client = new ApiManagementClient(credentials, subscriptionId);
  var result = await client.api.createOrUpdateWithHttpOperationResponse(resourceGroupName, serviceName, apiId, parameters, null);
  return result;
@@ -155,14 +163,20 @@ async function deleteApi(resourceGroupName, serviceName, apiId, credentials, sub
     return result;
  }
 
- async function upload(resourceGroup, appName, subscriptionId, b64string, credentials) {
+async function addApiToProduct(resourceGroupName, serviceName, productId, apiId, credentials, subscriptionId) {
+    const client = new ApiManagementClient(credentials, subscriptionId);
+    var result = await client.productApi.createOrUpdate(resourceGroupName, serviceName, productId, apiId, null);
+    return result;
+ }
+
+ async function upload(resourceGroup, appName, b64string, subscriptionId, credentials) {
     var buffer = Buffer.from(b64string, 'base64');
     var stream = new Stream.PassThrough();
     stream.end(buffer);
     
-    const client = await new webSiteManagementClient(credentials, subscriptionId, null, null);
+    const client = await new WebAppManagementClient(credentials, subscriptionId, null, null);
     var pubcreds = await client.webApps.listPublishingCredentials(resourceGroup, appName, null);
-       
+       console.log(pubcreds);
         console.log("Trying to upload a file");
         var config = {
             headers: {
@@ -176,8 +190,30 @@ async function deleteApi(resourceGroupName, serviceName, apiId, credentials, sub
               body: stream
         };
            
-       return await axios.put(
-            `https://${appName}.azurewebsites.net/api/zipdeploy`,
+    //   request({
+    //             url: `https://${appName}.scm.azurewebsites.net/api/zipdeploy`,
+    //             method: 'PUT',
+    //             body: stream,
+    //             encoding: null,
+    //             auth: {
+    //                 username: pubcreds.publishingUserName,
+    //                 password: pubcreds.publishingPassword
+    //               },
+    //               headers: {
+    //                 Accept: '*/*'
+    //               }
+    //           }, (error, response) => {
+    //             if (error) {
+    //                 console.log(error);
+    //                 throw error;
+    //             } else {
+    //                 console.log(response);
+    //               return response;
+    //             }
+    //           })
+    
+        return await axios.put(
+            `https://${appName}.scm.azurewebsites.net/api/zipdeploy`,
             stream,
             config
         ).then((response) => {
@@ -191,5 +227,3 @@ async function deleteApi(resourceGroupName, serviceName, apiId, credentials, sub
             console.log(error.response.data.error);
         });
     }
- 
-
