@@ -66,6 +66,7 @@
     "karma-remap-istanbul": "^0.2.1",
     "protractor": "^5.4.2",
     "protractor-jasmine2-html-reporter": "0.0.7",
+    "jasmine-json-test-reporter": "1.0.0-beta",
     "ts-node": "~3.2.0",
     "tslint": "~5.7.0",
     "typescript": "~2.4.2",
