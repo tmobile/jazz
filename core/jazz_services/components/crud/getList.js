@@ -75,6 +75,28 @@ module.exports = (query, getAllRecords, onComplete) => {
                         'S': value
                     };
                 });
+            } else if(key_name == "SERVICE_REGION" && query.region !== undefined){
+                var region = query.region;
+                var array = region.split(',');
+                var obj = {};
+
+                var filterString = "( ";
+                array.forEach(function (value) {
+                    var modifiedFilteredValue = value;
+                    modifiedFilteredValue = modifiedFilteredValue.replace(/-/g, '_');
+                    filterString += " :" + modifiedFilteredValue + " , ";
+                });
+                filterString = filterString.substring(0, filterString.length - 3);
+                filterString += " )";
+
+                filter = filter + key_name + " IN " + filterString + " AND ";
+                array.forEach(function (value) {
+                    var modifiedAttributeValue = value;
+                    modifiedAttributeValue = modifiedAttributeValue.replace(/-/g, '_');
+                    attributeValues[(":" + modifiedAttributeValue)] = {
+                        'S': value
+                    };
+                });
             } else if (query[key]) {
                 filter = filter + key_name + " = :" + key_name + insertAnd;
                 attributeValues[(":" + key_name)] = {
