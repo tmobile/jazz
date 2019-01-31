@@ -18,6 +18,7 @@ export const CONFIGURATIONS = {
   optional: {
     general: {
       ACCESS_MANAGEMENT_PORTAL_URL: '',
+<<<<<<< HEAD
           e2e: {
                       EMAIL_ID: '{stack_email}',            
                       USER_NAME: '{stack_username}',  
@@ -29,4 +30,17 @@ export const CONFIGURATIONS = {
                 }
               }
             }
+=======
+      e2e: {
+        EMAIL_ID: '{stack_email}',            
+        USER_NAME: '{stack_username}',  
+        PASSWORD: '{stack_password}',  
+        REG_USER_NAME: '{stack_reg_username}', 
+        REG_PASS_WORD: '{stack_reg_password}', 
+        REG_CODE: '{stack_reg_code}', 
+        APPLN_URL: '{stack_jazz_url}'
+      }
+    }
+  }
+>>>>>>> 203df53c8cef074cc5f73249259889104c561294
 };
