@@ -75,23 +75,23 @@ module.exports = (query, getAllRecords, onComplete) => {
                         'S': value
                     };
                 });
-            } else if(key_name == "SERVICE_REGION" && query.region !== undefined){
-                var region = query.region;
-                var array = region.split(',');
-                var obj = {};
+            } else if(key_name == "SERVICE_REGION" && query.region){
+                let region = query.region;
+                let array = region.split(',');
+                let obj = {};
 
-                var filterString = "( ";
+                let filterString = "( ";
                 array.forEach(function (value) {
-                    var modifiedFilteredValue = value;
+                    let modifiedFilteredValue = value;
                     modifiedFilteredValue = modifiedFilteredValue.replace(/-/g, '_');
-                    filterString += " :" + modifiedFilteredValue + " , ";
+                    filterString += ` :${modifiedFilteredValue} , `;
                 });
                 filterString = filterString.substring(0, filterString.length - 3);
                 filterString += " )";
 
                 filter = filter + key_name + " IN " + filterString + " AND ";
                 array.forEach(function (value) {
-                    var modifiedAttributeValue = value;
+                    let modifiedAttributeValue = value;
                     modifiedAttributeValue = modifiedAttributeValue.replace(/-/g, '_');
                     attributeValues[(":" + modifiedAttributeValue)] = {
                         'S': value
