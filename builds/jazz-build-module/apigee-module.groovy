@@ -6,7 +6,6 @@ import groovy.transform.Field
 
 @Field apigeeConfig
 @Field apiversion
-@Field mavenHome
 @Field nodeHome
 @Field apigeeModuleRoot
 @Field events
@@ -17,7 +16,6 @@ import groovy.transform.Field
  */
 def initialize(apigee_config, event_logger) {
     apigeeConfig = apigee_config
-    mavenHome = tool name: "${apigeeConfig.MAVEN}", type: 'maven'
     apiversion = "${apigeeConfig.BUILD_VERSION}.${env.BUILD_NUMBER}"
     apigeeModuleRoot = getModuleRoot()
     events = event_logger
@@ -67,9 +65,7 @@ String deploy(swaggerFile, arn, env_key, environment_logical_id, config, context
                 try {
                 // call the script bundle.sh which will build the proxy files and upload them to artifactory. Note artifactory url is set in the script.
                     events.sendStartedEvent('APIGEE_API_PROXY_BUILD', 'Creating Apigee API proxy bundle', apigeeContextMap)
-                    withEnv(["MVN_HOME=${mavenHome}"]) {
-                        sh("cd build;./bundle.sh ${templateValues.ProxyName} v1 ${functionName} ${apiversion} ${email}")
-                    }
+                    sh("cd build;./bundle.sh ${templateValues.ProxyName} v1 ${functionName} ${apiversion} ${email}")
                     events.sendCompletedEvent('APIGEE_API_PROXY_BUILD', 'Completed Apigee API proxy bundle', apigeeContextMap)
                 } catch (e) {
                     events.sendFailureEvent('APIGEE_API_PROXY_BUILD', e.getMessage(), apigeeContextMap)

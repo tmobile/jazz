@@ -469,11 +469,11 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/prod-config.json"
 
-            if (config_loader.SCM.TYPE == "bitbucket") {
-                sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
-                sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
-                sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
+            sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
+            sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
+            sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
 
+            if (config_loader.SCM.TYPE == "bitbucket") {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
                 sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/dev-config.json"
                 sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/stg-config.json"
@@ -486,13 +486,9 @@ def loadServiceConfigurationData() {
             }
 
             if (config_loader.SCM.TYPE == "gitlab") {
-                sh "sed -i -- 's,{gitlab_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
-                sh "sed -i -- 's,{gitlab_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
-                sh "sed -i -- 's,{gitlab_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
-
-                sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
+                sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
             }
         }
 
