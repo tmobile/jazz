@@ -100,7 +100,7 @@
         },
         {
           "key": "platform",
-          "required": true,
+          "required": false,
           "editable": false,
           "isEmptyAllowed": false,
           "type": "String"
