@@ -69,7 +69,15 @@ export class CreateServiceComponent implements OnInit {
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
-
+  eventMaxLength:any = {
+    "stream_name":0,
+    "table_name":0,
+    "queue_name":0,
+    "bucket_name":0
+  };
+  serviceLimit:number;
+  domainLimit:number;
+  servicePatterns:any;
 
   model = new ServiceFormData('','','', '','','');
   cronObj = new CronObject('0/5','*','*','*','?','*')
@@ -82,6 +90,7 @@ export class CreateServiceComponent implements OnInit {
   errMessage: any;
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
+  invalidEventName:boolean = false;
 
 
   constructor (
@@ -164,6 +173,8 @@ export class CreateServiceComponent implements OnInit {
     }
   }
   onAWSEventChange(val){
+    this.invalidEventName = false;
+    this.eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
     this.eventExpression.type = val;
     if(val !== `none`){
       this.rateExpression.type = 'none';
@@ -185,6 +196,12 @@ export class CreateServiceComponent implements OnInit {
 
   }
 
+  //function to validate event source names
+  validateEvents(value){
+    if(value != null && ((value[0] === '-' || value[value.length - 1] === '-') || (value[0] === '.' || value[value.length - 1] === '.') || (value[0] === '_' || value[value.length - 1] === '_'))){
+      this.invalidEventName = true;
+    }
+  }
   // function to validate slack channel
   public validateChannelName() {
 
@@ -517,6 +534,9 @@ export class CreateServiceComponent implements OnInit {
     if(this.invalidServiceName || this.invalidDomainName){
       return true
     }
+    if(this.invalidEventName){
+      return true
+    }
     return false;
   }
 
@@ -581,8 +601,20 @@ export class CreateServiceComponent implements OnInit {
     document.getElementById('approverName').focus();
   }
 
+  loadMaxLength(){
+    let maxEnvIfLength = 15;
+    this.serviceLimit = env_oss.charachterLimits.serviceName;
+    this.domainLimit = env_oss.charachterLimits.domainName;
+    this.eventMaxLength.stream_name = env_oss.charachterLimits.eventMaxLength.stream_name - maxEnvIfLength;
+    this.eventMaxLength.table_name = env_oss.charachterLimits.eventMaxLength.table_name - maxEnvIfLength;
+    this.eventMaxLength.queue_name = env_oss.charachterLimits.eventMaxLength.queue_name - maxEnvIfLength;
+    this.eventMaxLength.bucket_name = env_oss.charachterLimits.eventMaxLength.bucket_name - maxEnvIfLength;
+    this.servicePatterns = env_oss.servicePatterns;
+  }
+
   ngOnInit() {
     this.getData();
+    this.loadMaxLength();
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
     // cron validation related functions //

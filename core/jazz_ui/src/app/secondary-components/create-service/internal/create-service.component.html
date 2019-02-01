@@ -82,7 +82,7 @@
                         <section class="col-lg-3 col-md-3 pad-left0">
                             <div class="radio-container">
                                 <input type="radio" class='test-focus' name="runtime" id="nodejs" [value]="nodejs" [checked]="runtime == 'nodejs'" (click)="onSelectionChange('nodejs')">
-                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (6.10)</label>
+                                <label for="nodejs"><span class='outer'></span><span class="background"></span>Nodejs (8.10)</label>
                             </div>
                         </section>
                         <section class="col-lg-3 col-md-3 pad-left0">
@@ -125,7 +125,7 @@
                         <section class="col-lg-12  pad-left0">
                             <div class="input-field-container">
                                 <div class="input-wrapper" [ngClass]="{'available': serviceAvailable && !invalidServiceName && !invalidDomainName, 'unavailable': serviceNotAvailable || !serviceName.valid && (serviceName.dirty || serviceName.touched) || (serviceName.valid && invalidServiceName)}">
-                                    <input name="serviceName" pattern="^[A-Za-z0-9\-]+$" type="text" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (ngModelChange)="invalidServiceName = false;serviceAvailable=false" #serviceName='ngModel' (blur)="validateName($event)" >
+                                    <input name="serviceName" pattern="^[A-Za-z0-9\-]+$"  maxlength="20" type="text" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (ngModelChange)="invalidServiceName = false;serviceAvailable=false" #serviceName='ngModel' (blur)="validateName($event)" >
                                     <img class="input-loader ng-hide">
                                     <p class="termsConditions" *ngIf="!serviceName.valid && (serviceName.dirty || serviceName.touched)">Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
                                     <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && !isDomainDefined">Service name is available !</p>
@@ -152,7 +152,7 @@
                         <section class="col-lg-12  pad-left0">
                             <div class="input-field-container">
                                 <div class="input-wrapper" [ngClass]="{'unavailable' : !domainName.valid && (domainName.dirty || domainName.touched) || (domainName.valid && invalidDomainName) }">
-                                    <input name="domainName" pattern="^[A-Za-z0-9\-]+$" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event)" (ngModelChange)="invalidDomainName=false" required>
+                                    <input name="domainName" pattern="^[A-Za-z0-9\-]+$" maxlength="20" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event)" (ngModelChange)="invalidDomainName=false" required>
                                     <p class="termsConditions" *ngIf="!domainName.valid && (domainName.dirty || domainName.touched)">Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
                                     <p class="termsConditions" *ngIf="domainName.valid && invalidDomainName">Namespace should not start with number or hyphens and should not end with hyphens</p>
                                     <img *ngIf="serviceName.valid && domainName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">

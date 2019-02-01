@@ -31,6 +31,7 @@ var errorHandler = errorHandlerModule(logger);
 
 function handler(event, context, cb){
   var config = configModule.getConfig(event, context);
+  logger.info("event: " + JSON.stringify(event))
 
   rp(getTokenRequest(config))
     .then(result => {
@@ -127,6 +128,7 @@ function processEachEvent(record, configData, authToken) {
 function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
   return new Promise((resolve, reject) => {
     var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
+    logger.info("event payload: " + JSON.stringify(kinesisPayload));
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
       if (_.includes(config.EVENTS.EVENT_TYPE, kinesisPayload.Item.EVENT_TYPE.S) &&
         _.includes(config.EVENTS.EVENT_NAMES, kinesisPayload.Item.EVENT_NAME.S)) {
@@ -202,8 +204,8 @@ function processCreateAsset(eventPayload, configData, authToken) {
       "domain": svcContext.domain,
       "asset_type": svcContext.type
     };
-    if (_.includes(Object.keys(configData.EVENTS.EVENT_STATUS), eventPayload.EVENT_STATUS.S)) {
-      assetApiPayload["status"] = configData.EVENTS.EVENT_STATUS[eventPayload.EVENT_STATUS.S]
+    if (_.includes(configData.EVENTS.EVENT_STATUS, eventPayload.EVENT_STATUS.S)) {
+      assetApiPayload["status"] = configData.EVENTS.CREATE_ASSET_COMPLETED
     } else {
       logger.error("Error in creating assets. Invalid status value in the payload");
       return reject({
@@ -244,10 +246,11 @@ function processUpdateAsset(record, eventPayload, configData, authToken) {
       "tags": svcContext.tags,
       "asset_type": svcContext.type
     };
-    if (_.includes(Object.keys(configData.EVENTS.EVENT_STATUS), eventPayload.EVENT_STATUS.S)) {
-      assetApiPayload["status"] = configData.EVENTS.EVENT_STATUS[eventPayload.EVENT_STATUS.S]
+    if (_.includes(configData.EVENTS.EVENT_STATUS, eventPayload.EVENT_STATUS.S)) {
+      var event_status = eventPayload.EVENT_NAME.S + "_" + eventPayload.EVENT_STATUS.S
+      assetApiPayload["status"] = configData.EVENTS[event_status]
     } else {
-      logger.error("Error in creating assets. Invalid status value in the payload");
+      logger.error("Error in updating assets. Invalid status value in the payload");
       return reject({
         "error": "Error in updating assets. Invalid status value in the payload",
         "details": eventPayload.EVENT_STATUS.S
@@ -289,7 +292,7 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
     };
 
     var svcPostSearchPayload = {
-      uri: configData.BASE_API_URL + configData.ASSETS_API_SEARCH_RESOURCE+ "?domain=" + searchAssetPayload.domain + "&service=" + searchAssetPayload.service + "&provider_id=" +searchAssetPayload.provider_id + "&asset_type=" +searchAssetPayload.asset_type,
+      uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE+ "?domain=" + searchAssetPayload.domain + "&service=" + searchAssetPayload.service + "&provider_id=" +searchAssetPayload.provider_id + "&asset_type=" +searchAssetPayload.asset_type,
       method: "GET",
       headers: { Authorization: authToken },
       rejectUnauthorized: false
