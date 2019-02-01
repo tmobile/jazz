@@ -19,7 +19,7 @@ const logger = require("../logger.js");
 
 const addRepoPermissionInBitbucket = async (config, serviceInfo, policies) => {
   let users_list = [];
-  await removeAllRepoUsers(config, serviceInfo);
+  await exportable.removeAllRepoUsers(config, serviceInfo);
   for (const policy of policies) {
     try {
       let permission = policy.permission.toUpperCase()
@@ -29,7 +29,7 @@ const addRepoPermissionInBitbucket = async (config, serviceInfo, policies) => {
         "permission": `REPO_${permission}`
       };
       if (config.PERMISSION_CATEGORIES.includes(policy.category)) {
-        await addPermsInBitbucketRepo(config, repoInfo);
+        await exportable.addPermsInBitbucketRepo(config, repoInfo);
         users_list.push(policy.userId);
       }
     } catch (e) {
@@ -55,15 +55,16 @@ const addPermsInBitbucketRepo = async (config, repoInfo) => {
 const removeAllRepoUsers = async (config, serviceInfo) => {
   try {
     const repo_name = `${serviceInfo.domain}_${serviceInfo.service}`;
-    let response = await getRepoUsers(config, repo_name);
+    let response = await exportable.getRepoUsers(config, repo_name);
     let list = [];
     if (response.body) {
       const result = JSON.parse(response.body);
       if (result.values.length > 0) {
         for (const res of result.values) {
+          let user
           try {
-            const user = res.user;
-            await removeRepoUser(config, repo_name, user.name);
+            user = res.user;
+            await exportable.removeRepoUser(config, repo_name, user.name);
             list.push(user.name);
           } catch (e) {
             logger.error("Remove user failed for user : " + user.name);
@@ -111,7 +112,8 @@ const sendRequest = async (payload) => {
         logger.error("sendRequest: " + JSON.stringify(error));
         return reject(error);
       } else {
-        if (response.statusCode === 200 || response.statusCode === 204 || response.statusCode === 201) {
+        if (response.statusCode === 200 || response.statusCode === 204
+          || response.statusCode === 201 || response.statusCode === 404) { // Adding 404, since it is a valid condition
           return resolve(response);
         }
         return reject({ "error": "Error occured while executing request." });
@@ -132,7 +134,12 @@ const getPayload = (config, url, method) => {
   };
 }
 
-module.exports = {
+const exportable = {
   addRepoPermissionInBitbucket,
-  removeAllRepoUsers
+  removeAllRepoUsers,
+  addPermsInBitbucketRepo,
+  getRepoUsers,
+  removeRepoUser
 };
+
+module.exports = exportable;

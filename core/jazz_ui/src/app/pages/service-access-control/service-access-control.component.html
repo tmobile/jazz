@@ -1,10 +1,10 @@
 <div class="access-control-wrap relative">
-    <div>
+    <div *ngIf="!isLoading && !isDataNotAvailable && !isError">
         <section class="each-step-wrap header-sec">
             <h1>Update who can access your service</h1>
              <btn-jazz-primary newclass="loginbutton savechangesbtn" text="EDIT" *ngIf="showDisplay" (click)='onEditClick()'></btn-jazz-primary>
             <div class="custom-save-btn-wrap" *ngIf="!showDisplay">
-            <btn-jazz-primary newclass="loginbutton savechangesbtn" text="SAVE" (click)='onSaveClick()'></btn-jazz-primary>
+            <btn-jazz-primary newclass="loginbutton savechangesbtn" text="SAVE" [disablePrimaryBtn]="!isAddOrDelete || isValidData()"  (click)='onSaveClick()'></btn-jazz-primary>
             <div class="cancel-wrapper"><a  (click)='onCancelClick()'>CANCEL</a></div>
           </div>
         </section>
@@ -12,10 +12,10 @@
             <div class="row">
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title step-title-head">Management Access</p>
-                    <p class="step-details">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p>
+                    <p class="step-details">User(s) who can access and edit/modify service details (includes Code and Deployments accesses).</p>
                 </div>
-                <div class="col-lg-8 col-md-8"> 
-                    <div class="groups-wrap" [hidden]="accessGranted">
+                <div class="col-lg-8 col-md-8">
+                    <div class="groups-wrap">
                         <div class="groups-input toggle-class">
                             <div>
                                 <p class="step-title">Users</p>
@@ -31,26 +31,26 @@
                         </div>
                     </div>
                 </div>
-                 <div class="col-lg-8 col-md-8" *ngIf="showDisplay"> 
-                    <div class="groups-wrap" [hidden]="accessGranted" *ngFor="let group of groupsAccess.manage;let i=index">
+                 <div class="col-lg-8 col-md-8" *ngIf="showDisplay">
+                    <div class="groups-wrap" *ngFor="let group of access.manage;let i=index">
                         <div class="groups-input toggle-class">
-                            <div>
-                                <p class="step-title step-title-edit">{{group.name}} <span class="usertype"> {{group.userType}}</span></p>
+                            <div *ngIf="group.userId">
+                                <p class="step-title step-title-edit"> {{group.userId}} <span class="usertype"> {{group.permission}}</span></p>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                  <div class="col-lg-8 col-md-8" *ngIf="!showDisplay"> 
-                    <div class="groups-wrap" [hidden]="accessGranted" *ngFor="let group of groupsAccess.manage;let i=index">
-                        <div class="groups-input toggle-class" [ngClass]="{'disabled': accessGranted}">
-                            <div class="input-wrapper" [ngClass]="{'read-only': group.readOnly}">
-                                <input name="api_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.name" (ngModelChange)="ongrpNameChange('api' ,i)" [readonly]="group.readOnly">
-                                <div *ngIf="group.showGroups" class="approvers-list-wrap" (clickOutside)="group.showGroups = false">
-                                    <div class="approvers-list typeShow open">
-                                        <div class="approvers-dets" *ngFor="let approverss of groupList;let j = index;" (focus)=" j==focusindex " [ngClass]="{pinkfocususers : j==focusindex }" [ngStyle]="scrollList" >
-                                        <div (click)="selectApprovers(approverss);$event.stopPropagation();" index="{j}" [attr.displayName]='approverss.displayName' [attr.userId]='approverss.userId' [attr.userEmail]='approverss.userEmail'><div class="approvers-text">{{approverss.userId}}</div></div>
+                  <div class="col-lg-8 col-md-8" *ngIf="!showDisplay">
+                    <div class="groups-wrap" *ngFor="let group of access.manage;let i=index">
+                        <div class="groups-input toggle-class" >
+                            <div class="input-wrapper" [ngClass]="{'read-only': group.permission !== admin }">
+                                <input name="api_text_{{i}}" [ngClass]="{'unavailable-error': !groupList[group.category].length && showManageGroup && i == iSelected}" (keydown)="keypress($event, i, group.category);" autocomplete="off" type="text" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{3,4}$" class="textForm" placeholder="User" [(ngModel)]="group.userId" (ngModelChange)="ongrpNameChange('manage' ,i)" #manageUser="ngModel" [readonly]= "(group.userId && manageUser.valid) ? true : false">
+                                <div *ngIf="showManageGroup && i == iSelected" class="approvers-list-wrap" (clickOutside)="showManageGroup = false">
+                                    <div class="approvers-list typeShow open" [ngClass]="{'list-empty-error': !groupList[group.category].length}">
+                                        <div class="approvers-dets" *ngFor="let user of groupList[group.category] | myfilter:group.userId;let k = index;" (focus)=" k==focusindex " [ngClass]="{pinkfocususers : k==focusindex }" [ngStyle]="scrollList">
+                                          <div (click)="selectUser(user, i, 'manage');$event.stopPropagation();" [attr.user]='user'>{{user}}</div>
                                         </div>
+                                        <div *ngIf="!groupList[group.category].length " class="empty-user-list approvers-dets">User not found</div>
                                     </div>
                                 </div>
                             </div>
@@ -58,34 +58,33 @@
                         <div class="radio-button-wrapper">
                             <div class="group-status">
                                 <div class="radio-container">
-                                    <input type="radio" id="manageAdmin_{{i}}" name="manageAdmin_{{i}}" [value]="admin" [checked]="group.accessType == 'admin'" (click)="onManagementChange('admin',i)">
+                                    <input type="radio" id="manageAdmin_{{i}}" name="manage_{{i}}" [value]="admin" [checked]="group.permission == 'admin'" (click)="onSelectionChange('admin', i, group.category)">
                                     <label for="manageAdmin_{{i}}"><span></span><span class="background"></span></label>
                                 </div>
                             </div>
                             <div class="group-status">
                                 <div class="radio-container">
-                                    <input type="radio" name="manageRead_{{i}}" id="manageRead_{{i}}" [value]="read" [checked]="group.accessType == 'read'" (click)="onManagementChange('read',i)">
+                                    <input type="radio" name="manage_{{i}}" id="manageRead_{{i}}" [value]="read" [checked]="group.permission == 'read'" (click)="onSelectionChange('read', i, group.category)">
                                     <label for="manageRead_{{i}}"><span></span><span class="background"></span></label>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="delete-grp" *ngIf="!disableManage">
-                            <span (click)="deletegroup(i,'manage')" class="icon-icon-close toggle-class" [ngClass]="{'disabled': accessGranted}"></span>
+                        <div class="delete-grp">
+                            <span (click)="deletegroup(i, 'manage')" class="icon-icon-close toggle-class" ></span>
                         </div>
                     </div>
-                    <p class="add-group toggle-class" [hidden]="accessGranted" [ngClass]="{'disabled': accessGranted}" (click)="addgroup(i,'manage')"><span class="icon-icon-close"></span>Add User</p>
-                </div>  
+                    <p class="add-group toggle-class"  (click)="addgroup('manage')"><span class="icon-icon-close"></span>Add User</p>
+                </div>
             </div>
         </section>
         <section class="code-access each-step-wrap">
             <div class="row">
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title step-title-head">Code Access</p>
-                    <p class="step-details">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p>
+                    <p class="step-details">User(s) who can access the bitbucket repository with selected permissions.</p>
                 </div>
-                   <div class="col-lg-8 col-md-8"> 
-                    <div class="groups-wrap" [hidden]="accessGranted">
+                   <div class="col-lg-8 col-md-8">
+                    <div class="groups-wrap">
                         <div class="groups-input toggle-class">
                             <div>
                                 <p class="step-title">Users</p>
@@ -101,26 +100,26 @@
                         </div>
                     </div>
                 </div>
-                  <div class="col-lg-8 col-md-8" *ngIf="showDisplay"> 
-                    <div class="groups-wrap" [hidden]="accessGranted" *ngFor="let group of groupsAccess.code;let i=index">
+                  <div class="col-lg-8 col-md-8" *ngIf="showDisplay">
+                    <div class="groups-wrap" *ngFor="let group of access.code;let i=index">
                         <div class="groups-input toggle-class">
                             <div>
-                                <p class="step-title step-title-edit">{{group.name}} <span class="usertype"> {{group.userType}}</span></p>
+                                <p class="step-title step-title-edit">{{group.userId}} <span class="usertype"> {{group.permission}}</span></p>
                             </div>
                         </div>
                     </div>
                 </div>
-                
                 <div class="col-lg-8 col-md-8" *ngIf="!showDisplay">
-                    <div class="groups-wrap" *ngFor="let group of groupsAccess.code;let i=index">
+                    <div class="groups-wrap" *ngFor="let group of access.code;let i=index">
                         <div class="groups-input">
-                            <div class="input-wrapper" [ngClass]="{'read-only': group.readOnly}">
-                                <input name="code_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.name" (ngModelChange)="ongrpNameChange('code' ,i)" [readonly]="group.readOnly">
-                                <div *ngIf="group.showGroups" class="approvers-list-wrap" (clickOutside)="group.showGroups = false">
-                                    <div class="approvers-list typeShow open">
-                                        <div class="approvers-dets" *ngFor="let approvers of groupList | myfilter:group.name">
-                                            <div (click)="selectApprovers(approvers, i , 'code')">{{approvers.givenName}}</div>
+                            <div class="input-wrapper" [ngClass]="{'read-only': group.permission == read}">
+                                <input name="code_text_{{i}}" [ngClass]="{'unavailable-error': !groupList[group.category].length && showCodeGroup && i == iSelected}" (keydown)="keypress($event, i, group.category);" autocomplete="off" type="text" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" class="textForm" placeholder="User" [(ngModel)]="group.userId" (ngModelChange)="ongrpNameChange('code' ,i)" #codeUser="ngModel" [readonly]= "(group.userId && codeUser.valid) ? true : false">
+                                <div *ngIf="showCodeGroup && i == iSelected" class="approvers-list-wrap" (clickOutside)="showCodeGroup = false">
+                                    <div class="approvers-list typeShow open" [ngClass]="{'list-empty-error': !groupList[group.category].length}">
+                                        <div class="approvers-dets" *ngFor="let user of groupList[group.category] | myfilter:group.userId;let k = index;" (focus)=" k==focusindex " [ngClass]="{pinkfocususers : k==focusindex }" [ngStyle]="scrollList">
+                                            <div (click)="selectUser(user, i , 'code')" [attr.user]='user'>{{user}}</div>
                                         </div>
+                                        <div *ngIf="!groupList[group.category].length " class="empty-user-list approvers-dets">User not found</div>
                                     </div>
                                 </div>
                             </div>
@@ -128,22 +127,22 @@
                          <div class="radio-button-wrapper">
                             <div class="group-status">
                                 <div class="radio-container">
-                                    <input type="radio" id="codeManage_{{i}}" name="code_{{i}}" [value]="manage" [checked]="group.accessType == 'manage'" (click)="onSelectionChange('manage',i)" />
-                                    <label for="codeManage_{{i}}"><span></span><span class="background"></span></label>
+                                    <input type="radio" id="codeWrite_{{i}}" name="code_{{i}}" [value]="write" [checked]="group.permission == 'write'" (click)="onSelectionChange('write', i, group.category)" />
+                                    <label for="codeWrite_{{i}}"><span></span><span class="background"></span></label>
                                 </div>
                             </div>
                             <div class="group-status">
                                 <div class="radio-container">
-                                    <input type="radio" name="code_{{i}}" id="codeRead_{{i}}" [value]="read" [checked]="group.accessType == 'read'" (click)="onSelectionChange('read',i)">
+                                    <input type="radio" name="code_{{i}}" id="codeRead_{{i}}" [value]="read" [checked]="group.permission == 'read'" (click)="onSelectionChange('read',i, group.category)">
                                     <label for="codeRead_{{i}}"><span></span><span class="background"></span></label>
                                 </div>
                             </div>
                         </div>
-                        <div class="delete-grp" *ngIf="!disableCode">
+                        <div class="delete-grp">
                             <span (click)="deletegroup(i,'code')" class="icon-icon-close"></span>
                         </div>
                     </div>
-                    <p class="add-group" (click)="addgroup(i,'code')"><span class="icon-icon-close"></span>Add User</p>
+                    <p class="add-group" (click)="addgroup('code')"><span class="icon-icon-close"></span>Add User</p>
                 </div>
             </div>
         </section>
@@ -151,48 +150,101 @@
             <div class="row">
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title step-title-head">Deployment Access</p>
-                    <p class="step-details">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p>
+                    <p class="step-details">User(s) who are can trigger a deployment for the service.</p>
                 </div>
-                  <div class="col-lg-8 col-md-8"> 
-                    <div class="groups-wrap" [hidden]="accessGranted">
-                        <div class="groups-input toggle-class">
-                            <div>
-                                <p class="step-title">Users</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="col-lg-8 col-md-8">
+                  <div class="groups-wrap">
+                      <div class="groups-input toggle-class">
+                          <div>
+                              <p class="step-title">Users</p>
+                          </div>
+                      </div>
+                      <div class="">
+                          <div class="group-status" *ngIf="!showDisplay">
+                              <p class="step-title">Write</p>
+                          </div>
+                          <div class="group-status" *ngIf="!showDisplay">
+                              <p class="step-title">Read</p>
+                          </div>
+                      </div>
+                  </div>
                 </div>
-                  <div class="col-lg-8 col-md-8" *ngIf="showDisplay"> 
-                    <div class="groups-wrap" [hidden]="accessGranted" *ngFor="let group of groupsAccess.deploy;let i=index">
-                        <div class="groups-input toggle-class">
-                            <div>
-                                <p class="step-title step-title-edit">{{group.name}}</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="col-lg-8 col-md-8" *ngIf="showDisplay">
+                  <div class="groups-wrap" *ngFor="let group of access.deploy;let i=index">
+                      <div class="groups-input toggle-class">
+                          <div>
+                              <p class="step-title step-title-edit">{{group.userId}} <span class="usertype"> {{group.permission}}</span></p>
+                          </div>
+                      </div>
+                  </div>
                 </div>
-                
                 <div class="col-lg-8 col-md-8" *ngIf="!showDisplay">
-                    <div class="groups-wrap" *ngFor="let group of groupsAccess.deploy;let i=index">
+                    <div class="groups-wrap" *ngFor="let group of access.deploy;let i=index;">
                         <div class="groups-input">
-                            <div class="input-wrapper border-wrapper" [ngClass]="{'read-only': group.readOnly}">
-                                <input name="deploy_text_{{i}}" type="text" class="textForm" placeholder="User" [(ngModel)]="group.name" (ngModelChange)="ongrpNameChange('deploy' ,i)" [readonly]="group.readOnly">
-                                <div *ngIf="group.showGroups" class="approvers-list-wrap" (clickOutside)="group.showGroups = false">
-                                    <div class="approvers-list typeShow open">
-                                        <div class="approvers-dets" *ngFor="let approvers of groupList | myfilter:group.userId">
-                                            <div (click)="selectApprovers(approvers, i , 'deploy')">{{approverss.userId}}</div>
+                            <div class="input-wrapper" [ngClass]="{'read-only': group.permission === 'read'}">
+                                <input name="deploy_text_{{i}}" [ngClass]="{'unavailable-error': !groupList[group.category].length && showDeployGroup && i == iSelected}" (keydown)="keypress($event, i, group.category);" autocomplete="off" type="text" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,4}$" class="textForm" placeholder="User" [(ngModel)]="group.userId" (ngModelChange)="ongrpNameChange('deploy' ,i); showGroups = true" #deployUser="ngModel" [readonly]= "(group.userId && deployUser.valid) ? true : false">
+
+                                <div *ngIf="showDeployGroup && i == iSelected" class="approvers-list-wrap" (clickOutside)="showDeployGroup = false">
+                                    <div class="approvers-list typeShow open" [ngClass]="{'list-empty-error': !groupList[group.category].length}">
+                                        <div class="approvers-dets" *ngFor="let user of groupList[group.category] | myfilter:group.userId;let k = index;" (focus)=" k==focusindex " [ngClass]="{pinkfocususers : k==focusindex }" [ngStyle]="scrollList">
+                                            <div (click)="selectUser(user, i , 'deploy');" [attr.user]='user'>{{user}}</div>
                                         </div>
+                                        <div *ngIf="!groupList[group.category].length " class="empty-user-list approvers-dets">User not found</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="delete-grp" *ngIf="!disableDeploy" >
+                        <div class="radio-button-wrapper">
+                          <div class="group-status">
+                              <div class="radio-container">
+                                  <input type="radio" id="deployWrite_{{i}}" name="deploy_{{i}}" [value]="write" [checked]="group.permission == 'write'" (click)="onSelectionChange('write',i, group.category)" />
+                                  <label for="deployWrite_{{i}}"><span></span><span class="background"></span></label>
+                              </div>
+                          </div>
+                          <div class="group-status">
+                              <div class="radio-container">
+                                  <input type="radio" name="deploy_{{i}}" id="deployRead_{{i}}" [value]="read" [checked]="group.permission == 'read'" (click)="onSelectionChange('read',i, group.category)">
+                                  <label for="deployRead_{{i}}"><span></span><span class="background"></span></label>
+                              </div>
+                          </div>
+                        </div>
+                        <div class="delete-grp">
                             <span (click)="deletegroup(i,'deploy')" class="icon-icon-close"></span>
                         </div>
                     </div>
-                    <p class="add-group" (click)="addgroup(i,'deploy')"><span class="icon-icon-close"></span>Add User</p>
+                    <p class="add-group" (click)="addgroup('deploy')"><span class="icon-icon-close"></span>Add User</p>
                 </div>
             </div>
         </section>
+        <div class='confirm-overlay' *ngIf='saveClicked || removeUser' (click)="saveClicked = false; removeUser = false">
+          <div class='confirm-overlay-inner-wrap' (click)="$event.stopPropagation()">
+              <div class='overlay-header'>{{confirmationHeader}}</div>
+              <div *ngIf="!isPUTLoading" class='overlay-body'>{{confirmationText}}</div>
+              <div class='overlay-btns'>
+                <btn-jazz-primary text="OK" (click)='onCompleteClick()'></btn-jazz-primary>
+              </div>
+          </div>
+        </div>
+    </div>
+    <div>
+      <div class="loading-row-cost" [class.show]="isLoading">
+        <div class="loading-circle"></div>
+      </div>
+      <div class="loading-row-cost" [class.show]="isDataNotAvailable">
+        <div class="empty-row nodata with-refresh relative">
+            <div class="icon-icon-nodata"></div>
+            <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
+        </div>
+      </div>
+      <div class="loading-row-cost" [class.show]="isError">
+          <div class="empty-row with-refresh relative">
+              <div class="icon-icon-server-error">
+                  <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span>
+              </div>
+              <div class='oops'>Oops!</div>
+              <div>{{errMessage}}<br><a (click)="refresh()">REFRESH</a> to give it another try.</div>
+              <br><div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
+          </div>
+      </div>
     </div>
 </div>

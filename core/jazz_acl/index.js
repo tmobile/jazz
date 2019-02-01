@@ -14,7 +14,7 @@
 // limitations under the License.
 // =========================================================================
 
-const errorHandlerModule = require("./components/error-handler.js")();
+const errorHandler = require("./components/error-handler.js")();
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const validation = require("./components/validation.js");
@@ -47,12 +47,11 @@ async function handler(event, context) {
 };
 
 async function processACLRequest(event, config) {
-  let resourcePath = event.resourcePath.split("/");
-  let pathString = resourcePath.pop();
-  let path = pathString.toLowerCase();
+  let resourcePath = event.resourcePath;
+  let path = event.path;
 
   //1. POST - add and delete the policy
-  if (event.method === 'POST' && path === 'policies') {
+  if (event.method === 'POST' && resourcePath.indexOf("policies") !== -1) {
     validation.validatePostPoliciesInput(event);
 
     const serviceId = event.body.serviceId;
@@ -62,34 +61,33 @@ async function processACLRequest(event, config) {
     if (event.body.policies && event.body.policies.length) {
       const policies = event.body.policies;
       result = await casbinUtil.addOrRemovePolicy(serviceId, config, 'add', policies);
-
       if (result && result.error) {
-        throw (errorHandlerModule.throwInternalServerError(`Error adding the policy for service ${serviceId}. ${result.error}`));
+        throw (errorHandler.throwInternalServerError(`Error adding the policy for service ${serviceId}. ${result.error}`));
       }
 
-      await processScmPermissions(config, serviceId, policies, 'add');
+      await exportable.processScmPermissions(config, serviceId, policies, 'add');
     } else {//delete policies
       result = await casbinUtil.addOrRemovePolicy(serviceId, config, 'remove');
 
       if (result && result.error) {
-        throw (errorHandlerModule.throwInternalServerError(result.error));
+        throw (errorHandler.throwInternalServerError(result.error));
       }
 
-      await processScmPermissions(config, serviceId, null, 'remove');
+      await exportable.processScmPermissions(config, serviceId, null, 'remove');
     }
 
     return { success: true };
   }
 
   //2. GET the policy for the given service id
-  if (event.method === 'GET' && path === 'policies') {
+  if (event.method === 'GET' && resourcePath.indexOf("policies") !== -1) {
 
     validation.validateGetPoliciesInput(event);
     const serviceId = event.query.serviceId;
     const result = await casbinUtil.getPolicies(serviceId, config);
 
     if (result && result.error) {
-      throw (errorHandlerModule.throwInternalServerError(result.error));
+      throw (errorHandler.throwInternalServerError(result.error));
     }
 
     let policies = [];
@@ -99,7 +97,7 @@ async function processACLRequest(event, config) {
         permission: policy[2],
         category: policy[1]
       })
-    ));
+      ));
 
     return {
       serviceId: serviceId,
@@ -108,42 +106,47 @@ async function processACLRequest(event, config) {
   }
 
   //3. GET the permissions for a given user
-  if (event.method === 'GET' && path === 'services') {
+  if (event.method === 'GET' && resourcePath.indexOf("services") !== -1) {
     validation.validateGetServicesInput(event);
     let result;
-    if (event.path.serviceId) {
-      result = await casbinUtil.getPolicyForServiceUser(event.path.serviceId, event.query.userId, config);
+    if (path && path.serviceId) {
+      result = await casbinUtil.getPolicyForServiceUser(path.serviceId, event.query.userId, config);
     } else {
       result = await casbinUtil.getPolicyForUser(event.query.userId, config);
     }
 
-    if(result && result.error) {
-      throw (errorHandlerModule.throwInternalServerError(result.error));
+    if (result && result.error) {
+      throw (errorHandler.throwInternalServerError(result.error));
     }
 
     return result;
   }
 
   //4. GET the permissions for a specific service for a given user
-  if (event.method === 'GET' && path === 'checkpermission') {
+  if (event.method === 'GET' && resourcePath.indexOf("checkpermission") !== -1) {
     validation.validateGetCheckPermsInput(event);
     const query = event.query;
     const result = await casbinUtil.checkPermissions(query.userId, query.serviceId, query.category, query.permission, config);
 
     if (result && result.error) {
-      throw (errorHandlerModule.throwInternalServerError(result.error));
+      throw (errorHandler.throwInternalServerError(result.error));
     }
 
     return result;
   }
 }
 
+
 async function processScmPermissions(config, serviceId, policies, key) {
-  let scm = new scmUtil(scmConfig);
-  let authToken = await auth.getAuthToken(config);
-  let serviceData = await services.getServiceMetadata(config, authToken, serviceId);
-  let res = await scm.processScmPermissions(serviceData, policies, key);
-  return (res);
+  try {
+    let scm = new scmUtil(scmConfig);
+    let authToken = await auth.getAuthToken(config);
+    let serviceData = await services.getServiceMetadata(config, authToken, serviceId);
+    let res = await scm.processScmPermissions(serviceData, policies, key);
+    return (res);
+  } catch (ex) {
+    throw (JSON.stringify(errorHandler.throwInternalServerError(ex)));
+  }
 }
 
 const exportable = {
