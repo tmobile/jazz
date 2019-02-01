@@ -78,7 +78,29 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
 
-        }
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.SUBSCRIPTIONID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
+                sh "sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/prod-config.json"
+            }
+
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.CLIENTID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
+                sh "sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/prod-config.json"
+            }
+
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.PASSWORD, passwordVariable: 'PASS', usernameVariable: 'USER']]){
+                sh "sed -i -- 's/{azure_password}/${PASS}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{azure_password}/${PASS}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{azure_password}/${PASS}/g' ./config/prod-config.json"
+            }
+
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.TENANTID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
+                sh "sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/prod-config.json"
+            }
 
         if (service_name.trim() == "jazz_codeq") {
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
@@ -532,7 +554,7 @@ def setEventSourceMapping(eventSourceArn, config) {
   ).trim()
   echo "$event_source_list"
   if (event_source_list == "[]") {
-      sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$role_id:function:$function_name --starting-position LATEST --region $region"
+      sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$role_id:function:$function_name --enabled --starting-position LATEST --region $region"
   }
 }
 

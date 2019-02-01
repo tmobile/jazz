@@ -66,35 +66,34 @@ node  {
 
 		events.sendStartedEvent("VALIDATE_INPUT", 'input validation starts', context_map)
 		if (service_config['type'] == "api" || service_config['type'] == "function" || service_config['type'] == "website") {
-			if (service_config['runtime'] == "nodejs" || service_config['runtime'] == "python" || service_config['runtime'] == "java" || service_config['runtime'] == "go1.x" || service_config['runtime'] == "n/a") {
-
+			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'] == "n/a") {
 				switch (service_config['type']) {
 					case "api":
-						if (service_config['runtime'] == "nodejs") {
+						if (service_config['runtime'].startsWith("nodejs")) {
 							service_template = "api-template-nodejs"
 						}
-						else if (service_config['runtime'] == "python") {
-							service_template = 'api-template-python'
+						else if (service_config['runtime'].startsWith("python")){
+							service_template = 'api-template-python'	
 						}
-						else if (service_config['runtime'] == "java") {
+						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'api-template-java'
 						}
-						else if (service_config['runtime'] == "go1.x") {
+						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'api-template-go'
 						}
 						break
 
 					case "function":
-						if (service_config['runtime'] == "nodejs") {
+						if (service_config['runtime'].startsWith("nodejs")) {
 							service_template = "lambda-template-nodejs"
 						}
-						else if (service_config['runtime'] == "python") {
-							service_template = 'lambda-template-python'
+						else if (service_config['runtime'].startsWith("python")){
+							service_template = 'lambda-template-python'	
 						}
-						else if (service_config['runtime'] == "java") {
+						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'lambda-template-java'
 						}
-						else if (service_config['runtime'] == "go1.x") {
+						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'lambda-template-go'
 						}
 						break
@@ -102,15 +101,12 @@ node  {
 					case "website":
 						service_template = 'static-website-template'
 						break
-
 				}
-
 			} else {
 				send_status_email("FAILED")
 				events.sendFailureEvent('VALIDATE_INPUT', "Invalid runtime: ${service_config['runtime']}", context_map)
 				error "Invalid runtime: ${service_config['runtime']}"
 			}
-
 		} else {
 			send_status_email("FAILED")
 			events.sendFailureEvent('VALIDATE_INPUT', "Invalid service type", context_map)
@@ -282,6 +278,7 @@ node  {
 		}
 	}
 }
+
 /**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
@@ -291,15 +288,12 @@ def getAuthToken() {
 	withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: g_svc_admin_cred_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
 
 		def loginUrl = g_base_url + "/jazz/login"
-		def login_json = []
-
-		login_json = [
+		def login_json = [
 			'username': UNAME,
 			'password': PWD
 		]
-		def tokenJson_token = null
 		def payload = JsonOutput.toJson(login_json)
-
+		
 		try {
 			def token = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
@@ -307,12 +301,10 @@ def getAuthToken() {
 				-d \'${payload}\'", returnStdout:true).trim()
 
 			def tokenJson = jsonParse(token)
-			tokenJson_token = tokenJson.data.token
-
-			return tokenJson_token
+			return tokenJson.data.token
 		}
 		catch (e) {
-			error "error occured: " + e.getMessage()
+			error "Failed while getting auth token for user: $UNAME, error:  " + e.getMessage()
 		}
 	}
 
@@ -395,7 +387,7 @@ def send_status_email (build_status) {
    	try {
 		def sendMail = sh(script: "curl -X POST \
 						${g_base_url}/jazz/email \
-						-k -v -H \"Authorization: $g_login_token\" \
+						-k -v -H \"Authorization: $auth_token\" \
 						-H \"Content-Type: application/json\" \
 						-d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJson(sendMail)

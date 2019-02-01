@@ -24,9 +24,15 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js")(); //Import the logging module.
-const request = require('request');
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
+const request = require('request');
+const monitorManagementClient = require('azure-arm-monitor');
+const msRestAzure = require('ms-rest-azure');
+const moment = require("moment-timezone");
+const momentDurationFormatSetup = require("moment-duration-format");
+
+
 
 function handler(event, context, cb) {
   var errorHandler = errorHandlerModule();
@@ -51,7 +57,7 @@ function handler(event, context, cb) {
       .then(() => exportable.getToken(config))
       .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
       .then(res => exportable.validateAssets(res, eventBody))
-      .then(res => exportable.getMetricsDetails(res))
+      .then(res => exportable.getMetricsDetails(res, config, eventBody))
       .then(res => {
         var finalObj = utils.massageData(res, eventBody);
         return cb(null, responseObj(finalObj, eventBody));
@@ -175,7 +181,7 @@ function validateAssets(assetsArray, eventBody) {
       var newAssetArray = [];
       var invalidTypeCount = 0;
 
-      assetsArray.forEach((assetItem) => {
+      assetsArray.filter(assetItem => assetItem.provider == 'aws').forEach((assetItem) => {
         if (assetItem.isError) {
           logger.error(assetItem.isError);
           invalidTypeCount++;
@@ -195,7 +201,8 @@ function validateAssets(assetsArray, eventBody) {
               .then(res => {
                 newAssetArray.push({
                   "actualParam": res,
-                  "userParam": assetItem
+                  "userParam": assetItem,
+                  "provider": assetItem.provider
                 });
                 resolve(newAssetArray);
               })
@@ -209,6 +216,23 @@ function validateAssets(assetsArray, eventBody) {
               message: "Unsupported metric type."
             });
           }
+        }
+      });
+
+      assetsArray.filter(assetItem => assetItem.provider == 'azure').forEach((assetItem) => {
+        if (assetItem.isError) {
+          logger.error(assetItem.isError);
+          invalidTypeCount++;
+          if (invalidTypeCount === assetsArray.length) {
+            reject({
+              result: "inputError",
+              message: "Unsupported metric type."
+            });
+          }
+        } else {
+
+            newAssetArray.push(assetItem);
+            resolve(newAssetArray);
         }
       });
     } else {
@@ -286,11 +310,11 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
   });
 }
 
-function getMetricsDetails(newAssetArray) {
+function getMetricsDetails(newAssetArray, config, eventBody) {
   return new Promise((resolve, reject) => {
     logger.debug("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
-    newAssetArray.forEach(assetParam => {
+    newAssetArray.filter(assetParam => assetParam.provider == 'aws').forEach(assetParam => {
       exportable.cloudWatchDetails(assetParam)
         .then(res => {
           metricsStatsArray.push(res);
@@ -302,6 +326,20 @@ function getMetricsDetails(newAssetArray) {
           reject(error);
         });
     });
+
+    // call azure api if 'azure' is found as a provider
+    newAssetArray.filter(assetParam => assetParam.provider == 'azure').forEach(assetParam => {
+      exportable.azureMetricDefinitions(config, assetParam)
+        .then( definitions => exportable.azureMetricDetails(definitions, config, assetParam, eventBody))
+        .then(res => {
+          metricsStatsArray.push(res);
+          resolve(metricsStatsArray);
+        })
+        .catch(error => {
+          reject(error);
+        });
+    });
+
   });
 }
 
@@ -311,7 +349,6 @@ function cloudWatchDetails(assetParam) {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
       let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch() : utils.getCloudWatch();
-
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
           logger.error("Error while getting metrics from cloudwatch: " + JSON.stringify(err));
@@ -337,6 +374,146 @@ function cloudWatchDetails(assetParam) {
   });
 }
 
+/*
+* Prepare to obtain azure metrics definiations
+*/
+function azureMetricDefinitions(config, assetParam) {
+  var data = {};
+  var resourceid = assetParam.provider_id;
+  return new Promise((resolve, reject) => {
+    subscriptionId = config.AZURE.SUBSCRIPTIONID;
+
+    // to obtain the azure credentials
+    msRestAzure.loginWithServicePrincipalSecret(
+      config.AZURE.CLIENTID,
+      config.AZURE.PASSWORD,
+      config.AZURE.TENANTID,
+      (err, credentials) => {
+
+        if (err) {
+          logger.error("Error while obtaining azure credentials " + JSON.stringify(err));
+            reject({
+              "result": "inputError",
+              "message": err.message
+            });
+        } else {
+
+          // to create an azure client
+          const client = new monitorManagementClient(credentials, subscriptionId);
+          const uri = `/subscriptions/${subscriptionId}${resourceid}`
+
+          // to get the metrics definitions
+          return client.metricDefinitions.list(uri).then((items) => {
+            if (items == null || items == undefined)
+              reject({
+                "result": "inputError",
+                "message": "Failed in obtaining metric definitions"
+              });
+            items.forEach(item => {
+              var attrs = {};
+              attrs["unit"] = item.unit;
+              attrs["aggregationtype"] = item.primaryAggregationType;
+              attrs["namespace"] = item.namespace;
+              data[item.name.value] = attrs;
+            });
+            resolve(data);
+          });
+        }
+    });
+  });
+};
+
+/*
+* Prepare to obtain metrcis based on the metric definitions
+*/
+function azureMetricDetails(definitions, config, assetParam, eventBody) {
+
+  //prepare the metric names & primary aggregation types
+  var resourceid = assetParam.provider_id;
+  var names = "";
+  var aggregations = "";
+
+  for (var name in definitions) {
+    names += name + ",";
+    aggregations += definitions[name]["aggregationtype"] + ",";
+  }
+  names = names.substring(0, names.length-1);
+  aggregations = aggregations.substring(0, aggregations.length-1);
+
+  return new Promise((resolve, reject) => {
+    subscriptionId = config.AZURE.SUBSCRIPTIONID;
+
+    // to obtain the azure credentials
+    msRestAzure.loginWithServicePrincipalSecret(
+      config.AZURE.CLIENTID,
+      config.AZURE.PASSWORD,
+      config.AZURE.TENANTID,
+      (err, credentials) => {
+
+        // create an azure client
+        const client = new monitorManagementClient(credentials, subscriptionId);
+        var options = {'metricnames': names}
+        options['interval'] = moment.duration(60, "minutes");
+        options['timespan'] = eventBody.start_time + "/" + eventBody.end_time;
+        options['aggregation'] = aggregations;
+        const uri = `/subscriptions/${subscriptionId}${resourceid}`
+
+        // query azure to get the multiple metric results
+        return client.metrics.list(uri, options).then((result) => {
+          var metrics = [];
+
+          if (!(result && result.value)) {
+            logger.error("Failed in obtaining metric results. Here is the response:  " + JSON.stringify(result));
+            return reject({"result": "inputError", "message": "Failed in obtaining metric results"});
+          }
+
+          result.value.forEach(item => {
+            if (item.name && item.name.value) {
+              var defname = item.name.value; // "UsedCapacity", "Availabilty", etc
+              var datapoints = [];
+            } else {
+              logger.error("Returned metric does not have 'name' property. Here is the metric: " + JSON.stringify(item));
+              return reject({"result": "inputError", "message": "Returned metric does not have a name"});
+            }
+
+            if (!item.timeseries){
+              logger.error("Returned metric does not have 'timeseries' property: Here is the metric: " + JSON.stringify(item));
+              return reject({"result": "inputError", "message": "Returned metric does not have timeseries"});
+            }
+            item.timeseries.forEach(dot => {
+              if (!dot.data){
+                logger.error("Timeseries does not have 'data' property. Here is the Timeseries: " + JSON.stringify(dot));
+                return reject({"result": "inputError", "message": "Timeseries does not have data"});
+              }
+              dot.data.forEach(p => {
+                if ((p[definitions[defname]["aggregationtype"].toLowerCase()]) && (p[definitions[defname]["aggregationtype"].toLowerCase()] >0 )) {
+                  point = {"Timestamp": p.timeStamp, "Unit": definitions[defname]["unit"], "Sum": p[definitions[defname]["aggregationtype"].toLowerCase()]};
+                  datapoints.push(point);
+                } else {
+                  logger.error("Timeseries data is malformatted. Here is the data: " + JSON.stringify(dot));
+                  return reject({"result": "inputError", "message": "Timeseries data is malformatted"});
+                }
+              });
+            });
+            points = {
+              "metric_name": defname,
+              "datapoints": datapoints
+            };
+            metrics.push(points);
+            data = {
+              "type": assetParam.asset_type,
+              "asset_name": {"provider_id": assetParam.provider_id, "asset_type": assetParam.asset_type},
+              "statistics": "Sum", /// TODO:
+              "metrics": metrics
+            };
+            resolve(data);
+          });
+      });
+    });
+  });
+};
+
+
 const exportable = {
   handler,
   genericValidation,
@@ -345,7 +522,9 @@ const exportable = {
   validateAssets,
   getActualParam,
   getMetricsDetails,
-  cloudWatchDetails
+  cloudWatchDetails,
+  azureMetricDefinitions,
+  azureMetricDetails
 }
 
 module.exports = exportable;
