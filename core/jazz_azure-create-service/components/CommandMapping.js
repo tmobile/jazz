@@ -1,11 +1,13 @@
 const ApiApp = require('./ApiApp');
 const FunctionApp = require('./FunctionApp');
+const WebApp = require('./WebApp');
 
 module.exports = class CommandMapping {    
     constructor(){
         this.classList = new Map();
         this.classList.set('ApiApp', ApiApp);
         this.classList.set('FunctionApp', FunctionApp);
+        this.classList.set('WebApp', WebApp);
     }
 
     async process(payload){
@@ -18,14 +20,12 @@ module.exports = class CommandMapping {
         this.instance = new (this.classList.get(payload.className))(payload.data);
         }
         else{
-            var error = new Error(`Classname ${payload.className} is not found.`);
+            let error = new Error(`Classname ${payload.className} is not found.`);
             throw error;
         }
     }
 
     async execute(payload){
-        console.log("this is the payload: " + JSON.stringify(payload));
-        console.log(payload.command);
         return await this.instance[payload.command](payload.data);
     }
 }

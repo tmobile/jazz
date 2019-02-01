@@ -13,19 +13,20 @@ module.exports = class ApiApp {
         this.credentials = await msRestAzure.loginWithServicePrincipalSecret(this.clientId, this.clientSecret, this.tenantId);
     }
 
-    async create(data){
+    async create(data) {
+      try {
         await this.login();
-        try {
-            await ResourceFactory.createStorageAccount(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials);
-            await ResourceFactory.createHostingPlan(data.resourceGroupName, this.subscriptionId, this.credentials);
-            await ResourceFactory.createFunctionApp(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials);
-            await ResourceFactory.upload(data.resourceGroupName, data.appName, data.zip, this.subscriptionId, this.credentials);
-            await ResourceFactory.createOrUpdateApiGatewayWithSwaggerJson("oscar-jazz", data.serviceName, data.apiId, this.credentials, this.subscriptionId, data.swagger, data.basepath);
-            await ResourceFactory.addApiToProduct(data.resourceGroupName, data.serviceName, "starter", data.apiId, this.credentials, this.subscriptionId);
-        }catch (e) {
-            //TODO:decide how to delete this properly, probs some sort of stack or a tag
-
-        }
+        let resourceFactory = new ResourceFactory();
+        let storageAccount = await resourceFactory.createStorageAccount(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials);
+        let storageAccountKeys = await resourceFactory.listStorageAccountKeys(data.resourceGroupName, storageAccount.name, this.subscriptionId, this.credentials);
+        await resourceFactory.createHostingPlan(data.resourceGroupName, this.subscriptionId, this.credentials);
+        await resourceFactory.createFunctionApp(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials, storageAccount.name, storageAccountKeys.keys[0].value);
+        await resourceFactory.upload(data.resourceGroupName, data.appName, data.zip, this.subscriptionId, this.credentials);
+        await resourceFactory.createOrUpdateApiGatewayWithSwaggerJson(data.resourceGroupName, data.serviceName, data.apiId, this.credentials, this.subscriptionId, data.swagger, data.basepath);
+        await resourceFactory.addApiToProduct(data.resourceGroupName, data.serviceName, "starter", data.apiId, this.credentials, this.subscriptionId);
+      } catch (e) {
+        //TODO: Handle rollback here
+      }
     }
 
     async deleteByTag(data){

@@ -16,13 +16,10 @@ module.exports.handler = async (event, context) => {
   const config = configModule.getConfig(event, context);
   const errorHandler = errorHandlerModule();
   logger.init(event, context);
-  var result;
-  var data = event.data;
-  logger.debug('Data is the following: ' + JSON.stringify(data));
-  logger.debug('Event is the following: ' + JSON.stringify(event));
+  let result;
+  let data = event.data;
 
-
-  var commandMapping = new CommandMapping();
+  let commandMapping = new CommandMapping();
 
   try {
     result = await commandMapping.process(event);
