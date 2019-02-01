@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,6 +55,10 @@ var handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'runtime' is not defined")));
         } else if (service_creation_data.domain && !isValidName(service_creation_data.domain)) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("Namespace is not appropriate")));
+        } else if (service_creation_data.service_name && service_creation_data.service_name.length > 20) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'Service Name' can have up to 20 characters")));
+        } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
+            return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
         }
 
         user_id = event.principalId;
@@ -90,7 +94,9 @@ var handler = (event, context, cb) => {
                             return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
                         }
                     });
-                } else {
+                } else if (err.result === 'inputError') {
+                    return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+                }else {
                     return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
                 }
             });
@@ -205,7 +211,8 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             "REGION": service_creation_data.region,
             "USERNAME": user_id,
             "IS_PUBLIC_ENDPOINT": service_creation_data.is_public_endpoint || false,
-            "STATUS": "creation_started"
+            "STATUS": "creation_started",
+            "PLATFORM": service_creation_data.platform
         };
 
         var serviceMetadataObj = {};
@@ -225,6 +232,11 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
         }
 
+        //Adding providerRuntime key in service catalog
+        if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
+            serviceMetadataObj.providerRuntime = service_creation_data.runtime;
+        }
+    
         // Pass the flag to enable authentication on API
         if (service_creation_data.service_type === "api") {
             serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;
@@ -237,6 +249,8 @@ var getServiceData = (service_creation_data, authToken, configData) => {
                 }
             }
         }
+
+    
 
         // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
         if (service_creation_data.service_type === "api" && service_creation_data.is_public_endpoint) {
@@ -274,17 +288,26 @@ var getServiceData = (service_creation_data, authToken, configData) => {
                     reject(cronExpValidator);
                 }
             }
-            
+
             if (service_creation_data.events && service_creation_data.events.length) {
                 //Process events into properties
                 for (let idx = 0; idx < service_creation_data.events.length; idx++) {
                     var eachEvent, eventSrc, eventAction;
                     eachEvent = service_creation_data.events[idx];
                     logger.info('event: ', JSON.stringify(eachEvent));
-                    eventSrc = "event_source_" + eachEvent.type;
-                    eventAction = "event_action_" + eachEvent.type;
-                    serviceMetadataObj[eventSrc] = eachEvent.source;
-                    serviceMetadataObj[eventAction] = eachEvent.action;
+                    let isEventNameValid = validateEventName(eachEvent.type, eachEvent.source, configData);
+                    if (isEventNameValid && isEventNameValid.result) {
+                      eventSrc = "event_source_" + eachEvent.type;
+                      eventAction = "event_action_" + eachEvent.type;
+                      serviceMetadataObj[eventSrc] = eachEvent.source;
+                      serviceMetadataObj[eventAction] = eachEvent.action;
+                    } else {
+                      if (!isEventNameValid) {
+                        isEventNameValid["message"] = `${eachEvent.type} is invalid.`
+                      }
+                      reject({result: 'inputError', message: isEventNameValid.message});
+                    }
+
                 }
             }
         }
@@ -294,6 +317,54 @@ var getServiceData = (service_creation_data, authToken, configData) => {
         resolve(inputs);
     });
 }
+
+var validateEventName = (eventType, sourceName, config) => {
+  let eventSourceName = '', sourceType = eventType.toLowerCase(), logicalIdLen = 15,
+  resultObj = {
+      result: "",
+      message: ""
+  };
+
+  if(!eventType || !sourceName) {
+    resultObj.result = false;
+    resultObj.message =  `Event type and/or source name cannot be empty.`;
+    return resultObj;
+  }
+
+  let eventSourceObject = {
+    's3': sourceName,
+    'sqs': sourceName.split(':').pop(),
+    'dynamodb': sourceName.split('/').pop(),
+    'kinesis': sourceName.split('/').pop()
+  };
+
+  eventSourceName = eventSourceObject[sourceType];
+  if (!eventSourceName) {
+    resultObj.result = false;
+    resultObj.message =  `Event type '${eventType}' is invalid.`;
+    return resultObj;
+  }
+
+  if (eventSourceName && (eventSourceName.startsWith("-") || eventSourceName.startsWith("_") || eventSourceName.startsWith(".") || eventSourceName.endsWith("-") || eventSourceName.endsWith("_") || eventSourceName.endsWith("."))) {
+    resultObj.result = false;
+    resultObj.message =  `${eventSourceName} cannot begin or end with special character`;
+    return resultObj;
+  }
+
+  let mapType = config.EVENT_SOURCE_NAME[sourceType];
+  let regexPattern = new RegExp(mapType.regexPattern);
+
+  if (eventSourceName.length >= mapType.minLength && eventSourceName.length <= (mapType.maxLength - logicalIdLen) && (regexPattern).test(eventSourceName)) {
+    resultObj.result = true;
+    resultObj.message =  `Source name of ${eventType} is valid.`;
+    return resultObj;
+  } else {
+    resultObj.result = false;
+    resultObj.message =  `Source name of ${eventType} is invalid. '${eventSourceName}' should have valid length and/or pattern.`;
+    return resultObj;
+  }
+};
+
 module.exports = {
     handler: handler,
     startServiceOnboarding: startServiceOnboarding,
