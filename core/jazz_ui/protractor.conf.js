@@ -52,17 +52,8 @@ exports.config = {
     });
     jasmine.getEnv().addReporter(new SpecReporter({ spec: { displayStacktrace: true } }));
     jasmine.getEnv().addReporter(new Jasmine2HtmlReporter({savePath: 'target/screenshots'}));
-<<<<<<< HEAD
     //browser.manage().timeouts().implicitlyWait(2000000);
     browser.manage().timeouts().implicitlyWait(600000);
-=======
-    jasmine.getEnv().addReporter(new JSONReporter({
-      file: 'jasmine-test-results.json',
-      beautify: true,
-      indentationLevel: 4 
-    }));
-    browser.manage().timeouts().implicitlyWait(2000000);
->>>>>>> 15acc43c513ba2aa5e8ba9fd574d7383e8d2e63e
     browser.manage().window().setSize(1600, 1000);
     browser.manage().window().maximize();
     browser.waitForAngularEnabled(false);
