@@ -5,16 +5,11 @@
         "service",
         "domain",
         "environment_logical_id",
-        "provider_build_url",
-        "provider_build_id",
-        "scm_commit_hash",
-        "scm_url",
-        "scm_branch",
         "status",
         "request_id"
     ],
     "REQUIRED_PARAMS": ["service", "domain", "environment"],
-    "OPTIONAL_PARAMS": ["status", "offset", "limit"],
+    "OPTIONAL_PARAMS": ["status", "offset", "limit", "provider_build_url", "provider_build_id", "scm_commit_hash", "scm_url","scm_branch"],
     "ARCHIVED_DEPLOYMENT_STATUS": "archived",
     "DEPLOYMENTS_SORTING_KEY": "provider_build_id",
     "DEPLOYMENTS_SORTING_ORDER": "desc",
@@ -38,5 +33,6 @@
         "api": "build-pack-api",
         "function": "build-pack-lambda",
         "website": "build-pack-website"
-    }
+    },
+    "EVENT_API_URL": "/prod/jazz/events"
 }

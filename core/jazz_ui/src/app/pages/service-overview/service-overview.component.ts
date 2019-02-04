@@ -399,7 +399,6 @@ export class ServiceOverviewComponent implements OnInit {
     }
     this.PutPayload = payload;
     if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
-
   }
 
   onCancelClick() {
@@ -496,7 +495,7 @@ export class ServiceOverviewComponent implements OnInit {
     this.isSlackAvailable = false;
     this.show_loader = true;
     if (this.slackChannel_temp == '' || this.slackChannel_temp == null) {
-
+      this.isSlackAvailable = true;
       this.hide_slack_error = true;
       this.show_loader = false;
     } else {
