@@ -63,15 +63,17 @@ export class ServiceAccessControlComponent implements OnInit {
 
   // list of all the groups//
   getUsersList() {
-    this.http.get('/jazz/users').subscribe(
+    this.http.get('/jazz/usermanagement/users').subscribe(
       response => {
-        this.usersList = response.data;
-        this.groupList.manage = (response.data).filter(user => user);
-        this.groupList.code = (response.data).filter(user => user);
-        this.groupList.deploy = (response.data).filter(user => user);
+        if (response && response.data && response.data.result) {
+          this.usersList = response.data.result;
+          this.groupList.manage = (response.data.result).filter(user => user);
+          this.groupList.code = (response.data.result).filter(user => user);
+          this.groupList.deploy = (response.data.result).filter(user => user);
 
-        if (this.originalAccessDetails.length) {
-          this.removeExistingUser(this.originalAccessDetails);
+          if (this.originalAccessDetails.length) {
+            this.removeExistingUser(this.originalAccessDetails);
+          }
         }
       },
       error => {
