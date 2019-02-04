@@ -1,0 +1,154 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Oscar Echo API",
+        "version": "1.0"
+    },
+    "host": "${domain}.azurewebsites.net" ,
+    "basePath": "/api",
+    "schemes": [
+        "https"
+    ],
+    "securityDefinitions": {
+        "apiKeyHeader": {
+            "type": "apiKey",
+            "name": "Ocp-Apim-Subscription-Key",
+            "in": "header"
+        },
+        "apiKeyQuery": {
+            "type": "apiKey",
+            "name": "subscription-key",
+            "in": "query"
+        }
+    },
+    "security": [
+        {
+            "apiKeyHeader": []
+        },
+        {
+            "apiKeyQuery": []
+        }
+    ],
+    "paths": {
+        "/Trigger": {
+            "get": {
+                "description": "A demonstration of a GET call on a sample resource. It is handled by an \"echo\" backend which returns a response equal to the request (the supplied headers and body are being returned as received).",
+                "operationId": "retrieve-resource",
+                "summary": "Retrieve resource",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "A sample parameter that is required and has a default value of \"sample\".",
+                        "required": true,
+                        "type": "string",
+                        "default": "sample",
+                        "enum": [
+                            "sample"
+                        ]
+                    },
+                    {
+                        "name": "param2",
+                        "in": "query",
+                        "description": "Another sample parameter, set to not required.",
+                        "type": "number"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Returned in all cases."
+                    }
+                }
+            },
+            "put": {
+                "description": "A demonstration of a PUT call handled by the same \"echo\" backend as above. You can now specify a request body in addition to headers and it will be returned as well.",
+                "operationId": "modify-resource",
+                "summary": "Modify Resource",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "post": {
+                "description": "A demonstration of a POST call based on the echo backend above. The request body is expected to contain JSON-formatted data (see example below). A policy is used to automatically transform any request sent in JSON directly to XML. In a real-world scenario this could be used to enable modern clients to speak to a legacy backend.",
+                "operationId": "create-resource",
+                "summary": "Create resource",
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/Body"
+                        }
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "delete": {
+                "description": "A demonstration of a DELETE call which traditionally deletes the resource. It is based on the same \"echo\" backend as in all other operations so nothing is actually deleted.",
+                "operationId": "remove-resource",
+                "summary": "Remove resource",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            },
+            "head": {
+                "description": "The HEAD operation returns only headers. In this demonstration a policy is used to set additional headers when the response is returned and to enable JSONP.",
+                "operationId": "retrieve-header-only",
+                "summary": "Retrieve header only",
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/resource-cached": {
+            "get": {
+                "description": "A demonstration of a GET call with caching enabled on the same \"echo\" backend as above. Cache TTL is set to 1 hour. When you make the first request the headers you supplied will be cached. Subsequent calls will return the same headers as the first time even if you change them in your request.",
+                "operationId": "retrieve-resource-cached",
+                "summary": "Retrieve resource (cached)",
+                "parameters": [
+                    {
+                        "name": "param1",
+                        "in": "query",
+                        "description": "A sample parameter that is required and has a default value of \"sample\".",
+                        "required": true,
+                        "type": "string",
+                        "default": "sample",
+                        "enum": [
+                            "sample"
+                        ]
+                    },
+                    {
+                        "name": "param2",
+                        "in": "query",
+                        "description": "Another sample parameter, set to not required.",
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": ""
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "Body": {
+            "example": "{\r\n\t\"vehicleType\": \"train\",\r\n\t\"maxSpeed\": 125,\r\n\t\"avgSpeed\": 90,\r\n\t\"speedUnit\": \"mph\"\r\n}"
+        }
+    },
+    "tags": []
+}
