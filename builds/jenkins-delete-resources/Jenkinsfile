@@ -1,0 +1,210 @@
+import groovy.json.JsonSlurper
+import groovy.transform.Field
+
+//in
+@Field def inputParams
+@Field def config
+@Field def awsAccounts
+@Field def finalAccounts = []
+@Field def credentialId
+
+node {
+  echo "Hello world"
+  echo "Starting the Job with Params ${params}"
+  inputParams = params.input
+  // Load the config
+  /**
+    This is the temporary workaround will fix after the admin api got ready
+  **/
+  URL apiUrl = new URL("https://api.myjson.com/bins/1bhgpc")
+  config = new JsonSlurper().parseText(apiUrl.text)
+  //check whether input param is not null
+
+  if( inputParams ==""){
+    echo "No Params defined"
+  }else if(inputParams == "all"){
+    finalAccounts = config['AWS']
+  }else{
+    // Split the Input parameter by comma seperated value
+    String[] inputstr;
+    inputstr = inputParams.split(',');
+    awsAccounts = config['AWS']
+    // Filter the List of Accounts to delete
+    for(awsAccount in awsAccounts){
+      // Check the AccountId is in inputStr array
+      def accountId = awsAccount['ACCOUNTID']
+      if(inputstr.contains(accountId)){
+        finalAccounts.push(awsAccount)
+      }
+    }
+  }
+
+  if( finalAccounts.size() > 0){
+    //Parse the Accounts and delete IAM,APIGateway,s3Buckets
+    for (account in finalAccounts)  {
+      credentialId = account['CREDENTIALID']
+      def iamRoles = account["IAM"]
+      // check if iamRoles are not empty
+      if( iamRoles.size() > 0){
+        // start the deletion process of IAM Roles
+        processIamRoles(credentialId, iamRoles)
+      }else{
+        // Nothing to do, Just log the message
+        echo "No IAM Roles found for deletion"
+      }
+      // Get all Regions
+      def allregions = account["REGIONS"]
+      for(region in allregions){
+        echo "processing  Region ${region['REGION']}"
+        //Get Region based apiGateway and s3Buckets
+        def apiGateway = region["API_GATEWAY"]
+        def s3Buckets = region["s3"]
+        // Check ApiGateway is not Null
+        if (apiGateway.size() > 0 ){
+          // Trigger Deletion process of APIGateway
+          processApiGateway(credentialId, apigateway)
+        }else{
+          // Nothing to do, Just log the message
+          echo "No API Gateway found for Region ${region['REGION']}"
+        }
+        // Check S3Buckets is not Null
+        if (s3Buckets.size() > 0 ){
+          // Trigger Deletion process of s3Buckets
+          processS3Buckets(credentialId, s3Buckets)
+        }else{
+          // Nothing to do, Just log the message
+          echo "No s3Buckets found for Region ${region['REGION']}"
+        }
+            
+      }
+    }
+    }else{
+    // Nothing to show, just log the message
+    echo "No Accounts available for Deletion"
+    }
+}
+
+def  processIamRoles(credentialsId , iamRoles){
+  // Get the Iam roles and delete it
+  iamRoles.each{ k, v -> 
+    println "${k}:${v}" 
+    echo "Processing Iam Role of ${k}"
+    deleteIam(credentialId , v)
+  }
+}
+
+def processApiGateway(credentialsId, apigateway){
+  // Get the Iam roles and delete it
+  apigateway.each{ k, v -> 
+    println "${k}:${v}" 
+    echo "Processing API Gateway  of ${k}"
+    //deleteRestApi(credentialId , v)
+  }
+}
+
+def processS3Buckets(credentialsId, s3Buckets){
+  // Get the s3Buckets and delete it
+  s3Buckets.each{ k, v -> 
+    println "${k}:${v}" 
+    echo "Processing s3Buckets of ${k}"
+    //deletes3Bucket(credentialId , v)
+  }
+}
+/**
+  Function for Deleting IAM Roles
+  Accepts credentialId and Role Name
+  Check if Role exists and delete it
+**/
+def deleteIam(credentialsId, roleName){
+  try{
+    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialsId}"]]) {
+      def status = true;
+      try {
+        sh "aws iam get-role --role-name ${roleName}"
+      } catch (ex) {
+        echo "Iam $roleName is empty"
+        status = false
+      }
+      // If Iam exists delete it
+      if(status){
+        sh "aws iam delete-role --role-name ${roleName}"
+      }else{
+        echo "Iam named ${roleName} not found"
+      }
+    }
+  }catch (ex) {
+    handleFailureEvent(ex.getMessage())
+	}
+}
+  
+/**
+  Function for Deleting API Gateway
+  Accepts credentialId and API ID
+  Check if api id exists and delete it
+**/
+def deleteAPIGateway(restApiId, credentialsId){
+  try{
+    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialsId}"]]) {
+      def status = true;
+      try {
+        sh "aws apigateway get-rest-api --rest-api-id ${restApiId}"
+      } catch (ex) {
+        echo "API ID $restApiId not exists"
+        status = false
+      }
+      // If Iam exists delete it
+      if(status){
+        sh "aws apigateway delete-rest-api --rest-api-id ${restApiId}"
+      }else{
+        echo "API id ${restApiId} not exists"
+      }
+    }
+  }catch (ex) {
+    handleFailureEvent(ex.getMessage())
+	} 
+}
+
+def isBucketEmpty(bucketName , credentialsID){
+  def status = false;
+  try {
+    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialsID}"]]) {
+      sh("aws s3api list-objects --bucket ${bucketName}  --output json --query '[length(Contents[])]'")
+    }
+	} catch (ex) {
+		echo "Bucket $bucketName is empty"
+		status = true
+	}
+	return status
+}
+/**
+  Function for Deleting s3Bucket
+  Accepts credentialId and BucketName
+  Check if s3 Bucket exists and delete it
+**/
+def deletes3Bucket(bucketName, credentialsId){
+	try {
+    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialsId}"]]) {
+      def s3Exists = true;
+      try {
+          sh "aws s3api head-bucket --bucket ${bucketName} --output json"
+      } catch (ex) {
+          echo "Bucket does not exist"
+          s3Exists = false
+      }
+     if(s3Exists && (!isBucketEmpty(bucketName,credentialsId))) {
+					sh "aws s3 rm s3://${bucketName}/ --recursive --exclude '/'"
+					echo "Removing items from bucket"
+					sh "aws s3api delete-bucket --bucket ${bucketName}"
+					echo "Deleting the bucket"
+			}else if(s3Exists && (isBucketEmpty(bucketName,credentialsId))){
+				sh "aws s3api delete-bucket --bucket ${bucketName}"
+				echo "Deleting the bucket"
+			}else {
+				echo "No s3bucket found with Bucket Name  ${bucketName}"
+			}
+
+		}
+	}catch (ex) {
+			handleFailureEvent(ex.getMessage())
+		}
+}
