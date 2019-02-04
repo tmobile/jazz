@@ -17,6 +17,7 @@ import { Jazz } from '../page-objects/jazzservices.po';
 import { CONFIGURATIONS } from '../../src/config/configuration';
 import { Timeouts } from 'selenium-webdriver';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
+import { async } from 'q';
 
 const timeOutHigh = 180000;
 const emailId = CONFIGURATIONS.optional.general.e2e.EMAIL_ID;
@@ -61,6 +62,9 @@ describe('Overview', () => {
             expect(jazzServices_po.getAwsServiceName().getText()).toEqual(servicename);
             expect(jazzServices_po.getAPIType().getText()).toEqual('api');
             expect(jazzServices_po.getAPIStatus().getText()).toEqual('creation started');
+            browser.driver.sleep(100000);
+            browser.wait(EC.visibilityOf(jazzServices_po.serviceStatus()), timeOutHigh);
+            expect(jazzServices_po.getAPIStatus().getText()).toEqual('active');
       });
 
       it('Verify API Service and Navigation', () => {
@@ -71,13 +75,12 @@ describe('Overview', () => {
             jazzServices_po.getAwsServiceName().click();
             expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
             browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
-            browser.sleep(45000);
+            browser.sleep(10000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
             jazzServices_po.getRefresh().click();
-            browser.sleep(30000);
+            browser.sleep(5000);
             browser.wait(EC.visibilityOf(jazzServices_po.getProdName()), timeOutHigh);
-            //To get the corresponding environment[Prod]
-            //browser.manage().timeouts().implicitlyWait(50000);
+            // //To get the corresponding environment[Prod]
             jazzServices_po.getProdName().click();
             //Verifying the browser id at the Deployment Tab
             browser.sleep(5000);
@@ -85,18 +88,14 @@ describe('Overview', () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
             browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
             browser.driver.switchTo().activeElement();
-            browser.sleep(15000);
+            browser.sleep(10000);
       });
 
       it('Verify API Deployments' , () => {
             jazzServices_po.getRefresh().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
-            browser.sleep(15000);
-            jazzServices_po.getRefresh().click();
-            //browser.manage().timeouts().implicitlyWait(50000);
-           // jazzServices_po.getDeploymentStatusVerify();
-            browser.sleep(15000);
+            browser.sleep(5000);
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatusVerify()), timeOutHigh);
             //Verifying the Deployment status
             expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
@@ -113,7 +112,7 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
       });
 
-      it('Verify Logs' ,  () => {
+      it('Verify API Logs' ,  () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getLogs()), timeOutHigh);
             jazzServices_po.getLogs().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getFilterIcon()), timeOutHigh);
@@ -160,6 +159,9 @@ describe('Overview', () => {
             expect(jazzServices_po.getAwsServiceName().getText()).toEqual(servicename);
             expect(jazzServices_po.getFunctionType().getText()).toEqual('function');
             expect(jazzServices_po.getFunctionStatus().getText()).toEqual('creation started');
+            browser.driver.sleep(100000);
+            browser.wait(EC.visibilityOf(jazzServices_po.serviceStatus()), timeOutHigh);
+            expect(jazzServices_po.getFunctionStatus().getText()).toEqual('active');
       });
       
       it('Verify Function ', () => {
@@ -168,15 +170,12 @@ describe('Overview', () => {
             jazzServices_po.getLamdaName().click();
             expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
             browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
-            browser.sleep(40000);
+            browser.sleep(10000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
             jazzServices_po.getRefresh().click();
-            browser.sleep(40000);
+            browser.sleep(4000);
             //Moving to Production Environment
             browser.wait(EC.visibilityOf(jazzServices_po.getProdName()), timeOutHigh);
-
-           // browser.manage().timeouts().implicitlyWait(50000);
-            
             jazzServices_po.getProdName().click();
             browser.sleep(10000);
             expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
@@ -192,8 +191,6 @@ describe('Overview', () => {
             jazzServices_po.getDeploymentStatus().click();
             browser.sleep(15000);
             jazzServices_po.getRefresh().click();
-            //browser.manage().timeouts().implicitlyWait(50000);
-            //jazzServices_po.getDeploymentStatusVerify();
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatusVerify()), timeOutHigh);
             expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
             
@@ -212,7 +209,7 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
       });
 
-      it('Verify Logs' ,  () => {
+      it('Verify Lamda Logs' ,  () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getLogs()), timeOutHigh);
             jazzServices_po.getLogs().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getFilterIcon()), timeOutHigh);
@@ -257,6 +254,9 @@ describe('Overview', () => {
             expect(jazzServices_po.getAwsServiceName().getText()).toEqual(servicename);
             expect(jazzServices_po.getWebsiteType().getText()).toEqual('website');
             expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('creation started');
+            browser.driver.sleep(100000);
+            browser.wait(EC.visibilityOf(jazzServices_po.serviceStatus()), timeOutHigh);
+            expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('active');
       });
 
       it('Verify Website Page Title', () => {
@@ -264,12 +264,11 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
             jazzServices_po.getWebsiteName().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
-            browser.sleep(45000);
+            browser.sleep(15000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
             jazzServices_po.getRefresh().click();
-            browser.sleep(30000);
+            browser.sleep(15000);
             browser.wait(EC.visibilityOf(jazzServices_po.getProdName()), timeOutHigh);
-            //browser.manage().timeouts().implicitlyWait(50000);
             jazzServices_po.getProdName().click();
             //Verification of the Deployment tab
             expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
@@ -285,8 +284,6 @@ describe('Overview', () => {
             jazzServices_po.getDeploymentStatus().click();
             browser.sleep(15000);
             jazzServices_po.getRefresh().click();
-            //browser.manage().timeouts().implicitlyWait(50000);
-            //jazzServices_po.getDeploymentStatusVerify();
             //Checking the deployment is successful
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatusVerify()), timeOutHigh);
             expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
