@@ -217,14 +217,13 @@ function updateDeployments(res, deploymentPayload, configData, authToken) {
 			var deploymentData;
 
 			for (var idx in deploymentsCollection) {
-				if (deploymentsCollection[idx].provider_build_url === deploymentPayload.provider_build_url &&
-					deploymentsCollection[idx].provider_build_id === deploymentPayload.provider_build_id) {
+				if (deploymentsCollection[idx].request_id === deploymentPayload.request_id) {
 					deploymentData = deploymentsCollection[idx];
 				}
 			}
 			if (deploymentData && deploymentData.deployment_id) {
 				Object.keys(deploymentPayload).forEach(function (key) {
-					if (key !== 'status') {
+					if (!(configData.DEPLOYMENT_KEY_LIST.includes(key))) {
 						deploymentPayload[key] = deploymentData[key];
 					}
 				});
