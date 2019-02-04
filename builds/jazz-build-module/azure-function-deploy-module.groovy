@@ -21,15 +21,35 @@ def initialize(configLoader, utilModule, scmModule, events, azureUtil){
   this.azureUtil = azureUtil
 
 
+//  configLoader.AZURE.APP_INSIGHTS_KEY = sh (
+//      script: "az resource show  -n ${configLoader.AZURE.APP_INSIGHTS} -g ${configLoader.AZURE.RESOURCE_GROUP} --resource-type 'Microsoft.Insights/components' --query properties.InstrumentationKey --output tsv",
+//      returnStdout: true
+//  ).trim()
+
+}
+
+def setAzureVar() {
+
+  if (configLoader.AZURE && configLoader.AZURE.RESOURCE_GROUPS) {
+    configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.DEVELOPMENT
+  } else {
+    configLoader.AZURE.RESOURCE_GROUP = "heinajazzdevrg"
+    configLoader.AZURE.LOCATION = "westus2"
+
+  }
+
+
+  configLoader.AZURE.APP_INSIGHTS = "heinajazzdevinsights"
   configLoader.AZURE.APP_INSIGHTS_KEY = sh (
-      script: "az resource show  -n ${configLoader.AZURE.APP_INSIGHTS} -g ${configLoader.AZURE.RESOURCE_GROUP} --resource-type 'Microsoft.Insights/components' --query properties.InstrumentationKey --output tsv",
-      returnStdout: true
+    script: "az resource show  -n ${configLoader.AZURE.APP_INSIGHTS} -g ${configLoader.AZURE.RESOURCE_GROUP} --resource-type 'Microsoft.Insights/components' --query properties.InstrumentationKey --output tsv",
+    returnStdout: true
   ).trim()
 
 }
 
-
 def createFunction(serviceInfo) {
+
+    setAzureVar()
     loadAzureConfig(serviceInfo)
     createAsset(serviceInfo)
     createFunctionApp(serviceInfo)
