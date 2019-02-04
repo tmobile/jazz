@@ -178,7 +178,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       } else if (this.serviceType === 'function') {
         return asset.type === 'lambda'
       } else if (this.serviceType === 'website') {
-        return (asset.type === 's3') || (asset.type === 'cloudfront');
+        return (asset.type === 's3') || (asset.type === 'cloudfront') || (asset.type === 'storage_account');
       }
     })
   }
@@ -198,7 +198,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'website':
         let websiteAssets = _(this.queryDataRaw.assets).map('type').uniq().value();
-        this.filters.addField('Filter By:', 'ASSET', websiteAssets, null, 'cloudfront');
+        this.filters.addField('Filter By:', 'ASSET', websiteAssets, null, websiteAssets.filter(s => ['cloudfront', 'storage_account'].indexOf(s)>-1)[0].toString());
         break;
     }
   }

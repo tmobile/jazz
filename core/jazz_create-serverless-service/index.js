@@ -211,7 +211,8 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             "REGION": service_creation_data.region,
             "USERNAME": user_id,
             "IS_PUBLIC_ENDPOINT": service_creation_data.is_public_endpoint || false,
-            "STATUS": "creation_started"
+            "STATUS": "creation_started",
+            "PLATFORM": service_creation_data.platform
         };
 
         var serviceMetadataObj = {};
@@ -231,6 +232,11 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
         }
 
+        //Adding providerRuntime key in service catalog
+        if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
+            serviceMetadataObj.providerRuntime = service_creation_data.runtime;
+        }
+    
         // Pass the flag to enable authentication on API
         if (service_creation_data.service_type === "api") {
             serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;
@@ -243,6 +249,8 @@ var getServiceData = (service_creation_data, authToken, configData) => {
                 }
             }
         }
+
+    
 
         // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
         if (service_creation_data.service_type === "api" && service_creation_data.is_public_endpoint) {

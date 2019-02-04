@@ -122,6 +122,40 @@
         }
       ],
       "dimensions": ["DistributionId", "Region"]
+    },
+    "storage_account": {
+      "metrics": [{
+          "MetricName": "Transactions",
+          "Unit": "Count",
+          "Dimensions": ["DistributionId", "Region"]
+        },
+        {
+          "MetricName": "Ingress",
+          "Unit": "Bytes",
+          "Dimensions": ["DistributionId", "Region"]
+        },
+        {
+          "MetricName": "Egress",
+          "Unit": "Bytes",
+          "Dimensions": ["DistributionId", "Region"]
+        },
+        {
+          "MetricName": "SuccessServerLatency",
+          "Unit": "MilliSeconds",
+          "Dimensions": ["DistributionId", "Region"]
+        },
+        {
+          "MetricName": "SuccessE2ELatency",
+          "Unit": "MilliSeconds",
+          "Dimensions": ["DistributionId", "Region"]
+        },
+        {
+          "MetricName": "Availability",
+          "Unit": "Percent",
+          "Dimensions": ["DistributionId", "Region"]
+        }
+      ],
+      "dimensions": ["DistributionId", "Region"]
     }
   }
 }
