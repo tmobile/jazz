@@ -20,7 +20,7 @@ export const CONFIGURATIONS = {
     general: {
       ACCESS_MANAGEMENT_PORTAL_URL: '',
       e2e: {
-        EMAIL_ID: '{stack_email}',   
+        EMAIL_ID: '{stack_email}',
         USER_NAME: '{stack_username}',
         PASSWORD: '{stack_password}',
         REG_USER_NAME: '{stack_reg_username}',
