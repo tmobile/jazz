@@ -96,6 +96,116 @@
     .icon-icon-web {
       color: #ed008c;
     }
+
+
+
+
+
+    .icon-icon-AWS .path1:before {
+      color: rgb(17, 16, 14);
+    }
+    .icon-icon-AWS .path2:before {
+      color: rgb(245, 141, 17);
+    }
+    .icon-icon-AWS .path3:before {
+      color: rgb(245, 142, 20);
+    }
+    .icon-icon-AWS .path4:before {
+      color: rgb(245, 142, 20);
+    }
+    .icon-icon-AWS .path5:before {
+      color: rgb(18, 17, 15);
+    }
+    .icon-icon-AWS .path6:before {
+      color: rgb(18, 17, 15);
+    }
+    .icon-icon-AWS .path7:before {
+      color: rgb(18, 17, 15);
+    }
+    .icon-icon-AWS .path8:before {
+      color: rgb(18, 17, 15);
+    }
+    .icon-icon-AWS .path9:before {
+      color: rgb(19, 18, 16);
+    }
+    .icon-icon-AWS .path10:before {
+      color: rgb(245, 141, 18);
+    }
+    .icon-icon-AWS .path11:before {
+      color: rgb(245, 141, 18);
+    }
+    .icon-icon-AWS .path12:before {
+      color: rgb(245, 141, 18);
+    }
+    .icon-icon-AWS .path13:before {
+      color: rgb(245, 141, 18);
+    }
+    .icon-icon-AWS .path14:before {
+      color: rgb(245, 141, 18);
+    }
+    .icon-icon-AWS .path15:before {
+      color: rgb(245, 141, 17);
+    }
+    .icon-icon-AWS .path16:before {
+      color: rgb(245, 141, 17);
+    }
+    .icon-icon-AWS .path17:before {
+      color: rgb(245, 141, 17);
+    }
+    .icon-icon-AWS .path18:before {
+      color: rgb(245, 141, 17);
+    }
+    .icon-icon-AWS .path19:before {
+      color: rgb(20, 19, 17);
+    }
+    .icon-icon-AWS .path20:before {
+      color: rgb(18, 17, 15);
+    }
+    .icon-icon-AWS .path21:before {
+      color: rgb(21, 20, 18);
+    }
+    .icon-icon-AWS .path22:before {
+      color: rgb(21, 20, 18);
+    }
+    .icon-icon-AWS .path23:before {
+      color: rgb(21, 20, 18);
+    }
+    .icon-icon-AWS .path24:before {
+      color: rgb(20, 19, 17);
+    }
+    .icon-icon-AWS .path25:before {
+      color: rgb(21, 20, 18);
+    }
+    .icon-icon-AWS .path26:before {
+      color: rgb(20, 19, 17);
+    }
+    .icon-icon-AWS .path27:before {
+      color: rgb(20, 19, 17);
+    }
+    .icon-icon-AWS .path28:before {
+      color: rgb(245, 142, 20);
+    }
+    .icon-icon-AWS .path29:before {
+      color: rgb(245, 142, 20);
+    }
+    .icon-icon-AWS .path30:before {
+      color: rgb(245, 142, 20);
+    }
+    .icon-icon-AWS .path31:before {
+      color: rgb(18, 17, 15);
+    }
+    .icon-icon-AWS .path32:before {
+      color: rgb(25, 24, 22);
+    }
+    .icon-icon-AWS .path33:before {
+      color: rgb(20, 19, 17);
+    }
+
+
+
+
+
+
   }
 }
 
@@ -123,6 +233,7 @@
 .service-box {
   .icon-icon-api,
   .icon-icon-function,
+  .icon-icon-azure-functions,
   .icon-icon-web,
   .icon-icon-AWS,
   .icon-icon-azure,
@@ -132,15 +243,24 @@
     color: #ccc;
     span {
       font-size: 40px;
-      color: #ccc;
+      color: #ccc !important;
     }
   }
   &.service-box-selected {
     .icon-icon-api,
     .icon-icon-function,
-    .icon-icon-web {
+    .icon-icon-web,
+    .icon-icon-azure-functions {
       color: #ed008c;
     }
+    .icon-icon-azure {
+      color:#0078d7;
+  }
+
+
+
+
+
   }
 }
 
@@ -815,9 +935,9 @@ p.learn-more {
   opacity: 0.5 !important;
 }
 .events-radio{
-  margin: 0 0.5rem;
+  /*margin: 0 0.5rem; */
   width: auto;
-  padding: 0px 2.5rem 0 9px;
+  /*padding: 0px 2.5rem 0 9px;*/
 }
 .aws-events-left-block.stream-sqs{
   width: 19.5rem;

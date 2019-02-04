@@ -46,6 +46,7 @@ export class ServiceDetailComponent implements OnInit {
   isENVavailable: boolean = true;
   disblebtn: boolean = true;
   ServiceName: string;
+  platfrom: string;
   deleteServiceVal: boolean;
   id: string;
   errMessage: string = '';
@@ -100,6 +101,7 @@ export class ServiceDetailComponent implements OnInit {
     } else {
       service.metadata = this.addEventSource(service.metadata);
       let returnObject = {
+      	platform: service.platform,
         id: service.id,
         name: service.service,
         serviceType: service.type,
@@ -160,7 +162,7 @@ export class ServiceDetailComponent implements OnInit {
       }
 
       this.service = this.processService(service);
-
+	  this.platfrom = this.service.platform;
       // Update breadcrumbs
       this.breadcrumbs = [
         {
@@ -306,7 +308,8 @@ export class ServiceDetailComponent implements OnInit {
     var payload = {
       "service_name": this.service.name,
       "domain": this.service.domain,
-      "id": this.service.id
+      "id": this.service.id,
+      "platform" : this.service.platform
     };
     this.deleteServiceStatus.emit(this.deleteServiceVal);
     this.subscription = this.http.post('/jazz/delete-serverless-service', payload)
@@ -371,8 +374,7 @@ export class ServiceDetailComponent implements OnInit {
 
 
   onServiceNameChange() {
-    
-    if (this.ServiceName.toLowerCase() == this.service['name']) {
+    if (this.ServiceName == this.service['name']) {
       this.disblebtn = false;
     }
     else {

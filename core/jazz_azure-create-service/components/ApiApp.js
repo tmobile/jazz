@@ -24,9 +24,6 @@ module.exports = class ApiApp {
         await resourceFactory.upload(data.resourceGroupName, data.appName, data.zip, this.subscriptionId, this.credentials);
         await resourceFactory.createOrUpdateApiGatewayWithSwaggerJson(data.resourceGroupName, data.serviceName, data.apiId, this.credentials, this.subscriptionId, data.swagger, data.basepath);
         await resourceFactory.addApiToProduct(data.resourceGroupName, data.serviceName, "starter", data.apiId, this.credentials, this.subscriptionId);
-      } catch (e) {
-        //TODO: Handle rollback here
-      }
     }
 
     async deleteByTag(data){

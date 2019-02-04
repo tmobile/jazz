@@ -8,7 +8,7 @@
 
         <div class="page-title-wrap hide-for-mobile">
             <h1 class="page-hdr bold-title">{{service.name}}</h1>
-            <span class="page-sub-title"><span class="service-type">{{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
+            <span class="page-sub-title"><span class="service-platform">{{service.platform}}</span><span class="service-type"> - {{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
             <btn-jazz-secondary class="delete-service-btn" text="DELETE SERVICE" [disablebtn]="!canDelete" (click)="deleteService(true)"></btn-jazz-secondary>
         </div>
         <div class='tab-component'>
