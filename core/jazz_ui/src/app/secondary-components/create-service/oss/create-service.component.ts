@@ -6,7 +6,7 @@
 import { Http, Headers, Response } from '@angular/http';
 import { Component, Input, OnInit, Output, EventEmitter, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { ServiceFormData, RateExpression, CronObject, EventExpression } from '../service-form-data';
+import { ServiceFormData, RateExpression, CronObject, EventExpression, EventLabels } from '../service-form-data';
 import { FocusDirective } from '../focus.directive';
 import { CronParserService } from '../../../core/helpers';
 import { ToasterService} from 'angular2-toaster';
@@ -83,6 +83,13 @@ export class CreateServiceComponent implements OnInit {
   cronObj = new CronObject('0/5','*','*','*','?','*')
   rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
   eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
+
+  eventLabels = new EventLabels("LAMBDA","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
+
+  azureEventLabels = new EventLabels("FUNCTION APP", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Instance Name","Batch Service Bus", "Service Bus Name");
+
+  amazonEventLabels = new EventLabels("LAMBDA","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
+
   private doctors = [];
   private toastmessage:any;
   errBody: any;
@@ -161,8 +168,20 @@ export class CreateServiceComponent implements OnInit {
   changePlatformType(platformType){
     if(!this.disablePlatform){
       this.typeOfPlatform = platformType;
+      this.updateEventLabels(platformType);
     }
   }
+
+
+  updateEventLabels(platformType){
+  	if(platformType == "aws"){
+  	this.eventLabels = this.amazonEventLabels;
+  	}
+  	else if(platformType == "azure"){
+  	this.eventLabels = this.azureEventLabels;
+  	}
+  }
+
 
   // function called on runtime change(radio)
   onSelectionChange(val){
