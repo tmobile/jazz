@@ -23,8 +23,8 @@
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
-                            <div class="icon-icon-function" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>LAMBDA</p>
+                            <div [ngClass]="{'selected': typeOfService == 'function', 'icon-icon-azure-functions': typeOfPlatform =='azure', 'icon-icon-function': typeOfPlatform =='aws' || typeOfPlatform =='gcloud' }"></div>
+                            <p>{{eventLabels.functionLabel}}</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
@@ -51,7 +51,7 @@
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="-1" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
+                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
                             <div class="icon-icon-azure"></div>
                             <p>Azure</p>
                         </div>
@@ -322,7 +322,7 @@
             <section class="each-step-wrap aws-events" *ngIf="typeOfService == 'function'">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
-                        <p class="step-title">AWS Events</p>
+                        <p class="step-title">{{typeOfPlatform}} Events</p>
                         <p class="step-details">Select appropriate events that you want to subscribe to.</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
@@ -336,25 +336,25 @@
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="dynamodb" [value]="dynamodb" [checked]="eventExpression.type == 'dynamodb'" (click)="onAWSEventChange('dynamodb')">
-                                    <label for="dynamodb"><span></span><span class="background"></span>DynamoDB</label>
+                                    <label for="dynamodb"><span></span><span class="background"></span>{{eventLabels.databaseLabel}}</label>
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="kinesis" [value]="kinesis" [checked]="eventExpression.type == 'kinesis'" (click)="onAWSEventChange('kinesis')">
-                                    <label for="kinesis"><span></span><span class="background"></span>Kinesis</label>
+                                    <label for="kinesis"><span></span><span class="background"></span>{{eventLabels.streamLabel}}</label>
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
-                                    <label for="s3"><span></span><span class="background"></span>S3</label>
+                                    <label for="s3"><span></span><span class="background"></span>{{eventLabels.storageLabel}}</label>
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                               <div class="radio-container">
                                   <input type="radio" name="AWSEvents" id="sqs" [value]="sqs" [checked]="eventExpression.type == 'sqs'" (click)="onAWSEventChange('sqs')">
-                                  <label for="sqs"><span></span><span class="background"></span>SQS</label>
+                                  <label for="sqs"><span></span><span class="background"></span>{{eventLabels.queueLabel}}</label>
                               </div>
                             </section>
                         </div>
@@ -367,9 +367,9 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-9">
-                                    <div class="text">Table ARN</div>
+                                    <div class="text">{{eventLabels.databaseNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
-                                        <input type="text" disabled="disabled" class="inline-input input-label aws-events-left-block" value="{{dynamoStreamString}}">
+                                        <input type="text" disabled="disabled" class="inline-input input-label aws-events-left-block" value="{{typeOfPlatform == 'aws' ? dynamoStreamString : ''}}">
                                         <input id="dynamoTable" name="dynamoTable" type="text" minlength="3" maxlength="{{eventMaxLength.table_name}}" #dynamoTable='ngModel' pattern="{{servicePatterns.tableName}}" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" (blur)="validateEvents(eventExpression.dynamoTable)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" >
                                   </div>
                                 </div>
@@ -386,7 +386,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-9">
-                                    <div class="text">Stream ARN</div>
+                                    <div class="text">{{eventLabels.streamNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input type="text" disabled="disabled" class="inline-input input-label stream aws-events-left-block" value="{{kinesisStreamString}}">
                                         <input id="streamARN" name="streamARN" type="text" #streamARN="ngModel" maxlength="{{eventMaxLength.stream_name}}" pattern="{{servicePatterns.streamName}}" [(ngModel)]="eventExpression.streamARN" [focus]="focusKinesis" (blur)="validateEvents(eventExpression.streamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Stream Name" >
@@ -405,7 +405,7 @@
                                     </div>
                                 </div>
                                 <div class="col-lg-9">
-                                    <div class="text">Bucket ARN</div>
+                                    <div class="text">{{eventLabels.storageNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input id="S3BucketName" name="S3BucketName" type="text"  minlength="3" maxlength="{{eventMaxLength.bucket_name}}" pattern="{{servicePatterns.bucketName}}" #S3BucketName="ngModel" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" (blur)="validateEvents(eventExpression.S3BucketName)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-left-block aw-events-s3 ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Bucket Name"  autofocus>
                                   </div>
@@ -419,7 +419,7 @@
                             <div class="sqs-fields row zero-margin arrow_box hide" [class.show]="chkSQS()">
 
                               <div class="col-lg-12">
-                                  <div class="text">Queue ARN</div>
+                                  <div class="text">{{eventLabels.queueNameLabel}}</div>
                                   <div class="label-input slct-bx-selected input-wrapper">
                                       <input type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="{{sqsStreamString}}">
                                       <input id="SQSstreamARN" name="SQSstreamARN" type="text" #SQSstreamARN="ngModel" [(ngModel)]="eventExpression.SQSstreamARN" pattern="{{servicePatterns.queueName}}" maxlength="{{eventMaxLength.queue_name}}" [focus]="focusSQS" (blur)="validateEvents(eventExpression.SQSstreamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Queue Name" >
