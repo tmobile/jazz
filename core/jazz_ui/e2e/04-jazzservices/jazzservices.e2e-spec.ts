@@ -17,7 +17,6 @@ import { Jazz } from '../page-objects/jazzservices.po';
 import { CONFIGURATIONS } from '../../src/config/configuration';
 import { Timeouts } from 'selenium-webdriver';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
-import { async } from 'q';
 
 const timeOutHigh = 180000;
 const emailId = CONFIGURATIONS.optional.general.e2e.EMAIL_ID;
@@ -137,7 +136,7 @@ describe('Overview', () => {
       });
       
             
-      it('Create Lamda Service', () => {
+      it('Create Lambda Service', () => {
             browser.driver.switchTo().activeElement();
             browser.driver.sleep(5000);
             browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
@@ -185,7 +184,7 @@ describe('Overview', () => {
             browser.sleep(30000);
       });
   
-      it('Verify Lamda Deployments' , () => {
+      it('Verify Lambda Deployments' , () => {
             jazzServices_po.getRefresh().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
@@ -196,7 +195,7 @@ describe('Overview', () => {
             
       });
     
-      it('Verify Lamda Asset' ,  () => {
+      it('Verify Lambda Asset' ,  () => {
             jazzServices_po.getRefresh().click();
             browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
             jazzServices_po.getRefresh().click();
@@ -209,7 +208,7 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
       });
 
-      it('Verify Lamda Logs' ,  () => {
+      it('Verify Lambda Logs' ,  () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getLogs()), timeOutHigh);
             jazzServices_po.getLogs().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getFilterIcon()), timeOutHigh);
