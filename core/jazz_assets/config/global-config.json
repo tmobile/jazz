@@ -34,7 +34,15 @@
     "dynamodb_stream",
     "iam_role",
     "sqs",
-    "kinesis_stream"
+    "kinesis_stream",
+    "storage_account",
+    "servicebus_namespace",
+    "eventhubs_namespace",
+    "event_hubs",
+    "service_bus",
+    "functionapp",
+    "storage_container",
+    "cosmosdb"
 	],
 	"ASSET_STATUS": [
 		"active",
