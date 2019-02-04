@@ -144,6 +144,7 @@ export class ServiceOverviewComponent implements OnInit {
   viewMode: boolean = true;
   cronFieldValidity: any;
   showGeneralField: boolean = false;
+  editEvents: boolean = false;
   generalAdvanceDisable: boolean = true;
   eventDisable  : boolean = true;
 
@@ -250,6 +251,7 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   onEditGeneral(){
+      this.onCancelClick();
       this.showGeneralField = true;
   }
 
@@ -350,6 +352,8 @@ export class ServiceOverviewComponent implements OnInit {
           this.loadPlaceholders()
           this.disp_show = true;
           this.saveClicked = false;
+          this.editEvents = false;
+          this.advancedSaveClicked = false;
           let successMessage = this.toastmessage.successMessage(Response, "updateService");
           this.toast_pop('success', "", "Data for service: " + this.service.name + " " + successMessage);
         },
@@ -358,6 +362,8 @@ export class ServiceOverviewComponent implements OnInit {
           this.isPUTLoading = false;
           this.disp_show = true;
           this.saveClicked = false;
+          this.editEvents = false;
+          this.advancedSaveClicked = false;
           this.edit_save = 'SAVE';
           let errorMessage = this.toastmessage.errorMessage(Error, "updateService");
           this.toast_pop('error', 'Oops!', errorMessage)
@@ -371,6 +377,7 @@ export class ServiceOverviewComponent implements OnInit {
     this.saveClicked = false;
     this.advancedSaveClicked = true;
     let payload = {};
+    let obJ = {};
 
     if (this.advancedSaveClicked) {
       if (this.rateExpression.type != 'none') {
@@ -378,35 +385,16 @@ export class ServiceOverviewComponent implements OnInit {
         if (this.rateExpression.cronStr == 'invalid') {
           return;
         } else if (this.rateExpression.cronStr !== undefined) {
-          payload["rateExpression"] = this.rateExpression.cronStr;
+          obJ['eventScheduleRate'] = `cron(${this.rateExpression.cronStr})`;
+          obJ['eventScheduleEnable'] = true;
         }
+      } else {
+        obJ['eventScheduleRate'] = null;
+        obJ['eventScheduleEnable'] = false;
       }
-
-      if (this.eventExpression.type !== "awsEventsNone") {
-        var event = {};
-        event["type"] = this.eventExpression.type;
-        if (this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/" + this.eventExpression.dynamoTable;
-          event["action"] = "PutItem";
-        } else if (this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/" + this.eventExpression.streamARN;
-          event["action"] = "PutRecord";
-        } else if (this.eventExpression.type === "s3") {
-          event["source"] = this.eventExpression.S3BucketName;
-          event["action"] = "s3:ObjectCreated:*";
-        }
-        payload["events"] = [];
-        payload["events"].push(event);
-      }
-
-      if (this.publicSelected !== this.publicInitial) {
-        payload["is_public_endpoint"] = this.publicSelected;
-      }
-      if (this.cdnConfigSelected !== this.cdnConfigInitial) {
-        payload["create_cloudfront_url"] = this.cdnConfigSelected;
-      }
-
     }
+
+    payload['metadata'] = obJ;
     this.PutPayload = payload;
     if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
   }
@@ -443,8 +431,14 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   onCancelClick() {
+    if(this.service.eventScheduleEnable === false){
+      this.rateExpression.type = "none"
+    } else {
+      this.rateExpression.type = "cron"
+    }
     this.eventDisable  = true;
     this.showGeneralField = false;
+    this.editEvents = false;
     this.generalAdvanceDisable = true;
     this.update_payload = {};
     this.disp_show = true;
@@ -483,6 +477,10 @@ export class ServiceOverviewComponent implements OnInit {
     this.eventExpression.type = 'awsEventsNone';
     if (val == 'cron' && this.service.eventScheduleRate) {
       this.setEventScheduleRate();
+    } else if(this.service.eventScheduleRate === null){
+      this.eventDisable = false;
+    } else if(val == 'none'){
+      this.eventDisable = false;
     }
   }
   onAWSEventChange(val) {
@@ -1059,6 +1057,11 @@ export class ServiceOverviewComponent implements OnInit {
   internal_build: boolean = true;
 
   ngOnChanges(x: any) {
+    if(this.service){
+      if(this.service.eventScheduleEnable !== undefined){
+        this.service['eventScheduleEnablePresent'] = true
+      }
+    }
     if (environment.multi_env) this.is_multi_env = true;
     if (environment.envName == 'oss') this.internal_build = false;
     var obj;
@@ -1122,8 +1125,11 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   onEditEvents(){
+    this.onCancelClick();
+    this.editEvents = true;
     this.disp_show2 = false;
   }
+
 
   serviceDeletionStatus() {
 

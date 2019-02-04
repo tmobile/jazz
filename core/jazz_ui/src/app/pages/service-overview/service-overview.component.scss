@@ -332,6 +332,10 @@
     outline: none;
 }
 
+.det-value input[type="radio"] + label span.background{
+    top:5px;
+}
+
 .edit-service-overview {
     display: flex;
     /deep/ input[type="text"] {
@@ -1233,7 +1237,9 @@ details {
 }
 
 .warn-msg {
-    display: inline-flex;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
     border-radius: 3px;
     background: #f9ada4;
     padding: 3px 10px;
@@ -1242,11 +1248,12 @@ details {
         &:first-child {
             background: white;
             border-radius: 50%;
-            padding: 3px 10px;
+            padding: 1px 10px;
             margin: 5px;
         }
         &:last-child {
             align-self: center;
+            font-size: 12px;
         }
     }
 }
@@ -1277,8 +1284,12 @@ details {
     }
     .overlay-body {
         text-align: center;
-        padding: 3rem;
+        // padding: 3rem;
         width: 34rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        height: 7em;
     }
     .overlay-btns {
         display: flex;
@@ -1393,9 +1404,9 @@ btn-jazz-primary {
 }
 
 .top-shift {
-    width: 70%;
+    width: 57%;
     text-align: center;
-    margin: auto;
+    margin: 1em auto;
 }
 
 .edit-div {

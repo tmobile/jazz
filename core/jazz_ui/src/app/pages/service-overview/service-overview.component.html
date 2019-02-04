@@ -178,7 +178,8 @@
       <div class="metadata-heading-wrap">
          <div class="metadata-heading" [ngClass]="!disp_show2 ? 'update-color' : ''">
             Events
-            <div class="edit-div" *ngIf="false" (click)="onEditEvents()">
+            <div class="edit-div" *ngIf="!editEvents &&
+            service.eventScheduleEnablePresent" (click)="onEditEvents()">
               <img class="pre-image" src="/assets/erser/icon-edit.svg" />
             </div>
             <div *ngIf="!disp_show2" class="down-btn-wrap">
@@ -308,13 +309,18 @@
   <div class='confirm-overlay' (click)='onAdvanceClick()' *ngIf='saveClicked || advancedSaveClicked'>
     <div class='confirm-overlay-inner-wrap' (click)="$event.stopPropagation()">
         <div class='overlay-header'>Submitting Changes</div>
-        <div *ngIf="isPUTLoading" class='loader-confirmation'>
+        <!-- <div *ngIf="isPUTLoading" class='loader-confirmation'>
             <div class="loading-row-confirm show" [class.show]="isPUTLoading">
                 <div class="loading-circle"></div>
             </div>
-        </div>
+        </div> -->
 
-        <div *ngIf="!isPUTLoading" class='overlay-body'> Are you sure you want to make this edit?</div>
+        <div class='overlay-body'>
+          <div *ngIf="!isPUTLoading" class="overlay-text">Are you sure you want to make this edit?</div>
+          <div *ngIf="isPUTLoading" class="loading-row-confirm show" [class.show]="isPUTLoading">
+              <div class="loading-circle"></div>
+          </div>
+        </div>
         <div class='overlay-btns'>
           <btn-jazz-primary text="COMPLETE" [disablePrimaryBtn]="!isPayloadAvailable" (click)='onCompleteClick()'></btn-jazz-primary>
         </div>
