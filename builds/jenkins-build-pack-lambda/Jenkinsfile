@@ -21,6 +21,7 @@ import groovy.transform.Field
 @Field def utilModule
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
+@Field def azureDeployer
 
 @Field def auth_token = ''
 @Field def config
@@ -131,6 +132,9 @@ node() {
   domain = config['domain']
 
   def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
+  def servicePlatform = config['platform']
+  def serviceType = config['type']
+  def eventScheduleRate = config['eventScheduleRate']
 
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
@@ -153,7 +157,10 @@ node() {
 
 
   dir(repo_name) {
-    loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
+    if (servicePlatform == null || servicePlatform != "azure") {
+
+      loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
+    }
     if (domain && domain == "jazz") {
       stage('Update Service Template') {
         echo "Inside Update service template"
@@ -220,6 +227,51 @@ node() {
       environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
 
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
+
+
+      def logicalId
+      if (servicePlatform && servicePlatform == 'azure') {
+
+
+        timestamps {
+
+          if (environment_logical_id == "prod") {
+            logicalId = config['service_id'].substring(0, 7) + environment_logical_id
+          } else {
+            logicalId = environment_logical_id.split('-')[0] //13 + 10
+          }
+
+          def serviceInfo = [
+            'stackName'         : stackName,
+            'storageAccountName': "${configLoader.INSTANCE_PREFIX}${logicalId}",
+            "repoCredentialId"  : repo_credential_id,
+            'envId'             : environment_logical_id,
+            'serviceCatalog'    : config,
+            'isScheduleEnabled' : isScheduleEnabled,
+            'isStreamEnabled'   : isStreamEnabled,
+            'isQueueEnabled'    : isSQSEventEnabled,
+            'isDbEnabled'       : isDynamoDbEnabled,
+            'isStorageEnabled'  : isS3EventEnabled
+          ]
+
+          echo "service info $serviceInfo"
+          try {
+            def endpoint = azureDeployer.createFunction(serviceInfo)
+            environmentDeploymentMetadata.setEnvironmentEndpoint(endpoint)
+
+            sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner)
+
+          } catch (ex) {
+            handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
+          }
+
+
+        }
+        return
+      }
+
+
+
 
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
@@ -1039,6 +1091,15 @@ def loadBuildModules(buildModuleUrl) {
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
     echo "Environment deployment data loader module loaded successfully."
+
+
+    def azureUtility = load "azure-utility.groovy"
+    azureUtility.initialize(configLoader, resourceUtility)
+    echo "Azure util init successfully."
+    azureDeployer = load "azure-function-deploy-module.groovy"
+    azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtility)
+    echo "Azure deploy module init successfully."
+
   }
 }
 
