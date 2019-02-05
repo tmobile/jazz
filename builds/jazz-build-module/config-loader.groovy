@@ -57,8 +57,8 @@ def parseValue(value) {
     } else if (type == 'L') {
       def parsed_value_list = [];
       try {
-        for (def i = 0; i < parsed_value.length; i++) {
-            parsed_value_list.push(parseValue(parsed_value[i]));
+        for (def i = 0; i < parsed_value.size(); i++) {
+          parsed_value_list.push(parseValue(parsed_value[i]));
         }
       } catch (e) { }
       return parsed_value_list;
