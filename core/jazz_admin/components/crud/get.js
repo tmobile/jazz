@@ -14,6 +14,13 @@
 // limitations under the License.
 // =========================================================================
 
+/**
+  CRUD APIs for Config Catalog
+  @author:
+  @version: 1.0
+**/
+
+
 const utils = require("../utils.js");
 
 module.exports = (onComplete) => {
@@ -34,3 +41,4 @@ module.exports = (onComplete) => {
     }
   });
 };
+

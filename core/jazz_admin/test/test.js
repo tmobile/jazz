@@ -30,20 +30,6 @@ describe('jazz_admin', function () {
       "principalId": "test@test.com",
       "body": {}
     };
-    callback = (err, responseObj) => {
-      if (err) {
-        return err;
-      } else {
-        return JSON.stringify(responseObj);
-      }
-    };
-    err = {
-      "errorType": "foo",
-      "message": "bar"
-    };
-    callbackObj = {
-      "callback": callback
-    };
     config = configObj.getConfig(event, context);
     context = awsContext();
   });
@@ -195,57 +181,6 @@ describe('jazz_admin', function () {
     });
   });
 
-  describe('updateConfiguration', () => {
-    let configs, input;
-    beforeEach(function () {
-      configs = {
-        "AWS": {
-          "ACCOUNTID": "xyz",
-          "API": {
-            "DEV": "xyz",
-            "PROD": "xyz",
-            "STG": "xyz"
-          }
-        }
-      }
-      input = {
-        "ABC.abc": {
-          "hdjshkjs": "sdhj"
-        }
-      }
-    });
-
-    it("should indicate error while updating admin config", () => {
-      let err = {
-        "errorType": "BadRequest",
-        "message": "Invalid table name"
-      }
-      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
-        return cb(err, null);
-      });
-
-      index.addConfiguration(configs, input)
-        .catch(error => {
-          expect(error.message).to.be.eq(err.message);
-          AWS.restore("DynamoDB.DocumentClient");
-        });
-    });
-
-    it("should successfully upating admin config on request", () => {
-      let responseObj = {
-        "message": "success"
-      };
-      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
-        return cb(null, responseObj);
-      });
-      index.addConfiguration(configs, input)
-        .then(res => {
-          expect(res).to.deep.eq(responseObj);
-          AWS.restore("DynamoDB.DocumentClient");
-        });
-    });
-  });
-
   describe('deleteConfiguration', () => {
     let configs, input;
     beforeEach(function () {
@@ -341,12 +276,10 @@ describe('jazz_admin', function () {
       event = {
         "stage": "test",
         "method": "POST",
-        "principalId": "test@test.com",
-        "body": {}
+        "principalId": "test@test.com"
       };
-      let message = "Input cannot be empty";
       index.handler(event, context, (err, res) => {
-        expect(err.message).to.eq(message);
+        expect(err).to.include('{"errorType":"BadRequest","message":"Input cannot be empty"}');
       });
     });
 
@@ -429,108 +362,28 @@ describe('jazz_admin', function () {
       });
     });
 
-    it("should return invalid input error when giving empty event.body on update", () => {
-      event = {
-        "stage": "test",
-        "method": "PUT",
-        "principalId": "test@test.com",
-        "body": {}
-      };
-      let message = "Input cannot be empty";
-      index.handler(event, context, (err, res) => {
-        expect(err.message).to.eq(message);
-      });
-    });
-
-    it("should return success response on update while giving valid input", () => {
-      event.method = "PUT";
-      event.body = {
-        "ABC.abc": {
-          "hdjshkjs": "sdhj"
-        }
-      };
-      let res = { "message": "success" }
-      let configs = {
-        "CRED_ID": "jazzaws",
-        "INST_PRE": "jazzsw"
-      }
-      const getConfiguration = sinon.stub(index, "getConfiguration").resolves(configs);
-      const updateConfiguration = sinon.stub(index, "updateConfiguration").resolves(res);
-      index.handler(event, context, (err, res) => {
-        expect(res.message).to.deep.eq(res.message);
-        sinon.assert.calledOnce(getConfiguration);
-        sinon.assert.calledOnce(updateConfiguration);
-        getConfiguration.restore();
-        updateConfiguration.restore();
-      });
-    });
-
-    it("should indicate internal server error when get configuration fails while updating", () => {
-      let responseObj = {
-        statusCode: 500,
-        body: {
-          data: {},
-          message: "Failed to update admin configuraion."
-        }
-      };
-
-      event.method = "PUT";
-      event.body = {
-        "ABC.abc": {
-          "hdjshkjs": "sdhj"
-        }
-      };
-
-      const getConfiguration = sinon.stub(index, "getConfiguration").rejects(responseObj.body.message);
-      index.handler(event, context, (err, res) => {
-        expect(err).to.include(responseObj.body.message);
-        sinon.assert.calledOnce(getConfiguration);
-        getConfiguration.restore();
-      });
-    });
-
-    it("should indicate internal server error when admin configuration is not updated", () => {
-      let responseObj = {
-        statusCode: 500,
-        body: {
-          data: {},
-          message: "Failed to update admin configuraion."
-        }
-      };
-
-      event.method = "PUT";
-      event.body = {
-        "ABC.abc": {
-          "hdjshkjs": "sdhj"
-        }
-      };
-
-      let configs = {
-        "CRED_ID": "jazzaws",
-        "INST_PRE": "jazzsw"
-      }
-      const getConfiguration = sinon.stub(index, "getConfiguration").resolves(configs);
-      const updateConfiguration = sinon.stub(index, "updateConfiguration").rejects(responseObj.body.message);
-      index.handler(event, context, (err, res) => {
-        expect(err).to.include(responseObj.body.message);
-        sinon.assert.calledOnce(getConfiguration);
-        sinon.assert.calledOnce(updateConfiguration);
-        getConfiguration.restore();
-        updateConfiguration.restore();
-      });
-    });
-
     it("should return invalid input error when giving empty event.body on DELETE", () => {
       event = {
         "stage": "test",
         "method": "DELETE",
-        "principalId": "test@test.com",
-        "body": {}
+        "principalId": "test@test.com"
       };
-      let message = "Input cannot be empty";
       index.handler(event, context, (err, res) => {
-        expect(err.message).to.eq(message);
+        expect(err).to.include('{\"errorType\":\"BadRequest\",\"message\":\"Input cannot be empty. Please give list of keys to be deleted.\"}');
       });
+    });
+
+    it("should return invalid input error when giving invalid type of event.body on DELETE", () => {
+      event = {
+        "stage": "test",
+        "method": "DELETE",
+        "principalId": "test@test.com",
+        "body": {"test":"aa"}
+      };
+      index.handler(event, context, (err, res) => {
+        expect(err).to.include('{\"errorType\":\"BadRequest\",\"message\":\"Please give list of keys to be deleted.\"}');
+      });
+
     });
 
     it("should return success response on DELETE while giving valid input", () => {
