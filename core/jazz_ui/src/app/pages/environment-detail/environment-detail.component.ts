@@ -55,6 +55,8 @@ export class EnvironmentDetailComponent implements OnInit {
   private subscription: any;
   public assets;
   isENVavailable:boolean = false;
+  isDeployAccess: boolean = false;
+  isAdminAccess: boolean =false;
 
   constructor(
     private toasterService: ToasterService,
@@ -167,11 +169,21 @@ export class EnvironmentDetailComponent implements OnInit {
         this.service = response.data.data;
         if (environment.envName == 'oss') this.service = response.data;
         this.isFunction = this.service.type === "function";
+        if (this.service.policies && this.service.policies.length) {
+          this.service.policies.forEach(policy => {
+            if(policy.category === "deploy" && policy.permission === "write") {
+              this.isDeployAccess = true;
+            } else if (policy.category === "manage" && policy.permission === "admin") {
+              this.isAdminAccess = true;
+            }
+          });
+        }
         this.getAssets();
         this.setTabs();
         this.cache.set(id, this.service);
         this.onDataFetched(this.service);
         this.envoverview.notify(this.service);
+
       },
       err => {
         this.isLoadingService = false;

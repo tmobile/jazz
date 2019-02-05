@@ -70,6 +70,7 @@ export class ServiceDetailComponent implements OnInit {
   test: any = "delete testing";
   disabled_tab: boolean = false;
   refreshTabClicked: boolean = false;
+  isAdminAccess: boolean = false;
 
 
   private sub: any;
@@ -201,6 +202,13 @@ export class ServiceDetailComponent implements OnInit {
       this.isGraphLoading = false;
       this.selectedTabComponent.refresh_env();
       this.setTabs();
+      if(service && service.policies && service.policies.length) {
+        service.policies.forEach(policy => {
+          if (policy.category === "manage" && policy.permission === "admin") {
+            this.isAdminAccess = true;
+          }
+        });
+      }
     }, (err) => {
       if (err.status == "404") {
         this.router.navigateByUrl('404');

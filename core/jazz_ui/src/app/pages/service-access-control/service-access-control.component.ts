@@ -17,6 +17,7 @@ import { RequestService, MessageService } from '../../core/services';
 })
 export class ServiceAccessControlComponent implements OnInit {
   @Input() service: any = {};
+  @Input() isAdminAccess: boolean = false;
 
   accessGranted:Boolean = false;
   i: number = 0;
