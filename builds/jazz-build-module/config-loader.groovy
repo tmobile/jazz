@@ -2,6 +2,7 @@
 import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import groovy.transform.Field
+import static java.util.UUID.randomUUID
 
 /*
 * Logic for accessing certain values from the given jazz-installer-vars json
@@ -20,8 +21,15 @@ def loadConfigData(aws_credential_id, region, instance_prefix) {
   try {
     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
 		credentialsId: aws_credential_id , secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+      	UUID uuid = UUID.randomUUID()
+        def randomString = uuid.toString();
+        def credsId = "jazz-${randomString}";
+        sh "aws configure set profile.${credsId}.region ${region}"
+        sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+        sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+
       def config_object = sh (
-        script: "aws --region ${region} dynamodb scan --table-name $table_name  --output json" ,
+        script: "aws  --profile ${credsId} dynamodb scan --table-name $table_name  --output json" ,
         returnStdout: true
       ).trim()
 

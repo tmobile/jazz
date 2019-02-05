@@ -48,8 +48,7 @@
                  </div>
                 </div>
                 
-              
-                        <div class="form-row bottom-2" *ngIf="!forgot_password || register || new_pwd_req">
+                        <div class="form-row bottom-2" [hidden]="forgot_password">
                         <div class="form-label">Password </div>
                         <input required minlength="8" [class.err-border]='err_password_brd || (model.password && (!password.valid && (password.dirty || password.touched))) && (register || new_pwd_req)' type="password" name='password' [(ngModel)]="model.password"  (ngModelChange)="onChange($event)" #password='ngModel'>
                         <ul class='login-form-errmsg' *ngIf="model.password && (!password.valid && (password.dirty || password.touched)) && (register || new_pwd_req)">
@@ -84,10 +83,10 @@
             <a (click)="toggleReg('newPassword')">{{regist}}</a>
             <br>
             <!-- <span *ngIf='forgot_password && !new_pwd_req'> | </span> -->
-            <a *ngIf='forgot_password && !new_pwd_req' (click)="new_pwd_req=true;disableLoginBtn()">Have verification code?</a>
+            <a *ngIf="forgot_password && !new_pwd_req" (click)="new_pwd_req=true;forgot_password=false;disableLoginBtn()">Have verification code?</a>
         </div>
-        <div class="separator-row" *ngIf="!forgot_password && !register"></div>
-        <div class="newUser" *ngIf="!forgot_password && !register">
+        <div class="separator-row" *ngIf="!forgot_password && !register && !new_pwd_req"></div>
+        <div class="newUser" *ngIf="!register && !forgot_password && !new_pwd_req">
             <a (click)="toggleReg('register')">Register</a>
         </div>
     </div>
