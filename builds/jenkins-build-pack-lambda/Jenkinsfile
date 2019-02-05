@@ -248,7 +248,9 @@ node() {
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey)
 
           if (deployOutput != 'success') {
-            if (config['event_source_s3']) {
+            if(deployOutput.contains('ROLLBACK_COMPLETE state and can not be updated')){
+              deleteAndRedeployService(environment_logical_id, envBucketKey)
+            } else if (config['event_source_s3']) {
               handleS3BucketError(deployOutput, config['event_source_s3'], environment_logical_id, envBucketKey, isEventSchdld)
             } else if (config['event_source_sqs']) {
               handleSqsError(deployOutput, config, environment_logical_id, envBucketKey)
