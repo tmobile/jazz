@@ -332,7 +332,9 @@ node() {
 				  }
 			  }
       } catch (ex) {
-			    if (api_deployment_target == 'aws_apigateway') {
+          if(deployOutput.contains('ROLLBACK_COMPLETE state and can not be updated')){
+              deleteAndRedeployService(environment_logical_id, envBucketKey)
+        } else if (api_deployment_target == 'aws_apigateway') {
 					  events.sendFailureEvent('DEPLOY_TO_AWS_APIGATEWAY', ex.getMessage(), context_map, environment_logical_id)
             events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 				} else if (api_deployment_target == 'gcp_apigee') {
@@ -359,6 +361,20 @@ node() {
 		}//stage of deployment to an environment ends here
 
 	}//dir ends here
+}
+
+/**
+Redeploying Service
+*/
+
+def deleteAndRedeployService(environment_logical_id, envBucketKey){
+  echoServerlessFile()
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+  if (redeployOutput != 'success') {
+    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
+    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+  }
 }
 
 def getLambdaARN(stackName, credsId) {
