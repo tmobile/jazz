@@ -166,6 +166,30 @@ describe('jazz_admin', function () {
         });
     });
 
+    it("should return correct json on adding admin configuration", () => {
+      let body = { "ABC.test": "newtest", "INST_PRE": "TESTCRED", "LIST": { "newItem": "newvalue" } };
+      let data = {
+        CRED_ID: "jazzaws",
+        INST_PRE: "jazzsw",
+        LIST: [{ item1: "Abc" }, { item2: "xyz" }],
+        ABC: { test: "Abc", test23: "xyz" }
+      }
+      let resp = { "message": "success" }
+
+      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
+        expect(params.Item.ABC.test).to.be.eql("newtest");
+        expect(params.Item.INST_PRE).to.be.eql("TESTCRED");
+        expect(params.Item.LIST.length).to.be.eql(3);
+        return cb(null, resp);
+      });
+
+      index.addConfiguration(data, body)
+        .then(res => {
+          expect(res.message).to.deep.eq(resp.message);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+
     it("should successfully add admin config on request", () => {
       let responseObj = {
         "message": "success"
@@ -223,6 +247,28 @@ describe('jazz_admin', function () {
       index.deleteConfiguration(configs, input)
         .then(res => {
           expect(res).to.deep.eq(responseObj);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+
+    it("should return correct json on DELETE while giving valid input", () => {
+      let input = ["ABC.test", "INST_PRE"];
+      let configs = {
+        CRED_ID: "jazzaws",
+        INST_PRE: "jazzsw",
+        ABC: { test: "Abc", test23: "xyz" }
+      }
+      let resp = { "message": "success" }
+
+      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
+        expect(params.Item.ABC.test).to.be.eql(undefined);
+        expect(params.Item.INST_PRE).to.be.eql(undefined);
+        return cb(null, resp);
+      });
+
+      index.deleteConfiguration(configs, input)
+        .then(res => {
+          expect(res.message).to.deep.eq(resp.message);
           AWS.restore("DynamoDB.DocumentClient");
         });
     });
@@ -378,7 +424,7 @@ describe('jazz_admin', function () {
         "stage": "test",
         "method": "DELETE",
         "principalId": "test@test.com",
-        "body": {"test":"aa"}
+        "body": { "test": "aa" }
       };
       index.handler(event, context, (err, res) => {
         expect(err).to.include('{\"errorType\":\"BadRequest\",\"message\":\"Please give list of keys to be deleted.\"}');
