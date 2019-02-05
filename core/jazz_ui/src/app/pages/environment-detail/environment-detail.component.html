@@ -47,16 +47,16 @@
         <span class="icon-icon-refresh"></span>
         <span>Refresh</span>
       </div>
-        <tabs [beforeEnv]= "!isENVavailable" [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+        <tabs [beforeEnv]= "!isENVavailable" [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" [isAdminAccess]="isAdminAccess" (onSelected)="onSelectedDr($event)"></tabs>
 
 
         <section class="page-content" *ngIf="selectedTab == 0">
-            <env-overview-section #selectedTabComponent #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service"></env-overview-section>
+            <env-overview-section #selectedTabComponent #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service" [isAdminAccess]="isAdminAccess"></env-overview-section>
         </section>
 
 
         <section class="page-content" *ngIf="selectedTab == 1">
-            <env-deployments-section #selectedTabComponent #envdeployments [service]="service"></env-deployments-section>
+            <env-deployments-section #selectedTabComponent #envdeployments [service]="service" [isDeployAccess]="isDeployAccess"></env-deployments-section>
         </section>
 
         <section class="page-content" *ngIf="selectedTab == 2">

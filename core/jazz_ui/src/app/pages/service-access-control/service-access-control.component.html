@@ -2,7 +2,7 @@
     <div *ngIf="!isLoading && !isDataNotAvailable && !isError">
         <section class="each-step-wrap header-sec">
             <h1>Update who can access your service</h1>
-             <btn-jazz-primary newclass="loginbutton savechangesbtn" text="EDIT" *ngIf="showDisplay" (click)='onEditClick()'></btn-jazz-primary>
+            <btn-jazz-primary newclass="loginbutton savechangesbtn" text="EDIT" [disablePrimaryBtn]="!isAdminAccess" *ngIf="showDisplay" (click)='onEditClick()'></btn-jazz-primary>
             <div class="custom-save-btn-wrap" *ngIf="!showDisplay">
             <btn-jazz-primary newclass="loginbutton savechangesbtn" text="SAVE" [disablePrimaryBtn]="!isAddOrDelete || isValidData()"  (click)='onSaveClick()'></btn-jazz-primary>
             <div class="cancel-wrapper"><a  (click)='onCancelClick()'>CANCEL</a></div>

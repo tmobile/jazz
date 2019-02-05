@@ -20,6 +20,7 @@ import { environment as env_internal } from './../../../environments/environment
 })
 export class EnvDeploymentsSectionComponent implements OnInit {
   @Input() service: any = {};
+  @Input() isDeployAccess: boolean = false;
   filterloglevel:string = 'INFO';
   loadingState:string='default';
   envObj:any;

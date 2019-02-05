@@ -105,25 +105,24 @@
   </div>
 </div>
 
-<section class= "service-metadata-wrap relative" [class.extra-bottom-padding]='!disp_show2' hide>
-  <div>
-    <div class='metadata-body metadata-body-border'>
-      <div [class]="service.serviceType != 'function' ? 'metadata-column fullWidth' : 'metadata-column'">
-        <div class="metadata-heading-wrap">
-         <div class="metadata-heading" [ngClass]="showGeneralField ? 'update-color' : ''">
-            General
-            <div class="edit-div" *ngIf="!showGeneralField" (click)="onEditGeneral()">
-              <img class="pre-image" src="/assets/erser/icon-edit.svg" />
-            </div>
-            <div *ngIf="showGeneralField" class="down-btn-wrap">
-              <div class="custom-save-btn-wrap">
-                <btn-jazz-primary class="save-btn-wrap" [disablePrimaryBtn]="generalAdvanceDisable"
-                  text="SUBMIT" (click)="onSaveClick()"></btn-jazz-primary>
-                <a (click)="onCancelClick()">CANCEL</a>
-              </div>
-            </div>
-          </div>
-          </div>
+<section class='service-details service-metadata-wrap relative' [class.extra-bottom-padding]='!disp_show2' hide>
+  <details open>
+    <summary>
+      <div class='metadata-heading-wrap'>
+        <div class='metadata-heading'>
+          General
+        </div>
+      </div>
+    </summary>
+    <div *ngIf='!disp_show' class='down-btn-wrap'>
+      <btn-jazz-primary  [disablePrimaryBtn]="!isSlackAvailable" text="SAVE" (click)='onSaveClick()'></btn-jazz-primary>
+      <a (click)="onCancelClick()">CANCEL</a>
+    </div>
+    <div class='metadata-body metadata-body-border' [class.no-border]='service.serviceType != "function"'>
+      <div *ngIf="disp_show" class='metadata-buttons-wrap'>
+        <btn-jazz-secondary text="EDIT" [disablebtn]="!isAdminAccess" (click)='onEditClick()'></btn-jazz-secondary>
+      </div>
+      <div class='metadata-column'>
         <ul>
           <li>
             <div class="det-label">Namespace</div>

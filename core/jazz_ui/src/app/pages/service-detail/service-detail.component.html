@@ -9,21 +9,21 @@
         <div class="page-title-wrap hide-for-mobile">
             <h1 class="page-hdr bold-title">{{service.name}}</h1>
             <span class="page-sub-title"><span class="service-type">{{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
-            <btn-jazz-secondary class="delete-service-btn" text="DELETE SERVICE" [disablebtn]="!canDelete" (click)="deleteService(true)"></btn-jazz-secondary>
+            <btn-jazz-secondary class="delete-service-btn" text="DELETE SERVICE" [disablebtn]="!canDelete || !isAdminAccess" (click)="deleteService(true)"></btn-jazz-secondary>
         </div>
         <div class='tab-component'>
             <div class="refresh-button" (click)="refreshTab()">
             </div>
-            <tabs [beforeEnv]= "!isENVavailable" [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+            <tabs [beforeEnv]= "!isENVavailable" [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [isAdminAccess]= "isAdminAccess" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
 
         </div>
 
         <div *ngIf='!err_flag'>
             <section class="page-content" *ngIf="selectedTab == 0">
-                <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isLoadingService]="isLoadingService"></service-overview>
+                <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isAdminAccess]= "isAdminAccess" [isLoadingService]="isLoadingService"></service-overview>
             </section>
             <section class="page-content" *ngIf="selectedTab == 1">
-                <service-access-control #selectedTabComponent [service]="service"></service-access-control>
+                <service-access-control #selectedTabComponent [service]="service" [isAdminAccess]= "isAdminAccess" ></service-access-control>
             </section>
             <section class="page-content" *ngIf="selectedTab == 2">
                 <service-metrics #selectedTabComponent [service]="service" #metric></service-metrics>

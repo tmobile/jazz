@@ -80,6 +80,10 @@
     font-size: 1rem;
     font-weight: 700;
   }
+
+  /deep/ button.btn[disabled] {
+    background-color: #fff !important;
+  }
 }
 
 .toggle-class {
