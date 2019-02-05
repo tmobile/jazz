@@ -808,6 +808,7 @@ describe('jazz_deployments', function () {
         message: "deployment started."
       }
       const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").resolves(event.body);
+      const sendCreateDepolymentEvent = sinon.stub(index,"sendCreateDepolymentEvent").resolves(event.body);
       const reBuildDeployment = sinon.stub(index, "reBuildDeployment").resolves(responseObj);
       index.processDeploymentRebuild(config, event.path.id, tableName)
         .then(res => {
@@ -816,6 +817,7 @@ describe('jazz_deployments', function () {
           sinon.assert.calledOnce(reBuildDeployment);
           getDeploymentDetailsById.restore();
           reBuildDeployment.restore();
+          sendCreateDepolymentEvent.restore();
         });
     });
 
@@ -825,6 +827,7 @@ describe('jazz_deployments', function () {
         message: "Unable to rebuild deployment"
       };
       const getDeploymentDetailsById = sinon.stub(index, "getDeploymentDetailsById").resolves(event.body);
+      const sendCreateDepolymentEvent = sinon.stub(index, "sendCreateDepolymentEvent").resolves(event.body);
       const reBuildDeployment = sinon.stub(index, "reBuildDeployment").rejects(responseObj);
       index.processDeploymentRebuild(config, event.path.id, tableName)
         .catch(error => {

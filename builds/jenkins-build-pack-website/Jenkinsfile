@@ -44,6 +44,7 @@ node()  {
 	def domain = params.domain
 	def service = params.service_name
 	def repo_name = params.service_name
+	def requestId = params.request_id
 	def gitCommitOwner
 	def gitCommitHash
 
@@ -78,20 +79,21 @@ node()  {
 
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
-	def environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
+	def environment_logical_id
 	if (params.scm_branch == 'master') {
-		environment = 'prod'
+		environment_logical_id = 'prod'
 		current_environment = 'PROD'
 		s3Bucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
 	} else {
-		if (environment_logical_id) {
-			environment = environment_logical_id
-		} else {
+    environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
+		if (!environment_logical_id) {
 			error "The environment has not been created yet and its missing the logical Id"
 		}
 		current_environment = "DEV"
 		s3Bucket = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
 	}
+
+  environment = environment_logical_id
 
 	if (!events) { error "Can't load events module"	} //Fail here
 	events.initialize(configLoader, service_config, "SERVICE_DEPLOYMENT", branch, environment, g_base_url + "/jazz/events")
@@ -102,17 +104,21 @@ node()  {
 	gitCommitHash = scmModule.getRepoCommitHash()
 	gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 
-	def requestId = utilModule.generateRequestId()
-	if (requestId != null) {
+	echo "requestId: $requestId"
+	if(requestId != "none" && requestId != null && !utilModule.isReplayedBuild()) {
+		echo "Setting up requestId"
 		events.setRequestId(requestId)
 		environmentDeploymentMetadata.setRequestId(requestId)
 	} else {
-		error "Request Id Generation failed"
+		requestId = utilModule.generateRequestId()
+		events.setRequestId(requestId)
+		environmentDeploymentMetadata.setRequestId(requestId)
+		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 	}
+
 
 	dir(repo_name)
 	{
-		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment, , gitCommitHash), environment)
 
 		stage('Pre-Build Validation'){
 
