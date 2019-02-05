@@ -113,6 +113,7 @@ const addConfiguration = (configs, input) => {
   return new Promise((resolve, reject) => {
     const jeditor = new jsonEditor(configs);
     const new_config = jeditor.editJson(input);
+
     crud.post(new_config, function (err, data) {
       if (err) {
         return reject(err);

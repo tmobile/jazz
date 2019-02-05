@@ -52,6 +52,7 @@ module.exports = class JsonEditor {
       }
       this.set(key, new_configs[key]);
     });
+    return this.toObject();
   }
 
   //Iterate and remove the json keys with the given input
