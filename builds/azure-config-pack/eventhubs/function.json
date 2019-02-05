@@ -1,0 +1,14 @@
+{
+  "disabled": false,
+  "bindings": [
+    {
+      "name": "myEvent",
+      "type": "eventHubTrigger",
+      "direction": "in",
+      "eventHubName": "{resource_name}",
+      "connection": "SAS_CONNSTR",
+      "cardinality": "many",
+      "consumerGroup": "$Default"
+    }
+  ]
+}

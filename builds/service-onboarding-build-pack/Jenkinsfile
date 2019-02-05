@@ -66,7 +66,7 @@ node  {
 
 		events.sendStartedEvent("VALIDATE_INPUT", 'input validation starts', context_map)
 		if (service_config['type'] == "api" || service_config['type'] == "function" || service_config['type'] == "website") {
-			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'] == "n/a") {
+			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'].startsWith("c#") || service_config['runtime'] == "n/a") {
 				switch (service_config['type']) {
 					case "api":
 						if (service_config['runtime'].startsWith("nodejs")) {
@@ -96,6 +96,10 @@ node  {
 						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'lambda-template-go'
 						}
+            else if (service_config['runtime'] == "c#") {
+              service_template = 'lambda-template-csharp'
+            }
+
 						break
 
 					case "website":
