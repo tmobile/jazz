@@ -312,7 +312,7 @@ describe('jazz_admin', function () {
         statusCode: 500,
         body: {
           data: {},
-          message: "Failed to add admin configuraion."
+          message: "Failed to add admin configuration."
         }
       };
 
@@ -336,7 +336,7 @@ describe('jazz_admin', function () {
         statusCode: 500,
         body: {
           data: {},
-          message: "Failed to add admin configuraion."
+          message: "Failed to add admin configuration."
         }
       };
 
@@ -411,7 +411,7 @@ describe('jazz_admin', function () {
         statusCode: 500,
         body: {
           data: {},
-          message: "Failed to delete the specified admin configuraion."
+          message: "Failed to delete the specified admin configuration."
         }
       };
       event.method = "DELETE";
@@ -430,7 +430,7 @@ describe('jazz_admin', function () {
         statusCode: 500,
         body: {
           data: {},
-          message: "Failed to delete the specified admin configuraion."
+          message: "Failed to delete the specified admin configuration."
         }
       };
 
