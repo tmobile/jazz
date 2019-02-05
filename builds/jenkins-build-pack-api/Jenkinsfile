@@ -329,6 +329,9 @@ node() {
 				  }
 			  }
       } catch (ex) {
+          if(deployOutput.contains('ROLLBACK_COMPLETE state and can not be updated')){
+             deleteAndRedeployService(environment_logical_id, envBucketKey)
+          }
 			    if (api_deployment_target == 'aws_apigateway') {
 					  events.sendFailureEvent('DEPLOY_TO_AWS_APIGATEWAY', ex.getMessage(), context_map, environment_logical_id)
             events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
@@ -567,6 +570,20 @@ def buildLambda(String runtime, String repo_name) {
       sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
       sh "cd $GOPATH/src/"+ repo_name+" && env GOOS=linux GOARCH=amd64 go build -o $GOPATH/"+ repo_name+"/main  *.go"
     }
+  }
+}
+
+/**
+Redeploying Service
+*/
+
+def deleteAndRedeployService(environment_logical_id, envBucketKey){
+  echoServerlessFile()
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+  if (redeployOutput != 'success') {
+    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
+    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
 }
 
