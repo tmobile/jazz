@@ -21,15 +21,15 @@ API for the admin user to perform administrative tasks
  **/
 
 'use strict';
-const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
+const errorHandler = require("./components/error-handler.js")(); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js"); //Import the logging module.
+const jsonEditor = require("./components/json-editor.js");
 const crud = require("./components/crud")();
 
 const handler = (event, context, cb) => {
   //Initializations
-  let errorHandler = errorHandlerModule();
   let config = configObj.getConfig(event, context);
   global.config = config;
   logger.init(event, context);
@@ -44,7 +44,7 @@ const handler = (event, context, cb) => {
       return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service|Authorization Incomplete")));
     }
 
-    if (event && event.principalId != config.ADMIN_ID) {
+    if (event && event.principalId !== config.ADMIN_ID) {
       return cb(JSON.stringify(errorHandler.throwUnauthorizedError("This user is not authorized to access this service.")));
     }
 
@@ -68,34 +68,24 @@ const handler = (event, context, cb) => {
         .then((res) => {
           return cb(null, responseObj(res, event.body));
         }).catch((error) => {
-          logger.error("Failed to add admin configuraion:" + JSON.stringify(error));
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to add admin configuraion.")));
-        });
-
-    } else if (event && event.method && event.method === 'PUT') {
-      if (event && !event.body) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty.")));
-      }
-      exportable.getConfiguration(config)
-        .then((res) => exportable.updateConfiguration(res, event.body))
-        .then((res) => {
-          return cb(null, responseObj(res, event.body));
-        }).catch((error) => {
-          logger.error("Failed to update admin configuraion:" + JSON.stringify(error));
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to update admin configuraion.")));
+          logger.error("Failed to add admin configuration:" + JSON.stringify(error));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to add admin configuration.")));
         });
 
     } else if (event && event.method && event.method === 'DELETE') {
       if (event && !event.body) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty. Please give list of keys to be deleted.")));
       }
+      if (!(event.body instanceof Array)) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Please give list of keys to be deleted.")));
+      }
       exportable.getConfiguration()
         .then((res) => exportable.deleteConfiguration(res, event.body))
         .then((res) => {
           return cb(null, responseObj(res, event.body));
         }).catch((error) => {
-          logger.error("Failed to delete the specified admin configuraion:" + JSON.stringify(error));
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to delete the specified admin configuraion.")));
+          logger.error("Failed to delete the specified admin configuration:" + JSON.stringify(error));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to delete the specified admin configuration.")));
         });
 
     } else {
@@ -119,9 +109,11 @@ const getConfiguration = () => {
   });
 }
 
-const addConfiguration = (configs, new_config) => {
+const addConfiguration = (configs, input) => {
   return new Promise((resolve, reject) => {
-    crud.post(configs, new_config, function (err, data) {
+    const jeditor = new jsonEditor(configs);
+    const new_config = jeditor.editJson(input);
+    crud.post(new_config, function (err, data) {
       if (err) {
         return reject(err);
       } else {
@@ -131,21 +123,11 @@ const addConfiguration = (configs, new_config) => {
   });
 }
 
-const updateConfiguration = (configs, new_config) => {
+const deleteConfiguration = (configs, keys) => {
   return new Promise((resolve, reject) => {
-    crud.put(configs, new_config, function (err, data) {
-      if (err) {
-        return reject(err);
-      } else {
-        return resolve(data);
-      }
-    });
-  });
-}
-
-const deleteConfiguration = (configs, key) => {
-  return new Promise((resolve, reject) => {
-    crud.put(configs, key, function (err, data) {
+    const jeditor = new jsonEditor(configs);
+    const new_config = jeditor.removeKeys(keys);
+    crud.post(new_config, function (err, data) {
       if (err) {
         return reject(err);
       } else {
@@ -160,7 +142,6 @@ const exportable = {
   handler,
   getConfiguration,
   addConfiguration,
-  updateConfiguration,
   deleteConfiguration
 }
 
