@@ -1,5 +1,6 @@
 import groovy.json.JsonSlurper
 import groovy.transform.Field
+import groovy.json.JsonOutput
 
 //in
 @Field def inputParams
@@ -8,27 +9,40 @@ import groovy.transform.Field
 @Field def finalAccounts = []
 @Field def credentialId
 
+
+// To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
+@Field def repo_credential_id 
+@Field def aws_credential_id 
+@Field def region 
+@Field def instance_prefix 
+@Field def repo_base 
+@Field def repo_core 
+@Field def scm_type 
+
+@Field def configModule
+@Field def configLoader
+
+
 node {
   echo "Hello world"
   echo "Starting the Job with Params ${params}"
   inputParams = params.input
   // Load the config
-  /**
-    This is the temporary workaround will fix after the admin api got ready
-  **/
-  URL apiUrl = new URL("https://api.myjson.com/bins/1bhgpc")
-  config = new JsonSlurper().parseText(apiUrl.text)
+  def jazzBuildModuleURL = getBuildModuleUrl()
+  loadBuildModules(jazzBuildModuleURL)
+  def output = JsonOutput.toJson(configLoader)
+  echo "${output}"
   //check whether input param is not null
 
   if( inputParams ==""){
     echo "No Params defined"
   }else if(inputParams == "all"){
-    finalAccounts = config['AWS']
+    finalAccounts = configLoader.AWS['ACCOUNTS']
   }else{
     // Split the Input parameter by comma seperated value
     String[] inputstr;
     inputstr = inputParams.split(',');
-    awsAccounts = config['AWS']
+    awsAccounts = configLoader.AWS['ACCOUNTS']
     // Filter the List of Accounts to delete
     for(awsAccount in awsAccounts){
       // Check the AccountId is in inputStr array
@@ -42,7 +56,7 @@ node {
   if( finalAccounts.size() > 0){
     //Parse the Accounts and delete IAM,APIGateway,s3Buckets
     for (account in finalAccounts)  {
-      credentialId = account['CREDENTIALID']
+      credentialId = account['CREDENTIAL_ID']
       def iamRoles = account["IAM"]
       // check if iamRoles are not empty
       if( iamRoles.size() > 0){
@@ -54,15 +68,15 @@ node {
       }
       // Get all Regions
       def allregions = account["REGIONS"]
-      for(region in allregions){
-        echo "processing  Region ${region['REGION']}"
+      for(awsregion in allregions){
+        echo "processing  Region ${awsregion['REGION']}"
         //Get Region based apiGateway and s3Buckets
-        def apiGateway = region["API_GATEWAY"]
-        def s3Buckets = region["s3"]
+        def apiGateway = awsregion["API_GATEWAY"]
+        def s3Buckets = awsregion["S3"]
         // Check ApiGateway is not Null
         if (apiGateway.size() > 0 ){
           // Trigger Deletion process of APIGateway
-          processApiGateway(credentialId, apigateway)
+          processApiGateway(credentialId, apiGateway)
         }else{
           // Nothing to do, Just log the message
           echo "No API Gateway found for Region ${region['REGION']}"
@@ -85,29 +99,38 @@ node {
 }
 
 def  processIamRoles(credentialsId , iamRoles){
+  echo "Credential Id is ${credentialsId}"
   // Get the Iam roles and delete it
   iamRoles.each{ k, v -> 
     println "${k}:${v}" 
     echo "Processing Iam Role of ${k}"
     deleteIam(credentialId , v)
+    echo "Sleeping the process for 30 seconds"
+    sleep(time:30,unit:"SECONDS")
   }
 }
 
 def processApiGateway(credentialsId, apigateway){
+  echo "Credential Id is ${credentialsId}"
   // Get the Iam roles and delete it
   apigateway.each{ k, v -> 
     println "${k}:${v}" 
     echo "Processing API Gateway  of ${k}"
-    //deleteRestApi(credentialId , v)
+    deleteAPIGateway(credentialId , v)
+    echo "Sleeping the process for 30 seconds"
+    sleep(time:30,unit:"SECONDS")
   }
 }
 
 def processS3Buckets(credentialsId, s3Buckets){
+  echo "Credential Id is ${credentialsId}"
   // Get the s3Buckets and delete it
   s3Buckets.each{ k, v -> 
     println "${k}:${v}" 
     echo "Processing s3Buckets of ${k}"
-    //deletes3Bucket(credentialId , v)
+    deletes3Bucket(credentialId , v)
+    echo "Sleeping the process for 30 seconds"
+    sleep(time:30,unit:"SECONDS")
   }
 }
 /**
@@ -133,7 +156,8 @@ def deleteIam(credentialsId, roleName){
       }
     }
   }catch (ex) {
-    handleFailureEvent(ex.getMessage())
+    //handleFailureEvent(ex.getMessage())
+    echo "${ex.getMessage()}"
 	}
 }
   
@@ -142,7 +166,7 @@ def deleteIam(credentialsId, roleName){
   Accepts credentialId and API ID
   Check if api id exists and delete it
 **/
-def deleteAPIGateway(restApiId, credentialsId){
+def deleteAPIGateway(credentialsId, restApiId){
   try{
     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialsId}"]]) {
       def status = true;
@@ -160,7 +184,8 @@ def deleteAPIGateway(restApiId, credentialsId){
       }
     }
   }catch (ex) {
-    handleFailureEvent(ex.getMessage())
+    //handleFailureEvent(ex.getMessage())
+    echo "${ex.getMessage()}"
 	} 
 }
 
@@ -181,7 +206,7 @@ def isBucketEmpty(bucketName , credentialsID){
   Accepts credentialId and BucketName
   Check if s3 Bucket exists and delete it
 **/
-def deletes3Bucket(bucketName, credentialsId){
+def deletes3Bucket(credentialsId, bucketName){
 	try {
     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialsId}"]]) {
       def s3Exists = true;
@@ -205,6 +230,39 @@ def deletes3Bucket(bucketName, credentialsId){
 
 		}
 	}catch (ex) {
-			handleFailureEvent(ex.getMessage())
+			//handleFailureEvent(ex.getMessage())
+      echo "${ex.getMessage()}"
 		}
+}
+
+def getBuildModuleUrl() {
+	if (scm_type && scm_type != "bitbucket") {
+		// right now only bitbucket has this additional tag scm in its git clone path
+		return "http://${repo_base}/${repo_core}/jazz-build-module.git"
+	} else {
+		return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+	}
+}
+
+/*
+* Load build modules
+*/
+
+def loadBuildModules(buildModuleUrl){
+
+	dir('build_modules') {
+		checkout([$class: 'GitSCM', branches: [
+			[name: '*/master']
+		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+				[credentialsId: repo_credential_id, url: buildModuleUrl]
+			]])
+
+		//def resultJsonString = readFile("jazz-installer-vars.json")
+		configModule = load "config-loader.groovy"
+		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
+		echo "config loader loaded successfully."
+
+		
+
+	}
 }
