@@ -377,7 +377,7 @@ export class ServiceOverviewComponent implements OnInit {
     this.saveClicked = false;
     this.advancedSaveClicked = true;
     let payload = {};
-    let obJ = {};
+    let eventObj = {};
 
     if (this.advancedSaveClicked) {
       if (this.rateExpression.type != 'none') {
@@ -385,16 +385,16 @@ export class ServiceOverviewComponent implements OnInit {
         if (this.rateExpression.cronStr == 'invalid') {
           return;
         } else if (this.rateExpression.cronStr !== undefined) {
-          obJ['eventScheduleRate'] = `cron(${this.rateExpression.cronStr})`;
-          obJ['eventScheduleEnable'] = true;
+          eventObj['eventScheduleRate'] = `cron(${this.rateExpression.cronStr})`;
+          eventObj['eventScheduleEnable'] = true;
         }
       } else {
-        obJ['eventScheduleRate'] = null;
-        obJ['eventScheduleEnable'] = false;
+        eventObj['eventScheduleRate'] = null;
+        eventObj['eventScheduleEnable'] = false;
       }
     }
 
-    payload['metadata'] = obJ;
+    payload['metadata'] = eventObj;
     this.PutPayload = payload;
     if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
   }
@@ -433,7 +433,7 @@ export class ServiceOverviewComponent implements OnInit {
   onCancelClick() {
     if(this.service.eventScheduleEnable === false){
       this.rateExpression.type = "none"
-    } else {
+    } else if(this.service.eventScheduleRate.includes('cron')){
       this.rateExpression.type = "cron"
     }
     this.eventDisable  = true;

@@ -309,12 +309,6 @@
   <div class='confirm-overlay' (click)='onAdvanceClick()' *ngIf='saveClicked || advancedSaveClicked'>
     <div class='confirm-overlay-inner-wrap' (click)="$event.stopPropagation()">
         <div class='overlay-header'>Submitting Changes</div>
-        <!-- <div *ngIf="isPUTLoading" class='loader-confirmation'>
-            <div class="loading-row-confirm show" [class.show]="isPUTLoading">
-                <div class="loading-circle"></div>
-            </div>
-        </div> -->
-
         <div class='overlay-body'>
           <div *ngIf="!isPUTLoading" class="overlay-text">Are you sure you want to make this edit?</div>
           <div *ngIf="isPUTLoading" class="loading-row-confirm show" [class.show]="isPUTLoading">
