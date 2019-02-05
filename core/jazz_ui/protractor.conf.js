@@ -1,6 +1,5 @@
 // Protractor configuration file, see link for more information
 // https://github.com/angular/protractor/blob/master/lib/config.ts
-
 const SpecReporter = require('jasmine-spec-reporter').SpecReporter;
 var Jasmine2HtmlReporter = require('protractor-jasmine2-html-reporter');
 const JasmineConsoleReporter = require('jasmine-console-reporter');
@@ -24,8 +23,7 @@ exports.config = {
     'browserName': 'chrome',
     'chromeOptions': {
       // Get rid of --ignore-certificate yellow warning
-      args: ['--headless', '--disable-gpu', '--no-sandbox', '--test-type=browser'],
-        //  [ , '--disable-gpu', '--no-sandbox', '--test-type=browser'],
+      args: ['--headless','--disable-gpu', '--no-sandbox', '--test-type=browser'],
       // Set download path and avoid prompting for download even though
       // this is already the default on Chrome but for completeness
       prefs: {
@@ -52,12 +50,7 @@ exports.config = {
     });
     jasmine.getEnv().addReporter(new SpecReporter({ spec: { displayStacktrace: true } }));
     jasmine.getEnv().addReporter(new Jasmine2HtmlReporter({savePath: 'target/screenshots'}));
-    jasmine.getEnv().addReporter(new JSONReporter({
-      file: 'jasmine-test-results.json',
-      beautify: true,
-      indentationLevel: 4 
-    }));
-    browser.manage().timeouts().implicitlyWait(2000000);
+    browser.manage().timeouts().implicitlyWait(600000);
     browser.manage().window().setSize(1600, 1000);
     browser.manage().window().maximize();
     browser.waitForAngularEnabled(false);
