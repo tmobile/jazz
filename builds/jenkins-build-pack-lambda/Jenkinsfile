@@ -1092,6 +1092,9 @@ def loadBuildModules(buildModuleUrl) {
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
     echo "Environment deployment data loader module loaded successfully."
 
+    def resourceUtility = load "resource-utility.groovy"
+    resourceUtility.initialize(configLoader)
+    echo "resource util init successfully."
 
     def azureUtility = load "azure-utility.groovy"
     azureUtility.initialize(configLoader, resourceUtility)
