@@ -148,7 +148,7 @@ def loadBuildModules(buildModuleUrl){
 			]])
 
       configModule = load "config-loader.groovy"
-		  configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
+      configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
 		  echo "config loader loaded successfully."
 
 			scmModule = load "scm-module.groovy"
