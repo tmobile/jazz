@@ -52,6 +52,11 @@ export class ServiceAccessControlComponent implements OnInit {
     'code': [],
     'deploy': []
   }
+  deleteManageRule: boolean = false;
+  toDelete: any = {};
+  adminAccessRule: boolean = false;
+  addAsAdmin: any = {};
+  categoryArray: any = ['manage', 'code', 'deploy'];
 
   constructor(
     private request: RequestService,
@@ -127,10 +132,19 @@ export class ServiceAccessControlComponent implements OnInit {
 
   //function for deleting group
   deletegroup(i,category){
+    this.toDelete = {};
     if (this.access[category].length > 1) {
-      this.addToList(category, this.access[category][i].userId);
-      this.access[category].splice(i, 1);
-      this.isAddOrDelete = true;
+      if (category === "manage") {
+        this.deleteManageRule = true;
+        this.confirmationHeader = this.toastmessage.customMessage("finalConfirmationHeader", "aclConfirmation");
+        this.confirmationText = this.toastmessage.customMessage("removeAdminRule", "aclConfirmation");
+        this.toDelete["index"] = i;
+        this.toDelete["category"] = category;
+      } else {
+        this.addToList(category, this.access[category][i].userId);
+        this.access[category].splice(i, 1);
+        this.isAddOrDelete = true;
+      }
     } else {
       this.removeUser = true;
       this.confirmationHeader = this.toastmessage.customMessage("errorIndicationHeader", "aclConfirmation");
@@ -185,6 +199,22 @@ export class ServiceAccessControlComponent implements OnInit {
       this.removeUser = false;
     }
 
+    if (this.deleteManageRule && Object.keys(this.toDelete).length > 0) {
+      let category = this.toDelete.category;
+      let i = this.toDelete.index;
+      this.addToList(category, this.access[category][i].userId);
+      this.access[category].splice(i, 1);
+      this.isAddOrDelete = true;
+      this.deleteManageRule = false;
+      this.toDelete = {};
+    }
+
+    if (this.adminAccessRule && Object.keys(this.addAsAdmin).length) {
+      this.access[this.addAsAdmin.category][this.addAsAdmin.index].permission = this.addAsAdmin.value;
+      this.isAddOrDelete = true;
+      this.adminAccessRule = false;
+    }
+
   }
 
   //on refresh load the acl view
@@ -195,8 +225,21 @@ export class ServiceAccessControlComponent implements OnInit {
   reportIssue() {}
 
   onSelectionChange(value, index, category){
-    this.access[category][index].permission = value;
-    this.isAddOrDelete = true;
+    if (category === "manage" && value === "admin") {
+      this.addAsAdmin = {};
+      this.adminAccessRule = true;
+      this.confirmationHeader = this.toastmessage.customMessage("finalConfirmationHeader", "aclConfirmation");
+      this.confirmationText = this.toastmessage.customMessage("addAdminRule", "aclConfirmation");
+      this.addAsAdmin = {
+        "category": category,
+        "index": index,
+        "value": value
+      }
+    } else {
+      this.access[category][index].permission = value;
+      this.isAddOrDelete = true;
+    }
+
   }
 
   ngOnInit() {
@@ -208,7 +251,7 @@ export class ServiceAccessControlComponent implements OnInit {
   // restructure the response
   restructureRes(policies) {
     let catogarisedList ={};
-    ['manage', 'code', 'deploy'].forEach(eachCat => {
+    this.categoryArray.forEach(eachCat => {
       catogarisedList[eachCat] = policies.filter(eachPolicy => {
         return (eachPolicy.category === eachCat)
       });
@@ -276,6 +319,14 @@ export class ServiceAccessControlComponent implements OnInit {
     if (this.isAddOrDelete) {
       let policiesList = Object.keys(this.access).map(eachcat => (this.access[eachcat]))
       let list = [].concat.apply([], policiesList);
+      let checkLen = [];
+
+      this.categoryArray.forEach(eachCat=> {
+        if (this.access[eachCat].length === 1 && this.access[eachCat][0].permission === 'read') {
+          checkLen.push(this.access[eachCat][0]);
+        }
+      });
+
       let check = list.filter(each => {
         if (!each.userId) {
           return true
@@ -284,7 +335,7 @@ export class ServiceAccessControlComponent implements OnInit {
         }
 
       });
-      if (!check.length) return false;
+      if (!check.length && !checkLen.length) return false;
       else return true;
     }
   }
@@ -328,6 +379,16 @@ export class ServiceAccessControlComponent implements OnInit {
       this.focusindex = -1;
     } else {
       this.focusindex = -1;
+    }
+  }
+
+  outSidePopup() {
+    this.saveClicked = false;
+    this.removeUser = false;
+    this.deleteManageRule = false;
+    this.adminAccessRule = false;
+    if (Object.keys(this.addAsAdmin).length) {
+      this.access[this.addAsAdmin.category][this.addAsAdmin.index].permission = "read";
     }
   }
 
