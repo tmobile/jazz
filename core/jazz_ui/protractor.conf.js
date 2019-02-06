@@ -50,6 +50,11 @@ exports.config = {
     });
     jasmine.getEnv().addReporter(new SpecReporter({ spec: { displayStacktrace: true } }));
     jasmine.getEnv().addReporter(new Jasmine2HtmlReporter({savePath: 'target/screenshots'}));
+    jasmine.getEnv().addReporter(new JSONReporter({
+      file: 'jasmine-test-results.json',
+      beautify: true,
+      indentationLevel: 4 
+    }));
     browser.manage().timeouts().implicitlyWait(600000);
     browser.manage().window().setSize(1600, 1000);
     browser.manage().window().maximize();
