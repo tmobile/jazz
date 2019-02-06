@@ -156,7 +156,6 @@ def deleteIam(credentialsId, roleName){
       }
     }
   }catch (ex) {
-    //handleFailureEvent(ex.getMessage())
     echo "${ex.getMessage()}"
 	}
 }
@@ -184,7 +183,6 @@ def deleteAPIGateway(credentialsId, restApiId){
       }
     }
   }catch (ex) {
-    //handleFailureEvent(ex.getMessage())
     echo "${ex.getMessage()}"
 	} 
 }
@@ -230,7 +228,6 @@ def deletes3Bucket(credentialsId, bucketName){
 
 		}
 	}catch (ex) {
-			//handleFailureEvent(ex.getMessage())
       echo "${ex.getMessage()}"
 		}
 }
