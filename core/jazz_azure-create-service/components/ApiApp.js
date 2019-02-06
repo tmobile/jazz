@@ -13,8 +13,7 @@ module.exports = class ApiApp {
         this.credentials = await msRestAzure.loginWithServicePrincipalSecret(this.clientId, this.clientSecret, this.tenantId);
     }
 
-    async create(data) {
-      try {
+    async create(data){
         await this.login();
         let resourceFactory = new ResourceFactory();
         let storageAccount = await resourceFactory.createStorageAccount(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials);
