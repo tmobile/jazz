@@ -15,9 +15,6 @@ import groovy.transform.Field
 //@Field def events
 @Field def configModule
 @Field def configLoader
-@Field def aws_credential_id
-@Field def instance_prefix
-@Field def region
 
 /**
  * The Jenkins Job deletes any diabled CloudFront Distributions
@@ -30,11 +27,6 @@ node {
 	echo "params : $params"
 
 	loadConfigModule(getBuildModuleUrl())
-
-	aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	instance_prefix = configLoader.INSTANCE_PREFIX
-	region = configLoader.AWS.REGION
-
 	cleanupCloudFrontDistribution()
 }
 
