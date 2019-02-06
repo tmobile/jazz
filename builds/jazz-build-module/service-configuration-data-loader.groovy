@@ -77,31 +77,8 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
-
-            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.SUBSCRIPTIONID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
-                sh "sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/prod-config.json"
-            }
-
-            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.CLIENTID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
-                sh "sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/prod-config.json"
-            }
-
-            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.PASSWORD, passwordVariable: 'PASS', usernameVariable: 'USER']]){
-                sh "sed -i -- 's/{azure_password}/${PASS}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{azure_password}/${PASS}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{azure_password}/${PASS}/g' ./config/prod-config.json"
-            }
-
-            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.TENANTID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
-                sh "sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/prod-config.json"
-            }
-
+        }
+      
         if (service_name.trim() == "jazz_codeq") {
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
