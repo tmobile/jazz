@@ -181,6 +181,8 @@ export const toastMessage = {
         "finalConfirmationMsg": "Are you sure you want to make this edit?",
         "finalConfirmationHeader": "CONFIRMATION",
         "errorIndicationHeader": "Unable to Remove User",
-        "errorIndicationMsg": "There must be at least one user delegated under each category. To add additional users, select \"Add User\" from the options below."
+        "errorIndicationMsg": "There must be at least one user delegated under each category. To add additional users, select \"Add User\" from the options below.",
+        "removeAdminRule": "User will not have access to Code and Deployment.",
+        "addAdminRule": "User will be provided with Code(write) and Deploy(write) permissions."
     }
 };

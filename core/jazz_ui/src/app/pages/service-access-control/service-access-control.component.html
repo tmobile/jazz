@@ -58,7 +58,7 @@
                         <div class="radio-button-wrapper">
                             <div class="group-status">
                                 <div class="radio-container">
-                                    <input type="radio" id="manageAdmin_{{i}}" name="manage_{{i}}" [value]="admin" [checked]="group.permission == 'admin'" (click)="onSelectionChange('admin', i, group.category)">
+                                    <input type="radio" id="manageAdmin_{{i}}" name="manage_{{i}}" [value]="admin" [checked]="group.permission == 'admin'" (change)="group.permission=$event.target.value" (click)="onSelectionChange('admin', i, group.category)">
                                     <label for="manageAdmin_{{i}}"><span></span><span class="background"></span></label>
                                 </div>
                             </div>
@@ -216,12 +216,13 @@
                 </div>
             </div>
         </section>
-        <div class='confirm-overlay' *ngIf='saveClicked || removeUser' (click)="saveClicked = false; removeUser = false">
+        <div class='confirm-overlay' *ngIf='saveClicked || removeUser || deleteManageRule || adminAccessRule' (click)="outSidePopup()">
           <div class='confirm-overlay-inner-wrap' (click)="$event.stopPropagation()">
               <div class='overlay-header'>{{confirmationHeader}}</div>
-              <div *ngIf="!isPUTLoading" class='overlay-body'>{{confirmationText}}</div>
+              <div *ngIf="!isPUTLoading" class='overlay-body'>{{confirmationText}} <br><br><div *ngIf="!removeUser && !saveClicked">Do you want to continue?</div></div>
               <div class='overlay-btns'>
                 <btn-jazz-primary text="OK" (click)='onCompleteClick()'></btn-jazz-primary>
+                <a *ngIf="!removeUser" (click)='outSidePopup()'>CANCEL</a>
               </div>
           </div>
         </div>

@@ -246,8 +246,6 @@ input[type="text"] {
   font-size: 15px;
 }
 
-.access-label {}
-
 .step-title-head {
   padding: 0px 0px 16px 0px;
 }
@@ -344,9 +342,16 @@ input[type="text"] {
 
   .overlay-btns {
     display: flex;
-    justify-content: center;
     padding: 0 0 2.5rem 0;
-
+    justify-content: flex-start;
+    flex-direction: row-reverse;
+    a {
+      align-self: center;
+      cursor: pointer;
+    }
+    btn-jazz-primary{
+      margin:0 3rem;
+    }
     /deep/ btn-jazz-primary button.btn {
       padding: 1rem 3.25rem
     }
