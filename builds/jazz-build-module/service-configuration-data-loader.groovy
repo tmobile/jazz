@@ -101,7 +101,8 @@ def loadServiceConfigurationData() {
                 sh "sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/stg-config.json"
                 sh "sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/prod-config.json"
             }
-
+        }
+      
         if (service_name.trim() == "jazz_codeq") {
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
