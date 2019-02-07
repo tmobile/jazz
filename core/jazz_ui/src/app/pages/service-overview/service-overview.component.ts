@@ -312,7 +312,7 @@ export class ServiceOverviewComponent implements OnInit {
         if(this.rateExpression.interval === "Minutes" || this.rateExpression.interval === "Hours"){
           let cronExp = JSON.parse(JSON.stringify(this.rateExpression.cronStr));
           cronExp = cronExp.split(" ");
-          if((cronExp[0].includes("0/") && cronExp[1].includes("*")) || (cronExp[1].includes("0/") && cronExp[0].includes("*"))){
+          if((cronExp[0].includes("0/") && cronExp[1].includes("*")) || (cronExp[1].includes("0/") && cronExp[0].includes("0"))){
             if(cronExp[0].includes("0/")){
               let duration = cronExp[0].split("/");
               duration = parseInt(duration[1]);
@@ -376,6 +376,12 @@ export class ServiceOverviewComponent implements OnInit {
     if(this.rateExpression.type === "none"){
       this.rateExpression.duration = "5";
       this.rateExpression.interval = "Minutes";
+      this.cronObj.minutes = "0/5";
+      this.cronObj.hours = "*";
+      this.cronObj.dayOfMonth = "*";
+      this.cronObj.month = "*";
+      this.cronObj.dayOfWeek = "?";
+      this.cronObj.year = "*";
     }
     this.http.put('/jazz/services/' + this.service.id, this.PutPayload)
       .subscribe(
@@ -518,7 +524,7 @@ export class ServiceOverviewComponent implements OnInit {
         localEvenSchedule = localEvenSchedule.split(' ');
       }
       
-      if((localEvenSchedule[0].includes("0/") && localEvenSchedule[1].includes("*")) || (localEvenSchedule[1].includes("0/") && localEvenSchedule[0].includes("*"))){
+      if((localEvenSchedule[0].includes("0/") && localEvenSchedule[1].includes("*")) || (localEvenSchedule[1].includes("0/") && localEvenSchedule[0].includes("0"))){
         if(localEvenSchedule[0].includes("0/")){
           let duration = localEvenSchedule[0].split("/");
           duration = parseInt(duration[1]);
