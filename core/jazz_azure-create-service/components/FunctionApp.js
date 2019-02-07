@@ -1,30 +1,39 @@
 const ResourceFactory = require('./ResourceFactory');
-const msRestAzure = require('ms-rest-azure');
 
-module.exports = class ApiApp {
+module.exports = class FunctionApp {
     constructor(data){
+        this.data = data;
         this.subscriptionId = data.subscriptionId;
         this.tenantId = data.tenantId;
         this.clientId = data.clientId;
         this.clientSecret = data.clientSecret;
     }
 
-    async login(){
-        this.credentials = await msRestAzure.loginWithServicePrincipalSecret(this.clientId, this.clientSecret, this.tenantId);
+    async init(){
+        this.resourceFactory = new ResourceFactory(this.data.clientId, this.data.clientSecret, this.data.tenantId, this.data.subscriptionId, this.data.resourceGroupName);
+        await this.resourceCreator.init();
     }
 
-    async create(data){
-        await this.login();
-        let resourceFactory = new ResourceFactory();
-        let storageAccount = await resourceFactory.createStorageAccount(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials);
-        let storageAccountKeys = await resourceFactory.listStorageAccountKeys(data.resourceGroupName, storageAccount.name, this.subscriptionId, this.credentials);
-        console.log(await resourceFactory.createHostingPlan(data.resourceGroupName, this.subscriptionId, this.credentials));
-        console.log(await resourceFactory.createFunctionApp(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials, storageAccount.name, storageAccountKeys.keys[0].value));
-        console.log(await resourceFactory.upload(data.resourceGroupName, data.appName, data.zip, this.subscriptionId, this.credentials));
+    async deleteByTag() {
+        await this.init().then(async () => {
+            await this.resourceFactory.deleteResourcesByTag(this.data.tagName);
+        });
     }
 
-    async deleteByTag(data){
-        await this.login();
-        await ResourceFactory.deleteResourcesByTag(data.tagName, this.subscriptionId, this.credentials);
+    async create(){
+        await this.init().then(async () => {
+            try {
+                let storageAccount = await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags);
+                let storageAccountKeys = await this.resourceFactory.listStorageAccountKeys(storageAccount.name);
+                let storageAccountKey = storageAccountKeys.keys[0].value;
+                await this.resourceFactory.createHostingPlan();
+                await this.resourceFactory.createFunctionApp(this.data.appName, storageAccountKey, this.data.tags);
+                await this.resourceFactory.uploadZipToKudu(this.data.appName, this.data.zip);
+            }catch (exception) {
+                await this.resourceFactory.rollBack();
+                throw exception;
+            }
+        });
+        return this.resourceFactory.resourceStack;
     }
 }

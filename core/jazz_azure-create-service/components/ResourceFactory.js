@@ -1,12 +1,12 @@
-const WebAppManagementClient = require('azure-arm-website');
-const resourceManagement = require('azure-arm-resource');
-const StorageManagementClient = require('azure-arm-storage');
-const ApiManagementClient = require("azure-arm-apimanagement");
-const msRestAzure = require('ms-rest-azure');
+const storage = require('azure-storage');
 const Stream = require('stream');
-const utils = require('./Utils');
-// const request = require('request');
-const axios = require('axios');
+const request = require('request');
+const AdmZip = require('adm-zip');
+const mime = require('mime-types');
+const url = require('url');
+
+
+const ClientFactory = require('./ClientFactory');
 
 /**
  *
@@ -14,19 +14,46 @@ const axios = require('axios');
  */
 module.exports = class ResourceFactory {
 
+    constructor(clientId, clientSecret, tenantId, subscriptionId, resourceGroupName){
+        this.resourceStack = [];
+        this.factory = new ClientFactory(clientId, clientSecret, tenantId, subscriptionId);
+        this.resourceGroupName = resourceGroupName;
+    }
 
-    async createResourceGroup(resourceGroupName, subscriptionId, credentials, location = 'westus', tags = {}) {
 
-        let client = new resourceManagement.ResourceManagementClient(credentials, subscriptionId);
+    async init(){
+        await this.factory.init();
+    }
+
+    async withStack(object){
+        this.resourceStack.push(object);
+        return object;
+    }
+
+    async rollBack(){
+        console.log("initiated rollback");
+        for (let i = this.resourceStack.length -1 ; i >= 0; i--) {
+            await this.deleteResourcesById(this.resourceStack.pop());
+        }
+
+        // await this.resourceStack.slice().reverse().forEach( async (resource) =>
+        //    await this.deleteResourcesById(resource));
+    }
+
+    async createResourceGroup(resourceGroupName = this.resourceGroupName, location = 'westus', tags = {}) {
+
         let groupParameters = {
             location: location,
             tags: tags
         };
+
+        let client = await this.factory.getResource("ResourceManagementClient");
         let result = await client.resourceGroups.createOrUpdate(resourceGroupName, groupParameters);
-        return result;
+        return this.withStack(result);
     }
 
-    async createHostingPlan(resourceGroupName, subscriptionId, credentials, location = 'westus', tags = {}, planSkuName = 'Y1', planName = 'WestUSPlan') {
+
+    async createHostingPlan(resourceGroupName = this.resourceGroupName, location = 'westus', tags = {}, planSkuName = 'Y1', planName = 'WestUSPlan') {
         //https://azure.microsoft.com/en-us/pricing/details/app-service/windows/
         let info = {
             location: location,
@@ -36,75 +63,80 @@ module.exports = class ResourceFactory {
                 capacity: 0
             }
         };
-        let webAppManagementClient = new WebAppManagementClient(credentials, subscriptionId);
-        return webAppManagementClient.appServicePlans.createOrUpdate(resourceGroupName, planName, info);
+
+        let client = await this.factory.getResource("WebAppManagementClient");
+        let result = await client.appServicePlans.createOrUpdate(resourceGroupName, planName, info);
+        return this.withStack(result);
     }
 
 
-    async createStorageAccount(resourceGroupName, storageName, subscriptionId, credentials, tags = {}, skuName = 'Standard_LRS') {
+    async createStorageAccount(storageAccountName, tags = {}, location = 'westus', skuName = 'Standard_LRS', resourceGroupName = this.resourceGroupName) {
         let options = {
             tags: tags,
             sku: {
                 name: skuName
             },
             kind: "StorageV2",
-            location: "westus",
+            location: location,
             accessTier: "Hot"
         };
-        let storageManagementClient = new StorageManagementClient(credentials, subscriptionId);
-        let name;
-        let nameAvailable = false;
-        let attemptCounter = 0;
-        while (attemptCounter < 20 && !nameAvailable) {
-            name = storageName.toLowerCase() + await utils.randomID();
-            attemptCounter++;
-            nameAvailable = await storageManagementClient.storageAccounts.checkNameAvailability(name, null);
-
-        }
-        if (nameAvailable) {
-            this.storageAccountName = name;
-            console.log("name is available...continuing");
-            return storageManagementClient.storageAccounts.create(resourceGroupName, name, options);
-        } else {
-            console.log("After trying 20 different names, no names were available");
-            let err = new Error('Name Unavailable');
-            throw err;
-        }
-
+        let client = await this.factory.getResource("StorageManagementClient");
+        let result = await client.storageAccounts.create(resourceGroupName, storageAccountName, options);
+        this.storageAccountName = storageAccountName;
+        return this.withStack(result);
     }
 
-    async listStorageAccountKeys(resourceGroupName, storageName, subscriptionId, credentials) {
 
-        let storageManagementClient = new StorageManagementClient(credentials, subscriptionId);
-        return await storageManagementClient.storageAccounts.listKeys(resourceGroupName, storageName, null);
-
+    async createBlobContainer(storageName, resourceGroupName = this.resourceGroupName) {
+        let client = await this.factory.getResource("StorageManagementClient");
+        return await client.blobContainers.create(resourceGroupName, storageName, "$web");
     }
 
-    async createWebApp(resourceGroupName, appName, envelope, subscriptionId, credentials) {
-        let webAppManagementClient = new WebAppManagementClient(credentials, subscriptionId);
-        return webAppManagementClient.webApps.createOrUpdateWithHttpOperationResponse(resourceGroupName, appName, envelope);
+
+    async setBlobServicePropertiesForWebsite(accountKey, storageName = this.storageAccountName) {
+        let serviceProperties = {
+            StaticWebsite: {
+                Enabled: true,
+                IndexDocument: "index.html",
+                ErrorDocument404Path: "error/404.html"
+            }
+        };
+
+        let blobStorage = storage.createBlobService(storageName,accountKey);
+        return new Promise(function(resolve, reject) {
+            blobStorage.setServiceProperties(serviceProperties, function(err, resp, body) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(resp);
+                }
+            })
+        });
     }
 
-    async createFunctionApp(resourceGroupName, appName, subscriptionId, credentials, storageAccountName, storageAccountKey, tags = {
-        owner: "test",
-        environment: "test",
-        application: "test",
-        STAGE: "test",
-        service: "test",
-        domain: "test"
-    }) {
+
+    async listStorageAccountKeys(storageName = this.storageAccountName, resourceGroupName = this.resourceGroupName) {
+        let client = await this.factory.getResource("StorageManagementClient");
+        return await client.storageAccounts.listKeys(resourceGroupName, storageName, null);
+    }
 
 
+    async createWebApp(appName, envelope, resourceGroupName = this.resourceGroupName) {
+        let client = await this.factory.getResource("WebAppManagementClient");
+        let result = await client.webApps.createOrUpdateWithHttpOperationResponse(resourceGroupName, appName, envelope);
+        return this.withStack(result);
+    }
+
+
+    async createFunctionApp( appName, storageAccountKey, tags = {}, storageAccountName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = 'westus') {
         let envelope = {
             tags: tags,
-            location: "westus",
-            kind: 'functionApp',
+            location: location,
+            kind: "functionApp",
             serverFarmId: "WestUSPlan",
             properties: {},
             siteConfig: {
-
                 appSettings: [
-
                     {
                         "name": "FUNCTIONS_WORKER_RUNTIME",
                         "value": "node"
@@ -133,136 +165,180 @@ module.exports = class ResourceFactory {
                         "name": "WEBSITE_CONTENTSHARE",
                         "value": storageAccountName
                     },
-
                 ]
-
             }
-
         }
-        return await this.createWebApp(resourceGroupName, appName, envelope, subscriptionId, credentials);
+        return await this.createWebApp(appName, envelope, resourceGroupName = this.resourceGroupName );
     }
 
 
-    async listResourcesByTag(tagName, subscriptionId, credentials) {
-        const client = new resourceManagement.ResourceManagementClient(credentials, subscriptionId);
+    async listResourcesByTag(tagName) {
+        let client = await this.factory.getResource("ResourceManagementClient");
         let resourcesByTags = await client.resources.list({filter: `tagName eq '${tagName}'`});
         return resourcesByTags;
     }
 
-    async deleteResourcesByTag(tagName, subscriptionId, credentials) {
-        let resources = await listResourcesByTag(tagName, subscriptionId, credentials);
-        console.log(resources);
+
+
+    async deleteResourcesByTag(tagName) {
+        let resources = await this.listResourcesByTag(tagName);
         resources.forEach(async function (resource) {
-            let apiVersion = await this.getLatestApiVersionForResource(resource, subscriptionId, credentials);
-            this.deleteResourcesById(resource, apiVersion, subscriptionId, credentials);
+            await this.deleteResourcesById(resource);
         });
     }
 
-    async deleteResourcesById(resource, apiVersion, subscriptionId, credentials) {
-        let client = new resourceManagement.ResourceManagementClient(credentials, subscriptionId);
-        console.log("trying to delete" + resource.id);
-        let result = await client.resources.deleteById(resource.id, apiVersion);
-        console.log(result);
+
+    async deleteResourcesById(resource) {
+        let client = await this.factory.getResource("ResourceManagementClient");
+        console.log("deleting " + resource.id);
+        let apiVersion = await this.getLatestApiVersionForResource(resource);
+
+        return await client.resources.deleteById(resource.id, apiVersion);
     }
 
-    async getLatestApiVersionForResource(resource, subscriptionId, credentials) {
-        let client = new resourceManagement.ResourceManagementClient(credentials, subscriptionId);
+
+    async getLatestApiVersionForResource(resource) {
+        let client = await this.factory.getResource("ResourceManagementClient");
         let providerNamespace = resource.type.split('/')[0];
         let providerType = resource.type.split('/')[1];
         let response = await client.providers.get(providerNamespace);
-        let apiVersion;
-        let string = JSON.stringify(response);
-        response['resourceTypes'].forEach(function (resource) {
-            if (resource.resourceType === providerType) {
+        let apiVersion = undefined;
+        await response['resourceTypes'].forEach(async function (resource) {
+
+            if (resource.resourceType.toLowerCase() === providerType.toLowerCase()) {
                 apiVersion = resource.apiVersions[0];
-                console.log("apiVersion" + apiVersion);
             }
         });
         return apiVersion;
     }
 
-    async createOrUpdateApiGatewayWithSwaggerJson(resourceGroupName, serviceName, apiId, credentials, subscriptionId, swagger, basepath) {
-        console.log(JSON.stringify(swagger));
+
+    async createOrUpdateApiGatewayWithSwaggerJson(serviceName, apiId, swagger, basePath = "api", resourceGroupName = this.resourceGroupName) {
         let parameters = {
             "contentFormat": "swagger-json",
             "contentValue": JSON.stringify(swagger),
-            "path": basepath
+            "path": basePath
         }
-
-        console.log("parameters here: " + JSON.stringify(parameters));
-        const client = new ApiManagementClient(credentials, subscriptionId);
+        let client = await this.factory.getResource("ApiManagementClient");
         let result = await client.api.createOrUpdateWithHttpOperationResponse(resourceGroupName, serviceName, apiId, parameters, null);
         return result;
     }
 
-    async deleteApi(resourceGroupName, serviceName, apiId, credentials, subscriptionId) {
-        const client = new ApiManagementClient(credentials, subscriptionId);
+
+    async deleteApi(serviceName, apiId, resourceGroupName = this.resourceGroupName) {
+        let client = await this.factory.getResource("ApiManagementClient");
         let result = await client.api.deleteMethodWithHttpOperationResponse(resourceGroupName, serviceName, apiId, "*", null);
         return result;
     }
 
-    async addApiToProduct(resourceGroupName, serviceName, productId, apiId, credentials, subscriptionId) {
-        const client = new ApiManagementClient(credentials, subscriptionId);
+
+    async addApiToProduct(serviceName, productId, apiId, resourceGroupName = this.resourceGroupName) {
+        let client = await this.factory.getResource("ApiManagementClient");
         let result = await client.productApi.createOrUpdate(resourceGroupName, serviceName, productId, apiId, null);
         return result;
     }
 
-    async upload(resourceGroup, appName, b64string, subscriptionId, credentials) {
+
+    async createCdnProfile(tags = {}, storageName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = "West US", skuName = "Standard_Akamai") {
+        let standardCreateParameters = {
+            location: location,
+            tags: tags,
+            sku: {
+                name: skuName
+            }
+        };
+        let client = await this.factory.getResource("CdnManagementClient");
+        return client.profiles.create(resourceGroupName, storageName, standardCreateParameters)
+    }
+
+
+    async createCdnEndpoint(tags = {}, hostname = this.storageAccountName,  storageName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = "West US") {
+        let path = url.parse(hostname, true);
+        console.log(path.path);
+        let endpointProperties = {
+            location: 'West US',
+            tags: tags,
+            origins: [{
+                name: 'newname',
+                hostName: path.host
+            }]
+        }
+
+        let client = await this.factory.getResource("CdnManagementClient");
+        return client.endpoints.create(resourceGroupName, storageName, storageName, endpointProperties);
+    }
+
+
+    async uploadFilesToStorageFromZipBase64(accountKey, b64string, storageName = this.storageAccountName){
+        let blobStorageService = storage.createBlobService(storageName,accountKey);
+        let buffer = Buffer.from(b64string, 'base64');
+        let zip = new AdmZip(buffer);
+        let zipEntries = zip.getEntries();
+        let promiseArray = [];
+
+        for (let i = 0; i < zipEntries.length; i++) {
+            console.log(zipEntries[i].entryName);
+            let decompressedData = zip.readFile(zipEntries[i]);
+            let stream = new Stream.PassThrough();
+            stream.end(decompressedData);
+            promiseArray.push(new Promise(function(resolve, reject){
+                blobStorageService.createBlockBlobFromStream("$web", zipEntries[i].entryName, stream, buffer.length, {contentSettings: {contentType: mime.lookup(zipEntries[i].entryName)}} ,function (error, result, response) {
+                    if (error) {
+                        console.error(error);
+                        reject("Couldn't upload stream");
+
+                    } else {
+                        console.log('Stream uploaded successfully: ' + i + " " + zipEntries[i].entryName + "    " +  mime.lookup(zipEntries[i].entryName));
+                        resolve(result);
+                    }
+                });
+            }));
+        }
+        return await Promise.all(promiseArray).then(() => { console.log('resolved!'); })
+            .catch(() => { console.log('failed!') });
+    }
+
+
+    async uploadZipToKudu(appName, b64string, resourceGroup = this.resourceGroupName) {
         let buffer = Buffer.from(b64string, 'base64');
         let stream = new Stream.PassThrough();
         stream.end(buffer);
 
-        const client = await new WebAppManagementClient(credentials, subscriptionId, null, null);
-        let pubcreds = await client.webApps.listPublishingCredentials(resourceGroup, appName, null);
-        console.log(pubcreds);
+        let client = await this.factory.getResource("WebAppManagementClient");
+        let publishingCredentials = await client.webApps.listPublishingCredentials(resourceGroup, appName, null);
         console.log("Trying to upload a file");
         let config = {
             headers: {
                 Accept: '*/*'
             },
             auth: {
-                username: pubcreds.publishingUserName,
-                password: pubcreds.publishingPassword
+                username: publishingCredentials.publishingUserName,
+                password: publishingCredentials.publishingPassword
             },
             encoding: null,
             body: stream
         };
 
-        //   request({
-        //             url: `https://${appName}.scm.azurewebsites.net/api/zipdeploy`,
-        //             method: 'PUT',
-        //             body: stream,
-        //             encoding: null,
-        //             auth: {
-        //                 username: pubcreds.publishingUserName,
-        //                 password: pubcreds.publishingPassword
-        //               },
-        //               headers: {
-        //                 Accept: '*/*'
-        //               }
-        //           }, (error, response) => {
-        //             if (error) {
-        //                 console.log(error);
-        //                 throw error;
-        //             } else {
-        //                 console.log(response);
-        //               return response;
-        //             }
-        //           })
-
-        return await axios.put(
-            `https://${appName}.scm.azurewebsites.net/api/zipdeploy`,
-            stream,
-            config
-        ).then((response) => {
-            console.log(response.status);
-            console.log(response.statusText);
-            console.log(response.data);
-        }).catch((error) => {
-            console.log(error.response.status);
-            console.log(error.response.statusText);
-            console.log(error.response.data);
-            console.log(error.response.data.error);
+        return new Promise(function(resolve, reject) {
+            request({
+                url: `https://${appName}.scm.azurewebsites.net/api/zipdeploy`,
+                method: 'PUT',
+                body: stream,
+                encoding: null,
+                auth: {
+                    username: publishingCredentials.publishingUserName,
+                    password: publishingCredentials.publishingPassword
+                },
+                headers: {
+                    Accept: '*/*'
+                }
+            }, function(err, resp, body) {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(resp);
+                }
+            })
         });
     }
 }

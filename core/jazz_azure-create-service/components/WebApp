@@ -1,22 +1,39 @@
 const ResourceFactory = require('./ResourceFactory');
-const msRestAzure = require('ms-rest-azure');
-module.exports = class FunctionApp {
+
+module.exports = class WebApp {
     constructor(data){
-        this.subscriptionId = data.subscriptionId;
-        this.tenantId = data.tenantId;
-        this.clientId = data.clientId;
-        this.clientSecret = data.clientSecret;
+        this.data = data;
     }
 
-    async login(){
-        this.credentials = await msRestAzure.loginWithServicePrincipalSecret(this.clientId, this.clientSecret, this.tenantId);
+    async init(){
+       this.resourceFactory = new ResourceFactory(this.data.clientId, this.data.clientSecret, this.data.tenantId, this.data.subscriptionId, this.data.resourceGroupName);
+       await this.resourceFactory.init();
     }
 
-    async create(data){
-        await this.login();
-        await ResourceFactory.createStorageAccount(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials);
-        await ResourceFactory.createHostingPlan(data.resourceGroupName, this.subscriptionId, this.credentials);
-        await ResourceFactory.createFunctionApp(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials);
-        await ResourceFactory.upload(data.resourceGroupName, data.appName, data.zip, this.subscriptionId, this.credentials);
+    async create(){
+       await this.init().then(async () => {
+            try {
+                // await this.resourceFactory.createHostingPlan();
+                let storageAccount = await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags);
+                await this.resourceFactory.createBlobContainer(storageAccount.name);
+                let storageAccountKeys = await this.resourceFactory.listStorageAccountKeys(storageAccount.name);
+                let storageAccountKey = storageAccountKeys.keys[0].value;
+                await this.resourceFactory.setBlobServicePropertiesForWebsite(storageAccountKey);
+                await this.resourceFactory.uploadFilesToStorageFromZipBase64(storageAccountKey, this.data.zip);
+                await this.resourceFactory.createCdnProfile(this.data.tags);
+                await this.resourceFactory.createCdnEndpoint(this.data.tags);
+                }catch (exception) {
+                    await this.resourceFactory.rollBack();
+                    throw exception;
+                }
+            });
+       return this.resourceFactory.resourceStack;
+    }
+
+
+    async deleteByTag() {
+        await this.init().then(async () => {
+            await this.resourceFactory.deleteResourcesByTag(this.data.tagName);
+        });
     }
 }
