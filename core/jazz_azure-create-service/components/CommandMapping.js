@@ -17,7 +17,7 @@ module.exports = class CommandMapping {
 
     async instantiate(payload){
         if(this.classList.has(payload.className)){
-        this.instance = new (this.classList.get(payload.className))(payload.data);
+            this.instance = new (this.classList.get(payload.className))(payload.data);
         }
         else{
             let error = new Error(`Classname ${payload.className} is not found.`);
@@ -26,6 +26,6 @@ module.exports = class CommandMapping {
     }
 
     async execute(payload){
-        return await this.instance[payload.command](payload.data);
+        return await this.instance[payload.command]();
     }
 }

@@ -1,32 +1,33 @@
 const ResourceFactory = require('./ResourceFactory');
-const msRestAzure = require('ms-rest-azure');
 
-module.exports = class ApiApp {    
+module.exports = class ApiApp {
     constructor(data){
-        this.subscriptionId = data.subscriptionId;
-        this.tenantId = data.tenantId;
-        this.clientId = data.clientId;
-        this.clientSecret = data.clientSecret;
+        this.data = data;
     }
 
-    async login(){
-        this.credentials = await msRestAzure.loginWithServicePrincipalSecret(this.clientId, this.clientSecret, this.tenantId);
+    async init(){
+        this.resourceFactory = new ResourceFactory(this.data.clientId, this.data.clientSecret, this.data.tenantId, this.data.subscriptionId, this.data.resourceGroupName);
+        await this.resourceFactory.init();
     }
 
-    async create(data){
-        await this.login();
-        let resourceFactory = new ResourceFactory();
-        let storageAccount = await resourceFactory.createStorageAccount(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials);
-        let storageAccountKeys = await resourceFactory.listStorageAccountKeys(data.resourceGroupName, storageAccount.name, this.subscriptionId, this.credentials);
-        await resourceFactory.createHostingPlan(data.resourceGroupName, this.subscriptionId, this.credentials);
-        await resourceFactory.createFunctionApp(data.resourceGroupName, data.appName, this.subscriptionId, this.credentials, storageAccount.name, storageAccountKeys.keys[0].value);
-        await resourceFactory.upload(data.resourceGroupName, data.appName, data.zip, this.subscriptionId, this.credentials);
-        await resourceFactory.createOrUpdateApiGatewayWithSwaggerJson(data.resourceGroupName, data.serviceName, data.apiId, this.credentials, this.subscriptionId, data.swagger, data.basepath);
-        await resourceFactory.addApiToProduct(data.resourceGroupName, data.serviceName, "starter", data.apiId, this.credentials, this.subscriptionId);
-    }
+    async create(){
+       await this.init().then(async () => {
+            try {
+                let storageAccount = await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags);
+                let storageAccountKeys = await this.resourceFactory.listStorageAccountKeys(storageAccount.name);
+                let storageAccountKey = storageAccountKeys.keys[0].value;
+                await this.resourceFactory.createHostingPlan();
+                await this.resourceFactory.createFunctionApp(this.data.appName, storageAccountKey, this.data.tags);
+                await this.resourceFactory.uploadZipToKudu(this.data.appName, this.data.zip);
+                await this.resourceFactory.createOrUpdateApiGatewayWithSwaggerJson(this.data.serviceName, this.data.apiId, this.data.swagger, this.data.basepath);
+                await this.resourceFactory.addApiToProduct(this.data.serviceName, "starter", this.data.apiId);
 
-    async deleteByTag(data){
-        await this.login();
-        await ResourceFactory.deleteResourcesByTag(data.tagName, this.subscriptionId, this.credentials);
+            }catch (exception) {
+                await this.resourceFactory.rollBack();
+                throw exception;
+            }
+        });
+        return this.resourceFactory.resourceStack;
     }
 }
+
