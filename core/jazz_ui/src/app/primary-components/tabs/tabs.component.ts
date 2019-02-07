@@ -23,7 +23,7 @@ export class TabsComponent implements OnInit {
   @Input() isAdminAccess: boolean = false;
   disableobj:any= {
     'overview':true,
-    'access control':false,
+    'access control':true,
     'cost':true,
     'metrics':true,
     'logs':true,

@@ -182,6 +182,7 @@ export class ServiceAccessControlComponent implements OnInit {
   onCancelClick(){
     if (this.isAddOrDelete) {
       this.access = this.restructureRes(this.originalAccessDetails);
+      this.getUsersList()
     }
     this.showDisplay = true;
     this.isAddOrDelete = false;
@@ -220,6 +221,7 @@ export class ServiceAccessControlComponent implements OnInit {
   //on refresh load the acl view
   refresh(){
     this.getAclPolicies(this.service.id);
+    this.getUsersList()
   }
 
   reportIssue() {}
@@ -319,11 +321,18 @@ export class ServiceAccessControlComponent implements OnInit {
     if (this.isAddOrDelete) {
       let policiesList = Object.keys(this.access).map(eachcat => (this.access[eachcat]))
       let list = [].concat.apply([], policiesList);
-      let checkLen = [];
+      let checkLen = [], isAdminOrWrite = false;
 
       this.categoryArray.forEach(eachCat=> {
         if (this.access[eachCat].length === 1 && this.access[eachCat][0].permission === 'read') {
           checkLen.push(this.access[eachCat][0]);
+        } else if (this.access[eachCat].length > 1) {
+          this.access[eachCat].forEach(eachObj => {
+            if (eachObj.permission === "admin" || eachObj.permission === "write") {
+              isAdminOrWrite = true;
+              return;
+            }
+          })
         }
       });
 
@@ -335,7 +344,7 @@ export class ServiceAccessControlComponent implements OnInit {
         }
 
       });
-      if (!check.length && !checkLen.length) return false;
+      if (!check.length && !checkLen.length && isAdminOrWrite) return false;
       else return true;
     }
   }
