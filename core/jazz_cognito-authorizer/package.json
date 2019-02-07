@@ -15,9 +15,10 @@
     "lodash": "*"
   },
   "devDependencies": {
-    "lambda-local": "^1.4.2",
     "aws-sdk": "*",
     "chai": "^3.5.0",
-    "mocha": "^v3.0.0"
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^v3.0.0",
+    "sinon": "^7.2.2"
   }
 }

@@ -211,17 +211,51 @@ async function handler(event, context, cb) {
       }
     } else if (resource.indexOf("acl/policies") !== -1) {
       let result = getPathQuery(resource);
-      let permissionData = await aclServices.checkPermissionData(config,token,result.queryString);
+      let permission;
+      if (method === 'GET') {
+        permission = 'read'
+      } else if (method === 'POST') {
+        permission = 'admin'
+      } else {
+        logger.error("Incorrect method for /acl/policies" + method);
+        throw (errorHandlerModule.throwInputValidationError("Method not supported"));
+      }
+      let permissionData = await aclServices.checkPermissionData(config, token, result.queryString, user, "manage", permission);
+      return {
+        allow: permissionData.data
+      }
+    } else {
+      let category, permission;
+      if (method === 'GET') {
+        if (resource.indexOf("deployements") !== -1) {
+          category = "deploy"
+        } else {
+          category = "manage";
+        }
+        permission = "read"
+      } else {
+        if (resource.indexOf("deployements") !== -1) {
+          category = "deploy"
+          permission = 'write'
+        } else {
+          category = "manage";
+          permission = 'admin'
+        }
+      }
+      let result = getPathQuery(resource);
+      let permissionData = await aclServices.checkPermissionData(config, token, result.serviceId, user, category, permission);
       return {
         allow: permissionData.data
       }
     }
   }
 
-  function getPathQuery(reource) {
+  function getPathQuery(resource) {
+    let tmp = resource.split('?');
+    let pathName = tmp[0].split('/');
     return {
-      serviceId: null,
-      queryString: "userId=765"
+      serviceId: pathName.pop(),
+      queryString: tmp[1]
     }
   }
 

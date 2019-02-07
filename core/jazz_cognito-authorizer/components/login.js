@@ -15,7 +15,7 @@
 // =========================================================================
 
 const request = require('request');
-const logger = require("../logger.js");
+const logger = require("./logger.js");
 
 const getAuthToken = async (config) => {
   return new Promise((resolve, reject) => {

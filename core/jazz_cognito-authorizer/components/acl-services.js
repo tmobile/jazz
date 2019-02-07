@@ -15,7 +15,7 @@
 // =========================================================================
 
 const request = require('request');
-const logger = require("../logger.js");
+const logger = require("./logger.js");
 
 const getServiceMetadata = async (config, authToken, queryString, serviceId) => {
   return new Promise((resolve, reject) => {
