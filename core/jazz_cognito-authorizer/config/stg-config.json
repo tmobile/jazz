@@ -1,5 +1,11 @@
 {
   "USER_POOL_ID":"{conf-user-pool-id}",
-  "REGION": "{conf-region}"
+  "REGION": "{conf-region}",
+  "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod",
+  "ACL_SERVICE_API": "/acl/services",
+  "ACL_CHECKPERMISSION_API": "/acl/checkpermission",
+  "LOGIN_API": "/jazz/login",
+  "JAZZ_ADMIN": "{jazz_admin}",
+  "TOKEN_CREDS": "{jazz_admin_creds}"
 }
 

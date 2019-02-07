@@ -41,7 +41,8 @@ async function handler(event, context) {
     logger.error(err.message);
 
     return {
-      data: err.message
+      data: null,
+      error: err.message
     };
   }
 };
