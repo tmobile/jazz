@@ -1,4 +1,42 @@
 {
+  "POLICY": {
+    "MANAGE_ADMIN": [
+      {
+        "userId": "",
+        "permission": "write",
+        "category": "code"
+      },
+      {
+        "userId": "",
+        "permission": "admin",
+        "category": "manage"
+      },
+      {
+        "userId": "",
+        "permission": "write",
+        "category": "deploy"
+      }
+    ],
+    "MANAGE_READ": [
+      {
+        "userId": "",
+        "permission": "read",
+        "category": "code"
+      },
+      {
+        "userId": "",
+        "permission": "read",
+        "category": "deploy"
+      }
+    ],
+    "READ": [
+      {
+        "userId": "",
+        "permission": "read",
+        "category": "manage"
+      }
+    ]
+  },
   "SCM_TYPE": "{scm_type}",
   "SCM_CONFIG": {
     "bitbucket": {
