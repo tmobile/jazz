@@ -25,6 +25,8 @@ const auth = require("../components/scm/login");
 const bitbucketUtil = require("../components/scm/bitbucket");
 const gitlabUtil = require("../components/scm/gitlab");
 const services = require("../components/scm/services");
+const util = require("../components/util");
+const globalConfig = require("../config/global-config.json");
 const request = require('request');
 chai.use(chaiAsPromised);
 
@@ -317,6 +319,104 @@ describe('processACLRequest tests', () => {
     });
   });
 });
+
+describe("Util", () => {
+  it('Make rule for user has manage admin policy only', async () => {
+    let policies = [{
+      "userId": "test",
+      "permission": "admin",
+      "category": "manage"
+    }];
+
+    const userPolicies = util.createRule(policies, globalConfig.POLICY);
+    const managePolicy = userPolicies.filter(policy => policy.category === 'manage' && policy.permission === 'admin');
+    const codePolicy = userPolicies.filter(policy => policy.category === 'code' && policy.permission === 'write');
+    const deployPolicy = userPolicies.filter(policy => policy.category === 'deploy' && policy.permission === 'write');
+
+    expect(userPolicies.length).to.be.eql(3);
+    expect(managePolicy.length).to.be.eql(1);
+    expect(codePolicy.length).to.be.eql(1);
+    expect(deployPolicy.length).to.be.eql(1);
+  });
+
+  it('Make rule for user has manage read policy only', async () => {
+    let policies = [{
+      "userId": "test",
+      "permission": "read",
+      "category": "manage"
+    }];
+
+    const userPolicies = util.createRule(policies, globalConfig.POLICY);
+    const manageAdminPolicy = userPolicies.filter(policy => policy.category === 'manage' && policy.permission === 'admin');
+    const codeWritePolicy = userPolicies.filter(policy => policy.category === 'code' && policy.permission === 'write');
+    const deployWritePolicy = userPolicies.filter(policy => policy.category === 'deploy' && policy.permission === 'write');
+    const manageReadPolicy = userPolicies.filter(policy => policy.category === 'manage' && policy.permission === 'read');
+    const codeReadPolicy = userPolicies.filter(policy => policy.category === 'code' && policy.permission === 'read');
+    const deployReadPolicy = userPolicies.filter(policy => policy.category === 'deploy' && policy.permission === 'read');
+
+    expect(userPolicies.length).to.be.eql(3);
+    expect(manageAdminPolicy.length).to.be.eql(0);
+    expect(codeWritePolicy.length).to.be.eql(0);
+    expect(deployWritePolicy.length).to.be.eql(0);
+    expect(manageReadPolicy.length).to.be.eql(1);
+    expect(codeReadPolicy.length).to.be.eql(1);
+    expect(deployReadPolicy.length).to.be.eql(1);
+  });
+
+  it('Make rule for user has code write policy ', async () => {
+    let policies = [{
+      "userId": "test",
+      "permission": "write",
+      "category": "code"
+    }];
+
+    const userPolicies = util.createRule(policies, globalConfig.POLICY);
+    const manageAdminPolicy = userPolicies.filter(policy => policy.category === 'manage' && policy.permission === 'admin');
+    const codeWritePolicy = userPolicies.filter(policy => policy.category === 'code' && policy.permission === 'write');
+    const deployWritePolicy = userPolicies.filter(policy => policy.category === 'deploy' && policy.permission === 'write');
+    const manageReadPolicy = userPolicies.filter(policy => policy.category === 'manage' && policy.permission === 'read');
+    const codeReadPolicy = userPolicies.filter(policy => policy.category === 'code' && policy.permission === 'read');
+    const deployReadPolicy = userPolicies.filter(policy => policy.category === 'deploy' && policy.permission === 'read');
+
+    expect(userPolicies.length).to.be.eql(2);
+    expect(manageAdminPolicy.length).to.be.eql(0);
+    expect(codeWritePolicy.length).to.be.eql(1);
+    expect(deployWritePolicy.length).to.be.eql(0);
+    expect(manageReadPolicy.length).to.be.eql(1);
+    expect(codeReadPolicy.length).to.be.eql(0);
+    expect(deployReadPolicy.length).to.be.eql(0);
+  });
+
+  it('Make rule for user has deploy write and code read policy ', async () => {
+    let policies = [{
+      "userId": "test1",
+      "permission": "write",
+      "category": "deploy"
+    },
+    {
+      "userId": "test2",
+      "permission": "read",
+      "category": "code"
+    }];
+
+    const userPolicies = util.createRule(policies, globalConfig.POLICY);
+    const manageAdminPolicy = userPolicies.filter(policy => policy.category === 'manage' && policy.permission === 'admin' && policy.userId === 'test2');
+    const codeWritePolicy = userPolicies.filter(policy => policy.category === 'code' && policy.permission === 'write' && policy.userId === 'test2');
+    const deployWritePolicy = userPolicies.filter(policy => policy.category === 'deploy' && policy.permission === 'write' && policy.userId === 'test2');
+    const manageReadPolicy = userPolicies.filter(policy => policy.category === 'manage' && policy.permission === 'read' && policy.userId === 'test2');
+    const codeReadPolicy = userPolicies.filter(policy => policy.category === 'code' && policy.permission === 'read' && policy.userId === 'test2');
+    const deployReadPolicy = userPolicies.filter(policy => policy.category === 'deploy' && policy.permission === 'read' && policy.userId === 'test2');
+
+    expect(userPolicies.length).to.be.eql(4);
+    expect(manageAdminPolicy.length).to.be.eql(0);
+    expect(codeWritePolicy.length).to.be.eql(0);
+    expect(deployWritePolicy.length).to.be.eql(0);
+    expect(manageReadPolicy.length).to.be.eql(1);
+    expect(codeReadPolicy.length).to.be.eql(1);
+    expect(deployReadPolicy.length).to.be.eql(0);
+  });
+});
+
 
 describe("getAuthToken", () => {
   it('getAuthToken will be reject for status code 500', async () => {
