@@ -55,29 +55,62 @@ def loadServiceConfigurationData() {
         }
 
         if (service_name.trim() == "jazz_metrics") {
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/global-config.json"
+            sh """
+               sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json
+               sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json
+               sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json
+               sed -i -- 's/{conf-region}/${region}/g' ./config/global-config.json
 
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+               sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API[DEV])}/g' ./config/dev-config.json
+               sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API[STG])}/g' ./config/stg-config.json
+               sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API[PROD])}/g' ./config/prod-config.json
 
-            sh "sed -i -- 's/{conf-apikey-dev}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/global-config.json"
-            sh "sed -i -- 's/{conf-apikey-stg}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/global-config.json"
-            sh "sed -i -- 's/{conf-apikey-prod}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/global-config.json"
+               sed -i -- 's/{conf-apikey-dev}/${utilModule.getAPIIdForCore(config_loader.AWS.API[DEV])}/g' ./config/global-config.json
+               sed -i -- 's/{conf-apikey-stg}/${utilModule.getAPIIdForCore(config_loader.AWS.API[STG])}/g' ./config/global-config.json
+               sed -i -- 's/{conf-apikey-prod}/${utilModule.getAPIIdForCore(config_loader.AWS.API[PROD])}/g' ./config/global-config.json
 
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
+               sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json
 
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+               sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json
+               sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json
+               sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json
 
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
-        }
+               sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json
+               sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json
+               sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json
+            """
+
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.SUBSCRIPTIONID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
+                sh """
+                   sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/dev-config.json
+                   sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/stg-config.json
+                   sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/prod-config.json
+                """
+            }
+
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.CLIENTID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
+                sh """
+                   sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/dev-config.json
+                   sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/stg-config.json
+                   sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/prod-config.json
+                """
+            }
+
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.PASSWORD, passwordVariable: 'PASS', usernameVariable: 'USER']]){
+                sh """
+                   sed -i -- 's/{azure_password}/${PASS}/g' ./config/dev-config.json
+                   sed -i -- 's/{azure_password}/${PASS}/g' ./config/stg-config.json
+                   sed -i -- 's/{azure_password}/${PASS}/g' ./config/prod-config.json
+                """
+            }
+
+            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.AZURE.TENANTID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
+                sh """
+                   sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/dev-config.json
+                   sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/stg-config.json
+                   sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/prod-config.json
+                """
+            }       }
       
         if (service_name.trim() == "jazz_codeq") {
             sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
