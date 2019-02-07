@@ -518,6 +518,23 @@ export class ServiceOverviewComponent implements OnInit {
         localEvenSchedule = localEvenSchedule.split(' ');
       }
       
+      if((localEvenSchedule[0].includes("0/") && localEvenSchedule[1].includes("*")) || (localEvenSchedule[1].includes("0/") && localEvenSchedule[0].includes("*"))){
+        if(localEvenSchedule[0].includes("0/")){
+          let duration = localEvenSchedule[0].split("/");
+          duration = parseInt(duration[1]);
+          this.rateExpression.duration = duration;
+          this.rateExpression.interval = "Minutes";
+        } else {
+          let duration = localEvenSchedule[1].split("/");
+          duration = parseInt(duration[1]);
+          this.rateExpression.duration = duration;
+          this.rateExpression.interval = "Hours";
+        }
+      } else {
+        this.rateExpression.duration = "5";
+        this.rateExpression.interval = "Minutes";
+      }
+
       this.cronObj.minutes = localEvenSchedule[0];
       this.cronObj.hours = localEvenSchedule[1];
       this.cronObj.dayOfMonth = localEvenSchedule[2];
