@@ -219,7 +219,7 @@
         <div class='confirm-overlay' *ngIf='saveClicked || removeUser || deleteManageRule || adminAccessRule' (click)="outSidePopup()">
           <div class='confirm-overlay-inner-wrap' (click)="$event.stopPropagation()">
               <div class='overlay-header'>{{confirmationHeader}}</div>
-              <div *ngIf="!isPUTLoading" class='overlay-body'>{{confirmationText}} <br><br><div *ngIf="!removeUser && !saveClicked">Do you want to continue?</div></div>
+              <div *ngIf="!isPUTLoading" class='overlay-body'>{{confirmationText}} </div>
               <div class='overlay-btns'>
                 <btn-jazz-primary text="OK" (click)='onCompleteClick()'></btn-jazz-primary>
                 <a *ngIf="!removeUser" (click)='outSidePopup()'>CANCEL</a>
