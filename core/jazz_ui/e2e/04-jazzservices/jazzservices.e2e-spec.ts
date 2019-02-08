@@ -163,12 +163,12 @@ describe('Overview', () => {
                   browser.switchTo().window(handles[1]).then(function(){
                         expect(jazzServices_po.getAPIGET().getText()).toEqual('GET');
                         jazzServices_po.getAPIGET().click();
-                        browser.sleep(5000);
+                        browser.wait(EC.visibilityOf(jazzServices_po.getTryOut()), timeOutHigh);
                         jazzServices_po.getTryOut().click();
                         browser.sleep(5000);
                         jazzServices_po.getStringA().sendKeys('Testing');
                         jazzServices_po.getStringB().sendKeys('Jazz');
-                        browser.sleep(5000);
+                        browser.wait(EC.visibilityOf(jazzServices_po.getExecute()), timeOutHigh);
                         jazzServices_po.getExecute().click();
                         expect(jazzServices_po.serverResponse().getText()).toEqual('200');
                         jazzServices_po.getAPIGET().click();
