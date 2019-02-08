@@ -120,6 +120,7 @@ export class ServiceDetailComponent implements OnInit {
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
         returnObject["eventScheduleRate"] = service.metadata.eventScheduleRate;
+        returnObject["eventScheduleEnable"] = service.metadata.eventScheduleEnable;
         if(service.metadata.event_source){
           returnObject["event_source"] = service.metadata.event_source;
         }
