@@ -132,7 +132,6 @@ describe('Overview', () => {
             expect(jazzServices_po.getYearVerify().getText()).toEqual('YEAR');
             browser.sleep(5000);
             jazzServices_po.getServiceFromAsset().click();
-<<<<<<< HEAD
       });
 
       it('Verify METRICS Navigation for API' , () => {
@@ -232,9 +231,6 @@ describe('Overview', () => {
             jazzServices_po.getServiceFromAsset().click();            
       });
       
-=======
-      });      
->>>>>>> 36de9db17a9b5ab05e9c3ceae0a191c5344436d3
             
       it('Create Lambda Service', () => {
             browser.driver.switchTo().activeElement();
