@@ -104,7 +104,6 @@ export class Jazz {
   }
   getDeploymentStatusVerify() {
     return element(by.xpath('//div[contains(text(),"successful")]'));
-      //'//div[@class="column status-col"]/div[@class="green"]'));
   }
   getAssetStatusVerify() {
     return element(by.xpath('//div[@class="det-value"]'));
@@ -150,5 +149,121 @@ export class Jazz {
   }
   serviceStatus() {
       return element(by.xpath('//div[@class="table-body"]//div[2]//div[contains(text(),"active")]'));
+  }
+  getMetrices() {
+    return element(by.css('div.tabs-wrap>ul>li:nth-child(4)'));
+  }
+  getTestAPI() {
+    return element(by.xpath('//button[@class="btnT-radial-in"]'));
+  }
+  getAPIGET() {
+    return element(by.xpath('//span[contains(text(),"GET")]'));
+  }
+  getAPIPOST() {
+    return element(by.xpath('//span[contains(text(),"POST")]'));
+  }
+  getTryOut() {
+    return element(by.xpath('//button[@class="btn try-out__btn"]'));
+  }
+  getStringA() {
+    return element(by.xpath('//input[@placeholder="a"]'));
+  }
+  getStringB() {
+    return element(by.xpath('//input[@placeholder="b"]'));
+  }
+  getExecute() {
+    return element(by.css('div.execute-wrapper>button'));
+  }
+  getMetricesCount() {
+    return element(by.xpath('//div[@class="metrics-footer"][contains(text(),"Count")]/preceding-sibling::div[@class="metrics-card-content"]'));
+  }
+  getXXError(){
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(1)')); 
+  }
+  getXXErrorFive(){
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(2)'));    
+  }
+  getCacheHitCount()
+  {
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(3)'));  
+  }
+  getCacheMissCount()
+  {
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(4)'));  
+  }
+  getCount()
+  {
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(5)')); 
+  }
+  getIntegrationLatency()
+  {
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(6)')); 
+  } 
+  getLatency()
+  {
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(7)'));    
+  }
+  getTestFunction() {
+    return element(by.xpath('//btn-jazz-secondary[@class="testApiBtn"]/button[text()="TEST FUNCTION"]'));
+   }
+   getTestArea() {
+     return element(by.xpath('//textarea[contains(@class,"input-textarea")]')); 
+   }  
+   getTestButton() {
+     return element(by.xpath('//div/button[@class="btn-round primary start-button"]'));
+   }
+   getClose() {
+     return element(by.xpath('//div[@class="sidebar-frame"]//div[@class="icon-icon-close pointer"]'));
+   }
+   getInvocations(){
+     return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(1)')); 
+   }
+   getWebsiteLink(){
+     return element(by.xpath('//btn-jazz-secondary[@class="testApiBtn"]/button[text()="GO TO WEBSITE"]'));
+   }
+   getMetricsChildOne(){
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(1)')); 
+  }
+  getMetricsChildTwo(){
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(2)')); 
+  }
+  getMetricsChildThree()
+  {
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(3)'));  
+  }
+  getMetricsChildFour()
+  {
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(4)'));  
+  }
+  getMetricsChildFive()
+  {
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(5)')); 
+  }
+  getMetricsChildSix()
+  {
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(6)')); 
+  }	
+  getMetricsChildSeven()
+  {
+    return element(by.css('div.metrics-carousel-scroller>div.metrics-card:nth-child(7)')); 
+  }
+  serverResponse()
+  {
+    return element(by.xpath('//tr[@class="response"]//td[@class="col response-col_status"][contains(text(),"200")]')); 
+  }
+  goToFunction()
+  {
+    return element(by.xpath('//button[@class="btnT-radial-in"]')); 
+  }
+  testSuccessMessage()
+  {
+    return element(by.xpath('//span[contains(text(),"Function got triggered successfully")]')); 
+  }
+  websiteTemplete()
+  {
+    return element(by.xpath('//p[contains(text(),"Jazz Serverless Platform Website Template")]')); 
+  }
+  getMetricesRequestCount() {
+    return element(by.xpath('//div[contains(text(),"10")]'));
   }
  }
