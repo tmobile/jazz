@@ -4,8 +4,6 @@ const StorageManagementClient = require('azure-arm-storage');
 const ApiManagementClient = require("azure-arm-apimanagement");
 const CdnManagementClient = require("azure-arm-cdn");
 const msRestAzure = require('ms-rest-azure');
-const WebApp = require('./WebApp');
-// const AzureStorageClient = require('azure-storage');
 
 
 module.exports = class ClientFactory {
@@ -23,8 +21,6 @@ module.exports = class ClientFactory {
         this.classList.set('StorageManagementClient', StorageManagementClient);
         this.classList.set('ApiManagementClient', ApiManagementClient);
         this.classList.set('CdnManagementClient', CdnManagementClient);
-        // this.classList.set('AzureStorageClient', AzureStorageClient);
-
 
         this.instanceList = new Map();
     }

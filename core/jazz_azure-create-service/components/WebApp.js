@@ -11,9 +11,8 @@ module.exports = class WebApp {
     }
 
     async create(){
-       await this.init().then(async () => {
+        await this.init().then(async () => {
             try {
-                // await this.resourceFactory.createHostingPlan();
                 let storageAccount = await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags);
                 await this.resourceFactory.createBlobContainer(storageAccount.name);
                 let storageAccountKeys = await this.resourceFactory.listStorageAccountKeys(storageAccount.name);
@@ -21,12 +20,12 @@ module.exports = class WebApp {
                 await this.resourceFactory.setBlobServicePropertiesForWebsite(storageAccountKey);
                 await this.resourceFactory.uploadFilesToStorageFromZipBase64(storageAccountKey, this.data.zip);
                 await this.resourceFactory.createCdnProfile(this.data.tags);
-                await this.resourceFactory.createCdnEndpoint(this.data.tags);
+                await this.resourceFactory.createCdnEndpoint(storageAccount.primaryEndpoints.web, this.data.tags);
                 }catch (exception) {
                     await this.resourceFactory.rollBack();
                     throw exception;
                 }
-            });
+        });
        return this.resourceFactory.resourceStack;
     }
 
