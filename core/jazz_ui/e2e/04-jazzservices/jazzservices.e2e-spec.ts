@@ -66,8 +66,7 @@ describe('Overview', () => {
             expect(jazzServices_po.getAPIStatus().getText()).toEqual('active');
       });
 
-      it('Verify API Service and Navigation', () => {
-            
+      it('Verify API Service and Navigation', () => {            
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
             //To Navigate to the particular service and verifying the Page
@@ -79,7 +78,7 @@ describe('Overview', () => {
             jazzServices_po.getRefresh().click();
             browser.sleep(5000);
             browser.wait(EC.visibilityOf(jazzServices_po.getProdName()), timeOutHigh);
-            // //To get the corresponding environment[Prod]
+            //To get the corresponding environment[Prod]
             jazzServices_po.getProdName().click();
             //Verifying the browser id at the Deployment Tab
             browser.sleep(5000);
@@ -133,6 +132,7 @@ describe('Overview', () => {
             expect(jazzServices_po.getYearVerify().getText()).toEqual('YEAR');
             browser.sleep(5000);
             jazzServices_po.getServiceFromAsset().click();
+<<<<<<< HEAD
       });
 
       it('Verify METRICS Navigation for API' , () => {
@@ -232,6 +232,9 @@ describe('Overview', () => {
             jazzServices_po.getServiceFromAsset().click();            
       });
       
+=======
+      });      
+>>>>>>> 36de9db17a9b5ab05e9c3ceae0a191c5344436d3
             
       it('Create Lambda Service', () => {
             browser.driver.switchTo().activeElement();
@@ -288,8 +291,7 @@ describe('Overview', () => {
             browser.sleep(15000);
             jazzServices_po.getRefresh().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatusVerify()), timeOutHigh);
-            expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
-            
+            expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');            
       });
     
       it('Verify Lambda Asset' ,  () => {
