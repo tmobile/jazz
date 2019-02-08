@@ -35,9 +35,6 @@ module.exports = class ResourceFactory {
         for (let i = this.resourceStack.length -1 ; i >= 0; i--) {
             await this.deleteResourcesById(this.resourceStack.pop());
         }
-
-        // await this.resourceStack.slice().reverse().forEach( async (resource) =>
-        //    await this.deleteResourcesById(resource));
     }
 
     async createResourceGroup(resourceGroupName = this.resourceGroupName, location = 'westus', tags = {}) {
@@ -123,7 +120,7 @@ module.exports = class ResourceFactory {
 
     async createWebApp(appName, envelope, resourceGroupName = this.resourceGroupName) {
         let client = await this.factory.getResource("WebAppManagementClient");
-        let result = await client.webApps.createOrUpdateWithHttpOperationResponse(resourceGroupName, appName, envelope);
+        let result = await client.webApps.createOrUpdate(resourceGroupName, appName, envelope);
         return this.withStack(result);
     }
 
@@ -179,7 +176,6 @@ module.exports = class ResourceFactory {
     }
 
 
-
     async deleteResourcesByTag(tagName) {
         let resources = await this.listResourcesByTag(tagName);
         resources.forEach(async function (resource) {
@@ -189,11 +185,17 @@ module.exports = class ResourceFactory {
 
 
     async deleteResourcesById(resource) {
-        let client = await this.factory.getResource("ResourceManagementClient");
-        console.log("deleting " + resource.id);
-        let apiVersion = await this.getLatestApiVersionForResource(resource);
-
-        return await client.resources.deleteById(resource.id, apiVersion);
+        console.log("trying to delete resource:  " + resource);
+        if (resource.type.toLowerCase() === "Microsoft.ApiManagement/service/apis"){
+            console.log("deleting " + resource.id);
+            return await this.deleteApi(resource.id);
+        }
+        else {
+            let client = await this.factory.getResource("ResourceManagementClient");
+            console.log("deleting " + resource.id);
+            let apiVersion = await this.getLatestApiVersionForResource(resource);
+            return await client.resources.deleteById(resource.id, apiVersion);
+        }
     }
 
 
@@ -220,14 +222,15 @@ module.exports = class ResourceFactory {
             "path": basePath
         }
         let client = await this.factory.getResource("ApiManagementClient");
-        let result = await client.api.createOrUpdateWithHttpOperationResponse(resourceGroupName, serviceName, apiId, parameters, null);
-        return result;
+        let result = await client.api.createOrUpdate(resourceGroupName, serviceName, apiId, parameters, null);
+        this.serviceName = serviceName;
+        return this.withStack(result);
     }
 
 
-    async deleteApi(serviceName, apiId, resourceGroupName = this.resourceGroupName) {
+    async deleteApi(apiId, serviceName = this.serviceName, resourceGroupName = this.resourceGroupName) {
         let client = await this.factory.getResource("ApiManagementClient");
-        let result = await client.api.deleteMethodWithHttpOperationResponse(resourceGroupName, serviceName, apiId, "*", null);
+        let result = await client.api.deleteMethod(resourceGroupName, serviceName, apiId, "*", null);
         return result;
     }
 
@@ -252,11 +255,11 @@ module.exports = class ResourceFactory {
     }
 
 
-    async createCdnEndpoint(tags = {}, hostname = this.storageAccountName,  storageName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = "West US") {
+    async createCdnEndpoint(hostname, tags = {},  storageName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = "West US") {
         let path = url.parse(hostname, true);
         console.log(path.path);
         let endpointProperties = {
-            location: 'West US',
+            location: location,
             tags: tags,
             origins: [{
                 name: 'newname',
@@ -265,7 +268,7 @@ module.exports = class ResourceFactory {
         }
 
         let client = await this.factory.getResource("CdnManagementClient");
-        return client.endpoints.create(resourceGroupName, storageName, storageName, endpointProperties);
+        return this.withStack(client.endpoints.create(resourceGroupName, storageName, storageName, endpointProperties));
     }
 
 
@@ -299,6 +302,44 @@ module.exports = class ResourceFactory {
     }
 
 
+    async installFunctionExtensions(appName, resourceGroup = this.resourceGroupName){
+
+
+          let payload = {
+              "command": "dotnet build extensions.csproj -o bin --no-incremental --packages D:\\home\\.nuget",
+              "dir": "site\\wwwroot"
+          }
+
+        let client = await this.factory.getResource("WebAppManagementClient");
+        let publishingCredentials = await client.webApps.listPublishingCredentials(resourceGroup, appName, null);
+
+        return new Promise(function(resolve, reject) {
+            request({
+                url: `https://${appName}.scm.azurewebsites.net/api/command`,
+                method: 'POST',
+                body: payload,
+                json: true,
+                auth: {
+                    username: publishingCredentials.publishingUserName,
+                    password: publishingCredentials.publishingPassword
+                },
+                headers: {
+                    Accept: '*/*'
+                }
+            }, function(err, resp, body) {
+                if (err) {
+                    console.log(body);
+                    reject(err);
+                } else {
+                    resolve(resp);
+                }
+            })
+        });
+
+
+    }
+
+
     async uploadZipToKudu(appName, b64string, resourceGroup = this.resourceGroupName) {
         let buffer = Buffer.from(b64string, 'base64');
         let stream = new Stream.PassThrough();
@@ -307,17 +348,6 @@ module.exports = class ResourceFactory {
         let client = await this.factory.getResource("WebAppManagementClient");
         let publishingCredentials = await client.webApps.listPublishingCredentials(resourceGroup, appName, null);
         console.log("Trying to upload a file");
-        let config = {
-            headers: {
-                Accept: '*/*'
-            },
-            auth: {
-                username: publishingCredentials.publishingUserName,
-                password: publishingCredentials.publishingPassword
-            },
-            encoding: null,
-            body: stream
-        };
 
         return new Promise(function(resolve, reject) {
             request({
