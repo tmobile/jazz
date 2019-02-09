@@ -1,10 +1,8 @@
-// const CosmosDBManagementClient = require('azure-arm-cosmosdb');
 const CosmosClient = require("@azure/cosmos").CosmosClient;
 const logger = require("../logger.js");
 
 async function create(data, client) {
 
-  // let client  = new CosmosDBManagementClient(serviceClientCredentials, data.subscriptionId);
   let output = {};
   logger.debug('dbaccount create starting...');
   const dbAccount = await createAccount(data, client);

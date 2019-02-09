@@ -130,7 +130,6 @@ module.exports = class ResourceFactory {
             tags: tags,
             location: location,
             kind: "functionApp",
-          //  serverFarmId: "WestUSPlan",
             properties: {},
             siteConfig: {
                 appSettings: [
