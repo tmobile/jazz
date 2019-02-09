@@ -1,12 +1,9 @@
 {
-  "name": "jazz-azure-cli",
+  "name": "jazz_azure-create-service",
   "version": "1.0.4",
-  "description": "A jazz cli tool that allows creating and deleting api gateways. This is used internally by the Jazz framwork.",
+  "description": "A package for creating jazz azure resources.",
   "license": "MIT",
   "preferGlobal": true,
-  "bin": {
-    "jazz-azure-cli": "bin/jazz-azure-cli"
-  },
   "engines": {
     "node": ">=8"
   },
@@ -33,6 +30,7 @@
     "azure-storage": "^2.10.2",
     "escape-json-node": "^2.0.0",
     "form-data": "^2.3.3",
+    "mime-types": "^2.1.21",
     "minimist": "^1.2.0",
     "ms-rest-azure": "^2.5.9",
     "request": "^2.88.0",

@@ -1,6 +1,7 @@
 // const CosmosDBManagementClient = require('azure-arm-cosmosdb');
 const CosmosClient = require("@azure/cosmos").CosmosClient;
 const logger = require("../logger.js");
+
 async function create(data, client) {
 
   // let client  = new CosmosDBManagementClient(serviceClientCredentials, data.subscriptionId);
@@ -12,9 +13,9 @@ async function create(data, client) {
   output.stack = dbAccount;
 
   let connectionStrings = await client.databaseAccounts.listConnectionStrings(data.resourceGroupName, data.appName);
-  logger.debug('dbaccount connection string ' + connectionStrings);
-  output.connectionString = connectionStrings.connectionStrings[0].connectionString; //AzureWebJobsCosmosDBConnectionStringName
 
+  output.connectionString = connectionStrings.connectionStrings[0].connectionString; //AzureWebJobsCosmosDBConnectionStringName
+  logger.debug('dbaccount connection string ' + output.connectionString);
   await createDatabase(data, client, dbAccount.documentEndpoint);
 
   return output;

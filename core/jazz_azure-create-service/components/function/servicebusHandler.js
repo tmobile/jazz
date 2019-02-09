@@ -1,11 +1,9 @@
 
 
 async function create(data, client){
-  console.log('execute servicebus creation.......');
 
   let output = {};
 
-//  let client = new ServiceBusManagementClient(serviceClientCredentials, data.subscriptionId);
   output.stack = await createNamespaceAndQueue(data, client);
   output.connectionString = await getKey(client, data);
 

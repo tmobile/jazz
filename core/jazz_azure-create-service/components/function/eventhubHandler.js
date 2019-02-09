@@ -1,11 +1,7 @@
 
-
-
 async function create(data, client){
-  console.log('execute eventhub creation.......');
 
   let output = {};
-  // const client = new EventHubManagementClient(serviceClientCredentials, data.subscriptionId);
   output.stack = await createNamespaceAndHub(client, data);
   output.connectionString = await getKey(client, data);
 
@@ -17,7 +13,6 @@ async function createNamespaceAndHub(client, data) {
     location: data.location
   };
 
-  // let result = await client.namespaces.checkNameAvailability({name:data.uniqueName});
   const namespace = await client.namespaces.createOrUpdate(data.resourceGroupName, data.appName, params);
   await client.eventHubs.createOrUpdate(data.resourceGroupName, data.appName, data.resourceName, params);
   return namespace;

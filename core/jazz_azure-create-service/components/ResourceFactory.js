@@ -378,15 +378,11 @@ module.exports = class ResourceFactory {
 
     async createFunctionAppWithDependency(data) {
 
-
       let storageAccountKeys = await this.listStorageAccountKeys(data.appName);
-    let storageAccountKey = storageAccountKeys.keys[0].value;
-    console.log(storageAccountKey);
-
-
-    const resource = await functionCreateHandler.createDependency(data, this.factory);
-    await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, resource.connectionString);
-    return this.withStack(resource.stack);
+      let storageAccountKey = storageAccountKeys.keys[0].value;
+      const resource = await functionCreateHandler.createDependency(data, this.factory);
+      await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, resource.connectionString);
+      return this.withStack(resource.stack);
 
   }
 }
