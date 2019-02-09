@@ -4,7 +4,9 @@ const StorageManagementClient = require('azure-arm-storage');
 const ApiManagementClient = require("azure-arm-apimanagement");
 const CdnManagementClient = require("azure-arm-cdn");
 const msRestAzure = require('ms-rest-azure');
-
+const CosmosDBManagementClient = require('azure-arm-cosmosdb');
+const EventHubManagementClient = require('azure-arm-eventhub');
+const ServiceBusManagementClient = require('azure-arm-sb');
 
 module.exports = class ClientFactory {
 
@@ -21,6 +23,9 @@ module.exports = class ClientFactory {
         this.classList.set('StorageManagementClient', StorageManagementClient);
         this.classList.set('ApiManagementClient', ApiManagementClient);
         this.classList.set('CdnManagementClient', CdnManagementClient);
+        this.classList.set('CosmosDBManagementClient', CosmosDBManagementClient);
+        this.classList.set('EventHubManagementClient', EventHubManagementClient);
+        this.classList.set('ServiceBusManagementClient', ServiceBusManagementClient);
 
         this.instanceList = new Map();
     }
