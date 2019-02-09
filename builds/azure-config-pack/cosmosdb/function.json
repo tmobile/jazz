@@ -9,7 +9,7 @@
       "collectionName": "{resource_name}",
       "leaseCollectionName": "leases",
       "createLeaseCollectionIfNotExists": true,
-      "connectionStringSetting": "AzureWebJobsCosmosDBConnectionStringName"
+      "connectionStringSetting": "CONNECTION_STRING"
     }
   ]
 }
