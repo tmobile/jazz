@@ -61,7 +61,7 @@
 		<div   class='edit-service-overview-btn'>
 			<!-- <btn-jazz-secondary class='btn-edit-overview' *ngIf='showCancel'  text='CANCEL' (click)='onCancelClick()' ></btn-jazz-secondary> -->
 			<a  *ngIf='showCancel'  (click)='onCancelClick()'>CANCEL</a>
-			<btn-jazz-secondary [disablebtn]='(status_val > 4) || (status_val == 3) || branchname == "master"' class='btn-edit-overview'  *ngIf="editBtn" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
+			<btn-jazz-secondary [disablebtn]='(status_val > 4) || (status_val == 3) || branchname == "master" || !isAdminAccess' class='btn-edit-overview'  *ngIf="editBtn" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
 			<btn-jazz-secondary  class='btn-edit-overview' *ngIf='saveBtn' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onSaveClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
 			<!-- [style.borders]="edit_save=='SAVE'? 'none':'1px solid'"  -->
 		</div>

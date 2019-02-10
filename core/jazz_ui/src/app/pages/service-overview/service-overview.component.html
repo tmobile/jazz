@@ -120,7 +120,7 @@
     </div>
     <div class='metadata-body metadata-body-border' [class.no-border]='service.serviceType != "function"'>
       <div *ngIf="disp_show" class='metadata-buttons-wrap'>
-        <btn-jazz-secondary text="EDIT" (click)='onEditClick()'></btn-jazz-secondary>
+        <btn-jazz-secondary text="EDIT" [disablebtn]="!isAdminAccess" (click)='onEditClick()'></btn-jazz-secondary>
       </div>
       <div class='metadata-column'>
         <ul>

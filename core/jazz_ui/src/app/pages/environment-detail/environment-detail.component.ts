@@ -55,6 +55,9 @@ export class EnvironmentDetailComponent implements OnInit {
   private subscription: any;
   public assets;
   isENVavailable:boolean = false;
+  isDeployAccess: boolean = false;
+  isAdminAccess: boolean =false;
+  currentUser: any = {};
 
   constructor(
     private toasterService: ToasterService,
@@ -167,11 +170,21 @@ export class EnvironmentDetailComponent implements OnInit {
         this.service = response.data.data;
         if (environment.envName == 'oss') this.service = response.data;
         this.isFunction = this.service.type === "function";
+        if (this.service.policies && this.service.policies.length) {
+          this.service.policies.forEach(policy => {
+            if(policy.category === "deploy" && policy.permission === "write" && policy.userId === this.currentUser.username) {
+              this.isDeployAccess = true;
+            } else if (policy.category === "manage" && policy.permission === "admin" && policy.userId === this.currentUser.username) {
+              this.isAdminAccess = true;
+            }
+          });
+        }
         this.getAssets();
         this.setTabs();
         this.cache.set(id, this.service);
         this.onDataFetched(this.service);
         this.envoverview.notify(this.service);
+
       },
       err => {
         this.isLoadingService = false;
@@ -243,6 +256,7 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
     this.api_doc_name = env_oss.api_doc_name;
     this.sub = this.route.params.subscribe(params => {
       let id = params['id'];
