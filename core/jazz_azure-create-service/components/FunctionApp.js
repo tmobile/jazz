@@ -24,26 +24,82 @@ module.exports = class FunctionApp {
         });
     }
 
-    async create(){
-        await this.init().then(async () => {
-            try {
-              logger.debug('function app starting...');
+  async createStorage(){
+    await this.init().then(async () => {
+      try {
+        await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags, this.data.location);
+      }catch (exception) {
+        logger.error(exception);
+        throw exception;
+      }
+    });
+    return this.resourceFactory.resourceStack;
+  }
 
-              await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags, this.data.location);
-              // await this.resourceFactory.createHostingPlan();
-              await this.resourceFactory.createFunctionAppWithDependency(this.data);
-              await this.resourceFactory.uploadZipToKudu(this.data.stackName, this.data.zip);
-              if (this.data.eventSourceType) {
-                logger.debug('installing extension');
-                await this.resourceFactory.installFunctionExtensions(this.data.stackName);
-              }
+  async createEventResource(){
+    await this.init().then(async () => {
+      try {
+       await this.resourceFactory.createDependency(this.data);
 
-            }catch (exception) {
-              logger.error(exception);
-              //await this.resourceFactory.rollBack();
-              throw exception;
-            }
-        });
-        return this.resourceFactory.resourceStack;
-    }
+      }catch (exception) {
+        logger.error(exception);
+        throw exception;
+      }
+    });
+    logger.debug('done');
+    return this.resourceFactory.resourceStack;
+  }
+
+  async createfunction(){
+    await this.init().then(async () => {
+      try {
+        await this.resourceFactory.createFunctionWithConnectionString(this.data);
+      }catch (exception) {
+        logger.error(exception);
+        throw exception;
+      }
+    });
+    return this.resourceFactory.resourceStack;
+  }
+
+
+  async deployFunction(){
+    await this.init().then(async () => {
+      try {
+        validator.notNull(data.zip, 'zip');
+        await this.resourceFactory.uploadZipToKudu(this.data.stackName, this.data.zip);
+
+      }catch (exception) {
+        logger.error(exception);
+        throw exception;
+      }
+    });
+    return this.resourceFactory.resourceStack;
+  }
+
+  async installFunctionExtensions(){
+    await this.init().then(async () => {
+      try {
+        logger.debug('installing extension');
+        await this.resourceFactory.installFunctionExtensions(this.data.stackName);
+      }catch (exception) {
+        logger.error(exception);
+        throw exception;
+      }
+    });
+    return this.resourceFactory.resourceStack;
+  }
+
+  async createDatabase(){
+    await this.init().then(async () => {
+      try {
+        await this.resourceFactory.createDatabase(this.data);
+      }catch (exception) {
+        logger.error(exception);
+        throw exception;
+      }
+    });
+    return;
+  }
+
 }

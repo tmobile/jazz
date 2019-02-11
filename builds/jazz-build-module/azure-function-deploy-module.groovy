@@ -65,8 +65,7 @@ def invokeAzureCreation(serviceInfo, azureCreatefunction){
     string(credentialsId: 'AZ_SUBSCRIPTIONID', variable: 'AZURE_SUBSCRIPTION_ID')]) {
 
     def type = azureUtil.getExtensionName(serviceInfo)
-    def myData = [
-      "zip" : zip,
+    def data = [
       "resourceGroupName" : configLoader.AZURE.RESOURCE_GROUP,
       "appName" : serviceInfo.storageAccountName,
       "stackName" : serviceInfo.stackName,
@@ -81,16 +80,41 @@ def invokeAzureCreation(serviceInfo, azureCreatefunction){
 
     def payload = [
       "className" : "FunctionApp",
-      "command" : "create",
-      "data" : myData
+      "command" : "createStorage",
+      "data" : data
     ]
 
-    def payloadString = JsonOutput.toJson(payload)
-    invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY" , functionName: azureCreatefunction, payload: payloadString, synchronous: true])
-    invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY" , functionName: azureCreatefunction, payload: payloadString, synchronous: true])
-    invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY" , functionName: azureCreatefunction, payload: payloadString, synchronous: true])
+
+    executeLambda(data, azureCreatefunction, "createStorage")
+    executeLambda(data, azureCreatefunction, "createEventResource")
+    executeLambda(data, azureCreatefunction, "createfunction")
+    data.zip = zip
+    executeLambda(data, azureCreatefunction, "deployFunction")
+
+    if (type) {
+      data.zip = ""
+      executeLambda(data, azureCreatefunction, "installFunctionExtensions")
+
+      if (type == 'CosmosDB') {
+        executeLambda(data, azureCreatefunction, "createDatabase")
+      }
+    }
+
 
   }
+}
+
+def executeLambda(data, azureCreatefunction, commandName) {
+
+  def payload = [
+    "className": "FunctionApp",
+    "command"  : commandName,
+    "data"     : data
+  ]
+
+  def payloadString = JsonOutput.toJson(payload)
+  invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY", functionName: azureCreatefunction, payload: payloadString, synchronous: true])
+
 }
 
 def loadAzureConfig(serviceInfo) {

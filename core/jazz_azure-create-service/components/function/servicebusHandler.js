@@ -2,12 +2,7 @@
 
 async function create(data, client){
 
-  let output = {};
-
-  output.stack = await createNamespaceAndQueue(data, client);
-  output.connectionString = await getKey(client, data);
-
-  return output;
+  return await createNamespaceAndQueue(data, client);
 }
 
 async function createNamespaceAndQueue(data, client){
@@ -21,13 +16,14 @@ async function createNamespaceAndQueue(data, client){
   return namespace;
 }
 
-async function getKey(client, data) {
+async function getConnectionString(data, client) {
 
   const keys = await client.namespaces.listKeys(data.resourceGroupName, data.appName, 'RootManageSharedAccessKey');
-  return keys.primaryKey;
+  return keys.primaryConnectionString;
 }
 
 
 module.exports = {
-  create
+  create,
+  getConnectionString
 };
