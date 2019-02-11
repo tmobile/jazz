@@ -37,6 +37,7 @@
   "BUILDPACKMAP": {
     "api": "build-pack-api",
     "function": "build-pack-lambda",
-    "website": "build-pack-website"
+    "website": "build-pack-website",
+    "sls-app": "build-pack-sls-app"    
   }
 }
