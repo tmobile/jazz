@@ -71,7 +71,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   private subscription:any;
 
   @Input() service: any = {};
-  
+  @Input() isAdminAccess:boolean = false;
   temp_description:string;
   put_payload:any = {};
   services = {

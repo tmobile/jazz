@@ -70,6 +70,8 @@ export class ServiceDetailComponent implements OnInit {
   test: any = "delete testing";
   disabled_tab: boolean = false;
   refreshTabClicked: boolean = false;
+  isAdminAccess: boolean = false;
+  currentUser: any = {}
 
 
   private sub: any;
@@ -201,6 +203,13 @@ export class ServiceDetailComponent implements OnInit {
       this.isGraphLoading = false;
       this.selectedTabComponent.refresh_env();
       this.setTabs();
+      if(service && service.policies && service.policies.length) {
+        service.policies.forEach(policy => {
+          if (policy.category === "manage" && policy.permission === "admin" && policy.userId === this.currentUser.username) {
+            this.isAdminAccess = true;
+          }
+        });
+      }
     }, (err) => {
       if (err.status == "404") {
         this.router.navigateByUrl('404');
@@ -400,7 +409,7 @@ export class ServiceDetailComponent implements OnInit {
   }
 
   ngOnInit() {
-
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
     this.breadcrumbs = [
       {
         'name': this.service['name'],
