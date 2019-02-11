@@ -277,7 +277,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
     this.addQueryParam('service=', this.service.name, false);
     this.addQueryParam('environment=', this.env, false);
 
-    this.subscription = this.http.get(this.relativeUrl).subscribe(
+    this.subscription = this.http.get(this.relativeUrl, null, this.service.id).subscribe(
       (response) => {
 
         if((response.data == undefined) || (response.data.length == 0) || (response.data.deployments.length == 0 ) ){
@@ -641,7 +641,7 @@ rebuild(){
   this.disableBuild = true;
   this.isRebuildReq = true;
   var rebuild_url = '/jazz/deployments/';
-  this.http.post(rebuild_url+this.rebuild_id+'/re-build').subscribe(
+  this.http.post(rebuild_url+this.rebuild_id+'/re-build',{},this.service.id).subscribe(
     (response) => {
       let successMessage = this.toastmessage.successMessage(response, "retryDeploy");
       this.toast_pop('success',"",successMessage+this.service.name);      

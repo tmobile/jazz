@@ -271,7 +271,7 @@ export class ServiceAccessControlComponent implements OnInit {
   //get policies for provided service
   getAclPolicies(serviceId) {
     this.isLoading = true;
-    this.http.get(`/jazz/acl/policies?serviceId=${serviceId}`).subscribe(
+    this.http.get(`/jazz/acl/policies?serviceId=${serviceId}`,null,serviceId).subscribe(
       response => {
         if (response && response.data && response.data.policies && response.data.policies.length) {
           this.originalAccessDetails = JSON.parse(JSON.stringify(response.data.policies))
