@@ -178,7 +178,7 @@ def loadServiceConfigurationData() {
             updateConfigValue("{conf-region}", region)
         }
 
-        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer") || (service_name.trim() == "jazz_cognito-admin-authorizer")) {
+        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer") || (service_name.trim() == "jazz_cognito-admin-authorizer") || (service_name.trim() == "jazz_cognito-token-authorizer")) {
             updateConfigValue("{conf-user-pool-id}", config_loader.AWS.COGNITO.USER_POOL_ID)
             updateConfigValue("{conf-client-id}", config_loader.AWS.COGNITO.CLIENT_ID)
             updateConfigValue("{conf-region}", region)
