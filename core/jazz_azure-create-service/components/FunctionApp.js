@@ -66,7 +66,7 @@ module.exports = class FunctionApp {
   async deployFunction(){
     await this.init().then(async () => {
       try {
-        validator.notNull(data.zip, 'zip');
+        validator.notNull(this.data.zip, 'zip');
         await this.resourceFactory.uploadZipToKudu(this.data.stackName, this.data.zip);
 
       }catch (exception) {
