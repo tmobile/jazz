@@ -78,13 +78,6 @@ def invokeAzureCreation(serviceInfo, azureCreatefunction){
       "resourceName": serviceInfo.resourceName
     ]
 
-    def payload = [
-      "className" : "FunctionApp",
-      "command" : "createStorage",
-      "data" : data
-    ]
-
-
     executeLambda(data, azureCreatefunction, "createStorage")
     executeLambda(data, azureCreatefunction, "createEventResource")
     executeLambda(data, azureCreatefunction, "createfunction")
@@ -208,19 +201,5 @@ def registerBindingExtension(type) {
 
 }
 
-////https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer#cron-expressions
-////TODO this terrible method will be removed when we fix the cron expression from UI
-
-//def sendAssetCompletedEvent(resourceName, resourceType, serviceInfo) {
-//  def id
-//
-//  if (resourceType == "functionapp" || resourceType == "eventhubs_namespace" || resourceType == "servicebus_namespace" || resourceType == "storage_account" || resourceType == "cosmosdb") {
-//    id = azureUtil.getResourceId(resourceType.replace("_", " "), resourceName)
-//  } else  {
-//    id = resourceName
-//  }
-//
-//  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, resourceType, serviceInfo.serviceCatalog), serviceInfo.envId)
-//}
 
 return this
