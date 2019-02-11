@@ -23,20 +23,21 @@ def initialize(configLoader, utilModule, scmModule, events, azureUtil){
 
 }
 
-def setAzureVar() {
+def setAzureVar(envId) {
 
   if (configLoader.AZURE && configLoader.AZURE.RESOURCE_GROUPS) {
-    configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.DEVELOPMENT
-  } else {
-    configLoader.AZURE.RESOURCE_GROUP = "heinajazzdevrg"
-    configLoader.AZURE.LOCATION = "westus2"
+    if (envId == 'prod') {
+      configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.PRODUCTION
+    } else {
+      configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.DEVELOPMENT
+    }
 
   }
 
 }
 
 def createFunction(serviceInfo, azureCreatefunction) {
-  setAzureVar()
+  setAzureVar(serviceInfo.envId)
   loadAzureConfig(serviceInfo)
   invokeAzureCreation(serviceInfo, azureCreatefunction)
 //  sendAssetComplete(serviceInfo)
