@@ -68,7 +68,7 @@ export class JenkinsStatusComponent implements OnInit {
     var urlParams = new URLSearchParams(url_search);
     let action = urlParams.get("action"); 
     let id = urlParams.get("id"); 
-    this.http.post("/jazz/deployments/"+id+"/re-build",{}).subscribe(
+    this.http.post("/jazz/deployments/"+id+"/re-build",{},id).subscribe(
       (response) => {
         let successMessage = (response.data.message).replace("."," ");
         this.toast_pop('success', "", successMessage+"successfully");
