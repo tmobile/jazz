@@ -142,7 +142,7 @@
                   {
                     "{envPrefix}-{domain}-cognito-authorizer": []
                   }
-                ],             
+                ],
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
                     "passthroughBehavior": "when_no_templates",
@@ -201,7 +201,7 @@
 			"type": "token"
 		  }
 		}
-	},  
+	},
     "definitions": {
         "400ErrorResponse": {
             "type": "object",
@@ -266,7 +266,8 @@
                     "enum": [
                         "api",
                         "lambda",
-                        "website"
+                        "website",
+                        "sls-app"
                     ]
                 },
                 "service_name": {
@@ -308,10 +309,13 @@
                     "type": "string",
                     "description":"Slack channel to receive all the service notifications"
                 },
-				"require_internal_access": {
+                "require_internal_access": {
                     "type": "boolean",
                     "description":"Does service require access to internal SLF network and resources"
-                }
+                },
+                "deployment-descriptor": {
+                   "type": "string",
+                   "description":"Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
             }
         }
     }

@@ -20,11 +20,11 @@ const request = require('request');
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const CronParser = require("./components/cron-parser.js");
-const configModule = require("./components/config.js"); 
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const util = require('util');
 const validateARN = require("./components/validate-arn.js");
-const crud = require("./components/crud")(); 
+const crud = require("./components/crud")();
 
 /**
     Serverless create service
@@ -59,6 +59,8 @@ var handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'Service Name' can have up to 20 characters")));
         } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
+        } else if(service_creation_data.service_type === "sls-app" && (!service_creation_data.deployment_descriptor)) {
+          return cb(JSON.stringify(errorHandler.throwInputValidationError(`'deployment_descriptor' field is required for  ${service_creation_data.service_type}`)));
         }
 
         user_id = event.principalId;
@@ -302,6 +304,25 @@ var getServiceData = (service_creation_data, authToken, configData) => {
 
                 }
             }
+        }
+
+        if(service_creation_data.service_type === "sls-app") {
+          const deployDescrValidator = require('./components/validate-sls-yml');
+          try {
+            const outstandingResources = deployDescrValidator.validateResources(service_creation_data.deployment_descriptor);
+            if(outstandingResources.length) { // some resources that are not allowed were found this is bad
+              reject({result: 'inputError', message: `Invalid deployment_descriptor. The resource types not allowed ${outstandingResources}`});
+            } else {
+              const outstandingEvents = deployDescrValidator.validateEvents(service_creation_data.deployment_descriptor);
+              if(outstandingEvents.length) {
+                reject({result: 'inputError', message: `Invalid deployment_descriptor. The event types not allowed ${outstandingEvents}`});
+              } else {
+                inputs.DEPLOYMENT_DESCRIPTOR = service_creation_data.deployment_descriptor;
+              }
+            }
+          } catch(e) {
+            reject({result: 'inputError', message: `Invalid deployment_descriptor format. Nested exception is ${e}`});
+          }
         }
 
         inputs.METADATA = serviceMetadataObj;

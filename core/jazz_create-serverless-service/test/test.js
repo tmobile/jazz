@@ -221,6 +221,15 @@ describe('create-serverless-service', function () {
       assert.isTrue(invalidCase);
     });
 
+    it("should inform user of error if no deployment descriptor supplied for sls-app type of service", () => {
+      let emptyDeploymentDescriptor = "";
+      let errMessage = "'deployment_descriptor' field is required";
+      let errType = "BadRequest";
+      event.body.service_type = "sls-app"; // Spoofing the new type for this test
+      let emptyDeploymentDescriptorCase = checkCase("body", "deployment_descriptor", emptyDeploymentDescriptor, errMessage, errType);
+      assert.isTrue(emptyDeploymentDescriptorCase);
+    });
+
     /*
      * Given an event with no principalId provided, handler() indicates user isn't authorized
      * @param {object} event, contains a principalId value that is either undefined or null
@@ -482,9 +491,9 @@ describe('create-serverless-service', function () {
           source: "temp-" + each + "-source",
           action: "temp-" + each + "-action"
         }
-        
+
         service_creation_data.events = [eachEvent]
-        
+
         index.getServiceData(service_creation_data, authToken, config)
         .then((input) => {
           let action = 'event_action_' + each;
@@ -569,6 +578,19 @@ describe('create-serverless-service', function () {
       let callFunction = index.createService(input);
       stub.restore();
       assert.isTrue(spy.called);
+    })
+
+    it("should an http POST containing the 'deployment_descriptor' field for sls-app service", () => {
+      const theSpy = sinon.spy();
+      input.TYPE = 'sls-app';
+      input.DEPLOYMENT_DESCRIPTOR = 'service: cool';
+      stub = sinon.stub(request, "Request", theSpy);
+      let callFunction = index.createService(input);
+      stub.restore();
+
+      const requestCalledWith = theSpy.args[0][0].json;
+      assert.equal('sls-app', requestCalledWith.type);
+      assert.equal('service: cool', requestCalledWith.deployment_descriptor);
     })
 
     it("should Return service id of Created Service in case of successfull service creation", () => {
