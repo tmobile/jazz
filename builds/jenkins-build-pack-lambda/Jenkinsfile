@@ -255,9 +255,11 @@ node() {
           ]
 
           echo "service info $serviceInfo"
+          def azureCreatefunction = "${configLoader.INSTANCE_PREFIX}-jazz-azure-create-service-prod"
+
           try {
-            def endpoint = azureDeployer.createFunction(serviceInfo)
-            environmentDeploymentMetadata.setEnvironmentEndpoint(endpoint)
+            azureDeployer.createFunction(serviceInfo, azureCreatefunction)
+//            environmentDeploymentMetadata.setEnvironmentEndpoint(endpoint)
 
             sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner)
 

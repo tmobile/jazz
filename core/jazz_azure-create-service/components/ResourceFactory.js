@@ -4,7 +4,7 @@ const request = require('request');
 const AdmZip = require('adm-zip');
 const mime = require('mime-types');
 const url = require('url');
-
+const functionCreateHandler = require('./function/functionCreateHandler');
 
 const ClientFactory = require('./ClientFactory');
 
@@ -125,12 +125,11 @@ module.exports = class ResourceFactory {
     }
 
 
-    async createFunctionApp( appName, storageAccountKey, tags = {}, storageAccountName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = 'westus') {
+    async createFunctionApp( appName, storageAccountKey, tags = {}, storageAccountName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = 'westus', connectionString = '') {
         let envelope = {
             tags: tags,
             location: location,
             kind: "functionApp",
-            serverFarmId: "WestUSPlan",
             properties: {},
             siteConfig: {
                 appSettings: [
@@ -162,6 +161,10 @@ module.exports = class ResourceFactory {
                         "name": "WEBSITE_CONTENTSHARE",
                         "value": storageAccountName
                     },
+                    {
+                      "name": "CONNECTION_STRING",
+                      "value": connectionString
+                    }
                 ]
             }
         }
@@ -371,4 +374,14 @@ module.exports = class ResourceFactory {
             })
         });
     }
+
+    async createFunctionAppWithDependency(data) {
+
+      let storageAccountKeys = await this.listStorageAccountKeys(data.appName);
+      let storageAccountKey = storageAccountKeys.keys[0].value;
+      const resource = await functionCreateHandler.createDependency(data, this.factory);
+      await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, resource.connectionString);
+      return this.withStack(resource.stack);
+
+  }
 }

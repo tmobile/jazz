@@ -1,4 +1,5 @@
 #!groovy?
+import groovy.json.JsonOutput
 import groovy.transform.Field
 
 /*
@@ -20,12 +21,6 @@ def initialize(configLoader, utilModule, scmModule, events, azureUtil){
   this.events = events
   this.azureUtil = azureUtil
 
-
-//  configLoader.AZURE.APP_INSIGHTS_KEY = sh (
-//      script: "az resource show  -n ${configLoader.AZURE.APP_INSIGHTS} -g ${configLoader.AZURE.RESOURCE_GROUP} --resource-type 'Microsoft.Insights/components' --query properties.InstrumentationKey --output tsv",
-//      returnStdout: true
-//  ).trim()
-
 }
 
 def setAzureVar() {
@@ -38,93 +33,65 @@ def setAzureVar() {
 
   }
 
+}
 
-  configLoader.AZURE.APP_INSIGHTS = "heinajazzdevinsights"
-  configLoader.AZURE.APP_INSIGHTS_KEY = sh (
-    script: "az resource show  -n ${configLoader.AZURE.APP_INSIGHTS} -g ${configLoader.AZURE.RESOURCE_GROUP} --resource-type 'Microsoft.Insights/components' --query properties.InstrumentationKey --output tsv",
-    returnStdout: true
-  ).trim()
+def createFunction(serviceInfo, azureCreatefunction) {
+  setAzureVar()
+  loadAzureConfig(serviceInfo)
+  invokeAzureCreation(serviceInfo, azureCreatefunction)
+//  sendAssetComplete(serviceInfo)
+
+//    def hostname = azureUtil.getResourceHostname("functionapp", serviceInfo.stackName)
+//    def functionName = serviceInfo.serviceCatalog['service']
+//    def masterKey = azureUtil.getMasterKey(serviceInfo.stackName)
+//    def endpoint = "https://$hostname/admin/functions/$functionName?code=$masterKey"
+//    return endpoint
 
 }
 
-def createFunction(serviceInfo) {
+def invokeAzureCreation(serviceInfo, azureCreatefunction){
 
-    setAzureVar()
-    loadAzureConfig(serviceInfo)
-    createAsset(serviceInfo)
-    createFunctionApp(serviceInfo)
+  sh "rm -rf _azureconfig"
 
-    def hostname = azureUtil.getResourceHostname("functionapp", serviceInfo.stackName)
-    def functionName = serviceInfo.serviceCatalog['service']
-    def masterKey = azureUtil.getMasterKey(serviceInfo.stackName)
-    def endpoint = "https://$hostname/admin/functions/$functionName?code=$masterKey"
-    return endpoint
+  sh "zip -qr content.zip ."
+  echo "trying to encode zip as 64bit string"
+  sh 'base64 content.zip -w 0 > b64zip'
+  def zip = readFile "b64zip"
 
-}
+  withCredentials([
+    string(credentialsId: 'AZ_PASSWORD', variable: 'AZURE_CLIENT_SECRET'),
+    string(credentialsId: 'AZ_CLIENTID', variable: 'AZURE_CLIENT_ID'),
+    string(credentialsId: 'AZ_TENANTID', variable: 'AZURE_TENANT_ID'),
+    string(credentialsId: 'AZ_SUBSCRIPTIONID', variable: 'AZURE_SUBSCRIPTION_ID')]) {
 
-def createAsset(serviceInfo) {
+    def type = azureUtil.getExtensionName(serviceInfo)
+    def myData = [
+      "zip" : zip,
+      "resourceGroupName" : configLoader.AZURE.RESOURCE_GROUP,
+      "appName" : serviceInfo.storageAccountName,
+      "stackName" : serviceInfo.stackName,
+      "tenantId" : AZURE_TENANT_ID,
+      "subscriptionId" : AZURE_SUBSCRIPTION_ID,
+      "clientId" : AZURE_CLIENT_ID,
+      "clientSecret" : AZURE_CLIENT_SECRET,
+      "location": configLoader.AZURE.LOCATION,
+      "eventSourceType": type,
+      "resourceName": serviceInfo.resourceName
+    ]
 
-  def config = serviceInfo.serviceCatalog
-  def envId = serviceInfo.envId
-  def resourceName = serviceInfo.resourceName
+    def payload = [
+      "className" : "FunctionApp",
+      "command" : "create",
+      "data" : myData
+    ]
 
-  def storageAccountName = serviceInfo.storageAccountName
-  azureUtil.createStorageAccount(storageAccountName)
-  sendAssetCompletedEvent(storageAccountName, "storage_account", serviceInfo)
+    def payloadString = JsonOutput.toJson(payload)
+    invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY" , functionName: azureCreatefunction, payload: payloadString, synchronous: true])
+    invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY" , functionName: azureCreatefunction, payload: payloadString, synchronous: true])
+    invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY" , functionName: azureCreatefunction, payload: payloadString, synchronous: true])
 
-  if (serviceInfo.isQueueEnabled) {
-    def namespace = azureUtil.getNamespace(serviceInfo)
-    azureUtil.createQueue(namespace, resourceName)
-    sendAssetCompletedEvent(resourceName, "service_bus", serviceInfo)
-    sendAssetCompletedEvent(namespace, "servicebus_namespace", serviceInfo)
-
-  }
-
-  if (serviceInfo.isStreamEnabled) {
-    def namespace = azureUtil.getNamespace(serviceInfo)
-    azureUtil.createEventHub(namespace, resourceName)
-    sendAssetCompletedEvent(resourceName, "event_hubs", serviceInfo)
-    sendAssetCompletedEvent(namespace, "eventhubs_namespace", serviceInfo)
-
-  }
-
-  if (serviceInfo.isStorageEnabled) {
-    azureUtil.createStorageBlob(resourceName, storageAccountName)
-    sendAssetCompletedEvent(resourceName, "storage_container", serviceInfo)
-  }
-
-  if (serviceInfo.isDbEnabled) {
-
-    def accountName = azureUtil.getDatabaseAccountName(serviceInfo)
-    azureUtil.createCosmosDB(accountName, resourceName)
-    sendAssetCompletedEvent(accountName, "cosmosdb", serviceInfo)
   }
 }
-
-def createFunctionApp(serviceInfo) {
-
-  def stackName = serviceInfo.stackName
-
-  azureUtil.createFunctionApp(stackName, serviceInfo.storageAccountName)
-  sendAssetCompletedEvent(stackName, "functionapp", serviceInfo)
-
-  azureUtil.setAppInsights(stackName)
-
-  if (serviceInfo.isQueueEnabled || serviceInfo.isStreamEnabled) {
-    def namespace = azureUtil.getNamespace(serviceInfo)
-    def connStr = azureUtil.getRootManageSharedAccessKey(serviceInfo.resourceType, namespace)
-
-    azureUtil.setSASConnectionString(stackName, connStr)
-  }
-  if (serviceInfo.isDbEnabled) {
-    def accountName = azureUtil.getDatabaseAccountName(serviceInfo)
-    def connStr = azureUtil.getPrimaryConnectionString(serviceInfo.resourceType, accountName)
-    azureUtil.setFunctionAppSettingVariable(stackName, "AzureWebJobsCosmosDBConnectionStringName", connStr)
-  }
-  azureUtil.deployFunction(stackName)
-
-}
-
 
 def loadAzureConfig(serviceInfo) {
   checkoutConfigRepo(serviceInfo.repoCredentialId)
@@ -214,23 +181,22 @@ private void writeConfig(functionName, type, resourceName, serviceInfo, version)
 def registerBindingExtension(type) {
 
   sh "cp _azureconfig/extensions.csproj ."
-  sh "cp -rf _azureconfig/${type}_bin ./bin"
 
 }
 
 ////https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer#cron-expressions
 ////TODO this terrible method will be removed when we fix the cron expression from UI
 
-def sendAssetCompletedEvent(resourceName, resourceType, serviceInfo) {
-  def id
-
-  if (resourceType == "functionapp" || resourceType == "eventhubs_namespace" || resourceType == "servicebus_namespace" || resourceType == "storage_account" || resourceType == "cosmosdb") {
-    id = azureUtil.getResourceId(resourceType.replace("_", " "), resourceName)
-  } else  {
-    id = resourceName
-  }
-
-  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, resourceType, serviceInfo.serviceCatalog), serviceInfo.envId)
-}
+//def sendAssetCompletedEvent(resourceName, resourceType, serviceInfo) {
+//  def id
+//
+//  if (resourceType == "functionapp" || resourceType == "eventhubs_namespace" || resourceType == "servicebus_namespace" || resourceType == "storage_account" || resourceType == "cosmosdb") {
+//    id = azureUtil.getResourceId(resourceType.replace("_", " "), resourceName)
+//  } else  {
+//    id = resourceName
+//  }
+//
+//  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, resourceType, serviceInfo.serviceCatalog), serviceInfo.envId)
+//}
 
 return this
