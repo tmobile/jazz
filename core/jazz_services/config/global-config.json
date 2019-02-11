@@ -97,7 +97,14 @@
             "editable": true,
             "isEmptyAllowed": false,
             "type": "Object"
-        }       
+        },
+        {
+            "key": "deployment_descriptor",
+            "required": false,
+            "editable": false,
+            "isEmptyAllowed": false,
+            "type": "String"
+         }
     ],
     "SERVICE_STATUS": [
         "creation_started",
@@ -131,6 +138,14 @@
         {
             "type": "website",
             "fields": []
+        },
+        {
+            "type": "sls-app",
+            "fields": [
+                {
+                    "key": "runtime"
+                }
+            ]
         }
     ]
 }

@@ -1325,7 +1325,7 @@
                 "type": {
                     "type": "string",
                     "description": "Service type",
-                    "enum": ["api", "function", "website"]
+                    "enum": ["api", "function", "website", "sls-app"]
                 },
                 "runtime": {
                     "type": "string",
@@ -1400,7 +1400,7 @@
                 "type": {
                     "type": "string",
                     "description": "Service type",
-                    "enum": ["api", "function", "website"]
+                    "enum": ["api", "function", "website", "sls-app"]
                 },
                 "runtime": {
                     "type": "string",
@@ -1445,6 +1445,10 @@
                         "type": "string"
                     },
                     "description": "Tags for the service"
+                },
+                "deployment_descriptor": {
+                    "type": "string",
+                    "description": "Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
                 }
             }
         },
@@ -1483,7 +1487,7 @@
                 "type": {
                     "type": "string",
                     "description": "Service type",
-                    "enum": ["api", "function", "website"]
+                    "enum": ["api", "function", "website", "sls-app"]
                 },
                 "runtime": {
                     "type": "string",
@@ -1528,6 +1532,10 @@
                         "type": "string"
                     },
                     "description": "Tags for the service"
+                },
+                "deployment_descriptor": {
+                    "type": "string",
+                    "description": "Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
                 }
             }
         },
