@@ -196,7 +196,7 @@ export class ServiceDetailComponent implements OnInit {
 
   fetchService(id) {
     this.isLoadingService = true;
-    this.http.get('/jazz/services/' + id).subscribe(response => {
+    this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
       this.cache.set(id, service);
       this.onDataFetched(service);
@@ -318,7 +318,7 @@ export class ServiceDetailComponent implements OnInit {
       "id": this.service.id
     };
     this.deleteServiceStatus.emit(this.deleteServiceVal);
-    this.subscription = this.http.post('/jazz/delete-serverless-service', payload)
+    this.subscription = this.http.post('/jazz/delete-serverless-service', payload, this.service.id)
       .subscribe(
         (Response) => {
           var update = {

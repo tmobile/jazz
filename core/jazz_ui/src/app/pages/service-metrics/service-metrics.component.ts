@@ -108,7 +108,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     return this.http.get('/jazz/environments', {
       domain: this.service.domain,
       service: this.service.name
-    }).toPromise()
+    }, this.service.id).toPromise()
       .then((response: any) => {
         if (response && response.data && response.data.environment && response.data.environment.length) {
           let serviceEnvironments = _(response.data.environment).map('logical_id').uniq().value();
@@ -154,7 +154,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
       }
     };
-    return this.http.post(request.url, request.body)
+    return this.http.post(request.url, request.body, this.service.id)
       .toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
