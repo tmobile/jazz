@@ -254,7 +254,7 @@ module.exports = class ResourceFactory {
             }
         };
         let client = await this.factory.getResource("CdnManagementClient");
-        return client.profiles.create(resourceGroupName, storageName, standardCreateParameters)
+        return this.withStack(client.profiles.create(resourceGroupName, storageName, standardCreateParameters));
     }
 
 
