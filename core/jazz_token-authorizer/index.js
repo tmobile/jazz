@@ -14,11 +14,10 @@
 // limitations under the License.
 // =========================================================================
 
-'use strict';
 const errorHandlerModule = require("./components/error-handler.js");
-
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
+
 const jwt = require("jsonwebtoken");
 const request = require('request');
 const jwkToPem = require('jwk-to-pem');
