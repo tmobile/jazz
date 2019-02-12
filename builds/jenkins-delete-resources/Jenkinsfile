@@ -12,13 +12,13 @@ import groovy.json.JsonOutput
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 
-@Field def repo_credential_id = "jazz_repocreds"
-@Field def aws_credential_id = "jazz_awscreds"
-@Field def region = "us-east-1"
-@Field def instance_prefix = "jazz20190206"
-@Field def repo_base = "jazzdailybb-926760108.us-east-1.elb.amazonaws.com"
-@Field def repo_core = "slf"
-@Field def scm_type = "bitbucket"
+@Field def repo_credential_id 
+@Field def aws_credential_id 
+@Field def region 
+@Field def instance_prefix 
+@Field def repo_base 
+@Field def repo_core
+@Field def scm_type 
 
 @Field def configModule
 @Field def configLoader
@@ -240,7 +240,7 @@ def detachIamPolicies(roleName) {
   for (policy in attachedPolicies) {
    def policyArn = policy["PolicyArn"]
    echo "Policy Arn is ${policyArn}"
-   //sh "aws iam detach-role-policy --role-name ${roleName} --policy-arn ${policyArn} &"
+    sh "aws iam detach-role-policy --role-name ${roleName} --policy-arn ${policyArn} &"
    sleep(time: 30, unit: "SECONDS")
   }
  } else {
@@ -306,7 +306,7 @@ def getEtag(originAccessId, regionAws) {
  def eTag = ""
  //get all policies attached to a role
  def originAccessIdentity = sh(script: "aws cloudfront get-cloud-front-origin-access-identity --id ${originAccessId} --region ${regionAws}", returnStdout: true).trim()
- def identity = new JsonSlurper().parseText(originAccessIdentity)
+ def identity = parseJson(originAccessIdentity)
  eTag = identity["ETag"]
  return eTag
 }
