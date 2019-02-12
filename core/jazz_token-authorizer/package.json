@@ -1,5 +1,5 @@
 {
-    "name": "jazz_cognito-token-authorizer",
+    "name": "jazz_token-authorizer",
     "version": "1.0.0",
     "description": "Cognito custom authorizer for token validation",
     "main": "index.js",

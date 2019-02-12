@@ -14,16 +14,14 @@
 // limitations under the License.
 // =========================================================================
 
-'use strict';
 const errorHandlerModule = require("./components/error-handler.js");
-
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
+
 const jwt = require("jsonwebtoken");
 const request = require('request');
 const jwkToPem = require('jwk-to-pem');
 const AWS = require('aws-sdk');
-const _ = require('lodash');
 
 var pems;
 var cognitoUserPoolEndpoint;
@@ -170,7 +168,7 @@ module.exports.handler = function (event, context, cb) {
                             resource += apiGatewayArnTmp[3];
                         }
                         //For more information on specifics of generating policy, refer to blueprint for API Gateway's Custom authorizer in Lambda console
-                        var policy = new AuthPolicy(emailAddress.Value, awsAccountId, apiOptions);
+                        var policy = new AuthPolicy(emailAddress[0].Value, awsAccountId, apiOptions);
                         policy.allowAllMethods();
                         context.succeed(policy.build());
                     }
