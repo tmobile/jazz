@@ -245,10 +245,12 @@ node() {
             } else {
               logicalId = environment_logical_id.split('-')[0] //13 + 10
             }
+            def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
+            def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
 
             def serviceInfo = [
               'stackName'         : stackName,
-              'storageAccountName': "${configLoader.INSTANCE_PREFIX}${logicalId}",
+              'storageAccountName': storageName,
               "repoCredentialId"  : repo_credential_id,
               'envId'             : environment_logical_id,
               'serviceCatalog'    : config,
