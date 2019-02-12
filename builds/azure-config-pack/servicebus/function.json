@@ -6,7 +6,7 @@
       "type": "serviceBusTrigger",
       "direction": "in",
       "queueName": "{resource_name}",
-      "connection": "SAS_CONNSTR"
+      "connection": "CONNECTION_STRING"
     }
   ]
 }
