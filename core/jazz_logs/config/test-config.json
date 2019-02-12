@@ -5,5 +5,43 @@
 	"VALID_ENVIRONMENTS" : ["prod", "stg", "dev", "test"],
 	"VALID_CATEGORIES" : ["api", "function"],
 	"VALID_LOGTYPES" : ["warn", "error", "info", "verbose", "debug"],
-	"ENV_PREFIX" : "bA11r00m-dAnCe"
+	"ENV_PREFIX" : "bA11r00m-dAnCe",
+	"LOG_LEVELS": [
+        {
+            "Level": 0,
+            "Type": "off"
+        },
+        {
+            "Level": 1,
+            "Type": "fatal"
+        },
+        {
+            "Level": 2,
+            "Type": "error"
+        },
+        {
+            "Level": 3,
+            "Type": "warn"
+        },
+        {
+            "Level": 4,
+            "Type": "info"
+        },
+        {
+            "Level": 5,
+            "Type": "debug"
+        },
+        {
+            "Level": 6,
+            "Type": "trace"
+        },
+        {
+            "Level": 7,
+            "Type": "verbose"
+        },
+        {
+            "Level": 8,
+            "Type": "all"
+        }
+    ]
 }

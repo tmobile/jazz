@@ -121,7 +121,7 @@ module.exports.handler = (event, context, cb) => {
 			req.url = config.BASE_URL + "/_plugin/kibana/elasticsearch/_msearch";
 			req.body = setRequestBody(servCategory, env, querys, startTime, endTime, size, page);
 
-			request(req, function (err, res, body) {
+			request.post(req, function (err, res, body) {
 				if (err) {
 					logger.error("Error occured : " + JSON.stringify(err));
 					return cb(JSON.stringify(errorHandler.throwInternalServerError("Internal Error")));
