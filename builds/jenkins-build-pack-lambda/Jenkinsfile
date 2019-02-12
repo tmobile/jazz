@@ -230,54 +230,53 @@ node() {
 
 
       def logicalId
-      if (servicePlatform && servicePlatform == 'azure') {
-
-
-        timestamps {
-
-          if (environment_logical_id == "prod") {
-            logicalId = config['service_id'].substring(0, 7) + environment_logical_id
-          } else {
-            logicalId = environment_logical_id.split('-')[0] //13 + 10
-          }
-
-          def serviceInfo = [
-            'stackName'         : stackName,
-            'storageAccountName': "${configLoader.INSTANCE_PREFIX}${logicalId}",
-            "repoCredentialId"  : repo_credential_id,
-            'envId'             : environment_logical_id,
-            'serviceCatalog'    : config,
-            'isScheduleEnabled' : isScheduleEnabled,
-            'isStreamEnabled'   : isStreamEnabled,
-            'isQueueEnabled'    : isSQSEventEnabled,
-            'isDbEnabled'       : isDynamoDbEnabled,
-            'isStorageEnabled'  : isS3EventEnabled
-          ]
-
-          echo "service info $serviceInfo"
-          def azureCreatefunction = "${configLoader.INSTANCE_PREFIX}-jazz-azure-create-service-prod"
-
-          try {
-            azureDeployer.createFunction(serviceInfo, azureCreatefunction)
-//            environmentDeploymentMetadata.setEnvironmentEndpoint(endpoint)
-
-            sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner)
-
-          } catch (ex) {
-            handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
-          }
-
-
-        }
-        return
-      }
-
-
-
 
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
+
+        if (servicePlatform && servicePlatform == 'azure') {
+
+
+          timestamps {
+
+            if (environment_logical_id == "prod") {
+              logicalId = config['service_id'].substring(0, 7) + environment_logical_id
+            } else {
+              logicalId = environment_logical_id.split('-')[0] //13 + 10
+            }
+
+            def serviceInfo = [
+              'stackName'         : stackName,
+              'storageAccountName': "${configLoader.INSTANCE_PREFIX}${logicalId}",
+              "repoCredentialId"  : repo_credential_id,
+              'envId'             : environment_logical_id,
+              'serviceCatalog'    : config,
+              'isScheduleEnabled' : isScheduleEnabled,
+              'isStreamEnabled'   : isStreamEnabled,
+              'isQueueEnabled'    : isSQSEventEnabled,
+              'isDbEnabled'       : isDynamoDbEnabled,
+              'isStorageEnabled'  : isS3EventEnabled
+            ]
+
+            echo "service info $serviceInfo"
+            def azureCreatefunction = "${configLoader.INSTANCE_PREFIX}-jazz-azure-create-service-prod"
+
+            try {
+              def endpoint = azureDeployer.createFunction(serviceInfo, azureCreatefunction)
+              //environmentDeploymentMetadata.setEnvironmentEndpoint(endpoint)
+
+              sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner)
+
+            } catch (ex) {
+              handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
+            }
+
+
+          }
+          return
+        }
+
         try {
           // initialize aws credentials
           def randomString = utilModule.generateRequestId();
