@@ -6,8 +6,6 @@ function mustHave(data) {
   notNull(data.resourceGroupName, 'resourceGroupName');
   notNull(data.appName, 'appName');
   notNull(data.stackName, 'stackName');
-  notNull(data.eventSourceType, 'eventSourceType');
-  notNull(data.resourceName, 'resourceName');
 }
 
 function notNull(property, propName) {
@@ -21,5 +19,6 @@ function notNull(property, propName) {
 }
 
 module.exports = {
-  mustHave
+  mustHave,
+  notNull
 };

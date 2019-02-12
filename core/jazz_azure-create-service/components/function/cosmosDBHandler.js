@@ -3,26 +3,21 @@ const logger = require("../logger.js");
 
 async function create(data, client) {
 
-  let output = {};
-  logger.debug('dbaccount create starting...');
-  const dbAccount = await createAccount(data, client);
-  logger.debug('dbaccount created id ' + dbAccount.id);
-  logger.debug('dbaccount created name ' + dbAccount.name);
-  output.stack = dbAccount;
-
-  let connectionStrings = await client.databaseAccounts.listConnectionStrings(data.resourceGroupName, data.appName);
-
-  output.connectionString = connectionStrings.connectionStrings[0].connectionString; //AzureWebJobsCosmosDBConnectionStringName
-  logger.debug('dbaccount connection string ' + output.connectionString);
-  await createDatabase(data, client, dbAccount.documentEndpoint);
-
-  return output;
+  logger.debug('dbaccount create starting...' + data.appName);
+  return await createAccount(data, client);
 
 }
 
+async function getConnectionString(data, client) {
+
+  const connectionStrings = await client.databaseAccounts.listConnectionStrings(data.resourceGroupName, data.appName);
+
+  return connectionStrings.connectionStrings[0].connectionString; //AzureWebJobsCosmosDBConnectionStringName
+
+}
 async function createAccount(data, client) {
 
-  let params = {
+  const params = {
     location: data.location,
     databaseAccountOfferType: "Standard"
   };
@@ -31,15 +26,22 @@ async function createAccount(data, client) {
 
 }
 
-async function createDatabase(data, client, endpoint)
+async function createDatabase(data, client) {
+
+  const dbAccount = await client.databaseAccounts.get(data.resourceGroupName, data.appName);
+  await createDatabaseWithEndpoint(data, client, dbAccount.documentEndpoint);
+
+}
+
+async function createDatabaseWithEndpoint(data, client, endpoint)
 {
 
-  let keys = await client.databaseAccounts.listKeys(data.resourceGroupName, data.appName);
+  const keys = await client.databaseAccounts.listKeys(data.resourceGroupName, data.appName);
   const masterKey = keys.primaryMasterKey;
 
   const dbClient = new CosmosClient({ endpoint, auth: { masterKey } });
 
-  logger.debug("Setting up the database...");
+  logger.debug("Setting up the database..." + data.resourceName);
   const dbResponse = await dbClient.databases.createIfNotExists({
     id: data.resourceName
   });
@@ -53,5 +55,7 @@ async function createDatabase(data, client, endpoint)
 
 }
 module.exports = {
-  create
+  create,
+  createDatabase,
+  getConnectionString
 };

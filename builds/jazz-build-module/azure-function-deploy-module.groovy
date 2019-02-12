@@ -23,20 +23,21 @@ def initialize(configLoader, utilModule, scmModule, events, azureUtil){
 
 }
 
-def setAzureVar() {
+def setAzureVar(envId) {
 
   if (configLoader.AZURE && configLoader.AZURE.RESOURCE_GROUPS) {
-    configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.DEVELOPMENT
-  } else {
-    configLoader.AZURE.RESOURCE_GROUP = "heinajazzdevrg"
-    configLoader.AZURE.LOCATION = "westus2"
+    if (envId == 'prod') {
+      configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.PRODUCTION
+    } else {
+      configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.DEVELOPMENT
+    }
 
   }
 
 }
 
 def createFunction(serviceInfo, azureCreatefunction) {
-  setAzureVar()
+  setAzureVar(serviceInfo.envId)
   loadAzureConfig(serviceInfo)
   invokeAzureCreation(serviceInfo, azureCreatefunction)
 //  sendAssetComplete(serviceInfo)
@@ -65,8 +66,7 @@ def invokeAzureCreation(serviceInfo, azureCreatefunction){
     string(credentialsId: 'AZ_SUBSCRIPTIONID', variable: 'AZURE_SUBSCRIPTION_ID')]) {
 
     def type = azureUtil.getExtensionName(serviceInfo)
-    def myData = [
-      "zip" : zip,
+    def data = [
       "resourceGroupName" : configLoader.AZURE.RESOURCE_GROUP,
       "appName" : serviceInfo.storageAccountName,
       "stackName" : serviceInfo.stackName,
@@ -79,18 +79,36 @@ def invokeAzureCreation(serviceInfo, azureCreatefunction){
       "resourceName": serviceInfo.resourceName
     ]
 
-    def payload = [
-      "className" : "FunctionApp",
-      "command" : "create",
-      "data" : myData
-    ]
+    executeLambda(data, azureCreatefunction, "createStorage")
+    executeLambda(data, azureCreatefunction, "createEventResource")
+    executeLambda(data, azureCreatefunction, "createfunction")
+    data.zip = zip
+    executeLambda(data, azureCreatefunction, "deployFunction")
 
-    def payloadString = JsonOutput.toJson(payload)
-    invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY" , functionName: azureCreatefunction, payload: payloadString, synchronous: true])
-    invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY" , functionName: azureCreatefunction, payload: payloadString, synchronous: true])
-    invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY" , functionName: azureCreatefunction, payload: payloadString, synchronous: true])
+    if (type) {
+      data.zip = ""
+      executeLambda(data, azureCreatefunction, "installFunctionExtensions")
+
+      if (type == 'CosmosDB') {
+        executeLambda(data, azureCreatefunction, "createDatabase")
+      }
+    }
+
 
   }
+}
+
+def executeLambda(data, azureCreatefunction, commandName) {
+
+  def payload = [
+    "className": "FunctionApp",
+    "command"  : commandName,
+    "data"     : data
+  ]
+
+  def payloadString = JsonOutput.toJson(payload)
+  invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY", functionName: azureCreatefunction, payload: payloadString, synchronous: true])
+
 }
 
 def loadAzureConfig(serviceInfo) {
@@ -184,19 +202,5 @@ def registerBindingExtension(type) {
 
 }
 
-////https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer#cron-expressions
-////TODO this terrible method will be removed when we fix the cron expression from UI
-
-//def sendAssetCompletedEvent(resourceName, resourceType, serviceInfo) {
-//  def id
-//
-//  if (resourceType == "functionapp" || resourceType == "eventhubs_namespace" || resourceType == "servicebus_namespace" || resourceType == "storage_account" || resourceType == "cosmosdb") {
-//    id = azureUtil.getResourceId(resourceType.replace("_", " "), resourceName)
-//  } else  {
-//    id = resourceName
-//  }
-//
-//  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, resourceType, serviceInfo.serviceCatalog), serviceInfo.envId)
-//}
 
 return this

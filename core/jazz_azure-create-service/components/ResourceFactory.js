@@ -7,7 +7,7 @@ const url = require('url');
 const functionCreateHandler = require('./function/functionCreateHandler');
 
 const ClientFactory = require('./ClientFactory');
-
+const dbHandler = require('./function/cosmosDBHandler');
 /**
  *
  *
@@ -375,13 +375,24 @@ module.exports = class ResourceFactory {
         });
     }
 
-    async createFunctionAppWithDependency(data) {
+  async createDependency(data) {
+    const resource = await functionCreateHandler.createDependency(data, this.factory);
+    if (resource) {
+      return this.withStack(resource);
+    }
 
-      let storageAccountKeys = await this.listStorageAccountKeys(data.appName);
-      let storageAccountKey = storageAccountKeys.keys[0].value;
-      const resource = await functionCreateHandler.createDependency(data, this.factory);
-      await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, resource.connectionString);
-      return this.withStack(resource.stack);
+  }
+
+  async createFunctionWithConnectionString(data) {
+    let storageAccountKeys = await this.listStorageAccountKeys(data.appName);
+    let storageAccountKey = storageAccountKeys.keys[0].value;
+    const connectionString = await functionCreateHandler.getConnectionString(data, this.factory);
+    return await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, connectionString);
+
+  }
+
+  async createDatabase(data) {
+    return await dbHandler.createDatabase(data, await this.factory.getResource('CosmosDBManagementClient'));
 
   }
 }
