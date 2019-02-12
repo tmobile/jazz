@@ -282,9 +282,10 @@
                     "type": "string",
                     "description": "The runtime framework for executing your code",
                     "enum": [
-                        "nodejs",
-                        "java",
-                        "python",
+                        "nodejs8.10",
+                        "java8",
+                        "python2.7",
+                        "python3.6",
                         "go1.x"
                     ]
                 },
@@ -303,7 +304,7 @@
                 },
                 "username": {
                     "type": "string",
-                    "description": "Username/NT ID for the service creator. This will be used for the bitbucket access"
+                    "description": "Username of the service creator"
                 },
                 "slack_channel": {
                     "type": "string",
