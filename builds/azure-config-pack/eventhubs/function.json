@@ -6,7 +6,7 @@
       "type": "eventHubTrigger",
       "direction": "in",
       "eventHubName": "{resource_name}",
-      "connection": "SAS_CONNSTR",
+      "connection": "CONNECTION_STRING",
       "cardinality": "many",
       "consumerGroup": "$Default"
     }
