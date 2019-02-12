@@ -6,7 +6,6 @@ function mustHave(data) {
   notNull(data.resourceGroupName, 'resourceGroupName');
   notNull(data.appName, 'appName');
   notNull(data.stackName, 'stackName');
-  notNull(data.resourceName, 'resourceName');
 }
 
 function notNull(property, propName) {
