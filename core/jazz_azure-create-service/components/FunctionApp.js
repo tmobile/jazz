@@ -24,82 +24,46 @@ module.exports = class FunctionApp {
         });
     }
 
-  async createStorage(){
-    await this.init().then(async () => {
-      try {
-        await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags, this.data.location);
-      }catch (exception) {
-        logger.error(exception);
-        throw exception;
-      }
-    });
-    return this.resourceFactory.resourceStack;
+  async createStorage() {
+    await this.init();
+    return await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags, this.data.location);
   }
 
-  async createEventResource(){
-    await this.init().then(async () => {
-      try {
-       await this.resourceFactory.createDependency(this.data);
-
-      }catch (exception) {
-        logger.error(exception);
-        throw exception;
-      }
-    });
-    logger.debug('done');
-    return this.resourceFactory.resourceStack;
+  async createEventResource() {
+    await this.init();
+    return await this.resourceFactory.createDependency(this.data);
   }
 
   async createfunction(){
-    await this.init().then(async () => {
-      try {
-        await this.resourceFactory.createFunctionWithConnectionString(this.data);
-      }catch (exception) {
-        logger.error(exception);
-        throw exception;
-      }
-    });
-    return this.resourceFactory.resourceStack;
+    await this.init();
+    return await this.resourceFactory.createFunctionWithConnectionString(this.data);
   }
 
-
   async deployFunction(){
-    await this.init().then(async () => {
-      try {
-        validator.notNull(this.data.zip, 'zip');
-        await this.resourceFactory.uploadZipToKudu(this.data.stackName, this.data.zip);
-
-      }catch (exception) {
-        logger.error(exception);
-        throw exception;
-      }
-    });
-    return this.resourceFactory.resourceStack;
+    await this.init();
+    validator.notNull(this.data.zip, 'zip');
+    return await this.resourceFactory.uploadZipToKudu(this.data.stackName, this.data.zip);
   }
 
   async installFunctionExtensions(){
-    await this.init().then(async () => {
-      try {
-        logger.debug('installing extension');
-        await this.resourceFactory.installFunctionExtensions(this.data.stackName);
-      }catch (exception) {
-        logger.error(exception);
-        throw exception;
-      }
-    });
-    return this.resourceFactory.resourceStack;
+    await this.init();
+    await this.resourceFactory.installFunctionExtensions(this.data.stackName);
   }
 
   async createDatabase(){
-    await this.init().then(async () => {
-      try {
-        await this.resourceFactory.createDatabase(this.data);
-      }catch (exception) {
-        logger.error(exception);
-        throw exception;
-      }
-    });
-    return;
+    await this.init();
+    await this.resourceFactory.createDatabase(this.data);
+  }
+
+  async getMasterKey(){
+    await this.init();
+    let masterKey = await this.resourceFactory.getMasterKey(this.data.stackName);
+    let output = {
+      status: 200,
+      key: masterKey.value
+    };
+    return output
+
   }
 
 }
