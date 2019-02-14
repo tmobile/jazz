@@ -82,9 +82,13 @@ async function checkPermissions(userId, serviceId, category, permission, config)
   let result = {};
   let conn;
   try {
-    conn = await dbConnection(config);
-    const enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
-    result.authorized = enforcer.enforce(userId, `${serviceId}_${category}`, permission);
+    if (userId === config.SERVICE_USER) {
+      result.authorized = true;
+    } else {
+      conn = await dbConnection(config);
+      const enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
+      result.authorized = enforcer.enforce(userId, `${serviceId}_${category}`, permission);
+    }
   } catch(err) {
     logger.error(err.message);
     result = {
@@ -197,37 +201,90 @@ async function getPolicyForServiceUser(serviceId, userId, config) {
 
 /* Get the policies for a userId*/
 async function getPolicyForUser(userId, config) {
-  let result = await getFilteredPolicy(0, [userId], config);
-  let serviceIdSeen = new Set();
   let policies = [];
+  if (userId === config.SERVICE_USER) {
+    let result = await getAllPolicies(config);
+    let serviceIdSeen = new Set();
+    if (result && result.error) {
+      return result;
+    }
 
-  if (result && result.error) {
-    return result;
-  }
-
-  result.forEach(policy => {
-    policy.forEach(item => {
-      const serviceId = item[1].split('_')[0];
+    result.forEach(eachPolicy => {
+      const serviceId = eachPolicy[1].split('_')[0];
       const policy = {
-        category: item[1].split('_')[1],
-        permission: item[2]
+        category: eachPolicy[1].split('_')[1],
+        permission: eachPolicy[2]
       };
-      if (serviceIdSeen.has(serviceId)) {
-        const foundPolicies = policies.find(r => r.serviceId === serviceId);
-        if (foundPolicies) {
-          foundPolicies.policies.push(policy);
+      let isAvailable = false;
+      policies.some(each => {
+        if (each.serviceId === serviceId) {
+          each.policies.push(policy);
+          isAvailable = true;
+          return true
         }
-      } else {
+      });
+      if (!isAvailable) {
         const policyObj = {};
         policyObj['serviceId'] = serviceId;
         policyObj['policies'] = [policy];
         policies.push(policyObj);
       }
-      serviceIdSeen.add(serviceId);
     });
-  });
+
+  } else {
+    let result = await getFilteredPolicy(0, [userId], config);
+    let serviceIdSeen = new Set();
+
+    if (result && result.error) {
+      return result;
+    }
+
+    result.forEach(policy => {
+      policy.forEach(item => {
+        const serviceId = item[1].split('_')[0];
+        const policy = {
+          category: item[1].split('_')[1],
+          permission: item[2]
+        };
+        if (serviceIdSeen.has(serviceId)) {
+          const foundPolicies = policies.find(r => r.serviceId === serviceId);
+          if (foundPolicies) {
+            foundPolicies.policies.push(policy);
+          }
+        } else {
+          const policyObj = {};
+          policyObj['serviceId'] = serviceId;
+          policyObj['policies'] = [policy];
+          policies.push(policyObj);
+        }
+        serviceIdSeen.add(serviceId);
+      });
+    });
+  }
 
   return policies;
+}
+
+/* Get all policies from casbin */
+async function getAllPolicies(config) {
+  let result = {};
+  let conn, enforcer;
+
+  try {
+    conn = await dbConnection(config);
+    enforcer = await casbin.newEnforcer("./config/rbac_model.conf", conn);
+    const policies = await enforcer.getPolicy();
+    result = policies;
+  } catch(err) {
+    logger.error(err.message);
+    result.error = err.message;
+  } finally {
+    if (conn) {
+      await conn.close();
+    }
+  }
+
+  return result;
 }
 
 function massagePolicies(policies) {
