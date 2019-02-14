@@ -59,7 +59,6 @@ module.exports = class FunctionApp {
     await this.init();
     let masterKey = await this.resourceFactory.getMasterKey(this.data.stackName);
     let output = {
-      status: 200,
       key: masterKey.value
     };
     return output

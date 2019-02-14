@@ -60,12 +60,14 @@ def invokeAzureCreation(serviceInfo, azureCreatefunction){
   def zip = readFile "b64zip"
 
   withCredentials([
-    string(credentialsId: 'AZ_PASSWORD', variable: 'AZURE_CLIENT_SECRET'),
-    string(credentialsId: 'AZ_CLIENTID', variable: 'AZURE_CLIENT_ID'),
-    string(credentialsId: 'AZ_TENANTID', variable: 'AZURE_TENANT_ID'),
-    string(credentialsId: 'AZ_SUBSCRIPTIONID', variable: 'AZURE_SUBSCRIPTION_ID')]) {
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
+  ]) {
 
     def type = azureUtil.getExtensionName(serviceInfo)
+    def runtimeType = azureUtil.getRuntimeType(serviceInfo)
     def data = [
       "resourceGroupName" : configLoader.AZURE.RESOURCE_GROUP,
       "appName" : serviceInfo.storageAccountName,
@@ -76,11 +78,18 @@ def invokeAzureCreation(serviceInfo, azureCreatefunction){
       "clientSecret" : AZURE_CLIENT_SECRET,
       "location": configLoader.AZURE.LOCATION,
       "eventSourceType": type,
-      "resourceName": serviceInfo.resourceName
+      "resourceName": serviceInfo.resourceName,
+      "runtime" : runtimeType
     ]
 
     executeLambda(data, azureCreatefunction, "createStorage")
     executeLambda(data, azureCreatefunction, "createEventResource")
+
+    if (type == 'CosmosDB') {
+      echo "sleep 3 min to wait for db account creation"
+      sleep 180
+      executeLambda(data, azureCreatefunction, "createDatabase")
+    }
     executeLambda(data, azureCreatefunction, "createfunction")
     data.zip = zip
     executeLambda(data, azureCreatefunction, "deployFunction")
@@ -89,9 +98,6 @@ def invokeAzureCreation(serviceInfo, azureCreatefunction){
       data.zip = ""
       executeLambda(data, azureCreatefunction, "installFunctionExtensions")
 
-      if (type == 'CosmosDB') {
-        executeLambda(data, azureCreatefunction, "createDatabase")
-      }
     }
 
 

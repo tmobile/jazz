@@ -66,8 +66,15 @@ def getDatabaseAccountName(serviceInfo) {
 
 def getNamespace(serviceInfo) {
     return serviceInfo.storageAccountName
+}
 
+def getRuntimeType(serviceInfo) {
 
+  if (serviceInfo.serviceCatalog['runtime'].indexOf("c#") > -1) {
+    return "dotnet"
+  } else {
+    return "node"
+  }
 }
 /**
  * JSON parser
