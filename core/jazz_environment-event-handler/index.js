@@ -25,6 +25,8 @@ const nanoid = require("nanoid/generate");
 const config = require("./components/config.js");
 const logger = require("./components/logger.js");
 const errorHandlerModule = require("./components/error-handler.js");
+const fcodes = require('./utils/failure-codes.js');
+const failureCodes = fcodes();
 var errorHandler = errorHandlerModule(logger);
 
 var processedEvents = [];
@@ -154,7 +156,42 @@ var processItem = function (eventPayload, configData, authToken) {
     var environmentApiPayload = {};
     environmentApiPayload.service = eventPayload.SERVICE_NAME.S;
     environmentApiPayload.created_by = eventPayload.USERNAME.S;
+    environmentApiPayload.service_id = eventPayload.SERVICE_ID.S
+    environmentApiPayload.domain = svcContext.domain;
+    environmentApiPayload.physical_id = svcContext.branch;
 
+    getServiceDetails(payload, configData, authToken)
+      .then((result) => processServiceDetails(result))
+      .then((serviceDetails) => manageProcessItem(eventPayload, serviceDetails, configData, authToken))
+
+  });
+}
+
+var processServiceDetails = function (result) {
+  return new Promise((resolve, reject) => {
+    var output;
+    if (result) {
+      output = JSON.parse(result);
+    }
+    if (!output.data && !output.data.services && output.data.services.length > 0) {
+      logger.error("Service details not found in service catalog: " + JSON.stringify(output));
+      var error = handleError(failureCodes.PR_ERROR_5.code, failureCodes.PR_ERROR_5.message);
+      return reject(error);
+    } else {
+      return resolve(output.data.services[0]);
+    }
+  });
+}
+
+var manageProcessItem = function (eventPayload,serviceDetails, configData, authToken) {
+  return new Promise((resolve, reject) => {
+    var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
+    logger.info("svcContext: " + JSON.stringify(svcContext));
+
+    var environmentApiPayload = {};
+    environmentApiPayload.service = eventPayload.SERVICE_NAME.S;
+    environmentApiPayload.created_by = eventPayload.USERNAME.S;
+    environmentApiPayload.service_id = eventPayload.SERVICE_ID.S
     environmentApiPayload.domain = svcContext.domain;
     environmentApiPayload.physical_id = svcContext.branch;
 
@@ -258,7 +295,10 @@ var processEventInitialCommit = function (environmentPayload, configData, authTo
       var svcPayload = {
         uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
         method: "POST",
-        headers: { Authorization: authToken },
+        headers: {
+          "Authorization": authToken,
+          "Jazz-Service-ID": environmentPayload.service_id
+        },
         json: environmentPayload,
         rejectUnauthorized: false
       };
@@ -311,7 +351,10 @@ var processEventCreateBranch = function (environmentPayload, configData, authTok
     var svcPayload = {
       uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
       method: "POST",
-      headers: { Authorization: authToken },
+      headers: {
+        "Authorization": authToken,
+        "Jazz-Service-ID": environmentPayload.service_id
+      },
       json: environmentPayload,
       rejectUnauthorized: false
     };
@@ -347,7 +390,10 @@ var processEventDeleteBranch = function (environmentPayload, configData, authTok
         var delSerPayload = {
           uri: configData.BASE_API_URL + configData.DELETE_ENVIRONMENT_API_RESOURCE,
           method: "POST",
-          headers: { Authorization: authToken },
+          headers: {
+            "Authorization": authToken,
+            "Jazz-Service-ID": environmentPayload.service_id
+          },
           json: {
             "service_name": environmentPayload.service,
             "domain": environmentPayload.domain,
@@ -395,7 +441,10 @@ var processEventUpdateEnvironment = function (environmentPayload, configData, au
       uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "/" + environmentPayload.logical_id
         + `?domain=${environmentPayload.domain}&service=${environmentPayload.service}`,
       method: "PUT",
-      headers: { Authorization: authToken },
+      headers: {
+        "Authorization": authToken,
+        "Jazz-Service-ID": environmentPayload.service_id
+      },
       json: updatePayload,
       rejectUnauthorized: false
     };
@@ -420,7 +469,10 @@ var getEnvironmentLogicalId = function (environmentPayload, configData, authToke
     var svcPayload = {
       uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "?domain=" + environmentPayload.domain + "&service=" + environmentPayload.service,
       method: "GET",
-      headers: { Authorization: authToken },
+      headers: {
+        "Authorization": authToken,
+        "Jazz-Service-ID": environmentPayload.service_id
+      },
       rejectUnauthorized: false
     };
 
@@ -463,11 +515,12 @@ var processBuild = function (payload, configData, authToken) {
   });
 }
 
-function getSvcPayload(method, payload, apiEndpoint, authToken) {
+function getSvcPayload(method, payload, apiEndpoint, authToken, serviceId) {
   var svcPayload = {
     headers: {
       'content-type': "application/json",
-      'authorization': authToken
+      'authorization': authToken,
+      "Jazz-Service-ID": serviceId
     },
     rejectUnauthorized: false
   };
@@ -496,7 +549,7 @@ function processRequest(svcPayload) {
 function getServiceDetails(eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
     var apiEndpoint = `${configData.BASE_API_URL}${configData.SERVICE_API_RESOURCE}?service=${eventPayload.service}&domain=${eventPayload.domain}&isAdmin=true`;
-    var svcPayload = getSvcPayload("GET", null, apiEndpoint, authToken);
+    var svcPayload = getSvcPayload("GET", null, apiEndpoint, authToken, eventPayload.service_id);
     if (eventPayload.service === 'ui' && eventPayload.domain === 'jazz') {
       return resolve();
     }
@@ -534,7 +587,7 @@ var triggerBuildJob = function (result, payload, configData) {
 
     var authToken = "Basic " + new Buffer(configData.JENKINS_USER + ":" + configData.API_TOKEN).toString("base64");
     var apiEndpoint = `${configData.JOB_BUILD_URL}${configData.BUILDPACKMAP[serviceDetails.type]}${buildQuery}`;
-    var svcPayload = getSvcPayload("POST", null, apiEndpoint, authToken);
+    var svcPayload = getSvcPayload("POST", null, apiEndpoint, authToken, payload.service_id);
 
     processRequest(svcPayload)
       .then(result => { logger.debug("Deployment started successfully."); return resolve(result); })
@@ -596,6 +649,8 @@ module.exports = {
   processBuild: processBuild,
   triggerBuildJob: triggerBuildJob,
   getServiceDetails: getServiceDetails,
+  processServiceDetails: processServiceDetails,
+  manageProcessItem: manageProcessItem,
   processRequest: processRequest,
   getSvcPayload: getSvcPayload
 }
