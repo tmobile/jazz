@@ -135,6 +135,8 @@ describe('Overview', () => {
       });
 
       it('Verify METRICS Navigation for API' , () => {
+            browser.driver.switchTo().activeElement();
+            browser.sleep(5000);
             // Navigation to services
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
@@ -208,6 +210,7 @@ describe('Overview', () => {
       });
   
       it('Verify METRICS COUNT for API' , () => {
+            browser.sleep(5000);
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
             //To Navigate to the particular service and verifying the Page
@@ -328,6 +331,8 @@ describe('Overview', () => {
       });
 
       it('Verify METRICS Navigation for Lambda' , () => {
+            browser.driver.switchTo().activeElement();
+            browser.sleep(5000);
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
             //To Navigate to the particular service and verifying the Page
@@ -462,6 +467,8 @@ describe('Overview', () => {
       });
 
       it('Verify METRICS Navigation for Website' , () => {
+            browser.driver.switchTo().activeElement();
+            browser.sleep(5000);
             browser.wait(EC.visibilityOf(jazzServices_po.getAwsServiceName()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
             //To Navigate to the particular service and verifying the Page
