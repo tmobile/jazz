@@ -2,16 +2,15 @@ import groovy.json.JsonSlurper
 import groovy.transform.Field
 import groovy.json.JsonOutput
 
-//in
 @Field def inputParams
 @Field def config
 @Field def awsAccounts
 @Field def finalAccounts = []
 @Field def credentialId
+@Field def isPrimary = false
 
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
-
 @Field def repo_credential_id 
 @Field def aws_credential_id 
 @Field def region 
@@ -25,7 +24,6 @@ import groovy.json.JsonOutput
 
 
 node {
- echo "Hello world"
  echo "Starting the Job with Params ${params}"
  inputParams = params.input
  // Load the config
@@ -48,7 +46,7 @@ node {
   for (awsAccount in awsAccounts) {
    // Check the AccountId is in inputStr array
    def accountId = awsAccount['ACCOUNTID']
-   if (inputstr.contains(accountId)) {
+   if (inputstr.contains(accountId) && !isPrimary) {
     finalAccounts.push(awsAccount)
    }
   }
@@ -59,53 +57,56 @@ node {
   for (account in finalAccounts) {
    credentialId = account['CREDENTIAL_ID']
    def iamRoles = account["IAM"]
-   withCredentials([
-    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialId}"]
-   ]) {
-    // check if iamRoles are not empty
-    if (iamRoles.size() > 0) {
-     // start the deletion process of IAM Roles
-     processIamRoles(iamRoles)
-    } else {
-     // Nothing to do, Just log the message
-     echo "No IAM Roles found for deletion"
-    }
-    // Get all Regions
-    def allregions = account["REGIONS"]
-    for (awsregion in allregions) {
-     echo "processing  Region ${awsregion['REGION']}"
-     def regionAws = awsregion['REGION']
-     //Get Region based apiGateway and s3Buckets
-     def apiGateway = awsregion["API_GATEWAY"]
-     def s3Buckets = awsregion["S3"]
-     def cloudFront = awsregion["CLOUDFRONT"]
-     // Check ApiGateway is not Null
-     if (apiGateway.size() > 0) {
-      // Trigger Deletion process of APIGateway
-      processApiGateway(apiGateway, regionAws)
-     } else {
+   isPrimary = account['PRIMARY']
+   if(!isPrimary){
+    withCredentials([
+      [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialId}"]
+    ]) {
+      // check if iamRoles are not empty
+      if (iamRoles.size() > 0) {
+      // start the deletion process of IAM Roles
+      processIamRoles(iamRoles)
+      } else {
       // Nothing to do, Just log the message
-      echo "No API Gateway found for Region ${regionAws}"
-     }
-     //Check CloudFront Array is Not null
-     if (cloudFront.size() > 0) {
-      // Trigger Deletion process of APIGateway
-      processCloudFront(cloudFront, regionAws)
-     } else {
-      // Nothing to do, Just log the message
-      echo "No CloudFront Distribution found for Region ${regionAws}"
-     }
-     // Check S3Buckets is not Null
-     if (s3Buckets.size() > 0) {
-      // Trigger Deletion process of s3Buckets
-      processS3Buckets(s3Buckets)
-     } else {
-      // Nothing to do, Just log the message
-      echo "No s3Buckets found for Region ${regionAws}"
-     }
+      echo "No IAM Roles found for deletion"
+      }
+      // Get all Regions
+      def allregions = account["REGIONS"]
+      for (awsregion in allregions) {
+      echo "processing  Region ${awsregion['REGION']}"
+      def regionAws = awsregion['REGION']
+      //Get Region based apiGateway and s3Buckets
+      def apiGateway = awsregion["API_GATEWAY"]
+      def s3Buckets = awsregion["S3"]
+      def cloudFront = awsregion["CLOUDFRONT"]
+      // Check ApiGateway is not Null
+      if (apiGateway.size() > 0) {
+        // Trigger Deletion process of APIGateway
+        processApiGateway(apiGateway, regionAws)
+      } else {
+        // Nothing to do, Just log the message
+        echo "No API Gateway found for Region ${regionAws}"
+      }
+      //Check CloudFront Array is Not null
+      if (cloudFront.size() > 0) {
+        // Trigger Deletion process of APIGateway
+        processCloudFront(cloudFront, regionAws)
+      } else {
+        // Nothing to do, Just log the message
+        echo "No CloudFront Distribution found for Region ${regionAws}"
+      }
+      // Check S3Buckets is not Null
+      if (s3Buckets.size() > 0) {
+        // Trigger Deletion process of s3Buckets
+        processS3Buckets(s3Buckets)
+      } else {
+        // Nothing to do, Just log the message
+        echo "No s3Buckets found for Region ${regionAws}"
+      }
 
+      }
     }
-   }
+  }
   }
  } else {
   // Nothing to show, just log the message
@@ -119,7 +120,6 @@ def processIamRoles(iamRoles) {
  iamRoles.each {
   k,
   v ->
-  println "${k}:${v}"
   if (v.contains('/')) {
    roleId = v.split("/");
   }
@@ -140,7 +140,6 @@ def processCloudFront(cloudfront, regionAws) {
  cloudfront.each {
   k,
   v ->
-  println "${k}:${v}"
   if (v.contains('/')) {
    distribution_id = v.split("/");
   }
@@ -159,7 +158,6 @@ def processApiGateway(apigateway, regionAws) {
  apigateway.each {
   k,
   v ->
-  println "${k}:${v}"
   echo "Processing API Gateway  of ${k}"
   deleteAPIGateway(v, regionAws)
  }
@@ -170,7 +168,6 @@ def processS3Buckets(s3Buckets) {
  s3Buckets.each {
   k,
   v ->
-  println "${k}:${v}"
   echo "Processing s3Buckets of ${k}"
   deletes3Bucket(v)
  }
