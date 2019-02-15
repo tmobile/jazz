@@ -271,7 +271,7 @@ export class ServiceAccessControlComponent implements OnInit {
   //get policies for provided service
   getAclPolicies(serviceId) {
     this.isLoading = true;
-    this.http.get(`/jazz/acl/policies?serviceId=${serviceId}`,null,serviceId).subscribe(
+    this.http.get(`/jazz/acl/policies?serviceId=${serviceId}`, null, serviceId).subscribe(
       response => {
         if (response && response.data && response.data.policies && response.data.policies.length) {
           this.originalAccessDetails = JSON.parse(JSON.stringify(response.data.policies))
@@ -302,7 +302,7 @@ export class ServiceAccessControlComponent implements OnInit {
   // update policies
   updateAclPolicies(payload) {
     this.isLoading = true;
-    this.http.post('/jazz/acl/policies', payload).subscribe(
+    this.http.post('/jazz/acl/policies', payload, this.service.id).subscribe(
       response=> {
         let successMessage = this.toastmessage.successMessage(response, "updateServicePolicies");
         this.toast_pop('success', "", "Policies for service: " + this.service.name + " are " + successMessage);
