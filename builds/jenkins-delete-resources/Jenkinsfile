@@ -46,7 +46,7 @@ node {
   for (awsAccount in awsAccounts) {
    // Check the AccountId is in inputStr array
    def accountId = awsAccount['ACCOUNTID']
-   if (inputstr.contains(accountId) && !isPrimary) {
+   if (inputstr.contains(accountId)) {
     finalAccounts.push(awsAccount)
    }
   }
