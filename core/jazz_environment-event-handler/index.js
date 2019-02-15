@@ -367,7 +367,6 @@ function processEventCreateBranch (environmentPayload, configData, authToken) {
     }
     logger.info("svcPayload" + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
-      console.log("KUDDDDDDDD 2" +JSON.stringify(response) );
       if (response.statusCode && response.statusCode === 200 && body && body.data) {
         return resolve(body);
       } else {
@@ -508,8 +507,8 @@ function getEnvironmentLogicalId (environmentPayload, configData, authToken) {
 
 function processBuild (payload, configData, authToken) {
   return new Promise((resolve, reject) => {
-    exportable.triggerBuildJob(result, payload, configData)
-      .then(result => { resolve(result) })
+    exportable.triggerBuildJob(payload, configData)
+      .then(result => { return resolve(result) })
       .catch(error => {
         logger.error("processBuild Failed : " + JSON.stringify(error));
         return reject(error);
@@ -540,7 +539,7 @@ function getSvcPayload(method, payload, apiEndpoint, authToken, serviceId) {
 function processRequest(svcPayload) {
   return new Promise((resolve, reject) => {
     request(svcPayload, function (error, response, body) {
-      if ((response.statusCode === 200 || response.statusCode === 201) && body) {
+      if (response.statusCode === 200 || response.statusCode === 201) {
         return resolve(body);
       } else {
         logger.error("Error processing request: " + JSON.stringify(response));
@@ -570,6 +569,7 @@ function getServiceDetails(eventPayload, configData, authToken) {
 function triggerBuildJob (payload, configData) {
   return new Promise((resolve, reject) => {
     var buildQuery;
+    var type;
     if (payload.service === 'ui' && payload.domain === 'jazz') {
       type = 'ui';
       buildQuery = `/build?token=${configData.JOB_TOKEN}`;
@@ -580,7 +580,7 @@ function triggerBuildJob (payload, configData) {
 
     var authToken = "Basic " + new Buffer(configData.JENKINS_USER + ":" + configData.API_TOKEN).toString("base64");
     var apiEndpoint = `${configData.JOB_BUILD_URL}${configData.BUILDPACKMAP[type]}${buildQuery}`;
-    var svcPayload = getSvcPayload("POST", null, apiEndpoint, authToken, payload.service_id);
+    var svcPayload = getSvcPayload("POST", null, apiEndpoint, authToken, null);
 
     exportable.processRequest(svcPayload)
       .then(result => { logger.debug("Deployment started successfully."); return resolve(result); })

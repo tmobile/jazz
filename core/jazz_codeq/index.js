@@ -30,16 +30,22 @@ function handler(event, context, cb) {
 	let config = configModule.getConfig(event, context);
 
 	logger.init(serviceContext, context);
-	
+
 	try {
 		logger.debug(serviceContext.resourcePath);
 		utils.getAPIPath(serviceContext.resourcePath)
 			.then(data => {
-				const pathString = data.pathString;
+        const pathString = data.pathString;
+        let serviceId
 				logger.debug(pathString);
 				if (serviceContext && serviceContext.method && serviceContext.method === 'GET' && pathString === "codeq") {
 					logger.debug(`code quality service called with pathstring - ${pathString}`);
 
+          if (!serviceContext.headers['Jazz-Service-ID']) {
+            serviceId = serviceContext.headers['Jazz-Service-ID']
+            logger.error('No service id provided in  headers');
+            return cb(JSON.stringify(errorHandler.throwInputValidationError('No service id provided.')));
+          }
 					const result = getCodeqInputsUsingQuery(serviceContext, config);
 
 					if (result.error) {
@@ -53,7 +59,7 @@ function handler(event, context, cb) {
 						const query = result.query;
 
 						return utils.getJazzToken(config)
-							.then((data) => utils.getProjectBranch(data.auth_token, query, config)
+							.then((data) => utils.getProjectBranch(data.auth_token, query, config, serviceId)
 							).then(data => utils.getCodeqReport(metrics, data.branch, toDate, fromDate, query, config , serviceContext)
 							).then(data => {
 								const output = responseObj(data, serviceContext.query);
