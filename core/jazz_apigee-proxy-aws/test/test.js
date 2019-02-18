@@ -77,6 +77,7 @@ describe('handler tests', () => {
       "pathParameters": {
         "proxy": "path/to/resource"
       },
+      "httpMethod": "GET",
       "method": "POST",
       "stageVariables": {
         "baz": "qux"
@@ -103,7 +104,7 @@ describe('handler tests', () => {
     });
 
     index.handler(event, context, (err, res) => {
-      expect(JSON.parse(err).errorType).to.eq("Common Lambda Integration Error");
+      expect(JSON.parse(err).errorType).to.eq("LambdaIntegrationError");
       AWS.restore('Lambda');
     });
   });
@@ -120,7 +121,7 @@ describe('handler tests', () => {
     });
 
     index.handler(event, context, (err, res) => {
-      expect(JSON.parse(err).errorType).to.eq("Missing Required Params");
+      expect(JSON.parse(err).errorType).to.eq("MissingRequiredParams");
       AWS.restore('Lambda');
     });
   });
@@ -153,7 +154,7 @@ describe('handler tests', () => {
 
     index.handler(event, context, (err, res) => {
 
-      expect(JSON.parse(err).errorType).to.eq("Service Unavailable");
+      expect(JSON.parse(err).errorType).to.eq("InternalServerError");
       expect(JSON.parse(err).message).to.eq("unhandled error");
       AWS.restore('Lambda');
     });
@@ -171,7 +172,7 @@ describe('handler tests', () => {
 
     index.handler(event, context, (err, res) => {
 
-      expect(JSON.parse(err).errorType).to.eq("Service Unavailable");
+      expect(JSON.parse(err).errorType).to.eq("InternalServerError");
       expect(JSON.parse(err).message).to.eq("handled error");
       AWS.restore('Lambda');
     });
