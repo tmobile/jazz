@@ -106,7 +106,9 @@ node {
 
       }
     }
-  }
+   } else {
+    echo "Primary account can not be deleted this way, skipping...."
+   }
   }
  } else {
   // Nothing to show, just log the message
