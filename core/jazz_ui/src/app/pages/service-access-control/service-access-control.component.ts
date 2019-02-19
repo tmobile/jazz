@@ -163,7 +163,6 @@ addgroup(category){
    this.access[category].push({'userId': '','category': category, 'permission': 'read'});
    this.isAddOrDelete = true;
   }
-
  }
 
  onEditClick(){
@@ -207,6 +206,7 @@ addgroup(category){
    if (this.removeUser) {
      this.removeUser = false;
    }
+
 
    if (this.deleteManageRule && Object.keys(this.toDelete).length > 0) {
      let category = this.toDelete.category;
