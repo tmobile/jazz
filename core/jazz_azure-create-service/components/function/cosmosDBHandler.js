@@ -19,7 +19,8 @@ async function createAccount(data, client) {
 
   const params = {
     location: data.location,
-    databaseAccountOfferType: "Standard"
+    databaseAccountOfferType: "Standard",
+    tags: data.tags
   };
 
   return await client.databaseAccounts.createOrUpdate(data.resourceGroupName, data.appName, params);

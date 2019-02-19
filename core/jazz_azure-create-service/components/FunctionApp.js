@@ -48,6 +48,7 @@ module.exports = class FunctionApp {
   async installFunctionExtensions(){
     await this.init();
     await this.resourceFactory.installFunctionExtensions(this.data.stackName);
+    await this.resourceFactory.restartWebApp(this.data.stackName);
   }
 
   async createDatabase(){

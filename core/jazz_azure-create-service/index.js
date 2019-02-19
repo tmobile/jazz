@@ -17,7 +17,8 @@ module.exports.handler = async (event, context) => {
   const errorHandler = errorHandlerModule();
   logger.init(event, context);
   let result;
-  logger.debug('Event is the following: ' + JSON.stringify(event));
+  logger.debug('Event is the following: ' + JSON.stringify(event, ['command', 'className', 'data', 'resourceGroupName', 'appName'] ));
+
 
   let commandMapping = new CommandMapping();
 

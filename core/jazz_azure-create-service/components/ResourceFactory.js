@@ -376,10 +376,7 @@ module.exports = class ResourceFactory {
     }
 
   async createDependency(data) {
-    const resource = await functionCreateHandler.createDependency(data, this.factory);
-    if (resource) {
-      return this.withStack(resource);
-    }
+    return  await functionCreateHandler.createDependency(data, this.factory);
 
   }
 
@@ -387,8 +384,13 @@ module.exports = class ResourceFactory {
     let storageAccountKeys = await this.listStorageAccountKeys(data.appName);
     let storageAccountKey = storageAccountKeys.keys[0].value;
     const connectionString = await functionCreateHandler.getConnectionString(data, this.factory);
-    return await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, connectionString, data.runtime);
+    let webApp = await this.existWebApp(data.stackName);
+    if (webApp == null) {
 
+      return await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, connectionString, data.runtime);
+     } else {
+      return webApp;
+    }
   }
 
   async createDatabase(data) {
@@ -440,5 +442,15 @@ module.exports = class ResourceFactory {
       });
     });
 
+  }
+  async existWebApp(appName, resourceGroupName = this.resourceGroupName) {
+    let client = await this.factory.getResource("WebAppManagementClient");
+    return await client.webApps.get(resourceGroupName, appName);
+
+  }
+
+  async restartWebApp(appName, resourceGroupName = this.resourceGroupName) {
+    let client = await this.factory.getResource("WebAppManagementClient");
+    return await client.webApps.restart(resourceGroupName, appName);
   }
 }
