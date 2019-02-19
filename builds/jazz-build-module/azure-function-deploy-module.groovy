@@ -99,16 +99,13 @@ def invokeAzureCreation(serviceInfo, assetList){
       if (type == 'CosmosDB') {
         echo "sleep 3 min to wait for db account creation"
         sleep 180
-        //  sendAssetCompletedEvent(serviceInfo, data, "cosmosdb","Microsoft.DocumentDB/databaseAccounts")
         item = getAssetDetails(serviceInfo, data.appName, "cosmosdb","Microsoft.DocumentDB/databaseAccounts")
         executeLambda(data, "createDatabase")
 
       } else if (type == 'ServiceBus') {
-        //  sendAssetCompletedEvent(serviceInfo, data, "servicebus_namespace","Microsoft.ServiceBus/namespaces")
         item = getAssetDetails(serviceInfo, data.appName, "servicebus_namespace","Microsoft.ServiceBus/namespaces")
 
       } else if (type == 'EventHubs') {
-        //   sendAssetCompletedEvent(serviceInfo, data, "eventhubs_namespace","Microsoft.EventHubs/namespaces")
         item = getAssetDetails(serviceInfo, data.appName, "eventhubs_namespace","Microsoft.EventHub/namespaces")
       }
 
