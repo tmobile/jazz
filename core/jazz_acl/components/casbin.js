@@ -18,6 +18,7 @@ const casbin = require('casbin');
 const TypeORMAdapter = require('typeorm-adapter');
 const logger = require('./logger.js');
 const errorHandlerModule = require("./error-handler.js")();
+const AWS = require("aws-sdk");
 
 /* Create a connection to the DB*/
 async function dbConnection(config) {
@@ -188,49 +189,100 @@ async function addPolicy(serviceId, policies, enforcer) {
 
 /* Get the permissions for a service given a userId */
 async function getPolicyForServiceUser(serviceId, userId, config) {
-  const result = await getPolicies(serviceId, config);
-  if (result && result.error) {
-    return result;
-  }
-  let policies = formatPolicies(result);
-  let userPolicies = policies.filter(policy => policy.userId === userId);
-  userPolicies = userPolicies.map(policy => { return { permission: policy.permission, category: policy.category } });
+  if (userId === config.SERVICE_USER) {
+    let result = attachAdminPolicies([serviceId]);
+    return result
+  } else {
+    const result = await getPolicies(serviceId, config);
+    if (result && result.error) {
+      return result;
+    }
+    let policies = formatPolicies(result);
+    let userPolicies = policies.filter(policy => policy.userId === userId);
+    userPolicies = userPolicies.map(policy => { return { permission: policy.permission, category: policy.category } });
 
-  return [{serviceId: serviceId, policies: userPolicies}];
+    return [{serviceId: serviceId, policies: userPolicies}];
+  }
+
+}
+
+/* fetch list of serviceIds from dynamodb */
+var scanResult;
+async function scanExecute(dynamodb, scanparams, items_formatted) {
+  let dataDb = await dynamodb.scan(scanparams).promise();
+
+  if (dataDb && dataDb.Items && dataDb.Items.length || items_formatted.length) {
+    dataDb.Items.forEach(function (item) {
+      items_formatted.push(item.SERVICE_ID.S);
+    });
+    if (dataDb.LastEvaluatedKey) {
+      scanparams.ExclusiveStartKey = dataDb.LastEvaluatedKey;
+      await scanExecute(dynamodb, scanparams, items_formatted);
+    } else {
+      scanResult = {
+        data : items_formatted
+      };
+    }
+  } else {
+    scanResult= {
+      error: dataDb || "db error"
+    };
+  }
+
+  return scanResult
+}
+
+/* attach admin policies */
+function attachAdminPolicies(list) {
+  let svcIdList = []
+  list.forEach(eachId => {
+    let svcIdObj = {
+      serviceId:"",
+      policies:[{
+        category: "manage",
+        permission: "admin"
+      }, {
+        category: "code",
+        permission: "write"
+      }, {
+        category: "deploy",
+        permission: "write"
+      }]
+    };
+    svcIdObj.serviceId = eachId;
+    svcIdList.push(svcIdObj);
+  });
+  return svcIdList;
 }
 
 /* Get the policies for a userId*/
 async function getPolicyForUser(userId, config) {
   let policies = [];
   if (userId === config.SERVICE_USER) {
-    let result = await getAllPolicies(config);
-    let serviceIdSeen = new Set();
-    if (result && result.error) {
-      return result;
-    }
-
-    result.forEach(eachPolicy => {
-      const serviceId = eachPolicy[1].split('_')[0];
-      const policy = {
-        category: eachPolicy[1].split('_')[1],
-        permission: eachPolicy[2]
-      };
-      let isAvailable = false;
-      policies.some(each => {
-        if (each.serviceId === serviceId) {
-          each.policies.push(policy);
-          isAvailable = true;
-          return true
-        }
-      });
-      if (!isAvailable) {
-        const policyObj = {};
-        policyObj['serviceId'] = serviceId;
-        policyObj['policies'] = [policy];
-        policies.push(policyObj);
-      }
+    let items_formatted = [];
+    AWS.config.update({
+      region: "us-east-1"
     });
 
+    let dynamodb = new AWS.DynamoDB({
+      apiVersion: '2012-08-10'
+    });
+
+    let scanparams = {
+      "TableName": config.SERVICES_TABLE_NAME,
+      "ProjectionExpression": "SERVICE_ID",
+      "ReturnConsumedCapacity": "TOTAL",
+      "Limit": "10"
+    };
+
+    const dbResult =  await scanExecute(dynamodb, scanparams, items_formatted)
+
+    if (dbResult && dbResult.error) {
+      return dbResult
+    }
+
+    let result = attachAdminPolicies(dbResult.data);
+    return result;
   } else {
     let result = await getFilteredPolicy(0, [userId], config);
     let serviceIdSeen = new Set();
