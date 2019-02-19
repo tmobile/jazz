@@ -65,7 +65,6 @@ node {
       // start the deletion process of IAM Roles
       processIamRoles(iamRoles)
       } else {
-      // Nothing to do, Just log the message
       echo "No IAM Roles found for deletion"
       }
       // Get all Regions
