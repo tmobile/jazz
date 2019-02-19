@@ -222,7 +222,6 @@ def deleteInlinePolicies(roleName) {
 def detachIamPolicies(roleName) {
  //get all policies attached to a role
  def allPolicies = sh(script: "aws iam list-attached-role-policies  --role-name ${roleName}", returnStdout: true).trim()
- //echo "${allPolicies}"
  def policies = parseJson(allPolicies)
  def attachedPolicies = policies["AttachedPolicies"]
 
