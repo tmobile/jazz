@@ -21,6 +21,7 @@ import groovy.transform.Field
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 
+@Field def environment_logical_id = ''
 @Field def environment = ''
 @Field def context_map = [:]
 @Field def s3Bucket
@@ -29,26 +30,27 @@ import groovy.transform.Field
 @Field def service_config
 
 node()  {
-	def jazzBuildModuleURL = getBuildModuleUrl()
-	loadBuildModules(jazzBuildModuleURL)
+  def jazzBuildModuleURL = getBuildModuleUrl()
+  loadBuildModules(jazzBuildModuleURL)
 
-	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
-	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+  def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
+  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
 
-	echo "Build Pack website params: " + params
+  echo "Build Pack website params: " + params
 
-	def branch = params.scm_branch
-	def domain = params.domain
-	def service = params.service_name
-	def repo_name = params.service_name
-	def gitCommitOwner
-	def gitCommitHash
+  def branch = params.scm_branch
+  def domain = params.domain
+  def service = params.service_name
+  def repo_name = params.service_name
+  def gitCommitOwner
+  def gitCommitHash
 
-	if (domain && domain != "") {
-		repo_name = params.domain + "_" + params.service_name
-	}
 
-	auth_token = setCredentials()
+  if (domain && domain != "") {
+    repo_name = params.domain + "_" + params.service_name
+  }
+
+  auth_token = setCredentials()
 
   def current_environment
   stage('Checkout code base') {
@@ -75,7 +77,7 @@ node()  {
 
   environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
-  def environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
+  environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
   if (params.scm_branch == 'master') {
     environment = 'prod'
     current_environment = 'PROD'
@@ -172,10 +174,10 @@ node()  {
           def destination="\$web"
 
 //				def name = sh(script:"az cdn profile list -g $resourcegroup | jq -r .[0].name", returnStdout:true).trim()
-
+//
 //				if (name == appname) { //
-//					asset_event = 'UPDATE_ASSET'
-//					asset_event_message = 'update'
+          asset_event = 'UPDATE_ASSET'
+          asset_event_message = 'update'
 //				} else {
 //					asset_event = 'CREATE_ASSET'
 //					asset_event_message = 'create'
@@ -208,30 +210,27 @@ node()  {
 
 //
 //                def origin_hostname = sh(script:"az cdn endpoint show -g $resourcegroup -n $webappname --profile-name $webappname | jq -r .origins[0].hostName", returnStdout:true).trim()
-//                def origin_url = "https://${origin_hostname}"
-//
+
+          def origin_url = "https://${appname}.azureedge.net"
 //                def cdn_hostname = sh(script:"az cdn endpoint show -g $resourcegroup -n $webappname --profile-name $webappname | jq -r .hostName", returnStdout:true).trim()
 //
           //def cdn_url = "https://${cdn_hostname}"
-          def cdn_url = "https://test"
-
+          def cdn_url = "https://${appname}.z22.web.core.windows.net"
 
           echo "You can access the website at $cdn_url"
 
-          echo "Lambda response to follow: "
-          echo "$env.LAMBDA_RESPONSE"
           def svc_status = "You can access your website using following link: ${cdn_url}"
           echo svc_status
           environmentDeploymentMetadata.setEnvironmentEndpoint(cdn_url)
           send_status_email('COMPLETED', svc_status)
 
           def store_acct = "/resourceGroups/$resourcegroup/providers/Microsoft.Storage/storageAccounts/$storageaccount"
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", store_acct, "storage_account", service_config),environment)
+          //events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", store_acct, "storage_account", service_config),environment)
 
           def cdn_profle_detail = "name $webappname, loaction: $location, resource group: $resourcegroup"
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_profle_detail, "cdn_profile", service_config),environment)
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", origin_url, "origin_endpoint_url", service_config),environment)
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_url, "cdn_endpoint_url", service_config),environment)
+//                events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_profle_detail, "cdn_profile", service_config),environment)
+//                events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", origin_url, "origin_endpoint_url", service_config),environment)
+//				        events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_url, "cdn_endpoint_url", service_config),environment)
 
           events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
           events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
@@ -956,48 +955,79 @@ def loadBuildModules(buildModuleUrl){
 
 
 
-def createWebsite(appName, resourceGroup){
-  sh "cd ./app && zip -qr ../content.zip * "
+def createWebsite(stackName, resourceGroup){
+  sh "cd ./app && zip -qr ../content.zip *  && cd .."
+  def zip = sh(script: 'readlink -f ./content.zip', returnStdout: true).trim()
+  def azureRG
 
-  echo "trying to encode zip as 64bit string"
-  sh 'base64 content.zip -w 0 >b64zip'
+  if (environment_logical_id == "prod") {
+    azureRG = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
+    logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
+  }
+  else if(environment_logical_id == "stg"){
+    azureRG = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
+    logicalId = environment_logical_id.split('-')[0] //13 + 10
+  }
+  else if(environment_logical_id == "dev"){
+    azureRG = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
+    logicalId = environment_logical_id.split('-')[0] //13 + 10
+  }
+  def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
+  def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
 
-  def zip = readFile "b64zip"
 
+  def tags = /{
+              "application" : "${configLoader.INSTANCE_PREFIX}",
+              "owner"       : "${service_config['created_by']}",
+              "domain"      : "${service_config['domain']}",
+              "STAGE"       : "${environment_logical_id}",
+              "environment" : "${environment_logical_id}",
+              "service"     : "${stackName}"
+             }/
 
-  withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-    withCredentials([
-      string(credentialsId: 'AZURE_CLIENT_SECRET', variable: 'AZURE_CLIENT_SECRET'),
-      string(credentialsId: 'AZURE_CLIENT_ID', variable: 'AZURE_CLIENT_ID'),
-      string(credentialsId: 'AZURE_TENANT_ID', variable: 'AZURE_TENANT_ID'),
-      string(credentialsId: 'AZURE_SUBSCRIPTION_ID', variable: 'AZURE_SUBSCRIPTION_ID')]) {
+  withCredentials([
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
+  ]) {
+    def payloadString = [
+      className : "WebApp",
+      command   : "create",
+      data      : [
+        resourceGroupName : "${azureRG}",
+        storageName       : "${storageName}",
+        appName           : "${stackName}",
+        tags: [
+          "application"   : "${configLoader.INSTANCE_PREFIX}",
+          "owner"         : "${service_config['created_by']}",
+          "domain"        : "${service_config['domain']}",
+          "STAGE"         : "${environment_logical_id}",
+          "environment"   : "${environment_logical_id}",
+          "service"       : "${stackName}"
+        ],
+        "tenantId"          : "${AZURE_TENANT_ID}",
+        "subscriptionId"    : "${AZURE_SUBSCRIPTION_ID}",
+        "clientId"          : "${AZURE_CLIENT_ID}",
+        "clientSecret"      : "${AZURE_CLIENT_SECRET}",
+        "zip"               : "${zip}"
+      ]
+    ]
 
-      def payloadString = /{
-  			"className" : "WebApp",
-    		"command" : "create",
-			"data" : {
-				"tags" : {
-				      "owner": "test",
-				      "environment" : "test",
-				      "application" : "test",
-				      "STAGE" : "test",
-				      "service" : "test",
-				      "domain" : "test"
-				    },
-			    "resourceGroupName" : "$resourceGroup",
-			    "appName" : "$appName",
-			    "tenantId" : "$AZURE_TENANT_ID",
-			    "subscriptionId" : "$AZURE_SUBSCRIPTION_ID",
-			    "clientId" : "$AZURE_CLIENT_ID",
-			    "clientSecret" : "$AZURE_CLIENT_SECRET",
-			    "zip" : "$zip"
-		    }
-		}/
+    def repo_name = "jazz_azure-create-service"
+    sh 'rm -rf ' + repo_name
+    sh 'mkdir ' + repo_name
 
-      invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY" , functionName: 'jazzoscar-test-azure-create-service-prod', jsonParameters: [[envVarName: "${env.LAMBDA_RESPONSE}"]],  payload: payloadString, synchronous: true])
-      echo "should have the result here: "
-      echo "$env.LAMBDA_RESPONSE"
-    }
+    def repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
+
+    dir(repo_name)
+      {
+        checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
+        sh "npm install -s"
+        def json = JsonOutput.toJson(payloadString)
+        writeFile(file:'payload.json', text: json)
+        sh "./bin/jazz-azure-cli ./payload.json"
+      }
   }
 }
 
@@ -1026,4 +1056,3 @@ def jsonParse(jsonString) {
   def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
   return nonLazyMap
 }
-
