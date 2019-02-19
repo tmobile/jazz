@@ -124,64 +124,51 @@ module.exports = class ResourceFactory {
     return this.withStack(result);
   }
 
+  async createFunctionApp( appName, storageAccountKey, tags = {}, storageAccountName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = 'westus', connectionString = '', runtime = 'node') {
+      let envelope = {
+          tags: tags,
+          location: location,
+          kind: "functionApp",
+          properties: {},
+          siteConfig: {
+              appSettings: [
+                  {
+                      "name": "FUNCTIONS_WORKER_RUNTIME",
+                      "value": runtime
+                  },
 
-  async createFunctionApp( appName, storageAccountKey, tags = {}, storageAccountName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = 'westus', connectionString = '') {
-    let envelope = {
-      tags: tags,
-      location: location,
-      kind: "functionApp",
-      properties: {},
-      siteConfig: {
-        appSettings: [
-          {
-            "name": "FUNCTIONS_WORKER_RUNTIME",
-            "value": "node"
-          },
-    async createFunctionApp( appName, storageAccountKey, tags = {}, storageAccountName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = 'westus', connectionString = '', runtime = 'node') {
-        let envelope = {
-            tags: tags,
-            location: location,
-            kind: "functionApp",
-            properties: {},
-            siteConfig: {
-                appSettings: [
-                    {
-                        "name": "FUNCTIONS_WORKER_RUNTIME",
-                        "value": runtime
-                    },
+        {
+          "name": "FUNCTIONS_EXTENSION_VERSION",
+          "value": "~2"
+        },
 
-          {
-            "name": "FUNCTIONS_EXTENSION_VERSION",
-            "value": "~2"
-          },
+        {
+          "name": "WEBSITE_NODE_DEFAULT_VERSION",
+          "value": "8.11.1"
+        },
 
-          {
-            "name": "WEBSITE_NODE_DEFAULT_VERSION",
-            "value": "8.11.1"
-          },
+        {
+          "name": "AzureWebJobsStorage",
+          "value": `DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}`
+        },
 
-          {
-            "name": "AzureWebJobsStorage",
-            "value": `DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}`
-          },
-
-          {
-            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-            "value": `DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}`
-          },
-          {
-            "name": "WEBSITE_CONTENTSHARE",
-            "value": storageAccountName
-          },
-          {
-            "name": "CONNECTION_STRING",
-            "value": connectionString
-          }
-        ]
-      }
+        {
+          "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+          "value": `DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}`
+        },
+        {
+          "name": "WEBSITE_CONTENTSHARE",
+          "value": storageAccountName
+        },
+        {
+          "name": "CONNECTION_STRING",
+          "value": connectionString
+        }
+      ]
     }
-    return await this.createWebApp(appName, envelope, resourceGroupName = this.resourceGroupName );
   }
+  return await this.createWebApp(appName, envelope, resourceGroupName = this.resourceGroupName );
+}
 
 
   async listResourcesByTag(tagName) {

@@ -3,26 +3,26 @@ const logger = require("./logger.js");
 const validator = require('./function/dataValidator');
 
 module.exports = class FunctionApp {
-    constructor(data){
-        this.data = data;
-        this.subscriptionId = data.subscriptionId;
-        this.tenantId = data.tenantId;
-        this.clientId = data.clientId;
-        this.clientSecret = data.clientSecret;
+  constructor(data){
+      this.data = data;
+      this.subscriptionId = data.subscriptionId;
+      this.tenantId = data.tenantId;
+      this.clientId = data.clientId;
+      this.clientSecret = data.clientSecret;
 
-    }
+  }
 
-    async init(){
-        validator.mustHave(this.data);
-        this.resourceFactory = new ResourceFactory(this.data.clientId, this.data.clientSecret, this.data.tenantId, this.data.subscriptionId, this.data.resourceGroupName);
-        await this.resourceFactory.init();
-    }
+  async init(){
+      validator.mustHave(this.data);
+      this.resourceFactory = new ResourceFactory(this.data.clientId, this.data.clientSecret, this.data.tenantId, this.data.subscriptionId, this.data.resourceGroupName);
+      await this.resourceFactory.init();
+  }
 
-    async deleteByTag() {
-        await this.init().then(async () => {
-            await this.resourceFactory.deleteResourcesByTag(this.data.tagName);
-        });
-    }
+  async deleteByTag() {
+      await this.init().then(async () => {
+          await this.resourceFactory.deleteResourcesByTag(this.data.tagName);
+      });
+  }
 
   async createStorage() {
     await this.init();
