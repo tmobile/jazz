@@ -29,10 +29,8 @@ node {
  // Load the config
  def jazzBuildModuleURL = getBuildModuleUrl()
  loadBuildModules(jazzBuildModuleURL)
- def output = JsonOutput.toJson(configLoader)
- echo "${output}"
- //check whether input param is not null
 
+ //check whether input param is not null
  if (inputParams == "") {
   echo "No Params defined"
  } else if (inputParams == "all") {
