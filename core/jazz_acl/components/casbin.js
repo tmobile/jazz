@@ -317,28 +317,6 @@ async function getPolicyForUser(userId, config) {
   return policies;
 }
 
-/* Get all policies from casbin */
-async function getAllPolicies(config) {
-  let result = {};
-  let conn, enforcer;
-
-  try {
-    conn = await dbConnection(config);
-    enforcer = await casbin.newEnforcer("./config/rbac_model.conf", conn);
-    const policies = await enforcer.getPolicy();
-    result = policies;
-  } catch(err) {
-    logger.error(err.message);
-    result.error = err.message;
-  } finally {
-    if (conn) {
-      await conn.close();
-    }
-  }
-
-  return result;
-}
-
 function massagePolicies(policies) {
   if (policies && !policies.error) {
     let filteredPolicies = policies.filter(el => el.length >=1);
