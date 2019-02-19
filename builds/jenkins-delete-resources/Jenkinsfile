@@ -84,7 +84,6 @@ node {
         // Trigger Deletion process of APIGateway
         processApiGateway(apiGateway, regionAws)
       } else {
-        // Nothing to do, Just log the message
         echo "No API Gateway found for Region ${regionAws}"
       }
       //Check CloudFront Array is Not null
@@ -92,7 +91,6 @@ node {
         // Trigger Deletion process of APIGateway
         processCloudFront(cloudFront, regionAws)
       } else {
-        // Nothing to do, Just log the message
         echo "No CloudFront Distribution found for Region ${regionAws}"
       }
       // Check S3Buckets is not Null
@@ -100,7 +98,6 @@ node {
         // Trigger Deletion process of s3Buckets
         processS3Buckets(s3Buckets)
       } else {
-        // Nothing to do, Just log the message
         echo "No s3Buckets found for Region ${regionAws}"
       }
 
@@ -111,7 +108,6 @@ node {
    }
   }
  } else {
-  // Nothing to show, just log the message
   echo "No Accounts available for Deletion"
  }
 }
@@ -232,14 +228,13 @@ def detachIamPolicies(roleName) {
  //echo "${allPolicies}"
  def policies = parseJson(allPolicies)
  def attachedPolicies = policies["AttachedPolicies"]
- echo "${attachedPolicies}"
 
  if (attachedPolicies.size() > 0) {
   echo "${attachedPolicies.size()}"
   for (policy in attachedPolicies) {
    def policyArn = policy["PolicyArn"]
    echo "Policy Arn is ${policyArn}"
-    sh "aws iam detach-role-policy --role-name ${roleName} --policy-arn ${policyArn} &"
+   sh "aws iam detach-role-policy --role-name ${roleName} --policy-arn ${policyArn} &"
    sleep(time: 30, unit: "SECONDS")
   }
  } else {
@@ -313,9 +308,7 @@ def getEtag(originAccessId, regionAws) {
 def isBucketEmpty(bucketName) {
  def status = false;
  try {
-  //withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialsID}"]]) {
-  sh("aws s3api list-objects --bucket ${bucketName}  --output json --query '[length(Contents[])]'")
-  //}
+    sh("aws s3api list-objects --bucket ${bucketName}  --output json --query '[length(Contents[])]'")
  } catch (ex) {
   echo "Bucket $bucketName is empty"
   status = true
@@ -376,12 +369,9 @@ def loadBuildModules(buildModuleUrl) {
    [credentialsId: repo_credential_id, url: buildModuleUrl]
   ]])
 
-  //def resultJsonString = readFile("jazz-installer-vars.json")
   configModule = load "config-loader.groovy"
   configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
   echo "config loader loaded successfully."
-
-
 
  }
 }
