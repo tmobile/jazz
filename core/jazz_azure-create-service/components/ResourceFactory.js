@@ -124,52 +124,51 @@ module.exports = class ResourceFactory {
     return this.withStack(result);
   }
 
+  async createFunctionApp( appName, storageAccountKey, tags = {}, storageAccountName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = 'westus', connectionString = '', runtime = 'node') {
+      let envelope = {
+          tags: tags,
+          location: location,
+          kind: "functionApp",
+          properties: {},
+          siteConfig: {
+              appSettings: [
+                  {
+                      "name": "FUNCTIONS_WORKER_RUNTIME",
+                      "value": runtime
+                  },
 
-  async createFunctionApp( appName, storageAccountKey, tags = {}, storageAccountName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = 'westus', connectionString = '') {
-    let envelope = {
-      tags: tags,
-      location: location,
-      kind: "functionApp",
-      properties: {},
-      siteConfig: {
-        appSettings: [
-          {
-            "name": "FUNCTIONS_WORKER_RUNTIME",
-            "value": "node"
-          },
+        {
+          "name": "FUNCTIONS_EXTENSION_VERSION",
+          "value": "~2"
+        },
 
-          {
-            "name": "FUNCTIONS_EXTENSION_VERSION",
-            "value": "~2"
-          },
+        {
+          "name": "WEBSITE_NODE_DEFAULT_VERSION",
+          "value": "8.11.1"
+        },
 
-          {
-            "name": "WEBSITE_NODE_DEFAULT_VERSION",
-            "value": "8.11.1"
-          },
+        {
+          "name": "AzureWebJobsStorage",
+          "value": `DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}`
+        },
 
-          {
-            "name": "AzureWebJobsStorage",
-            "value": `DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}`
-          },
-
-          {
-            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-            "value": `DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}`
-          },
-          {
-            "name": "WEBSITE_CONTENTSHARE",
-            "value": storageAccountName
-          },
-          {
-            "name": "CONNECTION_STRING",
-            "value": connectionString
-          }
-        ]
-      }
+        {
+          "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+          "value": `DefaultEndpointsProtocol=https;AccountName=${storageAccountName};AccountKey=${storageAccountKey}`
+        },
+        {
+          "name": "WEBSITE_CONTENTSHARE",
+          "value": storageAccountName
+        },
+        {
+          "name": "CONNECTION_STRING",
+          "value": connectionString
+        }
+      ]
     }
-    return await this.createWebApp(appName, envelope, resourceGroupName = this.resourceGroupName );
   }
+  return await this.createWebApp(appName, envelope, resourceGroupName = this.resourceGroupName );
+}
 
 
   async listResourcesByTag(tagName) {
@@ -375,10 +374,7 @@ module.exports = class ResourceFactory {
   }
 
   async createDependency(data) {
-    const resource = await functionCreateHandler.createDependency(data, this.factory);
-    if (resource) {
-      return this.withStack(resource);
-    }
+    return  await functionCreateHandler.createDependency(data, this.factory);
 
   }
 
@@ -386,12 +382,73 @@ module.exports = class ResourceFactory {
     let storageAccountKeys = await this.listStorageAccountKeys(data.appName);
     let storageAccountKey = storageAccountKeys.keys[0].value;
     const connectionString = await functionCreateHandler.getConnectionString(data, this.factory);
-    return await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, connectionString);
+    let webApp = await this.existWebApp(data.stackName);
+    if (webApp == null) {
 
+      return await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, connectionString, data.runtime);
+     } else {
+      return webApp;
+    }
   }
 
   async createDatabase(data) {
     return await dbHandler.createDatabase(data, await this.factory.getResource('CosmosDBManagementClient'));
 
+  }
+
+  async getMasterKey(stackName) {
+    let token = await this.getToken(stackName);
+
+    return new Promise(function (resolve, reject) {
+      request({
+        url: `https://${stackName}.azurewebsites.net/admin/host/systemkeys/_master`,
+        method: 'GET',
+        auth: {
+          bearer: token
+        }
+      }, function (err, resp, body) {
+        if (err) {
+          reject(err);
+        } else {
+          let jsonOutput = JSON.parse(body);
+          resolve(jsonOutput);
+        }
+      });
+    });
+
+  }
+
+  async getToken(stackName, resourceGroup = this.resourceGroupName) {
+
+    let client = await this.factory.getResource('WebAppManagementClient');
+    let publishingCredentials = await client.webApps.listPublishingCredentials(resourceGroup, stackName, null);
+
+    return new Promise(function (resolve, reject) {
+      request({
+        url: `https://${stackName}.scm.azurewebsites.net/api/functions/admin/token`,
+        method: 'GET',
+        auth: {
+          username: publishingCredentials.publishingUserName,
+          password: publishingCredentials.publishingPassword
+        }
+      }, function (err, resp, body) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(body.replace(/"/g, ''));
+        }
+      });
+    });
+
+  }
+  async existWebApp(appName, resourceGroupName = this.resourceGroupName) {
+    let client = await this.factory.getResource("WebAppManagementClient");
+    return await client.webApps.get(resourceGroupName, appName);
+
+  }
+
+  async restartWebApp(appName, resourceGroupName = this.resourceGroupName) {
+    let client = await this.factory.getResource("WebAppManagementClient");
+    return await client.webApps.restart(resourceGroupName, appName);
   }
 }

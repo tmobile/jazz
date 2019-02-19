@@ -32,7 +32,7 @@ async function createDependency(data, factory) {
 async function getConnectionString(data, factory) {
 
   let type = data.eventSourceType;
-  let resource;
+  let resource = '';
   switch (type) {
     case 'CosmosDB':
       resource = await dbHandler.getConnectionString(data, await factory.getResource('CosmosDBManagementClient'));
