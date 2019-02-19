@@ -13,21 +13,29 @@ module.exports = class ApiApp {
     async create(){
        await this.init().then(async () => {
             try {
-                let storageAccount = await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags);
+                let storageAccount = await this.resourceFactory.createStorageAccount(this.data.storageName, this.data.tags);
                 let storageAccountKeys = await this.resourceFactory.listStorageAccountKeys(storageAccount.name);
                 let storageAccountKey = storageAccountKeys.keys[0].value;
-                await this.resourceFactory.createHostingPlan();
+                await this.resourceFactory.createHostingPlan(this.data.resourceGroupName, 'westus', {}, 'Y1', this.data.appName);
                 await this.resourceFactory.createFunctionApp(this.data.appName, storageAccountKey, this.data.tags);
                 await this.resourceFactory.uploadZipToKudu(this.data.appName, this.data.zip);
                 await this.resourceFactory.createOrUpdateApiGatewayWithSwaggerJson(this.data.serviceName, this.data.apiId, this.data.swagger, this.data.basepath);
                 await this.resourceFactory.addApiToProduct(this.data.serviceName, "starter", this.data.apiId);
 
             }catch (exception) {
+                console.log(exception);
                 await this.resourceFactory.rollBack();
                 throw exception;
             }
         });
         return this.resourceFactory.resourceStack;
+    }
+
+
+    async deleteByTag(){
+        await this.init().then(async () => {
+            await this.resourceFactory.deleteResourcesByTag(this.data.tagName);
+        });
     }
 }
 

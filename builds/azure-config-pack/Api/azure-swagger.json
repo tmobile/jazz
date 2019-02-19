@@ -1,7 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
-        "title": "Oscar Echo API",
+        "title": "${domain}",
         "version": "1.0"
     },
     "host": "${domain}.azurewebsites.net" ,

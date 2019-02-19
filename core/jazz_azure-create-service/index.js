@@ -1,33 +1,34 @@
-/**
-	Nodejs Lambda Template Project
-	@Author:
-	@version: 1.0
-**/
-
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const responseObj = require("./components/response.js");
 const errorHandlerModule = require("./components/error-handler.js");
 const CommandMapping = require("./components/CommandMapping.js"); 
 
-module.exports.handler = async (event, context) => {
 
-  //Initializations
-  const config = configModule.getConfig(event, context);
-  const errorHandler = errorHandlerModule();
-  logger.init(event, context);
-  let result;
-  logger.debug('Event is the following: ' + JSON.stringify(event, ['command', 'className', 'data', 'resourceGroupName', 'appName'] ));
+module.exports = async () => {
+    const args = process.argv.slice(2);
+    var cmd = args[0];
 
-
-  let commandMapping = new CommandMapping();
-
-  try {
-    result = await commandMapping.process(event);
-  } 
-  catch (error) {
-      throw(error);
-  }
-  return result;
+    let result;
+    try {
+        const fs = require("fs");
+        let text = fs.readFileSync(cmd);
+        var obj = JSON.parse(text);
+        let commandMapping = new CommandMapping();
+        result = await commandMapping.process(obj);
+        } 
+        catch (error) {
+            console.log(responseObj({
+                error : error
+            }));
+         }
+        console.log(responseObj({
+            result : result
+        }));
 }
+    
+        
+
+
+
 
