@@ -15,20 +15,19 @@
 export const CONFIGURATIONS = {
   required: {
 
-
   },
   optional: {
     general: {
       ACCESS_MANAGEMENT_PORTAL_URL: '',
-        e2e: {
-          EMAIL_ID: '{stack_email}',
-          USER_NAME: '{stack_username}', 
-          PASSWORD: '{stack_password}', 
-			    REG_USER_NAME: '{stack_reg_username}',
-          REG_PASS_WORD: '{stack_reg_password}',
-          REG_CODE: '{stack_reg_code}',
-          APPLN_URL: '{stack_jazz_url}'
-        }
+      e2e: {
+        EMAIL_ID: '{stack_email}',              
+        USER_NAME: '{stack_username}',  
+        PASSWORD: '{stack_password}',  
+        REG_USER_NAME: '{stack_reg_username}', 
+        REG_PASS_WORD: '{stack_reg_password}', 
+        REG_CODE: '{stack_reg_code}', 
+        APPLN_URL: '{stack_jazz_url}'
       }
+    }
   }
 };
