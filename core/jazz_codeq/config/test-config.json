@@ -1,5 +1,5 @@
 {
-	"SONAR_USER": "sonar_user",
+	"SONAR_USER": "{sonar_user}",
 	"SONAR_PASSWORD": "{sonar_creds}",
 	"SONAR_HOSTNAME": "{sonar_hostname}",
 	"SONAR_PROTOCOL": "http://",

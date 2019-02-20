@@ -89,7 +89,7 @@ function handler(event, context, cb) {
 					return cb(JSON.stringify(errorHandler.throwInputValidationError(messages.SERVICE_INPUT_ERROR)));
 				}
 			}).catch(err => {
-				logger.error("SINI CATCH "+ JSON.stringify(err));
+				logger.error(JSON.stringify(err));
 				return cb(JSON.stringify(errorHandler.throwInputValidationError(err.errorMessage)));
 			});
 	} catch (e) {
