@@ -1,7 +1,5 @@
 #!groovy?
-import groovy.json.JsonOutput
 import groovy.transform.Field
-
 /*
 * azure deployment module
 */
@@ -42,8 +40,7 @@ def createFunction(serviceInfo){
   setAzureVar(serviceInfo.envId)
   loadAzureConfig(serviceInfo)
 
-  def masterKeyResult = invokeAzureCreation(serviceInfo, assetList)
-  def masterKey = masterKeyResult.data.key
+  def masterKey = invokeAzureCreation(serviceInfo, assetList)
   sendAssetCompletedEvent(serviceInfo, assetList)
 
   def functionName = serviceInfo.serviceCatalog['service']
@@ -68,10 +65,7 @@ def invokeAzureCreation(serviceInfo, assetList){
   sh "rm -rf _azureconfig"
 
   sh "zip -qr content.zip ."
-  echo "trying to encode zip as 64bit string"
-  sh 'base64 content.zip -w 0 > b64zip'
-  def zip = readFile "b64zip"
-
+  def zip = sh(script: 'readlink -f ./content.zip', returnStdout: true).trim()
 
   withCredentials([
     [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
@@ -89,59 +83,82 @@ def invokeAzureCreation(serviceInfo, assetList){
     data.resourceName = serviceInfo.resourceName
 
 
-    executeLambda(data, "createStorage")
-    def item = getAssetDetails(serviceInfo, data.appName, "storage_account","Microsoft.Storage/storageAccounts")
-    assetList.add(item)
+    def repo_name = "jazz_azure-create-service"
+    sh "rm -rf $repo_name"
+    sh "mkdir $repo_name"
 
-    if (type) {
-      data.eventSourceType = type
-      executeLambda(data, "createEventResource")
-      if (type == 'CosmosDB') {
-        echo "sleep 3 min to wait for db account creation"
-        sleep 180
-        item = getAssetDetails(serviceInfo, data.appName, "cosmosdb","Microsoft.DocumentDB/databaseAccounts")
-        executeLambda(data, "createDatabase")
+    def repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
+    def masterKey
 
-      } else if (type == 'ServiceBus') {
-        item = getAssetDetails(serviceInfo, data.appName, "servicebus_namespace","Microsoft.ServiceBus/namespaces")
+    dir(repo_name)
+      {
+        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
+        sh "npm install -s"
 
-      } else if (type == 'EventHubs') {
-        item = getAssetDetails(serviceInfo, data.appName, "eventhubs_namespace","Microsoft.EventHub/namespaces")
+        def item = createStorageAccount(data)
+        assetList.add(item)
+        if (type) {
+          item = createEventResource(data, type)
+          if (item) {
+            assetList.add(item)
+          }
+        }
+
+        item = createFunctionApp(data)
+        assetList.add(item)
+        deployFunction(data, zip, type)
+        output = azureUtil.invokeAzureService(data, "getMasterKey")
+        masterKey = output.data.result.key
+
       }
 
-      assetList.add(item)
-    }
-
-    executeLambda(data, "createfunction")
-    item = getAssetDetails(serviceInfo, data.stackName, "functionapp","Microsoft.Web/sites")
-    assetList.add(item)
-
-    data.zip = zip
-    executeLambda(data, "deployFunction")
-    data.zip = ""
-    if (type) {
-      executeLambda(data, "installFunctionExtensions")
-
-    }
-
-    return azureUtil.invokeAzureService(data, "getMasterKey")
+    return masterKey
   }
 }
 
-def executeLambda(data, commandName) {
-  def azureCreatefunction = azureUtil.getAzureServiceName()
+def createFunctionApp(data) {
+  def output = azureUtil.invokeAzureService(data, "createfunction")
+  return getAssetDetails(output.data.result.id, data.stackName, "functionapp","Microsoft.Web/sites")
 
-  def payload = [
-    "className": "FunctionApp",
-    "command"  : commandName,
-    "data"     : data
-  ]
-
-  def payloadString = JsonOutput.toJson(payload)
-  invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY", functionName: azureCreatefunction, payload: payloadString, synchronous: true])
 }
+def deployFunction(data, zip, type) {
+
+  data.zip = zip
+  azureUtil.invokeAzureService(data, "deployFunction")
+  data.zip = ""
+  if (type) {
+    azureUtil.invokeAzureService(data, "installFunctionExtensions")
+
+  }
+
+}
+def createStorageAccount(data) {
+
+  def output = azureUtil.invokeAzureService(data, "createStorage")
+  return getAssetDetails(output.data.result.id, data.appName, "storage_account","Microsoft.Storage/storageAccounts")
+
+}
+def createEventResource(data, type) {
+
+  data.eventSourceType = type
+  def output = azureUtil.invokeAzureService(data, "createEventResource")
+  def item
+  if (type == 'CosmosDB') {
+
+    output = azureUtil.invokeAzureService(data, "createDatabase")
+    item = getAssetDetails(output.data.result.id, data.appName, "cosmosdb","Microsoft.DocumentDB/databaseAccounts")
+
+  } else if (type == 'ServiceBus') {
+    item = getAssetDetails(output.data.result.id, data.appName, "servicebus_namespace","Microsoft.ServiceBus/namespaces")
+
+  } else if (type == 'EventHubs') {
+    item = getAssetDetails(output.data.result.id, data.appName, "eventhubs_namespace","Microsoft.EventHub/namespaces")
+  }
+
+  return item
 
 
+}
 def loadAzureConfig(serviceInfo) {
   checkoutConfigRepo(serviceInfo.repoCredentialId)
   selectConfig(serviceInfo)
@@ -234,29 +251,18 @@ def registerBindingExtension(type) {
 
 }
 
-def getAssetDetails(serviceInfo, name, assetType, resourceType) {
+def getAssetDetails(id, name, assetType, resourceType) {
 
-  def data = azureUtil.getAzureRequestPayload(serviceInfo)
-
-  data.appName = name
-  data.resourceType = resourceType
 
   def assetItem = [
     type: assetType,
     azureResourceType: resourceType,
-    azureResourceName: name
+    azureResourceName: name,
+    azureResourceId: id
   ]
 
-  def result = azureUtil.invokeAzureService(data, "getId")
-  echo "getId result $result"
-  if (result && result.data.statusCode == 200) {
+  return assetItem
 
-    assetItem.azureResourceId = result.data.id
-
-    return assetItem
-  } else {
-    error "Azure resource id search error ${result}"
-  }
 
 }
 

@@ -83,22 +83,23 @@ def getRuntimeType(serviceInfo) {
 
 def invokeAzureService(data, command) {
   def payload = [
-    "command": command,
+    "className": "FunctionApp",
+    "command"  : command,
     "data"     : data
   ]
-  def payloadString = JsonOutput.toJson(payload)
-  def apiUrl = "https://fnm7abd9ci.execute-api.us-east-1.amazonaws.com/prod/heinanode/heinatestazure"
-  try {
-    def shcmd = sh(script: "curl --silent -X POST -k \
-				-H \"Content-Type: application/json\" \
-					$apiUrl \
-				-d \'${payloadString}\'", returnStdout:true).trim()
 
-    return parseJson(shcmd)
-  }
-  catch (e) {
-    echo "error occured when create azure resource: " + e.getMessage()
-    error "failed azure creation ${e.getMessage()}"
+  def payloadString = JsonOutput.toJson(payload)
+
+  writeFile(file:'payload.json', text: payloadString)
+  def output =  sh(script: './bin/jazz-azure-cli ./payload.json', returnStdout: true).trim()
+
+  echo "azure service $command $output"
+
+  def outputJson =  parseJson(output)
+  if (outputJson.data.error) {
+    error "Failed calling azure service $command $output"
+  } else {
+    return outputJson
   }
 
 }
