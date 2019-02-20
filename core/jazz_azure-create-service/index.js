@@ -18,13 +18,13 @@ module.exports = async () => {
         result = await commandMapping.process(obj);
         } 
         catch (error) {
-            console.log(responseObj({
+            console.log(JSON.stringify(responseObj({
                 error : error
-            }));
+            })));
          }
-        console.log(responseObj({
+        console.log(JSON.stringify(responseObj({
             result : result
-        }));
+        })));
 }
     
         
