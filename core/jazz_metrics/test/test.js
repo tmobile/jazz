@@ -35,6 +35,9 @@ describe('jazz_metrics', function () {
     event = {
       "stage": "test",
       "method": "POST",
+      "headers": {
+        "Jazz-Service-ID": "test-id"
+      },
       "body": {
         "service": "test-service",
         "domain": "jazztest",
@@ -97,6 +100,17 @@ describe('jazz_metrics', function () {
           expect(error).to.include({
             result: 'unauthorized',
             message: 'Unauthorized'
+          });
+        });
+    });
+
+    it("should indicate inputError if service id is not provided", () => {
+      event.headers = {};
+      index.genericValidation(event)
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: 'No service id provided'
           });
         });
     });
@@ -297,7 +311,7 @@ describe('jazz_metrics', function () {
         "statistics": "userStatistics"
       }
       const getAssetsObj = sinon.stub(utils, "getAssetsObj").returns(getAssetRes);
-      index.getAssetsDetails(config, event.body, authToken)
+      index.getAssetsDetails(config, event.body, authToken, "test-id")
         .then(res => {
           expect(res).to.have.all.keys('type', 'asset_name', 'statistics');
           sinon.assert.calledOnce(getAssetsObj);
@@ -318,7 +332,7 @@ describe('jazz_metrics', function () {
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObj, JSON.stringify(responseObj.body))
       });
-      index.getAssetsDetails(config, event.body, authToken)
+      index.getAssetsDetails(config, event.body, authToken, "test-id")
         .then(res => {
           expect(res).to.be.empty;
         });
@@ -331,7 +345,7 @@ describe('jazz_metrics', function () {
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(err, null, null)
       });
-      index.getAssetsDetails(config, event.body, authToken)
+      index.getAssetsDetails(config, event.body, authToken, "test-id")
         .catch(error => {
           expect(error).to.include(err);
         });

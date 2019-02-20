@@ -165,7 +165,7 @@ function getJazzToken(config) {
 }
 
 //get branch
-function getProjectBranch(authToken, query, config) {
+function getProjectBranch(authToken, query, config, serviceId) {
 	return new Promise((resolve, reject) => {
 		const envID = query.environment;
 		const svcPayload = {
@@ -173,7 +173,8 @@ function getProjectBranch(authToken, query, config) {
 			method: 'GET',
 			headers: {
 				'Authorization': authToken,
-				'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Jazz-Service-ID': serviceId
 			},
 			rejectUnauthorized: false
 		};
@@ -214,7 +215,7 @@ function getCodeqReport(metrics, branch, toDate, fromDate, query, config , servi
 
 		const component = config.SONAR_PROJECT_KEY + "_" + query.domain + "_" + query.service + "_" + branch;
 		const svcPayload = {
-			
+
 			uri: config.SONAR_PROTOCOL + config.SONAR_HOSTNAME + config.SONAR_ENV_SERVICE + "?metrics=" + metricString + "&from=" + fromDate + "&to=" + toDate + "&component=" + component,
 			method: 'GET',
 			headers: {
