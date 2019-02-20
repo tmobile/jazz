@@ -439,7 +439,7 @@ def echoServerlessFile() {
 
 def servelessDeploy(env, envBucketKey){
   try {
-    sh "serverless deploy --stage ${env} -v --bucket ${configLoader.AWS.S3[envBucketKey]} > output.log"
+    sh "serverless deploy --stage ${env} -v --bucket ${configLoader.AWS.S3[envBucketKey]} --force > output.log"
     return "success"
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
