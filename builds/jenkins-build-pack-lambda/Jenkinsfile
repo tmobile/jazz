@@ -42,6 +42,7 @@ node() {
 
   def branch = params.scm_branch
   def repo_name = params.service_name
+  def requestId = params.request_id
   def gitCommitOwner
   def gitCommitHash
   def context_map
@@ -138,15 +139,18 @@ node() {
     isEventSchdld = true
   }
 
-  def requestId = utilModule.generateRequestId()
-  if (requestId != null) {
+  echo "requestId: $requestId"
+  if (requestId != "none" && requestId != null && !utilModule.isReplayedBuild()) {
+    requestId = requestId
     events.setRequestId(requestId)
     environmentDeploymentMetadata.setRequestId(requestId)
   } else {
-    error "Request Id Generation failed"
+    requestId = utilModule.generateRequestId()
+    events.setRequestId(requestId)
+    environmentDeploymentMetadata.setRequestId(requestId)
+    events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
   }
 
-  events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
   dir(repo_name) {
     loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
@@ -248,7 +252,9 @@ node() {
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey)
 
           if (deployOutput != 'success') {
-            if (config['event_source_s3']) {
+            if(deployOutput.contains('ROLLBACK_COMPLETE state and can not be updated')){
+              deleteAndRedeployService(environment_logical_id, envBucketKey)
+            } else if (config['event_source_s3']) {
               handleS3BucketError(deployOutput, config['event_source_s3'], environment_logical_id, envBucketKey, isEventSchdld)
             } else if (config['event_source_sqs']) {
               handleSqsError(deployOutput, config, environment_logical_id, envBucketKey)
@@ -712,7 +718,7 @@ def echoServiceInfo(String env) {
     echo "==============================================================================================="
     echo svc_response
     echo "==============================================================================================="
-    
+
     return svc_response
 
   } catch (Exception ex) {
@@ -945,7 +951,7 @@ def getEventsArn(config, env) {
 
 def getLambdaARN(stackName, credsId) {
   def ARN = "";
-  
+
   try {
     def cloudformation_resources = "";
     cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId}")

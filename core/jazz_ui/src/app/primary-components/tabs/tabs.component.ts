@@ -22,7 +22,7 @@ export class TabsComponent implements OnInit {
   @Input() beforeEnv: boolean = true;
   disableobj:any= {
 'overview':true,
-'access control':true,
+'access control':false,
 'cost':true,
 'metrics':true,
 'logs':true,
@@ -39,8 +39,7 @@ export class TabsComponent implements OnInit {
   }
   disabletabs(){
     var tabs;
-
-      tabs=environment.serviceTabs;
+    tabs=environment.serviceTabs;
     for(var i=0;i<tabs.length;i++){
       if(tabs[i] == 'overview') this.disableobj['overview']=false;
       if(tabs[i] == 'access control') this.disableobj['access control']=false;

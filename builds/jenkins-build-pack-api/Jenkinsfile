@@ -19,7 +19,6 @@ import groovy.transform.Field
 @Field def serviceMetadataLoader
 @Field def utilModule
 @Field def awsAPIGatewayModule
-@Field def awsLambdaModule
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 
@@ -43,6 +42,7 @@ node() {
 
 	def branch = params.scm_branch
 	def repo_name = params.service_name
+	def requestId = params.request_id
 	def gitCommitOwner
 	def gitCommitHash
 	def context_map
@@ -138,15 +138,18 @@ node() {
 				}
 			}
 		}
-
-		def requestId = utilModule.generateRequestId()
-		if (requestId != null) {
+		echo "requestId: $requestId"
+		if (requestId != "none" && requestId != null && !utilModule.isReplayedBuild()) {
+			echo "Setting up requestId"
+			requestId = requestId
 			events.setRequestId(requestId)
 			environmentDeploymentMetadata.setRequestId(requestId)
 		} else {
-			error "Request Id Generation failed"
+			requestId = utilModule.generateRequestId()
+			events.setRequestId(requestId)
+			environmentDeploymentMetadata.setRequestId(requestId)
+			events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 		}
-		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Service deployment workflow started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
 		stage('Pre-Build Validation') {
 			try {
@@ -291,7 +294,7 @@ node() {
 
 							case 'gcp_apigee':
 								events.sendStartedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment started for APIGEE', context_map, environment_logical_id)
-								apiHostName ="${configLoader.APIGEE.API_ENDPOINTS[env_key].service_hostname}"
+								apiHostName ="${configLoader.APIGEE.API_ENDPOINTS[env_key].SERVICE_HOSTNAME}"
 								updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
 								endpointUrl = apigeeModule.deploy("swagger/swagger.json", lambdaARN, env_key, environment_logical_id, config, context_map)
 								echo "API Proxy created at: ${endpointUrl}"
@@ -300,7 +303,7 @@ node() {
                 def apiResources = getSwaggerResourceARNs("${config['domain']}-${config['service']}-${environment_logical_id}", environment_logical_id, "gcp")
                 if(apiResources) {
                   for (path in apiResources) {
-                    events.sendCompletedEvent('CREATE_ASSET', null, generateAssetMap("gcp", "${config['domain']}-${config['service']}/${environment_logical_id}/${path}", "apigee_proxy", config), environment_logical_id);
+                    events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("gcp", "${config['domain']}-${config['service']}/${environment_logical_id}/${path}", "apigee_proxy", config), environment_logical_id);
                   }
                 }
 								break;
@@ -329,7 +332,9 @@ node() {
 				  }
 			  }
       } catch (ex) {
-			    if (api_deployment_target == 'aws_apigateway') {
+          if(deployOutput.contains('ROLLBACK_COMPLETE state and can not be updated')){
+              deleteAndRedeployService(environment_logical_id, envBucketKey)
+        } else if (api_deployment_target == 'aws_apigateway') {
 					  events.sendFailureEvent('DEPLOY_TO_AWS_APIGATEWAY', ex.getMessage(), context_map, environment_logical_id)
             events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
 				} else if (api_deployment_target == 'gcp_apigee') {
@@ -358,6 +363,20 @@ node() {
 	}//dir ends here
 }
 
+/**
+Redeploying Service
+*/
+
+def deleteAndRedeployService(environment_logical_id, envBucketKey){
+  echoServerlessFile()
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+  if (redeployOutput != 'success') {
+    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
+    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+  }
+}
+
 def getLambdaARN(stackName, credsId) {
 	def ARN = "";
 	try {
@@ -376,7 +395,20 @@ def getLambdaARN(stackName, credsId) {
 		error ex.getMessage();
 	}
 
-	return ARN;
+	def tokens = ARN.split(':')
+	def version
+	def alias
+	if (tokens[7].substring(0,1).isNumber()) {
+		version = tokens[7]
+		alias = ""
+	} else {
+		version = ""
+		alias = tokens[7]
+	}
+    if (alias || version) {
+      ARN = ARN.substring(0, ARN.lastIndexOf(':'));
+    }
+	return [ arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias ]
 }
 
 /**
@@ -1014,9 +1046,6 @@ def loadBuildModules(buildModuleUrl){
 		awsAPIGatewayModule.initialize()
 		echo "AWS APIGateway module loaded successfully."
 
-		awsLambdaModule = load "aws-lambda-module.groovy"
-		echo "AWS Lambda module loaded successfully."
-
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
 		echo "SCM module loaded successfully."
@@ -1040,7 +1069,7 @@ def loadBuildModules(buildModuleUrl){
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
 
-		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {
+		if (configLoader.APIGEE && configLoader.APIGEE.ENABLE_APIGEE) {
 			apigeeModule = load "apigee-module.groovy"
 			apigeeModule.initialize(configLoader.APIGEE, events)
 			echo "Apigee module loaded successfully."

@@ -67,9 +67,9 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{conf-apikey-stg}/${apiKeyStg}/g' ./config/global-config.json"
             sh "sed -i -- 's/{conf-apikey-prod}/${apiKeyProd}/g' ./config/global-config.json"
 
-            sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_HOST}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_HOST}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{apigee_mgmt_host}/${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_HOST}/g' ./config/prod-config.json"
+            sh "sed -i -- 's|{apigee_mgmt_host}|${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_HOST}|g' ./config/dev-config.json"
+            sh "sed -i -- 's|{apigee_mgmt_host}|${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_HOST}|g' ./config/stg-config.json"
+            sh "sed -i -- 's|{apigee_mgmt_host}|${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_HOST}|g' ./config/prod-config.json"
 
             sh "sed -i -- 's/{apigee_mgmt_org}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_ORG}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{apigee_mgmt_org}/${config_loader.APIGEE.API_ENDPOINTS.STG.MGMT_ORG}/g' ./config/stg-config.json"
@@ -469,11 +469,11 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/prod-config.json"
 
-            if (config_loader.SCM.TYPE == "bitbucket") {
-                sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
-                sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
-                sh "sed -i -- 's,{bb_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
+            sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
+            sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
+            sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
 
+            if (config_loader.SCM.TYPE == "bitbucket") {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
                 sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/dev-config.json"
                 sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/stg-config.json"
@@ -486,13 +486,9 @@ def loadServiceConfigurationData() {
             }
 
             if (config_loader.SCM.TYPE == "gitlab") {
-                sh "sed -i -- 's,{gitlab_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
-                sh "sed -i -- 's,{gitlab_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
-                sh "sed -i -- 's,{gitlab_service_host},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
-
-                sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{gitlab_private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
+                sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/dev-config.json"
+                sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/stg-config.json"
+                sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
             }
         }
 

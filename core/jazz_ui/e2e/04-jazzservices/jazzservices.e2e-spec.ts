@@ -44,6 +44,7 @@ describe('Overview', () => {
       }
     
       it('Create API Service', () => {
+            browser.sleep(5000);
             browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), timeOutHigh);
             winhandle = browser.getWindowHandle();
@@ -85,8 +86,11 @@ describe('Overview', () => {
       });
 
       it('Verify API Deployments' , () => {
+            jazzServices_po.getRefresh().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
+            browser.sleep(15000);
+            jazzServices_po.getRefresh().click();
             jazzServices_po.getDeploymentStatusVerify();
             //Verifying the Deployment status
             expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
@@ -158,10 +162,10 @@ describe('Overview', () => {
             jazzServices_po.getLamdaName().click();
             expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
             browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
-            browser.sleep(60000);
+            browser.sleep(40000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getRefresh()), timeOutHigh);
             jazzServices_po.getRefresh().click();
-            browser.sleep(60000);
+            browser.sleep(40000);
             //Moving to Production Environment
             browser.wait(EC.visibilityOf(jazzServices_po.getServiceNameHeader()), timeOutHigh);
             jazzServices_po.getProdName().click();
@@ -170,13 +174,15 @@ describe('Overview', () => {
             browser.wait(EC.visibilityOf(jazzServices_po.getProdHeader()), timeOutHigh);
             browser.wait(EC.visibilityOf(jazzServices_po.getRefresh()), timeOutHigh);
             browser.driver.switchTo().activeElement();
-            browser.sleep(60000);
+            browser.sleep(30000);
       });
   
       it('Verify Lamda Deployments' , () => {
+            jazzServices_po.getRefresh().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
-            //Verifying Deployment is successful or not
+            browser.sleep(15000);
+            jazzServices_po.getRefresh().click();
             jazzServices_po.getDeploymentStatusVerify();
             expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
             
@@ -262,8 +268,11 @@ describe('Overview', () => {
       });
 
       it('Verify Website Deployments' , () => {
+            jazzServices_po.getRefresh().click();
             browser.wait(EC.visibilityOf(jazzServices_po.getDeploymentStatus()), timeOutHigh);
             jazzServices_po.getDeploymentStatus().click();
+            browser.sleep(15000);
+            jazzServices_po.getRefresh().click();
             jazzServices_po.getDeploymentStatusVerify();
             //Checking the deployment is successful
             expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
@@ -277,34 +286,10 @@ describe('Overview', () => {
             //Asset Tab Navigagation
             jazzServices_po.getAsset().click();
             //Checking Assets are Active
-            expect(jazzServices_po.getAssetStatusVerify().getText()).toEqual('ACTIVE');
+            expect(jazzServices_po.getAssetStatusVerify().getText().then(function(text){ return text.toLowerCase()})).toEqual('active'); 
             browser.wait(EC.visibilityOf(jazzServices_po.getAssetHeader()), timeOutHigh);
             browser.sleep(4000);
             browser.wait(EC.elementToBeClickable(jazzServices_po.getServiceFromAsset()), timeOutHigh);
-      });
-
-      it('Verify Logs' ,  () => {
-            browser.wait(EC.visibilityOf(jazzServices_po.getLogs()), timeOutHigh);
-            jazzServices_po.getLogs().click();
-            browser.wait(EC.visibilityOf(jazzServices_po.getFilterIcon()), timeOutHigh);
-            browser.driver.switchTo().activeElement();
-            jazzServices_po.getFilterIcon().click();
-            jazzServices_po.getDropDown().click();
-            jazzServices_po.getDay().click();
-            browser.sleep(2000);
-            jazzServices_po.getDropDown().click();
-            jazzServices_po.getWeek().click();
-            browser.sleep(2000);
-            expect(jazzServices_po.getWeekVerify().getText()).toEqual('WEEK');
-            jazzServices_po.getDropDown().click();
-            jazzServices_po.getMonth().click();
-            browser.sleep(2000);
-            expect(jazzServices_po.getMonthVerify().getText()).toEqual('MONTH');
-            jazzServices_po.getDropDown().click();
-            jazzServices_po.getYear().click();
-            expect(jazzServices_po.getYearVerify().getText()).toEqual('YEAR');
-            browser.sleep(2000);
-            jazzServices_po.getServiceFromAsset().click();
       });
 
 });

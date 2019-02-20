@@ -3,13 +3,13 @@
 @import './../../secondary-components/create-service/create-service.component.scss';
 @keyframes blink {
     0% {
-        opacity: 0.2;
+        opacity: .2;
     }
     20% {
         opacity: 1;
     }
     100% {
-        opacity: 0.2;
+        opacity: .2;
     }
 }
 
@@ -44,7 +44,7 @@
 .stage-wrp {
     position: relative;
     background: #fff;
-    margin-right: 2rem;
+    margin-right: 1rem;
     cursor: pointer;
     flex-grow: 1;
     @media (max-width: $screen-lg) {
@@ -64,7 +64,7 @@
 }
 
 .stage-wrp::before {
-    content: '';
+    content: "";
     position: absolute;
     width: 100%;
     height: 5px;
@@ -81,7 +81,7 @@
 .stage-wrp .overview-item.health {
     display: flex;
     width: 100%;
-    @media (max-width: $screen-lg) {
+    @media(max-width: $screen-lg) {
         width: 33.33%;
     }
     .icon-icon-good,
@@ -97,7 +97,7 @@
 }
 
 .service-type {
-    text-transform: uppercase;
+    text-transform: lowercase;
 }
 
 .loading-row-edit {
@@ -120,7 +120,7 @@
 .stage-wrp.active .overview-item.health {
     display: flex;
     width: 20%;
-    @media (max-width: $screen-lg) {
+    @media(max-width: $screen-lg) {
         width: 33.33%;
     }
 }
@@ -130,19 +130,19 @@
     z-index: 3;
     visibility: hidden;
     position: absolute;
-    background: #d5d7d9;
+    background: #D5D7D9;
     padding: 3px 7px;
     border-radius: 3px;
     margin-top: 1rem;
     &::after {
-        content: '';
+        content: "";
         position: absolute;
         top: -60%;
         left: 29%;
         border-width: 8px;
         transform: rotate(180deg);
         border-style: solid;
-        border-color: #d5d7d9 transparent transparent transparent;
+        border-color: #D5D7D9 transparent transparent transparent;
     }
 }
 
@@ -218,7 +218,7 @@
     opacity: 0.9;
     z-index: 1;
     text-align: center;
-    background-image: url('/assets/images/mask-image.png');
+    background-image: url("/assets/images/mask-image.png");
     background-repeat: no-repeat;
     background-size: 87% auto;
     background-position: center;
@@ -228,7 +228,7 @@
 }
 
 .right-arow {
-    opacity: 0;
+    opacity: 0
 }
 
 .stage-wrp.active {
@@ -288,8 +288,8 @@
         &:nth-child(1) {
             margin-left: 0px !important;
         }
-        background: #ed008c;
-        color: white;
+        background:#ed008c;
+        color:white;
         list-style-type: none;
         border: 1px solid #d9d9d9;
         display: inline-block;
@@ -334,17 +334,17 @@
 
 .edit-service-overview {
     display: flex;
-    /deep/ input[type='text'] {
+    /deep/ input[type="text"] {
         padding: 0 !important;
     }
-    @media (max-width: $screen-sm) {
+    @media(max-width: $screen-sm) {
         flex-direction: column;
     }
 }
 
 .show-service-overview {
     display: flex;
-    @media (max-width: $screen-sm) {
+    @media(max-width: $screen-sm) {
         flex-direction: column;
     }
 }
@@ -363,7 +363,7 @@ section:focus {
 
 .email-err-msg {
     color: red;
-    margin-left: 155px;
+    margin-left: calc(14em - 7px);
     margin-top: -18px;
     font-size: 0.9rem;
 }
@@ -480,13 +480,13 @@ section:focus {
             width: 20%;
         }
         span:after {
-            content: '';
+            content: "";
             position: absolute;
             top: 0;
             left: 0;
             bottom: 0;
             right: 0; // background-image: -webkit-gradient(linear, 0 0, 100% 100%, color-stop(.25, rgba(255, 255, 255, .2)), color-stop(.25, transparent), color-stop(.5, transparent), color-stop(.5, rgba(255, 255, 255, .2)), color-stop(.75, rgba(255, 255, 255, .2)), color-stop(.75, transparent), to(transparent) );
-            background-image: -moz-linear-gradient(-45deg, rgba(255, 255, 255, 0.2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.2) 50%, rgba(255, 255, 255, 0.2) 75%, transparent 75%, transparent);
+            background-image: -moz-linear-gradient(-45deg, rgba(255, 255, 255, .2) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, .2) 50%, rgba(255, 255, 255, .2) 75%, transparent 75%, transparent);
             z-index: 1;
             -webkit-background-size: 4px 4px;
             -moz-background-size: 4px 4px; // background-size: 4px 4px;
@@ -1021,6 +1021,7 @@ section:focus {
         .feedback-submit {
             /deep/ button.btn-primary {
                 line-height: 3rem;
+                color: white;
             }
         }
     }
@@ -1028,7 +1029,7 @@ section:focus {
     button.btn-primary:active {
         background-color: #ed008c !important;
         color: #fff !important;
-        border: 1px solid #ed008c !important;
+        border: 1px solid #ffff !important;
     }
 }
 
@@ -1084,9 +1085,9 @@ summary {
         color: #ed008c;
     }
     display: flex;
-    outline: none;
+    outline:none;
     margin-bottom: 1rem;
-    cursor: pointer;
+    cursor:pointer
 }
 
 .summary-last-child {
@@ -1100,7 +1101,7 @@ details summary::-webkit-details-marker {
 }
 
 .metadata-body-border {
-    padding-bottom: 1rem;
+    padding-bottom: 1rem
 }
 
 .metadata-heading-wrap {
@@ -1112,8 +1113,8 @@ details summary::-webkit-details-marker {
         font-size: 1.8rem;
         font-weight: bold;
         border-radius: 10px 10px 0px 0px;
-        padding: 7px;
-        background-color: #aeb2bb;
+        padding: 0.5rem 1rem;
+        background-color: #AEB2BB;
     }
 }
 
@@ -1125,7 +1126,7 @@ details summary::-webkit-details-marker {
         margin: 0px;
         border-radius: 30px;
         padding: 7px 16px;
-        letter-spacing: 0.3px;
+        letter-spacing: .3px;
         font-size: 12px;
         vertical-align: middle;
         font-weight: 700;
@@ -1141,7 +1142,7 @@ details summary::-webkit-details-marker {
     display: flex;
     justify-content: space-between;
     .metadata-column {
-        width: calc(50% - 5px);
+        width: calc(50% - 1rem);
         background: white;
         border-radius: 10px;
     }
@@ -1151,9 +1152,7 @@ details summary::-webkit-details-marker {
     }
 }
 
-.extra-bottom-padding {
-    padding-bottom: 4rem;
-}
+.extra-bottom-padding {}
 
 .metadata-body-advanced {
     .metadata-row {}
@@ -1193,7 +1192,7 @@ details summary::-webkit-details-marker {
 }
 
 .cron-field {
-    min-width: 45rem;
+    min-width: 32rem;
 }
 
 .event-schedule-radio {
@@ -1209,15 +1208,13 @@ details {
 }
 
 .down-btn-wrap {
-    z-index: 1;
-    bottom: -1rem;
-    right: -2rem;
     font-size: 13px;
     btn-jazz-primary,
     a {
         cursor: pointer;
-        padding: 0px 5px;
-        color: white;
+        padding: 0px 5px
+    }
+    a {
         align-self: center;
     }
 }
@@ -1279,7 +1276,8 @@ details {
         border-bottom: 1px solid #d3d3d3;
     }
     .overlay-body {
-        padding: 4rem 3rem;
+        text-align: center;
+        padding: 3rem;
         width: 34rem;
     }
     .overlay-btns {
@@ -1299,11 +1297,7 @@ details {
 btn-jazz-primary {
     /deep/button.btn-primary {
         padding: 5px 23px;
-        border: 1px solid white;
-    }
-    /deep/button.disableBtn {
-        color: white !important;
-        border-color: white !important;
+        border: 1px solid #ed008c;
     }
 }
 
@@ -1333,6 +1327,8 @@ btn-jazz-primary {
 }
 
 .slack-relative {
+    display: flex;
+    width: 23%;
     position: relative;
     input {
         width: 150%;
@@ -1379,11 +1375,11 @@ btn-jazz-primary {
 }
 
 .rate-field.arrow_box:after {
-    left: 14.5%;
+    left: calc(23% - 3px);
 }
 
 .cron-fields.arrow_box:after {
-    left: 36%;
+    left: calc(61% - 3px);
 }
 
 .cron-field {
@@ -1397,13 +1393,14 @@ btn-jazz-primary {
 }
 
 .top-shift {
-    position: absolute;
-    top: 1rem;
-    left: 31%;
+    width: 70%;
+    text-align: center;
+    margin: auto;
 }
 
 .edit-div {
-    padding-right: 10px;
+    padding-right: 5px;
+    cursor: pointer;
 }
 
 .fullWidth {
@@ -1421,10 +1418,23 @@ btn-jazz-primary {
 .custom-save-btn-wrap {
     display: flex;
     flex-direction: row-reverse;
+    /deep/button.btn {
+        border-color: white !important;
+    }
+    /deep/a {
+        color: white !important;
+    }
+}
+
+.fixed-rate-wrapper {
+    display: flex;
+    align-items: baseline;
+}
+
+.label-value-margin {
+    margin-left: 4% !important;
 }
 
 .update-color {
     background-color: #ed008c !important;
 }
-
-.save-btn-wrap {}
