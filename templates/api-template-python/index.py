@@ -48,11 +48,10 @@ def handler(event, context):
     except Exception as e:
         # Exception Handling
         exception_type = e.__class__.__name__
-        exception_message = e.message
 
         # Create a JSON string here
         api_exception_json = CustomErrors.throwInternalServerError(
-            exception_message)
+            str(e))
         raise LambdaException(api_exception_json)
 
 
