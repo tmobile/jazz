@@ -35,6 +35,9 @@ describe('jazz_metrics', function () {
     event = {
       "stage": "test",
       "method": "POST",
+      "headers": {
+        "Jazz-Service-ID": "test-id"
+      },
       "body": {
         "service": "test-service",
         "domain": "jazztest",
@@ -97,6 +100,17 @@ describe('jazz_metrics', function () {
           expect(error).to.include({
             result: 'unauthorized',
             message: 'Unauthorized'
+          });
+        });
+    });
+
+    it("should indicate inputError if service id is not provided", () => {
+      event.headers = {};
+      index.genericValidation(event)
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: 'No service id provided'
           });
         });
     });

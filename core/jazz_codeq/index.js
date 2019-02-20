@@ -44,8 +44,9 @@ function handler(event, context, cb) {
           if (!serviceContext.headers['Jazz-Service-ID']) {
             serviceId = serviceContext.headers['Jazz-Service-ID']
             logger.error('No service id provided in  headers');
-            return cb(JSON.stringify(errorHandler.throwInputValidationError('No service id provided.')));
+            return cb(JSON.stringify(errorHandler.throwInputValidationError('No service id provided in  headers.')));
           }
+
 					const result = getCodeqInputsUsingQuery(serviceContext, config);
 
 					if (result.error) {
@@ -88,7 +89,7 @@ function handler(event, context, cb) {
 					return cb(JSON.stringify(errorHandler.throwInputValidationError(messages.SERVICE_INPUT_ERROR)));
 				}
 			}).catch(err => {
-				logger.error(err.errorMessage);
+				logger.error("SINI CATCH "+ JSON.stringify(err));
 				return cb(JSON.stringify(errorHandler.throwInputValidationError(err.errorMessage)));
 			});
 	} catch (e) {
