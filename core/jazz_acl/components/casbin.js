@@ -18,7 +18,8 @@ const casbin = require('casbin');
 const TypeORMAdapter = require('typeorm-adapter');
 const logger = require('./logger.js');
 const errorHandlerModule = require("./error-handler.js")();
-const AWS = require("aws-sdk");
+const getList = require("./getList.js");
+const globalConfig = require("../config/global-config.json");
 
 /* Create a connection to the DB*/
 async function dbConnection(config) {
@@ -206,49 +207,11 @@ async function getPolicyForServiceUser(serviceId, userId, config) {
 
 }
 
-/* fetch list of serviceIds from dynamodb */
-var scanResult;
-async function scanExecute(dynamodb, scanparams, items_formatted) {
-  let dataDb = await dynamodb.scan(scanparams).promise();
-
-  if (dataDb && dataDb.Items && dataDb.Items.length || items_formatted.length) {
-    dataDb.Items.forEach(function (item) {
-      items_formatted.push(item.SERVICE_ID.S);
-    });
-    if (dataDb.LastEvaluatedKey) {
-      scanparams.ExclusiveStartKey = dataDb.LastEvaluatedKey;
-      await scanExecute(dynamodb, scanparams, items_formatted);
-    } else {
-      scanResult = {
-        data : items_formatted
-      };
-    }
-  } else {
-    scanResult= {
-      error: dataDb || "db error"
-    };
-  }
-
-  return scanResult
-}
-
 /* attach admin policies */
 function attachAdminPolicies(list) {
   let svcIdList = []
   list.forEach(eachId => {
-    let svcIdObj = {
-      serviceId:"",
-      policies:[{
-        category: "manage",
-        permission: "admin"
-      }, {
-        category: "code",
-        permission: "write"
-      }, {
-        category: "deploy",
-        permission: "write"
-      }]
-    };
+    let svcIdObj = globalConfig.ADMIN_SERVICES_POLICIES;
     svcIdObj.serviceId = eachId;
     svcIdList.push(svcIdObj);
   });
@@ -259,24 +222,7 @@ function attachAdminPolicies(list) {
 async function getPolicyForUser(userId, config) {
   let policies = [];
   if (userId === config.SERVICE_USER) {
-    let items_formatted = [];
-    AWS.config.update({
-      region: "us-east-1"
-    });
-
-    let dynamodb = new AWS.DynamoDB({
-      apiVersion: '2012-08-10'
-    });
-
-    let scanparams = {
-      "TableName": config.SERVICES_TABLE_NAME,
-      "ProjectionExpression": "SERVICE_ID",
-      "ReturnConsumedCapacity": "TOTAL",
-      "Limit": "10"
-    };
-
-    const dbResult =  await scanExecute(dynamodb, scanparams, items_formatted)
-
+    const dbResult =  await getList.getSeviceIdList(config)
     if (dbResult && dbResult.error) {
       return dbResult
     }
