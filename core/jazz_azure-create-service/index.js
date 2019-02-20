@@ -1,7 +1,4 @@
-const configModule = require("./components/config.js");
-const logger = require("./components/logger.js");
 const responseObj = require("./components/response.js");
-const errorHandlerModule = require("./components/error-handler.js");
 const CommandMapping = require("./components/CommandMapping.js"); 
 
 
