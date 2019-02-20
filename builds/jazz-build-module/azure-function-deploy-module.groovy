@@ -106,9 +106,9 @@ def invokeAzureCreation(serviceInfo, assetList){
 
         item = createFunctionApp(data)
         assetList.add(item)
-        deployFunction(data, zip, type)
         output = azureUtil.invokeAzureService(data, "getMasterKey")
         masterKey = output.data.result.key
+        deployFunction(data, zip, type)
 
       }
 
