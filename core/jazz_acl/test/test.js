@@ -28,6 +28,8 @@ const services = require("../components/scm/services");
 const util = require("../components/util");
 const globalConfig = require("../config/global-config.json");
 const request = require('request');
+const getList = require("../components/getList");
+const AWS = require("aws-sdk-mock");
 chai.use(chaiAsPromised);
 
 describe("Validation tests", () => {
@@ -665,5 +667,51 @@ describe("ScmUtil -- Gitlab", () => {
     getAllRepoUsersStub.restore();
     getGitLabsProjectIdStub.restore();
     removeRepoUserStub.restore();
+  });
+});
+
+describe("getList", () => {
+  it("should successfully get data from db", () => {
+    const config = {
+      "SERVICES_TABLE_NAME": "test_table",
+      "REGION": "region",
+    }
+    let data = {
+      Items: [{
+        SERVICE_ID:{
+          S: "1"
+        }
+      }, {
+        SERVICE_ID:{
+          S: "2"
+        }
+      }, {
+        SERVICE_ID:{
+          S: "3"
+        }
+      }]
+    };
+    let count = 1;
+    let res = Object.assign({}, data);
+    AWS.mock("DynamoDB", "scan", (params, cb) => {
+      let dataObj;
+      if (count) {
+        data.LastEvaluatedKey = {
+          SERVICE_ID:{
+            S: "3"
+          }
+        }
+        dataObj = data;
+        count--;
+      } else {
+        dataObj = res;
+      }
+      return cb(null, dataObj);
+    });
+
+    const list = getList.getSeviceIdList(config);
+    list.then(res => {
+      expect(res.data).to.include('1', '2', '3')
+    });
   });
 });
