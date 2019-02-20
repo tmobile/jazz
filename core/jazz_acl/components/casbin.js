@@ -211,7 +211,7 @@ async function getPolicyForServiceUser(serviceId, userId, config) {
 function attachAdminPolicies(list) {
   let svcIdList = []
   list.forEach(eachId => {
-    let svcIdObj = globalConfig.ADMIN_SERVICES_POLICIES;
+    let svcIdObj = Object.assign({}, globalConfig.ADMIN_SERVICES_POLICIES);
     svcIdObj.serviceId = eachId;
     svcIdList.push(svcIdObj);
   });
