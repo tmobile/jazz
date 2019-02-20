@@ -1,5 +1,4 @@
 const ResourceFactory = require('./ResourceFactory');
-const logger = require("./logger.js");
 const validator = require('./function/dataValidator');
 
 module.exports = class FunctionApp {
@@ -26,23 +25,39 @@ module.exports = class FunctionApp {
 
   async createStorage() {
     await this.init();
-    return await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags, this.data.location);
+    let stack = await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags, this.data.location);
+    let output = {
+      id: stack.id
+    };
+    return output;
   }
 
   async createEventResource() {
     await this.init();
-    return await this.resourceFactory.createDependency(this.data);
+    let stack = await this.resourceFactory.createDependency(this.data);
+    let id = '';
+    if (stack) {
+      id = stack.id;
+    }
+    let output = {
+      id: id
+    };
+    return output;
   }
 
   async createfunction(){
     await this.init();
-    return await this.resourceFactory.createFunctionWithConnectionString(this.data);
+    let stack = await this.resourceFactory.createFunctionWithConnectionString(this.data);
+    let output = {
+      id: stack.id
+    };
+    return output;
   }
 
   async deployFunction(){
     await this.init();
     validator.notNull(this.data.zip, 'zip');
-    return await this.resourceFactory.uploadZipToKudu(this.data.stackName, this.data.zip);
+    await this.resourceFactory.uploadZipToKudu(this.data.stackName, this.data.zip);
   }
 
   async installFunctionExtensions(){
@@ -53,7 +68,13 @@ module.exports = class FunctionApp {
 
   async createDatabase(){
     await this.init();
-    await this.resourceFactory.createDatabase(this.data);
+    let stack = await this.resourceFactory.createDatabase(this.data);
+
+    let output = {
+      id: stack.id
+    };
+    return output;
+
   }
 
   async getMasterKey(){
@@ -62,7 +83,7 @@ module.exports = class FunctionApp {
     let output = {
       key: masterKey.value
     };
-    return output
+    return output;
 
   }
 

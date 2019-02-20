@@ -1,7 +1,4 @@
-const configModule = require("./components/config.js");
-const logger = require("./components/logger.js");
 const responseObj = require("./components/response.js");
-const errorHandlerModule = require("./components/error-handler.js");
 const CommandMapping = require("./components/CommandMapping.js"); 
 
 
@@ -18,13 +15,13 @@ module.exports = async () => {
         result = await commandMapping.process(obj);
         } 
         catch (error) {
-            console.log(responseObj({
+            console.log(JSON.stringify(responseObj({
                 error : error
-            }));
+            })));
          }
-        console.log(responseObj({
+        console.log(JSON.stringify(responseObj({
             result : result
-        }));
+        })));
 }
     
         

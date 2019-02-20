@@ -2,7 +2,6 @@ const sbHandler = require('./servicebusHandler');
 const dbHandler = require('./cosmosDBHandler');
 const ehHandler = require('./eventhubHandler');
 const storageHandler = require('./storageblobHandler');
-const logger = require("../logger.js");
 
 async function createDependency(data, factory) {
 
@@ -22,7 +21,6 @@ async function createDependency(data, factory) {
       resource = await sbHandler.create(data, await factory.getResource('ServiceBusManagementClient'));
       break;
     default:
-      logger.error('Unknown type ' + type);
   }
 
   return resource;
@@ -44,7 +42,6 @@ async function getConnectionString(data, factory) {
       resource = await sbHandler.getConnectionString(data, await factory.getResource('ServiceBusManagementClient'));
       break;
     default:
-      logger.info('No connection string for this type ' + type);
   }
 
   return resource;
