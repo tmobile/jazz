@@ -191,7 +191,11 @@ async function addPolicy(serviceId, policies, enforcer) {
 /* Get the permissions for a service given a userId */
 async function getPolicyForServiceUser(serviceId, userId, config) {
   if (userId === config.SERVICE_USER) {
-    let result = attachAdminPolicies([serviceId]);
+    const dbResult =  await getList.getSeviceIdList(config, serviceId)
+    if (dbResult && dbResult.error) {
+      return dbResult
+    }
+    let result = attachAdminPolicies(dbResult.data);
     return result
   } else {
     const result = await getPolicies(serviceId, config);
@@ -222,7 +226,7 @@ function attachAdminPolicies(list) {
 async function getPolicyForUser(userId, config) {
   let policies = [];
   if (userId === config.SERVICE_USER) {
-    const dbResult =  await getList.getSeviceIdList(config)
+    const dbResult =  await getList.getSeviceIdList(config, null)
     if (dbResult && dbResult.error) {
       return dbResult
     }
