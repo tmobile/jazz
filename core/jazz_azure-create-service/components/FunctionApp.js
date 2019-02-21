@@ -18,9 +18,12 @@ module.exports = class FunctionApp {
   }
 
   async deleteByTag() {
-      await this.init().then(async () => {
-          await this.resourceFactory.deleteResourcesByTag(this.data.tagName);
-      });
+    await this.init();
+    let message =  await this.resourceFactory.deleteResourcesByServiceName(this.data.tagName, this.data.tagValue);
+    let output = {
+      message: message
+    };
+    return output;
   }
 
   async createStorage() {

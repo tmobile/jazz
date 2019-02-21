@@ -451,4 +451,19 @@ module.exports = class ResourceFactory {
     let client = await this.factory.getResource("WebAppManagementClient");
     return await client.webApps.restart(resourceGroupName, appName);
   }
+
+  async deleteResourcesByServiceName(tagName, tagValue) {
+    let client = await this.factory.getResource("ResourceManagementClient");
+    let resources = await client.resources.list({filter: `tagName eq '${tagName}' and tagValue eq '${tagValue}'`});
+    let message ='total resources ' + resources.length + ' ';
+
+    for (const resource of resources) {
+      message += resource.id;
+      message += ' ';
+      let apiVersion = await this.getLatestApiVersionForResource(resource);
+      await client.resources.deleteById(resource.id, apiVersion);
+    }
+
+    return message;
+  }
 }
