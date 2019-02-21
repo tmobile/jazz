@@ -710,7 +710,7 @@ describe("getList", () => {
       return cb(null, dataObj);
     });
 
-    const list = getList.getSeviceIdList(config);
+    const list = getList.getSeviceIdList(config, '123');
     list.then(res => {
       expect(res.data).to.include('1', '2', '3');
       AWS.restore("DynamoDB");
