@@ -23,79 +23,80 @@ module.exports.handler = (event, context, callback) => {
   logger.init(event, context);
   const errorHandler = errorHandlerModule();
 
-  validation.validateEvent(event, callback);
+  try {
+    validation.validateEvent(event)
+      .then(function (result) {
+        AWS.config.region = event.region;
+        const lambda = new AWS.Lambda();
 
-  AWS.config.region = event.region;
-  const lambda = new AWS.Lambda();
+        //Defining the payload object
+        const payload = {
+          body: event.body,
+          query: event.queryStringParameters,
+          headers: event.headers,
+          method: event.httpMethod,
+          path: event.path,
+          resource: event.resource,
+          pathParameters: event.pathParameters
+        };
 
-  //Defining the payload object
-  const payload = {
-    body: event.body,
-    query: event.queryStringParameters,
-    headers: event.headers,
-    method: event.httpMethod,
-    path: event.path,
-    resource: event.resource,
-    pathParameters: event.pathParameters
-  };
-
-  logger.verbose(`payload : ${JSON.stringify(payload)}`);
-  const params = {
-    FunctionName: event.functionName,
-    InvocationType: 'RequestResponse',
-    LogType: 'Tail',
-    Payload: JSON.stringify(payload)
-  };
-
-  lambda.invoke(params, (err, data) => {
-    let errorMessage;
-    if (err) {
-      logger.error(`Error invoking lambda proxy : ${JSON.stringify(err)}`);
-      logger.verbose(`Input Params ${JSON.stringify(params)}`);
-
-      //error thrown when a required parameter is missing
-      if (err.code === 'MissingRequiredParameter') {
-        callback(JSON.stringify(errorHandler.throwMissingParamsError(err.message)));
-      } else {
-        callback(JSON.stringify(errorHandler.throwCommonLambdaError(err.message)));
-      }
-    } else {
-      const responseObj = JSON.parse(data.Payload);
-      if (!responseObj) {
-        logger.error(`No payload response received.`);
-        callback(errorHandler.throwInternalServerError(`No payload response received.`));
-      }
-      else if (!responseObj.errorMessage && !responseObj.message) {
-        logger.verbose(`Successfully invoked lambda : ${JSON.stringify(responseObj)}`);
-        callback(null, responseObj);
-      } else {
-        if (responseObj.errorMessage) {
-          errorMessage = (typeof responseObj === 'string') ? JSON.parse(responseObj.errorMessage) : responseObj.errorMessage;
-          logger.error(`Unhandled error reported in underlying lambda : ${errorMessage}`);
+        logger.verbose(`payload : ${JSON.stringify(payload)}`);
+        const params = {
+          FunctionName: event.functionName,
+          InvocationType: 'RequestResponse',
+          LogType: 'Tail',
+          Payload: JSON.stringify(payload)
+        };
+        return lambda.invoke(params).promise();
+      })
+      .then(function (result) {
+        const responseObj = JSON.parse(result.Payload);
+        if (!responseObj) {
+          logger.error(`No payload response received.`);
+          return callback(errorHandler.throwInternalServerError(`No payload response received.`));
+        }
+        else if (!responseObj.errorMessage && !responseObj.message) {
+          logger.verbose(`Successfully invoked lambda : ${JSON.stringify(responseObj)}`);
+          return callback(null, responseObj);
         } else {
-          errorMessage = (typeof responseObj === 'string') ? JSON.parse(responseObj.message) : responseObj.message;
-          logger.error(`Error reported in underlying lambda : ${errorMessage}`);
-        }
+          if (responseObj.errorMessage) {
+            errorMessage = (typeof responseObj === 'string') ? JSON.parse(responseObj.errorMessage) : responseObj.errorMessage;
+            logger.error(`Unhandled error reported in underlying lambda : ${errorMessage}`);
+          } else {
+            errorMessage = (typeof responseObj === 'string') ? JSON.parse(responseObj.message) : responseObj.message;
+            logger.error(`Error reported in underlying lambda : ${errorMessage}`);
+          }
 
-        const errorType = errorMessage.errorType;
-        switch (errorType) {
-          case 'BadRequest':
-            callback(JSON.stringify(errorHandler.throwInputValidationError(errorMessage)));
-            break;
-          case 'Forbidden':
-            callback(JSON.stringify(errorHandler.throwForbiddenError(errorMessage)));
-            break;
-          case 'Unauthorized':
-            callback(JSON.stringify(errorHandler.throwUnauthorizedError(errorMessage)));
-            break;
-          case 'NotFound':
-            callback(JSON.stringify(errorHandler.throwNotFoundError(errorMessage)));
-            break;
-          case 'InternalServerError':
-          default:
-            callback(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
+          const errorType = errorMessage.errorType;
+          switch (errorType) {
+            case 'BadRequest':
+              return callback(JSON.stringify(errorHandler.throwInputValidationError(errorMessage)));
+              break;
+            case 'Forbidden':
+              return callback(JSON.stringify(errorHandler.throwForbiddenError(errorMessage)));
+              break;
+            case 'Unauthorized':
+              return callback(JSON.stringify(errorHandler.throwUnauthorizedError(errorMessage)));
+              break;
+            case 'NotFound':
+              return callback(JSON.stringify(errorHandler.throwNotFoundError(errorMessage)));
+              break;
+            case 'InternalServerError':
+            default:
+              return callback(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
+          }
         }
-      }
-    }
+      })
+      .catch(function (error) {
+        if (error.result === "inputError") {
+          return callback(JSON.stringify(errorHandler.throwMissingParamsError(error.message)));
+        } else {
+          logger.error(`Error invoking lambda proxy : ${JSON.stringify(error)}`);
+          return callback(JSON.stringify(errorHandler.throwCommonLambdaError(error.message)));
+        }
+      })
+  } catch (e) {
+    logger.error("Internal server error:" + JSON.stringify(e));
+    return callback(JSON.stringify(errorHandler.throwInternalServerError("Unexpected error occurred")));
   }
-)};
+};

@@ -16,15 +16,30 @@
 
 const errorHandlerModule = require("./error-handler.js");
 
-module.exports.validateEvent = (event, callback) => {
-    const errorHandler = errorHandlerModule();
-    if (!event.region) {
-        callback(JSON.stringify(errorHandler.throwMissingParamsError(`Required parameter 'region' is missing`)));
-    }
-    if (!event.httpMethod) {
-        callback(JSON.stringify(errorHandler.throwMissingParamsError(`Required parameter 'httpMethod' is missing`)));
-    }
-    if (!event.functionName) {
-        callback(JSON.stringify(errorHandler.throwMissingParamsError(`Required parameter 'functionName' is missing`)));
-    }
+module.exports.validateEvent = (event) => {
+    return new Promise((resolve, reject) => {
+        // event.method cannot be empty, throw error
+        if (!event.region) {
+            reject({
+                result: "inputError",
+                message: "Required parameter 'region' is missing"
+            })
+        }
+
+        if (!event.httpMethod) {
+            reject({
+                result: "inputError",
+                message: "Required parameter 'httpMethod' is missing"
+            })
+        }
+
+        if (!event.functionName) {
+            reject({
+                result: "inputError",
+                message: "Required parameter 'functionName' is missing"
+            })
+        }
+
+        resolve();
+    });
 }
