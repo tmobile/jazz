@@ -37,6 +37,7 @@ export class CreateServiceComponent implements OnInit {
   disablePlatform = true;
   selected:string = "Minutes";
   runtime:string = Object.keys(env_oss.envLists)[0];
+  webtime:string = Object.keys(env_oss.WebLists)[0];
   eventSchedule:string = 'fixedRate';
   private slackSelected: boolean = false;
   private ttlSelected: boolean = false;
@@ -93,6 +94,8 @@ export class CreateServiceComponent implements OnInit {
   invalidEventName:boolean = false;
   runtimeKeys : any;
   runtimeObject : any;
+  webObject : any;
+  webKeys : any;
 
 
   constructor (
@@ -107,6 +110,8 @@ export class CreateServiceComponent implements OnInit {
     this.toastmessage = messageservice;
     this.runtimeObject = env_oss.envLists;
     this.runtimeKeys = Object.keys(this.runtimeObject);
+    this.webObject = env_oss.WebLists;
+    this.webKeys = Object.keys(this.webObject);
   }
 
   public focusDynamo = new EventEmitter<boolean>();
@@ -167,6 +172,10 @@ export class CreateServiceComponent implements OnInit {
   // function called on runtime change(radio)
   onSelectionChange(val){
     this.runtime = val;
+  }
+
+  onWebSelectionChange(val){
+    this.webtime = val;
   }
 
   // function called on event schedule change(radio)
@@ -358,6 +367,7 @@ export class CreateServiceComponent implements OnInit {
       }
 
     } else if(this.typeOfService == 'website'){
+      payload["runtime"] = this.webtime;
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
     }
 
@@ -430,7 +440,7 @@ export class CreateServiceComponent implements OnInit {
     this.getData();
     this.createService();
     this.typeOfService = 'api';
-    this.selectedApprovers=[];
+    this.selectedApprovers = [];
   }
 
 
