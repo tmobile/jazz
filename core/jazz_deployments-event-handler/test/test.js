@@ -102,7 +102,7 @@ describe("getAuthResponse", () => {
 
 });
 describe("checkforInterestedEvents", () => {
-  it("should return object with paramenter interested_event set to true", () => {
+  it("should return object with parameter interested_event set to true", () => {
     var record = event.Records[0];
     var sequenceNumber = record.kinesis.sequenceNumber;
     var encodedPayload = record.kinesis.data;
@@ -110,7 +110,7 @@ describe("checkforInterestedEvents", () => {
       assert.isTrue(res.interested_event);
     });
   });
-  it("should reject with paramenter interested_event set to false", () => {
+  it("should reject with parameter interested_event set to false", () => {
     var payload = {
       Item: {
         EVENT_ID: {
@@ -594,7 +594,8 @@ describe("updateDeployments", () => {
       service: 'test-02',
       environment_logical_id: 'temp_env_ID',
       provider_build_url: "http://temp_testing/dccdw.com",
-      provider_build_id: "temp_build_id"
+      provider_build_id: "temp_build_id",
+      request_id: "temp-reqid-0001"
     };
     res = {
       "data": {
@@ -624,6 +625,7 @@ describe("updateDeployments", () => {
       sinon.assert.calledOnce(processRequestStub);
       processRequestStub.restore();
     })
+
   })
   it("should call return error if  processRequest is unsucesfull", () => {
     var processRequestStub = sinon.stub(index, "processRequest").rejects({

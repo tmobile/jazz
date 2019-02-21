@@ -36,7 +36,7 @@ export class CreateServiceComponent implements OnInit {
   typeOfPlatform:string = "aws";
   disablePlatform = true;
   selected:string = "Minutes";
-  runtime:string = 'nodejs';
+  runtime:string = Object.keys(env_oss.envLists)[0];
   eventSchedule:string = 'fixedRate';
   private slackSelected: boolean = false;
   private ttlSelected: boolean = false;
@@ -91,6 +91,8 @@ export class CreateServiceComponent implements OnInit {
   invalidServiceName:boolean=false;
   invalidDomainName:boolean=false;
   invalidEventName:boolean = false;
+  runtimeKeys : any;
+  runtimeObject : any;
 
 
   constructor (
@@ -103,6 +105,8 @@ export class CreateServiceComponent implements OnInit {
     private authenticationservice: AuthenticationService
   ) {
     this.toastmessage = messageservice;
+    this.runtimeObject = env_oss.envLists;
+    this.runtimeKeys = Object.keys(this.runtimeObject);
   }
 
   public focusDynamo = new EventEmitter<boolean>();
@@ -409,7 +413,7 @@ export class CreateServiceComponent implements OnInit {
     this.rateExpression.type = 'none';
     this.rateExpression.duration = "5";
     this.eventExpression.type = 'awsEventsNone';
-    this.runtime = 'nodejs';
+    this.runtime = this.runtimeKeys[0];
   }
 
   // function to navigate from success or error screen to create service screen

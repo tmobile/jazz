@@ -1,3 +1,41 @@
+#s3 Role
+s3Role:
+  Type: AWS::IAM::Role
+  Properties:
+    RoleName: ${self:service}-${self:custom.myStage}
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        -
+          Effect: "Allow"
+          Principal:
+            Service:
+              - "lambda.amazonaws.com"
+          Action:
+            - "sts:AssumeRole"
+    Path: "/"
+    Policies:
+      -
+        PolicyName: "s3-logs-policy"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "s3:ListBucket"
+              Resource: {event_s3_arn}
+            - Effect: "Allow"
+              Action:
+                - "s3:*"
+              Resource: "{event_s3_arn}/*"
+            - Effect: "Allow"
+              Action:
+                - "logs:CreateLogGroup"
+                - "logs:CreateLogStream"
+                - "logs:PutLogEvents"
+              Resource: "*"
+
+#DynamoDb Role
 dynamoDbRole:
   Type: AWS::IAM::Role
   Properties:
@@ -31,7 +69,7 @@ dynamoDbRole:
               #Start:dynamoDbstreamGetArn
               Resource: { Fn::GetAtt: [ sourceDynamoDbTable, StreamArn ] }
               #End:dynamoDbstreamGetArn
-              #ResourceDisabled: {event_dynamodb_stream_arn}
+              #ResourceDynamoDbDisabled: {event_dynamodb_stream_arn}
             - Effect: "Allow"
               Action:
                 - "logs:CreateLogGroup"
@@ -68,6 +106,45 @@ sqsRole:
                 - "sqs:DeleteMessage"
                 - "sqs:GetQueueAttributes"
               Resource: {event_sqs_arn}
+            - Effect: "Allow"
+              Action:
+                - "logs:CreateLogGroup"
+                - "logs:CreateLogStream"
+                - "logs:PutLogEvents"
+              Resource: "*"
+
+#kinesis Role
+kinesisRole:
+  Type: AWS::IAM::Role
+  Properties:
+    RoleName: ${self:service}-${self:custom.myStage}
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        -
+          Effect: "Allow"
+          Principal:
+            Service:
+              - "lambda.amazonaws.com"
+          Action:
+            - "sts:AssumeRole"
+    Path: "/"
+    Policies:
+      -
+        PolicyName: "kinesis-stream-logs"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "kinesis:DescribeStream"
+                - "kinesis:GetRecords"
+                - "kinesis:GetShardIterator"
+                - "kinesis:ListStreams"
+              #Start:kinesisStreamGetArn
+              Resource: { Fn::GetAtt: [ sourceKinesisStreams, Arn ] }
+              #End:kinesisStreamGetArn
+              #ResourceKinesisDisabled: {event_kinesis_stream_arn}
             - Effect: "Allow"
               Action:
                 - "logs:CreateLogGroup"
