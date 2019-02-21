@@ -63,6 +63,8 @@ def loadServiceConfigurationData() {
             updateConfigValue("{casbin_database}", config_loader.ACL.DATABASE.NAME)
             updateConfigValue("{casbin_type}", config_loader.ACL.DATABASE.TYPE_DB)
             updateConfigValue("{casbin_timeout}", config_loader.ACL.DATABASE.TIMEOUT)
+            updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
+            updateConfigValue("{conf-region}", region)
 
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/global-config.json"
             sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/global-config.json"
@@ -178,7 +180,7 @@ def loadServiceConfigurationData() {
             updateConfigValue("{conf-region}", region)
         }
 
-        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer") || (service_name.trim() == "jazz_cognito-admin-authorizer")) {
+        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer") || (service_name.trim() == "jazz_cognito-admin-authorizer") || (service_name.trim() == "jazz_token-authorizer")) {
             updateConfigValue("{conf-user-pool-id}", config_loader.AWS.COGNITO.USER_POOL_ID)
             updateConfigValue("{conf-client-id}", config_loader.AWS.COGNITO.CLIENT_ID)
             updateConfigValue("{conf-region}", region)

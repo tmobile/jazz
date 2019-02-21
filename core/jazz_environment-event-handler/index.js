@@ -32,7 +32,7 @@ var errorHandler = errorHandlerModule(logger);
 var processedEvents = [];
 var failedEvents = [];
 
-function handler (event, context, cb) {
+function handler(event, context, cb) {
   var configData = config(context);
 
   rp(exportable.getTokenRequest(configData))
@@ -55,7 +55,7 @@ function handler (event, context, cb) {
 
 }
 
-function getTokenRequest (configData) {
+function getTokenRequest(configData) {
   return {
     uri: configData.BASE_API_URL + configData.TOKEN_URL,
     method: 'post',
@@ -70,7 +70,7 @@ function getTokenRequest (configData) {
   };
 };
 
-function getAuthResponse (result) {
+function getAuthResponse(result) {
   return new Promise((resolve, reject) => {
     if (result.statusCode === 200 && result.body && result.body.data) {
       return resolve(result.body.data.token);
@@ -81,7 +81,7 @@ function getAuthResponse (result) {
   });
 }
 
-function processEvents (event, configData, authToken) {
+function processEvents(event, configData, authToken) {
   return new Promise((resolve, reject) => {
     var processEachEventPromises = [];
     for (var i = 0; i < event.Records.length; i++) {
@@ -98,7 +98,7 @@ function processEvents (event, configData, authToken) {
   });
 }
 
-function processEachEvent (record, configData, authToken) {
+function processEachEvent(record, configData, authToken) {
   return new Promise((resolve, reject) => {
     var sequenceNumber = record.kinesis.sequenceNumber;
     var encodedPayload = record.kinesis.data;
@@ -127,7 +127,7 @@ function processEachEvent (record, configData, authToken) {
   });
 }
 
-function checkForInterestedEvents (encodedPayload, sequenceNumber, config) {
+function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
   return new Promise((resolve, reject) => {
     var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
@@ -149,7 +149,7 @@ function checkForInterestedEvents (encodedPayload, sequenceNumber, config) {
   });
 }
 
-function processItem (eventPayload, configData, authToken) {
+function processItem(eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
     logger.info("svcContext: " + JSON.stringify(svcContext));
@@ -159,9 +159,9 @@ function processItem (eventPayload, configData, authToken) {
     environmentApiPayload.domain = svcContext.domain;
 
     exportable.getServiceDetails(environmentApiPayload, configData, authToken)
-      .then((result) => { return exportable.processServiceDetails(result)})
-      .then((serviceDetails) => { return exportable.manageProcessItem(eventPayload, serviceDetails, configData, authToken)})
-      .then((res) => {return resolve(res)})
+      .then((result) => { return exportable.processServiceDetails(result) })
+      .then((serviceDetails) => { return exportable.manageProcessItem(eventPayload, serviceDetails, configData, authToken) })
+      .then((res) => { return resolve(res) })
       .catch((err) => {
         logger.error("processItem failed: " + err);
         return reject(err);
@@ -185,7 +185,7 @@ function processServiceDetails(result) {
   });
 }
 
-function manageProcessItem (eventPayload, serviceDetails, configData, authToken) {
+function manageProcessItem(eventPayload, serviceDetails, configData, authToken) {
   return new Promise((resolve, reject) => {
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
     logger.info("svcContext: " + JSON.stringify(svcContext));
@@ -198,7 +198,7 @@ function manageProcessItem (eventPayload, serviceDetails, configData, authToken)
 
     if (eventPayload.EVENT_NAME.S === configData.EVENTS.INITIAL_COMMIT) {
       exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((result) => { return exportable.processBuild(environmentApiPayload,serviceDetails, configData, authToken); })
+        .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventInitialCommit failed: " + err);
@@ -208,8 +208,8 @@ function manageProcessItem (eventPayload, serviceDetails, configData, authToken)
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.CREATE_BRANCH) {
       environmentApiPayload.friendly_name = svcContext.branch;
 
-      exportable.processEventCreateBranch(environmentApiPayload,serviceDetails.id, configData, authToken)
-        .then((result) => { return exportable.processBuild(environmentApiPayload,serviceDetails, configData, authToken); })
+      exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken)
+        .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventCreateBranch Failed" + err);
@@ -226,10 +226,10 @@ function manageProcessItem (eventPayload, serviceDetails, configData, authToken)
       }
 
       if (!svcContext.logical_id) {
-        exportable.getEnvironmentLogicalId(environmentApiPayload, serviceDetails.id,configData, authToken)
+        exportable.getEnvironmentLogicalId(environmentApiPayload, serviceDetails.id, configData, authToken)
           .then((logical_id) => {
             environmentApiPayload.logical_id = logical_id;
-            exportable.processEventUpdateEnvironment(environmentApiPayload,serviceDetails.id, configData, authToken)
+            exportable.processEventUpdateEnvironment(environmentApiPayload, serviceDetails.id, configData, authToken)
               .then((result) => { return resolve(result); })
               .catch((err) => {
                 logger.error("processEventUpdateEnvironment Failed" + err);
@@ -239,7 +239,7 @@ function manageProcessItem (eventPayload, serviceDetails, configData, authToken)
 
       } else {
         environmentApiPayload.logical_id = svcContext.logical_id;
-        exportable.processEventUpdateEnvironment(environmentApiPayload,serviceDetails.id, configData, authToken)
+        exportable.processEventUpdateEnvironment(environmentApiPayload, serviceDetails.id, configData, authToken)
           .then((result) => { return resolve(result); })
           .catch((err) => {
             logger.error("processEventUpdateEnvironment Failed" + err);
@@ -261,7 +261,7 @@ function manageProcessItem (eventPayload, serviceDetails, configData, authToken)
       }
 
       // Update with DELETE status
-      exportable.processEventUpdateEnvironment(environmentApiPayload,serviceDetails.id, configData, authToken)
+      exportable.processEventUpdateEnvironment(environmentApiPayload, serviceDetails.id, configData, authToken)
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventUpdateEnvironment Failed" + err);
@@ -270,14 +270,14 @@ function manageProcessItem (eventPayload, serviceDetails, configData, authToken)
 
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_BRANCH) {
       environmentApiPayload.physical_id = svcContext.branch;
-      exportable.processEventDeleteBranch(environmentApiPayload, serviceDetails.id,configData, authToken)
+      exportable.processEventDeleteBranch(environmentApiPayload, serviceDetails.id, configData, authToken)
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventDeleteBranch Failed" + err);
           return reject(err);
         })
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.COMMIT_CODE) {
-      exportable.processBuild(environmentApiPayload, serviceDetails,configData, authToken)
+      exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken)
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processBuild Failed" + err);
@@ -288,7 +288,7 @@ function manageProcessItem (eventPayload, serviceDetails, configData, authToken)
   });
 }
 
-function processEventInitialCommit (environmentPayload, serviceId, configData, authToken) {
+function processEventInitialCommit(environmentPayload, serviceId, configData, authToken) {
   function processEnv(env) {
     return new Promise((resolve, reject) => {
       environmentPayload.logical_id = env;
@@ -342,7 +342,7 @@ function processEventInitialCommit (environmentPayload, serviceId, configData, a
   });
 }
 
-function processEventCreateBranch (environmentPayload,service_id, configData, authToken) {
+function processEventCreateBranch(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
     var nano_id = nanoid(configData.RANDOM_CHARACTERS, configData.RANDOM_ID_CHARACTER_COUNT);
     environmentPayload.logical_id = nano_id + "-dev";
@@ -378,10 +378,10 @@ function processEventCreateBranch (environmentPayload,service_id, configData, au
   });
 }
 
-function processEventDeleteBranch (environmentPayload,service_id, configData, authToken) {
+function processEventDeleteBranch(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
 
-    exportable.getEnvironmentLogicalId(environmentPayload,service_id, configData, authToken)
+    exportable.getEnvironmentLogicalId(environmentPayload, service_id, configData, authToken)
       .then((logical_id) => {
         logger.info("logical_id" + logical_id);
         environmentPayload.logical_id = logical_id;
@@ -426,7 +426,7 @@ function processEventDeleteBranch (environmentPayload,service_id, configData, au
 
 }
 
-function processEventUpdateEnvironment (environmentPayload,service_id, configData, authToken) {
+function processEventUpdateEnvironment(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
     var updatePayload = {};
     updatePayload.status = environmentPayload.status;
@@ -464,7 +464,7 @@ function processEventUpdateEnvironment (environmentPayload,service_id, configDat
   });
 }
 
-function getEnvironmentLogicalId (environmentPayload,service_id, configData, authToken) {
+function getEnvironmentLogicalId(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
     var svcPayload = {
       uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "?domain=" + environmentPayload.domain + "&service=" + environmentPayload.service,
@@ -503,7 +503,7 @@ function getEnvironmentLogicalId (environmentPayload,service_id, configData, aut
   });
 }
 
-function processBuild (payload,serviceDetails, configData, authToken) {
+function processBuild(payload, serviceDetails, configData, authToken) {
   return new Promise((resolve, reject) => {
     exportable.triggerBuildJob(payload, serviceDetails, configData)
       .then(result => { return resolve(result) })
@@ -564,7 +564,7 @@ function getServiceDetails(eventPayload, configData, authToken) {
   });
 }
 
-function triggerBuildJob (payload,serviceDetails, configData) {
+function triggerBuildJob(payload, serviceDetails, configData) {
   return new Promise((resolve, reject) => {
     var buildQuery;
     var type;
@@ -590,14 +590,14 @@ function triggerBuildJob (payload,serviceDetails, configData) {
   });
 }
 
-function handleProcessedEvents (id, payload) {
+function handleProcessedEvents(id, payload) {
   processedEvents.push({
     "sequence_id": id,
     "event": payload
   });
 }
 
-function handleFailedEvents (id, failure_message, payload, failure_code) {
+function handleFailedEvents(id, failure_message, payload, failure_code) {
   failedEvents.push({
     "sequence_id": id,
     "event": payload,
@@ -606,14 +606,14 @@ function handleFailedEvents (id, failure_message, payload, failure_code) {
   });
 }
 
-function getEventProcessStatus () {
+function getEventProcessStatus() {
   return {
     "processed_events": processedEvents.length,
     "failed_events": failedEvents.length
   };
 }
 
-function handleError (errorType, message) {
+function handleError(errorType, message) {
   var error = {};
   error.failure_code = errorType;
   error.failure_message = message;

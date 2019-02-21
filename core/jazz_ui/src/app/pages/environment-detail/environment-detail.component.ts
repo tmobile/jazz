@@ -163,7 +163,7 @@ export class EnvironmentDetailComponent implements OnInit {
 
   fetchService(id: string) {
     this.isLoadingService = true;
-    this.subscription = this.http.get('/jazz/services/' + id).subscribe(
+    this.subscription = this.http.get('/jazz/services/' + id, null, this.serviceId).subscribe(
       response => {
         this.service.accounts = env_internal.urls.accounts;
         this.service.regions = env_internal.urls.regions;
@@ -211,7 +211,7 @@ export class EnvironmentDetailComponent implements OnInit {
       domain: this.service.domain,
       environment: this.envSelected,
       limit: undefined
-    }).subscribe((assetsResponse) => {
+    },this.service.id).subscribe((assetsResponse) => {
       this.assets = assetsResponse.data.assets;
       this.service.assets = this.assets;
     }, (err) => {

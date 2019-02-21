@@ -310,7 +310,7 @@ export class ServiceOverviewComponent implements OnInit {
 
   onCompleteClick() {
     this.isPUTLoading = true;
-    this.http.put('/jazz/services/' + this.service.id, this.PutPayload)
+    this.http.put('/jazz/services/' + this.service.id, this.PutPayload, this.service.id)
       .subscribe(
         (Response) => {
           // debugger
@@ -619,7 +619,7 @@ export class ServiceOverviewComponent implements OnInit {
             this.statusprogress = 100;
             localStorage.removeItem('request_id' + "_" + this.service.name + "_" + this.service.domain);
             // alert('last stage');
-            this.http.get('/jazz/services/' + this.service.id).subscribe(
+            this.http.get('/jazz/services/' + this.service.id, null, this.service.id).subscribe(
               (response) => {
                 this.serviceDetail.onDataFetched(response.data);
               }
@@ -763,7 +763,7 @@ export class ServiceOverviewComponent implements OnInit {
     if (this.service == undefined) {
       return
     }
-    this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name).subscribe(
+    this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
       response => {
 
         this.isenvLoading = false;
