@@ -261,6 +261,9 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             var create_cloudfront_url = "true";
             serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
             inputs.RUNTIME = 'n/a';
+            if (service_creation_data.runtime == 'angular' || service_creation_data.runtime == 'react') {
+                inputs.RUNTIME = service_creation_data.runtime;
+            }
         }
         // Add rate expression to the propertiesObject;
         if (service_creation_data.service_type === "function") {
