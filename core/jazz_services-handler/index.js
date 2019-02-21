@@ -20,7 +20,6 @@
   @version: 1.0
 **/
 
-const _ = require("lodash");
 const rp = require('request-promise-native');
 
 const configModule = require("./components/config.js");
@@ -129,8 +128,8 @@ var checkInterest = function (encodedPayload, sequenceNumber, configData) {
 		var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 		logger.info("kinesisPayload : " + JSON.stringify(kinesisPayload));
 		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
-			if (_.includes(configData.EVENTS.EVENT_TYPE, kinesisPayload.Item.EVENT_TYPE.S) &&
-				_.includes(configData.EVENTS.EVENT_NAME, kinesisPayload.Item.EVENT_NAME.S)) {
+			if (configData.EVENTS.EVENT_TYPE.indexOf(kinesisPayload.Item.EVENT_TYPE.S) > -1 &&
+				configData.EVENTS.EVENT_NAME.indexOf(kinesisPayload.Item.EVENT_NAME.S) > -1) {
 				logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
 				return resolve({
 					"interested_event": true,
