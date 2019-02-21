@@ -28,6 +28,9 @@ const services = require("../components/scm/services");
 const util = require("../components/util");
 const globalConfig = require("../config/global-config.json");
 const request = require('request');
+const getList = require("../components/getList");
+const AWS = require("aws-sdk-mock");
+const casbin = require("../components/casbin");
 chai.use(chaiAsPromised);
 
 describe("Validation tests", () => {
@@ -666,4 +669,113 @@ describe("ScmUtil -- Gitlab", () => {
     getGitLabsProjectIdStub.restore();
     removeRepoUserStub.restore();
   });
+});
+
+describe("getList", () => {
+  it("should successfully get data from db", () => {
+    const config = {
+      "SERVICES_TABLE_NAME": "test_table",
+      "REGION": "region"
+    }
+    let data = {
+      Items: [{
+        SERVICE_ID:{
+          S: "1"
+        }
+      }, {
+        SERVICE_ID:{
+          S: "2"
+        }
+      }, {
+        SERVICE_ID:{
+          S: "3"
+        }
+      }]
+    };
+    let count = 1;
+    let res = Object.assign({}, data);
+    AWS.mock("DynamoDB", "scan", (params, cb) => {
+      let dataObj;
+      if (count) {
+        data.LastEvaluatedKey = {
+          SERVICE_ID:{
+            S: "3"
+          }
+        }
+        dataObj = data;
+        count--;
+      } else {
+        dataObj = res;
+      }
+      return cb(null, dataObj);
+    });
+
+    const list = getList.getSeviceIdList(config);
+    list.then(res => {
+      expect(res.data).to.include('1', '2', '3');
+      AWS.restore("DynamoDB");
+    });
+  });
+});
+
+describe("super user implementation", () =>{
+  it("should return list of services with admin policies for super user", () => {
+    let adminId = "adminUser";
+    const config = {
+      "SERVICE_USER": adminId,
+      "SERVICES_TABLE_NAME": "test_table",
+      "REGION": "region",
+    };
+    let response = {data: ["123", "456", "789"]};
+    let getSeviceIdList = sinon.stub(getList, "getSeviceIdList").returns(response);
+    casbin.getPolicyForUser(adminId, config).then(res => {
+      sinon.assert.calledOnce(getSeviceIdList);
+      for (eachSvc of res) {
+        for(each of eachSvc.policies) {
+          if (each.category === "manage") {
+            expect(each.permission).to.be.eq("admin")
+          } else {
+            expect(each.permission).to.be.eq("write")
+          }
+        }
+      }
+      getSeviceIdList.restore();
+    });
+  });
+
+  it("should thow error if db result in error", () => {
+    let adminId = "adminUser";
+    const config = {
+      "SERVICE_USER": adminId,
+      "SERVICES_TABLE_NAME": "test_table",
+      "REGION": "region",
+    };
+    let errorRes = {error: "db error"};
+    let getSeviceIdList = sinon.stub(getList, "getSeviceIdList").returns(errorRes);
+    casbin.getPolicyForUser(adminId, config).then(res => {
+      sinon.assert.calledOnce(getSeviceIdList);
+      expect(res.error).to.be.eq(errorRes.error);
+      getSeviceIdList.restore();
+    });
+  });
+
+  it("should return admin policies for the requested serviceId", () => {
+    let adminId = "adminUser";
+    const config = {
+      "SERVICE_USER": adminId
+    };
+    casbin.getPolicyForServiceUser("123", adminId, config)
+    .then(res => {
+      for (eachSvc of res) {
+        for(each of eachSvc.policies) {
+          if (each.category === "manage") {
+            expect(each.permission).to.be.eq("admin")
+          } else {
+            expect(each.permission).to.be.eq("write")
+          }
+        }
+      }
+    });
+  });
+
 });
