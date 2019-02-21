@@ -388,7 +388,7 @@ addgroup(category){
          })
        }
      });
-    
+
      if(this.originalAccessDetails.length > list.length){
        this.categoryArray.map((item)=>{
          this.access[item].map((eachObj)=>{
@@ -485,5 +485,4 @@ addgroup(category){
  }
 
 }
-
 
