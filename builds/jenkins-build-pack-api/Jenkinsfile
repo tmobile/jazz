@@ -23,7 +23,7 @@ import groovy.transform.Field
 
 @Field def azureRG
 @Field def AzureApim
-
+@Field def apigateway
 
 @Field def auth_token = ''
 @Field def config
@@ -253,7 +253,8 @@ node() {
                   endpointUrl="https://${stackName}.azure-api.net/api"
                   swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
 
-                  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", swaggerDocUrl, "swagger_url", config), environment_logical_id);
+                  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", swaggerDocUrl, "swagger_url", config), environment_logical_id)
+
 
             } else {
 
@@ -494,7 +495,7 @@ def servelessDeploy(env, envBucketKey){
 def serviceDeploy(env, envBucketKey, servicePlatform, stackName){
   if (servicePlatform == 'azure') {
     echo "oscar testing api deployement"
-    azureDeployer.writeSwaggerFile(stackName)
+//    azureDeployer.writeSwaggerFile(stackName)
     azureDeployer.createApi(stackName)
     // azureDeployer.createApi("gatewayName", "tagName")
     //azureDeployer.createApiThroughLambda("gatewayName", "tagName")

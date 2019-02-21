@@ -10,6 +10,7 @@ import groovy.json.*
 echo "azure deployment api module loaded successfully"
 
 def createApi(stackName) {
+  writeSwaggerFile(stackName)
   sh "zip -qr content.zip ."
   def zip = sh(script: 'readlink -f ./content.zip', returnStdout: true).trim()
   def swagger = sh(script: 'readlink -f Api/azure-swagger.json', returnStdout: true).trim()
@@ -22,15 +23,6 @@ def createApi(stackName) {
   def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
   def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
 
-  def tags = /{
-              "application" : "${configLoader.INSTANCE_PREFIX}",
-              "owner"       : "${config['created_by']}",
-              "domain"      : "${config['domain']}",
-              "STAGE"       : "${environment_logical_id}",
-              "environment" : "${environment_logical_id}",
-              "service"     : "${stackName}"
-             }/
-
   withCredentials([
     [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
     [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
@@ -41,28 +33,30 @@ def createApi(stackName) {
       className : "ApiApp",
       command   : "create",
       data      : [
-        resourceGroupName : "${azureRG}",
-        storageName       : "${storageName}",
-        appName           : "${stackName}",
+        resourceGroupName : azureRG,
+        storageName       : storageName,
+        appName           : stackName,
         tags: [
-          application : "${configLoader.INSTANCE_PREFIX}",
-          owner       : "${config['created_by']}",
-          domain      : "${config['domain']}",
-          STAGE       : "${environment_logical_id}",
-          environment : "${environment_logical_id}",
-          service     : "${stackName}"
+          application : configLoader.INSTANCE_PREFIX,
+          owner       : config['created_by'],
+          domain      : config['domain'],
+          STAGE       : environment_logical_id,
+          environment : environment_logical_id,
+          service     : stackName
         ],
-        serviceName       : "${AzureApim}",
-        apiId             : "${stackName}",
-        tenantId          : "${AZURE_TENANT_ID}",
-        subscriptionId    : "${AZURE_SUBSCRIPTION_ID}",
-        clientId          : "${AZURE_CLIENT_ID}",
-        clientSecret      : "${AZURE_CLIENT_SECRET}",
-        zip               : "$zip",
-        basepath          : "${stackName}",
-        swagger           : "${swagger}"
+        serviceName       : AzureApim,
+        apiId             : stackName,
+        tenantId          : AZURE_TENANT_ID,
+        subscriptionId    : AZURE_SUBSCRIPTION_ID,
+        clientId          : AZURE_CLIENT_ID,
+        clientSecret      : AZURE_CLIENT_SECRET,
+        zip               : zip,
+        basepath          : stackName,
+        swagger           : swagger
       ]
     ]
+
+    apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$azureRG/providers/Microsoft.ApiManagement/service/$AzureApim/apim-apis"
 
     def repo_name = "jazz_azure-create-service"
     sh 'rm -rf ' + repo_name
@@ -77,6 +71,8 @@ def createApi(stackName) {
         def json = JsonOutput.toJson(payloadString)
         writeFile(file:'payload.json', text: json)
         sh "./bin/jazz-azure-cli ./payload.json"
+
+        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", apigateway, "apigateway", config), environment_logical_id);
       }
   }
 }
