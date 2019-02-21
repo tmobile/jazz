@@ -849,7 +849,9 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 def resetCredentials(credsId) {
 	echo "resetting AWS credentials"
   def credPath = System.getenv().HOME + "/.aws/credentials"
-	sh "sed -i '/${credsId}/,+2d' ${credPath}"
+  def confPath = System.getenv().HOME + "/.aws/config"
+  sh "sed -i '/${credsId}/,+2d' ${credPath}"
+  sh "sed -i '/${credsId}/,+1d' ${confPath}"
 }
 @NonCPS
 def updateBucketPolicy(policy_json, bucketName){
