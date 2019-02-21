@@ -8,7 +8,8 @@ async function create(data, client){
 async function createNamespaceAndQueue(data, client){
 
   let params = {
-    location: data.location
+    location: data.location,
+    tags: data.tags
   };
 
   let namespace = await client.namespaces.createOrUpdate(data.resourceGroupName, data.appName, params);
