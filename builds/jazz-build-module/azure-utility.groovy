@@ -97,7 +97,7 @@ def invokeAzureService(data, command) {
 
   def outputJson =  parseJson(output)
   if (outputJson.data.error) {
-    error "Failed calling azure service $command $output"
+    throw new Exception("Failed calling azure service $command $output")
   } else {
     return outputJson
   }

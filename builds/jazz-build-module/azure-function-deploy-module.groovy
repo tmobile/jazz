@@ -94,26 +94,42 @@ def invokeAzureCreation(serviceInfo, assetList){
       {
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
         sh "npm install -s"
-
-        def item = createStorageAccount(data)
-        assetList.add(item)
-        if (type) {
-          item = createEventResource(data, type)
-          if (item) {
-            assetList.add(item)
+        try {
+          def item = createStorageAccount(data)
+          assetList.add(item)
+          if (type) {
+            item = createEventResource(data, type)
+            if (item) {
+              assetList.add(item)
+            }
           }
+
+          item = createFunctionApp(data)
+          assetList.add(item)
+          output = azureUtil.invokeAzureService(data, "getMasterKey")
+          masterKey = output.data.result.key
+          deployFunction(data, zip, type)
+          return masterKey
+        } catch (ex) {
+          echo "error occur $ex, rollback starting..."
+          deleteResourceByTag(serviceInfo)
+          error "Failed creating azure function $ex"
+        } finally {
+          echo "cleanup ...."
+          sh "rm -rf content.zip"
+          sh "rm -rf $repo_name"
+
         }
-
-        item = createFunctionApp(data)
-        assetList.add(item)
-        output = azureUtil.invokeAzureService(data, "getMasterKey")
-        masterKey = output.data.result.key
-        deployFunction(data, zip, type)
-
       }
-
-    return masterKey
   }
+}
+
+def deleteResourceByTag(serviceInfo) {
+  def data = azureUtil.getAzureRequestPayload(serviceInfo)
+  data.tagName = 'service'
+  data.tagValue = serviceInfo.stackName
+  azureUtil.invokeAzureService(data, "deleteByTag")
+
 }
 
 def createFunctionApp(data) {
