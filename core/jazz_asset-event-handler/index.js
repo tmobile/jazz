@@ -29,7 +29,7 @@ var processedEvents = [];
 var failedEvents = [];
 var errorHandler = errorHandlerModule(logger);
 
-function handler(event, context, cb){
+function handler(event, context, cb) {
   var config = configModule.getConfig(event, context);
   logger.info("event: " + JSON.stringify(event))
 
@@ -217,7 +217,10 @@ function processCreateAsset(eventPayload, configData, authToken) {
     var svcPayload = {
       uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE,
       method: "POST",
-      headers: { Authorization: authToken },
+      headers: {
+        "Authorization": authToken,
+        "Jazz-Service-ID": eventPayload.SERVICE_ID.S
+      },
       json: assetApiPayload,
       rejectUnauthorized: false
     };
@@ -260,7 +263,10 @@ function processUpdateAsset(record, eventPayload, configData, authToken) {
     var svcPayload = {
       uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE + "/" + record.id,
       method: "PUT",
-      headers: { Authorization: authToken },
+      headers: {
+        "Authorization": authToken,
+        "Jazz-Service-ID": eventPayload.SERVICE_ID.S
+      },
       json: assetApiPayload,
       rejectUnauthorized: false
     };
@@ -292,9 +298,12 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
     };
 
     var svcPostSearchPayload = {
-      uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE+ "?domain=" + searchAssetPayload.domain + "&service=" + searchAssetPayload.service + "&provider_id=" +searchAssetPayload.provider_id + "&asset_type=" +searchAssetPayload.asset_type,
+      uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE + "?domain=" + searchAssetPayload.domain + "&service=" + searchAssetPayload.service + "&provider_id=" + searchAssetPayload.provider_id + "&asset_type=" + searchAssetPayload.asset_type,
       method: "GET",
-      headers: { Authorization: authToken },
+      headers: {
+        "Authorization": authToken,
+        "Jazz-Service-ID": eventPayload.SERVICE_ID.S
+      },
       rejectUnauthorized: false
     };
 
@@ -303,9 +312,9 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
       logger.debug("response" + JSON.stringify(response));
       if (response && response.statusCode && response.statusCode === 200) {
         var responseBody = JSON.parse(body);
-        if(responseBody && responseBody.data && responseBody.data.count > 0) {
-           logger.debug("Asset found: " + JSON.stringify(body));
-           return resolve(responseBody.data.assets[0]);
+        if (responseBody && responseBody.data && responseBody.data.count > 0) {
+          logger.debug("Asset found: " + JSON.stringify(body));
+          return resolve(responseBody.data.assets[0]);
         } else {
           logger.error("No assets found. " + JSON.stringify(response));
           return reject({
@@ -315,10 +324,10 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
         }
 
       } else {
-        if (error){
+        if (error) {
           return reject(error);
         }
-        else{
+        else {
           logger.error("No assets found. " + JSON.stringify(response));
           return reject({
             "error": "No assets found. " + JSON.stringify(response),

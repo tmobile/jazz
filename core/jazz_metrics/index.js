@@ -49,7 +49,7 @@ function handler(event, context, cb) {
     exportable.genericValidation(event)
       .then(() => validateUtils.validateGeneralFields(eventBody))
       .then(() => exportable.getToken(config))
-      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
+      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken, event.headers['Jazz-Service-ID']))
       .then(res => exportable.validateAssets(res, eventBody))
       .then(res => exportable.getMetricsDetails(res))
       .then(res => {
@@ -86,10 +86,18 @@ function genericValidation(event) {
         message: "Invalid method"
       });
     }
+
     if (!event.principalId) {
       reject({
         result: "unauthorized",
         message: "Unauthorized"
+      });
+    }
+
+    if (!event.headers['Jazz-Service-ID']) {
+      reject({
+        result: "inputError",
+        message: "No service id provided"
       });
     }
 
@@ -129,13 +137,14 @@ function getToken(config) {
   });
 }
 
-function getAssetsDetails(config, eventBody, authToken) {
+function getAssetsDetails(config, eventBody, authToken, serviceId) {
   return new Promise((resolve, reject) => {
     var asset_api_options = {
       url: config.SERVICE_API_URL + config.ASSETS_URL + "?domain=" + eventBody.domain + "&service=" + eventBody.service + "&environment=" + eventBody.environment,
       headers: {
         "Content-Type": "application/json",
-        "Authorization": authToken
+        "Authorization": authToken,
+        "Jazz-Service-ID": serviceId
       },
       method: "GET",
       rejectUnauthorized: false,
