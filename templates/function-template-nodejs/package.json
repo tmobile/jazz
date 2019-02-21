@@ -1,7 +1,7 @@
 {
-  "name": "lambda-nodejs-template",
+  "name": "function-nodejs-template",
   "version": "0.0.1",
-  "description": "Nodejs Lambda Template project",
+  "description": "Nodejs Azure Function Template project",
   "main": "index.js",
   "private": true,
   "author": [],

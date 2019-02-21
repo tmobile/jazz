@@ -1,4 +1,4 @@
-const index = require("../azure-index.js");
+const index = require("../index.js");
 
 
 module.exports = async function (context, myEvent) {

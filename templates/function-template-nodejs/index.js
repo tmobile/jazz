@@ -1,5 +1,5 @@
 /**
-	Nodejs Lambda Template Project
+	Nodejs Azure Function Template Project
 	@Author:
 	@version: 1.0
 **/
@@ -27,7 +27,7 @@ module.exports.handler = (event, context, cb) => {
     logger.warn('Runtime situations that are undesirable or unexpected, but not necessarily "wrong".');
     logger.info('Interesting runtime events (Eg. connection established, data fetched etc.)');
     logger.verbose('Generally speaking, most lines logged by your application should be written as verbose.');
-    logger.debug('Detailed information on the flow through the system.');
+    NOTE:  debug level is not supported by Azure
     */
 
     const sampleResponse = {
