@@ -31,7 +31,6 @@ module.exports = class ResourceFactory {
   }
 
   async rollBack(){
-    console.log("initiated rollback");
     for (let i = this.resourceStack.length -1 ; i >= 0; i--) {
       await this.deleteResourcesById(this.resourceStack.pop());
     }
@@ -187,14 +186,14 @@ module.exports = class ResourceFactory {
 
 
   async deleteResourcesById(resource) {
-    // console.log("trying to delete resource:  " + resource);
+
     if (resource.type.toLowerCase() === "Microsoft.ApiManagement/service/apis"){
-      // console.log("deleting " + resource.id);
+
       return await this.deleteApi(resource.id);
     }
     else {
       let client = await this.factory.getResource("ResourceManagementClient");
-      // console.log("deleting " + resource.id);
+
       let apiVersion = await this.getLatestApiVersionForResource(resource);
       return await client.resources.deleteById(resource.id, apiVersion);
     }
@@ -263,7 +262,6 @@ module.exports = class ResourceFactory {
 
   async createCdnEndpoint(hostname, tags = {},  storageName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = "West US") {
     let path = url.parse(hostname, true);
-    console.log(path.path);
     let endpointProperties = {
       location: location,
       tags: tags,
@@ -286,7 +284,7 @@ module.exports = class ResourceFactory {
     let promiseArray = [];
 
     for (let i = 0; i < zipEntries.length; i++) {
-      // console.log(zipEntries[i].entryName);
+
       let decompressedData = zip.readFile(zipEntries[i]);
       let stream = new Stream.PassThrough();
       stream.end(decompressedData);
@@ -296,7 +294,6 @@ module.exports = class ResourceFactory {
             reject("Couldn't upload stream");
 
           } else {
-            // console.log('Stream uploaded successfully: ' + i + " " + zipEntries[i].entryName + "    " +  mime.lookup(zipEntries[i].entryName));
             resolve(result);
           }
         });
@@ -333,7 +330,6 @@ module.exports = class ResourceFactory {
         }
       }, function(err, resp, body) {
         if (err) {
-          console.log(body);
           reject(err);
         } else {
           resolve(resp);
