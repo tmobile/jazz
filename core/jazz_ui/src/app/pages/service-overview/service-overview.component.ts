@@ -475,10 +475,12 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   onCancelClick() {
-    if(this.service.eventScheduleEnable === false){
-      this.rateExpression.type = "none"
-    } else if(this.service.eventScheduleRate !== null && this.service.eventScheduleRate.includes('cron')){
-      this.rateExpression.type = "cron"
+    if(this.service.serviceType === "function" && this.service.eventScheduleEnable !== undefined){
+      if(this.service.eventScheduleEnable === false){
+        this.rateExpression.type = "none"
+      } else if(this.service.eventScheduleRate !== null && this.service.eventScheduleRate.includes('cron')){
+        this.rateExpression.type = "cron"
+      }
     }
     this.rateExpression.cronStr = this.service.eventScheduleRate;
     this.rateExpression.duration = this.initialDuration;
@@ -507,46 +509,48 @@ export class ServiceOverviewComponent implements OnInit {
 
   setEventScheduleRate() {
     let cronValue;
-    if(this.rateExpression.cronStr !== "" && (this.service.eventScheduleRate !== this.rateExpression.cronStr)){
-      cronValue = this.rateExpression.cronStr;
-    } else {
-      cronValue = this.service.eventScheduleRate;
-    }
-    if(cronValue !== null){
-        let localEvenSchedule = cronValue;
-      !!localEvenSchedule &&
-        (localEvenSchedule = localEvenSchedule.replace(/[\(\)']+/g, ' '));
-      if(cronValue.includes('cron')){
-        localEvenSchedule = localEvenSchedule.split(' ');
-        this.rateExpression.type = localEvenSchedule[0];
-        localEvenSchedule.shift();
+    if(this.service.serviceType === "function" && this.service.eventScheduleEnable !== undefined){
+      if(this.rateExpression.cronStr !== "" && (this.service.eventScheduleRate !== this.rateExpression.cronStr)){
+        cronValue = this.rateExpression.cronStr;
       } else {
-        localEvenSchedule = localEvenSchedule.split(' ');
+        cronValue = this.service.eventScheduleRate;
       }
-      
-      if((localEvenSchedule[0].includes("0/") && localEvenSchedule[1].includes("*")) || (localEvenSchedule[1].includes("0/") && localEvenSchedule[0].includes("0"))){
-        if(localEvenSchedule[0].includes("0/")){
-          let duration = localEvenSchedule[0].split("/");
-          duration = parseInt(duration[1]);
-          this.rateExpression.duration = duration;
-          this.rateExpression.interval = "Minutes";
+      if(cronValue !== null){
+          let localEvenSchedule = cronValue;
+        !!localEvenSchedule &&
+          (localEvenSchedule = localEvenSchedule.replace(/[\(\)']+/g, ' '));
+        if(cronValue.includes('cron')){
+          localEvenSchedule = localEvenSchedule.split(' ');
+          this.rateExpression.type = localEvenSchedule[0];
+          localEvenSchedule.shift();
         } else {
-          let duration = localEvenSchedule[1].split("/");
-          duration = parseInt(duration[1]);
-          this.rateExpression.duration = duration;
-          this.rateExpression.interval = "Hours";
+          localEvenSchedule = localEvenSchedule.split(' ');
         }
-      } else {
-        this.rateExpression.duration = "5";
-        this.rateExpression.interval = "Minutes";
+        
+        if((localEvenSchedule[0].includes("0/") && localEvenSchedule[1].includes("*")) || (localEvenSchedule[1].includes("0/") && localEvenSchedule[0].includes("0"))){
+          if(localEvenSchedule[0].includes("0/")){
+            let duration = localEvenSchedule[0].split("/");
+            duration = parseInt(duration[1]);
+            this.rateExpression.duration = duration;
+            this.rateExpression.interval = "Minutes";
+          } else {
+            let duration = localEvenSchedule[1].split("/");
+            duration = parseInt(duration[1]);
+            this.rateExpression.duration = duration;
+            this.rateExpression.interval = "Hours";
+          }
+        } else {
+          this.rateExpression.duration = "5";
+          this.rateExpression.interval = "Minutes";
+        }
+  
+        this.cronObj.minutes = localEvenSchedule[0];
+        this.cronObj.hours = localEvenSchedule[1];
+        this.cronObj.dayOfMonth = localEvenSchedule[2];
+        this.cronObj.month = localEvenSchedule[3];
+        this.cronObj.dayOfWeek = localEvenSchedule[4];
+        this.cronObj.year = localEvenSchedule[5];
       }
-
-      this.cronObj.minutes = localEvenSchedule[0];
-      this.cronObj.hours = localEvenSchedule[1];
-      this.cronObj.dayOfMonth = localEvenSchedule[2];
-      this.cronObj.month = localEvenSchedule[3];
-      this.cronObj.dayOfWeek = localEvenSchedule[4];
-      this.cronObj.year = localEvenSchedule[5];
     }
   }
 
