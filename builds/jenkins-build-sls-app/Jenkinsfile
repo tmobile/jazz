@@ -21,6 +21,7 @@ import groovy.transform.Field
 @Field def utilModule
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
+@Field def whiteListModule
 
 @Field def auth_token = ''
 @Field def config
@@ -150,10 +151,9 @@ node() {
 
   dir(repo_name) {
   /* Writing the file from config */
-    def fileContent = config['deployment_descriptor']
-    echo "deployment_descriptor: ${fileContent}"
-
-    sh "echo '${fileContent}' >> ./serverless.yml"
+    def dd = prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
+    echo "prepareServerlessYml = ${dd}"
+    writeYaml(file: './serverless.yml', data: dd)
 
     if (domain && domain == "jazz") {
       stage('Update Service Template') {
@@ -212,6 +212,64 @@ node() {
     } else {
       env_key = "DEV"
     }
+
+    stage('Package') {
+      echo 'The packaging state'
+      withCredentials([
+        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+      ]) {
+
+        def randomString = utilModule.generateRequestId();
+        def credsId = "jazz-${randomString}";
+        sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+        sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+        sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+
+        try {
+          sh "serverless package --stage ${environment_logical_id} -v > output.log"
+        } catch(ex) {
+          def outputLog = readFile('output.log').trim()
+          echo "serverless packaging log $outputLog"
+          throw ex
+        }
+
+        def outputLog = readFile('output.log').trim()
+        echo "serverless packaging log $outputLog"
+
+        def cft = readFile('./.serverless/cloudformation-template-update-stack.json').trim()
+        echo "CFT: $cft"
+      }
+
+    }
+
+    stage('Template validation') {
+      echo 'The template validation state'
+      withCredentials([
+        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+      ]) {
+        def randomString = utilModule.generateRequestId();
+        def credsId = "jazz-${randomString}";
+        sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+        sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+        sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+
+        try {
+          sh "aws cloudformation validate-template --template-body file://.serverless/cloudformation-template-update-stack.json --region ${configLoader.AWS.REGION} > output.log"
+        } catch(ex) {
+          def outputLog = readFile('output.log').trim()
+          echo "template validation log $outputLog"
+          throw ex
+        }
+        def outputLog = readFile('output.log').trim()
+        echo "template validation log $outputLog"
+
+        def cft = readFile('./.serverless/cloudformation-template-update-stack.json').trim()
+        def cftJson = parseJson(cft)
+        def outstandingResources = whiteListModule.validate(cftJson)
+        if(!outstandingResources.isEmpty()) throw new Exception("Invalid CloudFormation template. The resource types not allowed: ${outstandingResources}")
+      }
+    }
+
     stage("Deployment to ${env_key} environment") {
       events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
@@ -243,8 +301,6 @@ node() {
               events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "cloudwatch_event", config), environment_logical_id);
             }
           }
-
-          writeServerlessFile(config, environment_logical_id)
 
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           echoServerlessFile()
@@ -432,6 +488,65 @@ def deleteAndRedeployService(environment_logical_id, envBucketKey){
 def echoServerlessFile() {
   def serverlessyml = readFile('serverless.yml').trim()
   echo "serverless file data $serverlessyml"
+}
+
+def fillFunctionElem(elem, idx, config, env) {
+  if(!elem['name']) elem['name'] = "${config['domain']}-${config['service']}-${env}-${idx}".toString()
+  if(!elem['handler']) elem['handler'] = "index.handler"
+  if(!elem['role']) elem['role'] = config['iamRoleARN']
+  if(!elem['description']) elem['description'] = "${config['domain']}-${config['service']} Lambda Function".toString()
+  if(!elem['runtime']) elem['runtime'] = config['providerRuntime']
+  if(!elem['memorySize']) elem['memorySize'] = config['providerMemorySize']
+  if(!elem['timeout']) elem['timeout'] = config['providerTimeout']
+}
+
+def prepareServerlessYml(aConfig, env) {
+  def dd = aConfig['deployment_descriptor']
+  def doc = dd ? readYaml(text: dd) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
+  if(!doc['service']) doc['service'] = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}".toString() // toString() is needed here because otherwise the de-serialization back to Yaml will be invalid
+  def providerElem = doc['provider']
+  if(!providerElem) {
+    providerElem = [:]
+    doc['provider'] = providerElem
+  }
+  if(!providerElem['name']) providerElem['name'] = "aws"
+  if(!providerElem['deploymentBucket']) providerElem['deploymentBucket'] = '${opt:bucket}'
+  if(!providerElem['region']) providerElem['region'] = config['region']
+  if(!providerElem['stage']) providerElem['stage'] = env
+  if(!providerElem['owner']) providerElem['owner'] = config['created_by']
+  if(!providerElem['domain']) providerElem['domain'] = ""
+  def stackTagsElem = providerElem['stackTags']
+  if(!stackTagsElem) {
+    stackTagsElem = [:]
+    providerElem['stackTags'] = stackTagsElem
+  }
+  if(!stackTagsElem['application']) stackTagsElem['application'] = configLoader.INSTANCE_PREFIX
+  if(!stackTagsElem['service']) stackTagsElem['service']="${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}".toString()
+  if(!stackTagsElem['domain']) stackTagsElem['domain'] = config['domain']
+  if(!stackTagsElem['owner']) stackTagsElem['owner'] = config['created_by']
+  if(!stackTagsElem['environment']) stackTagsElem['environment'] = env
+
+  def customElem = doc['custom']
+  if(!customElem) {
+    customElem = [:]
+    doc['custom'] = customElem
+  }
+  if(!customElem['myStage']) customElem['myStage'] = env
+
+  def functionsElem = doc['functions']
+  if(!functionsElem) {
+    functionsElem = ['handler':[:]]
+    doc['functions'] = functionsElem
+    fillFunctionElem(functionsElem['handler'], 0, config, env)
+  } else {
+    // Traversing through the list of functions and calling fillFunctionElem with index to help with the name creation
+    functionsElem.collect{key, val -> val} // The logical name of function (key) is no use now so we throw it away and mapping values only
+                 .withIndex() // Adding the index to each value rendered. It helps with name creation if such has not been provided
+                 .collect{z -> fillFunctionElem(z[0], z[1], config, env)} // Applying the function for each [val, idx] pair generated
+  }
+
+  return doc
+
 }
 
 def servelessDeploy(env, envBucketKey){
@@ -701,69 +816,6 @@ def createSubscriptionFilters(stackName, region, roleId) {
   }
 }
 
-
-def writeServerlessFile(config, env) {
-  sh "pwd"
-  sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
-  sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
-  sh "sed -i -- 's/{env-stage}/${env}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
-  sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${config['eventScheduleRate']}|g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
-
-  if (config['artifact']) {
-    sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
-  }
-
-  if (config['mainClass']) {
-    sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
-  }
-
-  if (config['event_source_s3']) {
-    def event_source_s3 =  lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], env, "-")
-    def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
-    sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
-    sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
-    sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
-    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-  }
-
-  if (config['event_source_sqs']) {
-    def event_source_sqs = lambdaEvents.getSqsQueueName(config['event_source_sqs'], env)
-    def event_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_sqs'], env, "_")
-    sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
-    sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
-    sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
-    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-  }
-
-  if (config['event_source_kinesis']) {
-    def event_source_kinesis = lambdaEvents.splitAndGetResourceName(config['event_source_kinesis'], env)
-    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-    sh "sed -i -- 's|{event_source_kinesis}|${event_source_kinesis}|g' ./serverless.yml"
-  }
-
-  if (config['event_source_dynamodb']) {
-    def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(config['event_source_dynamodb'], env)
-    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-    sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
-  }
-
-  if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
-  } else {
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
-  }
-
-}
-
 /**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
@@ -982,6 +1034,9 @@ def loadBuildModules(buildModuleUrl) {
 
     sonarModule = load "sonar-module.groovy"
     echo "Sonar module loaded successfully."
+
+    whiteListModule = load "whitelist-validator-module.groovy"
+    echo "whitelist-validator-module module loaded successfully"
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
     echo "Environment deployment data loader module loaded successfully."
