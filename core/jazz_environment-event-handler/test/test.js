@@ -383,7 +383,8 @@ describe('jazz environment handler tests: ', () => {
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, testPayloads.processEventUpdateEnvironmentError, JSON.stringify(testPayloads.processEventUpdateEnvironmentError.body));
     });
-    index.processEventUpdateEnvironment(environmentPayload, configData, authToken)
+    const serviceId = "test_id";
+    index.processEventUpdateEnvironment(environmentPayload,serviceId, configData, authToken)
       .catch(res => {
         sinon.assert.calledOnce(requestPromiseStub);
         requestPromiseStub.restore();
@@ -398,8 +399,8 @@ describe('jazz environment handler tests: ', () => {
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, testPayloads.createBranchError, JSON.stringify(testPayloads.createBranchError.body));
     });
-const serviceId = "test_id";
-    index.processEventCreateBranch(environmentPayload, configData, authToken)
+    const serviceId = "test_id";
+    index.processEventCreateBranch(environmentPayload, serviceId, configData, authToken)
       .catch(res => {
         sinon.assert.calledOnce(requestPromiseStub);
         requestPromiseStub.restore();
