@@ -62,12 +62,12 @@ function assetData(results, assetItem) {
   return asset_obj;
 };
 
-function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset) {
+function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
   var output_obj = {};
   output_obj["isError"] = false;
   var paramMetrics = [];
   var nameSpace = nameSpaceFrmAsset.toLowerCase();
-  var namespacesList = metricConfig.namespaces;
+  var namespacesList = metricConfig.namespaces[provider];
   var supportedNamespace = namespacesList[nameSpace];
   if(nameSpaceFrmAsset && supportedNamespace) {
     paramMetrics = supportedNamespace["metrics"];
@@ -126,7 +126,7 @@ function getAssetsObj(assetsArray, userStatistics) {
   assetsArray.forEach((asset) => {
 
     var assetType = asset.asset_type;
-    var metricNamespace = namespaces[assetType];
+    var metricNamespace = namespaces[asset.provider][assetType];
 
     if (metricNamespace) {
       var dimensions = metricNamespace.dimensions;
@@ -150,7 +150,8 @@ function getAssetsObj(assetsArray, userStatistics) {
         "type": assetType,
         "asset_name": dimensionObj,
         "statistics": userStatistics,
-        "provider": asset.provider
+        "provider": asset.provider,
+        "metrics": metricNamespace.metrics
       };
       assetObj = updateNewAssetObj(newAssetObj, asset);
       newAssetArr.push(assetObj);
@@ -177,29 +178,51 @@ function updateNewAssetObj(newAssetObj, asset) {
   var arnParsedObj = parser(arnString);
   var relativeId = arnParsedObj.relativeId;
 
-  switch (assetType) {
-    case "lambda":
-      newAssetObj = updateLambdaAsset(newAssetObj, relativeId, arnString);
-      break;
-    case "apigateway":
-      newAssetObj = updateApigatewayAsset(newAssetObj, relativeId, assetEnvironment);
-      break;
-    case "s3":
-      newAssetObj = updateS3Asset(newAssetObj, relativeId);
-      break;
+  switch(newAssetObj.provider) {
+    case "aws": {
 
-    case "cloudfront":
-      newAssetObj = updateCloudfrontAsset(newAssetObj, relativeId);
-      break;
-
-    case "storage_account":
-      newAssetObj = asset;
-      break;
+      switch (assetType) {
+        case "lambda":
+          newAssetObj = updateLambdaAsset(newAssetObj, relativeId, arnString);
+          break;
+        case "apigateway":
+          newAssetObj = updateApigatewayAsset(newAssetObj, relativeId, assetEnvironment);
+          break;
+        case "s3":
+          newAssetObj = updateS3Asset(newAssetObj, relativeId);
+          break;
+        case "cloudfront":
+          newAssetObj = updateCloudfrontAsset(newAssetObj, relativeId);
+          break;
+        default:
+          newAssetObj = {
+            "isError": "Metric not supported for asset type " + assetType
+          }
+      }
+    }
+    break;
+    case "azure": {
+      switch (assetType) {
+        case "storage_account":
+          asset.metrics = newAssetObj.metrics;
+          newAssetObj = asset;
+          break;
+        case "apigateway":
+          asset.metrics = newAssetObj.metrics;
+          newAssetObj = asset;
+          break;
+        default:
+          newAssetObj = {
+            "isError": "Metric not supported for asset type " + assetType
+          }
+      }
+    }
+    break;
 
     default:
-      newAssetObj = {
-        "isError": "Metric not supported for asset type " + assetType
-      }
+    newAssetObj = {
+      "isError": "Metric not supported for asset type " + assetType
+    }
   }
   return newAssetObj;
 }
