@@ -156,6 +156,8 @@ node()  {
 
         stage("Deployment to ${servicePlatform} ${current_environment} Env"){
 
+
+
           def lastpart = sh(script:"echo $branch | rev | cut -d- -f1 | rev", returnStdout:true).trim()
           def surfix = ''
 
@@ -164,7 +166,7 @@ node()  {
           }
 
           def appname=service_name + domain + surfix
-          def resourcegroup="oscar-test-resource-group"
+          def resourcegroup
           def location="westus"
 
           def storageaccount=appname
@@ -173,64 +175,49 @@ node()  {
           def apptoupload="./app"
           def destination="\$web"
 
-//				def name = sh(script:"az cdn profile list -g $resourcegroup | jq -r .[0].name", returnStdout:true).trim()
-//
-//				if (name == appname) { //
-          asset_event = 'UPDATE_ASSET'
-          asset_event_message = 'update'
-//				} else {
-//					asset_event = 'CREATE_ASSET'
-//					asset_event_message = 'create'
-//				}
+          if (environment_logical_id == "prod") {
+            resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
+            logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
+          }
+          else if(environment_logical_id == "stg"){
+            resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
+            logicalId = environment_logical_id.split('-')[0] //13 + 10
+          }
+          else if(environment_logical_id == "dev"){
+            resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
+            logicalId = environment_logical_id.split('-')[0] //13 + 10
+          }
+          def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
+          def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
+
+          asset_event = 'CREATE_ASSET'
+          asset_event_message = 'create'
+
 
           events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
           events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
 
-          createWebsite(appname, resourcegroup)
-//	            def groupfound = sh(script:"az group exists -g $resourcegroup", returnStdout:true).trim()
-//	            if (groupfound == 'false') {
-//	            	sh "az group create --name $resourcegroup --location $location"
-//	            }
+          createWebsite(appname, resourcegroup, storageName)
 
-//	            if (asset_event == 'CREATE_ASSET') {
-//					sh "az storage account create --location $location --name $storageaccount --resource-group $resourcegroup --sku Standard_LRS --kind StorageV2"
-//					//sh "az storage container create --account-name $storageaccount --name $containername --public-access blob"
-//	            }
+          def origin_endpoint_url = "https://${appname}.azureedge.net"
 
-//				sh "az storage blob service-properties update --account-name $storageaccount --index-document index.html --static-website true"
-//				sh "az storage blob upload-batch --account-name $storageaccount --source $apptoupload --destination '\$web'"
-//
-//				if (asset_event == 'CREATE_ASSET') {
-//					sh "az cdn profile create -g $resourcegroup -n $webappname"
-//
-//					def origin = sh(script:"az storage account show --name $storageaccount | jq -r .primaryEndpoints.web | cut -d'/' -f 3", returnStdout:true).trim()
-//					sh "az cdn endpoint create -g $resourcegroup -n $webappname --profile-name $webappname --origin $origin --origin-host-header $origin --tags branch=$branch"
-//
-//				}
+          def cdn_endpoint_url = "https://${appname}.z22.web.core.windows.net"
 
-//
-//                def origin_hostname = sh(script:"az cdn endpoint show -g $resourcegroup -n $webappname --profile-name $webappname | jq -r .origins[0].hostName", returnStdout:true).trim()
+          echo "You can access the website at $cdn_endpoint_url"
 
-          def origin_url = "https://${appname}.azureedge.net"
-//                def cdn_hostname = sh(script:"az cdn endpoint show -g $resourcegroup -n $webappname --profile-name $webappname | jq -r .hostName", returnStdout:true).trim()
-//
-          //def cdn_url = "https://${cdn_hostname}"
-          def cdn_url = "https://${appname}.z22.web.core.windows.net"
-
-          echo "You can access the website at $cdn_url"
-
-          def svc_status = "You can access your website using following link: ${cdn_url}"
+          def svc_status = "You can access your website using following link: ${cdn_endpoint_url}"
           echo svc_status
-          environmentDeploymentMetadata.setEnvironmentEndpoint(cdn_url)
+          environmentDeploymentMetadata.setEnvironmentEndpoint(cdn_endpoint_url)
           send_status_email('COMPLETED', svc_status)
 
           def store_acct = "/resourceGroups/$resourcegroup/providers/Microsoft.Storage/storageAccounts/$storageaccount"
-          //events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", store_acct, "storage_account", service_config),environment)
+          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", storageName, "storage_account", service_config),environment)
 
+          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", origin_endpoint_url, "origin_endpoint_url", service_config),environment)
           def cdn_profle_detail = "name $webappname, loaction: $location, resource group: $resourcegroup"
-//                events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_profle_detail, "cdn_profile", service_config),environment)
-//                events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", origin_url, "origin_endpoint_url", service_config),environment)
-//				        events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_url, "cdn_endpoint_url", service_config),environment)
+          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_profle_detail, "cdn_profile", service_config),environment)
+
+          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_endpoint_url, "cdn_endpoint_url", service_config),environment)
 
           events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
           events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
@@ -955,35 +942,9 @@ def loadBuildModules(buildModuleUrl){
 
 
 
-def createWebsite(stackName, resourceGroup){
+def createWebsite(stackName, resourceGroup, storageName){
   sh "cd ./app && zip -qr ../content.zip *  && cd .."
   def zip = sh(script: 'readlink -f ./content.zip', returnStdout: true).trim()
-  def azureRG
-
-  if (environment_logical_id == "prod") {
-    azureRG = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
-    logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
-  }
-  else if(environment_logical_id == "stg"){
-    azureRG = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
-    logicalId = environment_logical_id.split('-')[0] //13 + 10
-  }
-  else if(environment_logical_id == "dev"){
-    azureRG = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
-    logicalId = environment_logical_id.split('-')[0] //13 + 10
-  }
-  def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
-  def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
-
-
-  def tags = /{
-              "application" : "${configLoader.INSTANCE_PREFIX}",
-              "owner"       : "${service_config['created_by']}",
-              "domain"      : "${service_config['domain']}",
-              "STAGE"       : "${environment_logical_id}",
-              "environment" : "${environment_logical_id}",
-              "service"     : "${stackName}"
-             }/
 
   withCredentials([
     [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
@@ -995,22 +956,22 @@ def createWebsite(stackName, resourceGroup){
       className : "WebApp",
       command   : "create",
       data      : [
-        resourceGroupName : "${azureRG}",
-        storageName       : "${storageName}",
-        appName           : "${stackName}",
+        resourceGroupName : resourceGroup,
+        storageName       : storageName,
+        appName           : stackName,
         tags: [
-          "application"   : "${configLoader.INSTANCE_PREFIX}",
-          "owner"         : "${service_config['created_by']}",
-          "domain"        : "${service_config['domain']}",
-          "STAGE"         : "${environment_logical_id}",
-          "environment"   : "${environment_logical_id}",
-          "service"       : "${stackName}"
+          "application"   : configLoader.INSTANCE_PREFIX,
+          "owner"         : service_config['created_by'],
+          "domain"        : service_config['domain'],
+          "STAGE"         : environment_logical_id,
+          "environment"   : environment_logical_id,
+          "service"       : stackName
         ],
-        "tenantId"          : "${AZURE_TENANT_ID}",
-        "subscriptionId"    : "${AZURE_SUBSCRIPTION_ID}",
-        "clientId"          : "${AZURE_CLIENT_ID}",
-        "clientSecret"      : "${AZURE_CLIENT_SECRET}",
-        "zip"               : "${zip}"
+        "tenantId"          : AZURE_TENANT_ID,
+        "subscriptionId"    : AZURE_SUBSCRIPTION_ID,
+        "clientId"          : AZURE_CLIENT_ID,
+        "clientSecret"      : AZURE_CLIENT_SECRET,
+        "zip"               : zip
       ]
     ]
 

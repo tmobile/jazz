@@ -392,7 +392,7 @@ describe('jazz_metrics', function () {
         }
       };
       Object.keys(nameSpaceList).forEach(param => {
-        var paramMetrics = metricConfig.namespaces[param].metrics;
+        var paramMetrics = metricConfig.namespaces['aws'][param].metrics;
         index.getActualParam(paramMetrics, nameSpaceList[param].awsNameSpace, nameSpaceList[param].assetItem, event.body)
           .then(res => {
             for (var i in res) {
@@ -423,7 +423,7 @@ describe('jazz_metrics', function () {
           }
         }
       }
-      var paramMetrics = metricConfig.namespaces['lambda'].metrics;
+      var paramMetrics = metricConfig.namespaces['aws']['lambda'].metrics;
       index.getActualParam(paramMetrics, nameSpaceList['lambda'].awsNameSpace, nameSpaceList['lambda'].assetItem, event.body)
         .catch(error => {
           expect(error).to.include({
@@ -907,7 +907,7 @@ describe('jazz_metrics', function () {
       it("should provide all metrics params for provided namespace", () => {
         var validNameSpace = ['apigateway', 'cloudfront', 'lambda', 's3'];
         validNameSpace.forEach(namespace => {
-          var resObj = utils.getNameSpaceAndMetricDimensons(namespace);
+          var resObj = utils.getNameSpaceAndMetricDimensons(namespace, 'aws');
           expect(resObj).to.have.all.keys('isError', 'paramMetrics', 'awsNameSpace');
           expect(resObj.isError).to.be.false;
           resObj.paramMetrics.forEach(each => {
@@ -923,7 +923,7 @@ describe('jazz_metrics', function () {
       it("should indicate error while accessing metric params for invalid namespace", () => {
         var invalidNameSpace = ['swagger_url', 'endpoint_url'];
         invalidNameSpace.forEach(namespace => {
-          var resObj = utils.getNameSpaceAndMetricDimensons(namespace);
+          var resObj = utils.getNameSpaceAndMetricDimensons(namespace, 'aws');
           expect(resObj).to.have.all.keys('isError', 'awsNameSpace');
           expect(resObj.isError).to.be.true;
           expect(resObj.awsNameSpace).to.eq("Invalid");
@@ -985,14 +985,14 @@ describe('jazz_metrics', function () {
       var userStatistics = 'average';
       assetsArray.forEach(asset => {
         var resObj = utils.getAssetsObj([asset], userStatistics);
-        if (asset.asset_type === 's3') {
-          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'provider')
+        if ((asset.asset_type === 's3') && (asset.provider === 'aws')) {
+          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'provider', 'metrics')
           expect(resObj[0]).to.have.deep.property('asset_name.BucketName')
-        } else if (asset.asset_type === 'cloudfront') {
-          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'provider')
+        } else if ((asset.asset_type === 'cloudfront') && (asset.provider === 'aws')) {
+          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'provider', 'metrics')
           expect(resObj[0]).to.have.deep.property('asset_name.DistributionId')
-        } else if (asset.asset_type === 'lambda' || asset.asset_type === 'apigateway') {
-          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'provider')
+        } else if (((asset.asset_type === 'lambda' || asset.asset_type === 'apigateway')) && (asset.provider === 'aws')) {
+          expect(resObj[0]).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'provider', 'metrics')
           expect(resObj[0]).to.include({
             type: asset.asset_type
           })
