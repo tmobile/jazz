@@ -37,7 +37,7 @@ if(!Array.prototype.flatMap) {
 const allowedResourceList = Object.keys(doc.resources).flatMap(key => doc.resources[key]).map(obj => obj.Type);
 const allowedEventNameList = Object.keys(doc.events).filter(name => name != 'stream'); // everything but stream as stream depend on type
 const allowedStreamTypeList = doc.events['stream'].map(obj => obj.type); // Enlisting all allowed stream types
-
+const allowedActions = Object.keys(doc.actions).flatMap(key => doc.actions[key].map(value => `${key}:${value}`)) // All actions in the 'resource:action' form like 'kinesis:DescribeStream'
 
 const getReducerFunction = function(allowed) {
   return function(acc, curr) {
@@ -72,7 +72,7 @@ const validateEvents = function validateEventsAgaistWhitelist(deploymentDescript
   if(functionElem) {
 
     const outstandingEvents = Object.keys(functionElem).map(name => functionElem[name])
-                                    .filter(eventElem => eventElem.events) // Only those with events are interesting here
+                                    .filter(eventElem => eventElem.events) // Only those with 'events' sub-element are interesting here
                                     .flatMap(functionContent => validateEventsElement(functionContent.events));
      return outstandingEvents;
   } else {
@@ -80,9 +80,22 @@ const validateEvents = function validateEventsAgaistWhitelist(deploymentDescript
   }
 }
 
+/* Validating all the events under functions/events
+functions:
+  some-random-name:
+    name: SomeRandomName
+      ...
+    events:
+      - schedule:
+          rate: 160
+          name: some-name
+          enabled: true
+      - stream:
+          type: dynamodb
+*/
 const validateEventsElement = function validateEventsInsideFunction(element) {
     const allEventNames = element.flatMap(obj => Object.keys(obj))
-                                                        .filter(name => name != 'stream'); // Everything but 'stream' that we'll handle separatelly
+                                                       .filter(name => name != 'stream'); // Everything but 'stream' that we'll handle separatelly
     const outstandingEventNames = allEventNames.reduce(getReducerFunction(allowedEventNameList), []);
 
     const allStreamTypes = element.flatMap(obj => obj['stream'])
@@ -95,6 +108,116 @@ const validateEventsElement = function validateEventsInsideFunction(element) {
     return outstandingEventNames.concat(outstandingStreamTypes);
 }
 
+/* Validating all Actions under 'provider/iamManagedPolicies'
+   Example:
+provider:
+ name: aws
+ iamRoleStatements:
+   - Effect: "Allow"
+     Action:
+       - "s3:ListBucket"
+*/
+const validateActionsInProvider = function validateActionInProviderIamRoleStatements(deploymentDescriptor) {
+  const deploymentDescriptorDoc = yaml.load(deploymentDescriptor);
+  const providerElem = deploymentDescriptorDoc.provider;
+  if(providerElem) {
+    iamRoleElem = providerElem.iamRoleStatements;
+    if(iamRoleElem) {
+      return validatePolicyStatement(iamRoleElem); // Removing all the actions that are allowed thus not allowed will stay in
+    } else {
+      return [];
+    }
+  } else {
+    return [];
+  }
+}
+
+/* Validating all Actions at resource/Resources/role[Type='AWS:IAM:Role]/Policies/Statement
+   Example:
+resources:
+ Resources:
+   myRole:
+     Type: AWS::IAM::Role
+     Properties:
+       Path: /my/default/path/
+       RoleName: MyRole
+       Policies:
+         - PolicyName: myPolicyName
+           PolicyDocument:
+             Version: '2017'
+             Statement:
+               - Effect:
+                 Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+*/
+const validateActionsInResources = function validateActionsInResourceRolePolicy(deploymentDescriptor) {
+  const deploymentDescriptorDoc = yaml.load(deploymentDescriptor);
+  const resourcesElem = deploymentDescriptorDoc.resources;
+  if(resourcesElem) { // 'resources' top element is present
+    const capitalResourcesElem = resourcesElem.Resources;
+    if(capitalResourcesElem) { // 'resources.Resources' element is present
+      resourceValues = Object.keys(capitalResourcesElem).map(key => capitalResourcesElem[key]); // Here we are not intersted in keys but only in values that we extract
+      return resourceValues.filter(aResource => aResource.Type==='AWS::IAM::Role' && // Only IAM Role resources we are interested in here
+                                                aResource.Properties &&
+                                                aResource.Properties.Policies)
+                           .flatMap(aResource => aResource.Properties.Policies) // merging all policy arrays all together [[p1,p2], [p3,p4]] => [p1,p2,p3,p4]
+                           .filter(policy => policy.PolicyDocument) //Only those policies with document we are integersted in
+                           .map(policy => policy.PolicyDocument)
+                           .filter(doc => doc.Statement) // Only documents with Statement inside
+                           .flatMap(document => validatePolicyStatement(document.Statement));
+    } else {
+      return [];
+    }
+  } else {
+    return [];
+  }
+
+}
+
+// Inner function that is able to validate 'Statement' structure irrespecitve off place it is encountered
+function validatePolicyStatement(statementElem) {
+  return statementElem.filter(item => item.Effect === 'Allow' && item.Action) // Where Effect is 'Allow' and the Action sub element is present
+                      .flatMap(elem => elem.Action) // Combining all action subarrays into one big flat list
+                      .reduce(getReducerFunction(allowedActions),[]);
+}
+
+/** Finding the oustanding actions that occured in either 'provider' or 'resources'
+     top element
+  @deploymentDescriptor is a string with a yml file inside that looks like
+provider:
+  name: aws
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+resources:
+  Resources:
+    myRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /my/default/path/
+        RoleName: MyRole
+        Policies:
+          - PolicyName: myPolicyName
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect:
+                  Action:
+                   - logs:CreateLogGroup
+                   - logs:CreateLogStream
+
+  @returns the list of oustanding actions that are not listed at whitelist.yml.
+  Like ['ec2:CreateLaunchTemplate', 'ec2:CopyImage', ...]
+*/
+const validateActions = function validateActionsInProviderAndResources(deploymentDescriptor) {
+  const outstandingActionsInProvider = validateActionsInProvider(deploymentDescriptor);
+  const outstandingActionsInResources = validateActionsInResources(deploymentDescriptor);
+  return outstandingActionsInProvider.concat(outstandingActionsInResources);
+}
+
 module.exports = {
   validateResources : validateResources,
-  validateEvents : validateEvents }
+  validateEvents : validateEvents,
+  validateActions: validateActions}

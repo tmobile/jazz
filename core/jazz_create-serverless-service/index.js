@@ -59,8 +59,6 @@ var handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'Service Name' can have up to 20 characters")));
         } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
-        } else if(service_creation_data.service_type === "sls-app" && (!service_creation_data.deployment_descriptor)) {
-          return cb(JSON.stringify(errorHandler.throwInputValidationError(`'deployment_descriptor' field is required for  ${service_creation_data.service_type}`)));
         }
 
         user_id = event.principalId;
@@ -237,7 +235,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
         if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
             serviceMetadataObj.providerRuntime = service_creation_data.runtime;
         }
-    
+
         // Pass the flag to enable authentication on API
         if (service_creation_data.service_type === "api") {
             serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;
@@ -251,7 +249,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             }
         }
 
-    
+
 
         // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
         if (service_creation_data.service_type === "api" && service_creation_data.is_public_endpoint) {
@@ -313,22 +311,29 @@ var getServiceData = (service_creation_data, authToken, configData) => {
             }
         }
 
-        if(service_creation_data.service_type === "sls-app") {
+        if(service_creation_data.service_type === "sls-app") { // application with a deployment descriptor
           const deployDescrValidator = require('./components/validate-sls-yml');
-          try {
-            const outstandingResources = deployDescrValidator.validateResources(service_creation_data.deployment_descriptor);
-            if(outstandingResources.length) { // some resources that are not allowed were found this is bad
-              reject({result: 'inputError', message: `Invalid deployment_descriptor. The resource types not allowed ${outstandingResources}`});
-            } else {
-              const outstandingEvents = deployDescrValidator.validateEvents(service_creation_data.deployment_descriptor);
-              if(outstandingEvents.length) {
-                reject({result: 'inputError', message: `Invalid deployment_descriptor. The event types not allowed ${outstandingEvents}`});
-              } else {
-                inputs.DEPLOYMENT_DESCRIPTOR = service_creation_data.deployment_descriptor;
-              }
+          if(service_creation_data.deployment_descriptor) { // If deployment descriptor is present then validate
+            try {
+                const outstandingResources = deployDescrValidator.validateResources(service_creation_data.deployment_descriptor);
+                if(outstandingResources.length) { // some resources that are not allowed were found this is bad
+                  reject({result: 'inputError', message: `Invalid deployment_descriptor. The resource types not allowed ${outstandingResources}`});
+                } else {
+                  const outstandingEvents = deployDescrValidator.validateEvents(service_creation_data.deployment_descriptor);
+                  if(outstandingEvents.length) { // some events that are not allowed were found so let's reject the request
+                    reject({result: 'inputError', message: `Invalid deployment_descriptor. The event types not allowed ${outstandingEvents}`});
+                  } else {
+                    const outstandingActions = deployDescrValidator.validateActions(service_creation_data.deployment_descriptor);
+                    if(outstandingActions.length) {
+                      reject({result: 'inputError', message: `Invalid deployment_descriptor. The action types not allowed ${outstandingActions}`});
+                    } else {
+                      inputs.DEPLOYMENT_DESCRIPTOR = service_creation_data.deployment_descriptor;
+                    }
+                  }
+                }
+            } catch(e) {
+              reject({result: 'inputError', message: `Invalid deployment_descriptor format. Nested exception is ${e}`});
             }
-          } catch(e) {
-            reject({result: 'inputError', message: `Invalid deployment_descriptor format. Nested exception is ${e}`});
           }
         }
 

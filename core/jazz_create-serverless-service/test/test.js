@@ -221,15 +221,6 @@ describe('create-serverless-service', function () {
       assert.isTrue(invalidCase);
     });
 
-    it("should inform user of error if no deployment descriptor supplied for sls-app type of service", () => {
-      let emptyDeploymentDescriptor = "";
-      let errMessage = "'deployment_descriptor' field is required";
-      let errType = "BadRequest";
-      event.body.service_type = "sls-app"; // Spoofing the new type for this test
-      let emptyDeploymentDescriptorCase = checkCase("body", "deployment_descriptor", emptyDeploymentDescriptor, errMessage, errType);
-      assert.isTrue(emptyDeploymentDescriptorCase);
-    });
-
     /*
      * Given an event with no principalId provided, handler() indicates user isn't authorized
      * @param {object} event, contains a principalId value that is either undefined or null

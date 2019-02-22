@@ -205,5 +205,203 @@ functions:
     assert.isTrue(outstandingEvents.includes('stream:firehose'));
   });
 
+  it("provider/iamRoleStatements: should return an empty list of outstanding actions if all actions're in whitelist", function() {
+    const bunchOfAllowedActions = `
+service: new-service
+provider:
+  name: aws
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+        - "s3:PutObject"
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:s3:::"
+          - Ref: ServerlessDeploymentBucket
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+    - Effect: "Deny"
+      Action:
+        - "ec2:CopyImage"
+`
+    const outstandingActions = slsYmlValidator.validateActions(bunchOfAllowedActions);
+    assert.isTrue(outstandingActions.length==0);
+  });
+
+  it("provider/iamRoleStatements: should return two rogue actions", function() {
+    const twoRogueActions = `
+service: new-service
+provider:
+  name: aws
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "s3:ListBucket"
+        - "s3:PutObject"
+      Resource:
+        Fn::Join:
+          - ""
+          - - "arn:aws:s3:::"
+          - Ref: ServerlessDeploymentBucket
+    - Effect: "Allow"
+      Action:
+        - "dynamodb:GetItem"
+        - "dynamodb:PutItem"
+    - Effect: "Allow"
+      Action:
+        - "ec2:CopyImage"
+        - "ec2:CreateLaunchTemplate"
+`
+    const outstandingActions = slsYmlValidator.validateActions(twoRogueActions);
+    console.log('outstandingActions=>', outstandingActions);
+    assert.isTrue(outstandingActions.length==2);
+    assert.isTrue(outstandingActions.includes('ec2:CopyImage'));
+    assert.isTrue(outstandingActions.includes('ec2:CreateLaunchTemplate'));
+  });
+
+  it("resource/Resources/role[Type='AWS:IAM:Role]/Policies/Statement': should return an empty list of outstanding actions if all actions're in whitelist", function() {
+    const bunchOfAllowedActions = `
+resources:
+  Resources:
+    myDefaultRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /my/default/path/
+        RoleName: MyDefaultRole # required if you want to use 'serverless deploy --function' later on
+        AssumeRolePolicyDocument:
+          Version: '2017'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        # note that these rights are needed if you want your function to be able to communicate with resources within your vpc
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        Policies:
+          - PolicyName: myPolicyName
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow # note that these rights are given in the default policy and are required if you want logs out of your lambda(s)
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource:
+                    - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:logs'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId'
+                        - 'log-group:/aws/lambda/*:*:*'
+                -  Effect: "Allow"
+                   Action:
+                     - "s3:PutObject"
+                   Resource:
+                     Fn::Join:
+                       - ""
+                       - - "arn:aws:s3:::"
+                         - "Ref" : "ServerlessDeploymentBucket"
+    myOtherRole:
+      Type: AWS::IAM::Role
+      Properties:
+      Policies:
+        - PolicyName: myOtherPolicyName
+          PolicyDocument:
+            Version: '2017'
+            Statement:
+              - Effect: Allow
+                Action:
+                 - kinesis:GetRecords
+                 - kinesis:PutRecord
+`
+    const outstandingActions = slsYmlValidator.validateActions(bunchOfAllowedActions);
+    assert.isTrue(outstandingActions.length==0);
+  });
+
+  it("resource/Resources/role[Type='AWS:IAM:Role]/Policies/Statement: should return two rogue actions", function() {
+    const twoRogueActions = `
+resources:
+  Resources:
+    oneRogueRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /my/default/path/
+        # note that these rights are needed if you want your function to be able to communicate with resources within your vpc
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        Policies:
+          - PolicyName: myPolicyName
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow # note that these rights are given in the default policy and are required if you want logs out of your lambda(s)
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource:
+                    - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:logs'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId'
+                        - 'log-group:/aws/lambda/*:*:*'
+                - Effect: "Allow"
+                  Action:
+                   - "s3:PutObject"
+                  Resource:
+                   Fn::Join:
+                     - ""
+                     - - "arn:aws:s3:::"
+                       - "Ref" : "ServerlessDeploymentBucket"
+                - Effect: "Allow"
+                  Action:
+                    - "ec2:CopyImage"
+    perfectlyFineRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Policies:
+          - PolicyName: myOtherGoodName
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow
+                  Action:
+                   - dynamodb:GetRecords
+                   - dynamodb:PutItem
+    otherRogueRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Policies:
+          - PolicyName: myOtherRogueName
+            PolicyDocument:
+              Version: '2017'
+              Statement:
+                - Effect: Allow
+                  Action:
+                   - kinesis:GetRecords
+                   - kinesis:PutRecord
+                - Effect: Allow
+                  Action: "ec2:CreateLaunchTemplate"
+    `
+    const outstandingActions = slsYmlValidator.validateActions(twoRogueActions);
+    console.log('outstandingActions=>', outstandingActions);
+    assert.isTrue(outstandingActions.length==2);
+    assert.isTrue(outstandingActions.includes('ec2:CopyImage'));
+    assert.isTrue(outstandingActions.includes('ec2:CreateLaunchTemplate'));
+  });
+
+
+
+
 
 });
