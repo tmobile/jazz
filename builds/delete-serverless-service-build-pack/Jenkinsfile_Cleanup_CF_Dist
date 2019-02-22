@@ -204,7 +204,6 @@ def loadConfigModule(buildModuleUrl){
 			[credentialsId: repo_credential_id, url: buildModuleUrl]
 		]])
 
-		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
     echo "config loader loaded successfully."

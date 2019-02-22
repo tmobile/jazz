@@ -55,6 +55,44 @@ module.exports = class JsonEditor {
     return this.toObject();
   }
 
+  //Iterate and update the list keys in the json with the given input
+  editJsonList(input) {
+    let jvalue = this.get(input.path);
+    if (jvalue) {
+      if (jvalue.constructor === Array) {
+        let listObj = jvalue.find(obj => obj[input.id] === input.value);
+        const foundIndex = jvalue.findIndex(obj => obj[input.id] === input.value);
+
+        if (listObj) {
+          const new_configs = input.body
+          Object.keys(new_configs).forEach((key) => {
+            let value = findValue(listObj, key);
+            if (value) {
+              if (value.constructor === Array) {
+                value.push(new_configs[key]);
+                new_configs[key] = value;
+              }
+            }
+            const jeditor = new this.constructor(listObj);
+            jeditor.set(key, new_configs[key]);
+            listObj = jeditor.toObject();
+          });
+          jvalue[foundIndex] = listObj;
+          this.set(input.path, jvalue);
+        } else {
+          return ({ isError: true, error: { error: "inputError", "message": "No Such object found." } });
+        }
+
+      } else {
+        return ({ isError: true, error: { error: "inputError", "message": "Expecting Array but found Object/String." } });
+      }
+    }
+    return ({ isError: false, data: this.toObject() });
+
+  }
+
+
+
   //Iterate and remove the json keys with the given input
   removeKeys(keys) {
     for (let key in keys) {

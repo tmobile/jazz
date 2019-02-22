@@ -63,8 +63,9 @@ const handler = (event, context, cb) => {
       if (event && !event.body) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty")));
       }
-      exportable.getConfiguration()
-        .then((res) => exportable.addConfiguration(res, event.body))
+      exportable.validateQueryInput(event)
+        .then(() => exportable.getConfiguration())
+        .then((res) => exportable.addConfiguration(res, event))
         .then((res) => {
           return cb(null, responseObj(res, event.body));
         }).catch((error) => {
@@ -109,10 +110,26 @@ const getConfiguration = () => {
   });
 }
 
-const addConfiguration = (configs, input) => {
+const addConfiguration = (configs, event) => {
   return new Promise((resolve, reject) => {
     const jeditor = new jsonEditor(configs);
-    const new_config = jeditor.editJson(input);
+    let new_config
+    if (!event.query) {
+      new_config = jeditor.editJson(event.body);
+    } else {
+      const input = {
+        path: event.query.path,
+        id: event.query.id,
+        value: event.query.value,
+        body: event.body
+      }
+      const res = jeditor.editJsonList(input)
+      if (!res.isError) {
+        new_config = res.data
+      } else {
+        return reject(res.error);
+      }
+    }
 
     crud.post(new_config, function (err, data) {
       if (err) {
@@ -138,9 +155,36 @@ const deleteConfiguration = (configs, keys) => {
   });
 }
 
+const validateQueryInput = (event) => {
+  return new Promise((resolve, reject) => {
+    if (event.query) {
+      if (!event.query.path) {
+        reject({
+          result: "inputError",
+          message: "Json path is not provided in query."
+        });
+      }
+      if (!event.query.id) {
+        reject({
+          result: "inputError",
+          message: "Unique id is not provided in query."
+        });
+      }
+      if (!event.query.value) {
+        reject({
+          result: "inputError",
+          message: "Unique value is not provided in query."
+        });
+      }
+      resolve();
+    }
+    resolve();
+  });
+}
 
 const exportable = {
   handler,
+  validateQueryInput,
   getConfiguration,
   addConfiguration,
   deleteConfiguration
