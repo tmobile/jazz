@@ -131,6 +131,7 @@ module.exports = class ResourceFactory {
       kind: "functionApp",
       properties: {},
       siteConfig: {
+        cors: {"allowedOrigins": ["*"]},
         appSettings: [
           {
             "name": "FUNCTIONS_WORKER_RUNTIME",
