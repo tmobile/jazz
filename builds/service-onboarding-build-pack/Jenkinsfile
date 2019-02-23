@@ -84,7 +84,15 @@ node  {
 						break
 
 					case "function":
-						if (service_config['runtime'].startsWith("nodejs")) {
+            if (service_config['platform'] == "azure") {
+              if (service_config['runtime'].startsWith("nodejs")) {
+                service_template = "function-template-nodejs"
+              }
+              else if (service_config['runtime'].startsWith("c#")) {
+                service_template = 'function-template-csharp'
+              }
+            }
+						else if (service_config['runtime'].startsWith("nodejs")) {
 							service_template = "lambda-template-nodejs"
 						}
 						else if (service_config['runtime'].startsWith("python")){
@@ -96,9 +104,6 @@ node  {
 						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'lambda-template-go'
 						}
-            else if (service_config['runtime'] == "c#") {
-              service_template = 'lambda-template-csharp'
-            }
 
 						break
 
