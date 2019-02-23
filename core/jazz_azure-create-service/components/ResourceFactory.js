@@ -124,7 +124,7 @@ module.exports = class ResourceFactory {
   }
 
 
-  async createFunctionApp( appName, storageAccountKey, tags = {}, storageAccountName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = 'westus', connectionString = '') {
+  async createFunctionApp( appName, storageAccountKey, tags = {}, storageAccountName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = 'westus', connectionString = '', runtime = 'node') {
     let envelope = {
       tags: tags,
       location: location,
@@ -135,7 +135,7 @@ module.exports = class ResourceFactory {
         appSettings: [
           {
             "name": "FUNCTIONS_WORKER_RUNTIME",
-            "value": "node"
+            "value": runtime
           },
 
           {
@@ -170,6 +170,8 @@ module.exports = class ResourceFactory {
     }
     return await this.createWebApp(appName, envelope, resourceGroupName = this.resourceGroupName );
   }
+
+
 
 
   async listResourcesByTag(tagName) {
