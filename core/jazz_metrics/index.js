@@ -193,7 +193,7 @@ function validateAssets(assetsArray, eventBody) {
           }
         } else {
           var paramMetrics = [];
-          var getAssetNameDetails = utils.getNameSpaceAndMetricDimensons(assetItem.type);
+          var getAssetNameDetails = utils.getNameSpaceAndMetricDimensons(assetItem.type, assetItem.provider);
 
           if (!getAssetNameDetails.isError) {
             paramMetrics = getAssetNameDetails.paramMetrics;
@@ -380,6 +380,12 @@ function cloudWatchDetails(assetParam) {
 function azureMetricDefinitions(config, assetParam) {
   var data = {};
   var resourceid = assetParam.provider_id;
+  var expectedMetrics = [];
+  assetParam.metrics.forEach(item => {
+    expectedMetrics.push(item.MetricName);
+  });
+
+
   return new Promise((resolve, reject) => {
     subscriptionId = config.AZURE.SUBSCRIPTIONID;
 
@@ -400,7 +406,8 @@ function azureMetricDefinitions(config, assetParam) {
 
           // to create an azure client
           const client = new monitorManagementClient(credentials, subscriptionId);
-          const uri = `/subscriptions/${subscriptionId}${resourceid}`
+          //const uri = `/subscriptions/${subscriptionId}${resourceid}`
+          const uri = `${resourceid}`
 
           // to get the metrics definitions
           return client.metricDefinitions.list(uri).then((items) => {
@@ -409,12 +416,16 @@ function azureMetricDefinitions(config, assetParam) {
                 "result": "inputError",
                 "message": "Failed in obtaining metric definitions"
               });
+
             items.forEach(item => {
-              var attrs = {};
-              attrs["unit"] = item.unit;
-              attrs["aggregationtype"] = item.primaryAggregationType;
-              attrs["namespace"] = item.namespace;
-              data[item.name.value] = attrs;
+              if (expectedMetrics.includes(item.name.value)){
+                var attrs = {};
+                attrs["unit"] = item.unit;
+                attrs["aggregationtype"] = item.primaryAggregationType;
+                attrs["supportedAggregationTypes"] = item.supportedAggregationTypes; //array type
+                attrs["namespace"] = item.namespace;
+                data[item.name.value] = attrs;
+              }
             });
             resolve(data);
           });
@@ -430,15 +441,13 @@ function azureMetricDetails(definitions, config, assetParam, eventBody) {
 
   //prepare the metric names & primary aggregation types
   var resourceid = assetParam.provider_id;
-  var names = "";
-  var aggregations = "";
+  var names = [];
+  var statistics = eventBody.statistics;
 
   for (var name in definitions) {
-    names += name + ",";
-    aggregations += definitions[name]["aggregationtype"] + ",";
+    //names += name + ",";
+    names.push(name);
   }
-  names = names.substring(0, names.length-1);
-  aggregations = aggregations.substring(0, aggregations.length-1);
 
   return new Promise((resolve, reject) => {
     subscriptionId = config.AZURE.SUBSCRIPTIONID;
@@ -452,11 +461,11 @@ function azureMetricDetails(definitions, config, assetParam, eventBody) {
 
         // create an azure client
         const client = new monitorManagementClient(credentials, subscriptionId);
-        var options = {'metricnames': names}
+        var options = {'metricnames': names.join()}
         options['interval'] = moment.duration(60, "minutes");
         options['timespan'] = eventBody.start_time + "/" + eventBody.end_time;
-        options['aggregation'] = aggregations;
-        const uri = `/subscriptions/${subscriptionId}${resourceid}`
+        options['aggregation'] = statistics;
+        const uri = `${resourceid}`
 
         // query azure to get the multiple metric results
         return client.metrics.list(uri, options).then((result) => {
@@ -486,13 +495,12 @@ function azureMetricDetails(definitions, config, assetParam, eventBody) {
                 return reject({"result": "inputError", "message": "Timeseries does not have data"});
               }
               dot.data.forEach(p => {
-                if ((p[definitions[defname]["aggregationtype"].toLowerCase()]) && (p[definitions[defname]["aggregationtype"].toLowerCase()] >0 )) {
-                  point = {"Timestamp": p.timeStamp, "Unit": definitions[defname]["unit"], "Sum": p[definitions[defname]["aggregationtype"].toLowerCase()]};
-                  datapoints.push(point);
-                } else {
-                  logger.error("Timeseries data is malformatted. Here is the data: " + JSON.stringify(dot));
-                  return reject({"result": "inputError", "message": "Timeseries data is malformatted"});
-                }
+                definitions[defname]["supportedAggregationTypes"].forEach(aggr=> {
+                  if (aggr.toUpperCase() === statistics.toUpperCase()){
+                    point = {"Timestamp": p.timeStamp, "Unit": aggr, "Sum": p[aggr.toLowerCase()]};
+                    datapoints.push(point);
+                  }
+                })
               });
             });
             points = {
@@ -503,7 +511,7 @@ function azureMetricDetails(definitions, config, assetParam, eventBody) {
             data = {
               "type": assetParam.asset_type,
               "asset_name": {"provider_id": assetParam.provider_id, "asset_type": assetParam.asset_type},
-              "statistics": "Sum", /// TODO:
+              "statistics": statistics, 
               "metrics": metrics
             };
             resolve(data);

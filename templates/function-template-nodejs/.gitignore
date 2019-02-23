@@ -1,0 +1,9 @@
+# Add any directories, files, or patterns you don't want to be tracked by version control
+.serverless
+node_modules
+.DS_Store
+.classpath
+.project
+.settings/
+target/
+.vscode/

@@ -196,7 +196,7 @@ def checkoutConfigRepo(repoCredentialId) {
 
 def selectConfig(serviceInfo) {
   echo "load azure config...."
-  def functionName = serviceInfo.serviceCatalog['service']
+  def functionName = serviceInfo.stackName
   def serviceCatalog = serviceInfo.serviceCatalog
 
   if (serviceCatalog['runtime'].indexOf("nodejs") > -1) {
