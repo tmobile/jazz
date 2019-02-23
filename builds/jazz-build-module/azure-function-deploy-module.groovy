@@ -1,7 +1,5 @@
 #!groovy?
-import groovy.json.JsonOutput
 import groovy.transform.Field
-
 /*
 * azure deployment module
 */
@@ -36,81 +34,147 @@ def setAzureVar(envId) {
 
 }
 
-def createFunction(serviceInfo, azureCreatefunction) {
+
+def createFunction(serviceInfo){
+  def assetList = []
   setAzureVar(serviceInfo.envId)
   loadAzureConfig(serviceInfo)
-  invokeAzureCreation(serviceInfo, azureCreatefunction)
-//  sendAssetComplete(serviceInfo)
 
-//    def hostname = azureUtil.getResourceHostname("functionapp", serviceInfo.stackName)
-//    def functionName = serviceInfo.serviceCatalog['service']
-//    def masterKey = azureUtil.getMasterKey(serviceInfo.stackName)
-//    def endpoint = "https://$hostname/admin/functions/$functionName?code=$masterKey"
-//    return endpoint
+  def masterKey = invokeAzureCreation(serviceInfo, assetList)
+  sendAssetCompletedEvent(serviceInfo, assetList)
+
+  def functionName = serviceInfo.serviceCatalog['service']
+  def endpoint = "https://${serviceInfo.stackName}.azurewebsites.net/admin/functions/$functionName?code=$masterKey"
+  return endpoint
 
 }
 
-def invokeAzureCreation(serviceInfo, azureCreatefunction){
 
-  sh "rm -rf _azureconfig"
+def sendAssetCompletedEvent(serviceInfo, assetList) {
 
-  sh "zip -qr content.zip ."
-  echo "trying to encode zip as 64bit string"
-  sh 'base64 content.zip -w 0 > b64zip'
-  def zip = readFile "b64zip"
-
-  withCredentials([
-    string(credentialsId: 'AZ_PASSWORD', variable: 'AZURE_CLIENT_SECRET'),
-    string(credentialsId: 'AZ_CLIENTID', variable: 'AZURE_CLIENT_ID'),
-    string(credentialsId: 'AZ_TENANTID', variable: 'AZURE_TENANT_ID'),
-    string(credentialsId: 'AZ_SUBSCRIPTIONID', variable: 'AZURE_SUBSCRIPTION_ID')]) {
-
-    def type = azureUtil.getExtensionName(serviceInfo)
-    def data = [
-      "resourceGroupName" : configLoader.AZURE.RESOURCE_GROUP,
-      "appName" : serviceInfo.storageAccountName,
-      "stackName" : serviceInfo.stackName,
-      "tenantId" : AZURE_TENANT_ID,
-      "subscriptionId" : AZURE_SUBSCRIPTION_ID,
-      "clientId" : AZURE_CLIENT_ID,
-      "clientSecret" : AZURE_CLIENT_SECRET,
-      "location": configLoader.AZURE.LOCATION,
-      "eventSourceType": type,
-      "resourceName": serviceInfo.resourceName
-    ]
-
-    executeLambda(data, azureCreatefunction, "createStorage")
-    executeLambda(data, azureCreatefunction, "createEventResource")
-    executeLambda(data, azureCreatefunction, "createfunction")
-    data.zip = zip
-    executeLambda(data, azureCreatefunction, "deployFunction")
-
-    if (type) {
-      data.zip = ""
-      executeLambda(data, azureCreatefunction, "installFunctionExtensions")
-
-      if (type == 'CosmosDB') {
-        executeLambda(data, azureCreatefunction, "createDatabase")
-      }
-    }
-
+  for (item in assetList) {
+    def id = item.azureResourceId
+    def assetType = item.type
+    events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, assetType, serviceInfo.serviceCatalog), serviceInfo.envId)
 
   }
 }
 
-def executeLambda(data, azureCreatefunction, commandName) {
+def invokeAzureCreation(serviceInfo, assetList){
 
-  def payload = [
-    "className": "FunctionApp",
-    "command"  : commandName,
-    "data"     : data
-  ]
+  sh "rm -rf _azureconfig"
 
-  def payloadString = JsonOutput.toJson(payload)
-  invokeLambda([awsAccessKeyId: "$AWS_ACCESS_KEY_ID", awsRegion: 'us-east-1', awsSecretKey: "$AWS_SECRET_ACCESS_KEY", functionName: azureCreatefunction, payload: payloadString, synchronous: true])
+  sh "zip -qr content.zip ."
+  def zip = sh(script: 'readlink -f ./content.zip', returnStdout: true).trim()
+
+  withCredentials([
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
+  ]) {
+
+    def type = azureUtil.getExtensionName(serviceInfo)
+    def runtimeType = azureUtil.getRuntimeType(serviceInfo)
+    def tags = azureUtil.getTags(serviceInfo)
+    def data = azureUtil.getAzureRequestPayload(serviceInfo)
+    data.tags = tags
+    data.runtime = runtimeType
+    data.resourceName = serviceInfo.resourceName
+
+
+    def repo_name = "jazz_azure-create-service"
+    sh "rm -rf $repo_name"
+    sh "mkdir $repo_name"
+
+    def repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
+    def masterKey
+
+    dir(repo_name)
+      {
+        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
+        sh "npm install -s"
+        try {
+          def item = createStorageAccount(data)
+          assetList.add(item)
+          if (type) {
+            item = createEventResource(data, type)
+            if (item) {
+              assetList.add(item)
+            }
+          }
+
+          item = createFunctionApp(data)
+          assetList.add(item)
+          output = azureUtil.invokeAzureService(data, "getMasterKey")
+          masterKey = output.data.result.key
+          deployFunction(data, zip, type)
+          return masterKey
+        } catch (ex) {
+          echo "error occur $ex, rollback starting..."
+          deleteResourceByTag(serviceInfo)
+          error "Failed creating azure function $ex"
+        } finally {
+          echo "cleanup ...."
+          sh "rm -rf content.zip"
+          sh "rm -rf $repo_name"
+
+        }
+      }
+  }
+}
+
+def deleteResourceByTag(serviceInfo) {
+  def data = azureUtil.getAzureRequestPayload(serviceInfo)
+  data.tagName = 'service'
+  data.tagValue = serviceInfo.stackName
+  azureUtil.invokeAzureService(data, "deleteByTag")
 
 }
 
+def createFunctionApp(data) {
+  def output = azureUtil.invokeAzureService(data, "createfunction")
+  return getAssetDetails(output.data.result.id, data.stackName, "functionapp","Microsoft.Web/sites")
+
+}
+def deployFunction(data, zip, type) {
+
+  data.zip = zip
+  azureUtil.invokeAzureService(data, "deployFunction")
+  data.zip = ""
+  if (type) {
+    azureUtil.invokeAzureService(data, "installFunctionExtensions")
+
+  }
+
+}
+def createStorageAccount(data) {
+
+  def output = azureUtil.invokeAzureService(data, "createStorage")
+  return getAssetDetails(output.data.result.id, data.appName, "storage_account","Microsoft.Storage/storageAccounts")
+
+}
+def createEventResource(data, type) {
+
+  data.eventSourceType = type
+  def output = azureUtil.invokeAzureService(data, "createEventResource")
+  def item
+  if (type == 'CosmosDB') {
+
+    output = azureUtil.invokeAzureService(data, "createDatabase")
+    item = getAssetDetails(output.data.result.id, data.appName, "cosmosdb","Microsoft.DocumentDB/databaseAccounts")
+
+  } else if (type == 'ServiceBus') {
+    item = getAssetDetails(output.data.result.id, data.appName, "servicebus_namespace","Microsoft.ServiceBus/namespaces")
+
+  } else if (type == 'EventHubs') {
+    item = getAssetDetails(output.data.result.id, data.appName, "eventhubs_namespace","Microsoft.EventHub/namespaces")
+  }
+
+  return item
+
+
+}
 def loadAzureConfig(serviceInfo) {
   checkoutConfigRepo(serviceInfo.repoCredentialId)
   selectConfig(serviceInfo)
@@ -122,9 +186,9 @@ def checkoutConfigRepo(repoCredentialId) {
 
   dir('_azureconfig') {
     checkout([$class: 'GitSCM', branches: [
-            [name: '*/master']
+      [name: '*/master']
     ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-            [credentialsId: repoCredentialId, url: configPackURL]
+      [credentialsId: repoCredentialId, url: configPackURL]
     ]])
   }
 
@@ -148,6 +212,7 @@ def selectConfig(serviceInfo) {
 
 
   if (serviceInfo.isScheduleEnabled) {
+    serviceInfo.resourceType = "cron"
     sh "cp -rf _azureconfig/cron/function.json ./$functionName/function.json"
     def eventScheduleRate = config['eventScheduleRate']
     def timeRate = eventScheduleRate.replace("cron(0", "0 *").replace(")", "").replace(" ?", "")
@@ -201,6 +266,22 @@ def registerBindingExtension(type) {
   sh "cp _azureconfig/extensions.csproj ."
 
 }
+
+def getAssetDetails(id, name, assetType, resourceType) {
+
+
+  def assetItem = [
+    type: assetType,
+    azureResourceType: resourceType,
+    azureResourceName: name,
+    azureResourceId: id
+  ]
+
+  return assetItem
+
+
+}
+
 
 
 return this

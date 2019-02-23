@@ -7,7 +7,8 @@ async function create(data, client){
 
 async function createNamespaceAndHub(client, data) {
   let params = {
-    location: data.location
+    location: data.location,
+    tags: data.tags
   };
 
   const namespace = await client.namespaces.createOrUpdate(data.resourceGroupName, data.appName, params);

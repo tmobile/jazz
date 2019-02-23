@@ -5,7 +5,7 @@
   "SERVICE_USER": "xyz@abc.com",
   "TOKEN_CREDS": "aqaqaaqaqaqaqaq",
   "AZURE": {
-    "SUBSCRIPTIONID": "azure_subscriptionid7",
+    "SUBSCRIPTIONID": "azure_subscriptionid",
     "CLIENTID": "azure_clientid",
     "PASSWORD": "azure_password",
     "TENANTID": "azure_tenantid"
