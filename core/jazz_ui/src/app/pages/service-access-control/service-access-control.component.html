@@ -1,7 +1,7 @@
 <div class="access-control-wrap relative">
     <div *ngIf="!isLoading && !isDataNotAvailable && !isError">
         <section class="each-step-wrap header-sec">
-            <h1>Update who can access your service</h1>
+            <h1>Set up access controls to your service</h1>
             <btn-jazz-primary newclass="loginbutton savechangesbtn" text="EDIT" [disablePrimaryBtn]="!isAdminAccess" *ngIf="showDisplay" (click)='onEditClick()'></btn-jazz-primary>
             <div class="custom-save-btn-wrap" *ngIf="!showDisplay">
             <btn-jazz-primary newclass="loginbutton savechangesbtn" text="SAVE" [disablePrimaryBtn]="!isAddOrDelete || isValidData()"  (click)='onSaveClick()'></btn-jazz-primary>
@@ -12,7 +12,7 @@
             <div class="row">
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title step-title-head">Management Access</p>
-                    <p class="step-details">User(s) who can access and edit/modify service details (includes Code and Deployments accesses).</p>
+                    <p class="step-details">Users who can access/manage the service through Jazz, typically team members with admin role.</p>
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <div class="groups-wrap">
@@ -81,7 +81,7 @@
             <div class="row">
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title step-title-head">Code Access</p>
-                    <p class="step-details">User(s) who can access the bitbucket repository with selected permissions.</p>
+                    <p class="step-details">Users who can access source code repository, typically team members with developer role</p>
                 </div>
                    <div class="col-lg-8 col-md-8">
                     <div class="groups-wrap">
@@ -150,7 +150,7 @@
             <div class="row">
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title step-title-head">Deployment Access</p>
-                    <p class="step-details">User(s) who are can trigger a deployment for the service.</p>
+                    <p class="step-details">Users who can manage deployments for the service, typically team members with devops role</p>
                 </div>
                 <div class="col-lg-8 col-md-8">
                   <div class="groups-wrap">
