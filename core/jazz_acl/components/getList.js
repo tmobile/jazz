@@ -35,13 +35,13 @@ async function scanExecute(dynamodb, scanparams, items_formatted) {
     }
   } else {
     scanResult = {
-      error: dataDb || "db error"
+      error: "No data available"
     };
   }
   return scanResult
 }
 
-async function getSeviceIdList(config) {
+async function getSeviceIdList(config, serviceId) {
   let items_formatted = [];
   AWS.config.update({
     region: config.REGION
@@ -57,6 +57,15 @@ async function getSeviceIdList(config) {
     "ReturnConsumedCapacity": "TOTAL",
     "Limit": "10"
   };
+
+  if(serviceId) {
+    scanparams.FilterExpression = "SERVICE_ID = :SERVICE_ID";
+    scanparams.ExpressionAttributeValues = {
+      ":SERVICE_ID": {
+        "S": serviceId
+      }
+    }
+  }
   const dbResult = await scanExecute(dynamodb, scanparams, items_formatted);
   return dbResult;
 
