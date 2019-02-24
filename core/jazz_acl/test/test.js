@@ -710,7 +710,7 @@ describe("getList", () => {
       return cb(null, dataObj);
     });
 
-    const list = getList.getSeviceIdList(config);
+    const list = getList.getSeviceIdList(config, '123');
     list.then(res => {
       expect(res.data).to.include('1', '2', '3');
       AWS.restore("DynamoDB");
@@ -750,7 +750,7 @@ describe("super user implementation", () =>{
       "SERVICES_TABLE_NAME": "test_table",
       "REGION": "region",
     };
-    let errorRes = {error: "db error"};
+    let errorRes = {error: "No data available"};
     let getSeviceIdList = sinon.stub(getList, "getSeviceIdList").returns(errorRes);
     casbin.getPolicyForUser(adminId, config).then(res => {
       sinon.assert.calledOnce(getSeviceIdList);
@@ -764,8 +764,11 @@ describe("super user implementation", () =>{
     const config = {
       "SERVICE_USER": adminId
     };
+    let response = {data: ["123"]};
+    let getSeviceIdList = sinon.stub(getList, "getSeviceIdList").returns(response);
     casbin.getPolicyForServiceUser("123", adminId, config)
     .then(res => {
+      sinon.assert.calledOnce(getSeviceIdList);
       for (eachSvc of res) {
         for(each of eachSvc.policies) {
           if (each.category === "manage") {
@@ -775,6 +778,21 @@ describe("super user implementation", () =>{
           }
         }
       }
+      getSeviceIdList.restore();
+    });
+  });
+
+  it("should show no data available if no items available from db", () => {
+    let adminId = "adminUser";
+    const config = {
+      "SERVICE_USER": adminId
+    };
+    let errorRes = {error: "No data available"};
+    let getSeviceIdList = sinon.stub(getList, "getSeviceIdList").returns(errorRes);
+    casbin.getPolicyForServiceUser("123", adminId, config).then(res => {
+      sinon.assert.calledOnce(getSeviceIdList);
+      expect(res.error).to.be.eq(errorRes.error);
+      getSeviceIdList.restore();
     });
   });
 
