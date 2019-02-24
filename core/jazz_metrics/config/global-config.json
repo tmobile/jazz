@@ -1,7 +1,7 @@
 {
   "REQUIRED_FIELDS": ["service", "domain", "environment", "end_time", "start_time", "interval", "statistics"],
   "ASSET_REQUIRED_FIELDS": ["type", "asset_name", "statistics"],
-  "STATISTICS_TYPE": ["sum", "average", "maximum", "minimum", "samplecount"],
+  "STATISTICS_TYPE": ["sum", "average", "maximum", "minimum", "samplecount","total"],
   "CF_REGION": "{conf-region}",
   "APINAME": {
     "{conf-apikey-dev}": "{conf_stack_prefix}-dev",
