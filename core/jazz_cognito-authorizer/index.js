@@ -26,7 +26,6 @@ const jwt = require("jsonwebtoken");
 const request = require('request');
 const jwkToPem = require('jwk-to-pem');
 const AWS = require('aws-sdk');
-const _ = require('lodash');
 
 var pems;
 var cognitoUserPoolEndpoint;
@@ -37,7 +36,7 @@ async function handler(event, context, cb) {
   logger.init(event, context);
   var errorHandler = errorHandlerModule(logger);
 
-  if (!event || !event.authorizationToken) {
+  if (!event || !event.headers.Authorization) {
     logger.error('No access token, Request will be denied!');
     return cb("Unauthorized");
   }
@@ -85,7 +84,7 @@ async function handler(event, context, cb) {
 
   async function ValidateToken(pems, event, context, cb, config) {
 
-    var token = event.authorizationToken;
+    var token = event.headers.Authorization;
     //Fail if the token is not jwt
     var decodedJwt = jwt.decode(token, { complete: true });
     if (!decodedJwt) {
@@ -160,7 +159,11 @@ async function handler(event, context, cb) {
             logger.error(JSON.stringify(err));
             return cb("Unauthorized");
           } else {
-            var emailAddress = _.find(data.UserAttributes, { "Name": "email" });
+            var emailAddress = (data.UserAttributes).filter(data => {
+              if (data.Name === "email") {
+                return true;
+              }
+            });
             //Get AWS AccountId and API Options
             var apiOptions = {};
             var tmp = event.methodArn.split(':');
@@ -175,22 +178,16 @@ async function handler(event, context, cb) {
               resource += apiGatewayArnTmp[3];
             }
             //For more information on specifics of generating policy, refer to blueprint for API Gateway's Custom authorizer in Lambda console
-            var policy = new AuthPolicy(emailAddress.Value, awsAccountId, apiOptions);
-            let authResult;
-            if (resource.indexOf("checkpermission") !== -1) {
+            var policy = new AuthPolicy(emailAddress[0].Value, awsAccountId, apiOptions);
+            const authResult = await getAuthorizationDetails(event, emailAddress[0].Value, resource);
+            if (authResult && authResult.data) {
+              policy.context = authResult.data;
+            }
+            if (authResult && authResult.allow) {
               policy.allowMethod(method, resource);
-            } else {
-              const authResult = await getAuthorizationDetails(config, method, resource, emailAddress.Value);
-
-              if (authResult && authResult.data) {
-                policy.context = authResult.data;
-              }
-              if (authResult && authResult.allow) {
-                policy.allowMethod(method, resource);
-              }
-              else {
-                policy.denyMethod(method, resource);
-              }
+            }
+            else {
+              policy.denyMethod(method, resource);
             }
             context.succeed(policy.build());
           }
@@ -199,42 +196,40 @@ async function handler(event, context, cb) {
     });
   }
 
-  async function getAuthorizationDetails(config, method, resource, user) {
+  async function getAuthorizationDetails(event, user, resource) {
 
-    if (method === 'GET' && resource.indexOf("services") !== -1) {
+    if (event.httpMethod === 'GET' && resource.indexOf("services") !== -1) {
       let authToken = await auth.getAuthToken(config);
-      let result = getPathQuery(resource);
-      let serviceData = await aclServices.getServiceMetadata(config, authToken, result.queryString, result.serviceId);
+      let serviceData = await aclServices.getServiceMetadata(config, authToken, user, event.headers.Jazz-Service-ID);
       return {
         allow: true,
         data: serviceData
       }
     } else if (resource.indexOf("acl/policies") !== -1) {
-      let result = getPathQuery(resource);
       let permission;
-      if (method === 'GET') {
+      if (event.httpMethod === 'GET') {
         permission = 'read'
-      } else if (method === 'POST') {
+      } else if (event.httpMethod === 'POST') {
         permission = 'admin'
       } else {
-        logger.error("Incorrect method for /acl/policies" + method);
+        logger.error("Incorrect method for /acl/policies" + event.httpMethod);
         throw (errorHandlerModule.throwInputValidationError("Method not supported"));
       }
-      let permissionData = await aclServices.checkPermissionData(config, token, result.queryString, user, "manage", permission);
+      let permissionData = await aclServices.checkPermissionData(config, token, user, event.headers.Jazz-Service-ID, "manage", permission);
       return {
         allow: permissionData.data
       }
     } else {
       let category, permission;
-      if (method === 'GET') {
-        if (resource.indexOf("deployements") !== -1) {
+      if (event.httpMethod === 'GET') {
+        if (resource.indexOf("deployments") !== -1) {
           category = "deploy"
         } else {
           category = "manage";
         }
         permission = "read"
       } else {
-        if (resource.indexOf("deployements") !== -1) {
+        if (resource.indexOf("deployments") !== -1) {
           category = "deploy"
           permission = 'write'
         } else {
@@ -242,20 +237,10 @@ async function handler(event, context, cb) {
           permission = 'admin'
         }
       }
-      let result = getPathQuery(resource);
-      let permissionData = await aclServices.checkPermissionData(config, token, result.serviceId, user, category, permission);
+      let permissionData = await aclServices.checkPermissionData(config, token, user, event.headers.Jazz-Service-ID, category, permission);
       return {
         allow: permissionData.data
       }
-    }
-  }
-
-  function getPathQuery(resource) {
-    let tmp = resource.split('?');
-    let pathName = tmp[0].split('/');
-    return {
-      serviceId: pathName.pop(),
-      queryString: tmp[1]
     }
   }
 

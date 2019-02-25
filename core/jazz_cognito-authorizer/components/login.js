@@ -23,8 +23,8 @@ const getAuthToken = async (config) => {
       uri: config.BASE_API_URL + config.LOGIN_API,
       method: 'post',
       json: {
-        "username": config.SERVICE_USER,
-        "password": config.TOKEN_CREDS
+        "username": config.JAZZ_ADMIN_USERNAME,
+        "password": config.JAZZ_ADMIN_CREDS
       },
       rejectUnauthorized: false
     };

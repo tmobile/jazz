@@ -5,8 +5,8 @@
     "ACL_SERVICE_API": "/acl/services",
     "ACL_CHECKPERMISSION_API": "/acl/checkpermission",
     "LOGIN_API": "/jazz/login",
-    "JAZZ_ADMIN": "{jazz_admin}",
-    "TOKEN_CREDS": "{jazz_admin_creds}"
+    "JAZZ_ADMIN_USERNAME": "{jazz_admin}",
+    "JAZZ_ADMIN_CREDS": "{jazz_admin_creds}"
 }
   
   

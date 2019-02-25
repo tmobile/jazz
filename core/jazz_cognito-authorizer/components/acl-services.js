@@ -17,13 +17,13 @@
 const request = require('request');
 const logger = require("./logger.js");
 
-const getServiceMetadata = async (config, authToken, queryString, serviceId) => {
+const getServiceMetadata = async (config, authToken, user, serviceId) => {
   return new Promise((resolve, reject) => {
     let uri;
-    if(serviceId){
-      uri = `${config.BASE_API_URL}${config.ACL_SERVICE_API}/${serviceId}?${queryString}`;
+    if (serviceId) {
+      uri = `${config.BASE_API_URL}${config.ACL_SERVICE_API}/${serviceId}?userId=${user}`;
     } else {
-      uri = `${config.BASE_API_URL}${config.ACL_SERVICE_API}?${queryString}`;
+      uri = `${config.BASE_API_URL}${config.ACL_SERVICE_API}?userId=` + user;
     }
     const svcPayload = {
       uri: uri,
@@ -59,10 +59,10 @@ const getServiceMetadata = async (config, authToken, queryString, serviceId) => 
   });
 };
 
-const checkPermissionData = async (config, authToken, queryString) => {
+const checkPermissionData = async (config, authToken, user, seerviceId, category, permission) => {
   return new Promise((resolve, reject) => {
     const svcPayload = {
-      uri: '${config.BASE_API_URL}${config.ACL_CHECKPERMISSION_API}/?${queryString}',
+      uri: '${config.BASE_API_URL}${config.ACL_CHECKPERMISSION_API}/?userId=${user}&serviceId=${serviceId}&permission=${permission}&category=${category}',
       method: 'GET',
       headers: {
         'Authorization': authToken
