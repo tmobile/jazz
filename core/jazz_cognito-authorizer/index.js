@@ -181,7 +181,9 @@ async function handler(event, context, cb) {
             var policy = new AuthPolicy(emailAddress[0].Value, awsAccountId, apiOptions);
             const authResult = await getAuthorizationDetails(event, emailAddress[0].Value, resource);
             if (authResult && authResult.data) {
-              policy.context = authResult.data;
+              policy.context = {
+                services: JSON.stringify(authResult.data)
+              }
             }
             if (authResult && authResult.allow) {
               policy.allowMethod(method, resource);
