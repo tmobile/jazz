@@ -77,19 +77,7 @@ describe('platform_services', function() {
         "email" : "gonnaGetALittle@Wild.com",
 		    "metadata":{"service":"test-service2","securityGroupIds":"sg-cdb65db9"}
       },
-      "services": [{
-        "serviceId": "k!ngd0m_0f_Mewni",
-        "policies": [{
-          "category": "manage",
-          "permission": 'admin'
-        },{
-          "category": "code",
-          "permission": 'write'
-        },{
-          "category": "deploy",
-          "permission": 'write'
-        }]
-      }],
+      "services": "[{\"serviceId\": \"k!ngd0m_0f_Mewni\",\"policies\": [{\"category\": \"manage\",\"permission\": \"admin\"},{\"category\": \"code\",\"permission\": \"write\"},{\"category\": \"deploy\",\"permission\": \"write\"}]}]",
       "principalId": "g10$saryck"
     };
     context = awsContext();
