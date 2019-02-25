@@ -48,12 +48,11 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       column: 'View By:',
       label: 'PERIOD',
       type: 'select',
-      options: ['15 Minutes', '1 Hour', '6 Hours', '1 Day'],
-      values: [moment(0).add(15, 'minute').valueOf() / 1000,
+      options: ['1 Minute', '1 Hour', '1 Day'],
+      values: [moment(0).add(1, 'minute').valueOf() / 1000,
         moment(0).add(1, 'hour').valueOf() / 1000,
-        moment(0).add(6, 'hour').valueOf() / 1000,
         moment(0).add(1, 'day').valueOf() / 1000],
-      selected: '15 Minutes'
+      selected: '1 Minute'
     },
     {
       column: 'View By:',
@@ -198,20 +197,18 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       else{
         switch(changedFilter.selected){
           case 'Day':{
-            this.formFields[index].options =  ['1 Minutes', '1 Hour', '6 Hour', '1 Day'];
+            this.formFields[index].options =  ['1 Minutes', '1 Hour', '1 Day'];
             this.formFields[index].values =  [
                 moment(0).add(1, 'minute').valueOf() / 1000,
                 moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(6, 'hour').valueOf() / 1000,
                 moment(0).add(1, 'day').valueOf() / 1000,];
             this.filters.changeFilter('1 Minutes',this.formFields[index]);
             break;
           }
           case 'Week':{
-            this.formFields[index].options =  ['1 Hour', '1 Day',  '6 Hour', '7 Days'];
+            this.formFields[index].options =  ['1 Hour', '1 Day', '7 Days'];
             this.formFields[index].values =  [
                 moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(6, 'hour').valueOf() / 1000,
                 moment(0).add(1, 'day').valueOf() / 1000,
                 moment(0).add(7, 'day').valueOf() / 1000,];
             this.filters.changeFilter('1 Hour',this.formFields[index]);
