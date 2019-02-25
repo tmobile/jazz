@@ -91,14 +91,16 @@
       },
       "post": {
         "description": "Post method swagger for logout Service",
-        "parameters": [{
-					"name": "Authorization",
-					"in": "header",
-					"description": "Authorization token. Required for accessing API. Use login API to receive a token.",
-					"required": true,
-					"type": "string"
-				}],
-		"consumes": [
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "description": "Authorization token. Required for accessing API. Use login API to receive a token.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
         ],
@@ -210,9 +212,9 @@
             }
           }
         },
-       "security": [
+        "security": [
           {
-            "{envPrefix}-{domain}-cognito-authorizer": []
+            "{envPrefix}-{domain}-token-authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -297,30 +299,30 @@
     }
   },
   "securityDefinitions": {
-      "{envPrefix}-{domain}-cognito-authorizer": {
-        "type": "apiKey",
-        "name": "Authorization",
-        "in": "header",
-        "x-amazon-apigateway-authtype": "custom",
-        "x-amazon-apigateway-authorizer": {
-          "authorizerCredentials": "{conf-role}",
-          "authorizerResultTtlInSeconds": 0,
-          "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
-          "type": "request"
-        }
+    "{envPrefix}-{domain}-token-authorizer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "custom",
+      "x-amazon-apigateway-authorizer": {
+        "authorizerCredentials": "{conf-role}",
+        "authorizerResultTtlInSeconds": 0,
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-token-authorizer-{envmnt}/invocations",
+        "type": "token"
       }
+    }
   },
   "definitions": {
     "200SuccessResponse": {
-		"type": "object",
-		"properties": {
-			"data": {					
-				"$ref": "#/definitions/LogoutOutputObj"
-			},
-			"input": {}
-		},
-		"title": "Success Response"
-	},
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/LogoutOutputObj"
+        },
+        "input": {}
+      },
+      "title": "Success Response"
+    },
     "400ErrorResponse": {
       "type": "object",
       "properties": {
@@ -381,14 +383,14 @@
         }
       }
     },
-	"LogoutOutputObj": {
-		"type": "object",
-		"properties": {
-			"message": {
-				"type": "string",
-				"description": "Signout status"
-			}
-		}
-	}
+    "LogoutOutputObj": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "description": "Signout status"
+        }
+      }
+    }
   }
 }

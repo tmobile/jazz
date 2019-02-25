@@ -91,15 +91,17 @@
       },
       "post": {
         "description": "Post method swagger for Node template",
-        "parameters": [{
-          "name": "param",
-          "in": "body",
-          "description": "post body parameter.",
-          "required": true,
-          "schema": {
-            "$ref": "#/definitions/InputObj"
+        "parameters": [
+          {
+            "name": "param",
+            "in": "body",
+            "description": "post body parameter.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InputObj"
+            }
           }
-        }],
+        ],
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -212,6 +214,11 @@
             }
           }
         },
+        "security": [
+          {
+            "{envPrefix}-{domain}-token-authorizer": []
+          }
+        ],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -372,15 +379,17 @@
       },
       "post": {
         "description": "Post method to reset user password",
-        "parameters": [{
-          "name": "param",
-          "in": "body",
-          "description": "post body parameter.",
-          "required": true,
-          "schema": {
-            "$ref": "#/definitions/InputObj"
+        "parameters": [
+          {
+            "name": "param",
+            "in": "body",
+            "description": "post body parameter.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InputObj"
+            }
           }
-        }],
+        ],
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -493,6 +502,11 @@
             }
           }
         },
+        "security": [
+          {
+            "{envPrefix}-{domain}-token-authorizer": []
+          }
+        ],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -653,15 +667,17 @@
       },
       "post": {
         "description": "Post method to update user password",
-        "parameters": [{
-          "name": "param",
-          "in": "body",
-          "description": "post body parameter.",
-          "required": true,
-          "schema": {
-            "$ref": "#/definitions/UpdatePwd"
+        "parameters": [
+          {
+            "name": "param",
+            "in": "body",
+            "description": "post body parameter.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdatePwd"
+            }
           }
-        }],
+        ],
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -774,6 +790,11 @@
             }
           }
         },
+        "security": [
+          {
+            "{envPrefix}-{domain}-token-authorizer": []
+          }
+        ],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -1144,6 +1165,18 @@
         "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
         "type": "request"
       }
+    },
+    "{envPrefix}-{domain}-token-authorizer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "custom",
+      "x-amazon-apigateway-authorizer": {
+        "authorizerCredentials": "{conf-role}",
+        "authorizerResultTtlInSeconds": 0,
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-token-authorizer-{envmnt}/invocations",
+        "type": "token"
+      }
     }
   },
   "definitions": {
@@ -1280,4 +1313,3 @@
     }
   }
 }
-

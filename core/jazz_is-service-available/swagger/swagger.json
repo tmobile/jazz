@@ -26,18 +26,18 @@
                 "x-amazon-apigateway-integration": {
                     "type": "mock",
                     "requestTemplates": {
-                      "application/json": "{\"statusCode\": 200}"
+                        "application/json": "{\"statusCode\": 200}"
                     },
                     "responses": {
                         "default": {
                             "statusCode": "200",
                             "responseParameters": {
-                              "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-                              "method.response.header.Access-Control-Allow-Methods": "'*'",
-                              "method.response.header.Access-Control-Allow-Origin": "'*'"
+                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                                "method.response.header.Access-Control-Allow-Origin": "'*'"
                             },
                             "responseTemplates": {
-                                   "application/json": "{}"
+                                "application/json": "{}"
                             }
                         }
                     }
@@ -136,11 +136,11 @@
                         }
                     }
                 },
-               "security": [
-                  {
-                    "{envPrefix}-{domain}-cognito-authorizer": []
-                  }
-                ],              
+                "security": [
+                    {
+                        "{envPrefix}-{domain}-token-authorizer": []
+                    }
+                ],
                 "x-amazon-apigateway-integration": {
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
                     "passthroughBehavior": "when_no_templates",
@@ -170,9 +170,9 @@
                                 "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
                             },
                             "responseParameters": {
-                              "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
-                              "method.response.header.Access-Control-Allow-Methods": "'*'",
-                              "method.response.header.Access-Control-Allow-Origin": "'*'"
+                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'",
+                                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                                "method.response.header.Access-Control-Allow-Origin": "'*'"
                             }
                         },
                         ".*\"NotFound\".*": {
@@ -186,20 +186,20 @@
             }
         }
     },
-  	"securityDefinitions": {
-		"{envPrefix}-{domain}-cognito-authorizer": {
-		  "type": "apiKey",
-		  "name": "Authorization",
-		  "in": "header",
-		  "x-amazon-apigateway-authtype": "custom",
-		  "x-amazon-apigateway-authorizer": {
-			"authorizerCredentials": "{conf-role}",
-			"authorizerResultTtlInSeconds": 0,
-			"authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
-			"type": "request"
-		  }
-		}
-	},
+    "securityDefinitions": {
+        "{envPrefix}-{domain}-token-authorizer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "x-amazon-apigateway-authtype": "custom",
+            "x-amazon-apigateway-authorizer": {
+                "authorizerCredentials": "{conf-role}",
+                "authorizerResultTtlInSeconds": 0,
+                "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-token-authorizer-{envmnt}/invocations",
+                "type": "token"
+            }
+        }
+    },
     "definitions": {
         "200SuccessResponse": {
             "type": "object",
