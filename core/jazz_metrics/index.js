@@ -46,12 +46,23 @@ function handler(event, context, cb) {
 		 *    }
 		 */
     var eventBody = event.body;
+    var authToken;
+    var tempCreds;
+    var serviceMetaData;
     exportable.genericValidation(event)
       .then(() => validateUtils.validateGeneralFields(eventBody))
-      .then(() => exportable.getToken(config))
-      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
+      .then(() => {
+        authToken = exportable.getToken(config);
+      })
+      .then(() => {
+        serviceMetaData = exportable.getserviceMetaData(config, eventBody, authToken)
+      })
+      .then(() =>{
+        tempCreds = utils.AssumeRole(services.metadata.iamRoleARN.split(':')[4])
+      }) 
+      .then(() => exportable.getAssetsDetails(config, eventBody, authToken))
       .then(res => exportable.validateAssets(res, eventBody))
-      .then(res => exportable.getMetricsDetails(res))
+      .then(res => exportable.getMetricsDetails(res,tempCreds,serviceMetaData))
       .then(res => {
         var finalObj = utils.massageData(res, eventBody);
         return cb(null, responseObj(finalObj, eventBody));
@@ -126,6 +137,37 @@ function getToken(config) {
         });
       }
     });
+  });
+}
+function getserviceMetaData(config, eventBody, authToken){
+  return new Promise((resolve, reject) =>  {
+    var service_api_options = {
+      url: config.SERVICE_API_URL + config.SERVICE_URL + "?domain=" + eventBody.domain + "&service=" + eventBody.service + "&environment=" + eventBody.environment,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": authToken
+      },
+      method: "GET",
+      rejectUnauthorized: false,
+      requestCert: true,
+      async: true
+    };
+
+    request(service_api_options, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else {
+        if (response.statusCode && response.statusCode === 200) {
+          var responseBody = JSON.parse(body);
+          //var iamroleARN = responseBody.data.services.metadata.iamRoleARN
+          //var AccountId = iamroleARN.split(':')[4];
+          resolve(responseBody.data)
+        }else{
+          logger.info("Service not found for this service, domain, environment. ", JSON.stringify(service_api_options));
+          resolve([])
+        }
+      }
+    })
   });
 }
 
@@ -286,12 +328,12 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
   });
 }
 
-function getMetricsDetails(newAssetArray) {
+function getMetricsDetails(newAssetArray,tempCreds,serviceMetaData) {
   return new Promise((resolve, reject) => {
     logger.debug("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
-      exportable.cloudWatchDetails(assetParam)
+      exportable.cloudWatchDetails(assetParam,tempCreds,serviceMetaData)
         .then(res => {
           metricsStatsArray.push(res);
           if (metricsStatsArray.length === newAssetArray.length) {
@@ -305,12 +347,12 @@ function getMetricsDetails(newAssetArray) {
   });
 }
 
-function cloudWatchDetails(assetParam) {
+function cloudWatchDetails(assetParam,tempCreds,serviceMetaData) {
   logger.debug("Inside cloudWatchDetails");
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
-      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch() : utils.getCloudWatch();
+      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch(tempCreds,serviceMetaData) : utils.getCloudWatch(tempCreds);
 
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
@@ -337,10 +379,13 @@ function cloudWatchDetails(assetParam) {
   });
 }
 
+
+
 const exportable = {
   handler,
   genericValidation,
   getToken,
+  getserviceMetaData,
   getAssetsDetails,
   validateAssets,
   getActualParam,

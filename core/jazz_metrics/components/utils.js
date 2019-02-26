@@ -240,19 +240,47 @@ function updateCloudfrontAsset(newAssetObj, relativeId) {
   return newAssetObj;
 }
 
-function getCloudWatch() {
-  var cloudwatch = new AWS.CloudWatch({
-    apiVersion: '2010-08-01'
-  });
+function getCloudWatch(tempcreds) {
+  tempcreds.apiVersion = '2010-08-01';
+  var cloudwatch = new AWS.CloudWatch({tempcreds});
   return cloudwatch;
 }
 
-function getCloudfrontCloudWatch() {
-  var cloudwatch = new AWS.CloudWatch({
-    apiVersion: '2010-08-01',
-    region: global_config.CF_REGION
-  });
+function getCloudfrontCloudWatch(tempcreds , serviceMetaData) {
+  tempcreds.apiVersion = '2010-08-01';
+  tempcreds.region = serviceMetaData.services.region
+  var cloudwatch = new AWS.CloudWatch({tempcreds});
   return cloudwatch;
+}
+
+function AssumeRole(accountID) {
+  logger.info("Inside Assume Role")
+  return new Promise((resolve, reject) => {
+    const sts = new AWS.STS({ region: process.env.REGION });
+    const params = {
+      RoleArn: 'arn:aws:iam::'+accountID+':role/'+global_config.STACK_PREFIX+'_platform_services',
+      RoleSessionName: 'CrossAccountCredentials',
+      ExternalId: '1234567-1234-1234-1234-123456789012',
+      DurationSeconds: 3600,
+    };
+    sts.assumeRole(params, (err, data) => {
+      if (err) {
+        logger.error("Error Assuming Role with params:" + JSON.stringify(err));
+        reject({
+          "result": "serverError",
+          "message": "Unknown internal error occurred"
+        })
+      }else{
+        logger.info("The Temporary Acces details are:" + JSON.stringify(data));
+        var accessparams = {
+          accessKeyId: data.Credentials.AccessKeyId,
+          secretAccessKey: data.Credentials.SecretAccessKey,
+          sessionToken: data.Credentials.SessionToken,
+        };
+        resolve(accessparams)
+      }
+    })
+  });
 }
 
 module.exports = {
@@ -261,5 +289,6 @@ module.exports = {
   getNameSpaceAndMetricDimensons,
   getAssetsObj,
   getCloudWatch,
-  getCloudfrontCloudWatch
+  getCloudfrontCloudWatch,
+  AssumeRole
 };
