@@ -830,7 +830,7 @@ def validateSwaggerFile(service, domain, apiHostName){
 **/
 def updateApiDocUrl(String env) {
 	sh "sed -i -- 's#basePath\": \"/#basePath\": \"/$env/#g' swagger/swagger.json"
-	//sh "sed -i -- 's#basePath\": \"/$env/\"#basePath\": \"/$env\"#g' swagger/swagger.json"
+	sh "sed -i -- 's#basePath\": \"/$env/\"#basePath\": \"/$env\"#g' swagger/swagger.json"
 }
 
 /**
