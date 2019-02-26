@@ -76,6 +76,16 @@ def loadServiceConfigurationData() {
 
                 sh "sed -i -- 's/{apigee_mgmt_env}/${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_ENV}/g' ./config/dev-config.json"
                 sh "sed -i -- 's/{apigee_mgmt_env}/${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_ENV}/g' ./config/prod-config.json"
+
+                withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.APIGEE.APIGEE_CRED_ID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
+                    sh "sed -i -- 's/{apigee_user}/${USER}/g' ./config/dev-config.json"
+                    sh "sed -i -- 's/{apigee_user}/${USER}/g' ./config/stg-config.json"
+                    sh "sed -i -- 's/{apigee_user}/${USER}/g' ./config/prod-config.json"
+
+                    sh "sed -i -- 's/{apigee_password}/${PASS}/g' ./config/dev-config.json"
+                    sh "sed -i -- 's/{apigee_password}/${PASS}/g' ./config/stg-config.json"
+                    sh "sed -i -- 's/{apigee_password}/${PASS}/g' ./config/prod-config.json"
+                }
             }
 
             sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
@@ -87,16 +97,6 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
             sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
-
-            withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.APIGEE.APIGEE_CRED_ID, passwordVariable: 'PASS', usernameVariable: 'USER']]){
-                sh "sed -i -- 's/{apigee_user}/${USER}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{apigee_user}/${USER}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{apigee_user}/${USER}/g' ./config/prod-config.json"
-
-                sh "sed -i -- 's/{apigee_password}/${PASS}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{apigee_password}/${PASS}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{apigee_password}/${PASS}/g' ./config/prod-config.json"
-            }
         }
 
         if (service_name.trim() == "jazz_codeq") {
