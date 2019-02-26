@@ -1,7 +1,7 @@
 export const environment = {
   production: true,
   configFile: 'config/config.oss.json',
-  baseurl: "https://tn8k9z56za.execute-api.us-east-1.amazonaws.com/prod",
+  baseurl: "https://{API_GATEWAY_KEY_PROD}.execute-api.{inst_region}.amazonaws.com/prod",
   api_doc_name: "https://{api_doc_name}.s3.amazonaws.com",
   envName: "oss",
   multi_env: true,
@@ -40,10 +40,5 @@ export const environment = {
     account_number:'{account_number}',
     region:"{region}",
   },
-  defaults: {
-    account_id: '{account_number}',
-    region: '{region}'
-  },
-  accounts: ['501-1230', '501-1231', '501-1232', '501-1233', '501-1234'],
-  regions: ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2'],
+  accountMap: {accountMap}
 };

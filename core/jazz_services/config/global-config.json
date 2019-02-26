@@ -97,6 +97,13 @@
             "editable": true,
             "isEmptyAllowed": false,
             "type": "Object"
+        },
+        {
+            "key": "deployment_accounts",
+            "required": true,
+            "editable": false,
+            "isEmptyAllowed": false,
+            "type": "Array"
         }       
     ],
     "SERVICE_STATUS": [

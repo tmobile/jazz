@@ -116,8 +116,8 @@ export class ServiceDetailComponent implements OnInit {
         endpoints: service.endpoints,
         is_public_endpoint: service.is_public_endpoint,
         created_by: service.created_by,
-        accountID: env_oss.defaults.account_id,
-        region: env_oss.defaults.region
+        accountID: service.deployment_accounts[0].accountId,
+        region: service.deployment_accounts[0].region
       }
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;

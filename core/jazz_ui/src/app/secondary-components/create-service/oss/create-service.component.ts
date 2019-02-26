@@ -97,6 +97,7 @@ export class CreateServiceComponent implements OnInit {
   regionList = [];
   accountSelected;
   regionSelected;
+  accountMap: any;
 
 
   constructor (
@@ -119,8 +120,11 @@ export class CreateServiceComponent implements OnInit {
   public focusSQS = new EventEmitter<boolean>();
 
   selectAccountsRegions(){
-    this.accountList = env_oss.accounts;
-    this.regionList = env_oss.regions;
+    this.accountMap = env_oss.accountMap;
+    this.accountMap.map((item)=>{
+      this.accountList.push(item.Account)
+    })
+    this.regionList = this.accountMap[0].Regions;
     this.accountSelected = this.accountList[0];
     this.regionSelected = this.regionList[0];
   }
@@ -158,10 +162,16 @@ export class CreateServiceComponent implements OnInit {
   }
 
   onaccountSelected(event){
-
+    this.accountMap.map((item,index)=>{
+      if(item.Account === event){
+        this.accountSelected = item.Account
+        this.regionList = item.Regions;
+        this.regionSelected = this.regionList[0];
+      }
+    })
   }
   onregionSelected(event){
-
+    this.regionSelected = event;
   }
 
 
@@ -385,6 +395,17 @@ export class CreateServiceComponent implements OnInit {
     if(this.typeOfService == 'api' && this.ttlSelected){
         payload["cache_ttl"] = this.model.ttlValue;
     }
+    
+    /* Including deployment_accounts in the payload */
+    let deployment_accounts = [
+      {
+        "accountId": this.accountSelected,
+        "region": this.regionSelected,
+        "provider":"aws",
+        "primary":true
+      }
+    ]
+    payload['deployment_accounts'] = deployment_accounts
 
     this.isLoading = true;
     this.http.post('/jazz/create-serverless-service' , payload)

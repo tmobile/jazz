@@ -234,8 +234,8 @@ var getServiceData = (service_creation_data, authToken, configData) => {
     let primaryAccountCount = 0;
     let deployment_accounts = [];
     // TODO: Make this field required when we support multiple accounts/regions/providers
-    if (event.body.deployment_accounts) {
-      for (let eachDeploymentAccount of event.body.deployment_accounts) {
+    if (service_creation_data.deployment_accounts) {
+      for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
         if (eachDeploymentAccount.primary) {
           primaryAccountCount++
           let deploymentAccount = {
@@ -263,7 +263,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
         logger.error('Invalid input! Only one primary deployment account is allowed')
         return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! Only one primary deployment account is allowed')))
       }
-      serviceMetadataObj["deployment_accounts"] = deployment_accounts
+      inputs["DEPLOYMENT_ACCOUNTS"] = deployment_accounts
     }
 
     //Adding providerRuntime key in service catalog
