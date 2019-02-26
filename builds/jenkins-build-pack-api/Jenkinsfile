@@ -1053,7 +1053,7 @@ def loadBuildModules(buildModuleUrl){
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
 
-		if (configLoader.APIGEE && configLoader.APIGEE.ENABLE_APIGEE) {
+		if(configLoader.APIGEE && configLoader.APIGEE.ENABLE_APIGEE instanceof Boolean && configLoader.APIGEE.ENABLE_APIGEE) {
 			apigeeModule = load "apigee-module.groovy"
 			apigeeModule.initialize(configLoader.APIGEE, events)
 			echo "Apigee module loaded successfully."
