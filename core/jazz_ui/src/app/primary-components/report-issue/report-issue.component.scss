@@ -3,7 +3,7 @@
   position: relative;
   text-align: center;
   text-decoration: none solid rgb(51, 51, 51);
-  margin-top: 8rem;
+  margin: 2rem 0;
 }
 
 .report-issue-header {
@@ -13,6 +13,7 @@
   text-align: center;
   text-decoration: none solid rgb(51, 51, 51);
   text-size-adjust: 100%;
+  width: 100%;
   column-rule-color: rgb(51, 51, 51);
   perspective-origin: 670.2px 17px;
   transform-origin: 670.2px 17px;
@@ -34,6 +35,8 @@
   text-align: center;
   text-decoration: none solid rgb(51, 51, 51);
   text-size-adjust: 100%;
+  width: 80%;
+  margin: 1rem auto;
   column-rule-color: rgb(51, 51, 51);
   perspective-origin: 670.2px 25.6px;
   transform-origin: 670.2px 25.6px;
@@ -50,6 +53,7 @@
   text-align: center;
   text-decoration: none solid rgb(51, 51, 51);
   text-size-adjust: 100%;
+  width: 100%;
   column-rule-color: rgb(51, 51, 51);
   perspective-origin: 670.2px 11px;
   transform-origin: 670.2px 11px;

@@ -289,6 +289,7 @@ node() {
 										events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
 									}
 								}
+								updateApiDocUrl(current_environment)
 								events.sendCompletedEvent('DEPLOY_TO_AWS_APIGATEWAY', 'Deployment completed for API Gateway', context_map, environment_logical_id)
 								break;
 
@@ -315,7 +316,6 @@ node() {
               createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
             }
 
-            updateApiDocUrl(current_environment)
             sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
             echo "completed deployment........."
 

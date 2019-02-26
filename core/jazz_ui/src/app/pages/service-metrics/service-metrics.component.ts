@@ -275,6 +275,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       },
       (error) => {
         this.sectionStatus = 'error';
+        this.errorData['response'] = error;
       });
 
   }
