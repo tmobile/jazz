@@ -41,8 +41,8 @@ export const environment = {
     region:"{region}",
   },
   defaults: {
-    account_id: '302890901340',
-    region: 'us-west-2'
+    account_id: '{account_number}',
+    region: '{region}'
   },
   accounts: ['501-1230', '501-1231', '501-1232', '501-1233', '501-1234'],
   regions: ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2'],
