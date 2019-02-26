@@ -70,25 +70,20 @@ const handler = (event, context, cb) => {
           return cb(null, responseObj(res, event.body));
         }).catch((error) => {
           logger.error("Failed to add admin configuration:" + JSON.stringify(error));
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to add admin configuration.")));
+          return cb(JSON.stringify(error));
         });
 
     } else if (event && event.method && event.method === 'DELETE') {
-      if (event && !event.body) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty. Please give list of keys to be deleted.")));
-      }
-      if (!(event.body instanceof Array)) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Please give list of keys to be deleted.")));
-      }
-      exportable.getConfiguration()
-        .then((res) => exportable.deleteConfiguration(res, event.body))
+      exportable.validateQueryInput(event)
+        .then(() => exportable.validateInputForDelete(event))
+        .then(() => exportable.getConfiguration())
+        .then((res) => exportable.deleteConfiguration(res, event))
         .then((res) => {
           return cb(null, responseObj(res, event.body));
         }).catch((error) => {
           logger.error("Failed to delete the specified admin configuration:" + JSON.stringify(error));
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to delete the specified admin configuration.")));
+          return cb(JSON.stringify(error));
         });
-
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("The requested method is not supported")));
     }
@@ -141,10 +136,26 @@ const addConfiguration = (configs, event) => {
   });
 }
 
-const deleteConfiguration = (configs, keys) => {
+const deleteConfiguration = (configs, event) => {
   return new Promise((resolve, reject) => {
     const jeditor = new jsonEditor(configs);
-    const new_config = jeditor.removeKeys(keys);
+    let new_config
+    if (!event.query) {
+      new_config = jeditor.removeKeys(event.body);
+    } else {
+      const input = {
+        path: event.query.path,
+        id: event.query.id,
+        value: event.query.value
+      }
+      const res = jeditor.removeJsonList(input)
+      if (!res.isError) {
+        new_config = res.data
+      } else {
+        return reject(res.error);
+      }
+    }
+
     crud.post(new_config, function (err, data) {
       if (err) {
         return reject(err);
@@ -182,12 +193,33 @@ const validateQueryInput = (event) => {
   });
 }
 
+const validateInputForDelete = (event) => {
+  return new Promise((resolve, reject) => {
+    if (!event.query) {
+      if (!event.body) {
+        reject({
+          result: "inputError",
+          message: "Input cannot be empty. Please give list of keys to be deleted."
+        });
+      }
+      if (!(event.body instanceof Array)) {
+        reject({
+          result: "inputError",
+          message: "Please give list of keys to be deleted."
+        });
+      }
+    }
+    resolve();
+  });
+}
+
 const exportable = {
   handler,
   validateQueryInput,
   getConfiguration,
   addConfiguration,
-  deleteConfiguration
+  deleteConfiguration,
+  validateInputForDelete
 }
 
 module.exports = exportable;

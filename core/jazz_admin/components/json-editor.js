@@ -55,7 +55,7 @@ module.exports = class JsonEditor {
     return this.toObject();
   }
 
-  //Iterate and update the list keys in the json with the given input
+  //Iterate and update the list of objects in the json with the given input
   editJsonList(input) {
     let jvalue = this.get(input.path);
     if (jvalue) {
@@ -99,6 +99,41 @@ module.exports = class JsonEditor {
       this.unset(keys[key]);
     }
     return this.toObject();
+  }
+
+  //Iterate and remove the list keys in the list of objects in the json with the given input
+  removeJsonList(input) {
+    let pathList = input.path.split("#")
+    let idList = input.id.split("#")
+    let valueList = input.value.split("#")
+    let jvalue = this.get(pathList[0]);
+
+    if (jvalue) {  //ACCOUNTS
+      if (jvalue.constructor === Array) {
+        let listObj = jvalue.find(obj => obj[idList[0]] === valueList[0]); // ONE ACNT OBJ
+        const foundIndex = jvalue.findIndex(obj => obj[input.id] === input.value);
+
+        if (listObj) {
+          let rvalue = findValue(listObj, pathList[1]);
+          if (rvalue.constructor === Array) {
+            let filter = rvalue.filter(obj => obj[idList[1]] !== valueList[1]); // ONE ACNT OBJ
+            const jeditor = new this.constructor(listObj);
+            jeditor.set(pathList[1], filter);
+            listObj = jeditor.toObject();
+          } else {
+            return ({ isError: true, error: { error: "inputError", "message": "Expecting Array but found Object/String." } });
+          }
+          jvalue[foundIndex] = listObj;
+          this.set(pathList[0], jvalue);
+        } else {
+          return ({ isError: true, error: { error: "inputError", "message": "No Such object found." } });
+        }
+
+      } else {
+        return ({ isError: true, error: { error: "inputError", "message": "Expecting Array but found Object/String." } });
+      }
+    }
+    return ({ isError: false, data: this.toObject() });
   }
 
 };
