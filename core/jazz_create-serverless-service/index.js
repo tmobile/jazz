@@ -233,7 +233,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
     // Set deployment_accounts to the propertiesObject variable
     let primaryAccountCount = 0;
     let deployment_accounts = [];
-    // TODO: Make this field required when we support multiple accounts/regions/providers
+
     if (service_creation_data.deployment_accounts) {
       for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
         if (eachDeploymentAccount.primary) {
