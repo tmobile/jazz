@@ -393,4 +393,78 @@ module.exports = class ResourceFactory {
     return await dbHandler.createDatabase(data, await this.factory.getResource('CosmosDBManagementClient'));
 
   }
+
+
+  async getMasterKey(stackName) {
+    let token = await this.getToken(stackName);
+
+    return new Promise(function (resolve, reject) {
+      request({
+        url: `https://${stackName}.azurewebsites.net/admin/host/systemkeys/_master`,
+        method: 'GET',
+        auth: {
+          bearer: token
+        }
+      }, function (err, resp, body) {
+        if (err) {
+          reject(err);
+        } else {
+          let jsonOutput = JSON.parse(body);
+          resolve(jsonOutput);
+        }
+      });
+    });
+
+  }
+
+  async getToken(stackName, resourceGroup = this.resourceGroupName) {
+
+    let client = await this.factory.getResource('WebAppManagementClient');
+    let publishingCredentials = await client.webApps.listPublishingCredentials(resourceGroup, stackName, null);
+
+    return new Promise(function (resolve, reject) {
+      request({
+        url: `https://${stackName}.scm.azurewebsites.net/api/functions/admin/token`,
+        method: 'GET',
+        auth: {
+          username: publishingCredentials.publishingUserName,
+          password: publishingCredentials.publishingPassword
+        }
+      }, function (err, resp, body) {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(body.replace(/"/g, ''));
+        }
+      });
+    });
+
+  }
+  async existWebApp(appName, resourceGroupName = this.resourceGroupName) {
+    let client = await this.factory.getResource("WebAppManagementClient");
+    return await client.webApps.get(resourceGroupName, appName);
+
+  }
+
+  async restartWebApp(appName, resourceGroupName = this.resourceGroupName) {
+    let client = await this.factory.getResource("WebAppManagementClient");
+    return await client.webApps.restart(resourceGroupName, appName);
+  }
+
+  async deleteResourcesByServiceName(tagName, tagValue) {
+    let client = await this.factory.getResource("ResourceManagementClient");
+    let resources = await client.resources.list({filter: `tagName eq '${tagName}' and tagValue eq '${tagValue}'`});
+    let message ='total resources ' + resources.length + ' ';
+
+    for (const resource of resources) {
+      message += resource.id;
+      message += ' ';
+      let apiVersion = await this.getLatestApiVersionForResource(resource);
+      await client.resources.deleteById(resource.id, apiVersion);
+    }
+
+    return message;
+  }
+
+
 }
