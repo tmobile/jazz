@@ -688,8 +688,10 @@ def setLambdaExecutionRole(role) {
  */
 def resetCredentials(credsId) {
 	echo "resetting AWS credentials"
-	sh "aws configure set profile.${credsId}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-	sh "aws configure set profile.${credsId}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+	def credPath = System.getenv().HOME + "/.aws/credentials"
+  def confPath = System.getenv().HOME + "/.aws/config"
+  sh "sed -i '/${credsId}/,+2d' ${credPath}"
+  sh "sed -i '/${credsId}/,+1d' ${confPath}"
 }
 
 /**
