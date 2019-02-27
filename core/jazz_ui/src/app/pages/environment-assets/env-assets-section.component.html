@@ -110,7 +110,7 @@
 
 
                     <li *ngIf='arn[i] != "-"'>
-                            <div class="det-label">{{assetTypeToLabel(asset.type)}}</div>
+                            <div class="det-label">{{assetTypeToLabel(asset.type, Provider[i])}}</div>
                             <div class="det-value arn-value">{{arn[i]}}</div>
                     </li>
 
