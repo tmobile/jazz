@@ -56,7 +56,7 @@ def createApi(stackName) {
       ]
     ]
 
-    apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$azureRG/providers/Microsoft.ApiManagement/service/$AzureApim/apim-apis"
+    apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$azureRG/providers/Microsoft.ApiManagement/service/$AzureApim"
 
     def repo_name = "jazz_azure-create-service"
     sh 'rm -rf ' + repo_name
@@ -71,9 +71,9 @@ def createApi(stackName) {
         def json = JsonOutput.toJson(payloadString)
         writeFile(file:'payload.json', text: json)
         sh "./bin/jazz-azure-cli ./payload.json"
-
-        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", apigateway, "apigateway", config), environment_logical_id);
       }
+
+    sh 'rm -rf ' + repo_name
   }
 }
 
