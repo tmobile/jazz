@@ -1,9 +1,10 @@
-#load "..\StreamHandler.csx"
+#load "..\Handler.csx"
 using System;
 
-public static void Run(Stream myEvent, ILogger log)
+public static void Run(Stream myEvent, ILogger log, ExecutionContext context)
 {
-    log.LogInformation(myEvent.ToString());
-    StreamHandler handler = new StreamHandler();
-    handler.handle(myEvent, log);
+
+    Handler<Stream> handler = new Handler<Stream>();
+    string result = handler.execute(myEvent, log, context);
+    log.LogInformation($"response: {result}");
 }
