@@ -109,12 +109,12 @@ node ()  {
           }
           accountMap = [:]
           if(item.PRIMARY){
-              accountMap.put('Primary', true)
+              accountMap.put('primary', true)
           } else {
-              accountMap.put('Primary', false)
+              accountMap.put('primary', false)
           }
-          accountMap.put('Account', item.ACCOUNTID);
-          accountMap.put('Regions', regions);
+          accountMap.put('account', item.ACCOUNTID);
+          accountMap.put('regions', regions);
           eachAccountMap.push(accountMap);
       }
       def uiAccountMap = JsonOutput.toJson(eachAccountMap)
