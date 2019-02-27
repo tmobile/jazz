@@ -4,7 +4,6 @@ const assert = require('assert');
 function mustHave(data) {
 
   notNull(data.resourceGroupName, 'resourceGroupName');
-  notNull(data.appName, 'appName');
   notNull(data.stackName, 'stackName');
 }
 
