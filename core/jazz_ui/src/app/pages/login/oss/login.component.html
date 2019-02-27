@@ -76,10 +76,6 @@
 
         <div class="btn-wrp">
             <btn-jazz-primary *ngIf="!register && !forgot_password && !new_pwd_req" [text]="buttonText" (click)="login($event)" newclass="loginbutton"  [disablePrimaryBtn]=' (!model.password) || (!model.username)'></btn-jazz-primary>
-<<<<<<< HEAD
-=======
-            <btn-jazz-primary *ngIf="!register && !forgot_password && !new_pwd_req" [text]="buttonText" (click)="login($event)" newclass="loginbutton"></btn-jazz-primary>
->>>>>>> 687a1e5cbf83987a814aed85558c0dd8c6839415
             <btn-jazz-primary *ngIf="register && !forgot_password && !new_pwd_req" [text]="'REGISTER'" (click)="registerUser($event)" newclass="loginbutton" [disablePrimaryBtn]= '(!username.valid && (username.dirty || username.touched)) || (!password.valid && (password.dirty || password.touched)) || (!model.username) || (!model.password) || (!model.usercode)'></btn-jazz-primary>
             <btn-jazz-primary *ngIf="!register && (forgot_password || new_pwd_req)" [text]="'SUBMIT'" (click)="resetPassword($event)" newclass="loginbutton" [disablePrimaryBtn]='disableLoginBtn() || (!username.valid && (username.dirty || username.touched)) || (model.password && (!password.valid && (password.dirty || password.touched)))'></btn-jazz-primary>            
         </div>
