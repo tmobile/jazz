@@ -108,6 +108,11 @@ node ()  {
               regions.push(data.REGION)
           }
           accountMap = [:]
+          if(item.PRIMARY){
+              accountMap.put('Primary', true)
+          } else {
+              accountMap.put('Primary', false)
+          }
           accountMap.put('Account', item.ACCOUNTID);
           accountMap.put('Regions', regions);
           eachAccountMap.push(accountMap);
