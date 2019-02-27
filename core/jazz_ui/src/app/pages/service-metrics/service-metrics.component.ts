@@ -19,6 +19,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   public serviceType;
   public environmentFilter;
+  public aggregationFilter;
+  public periodFilter;
   public formFields: any = [
     {
       column: 'View By:',
@@ -43,27 +45,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           format: 'MMMM'
         }],
       selected: 'Day'
-    },
-    {
-      column: 'View By:',
-      label: 'PERIOD',
-      type: 'select',
-      options: ['15 Minutes', '1 Hour', '6 Hours', '1 Day', '7 Days', '30 Days'],
-      values: [moment(0).add(15, 'minute').valueOf() / 1000,
-        moment(0).add(1, 'hour').valueOf() / 1000,
-        moment(0).add(6, 'hour').valueOf() / 1000,
-        moment(0).add(1, 'day').valueOf() / 1000,
-        moment(0).add(7, 'day').valueOf() / 1000,
-        moment(0).add(30, 'day').valueOf() / 1000],
-      selected: '15 Minutes'
-    },
-    {
-      column: 'View By:',
-      label: 'AGGREGATION',
-      type: 'select',
-      options: ['Sum', 'Average'],
-      values: ['Sum', 'average'],
-      selected: 'Sum'
     }
   ];
   public form;
@@ -74,6 +55,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public errorData = {};
   public graphData;
   private http;
+  public platform;
 
 
   constructor(private request: RequestService,
@@ -98,6 +80,54 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.serviceType = this.service.type || this.service.serviceType;
+    if (this.service.platform || (this.service.assets && this.service.assets.length>0)){
+      this.platform = this.service.platform || this.service.assets[0].provider;
+    }
+    if (this.platform == 'azure'){
+      this.aggregationFilter = {
+        column: 'View By:',
+        label: 'AGGREGATION',
+        type: 'select',
+        options: ['Total'],
+        values: ['total'],
+        selected: 'Total'
+      }
+      this.periodFilter = {
+        column: 'View By:',
+        label: 'PERIOD',
+        type: 'select',
+        options: ['15 Minutes', '1 Hour', '6 Hours', '1 Day'],
+        values: [moment(0).add(15, 'minute').valueOf() / 1000,
+          moment(0).add(1, 'hour').valueOf() / 1000,
+          moment(0).add(6, 'hour').valueOf() / 1000,
+          moment(0).add(1, 'day').valueOf() / 1000],
+        selected: '15 Minutes'
+      }
+    } else {
+      this.aggregationFilter = {
+        column: 'View By:',
+        label: 'AGGREGATION',
+        type: 'select',
+        options: ['Sum', 'Average'],
+        values: ['Sum', 'average'],
+        selected: 'Sum'
+      }    
+      this.periodFilter = {
+        column: 'View By:',
+        label: 'PERIOD',
+        type: 'select',
+        options: ['15 Minutes', '1 Hour', '6 Hours', '1 Day', '7 Days', '30 Days'],
+        values: [moment(0).add(15, 'minute').valueOf() / 1000,
+          moment(0).add(1, 'hour').valueOf() / 1000,
+          moment(0).add(6, 'hour').valueOf() / 1000,
+          moment(0).add(1, 'day').valueOf() / 1000,
+          moment(0).add(7, 'day').valueOf() / 1000,
+          moment(0).add(30, 'day').valueOf() / 1000],
+        selected: '15 Minutes'
+      }       
+    }
+    this.formFields.splice(0, 0, this.aggregationFilter);
+    this.formFields.splice(0, 0, this.periodFilter);
   }
 
   refresh() {

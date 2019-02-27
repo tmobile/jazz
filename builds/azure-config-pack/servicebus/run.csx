@@ -1,9 +1,10 @@
-#load "..\StringHandler.csx"
+#load "..\Handler.csx"
 using System;
 
-public static void Run(string myEvent, ILogger log)
+public static void Run(string myEvent, ILogger log, ExecutionContext context)
 {
-    log.LogInformation(myEvent);
-    StringHandler handler = new StringHandler();
-    handler.handle(myEvent, log);
+
+    Handler<string> handler = new Handler<string>();
+    string result = handler.execute(myEvent, log, context);
+    log.LogInformation($"response: {result}");
 }
