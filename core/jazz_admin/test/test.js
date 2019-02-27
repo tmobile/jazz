@@ -72,6 +72,104 @@ describe('jazz_admin', function () {
     });
   });
 
+  describe('validateQueryInput', () => {
+    it("should indicate error if path is not specified in the query", function () {
+      event = {
+        method: "POST",
+        principalId: "foo@foo.com",
+        query: {}
+      }
+      index.validateQueryInput(event)
+        .catch(error => {
+          expect(error.message).to.be.eq("Json path is not provided in query.");
+        });
+    });
+
+    it("should indicate error if id is not specified in the query", function () {
+      event = {
+        method: "POST",
+        principalId: "foo@foo.com",
+        query: { path: "NewPath" }
+      }
+      index.validateQueryInput(event)
+        .catch(error => {
+          expect(error.message).to.be.eq("Unique id is not provided in query.");
+        });
+    });
+
+    it("should indicate error if value is not specified in the query", function () {
+      event = {
+        method: "POST",
+        principalId: "foo@foo.com",
+        query: { path: "NewPath", id: "testid" }
+      }
+      index.validateQueryInput(event)
+        .catch(error => {
+          expect(error.message).to.be.eq("Unique value is not provided in query.");
+        });
+    });
+
+    it("should return success if query has all required values", function () {
+      event = {
+        method: "POST",
+        principalId: "foo@foo.com",
+        query: { path: "NewPath", id: "testid", value: "test value" }
+      }
+      index.validateQueryInput(event)
+        .then(res => {
+          expect(res.result).to.be.eq("success");
+        });
+    });
+
+  });
+
+  describe('validateInputForDelete', () => {
+    it("should indicate error if event does not have body if it is not having query", function () {
+      event = {
+        method: "DELETE",
+        principalId: "foo@foo.com"
+      }
+      index.validateInputForDelete(event)
+        .catch(error => {
+          expect(error.message).to.be.eq("Input cannot be empty. Please give list of keys to be deleted.");
+        });
+    });
+
+    it("should indicate error if body is not an array if it is not having query", function () {
+      event = {
+        method: "DELETE",
+        principalId: "foo@foo.com",
+        body: { test: "foo" }
+      }
+      index.validateInputForDelete(event)
+        .catch(error => {
+          expect(error.message).to.be.eq("Please give list of keys to be deleted.");
+        });
+    });
+
+    it("should return success if body has list of keys to be deleted if it is not having query", function () {
+      event = {
+        principalId: "foo@foo.com",
+        body: [{ path: "NewPath", id: "testid", value: "test value" }]
+      }
+      index.validateInputForDelete(event)
+        .then(res => {
+          expect(res.result).to.be.eq("success");
+        });
+    });
+
+     it("should return error if query does not have valid data for 2nd level deletion", function () {
+      event = {
+        principalId: "foo@foo.com",
+        query: { path: "NewPath#new", id: "testid#id", value: "test value" }
+      }
+      index.validateInputForDelete(event)
+        .catch(err => {
+          expect(err.message).to.be.eq("Please give the correct mapping in query");
+        });
+    });
+  });
+
   describe('getConfiguration', () => {
     it("should indicate error while get admin config", () => {
       let err = {
@@ -131,7 +229,7 @@ describe('jazz_admin', function () {
   });
 
   describe('addConfiguration', () => {
-    let configs, input;
+    let configs, event;
     beforeEach(function () {
       configs = {
         "AWS": {
@@ -143,9 +241,11 @@ describe('jazz_admin', function () {
           }
         }
       }
-      input = {
-        "ABC.abc": {
-          "hdjshkjs": "sdhj"
+      event = {
+        body: {
+          "ABC.abc": {
+            "hdjshkjs": "sdhj"
+          }
         }
       }
     });
@@ -159,7 +259,7 @@ describe('jazz_admin', function () {
         return cb(err, null);
       });
 
-      index.addConfiguration(configs, input)
+      index.addConfiguration(configs, event)
         .catch(error => {
           expect(error.message).to.be.eq(err.message);
           AWS.restore("DynamoDB.DocumentClient");
@@ -167,7 +267,7 @@ describe('jazz_admin', function () {
     });
 
     it("should return correct json on adding admin configuration", () => {
-      let body = { "ABC.test": "newtest", "INST_PRE": "TESTCRED", "LIST": { "newItem": "newvalue" } };
+      let input = { body: { "ABC.test": "newtest", "INST_PRE": "TESTCRED", "LIST": { "newItem": "newvalue" } } };
       let data = {
         CRED_ID: "jazzaws",
         INST_PRE: "jazzsw",
@@ -183,7 +283,7 @@ describe('jazz_admin', function () {
         return cb(null, resp);
       });
 
-      index.addConfiguration(data, body)
+      index.addConfiguration(data, input)
         .then(res => {
           expect(res.message).to.deep.eq(resp.message);
           AWS.restore("DynamoDB.DocumentClient");
@@ -197,16 +297,99 @@ describe('jazz_admin', function () {
       AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
         return cb(null, responseObj);
       });
-      index.addConfiguration(configs, input)
+      index.addConfiguration(configs, event)
         .then(res => {
           expect(res).to.deep.eq(responseObj);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+
+    it("should return correct json on list iteration while adding admin configuration", () => {
+      let event = {
+        query: {
+          id: "TESTID",
+          path: "TEST.TESTLIST",
+          value: "1234"
+        },
+        body:
+        {
+          "ABC": {
+            "test_ABC": "123",
+            "new_test": "aaa"
+          },
+          "TLIST": {
+            "newentry": "newEntry"
+          },
+          "C_ID": "abc@123"
+        }
+      };
+
+      let data = {
+        CRED_ID: "jazzaws",
+        INST_PRE: "jazzsw",
+        TEST: { test: "Abc", test23: "xyz", TESTLIST: [{ TESTID: "1234", ABC: { test_ABC: "xyz" }, TLIST: [{ "newItem": "newvalue" }] }, { TESTID: "xyz" }], }
+      }
+      let resp = { "message": "success" }
+
+      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
+        const filter = params.Item.TEST.TESTLIST.filter(obj => obj.TESTID === '1234');
+        expect(filter[0].ABC.test_ABC).to.be.eql("123");
+        expect(filter[0].ABC).haveOwnProperty('new_test');
+        expect(filter[0]).haveOwnProperty('C_ID');
+        expect(filter[0].C_ID).to.be.eql("abc@123");
+        expect(filter[0].ABC.new_test).to.be.eql("aaa");
+        expect(filter[0].TLIST.length).to.be.eql(2);
+        return cb(null, resp);
+      });
+
+      index.addConfiguration(data, event)
+        .then(res => {
+          expect(res.message).to.deep.eq(resp.message);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+
+    it("should return error while giving non listable item in query list iteration while adding admin configuration", () => {
+      let event = {
+        query: {
+          id: "TESTID",
+          path: "TEST.TESTLIST",
+          value: "1234"
+        },
+        body:
+        {
+          "ABC": {
+            "test_ABC": "123",
+            "new_test": "aaa"
+          },
+          "TLIST": {
+            "newentry": "newEntry"
+          },
+          "C_ID": "abc@123"
+        }
+      };
+
+      let data = {
+        CRED_ID: "jazzaws",
+        INST_PRE: "jazzsw",
+        TEST: { test: "Abc", test23: "xyz", TESTLIST: { TESTID: "1234", ABC: { test_ABC: "xyz" }, TLIST: [{ "newItem": "newvalue" }] } }
+      }
+      let resp = { "message": "success" }
+
+      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
+        return cb(null, resp);
+      });
+
+      index.addConfiguration(data, event)
+        .catch(err => {
+          expect(err.message).to.deep.eq("Expecting Array but found Object/String.");
           AWS.restore("DynamoDB.DocumentClient");
         });
     });
   });
 
   describe('deleteConfiguration', () => {
-    let configs, input;
+    let configs, event;
     beforeEach(function () {
       configs = {
         "AWS": {
@@ -218,7 +401,7 @@ describe('jazz_admin', function () {
           }
         }
       }
-      input = ["ABC.abc"]
+      event = { body: ["ABC.abc"] }
     });
 
     it("should indicate error while deleting admin config", () => {
@@ -230,7 +413,7 @@ describe('jazz_admin', function () {
         return cb(err, null);
       });
 
-      index.deleteConfiguration(configs, input)
+      index.deleteConfiguration(configs, event)
         .catch(error => {
           expect(error.message).to.be.eq(err.message);
           AWS.restore("DynamoDB.DocumentClient");
@@ -244,7 +427,7 @@ describe('jazz_admin', function () {
       AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
         return cb(null, responseObj);
       });
-      index.deleteConfiguration(configs, input)
+      index.deleteConfiguration(configs, event)
         .then(res => {
           expect(res).to.deep.eq(responseObj);
           AWS.restore("DynamoDB.DocumentClient");
@@ -252,7 +435,7 @@ describe('jazz_admin', function () {
     });
 
     it("should return correct json on DELETE while giving valid input", () => {
-      let input = ["ABC.test", "INST_PRE"];
+      let input = { body: ["ABC.test", "INST_PRE"] };
       let configs = {
         CRED_ID: "jazzaws",
         INST_PRE: "jazzsw",
@@ -272,6 +455,96 @@ describe('jazz_admin', function () {
           AWS.restore("DynamoDB.DocumentClient");
         });
     });
+
+    it("should return correct json on list iteration while deleting admin configuration", () => {
+      let event = {
+        query: {
+          id: "TESTID",
+          path: "TEST.TESTLIST",
+          value: "1234"
+        }
+      };
+
+      let data = {
+        CRED_ID: "jazzaws",
+        INST_PRE: "jazzsw",
+        TEST: { test: "Abc", test23: "xyz", TESTLIST: [{ TESTID: "1234", ABC: { test_ABC: "xyz" }, TLIST: [{ "newItem": "newvalue" }] }, { TESTID: "xyz" }], }
+      }
+      let resp = { "message": "success" }
+
+      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
+        const filter = params.Item.TEST.TESTLIST.filter(obj => obj.TESTID === '1234');
+        expect(params.Item.TEST.TESTLIST.length).to.be.eql(1);
+        expect(filter.length).to.be.eql(0);
+        return cb(null, resp);
+      });
+
+      index.deleteConfiguration(data, event)
+        .then(res => {
+          expect(res.message).to.deep.eq(resp.message);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+
+    it("should return correct json on 2 level list iteration while deleting admin configuration", () => {
+      let event = {
+        query: {
+          id: "TESTID#second_id",
+          path: "TEST.TESTLIST#TLIST",
+          value: "1234#123"
+        }
+      };
+
+      let data = {
+        CRED_ID: "jazzaws",
+        INST_PRE: "jazzsw",
+        TEST: { test: "Abc", test23: "xyz", TESTLIST: [{ TESTID: "1234", ABC: { test_ABC: "xyz" }, TLIST: [{ newItem: "newvalue", second_id: "123" }, { newItem: "newvalue1", second_id: "12345" }] }, { TESTID: "xyz" }], }
+      }
+      let resp = { "message": "success" }
+
+      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
+        const topfilter = params.Item.TEST.TESTLIST.filter(obj => obj.TESTID === '1234');
+        const filter = topfilter[0].TLIST.filter(obj => obj.second_id === '123');
+        expect(topfilter[0].TLIST.length).to.be.eql(1);
+        expect(filter.length).to.be.eql(0);
+        return cb(null, resp);
+      });
+
+      index.deleteConfiguration(data, event)
+        .then(res => {
+          expect(res.message).to.deep.eq(resp.message);
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+
+    it("should return error while giving non listable item in query 2 level list iteration while deleting admin configuration", () => {
+      let event = {
+        query: {
+          id: "TESTID#second_id",
+          path: "TEST.TESTLIST#TLIST",
+          value: "1234#123"
+        }
+      };
+
+      let data = {
+        CRED_ID: "jazzaws",
+        INST_PRE: "jazzsw",
+        TEST: { test: "Abc", test23: "xyz", TESTLIST: [{ TESTID: "1234", ABC: { test_ABC: "xyz" }, TLIST: { newItem: "newvalue", second_id: "123" } }, { TESTID: "xyz" }], }
+      }
+
+      let resp = { "message": "success" }
+
+      AWS.mock("DynamoDB.DocumentClient", "put", (params, cb) => {
+        return cb(null, resp);
+      });
+
+      index.deleteConfiguration(data, event)
+        .catch(err => {
+          expect(err.message).to.deep.eq("Expecting Array but found Object/String.");
+          AWS.restore("DynamoDB.DocumentClient");
+        });
+    });
+
   });
 
   describe('handler', () => {

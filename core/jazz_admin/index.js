@@ -109,7 +109,7 @@ const addConfiguration = (configs, event) => {
   return new Promise((resolve, reject) => {
     const jeditor = new jsonEditor(configs);
     let new_config
-    if (!event.query) {
+    if (isEmpty(event.query)) {
       new_config = jeditor.editJson(event.body);
     } else {
       const input = {
@@ -140,7 +140,7 @@ const deleteConfiguration = (configs, event) => {
   return new Promise((resolve, reject) => {
     const jeditor = new jsonEditor(configs);
     let new_config
-    if (!event.query) {
+    if (isEmpty(event.query)) {
       new_config = jeditor.removeKeys(event.body);
     } else {
       const input = {
@@ -168,49 +168,70 @@ const deleteConfiguration = (configs, event) => {
 
 const validateQueryInput = (event) => {
   return new Promise((resolve, reject) => {
-    if (event.query) {
+    if (!isEmpty(event.query)) {
       if (!event.query.path) {
-        reject({
-          result: "inputError",
+         reject({
+          errorType: "BadRequest",
           message: "Json path is not provided in query."
         });
       }
       if (!event.query.id) {
-        reject({
-          result: "inputError",
+        return reject({
+          errorType: "BadRequest",
           message: "Unique id is not provided in query."
         });
       }
       if (!event.query.value) {
-        reject({
-          result: "inputError",
+        return reject({
+          errorType: "BadRequest",
           message: "Unique value is not provided in query."
         });
       }
-      resolve();
     }
-    resolve();
+    return resolve({ result: "success" });
   });
 }
 
 const validateInputForDelete = (event) => {
   return new Promise((resolve, reject) => {
-    if (!event.query) {
+    if (isEmpty(event.query)) {
       if (!event.body) {
-        reject({
-          result: "inputError",
+        return reject({
+          errorType: "BadRequest",
           message: "Input cannot be empty. Please give list of keys to be deleted."
         });
       }
       if (!(event.body instanceof Array)) {
-        reject({
-          result: "inputError",
+        return reject({
+          errorType: "BadRequest",
           message: "Please give list of keys to be deleted."
         });
       }
+    } else {
+      let pathList = event.query.path.split("#");
+      let idList = event.query.id.split("#");
+      let valueList = event.query.value.split("#");
+
+      if (pathList.length !== idList.length || pathList.length !== valueList.length) {
+        return reject({
+          errorType: "BadRequest",
+          message: "Please give the correct mapping in query"
+        });
+      }
     }
-    resolve();
+    return resolve({ result: "success" });
   });
+}
+
+const isEmpty = (obj) => {
+  if (obj == null) return true;
+  if (obj.length > 0)    return false;
+  if (obj.length === 0)  return true;
+  if (typeof obj !== "object") return true;
+  for (var key in obj) {
+      if (hasOwnProperty.call(obj, key)) return false;
+  }
+  return true;
 }
 
 const exportable = {
@@ -219,7 +240,8 @@ const exportable = {
   getConfiguration,
   addConfiguration,
   deleteConfiguration,
-  validateInputForDelete
+  validateInputForDelete,
+  isEmpty
 }
 
 module.exports = exportable;
