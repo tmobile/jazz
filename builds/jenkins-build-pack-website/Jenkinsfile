@@ -128,8 +128,8 @@ node()  {
 				}
 
 				create_cloudfront_url = true
-				if (service_config['create_cloudfront_url'] == true || service_config['create_cloudfront_url'] == "true") {
-					create_cloudfront_url = true
+				if (service_config['deployment_targets'] && service_config['deployment_targets'] instanceof Object && service_config['deployment_targets'].website == "aws_s3") {
+					create_cloudfront_url = false
 				}
 
 				echo "create_cloudfront_url====" + create_cloudfront_url

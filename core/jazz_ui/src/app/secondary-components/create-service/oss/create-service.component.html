@@ -447,25 +447,6 @@
                 </div>
             </section>
             <!-- end of aws events -->
-            <section class="each-step-wrap cloudfront-url" *ngIf="typeOfService == 'website'">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">CDN configuration</p>
-                        <p class="step-details hide">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p>
-                    </div>
-                    <div class="col-lg-8 col-md-8">
-                        <section class="col-lg-12  pad-left0">
-                            <div class="input-field-container">
-                                <div class="slack-checkbox custom-cb disable-event">
-                                    <input disabled type="checkbox" id="checkbox-cdnconfig" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="true" (change)="cdnConfigSelected = !cdnConfigSelected"><!--[checked]="cdnConfigSelected" -->
-                                    <label for="checkbox-cdnconfig" class="disble"></label>
-                                    <div class="cb-status-dets">Do you need CDN configured for your website?</div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </section>
             <p class="requiredInfo"><span>*</span>Indicates required fields</p>
             <section class="submit-form">
                 <button type="submit" [disabled]="!serviceForm.valid || (disableForm())" class="btn btn-primary">SUBMIT</button>

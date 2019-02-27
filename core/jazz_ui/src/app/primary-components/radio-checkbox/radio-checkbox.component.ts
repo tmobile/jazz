@@ -12,7 +12,10 @@ export class RadioCheckboxComponent implements OnInit {
   @Input()
   set options(value) {
       this._options = value;
-      this.selected = this.options[this.defaultIndex].value;
+      let selectedOption = this.options.filter(option => {
+        if (option.default) return option
+      })
+      this.selected = selectedOption.length ? selectedOption[0].value : this.options[this.defaultIndex].value;
   }
   get options() {
       return this._options;
