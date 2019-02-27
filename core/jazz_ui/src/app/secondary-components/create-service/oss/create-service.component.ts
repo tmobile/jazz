@@ -166,9 +166,10 @@ export class CreateServiceComponent implements OnInit {
 
   // function for changing platform type
   changePlatformType(platformType){
-    if(!this.disablePlatform){
+    if(!this.disablePlatform && platformType !== "gcloud"){
       this.typeOfPlatform = platformType;
       this.updateEventLabels(platformType);
+      this.updateAvailableRuntimes(platformType);
     }
   }
 
@@ -180,6 +181,12 @@ export class CreateServiceComponent implements OnInit {
   	else if(platformType == "azure"){
   	this.eventLabels = this.azureEventLabels;
   	}
+  }
+
+  updateAvailableRuntimes(platformType){
+    this.runtimeObject = env_oss[platformType].envLists;
+    this.runtimeKeys = Object.keys(this.runtimeObject);
+    this.runtime = this.runtimeKeys[0];
   }
 
 
@@ -545,6 +552,9 @@ export class CreateServiceComponent implements OnInit {
     if(this.rateExpression.error != undefined && this.typeOfService == 'function' && this.rateExpression.type != 'none'){
         return true
     }
+    if(this.eventExpression.type == 'awsEventsNone' && this.typeOfService == 'function'){
+      return true;
+    }
     if(this.eventExpression.type == 'dynamodb' && this.eventExpression.dynamoTable == undefined){
         return true
     }
@@ -560,6 +570,7 @@ export class CreateServiceComponent implements OnInit {
     if(this.invalidEventName){
       return true
     }
+
     return false;
   }
 

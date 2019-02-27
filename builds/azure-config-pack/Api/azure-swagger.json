@@ -32,7 +32,7 @@
     "paths": {
         "/Trigger": {
             "get": {
-                "description": "A demonstration of a GET call on a sample resource. It is handled by an \"echo\" backend which returns a response equal to the request (the supplied headers and body are being returned as received).",
+                "description": "A demonstration of a GET call on a sample resource.",
                 "operationId": "retrieve-resource",
                 "summary": "Retrieve resource",
                 "parameters": [
@@ -106,37 +106,6 @@
                 "description": "The HEAD operation returns only headers. In this demonstration a policy is used to set additional headers when the response is returned and to enable JSONP.",
                 "operationId": "retrieve-header-only",
                 "summary": "Retrieve header only",
-                "responses": {
-                    "200": {
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/resource-cached": {
-            "get": {
-                "description": "A demonstration of a GET call with caching enabled on the same \"echo\" backend as above. Cache TTL is set to 1 hour. When you make the first request the headers you supplied will be cached. Subsequent calls will return the same headers as the first time even if you change them in your request.",
-                "operationId": "retrieve-resource-cached",
-                "summary": "Retrieve resource (cached)",
-                "parameters": [
-                    {
-                        "name": "param1",
-                        "in": "query",
-                        "description": "A sample parameter that is required and has a default value of \"sample\".",
-                        "required": true,
-                        "type": "string",
-                        "default": "sample",
-                        "enum": [
-                            "sample"
-                        ]
-                    },
-                    {
-                        "name": "param2",
-                        "in": "query",
-                        "description": "Another sample parameter, set to not required.",
-                        "type": "string"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": ""

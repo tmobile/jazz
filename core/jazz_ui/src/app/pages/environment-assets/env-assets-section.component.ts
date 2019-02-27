@@ -471,7 +471,17 @@ public goToAbout(hash){
 	this.cache.set('scroll_id',hash);
 }
 
-  public assetTypeToLabel(type) {
+  public assetTypeToLabel(type, provider) {
+	  if(type === 'swagger_url' || type === 'endpoint_url'){
+      return 'URL';
+    }
+    else if(provider === 'aws'){
+      return 'ARN'
+    }
+    else if(provider === 'azure') {
+      return 'Resource'
+    }
+
     switch(type) {
       case 'swagger_url':
       case 'endpoint_url':
