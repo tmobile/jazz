@@ -74,7 +74,7 @@ describe('platform_services', function() {
       },
       "body" : {
         "description" : "g0nna_GET_a-L!tt1e_we!rd",
-        "deployment_accounts" : [{"Account":"12345","Regions":["us-east-1"]}],
+        "deployment_accounts" : [{"accountId":"12345","region":["us-east-1"],"provider":"aws","primary":true}],
         "email" : "gonnaGetALittle@Wild.com",
 		    "metadata":{"service":"test-service2","securityGroupIds":"sg-cdb65db9"}
       },

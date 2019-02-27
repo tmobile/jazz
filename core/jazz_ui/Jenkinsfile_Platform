@@ -121,8 +121,7 @@ node ()  {
       sh "sed -i 's/{accountMap}/${uiAccountMap}/g' ./src/environments/environment.oss.ts"
 
       def envFile = readFile('./src/environments/environment.oss.ts');
-      echo "displaying env file :"
-      echo "$envFile";
+      echo "displaying env file : ${envFile}"
     }
   }
   stage('Building the UI - NPM build') {
