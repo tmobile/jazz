@@ -463,7 +463,7 @@ def writeServerlessFile(){
 def updateSwaggerConfig() {
 	try {
 		if (fileExists('swagger/swagger.json')) {
-			sh "sed -i -- 's/{serviceName}/${service_config['service']}/g' swagger/swagger.json"
+			sh "sed -i -- 's/{service_name}/${service_config['service']}/g' swagger/swagger.json"
 			sh "sed -i -- 's/{domain}/${service_config['domain']}/g' swagger/swagger.json"
 
 			def region = "${configLoader.AWS.REGION}"
@@ -473,9 +473,9 @@ def updateSwaggerConfig() {
 			// TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
-			sh "sed -i -- 's/{confRole}/${roleARN}/g' ./swagger/swagger.json"
-			sh "sed -i -- 's/{confRegion}/${region}/g' ./swagger/swagger.json"
-			sh "sed -i -- 's/{confAccId}/${roleId}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf_role}/${roleARN}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf0accId}/${roleId}/g' ./swagger/swagger.json"
 		}
 	} catch (ex) {
 		handleFailureEvent(ex.getMessage())
@@ -1222,7 +1222,7 @@ def loadBuildModules(buildModuleUrl){
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
 
-		if (configLoader.APIGEE && configLoader.APIGEE.ENABLED) {
+		if (configLoader.APIGEE && configLoader.APIGEE.ENABLE_APIGEE instanceof Boolean && configLoader.APIGEE.ENABLE_APIGEE) {
 			apigeeModule = load "apigee-module.groovy"
 			apigeeModule.initialize(configLoader.APIGEE, events)
 			echo "Apigee module loaded successfully."

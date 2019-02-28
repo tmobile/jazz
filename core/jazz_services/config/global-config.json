@@ -100,7 +100,7 @@
         },
         {
             "key": "deployment_targets",
-            "required": false,
+            "required": true,
             "editable": false,
             "isEmptyAllowed": false,
             "type": "Object"
