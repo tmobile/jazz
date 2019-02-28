@@ -559,7 +559,7 @@ def buildLambda(String runtime, String repo_name) {
       sh "pip3 install -r requirements.txt -t library"
       // create virtual environment and install pytest
       sh """
-      python3 - m venv virtualenv
+      python3 -m venv virtualenv
       . virtualenv/bin/activate
       pip3 install pytest
       pytest test
