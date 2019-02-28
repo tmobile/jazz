@@ -333,10 +333,12 @@ export class Jazz {
   btnGitCreateBranch() {
     return element(by.xpath('//button[contains(text(),"Create branch")]'));
   }
+
   getSpinner() {
     return element(by.css('div.loading-circle'));
   }
   getMetricsSpinner() {
     return element(by.css('div.jz-spinner'));
   }
+
 }
