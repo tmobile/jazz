@@ -64,7 +64,7 @@ def aws_configure() {
 node ()  {
   stage('Loading Config-Loader') {
     def jazzBuildModuleURL = getBuildModuleUrl()
-	  loadBuildModules(jazzBuildModuleURL)
+    loadBuildModules(jazzBuildModuleURL)
   }
   stage('Configure AWS CLI') {
     aws_configure()
@@ -73,7 +73,7 @@ node ()  {
   stage('Checking out Jazz_UI repo') {
     dir('jazz_ui') {
       checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
-	    def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
+      def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
 
       if(config_loader.UI_CONFIG.service_tabs.overview)   sh "sed -i 's/{overview}/overview/g' ./src/environments/environment.oss.ts";
       if(config_loader.UI_CONFIG.service_tabs.access_control)   sh "sed -i 's/{access control}/access control/g' ./src/environments/environment.oss.ts";
@@ -104,21 +104,8 @@ node ()  {
       sh "sed -i 's/{website_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.WEBSITE_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
 
       def uiConfig = JsonOutput.toJson(config_loader.UI_CONFIG)
-
-      def importUICommand = 'sed -i s/{INSTALLER_VARS}/' + uiConfig + '/g ./src/environments/environment.oss.ts'
+      def importUICommand = "sed -i 's/{INSTALLER_VARS}/$uiConfig/g' ./src/environments/environment.oss.ts"
       sh importUICommand
-
-      sh "sed -i 's/AWS API Gateway/\"AWS API Gateway\"/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/aws_apigateway/\"aws_apigateway\"/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/GCP APIGEE/\"GCP APIGEE\"/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/gcp_apigee/\"gcp_apigee\"/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/AWS Lambda/\"AWS Lambda\"/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/aws_lambda/\"aws_lambda\"/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/AWS S3/\"AWS S3\"/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/aws_s3/\"aws_s3\"/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/AWS Cloudfront/\"AWS Cloudfront\"/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/aws_cloudfront/\"aws_cloudfront\"/g' ./src/environments/environment.oss.ts"
-
 
       def envFile = readFile('./src/environments/environment.oss.ts');
       echo "displaying env file :"
@@ -158,33 +145,33 @@ load build modules
 */
 def loadBuildModules(buildModuleUrl){
 
-	try {
-		dir('scm-loader') {
-			checkout([$class: 'GitSCM', branches: [
-				[name: '*/master']
-			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: buildModuleUrl]
-			]])
+  try {
+    dir('scm-loader') {
+      checkout([$class: 'GitSCM', branches: [
+        [name: '*/master']
+      ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+        [credentialsId: repo_credential_id, url: buildModuleUrl]
+      ]])
 
       def result_json_string = readFile("jazz-installer-vars.json")
       config_module = load "config-loader.groovy"
       config_loader = config_module.initialize(result_json_string)
 
-			scmModule = load "scm-module.groovy"
-			scmModule.initialize(config_loader)
+      scmModule = load "scm-module.groovy"
+      scmModule.initialize(config_loader)
 
       utilModule = load "utility-loader.groovy"
-		}
-	}catch(ex) {
-		error "loadBuildModules failed: " + ex.toString()
-	}
+    }
+  } catch(ex) {
+    error "loadBuildModules failed: " + ex.toString()
+  }
 }
 
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
       // right now only bitbucket has this additional tag scm in its git clone path
       return "http://${repo_base}/${repo_core}/jazz-build-module.git"
-    }else {
+    } else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     }
 }
