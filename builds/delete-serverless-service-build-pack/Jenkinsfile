@@ -473,9 +473,9 @@ def updateSwaggerConfig() {
 			// TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
-			sh "sed -i -- 's/{conf_role}/${roleARN}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-role}/${roleARN}/g' ./swagger/swagger.json"
 			sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
-			sh "sed -i -- 's/{conf0accId}/${roleId}/g' ./swagger/swagger.json"
+			sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 		}
 	} catch (ex) {
 		handleFailureEvent(ex.getMessage())
