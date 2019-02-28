@@ -106,6 +106,7 @@ var processRecord = function (record, configData, authToken) {
 		var sequenceNumber = record.kinesis.sequenceNumber;
 		var encodedPayload = record.kinesis.data;
 		var payload;
+		
 		return checkInterest(encodedPayload, sequenceNumber, configData)
 			.then(result => {
 				payload = result.payload;
@@ -183,7 +184,9 @@ var updateService = function (result, payload, configData, authToken) {
 			"SLACKCHANNEL": serviceContext.slackChannel,
 			"TAGS": serviceContext.tags,
 			"STATUS": statusResponse.status,
-			"METADATA": serviceContext.metadata
+			"METADATA": serviceContext.metadata,
+			"DEPLOYMENT_TARGETS": serviceContext.deployment_targets
+
 		};
 		logger.info("update input : " + JSON.stringify(inputs));
 		crud.update(inputs, function (err, results) {
@@ -293,6 +296,9 @@ var getServiceContext = function (svcContext) {
 	}
 	if (svcContext.metadata) {
 		json.metadata = svcContext.metadata;
+	}
+	if (svcContext.deployment_targets) {
+		json.deployment_targets = svcContext.deployment_targets
 	}
 
 	return json;
