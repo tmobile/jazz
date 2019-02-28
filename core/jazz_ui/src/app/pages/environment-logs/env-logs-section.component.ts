@@ -206,6 +206,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				}
 			}
 		}
+
 	}
 
 	onFilter(column) {

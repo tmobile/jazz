@@ -98,6 +98,28 @@ node ()  {
 
       sh "sed -i s!{swagger_editor}!${config_loader.JAZZ.SWAGGER.EDITOR_URL}!g ./src/environments/environment.oss.ts"
 
+      sh "sed -i 's/{api_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.API_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+
+      sh "sed -i 's/{function_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.FUNCTION_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{website_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.WEBSITE_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+
+      def uiConfig = JsonOutput.toJson(config_loader.UI_CONFIG)
+
+      def importUICommand = 'sed -i s/{INSTALLER_VARS}/' + uiConfig + '/g ./src/environments/environment.oss.ts'
+      sh importUICommand
+
+      sh "sed -i 's/AWS API Gateway/\"AWS API Gateway\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/aws_apigateway/\"aws_apigateway\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/GCP APIGEE/\"GCP APIGEE\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/gcp_apigee/\"gcp_apigee\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/AWS Lambda/\"AWS Lambda\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/aws_lambda/\"aws_lambda\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/AWS S3/\"AWS S3\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/aws_s3/\"aws_s3\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/AWS Cloudfront/\"AWS Cloudfront\"/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/aws_cloudfront/\"aws_cloudfront\"/g' ./src/environments/environment.oss.ts"
+
+
       def envFile = readFile('./src/environments/environment.oss.ts');
       echo "displaying env file :"
       echo "$envFile";

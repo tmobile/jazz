@@ -18,9 +18,8 @@
 var https = require('https');
 var zlib = require('zlib');
 var truncate = require('unicode-byte-truncate');
-const _ = require("lodash");
 
-const configModule = require("./components/config.js"); 
+const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const utils = require("./components/utils.js")(); //Import the utils module.
 const responseObj = require("./components/response.js");
@@ -168,7 +167,7 @@ function transform(payload) {
                         data.message = message;
                     }
                     data.log_level = utils.getSubInfo(logEvent.message, globalConfig.PATTERNS.log_level, 0);
-                    if (_.isEmpty(data.log_level)) {
+                    if (!data.log_level) {
                         data.log_level = globalConfig.DEFAULT_LOG_LEVEL;
                     }
                     if (!(data.message.startsWith("REPORT") || data.message.startsWith("START") || data.message.startsWith("END"))) {
