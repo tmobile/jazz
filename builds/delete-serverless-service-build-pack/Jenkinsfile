@@ -486,6 +486,10 @@ def writeServerlessFile(){
  * @return
  */
 def updateSwaggerConfig() {
+
+  if (service_config['platform'] != null || service_config['platform'] == "azure") {
+    return
+  }
 	try {
 		if (fileExists('swagger/swagger.json')) {
 			sh "sed -i -- 's/{service_name}/${service_config['service']}/g' swagger/swagger.json"
