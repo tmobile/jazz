@@ -311,14 +311,13 @@ search- box {
   margin-left: auto;
 }
 
-.refresh{
-    // padding:7px 0;
-    // order:2;
-    // margin-left:1rem;
-    font-weight: bold;
-    font-size: 18px;
-    vertical-align: middle;
-    margin-right: 2.5rem;
+.refresh {
+  // padding:7px 0;
+  // order:2;
+  // margin-left:1rem;
+  font-weight: bold;
+  font-size: 18px;
+  vertical-align: middle;
 }
 
 .page-filter-wrap {
@@ -416,28 +415,3 @@ search- box {
 //     text-transform:capitalize;
 // }
 
-.service-list-filter{
-    position: absolute;
-    top: -2.75rem;
-    right: -0.5rem;
-    z-index: 1;
-    max-height: 0;
-    overflow: hidden;
-    opacity: 0;
-    transition: all 0.6s ease;
-  }
-
-.filter-abs{
-  position: absolute;
-  right:0;
-  top: -2.4rem;
-}
-.z-index-2 {
-  z-index: 2;
-}
-.z-index-0 {
-  z-index: 0;
-}
-.filter-icon-services{
-    font-size: 1.35rem;
-}
