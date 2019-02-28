@@ -46,27 +46,29 @@ function handler(event, context, cb) {
 		 *    }
 		 */
     var eventBody = event.body;
-    var authToken;
-    var tempCreds;
-    var serviceMetaData;
-    exportable.genericValidation(event)
-      .then(() => validateUtils.validateGeneralFields(eventBody))
-      .then(() => {
-        authToken = exportable.getToken(config);
+    var genValidation = exportable.genericValidation(event);
+    var token = exportable.getToken(config);
+    var valGenFields = validateUtils.validateGeneralFields(eventBody);
+    Promise.all([genValidation, token, valGenFields])
+    .then((results) => {
+      logger.info(results);
+      const authToken = results[1];
+      exportable.getserviceMetaData(config, eventBody, authToken)
+      .then((serviceMetaData) => {
+        const serviceData = serviceMetaData;
+        utils.AssumeRole(serviceData.services.iamRoleARN.split(':')[4])
+        .then((tempCreds) => {
+          const creds = tempCreds;
+          exportable.getAssetsDetails(config, eventBody, authToken)
+          .then((res) => exportable.validateAssets(res, eventBody))
+          .then((res) => exportable.getMetricsDetails(res,creds,serviceData))
+          .then((res) => {
+            var finalObj = utils.massageData(res, eventBody);
+            return cb(null, responseObj(finalObj, eventBody));
+          })
+        })
       })
-      .then(() => {
-        serviceMetaData = exportable.getserviceMetaData(config, eventBody, authToken)
-      })
-      .then(() =>{
-        tempCreds = utils.AssumeRole(services.metadata.iamRoleARN.split(':')[4])
-      }) 
-      .then(() => exportable.getAssetsDetails(config, eventBody, authToken))
-      .then(res => exportable.validateAssets(res, eventBody))
-      .then(res => exportable.getMetricsDetails(res,tempCreds,serviceMetaData))
-      .then(res => {
-        var finalObj = utils.massageData(res, eventBody);
-        return cb(null, responseObj(finalObj, eventBody));
-      })
+    })
       .catch(error => {
         if (error.result === "inputError") {
           return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));

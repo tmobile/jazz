@@ -29,7 +29,7 @@ const utils = require('../components/utils.js')
 
 describe('jazz_metrics', function () {
 
-  var err, event, context, callback, callbackObj;
+  var err, event, context, callback, callbackObj, accessparams, serviceData;;
 
   beforeEach(function () {
     event = {
@@ -581,6 +581,18 @@ describe('jazz_metrics', function () {
           "statistics": "Average"
         }
       }
+      accessparams = {
+        "accessKeyId": "hewf73223e2h3u23y82332h23nd",
+        "secretAccessKey": "48584ji4rnfruihv849fjne",
+        "sessionToken": "nckjvrevr4343k4jioj43u94j3m4oi493f43jfm43fcn",
+      };
+      serviceData = {
+        "count": 1,
+        "services" :{
+          "region" : "us-east-1",
+          "iamRoleARN": "arn:aws:iam::102707241671:role/config21_basic_execution",
+        }
+      }
     });
 
     it("should successfully get metrics details from cloudwatch", () => {
@@ -607,7 +619,7 @@ describe('jazz_metrics', function () {
         return cb(null, responseObj);
       })
       dataArray.forEach(each => {
-        index.cloudWatchDetails(each)
+        index.cloudWatchDetails(each,accessparams,serviceData)
           .then(res => {
             expect(res).to.have.all.deep.keys('type', 'asset_name', 'statistics', 'metrics');
             sinon.assert.calledTwice(assetData);
@@ -622,7 +634,7 @@ describe('jazz_metrics', function () {
       AWS.mock('CloudWatch', "getMetricStatistics", (params, cb) => {
         return cb(err, null);
       })
-      index.cloudWatchDetails(lambdaAssetArray)
+      index.cloudWatchDetails(lambdaAssetArray,accessparams,serviceData)
         .catch(error => {
           expect(error).to.include({
             result: 'serverError',
@@ -640,7 +652,7 @@ describe('jazz_metrics', function () {
       AWS.mock('CloudWatch', "getMetricStatistics", (params, cb) => {
         return cb(errorObj, null);
       })
-      index.cloudWatchDetails(lambdaAssetArray)
+      index.cloudWatchDetails(lambdaAssetArray,accessparams,serviceData)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
@@ -775,6 +787,8 @@ describe('jazz_metrics', function () {
       const genericValidation = sinon.stub(index, "genericValidation").resolves();
       const validateGeneralFields = sinon.stub(validateUtils, "validateGeneralFields").resolves(event.body);
       const getToken = sinon.stub(index, 'getToken').resolves("zaqwsxcderfv.qawsedrftg.qxderfvbhy");
+      const getserviceMetaData = sinon.stub(index, 'getserviceMetaData').resolves(serviceData);
+      const AssumeRole = sinon.stub(utils, 'AssumeRole').resolves(accessparams);
       const getAssetsDetails = sinon.stub(index, "getAssetsDetails").resolves(assetDetailsRes);
       const validateAssets = sinon.stub(index, "validateAssets").resolves(validateAssetsRes);
       const getMetricsDetails = sinon.stub(index, "getMetricsDetails").resolves(metricsDetailsRes);
@@ -790,6 +804,8 @@ describe('jazz_metrics', function () {
         sinon.assert.calledOnce(genericValidation);
         sinon.assert.calledOnce(validateGeneralFields);
         sinon.assert.calledOnce(getToken);
+        sinon.assert.calledOnce(getserviceMetaData)
+        sinon.assert.calledOnce(AssumeRole)
         sinon.assert.calledOnce(getAssetsDetails);
         sinon.assert.calledOnce(validateAssets);
         sinon.assert.calledOnce(getMetricsDetails);
@@ -798,6 +814,8 @@ describe('jazz_metrics', function () {
         genericValidation.restore();
         validateGeneralFields.restore();
         getToken.restore();
+        getserviceMetaData.restore();
+        AssumeRole.restore();
         getAssetsDetails.restore();
         validateAssets.restore();
         getMetricsDetails.restore();
@@ -837,6 +855,8 @@ describe('jazz_metrics', function () {
       const genericValidation = sinon.stub(index, "genericValidation").resolves();
       const validateGeneralFields = sinon.stub(validateUtils, "validateGeneralFields").resolves(event.body);
       const getToken = sinon.stub(index, 'getToken').resolves("zaqwsxcderfv.qawsedrftg.qxderfvbhy");
+      const getserviceMetaData = sinon.stub(index, 'getserviceMetaData').resolves(serviceData);
+      const AssumeRole = sinon.stub(utils, 'AssumeRole').resolves(accessparams);
       const getAssetsDetails = sinon.stub(index, "getAssetsDetails").resolves(assetDetailsRes);
       const validateAssets = sinon.stub(index, "validateAssets").resolves(validateAssetsRes);
       const getMetricsDetails = sinon.stub(index, "getMetricsDetails").rejects({
@@ -850,6 +870,8 @@ describe('jazz_metrics', function () {
         sinon.assert.calledOnce(genericValidation);
         sinon.assert.calledOnce(validateGeneralFields);
         sinon.assert.calledOnce(getToken);
+        sinon.assert.calledOnce(getserviceMetaData)
+        sinon.assert.calledOnce(AssumeRole)
         sinon.assert.calledOnce(getAssetsDetails);
         sinon.assert.calledOnce(validateAssets);
         sinon.assert.calledOnce(getMetricsDetails);
@@ -857,6 +879,8 @@ describe('jazz_metrics', function () {
         genericValidation.restore();
         validateGeneralFields.restore();
         getToken.restore();
+        getserviceMetaData.restore();
+        AssumeRole.restore();
         getAssetsDetails.restore();
         validateAssets.restore();
         getMetricsDetails.restore();
