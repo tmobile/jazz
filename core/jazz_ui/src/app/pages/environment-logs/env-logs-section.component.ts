@@ -194,7 +194,6 @@ export class EnvLogsSectionComponent implements OnInit {
 	}
 
 	onRowClicked(row, index) {
-
 		var rowData = this.logs[index];
 		if (rowData) {
 			rowData['expanded'] = !rowData['expanded'];
