@@ -291,9 +291,9 @@ def loadServiceConfigurationData() {
     }
 
     if ((service_name.trim() == "jazz_services-handler") || (service_name.trim() == "jazz_create-serverless-service")) {
-      sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-      sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-      sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+      sh "sed -i -- 's/{conf-apikey}/${apiKeyDev}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{conf-apikey}/${apiKeyStg}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{conf-apikey}/${apiKeyProd}/g' ./config/prod-config.json"
 
       sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
       sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
