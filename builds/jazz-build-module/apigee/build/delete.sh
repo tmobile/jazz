@@ -15,10 +15,7 @@ function delete()  {
     apis=`curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/environments/$mgmt_env/deployments" 2>/dev/null`
     echo $apis > temp.xml
 
-    deployedVersion=$(xpath -e "//APIProxy[@name='$application']/Revision/@name" temp.xml 2> /dev/null)
-    deployedVersion=${deployedVersion//name=/}
-    deployedVersion=${deployedVersion//\"/}
-    deployedVersion=${deployedVersion//\ /}
+    deployedVersion=$(grep -oPm1 "(?<=name=\"$application\"> <Revision xsi:type=\"revisionStatusInEnvironment\" name=\")[^\">]+" temp.xml)
 
     echo "Deployed version="$deployedVersion
     echo "==================================================="
