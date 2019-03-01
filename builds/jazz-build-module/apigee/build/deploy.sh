@@ -22,10 +22,7 @@ function importanddeploy()  {
     apis=`curl -k -X GET -H "Accept: application/xml" -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/environments/$mgmt_env/deployments" 2>/dev/null`
     echo $apis > temp.xml
 
-    deployedVersion=$(xpath -e "//APIProxy[@name='$application']/Revision/@name" temp.xml 2> /dev/null)
-    deployedVersion=${deployedVersion//name=/}
-    deployedVersion=${deployedVersion//\"/}
-    deployedVersion=${deployedVersion//\ /}
+    deployedVersion=$(grep -oPm1 "(?<=name=\"$application\"> <Revision xsi:type=\"revisionStatusInEnvironment\" name=\")[^\">]+" temp.xml)
 
     echo "Deployed version="$deployedVersion
     echo "==================================================="
@@ -37,17 +34,14 @@ function importanddeploy()  {
     imprt=`curl -k -s -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/apis?action=import&name=$application" -F "file=@$application-$apiversion.zip" -H "Accept: application/xml" -H "Content-Type: multipart/form-data" -X POST 2>/dev/null`
     echo $imprt > dep.xml
 
-    revision=$(xpath -e '//APIProxy/@revision' dep.xml 2> /dev/null)
-    revision=${revision/revision=/}
-    revision=${revision//\"/}
-    revision=${revision//\ /}
+    revision=$(grep -oPm1 "(?<=<APIProxy revision=\")[^\" >]+"  dep.xml)
 
     echo "New Revision imported= $revision"
     echo "***************************************************"
 
     echo "---------------------------------------------------"
     echo "Undeploy this $deployedVersion  revision"
-    
+
     undeploy=`curl -k -s -X POST -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/apis/$application/deployments?action=undeploy&env=$mgmt_env&revision=$deployedVersion" 2>/dev/null`
     echo $undeploy
 
@@ -60,7 +54,7 @@ function importanddeploy()  {
 
     echo "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
     echo "Deploy new $revision revision"
-    
+
     deploy=`curl -k -s -X POST -u $credentials "$mgmt_host/v1/organizations/$mgmt_org/apis/$application/revisions/$revision/deployments?action=deploy&env=$mgmt_env&override=true" 2>/dev/null`
     echo $deploy
 
