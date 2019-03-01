@@ -45,7 +45,12 @@
     "service_bus",
     "functionapp",
     "storage_container",
-    "cosmosdb"
+    "cosmosdb_account",
+    "cosmosdb_database",
+    "cosmosdb_collection",
+    "storage_blob_container",
+    "servicebus_queue",
+    "eventhubs_eventhub"
 	],
 	"ASSET_STATUS": [
 		"active",
