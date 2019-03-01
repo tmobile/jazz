@@ -65,7 +65,7 @@
                 </div>
             </div>
         </section>
-        <section class="form-row deployment-targets">
+        <section *ngIf="deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature" class="form-row deployment-targets">
           <div class="row">
             <div class="col-lg-4 col-md-4">
               <p class="step-title">Choose your API deployment target<span>*</span></p>

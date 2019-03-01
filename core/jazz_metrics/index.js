@@ -363,8 +363,8 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
   const DATE_FORMAT = 'MM/DD/YYYY%20HH:MM';
 
   return new Promise((resolve, reject) => {
-    let metrics = assetParam.actualParam.map(param =>`${param.Statistics}(${param.MetricName})`);
-    let metricString = metrics.join(",");
+    let metricsList = assetParam.actualParam.map(param =>`${param.Statistics}(${param.MetricName})`);
+    let metricString = metricsList.join(",");
     let endTime = moment(eventBody.end_time).format(DATE_FORMAT);
     let startTime = moment(eventBody.start_time).format(DATE_FORMAT);
     let timeUnit = global_config.APIGEE.INTERVAL_MAP[eventBody.interval];
@@ -378,6 +378,10 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
       rejectUnauthorized: false,
       json: true
     };
+    var metricData = {};
+    metricConfig.namespaces.gcp.apigee_proxy.metrics.forEach(item =>
+        metricData[`${item.Statistics.toLowerCase()}(${item.MetricName})`] = item.Label
+    );
 
     logger.debug("Get Apigee metrics using URL : " + servicePayload.url);
     request(servicePayload, (error, response, body) => {
@@ -385,24 +389,21 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
         reject(error);
       } else if (response && response.statusCode === 200 && body && body.environments) {
         const metricResult = body.environments[0].metrics;
+        let metricsStats = [];
+        metricResult.forEach(metric => {
+          if (metricsList.indexOf(metric.name) > -1) {
+            let dataPoints = metric.values.map(val => ({
+              Timestamp: moment(val.timestamp),
+              [eventBody.statistics]: val.value,
+              Unit: eventBody.statistics
+            }));
 
-        let metricsStats = metricResult.map(metric => {
-        let dataPoints = metric.values.map(val => (
-          {
-            Timestamp: moment(val.timestamp),
-            [eventBody.statistics]: val.value,
-            Unit: eventBody.statistics
-          }));
-
-          var metricData = {};
-          metricConfig.namespaces.gcp.apigee_proxy.metrics.forEach(item =>
-              metricData[`${item.Statistics.toLowerCase()}(${item.MetricName})`] = item.Label
-          );
-          const metricObj = {
-            Label: metricData[metric.name],
-            Datapoints: dataPoints
-          };
-          return metricObj;
+            const metricObj = {
+              Label: metricData[metric.name],
+              Datapoints: dataPoints
+            };
+            metricsStats.push(metricObj);
+          }
         });
         const assetObj = utils.assetData(metricsStats, assetParam.userParam);
         resolve(assetObj);
