@@ -107,7 +107,8 @@ node ()  {
       def importUICommand = "sed -i 's/{INSTALLER_VARS}/$uiConfig/g' ./src/environments/environment.oss.ts"
       sh importUICommand
 
-      sh "sed -i 's/{apigee_support}/${config_loader.APIGEE.ENABLE_APIGEE}/g' ./src/environments/environment.oss.ts"
+      if (config_loader.APIGEE.ENABLE_APIGEE || config_loader.APIGEE.ENABLE_APIGEE == "true") sh "sed -i 's/{apigee_support}/true/g' ./src/environments/environment.oss.ts"
+      else "sed -i 's/{apigee_support}/false/g' ./src/environments/environment.oss.ts"
 
       def envFile = readFile('./src/environments/environment.oss.ts');
       echo "displaying env file :"
