@@ -46,6 +46,8 @@ function handler(event, context, cb) {
 		 *    }
 		 */
     var eventBody = event.body;
+    var metricsResponse ;
+    var configJson = exportable.getConfigJson(config,eventBody)
     var genValidation = exportable.genericValidation(event);
     var token = exportable.getToken(config);
     var valGenFields = validateUtils.validateGeneralFields(eventBody);
@@ -56,16 +58,26 @@ function handler(event, context, cb) {
       exportable.getserviceMetaData(config, eventBody, authToken)
       .then((serviceMetaData) => {
         const serviceData = serviceMetaData;
-        utils.AssumeRole(serviceData.services.iamRoleARN.split(':')[4])
-        .then((tempCreds) => {
-          const creds = tempCreds;
-          exportable.getAssetsDetails(config, eventBody, authToken)
-          .then((res) => exportable.validateAssets(res, eventBody))
-          .then((res) => exportable.getMetricsDetails(res,creds,serviceData))
-          .then((res) => {
-            var finalObj = utils.massageData(res, eventBody);
-            return cb(null, responseObj(finalObj, eventBody));
+        // foreach serviceData 
+        exportable.getAssetsDetails(config, eventBody, authToken)
+        .then((res) => exportable.validateAssets(res, eventBody))
+        .then((res) => {
+          const deploymentAccounts = serviceData.services.SERVICE_DEPLOYMENT_ACCOUNTS
+          deploymentAccounts.forEach(function (item) {
+            const accountId = item.accountId;
+            const region = item.region;
+            utils.AssumeRole(accountId, configJson)
+            .then((creds) => {
+              exportable.getMetricsDetails(res,creds,region)
+              .then((res) => {
+                var finalObj = utils.massageData(res, eventBody);
+                // This return will go after foreach
+                metricsResponse[item.accountId] = finalObj
+                //return cb(null, responseObj(finalObj, eventBody));
+              })
+            })
           })
+          return cb(null, responseObj(metricsResponse, eventBody))
         })
       })
     })
@@ -141,6 +153,37 @@ function getToken(config) {
     });
   });
 }
+
+function getConfigJson(config, eventBody) {
+  return new Promise((resolve, reject) => {
+    var config_json_api_options = {
+      url : config.SERVICE_API_URL + "/jazz/admin/config",
+      headers : {
+        "Content-Type" : "application/json",
+        "Authorization" : getToken(config)
+      },
+      method: "GET",
+      rejectUnauthorized:false,
+      requestCert: true,
+      async: true
+    };
+
+    request(config_json_api_options, (error, response, body) => {
+      if (error) {
+        reject(error)
+      } else {
+        if (response.statusCode && response.statusCode === 200) {
+          var responseBody = JSON.parse(body);
+          resolve(responseBody.data)
+        }else{
+          logger.info("Service not found for this service, domain, environment. ", JSON.stringify(service_api_options));
+          resolve([])
+        }
+      }
+    })
+  })
+}
+
 function getserviceMetaData(config, eventBody, authToken){
   return new Promise((resolve, reject) =>  {
     var service_api_options = {
@@ -379,6 +422,10 @@ function cloudWatchDetails(assetParam,tempCreds,serviceMetaData) {
       });
     });
   });
+}
+
+function isAccountPrimary(accountId , configJson) {
+
 }
 
 

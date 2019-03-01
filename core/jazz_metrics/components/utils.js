@@ -252,35 +252,57 @@ function getCloudfrontCloudWatch(tempcreds , serviceMetaData) {
   var cloudwatch = new AWS.CloudWatch({tempcreds});
   return cloudwatch;
 }
+function isPrimary(accountId, jsonConfig){
+  var data = jsonConfig.AWS.ACCOUNTS;
+  index = data.findIndex(x => x.ACCOUNTID==accountId);
+  if(data[index].PRIMARY){
+    return data[index].PRIMARY;
+  }else{
+    return false;
+  }
+}
 
-function AssumeRole(accountID) {
+function getRolePlatformService(accountId, jsonConfig){
+  var data = jsonConfig.AWS.ACCOUNTS;
+  index = data.findIndex(x => x.ACCOUNTID==accountId);
+  return data[index].IAM.PLATFORMSERVICES_ROLEID;
+}
+
+function AssumeRole(accountID, configJson) {
   logger.info("Inside Assume Role")
-  return new Promise((resolve, reject) => {
-    const sts = new AWS.STS({ region: process.env.REGION });
-    const params = {
-      RoleArn: 'arn:aws:iam::'+accountID+':role/'+global_config.STACK_PREFIX+'_platform_services',
-      RoleSessionName: 'CrossAccountCredentials',
-      ExternalId: '1234567-1234-1234-1234-123456789012',
-      DurationSeconds: 3600,
-    };
-    sts.assumeRole(params, (err, data) => {
-      if (err) {
-        logger.error("Error Assuming Role with params:" + JSON.stringify(err));
-        reject({
-          "result": "serverError",
-          "message": "Unknown internal error occurred"
-        })
-      }else{
-        logger.info("The Temporary Acces details are:" + JSON.stringify(data));
-        var accessparams = {
-          accessKeyId: data.Credentials.AccessKeyId,
-          secretAccessKey: data.Credentials.SecretAccessKey,
-          sessionToken: data.Credentials.SessionToken,
-        };
-        resolve(accessparams)
-      }
-    })
-  });
+  var isPrimary = isPrimary(accountID , configJson);
+  var roleArn = getRolePlatformService(accountID, configJson);
+  var accessparams;
+  if(isPrimary){
+    return accessparams ={};
+  } else {
+    return new Promise((resolve, reject) => {
+      const sts = new AWS.STS({ region: process.env.REGION });
+      const params = {
+        RoleArn: roleArn,
+        RoleSessionName: 'CrossAccountCredentials',
+        ExternalId: '1234567-1234-1234-1234-123456789012',
+        DurationSeconds: 3600,
+      };
+      sts.assumeRole(params, (err, data) => {
+        if (err) {
+          logger.error("Error Assuming Role with params:" + JSON.stringify(err));
+          reject({
+            "result": "serverError",
+            "message": "Unknown internal error occurred"
+          })
+        } else {
+          logger.info("The Temporary Acces details are:" + JSON.stringify(data));
+          accessparams = {
+            accessKeyId: data.Credentials.AccessKeyId,
+            secretAccessKey: data.Credentials.SecretAccessKey,
+            sessionToken: data.Credentials.SessionToken,
+          };
+          resolve(accessparams)
+        }
+      })
+    });
+  }
 }
 
 module.exports = {
