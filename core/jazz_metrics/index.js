@@ -179,7 +179,7 @@ function validateAssets(assetsArray, eventBody) {
     if (assetsArray.length > 0) {
       var newAssetArray = [];
       var invalidTypeCount = 0;
-      logger.info("Validating assets");
+      logger.debug("Validating assets");
       assetsArray.forEach((assetItem) => {
         if (assetItem.isError) {
           logger.error(assetItem.isError);
@@ -378,10 +378,15 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
       rejectUnauthorized: false,
       json: true
     };
-    var metricData = {};
-    metricConfig.namespaces.gcp.apigee_proxy.metrics.forEach(item =>
-        metricData[`${item.Statistics.toLowerCase()}(${item.MetricName})`] = item.Label
-    );
+
+    var metricData = metricConfig.namespaces.gcp.apigee_proxy.metrics.map(item => {
+      let data = {
+          label: item.Label,
+          unit: item.Unit,
+          metricName: `${item.Statistics.toLowerCase()}(${item.MetricName})`
+      };
+      return data;
+    });
 
     logger.debug("Get Apigee metrics using URL : " + servicePayload.url);
     request(servicePayload, (error, response, body) => {
@@ -392,14 +397,18 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
         let metricsStats = [];
         metricResult.forEach(metric => {
           if (metricsList.indexOf(metric.name) > -1) {
+            let deatils = metricData.find(item => {
+              if (item.metricName === metric.name) return item;
+            })
+            let unit =  deatils.unit;
             let dataPoints = metric.values.map(val => ({
               Timestamp: moment(val.timestamp),
-              [eventBody.statistics]: val.value,
-              Unit: eventBody.statistics
+              [eventBody.statistics]: Number.parseFloat(val.value).toFixed(2),
+              Unit: unit
             }));
 
             const metricObj = {
-              Label: metricData[metric.name],
+              Label: deatils.label,
               Datapoints: dataPoints
             };
             metricsStats.push(metricObj);

@@ -130,102 +130,122 @@
         "metrics": [{
           "Label": "Requests",
           "MetricName": "message_count",
-          "Statistics": "Sum"
+          "Statistics": "Sum",
+          "Unit": "Count"
         },
         {
           "Label": "Errors",
           "MetricName": "is_error",
-          "Statistics": "Sum"
+          "Statistics": "Sum",
+          "Unit": "Count"
         },
         {
           "Label": "Total Response Time",
           "MetricName": "total_response_time",
-          "Statistics": "Avg"
+          "Statistics": "Avg",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Total Response Time",
           "MetricName": "total_response_time",
-          "Statistics": "Max"
+          "Statistics": "Max",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Total Response Time",
           "MetricName": "total_response_time",
-          "Statistics": "Min"
+          "Statistics": "Min",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Target Response Time",
           "MetricName": "target_response_time",
-          "Statistics": "Avg"
+          "Statistics": "Avg",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Target Response Time",
           "MetricName": "target_response_time",
-          "Statistics": "Max"
+          "Statistics": "Max",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Target Response Time",
           "MetricName": "target_response_time",
-          "Statistics": "Min"
+          "Statistics": "Min",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Request Size",
           "MetricName": "request_size",
-          "Statistics": "Avg"
+          "Statistics": "Avg",
+          "Unit": "Bytes"
         },
         {
           "Label": "Request Size",
           "MetricName": "request_size",
-          "Statistics": "Max"
+          "Statistics": "Max",
+          "Unit": "Bytes"
         },
         {
           "Label": "Request Size",
           "MetricName": "request_size",
-          "Statistics": "Min"
+          "Statistics": "Min",
+          "Unit": "Bytes"
         },
         {
           "Label": "Response Size",
           "MetricName": "response_size",
-          "Statistics": "Avg"
+          "Statistics": "Avg",
+          "Unit": "Bytes"
         },
         {
           "Label": "Response Size",
           "MetricName": "response_size",
-          "Statistics": "Max"
+          "Statistics": "Max",
+          "Unit": "Bytes"
         },
         {
           "Label": "Response Size",
           "MetricName": "response_size",
-          "Statistics": "Min"
+          "Statistics": "Min",
+          "Unit": "Bytes"
         },
         {
           "Label": "Response Processing Latency",
           "MetricName": "response_processing_latency",
-          "Statistics": "Avg"
+          "Statistics": "Avg",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Response Processing Latency",
           "MetricName": "response_processing_latency",
-          "Statistics": "Max"
+          "Statistics": "Max",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Response Processing Latency",
           "MetricName": "response_processing_latency",
-          "Statistics": "Min"
+          "Statistics": "Min",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Request Processing Latency",
           "MetricName": "request_processing_latency",
-          "Statistics": "Avg"
+          "Statistics": "Avg",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Request Processing Latency",
           "MetricName": "request_processing_latency",
-          "Statistics": "Max"
+          "Statistics": "Max",
+          "Unit": "Milliseconds"
         },
         {
           "Label": "Request Processing Latency",
           "MetricName": "request_processing_latency",
-          "Statistics": "Min"
+          "Statistics": "Min",
+          "Unit": "Milliseconds"
         }
       ],
       "dimensions": ["apiproxy"]

@@ -97,7 +97,7 @@ export class CreateServiceComponent implements OnInit {
 
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
-  public apigeeFeature = (this.buildEnvironment.INSTALLER_VARS.feature.apigee === true) ?  true : false;
+  public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
   public selectedDeploymentTarget = "";
 
   constructor (
@@ -332,14 +332,14 @@ export class CreateServiceComponent implements OnInit {
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
       payload["deployment_targets"] = {
-        "api": this.selectedDeploymentTarget
+        "api": this.selectedDeploymentTarget || "aws_apigateway"
       }
     }
     else if(this.typeOfService == 'function'){
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
       payload["deployment_targets"] = {
-        "function": this.selectedDeploymentTarget
+        "function": "aws_lambda"
       }
       if(this.rateExpression.type != 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
@@ -372,7 +372,7 @@ export class CreateServiceComponent implements OnInit {
     } else if(this.typeOfService == 'website'){
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
       payload["deployment_targets"] = {
-        "website": this.selectedDeploymentTarget
+        "website": "aws_cloudfront"
       }
     }
 
