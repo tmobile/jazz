@@ -97,7 +97,7 @@ export class CreateServiceComponent implements OnInit {
 
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
-  public apigeeFeature = (this.buildEnvironment.INSTALLER_VARS.feature.apigee === true) ?  true : false;
+  public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
   public selectedDeploymentTarget = "";
 
   constructor (
