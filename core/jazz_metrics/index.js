@@ -403,7 +403,7 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
             let unit =  deatils.unit;
             let dataPoints = metric.values.map(val => ({
               Timestamp: moment(val.timestamp),
-              [eventBody.statistics]: val.value,
+              [eventBody.statistics]: Number.parseFloat(val.value).toFixed(2),
               Unit: unit
             }));
 
