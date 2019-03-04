@@ -306,55 +306,39 @@ node() {
           echoServerlessFile()
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey)
 
-          if (deployOutput != 'success') {
-            if (config['event_source_s3']) {
-              handleS3BucketError(deployOutput, config['event_source_s3'], environment_logical_id, envBucketKey, isEventSchdld)
-            } else if (config['event_source_sqs']) {
-              handleSqsError(deployOutput, config, environment_logical_id, envBucketKey)
-            } else if (config['event_source_kinesis']) {
-              handleKinesisStreamError(deployOutput, config['event_source_kinesis'], environment_logical_id, envBucketKey)
-            } else if (config['event_source_dynamodb']) {
-              handleDynamoDbStreamError(deployOutput, config, environment_logical_id, envBucketKey)
-            } else {
-              echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
-              error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+// Shoving deploy output lines into array
+          def deployLines = deployOutput.split('\n')
+          def resourceArns = []
+          def afterStackOutputs = false
+// Extracting all the lines that follow 'Stack Outputs'. These lines are supposed to contain arns of resources created
+          for(def line: deployLines) {
+            if(afterStackOutputs) resourceArns.add(line)
+            if(line.contains('Stack Outputs')) afterStackOutputs = true // Here we are only interested in lines that follow 'Stack Outputs' marker
+          }
+
+          for(def name2ArnString: resourceArns) {
+            def name2ArnPair = name2ArnString.split(': ') // Here we rely on the space after the ': ' so it is split properly without affecting the arn itself that is full of colons but never has a space after
+            if(name2ArnPair.size() > 1) {
+              def arn = name2ArnPair[1].trim()
+              if(arn.startsWith('arn')) {
+                 def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:102707241671:table/jazzUsersTable53
+                 if(arnAsArray.size() > 2) { // Making sure that the third element exists
+                   def artifactType = arnAsArray[2]
+                   if(artifactType == 'kinesis') artifactType = 'kinesis_stream' // 'kinesis_stream' needs to be instaead of simple 'kinesis' that did not get persisted :-( by itself
+                   events.sendCompletedEvent('CREATE_ASSET',
+                                             null,
+                                             utilModule.generateAssetMap("aws",
+                                                                         arn,
+                                                                         artifactType,
+                                                                         config),
+                                             environment_logical_id)
+                   echo "Sending type $artifactType with arn $arn"
+
+                }
+              }
             }
-          } else {
-            if (config['event_source_s3']) {
-              def bucket_arn = "arn:aws:s3:::${config['event_source_s3']}"
-              def s3_bucket_arn = lambdaEvents.getEventResourceNamePerEnvironment(bucket_arn, environment_logical_id, "-")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", s3_bucket_arn, "s3", config), environment_logical_id);
-            } else if (config['event_source_sqs']) {
-              def event_source_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_sqs'], environment_logical_id, "_")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", event_source_sqs_arn, "sqs", config), environment_logical_id);
-            } else if (config['event_source_kinesis']) {
-              def event_source_kinesis_stream_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_kinesis'], environment_logical_id, "_")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", event_source_kinesis_stream_arn, "kinesis_stream", config), environment_logical_id);
-            } else if (config['event_source_dynamodb']) {
-              def dynamodbTableName = lambdaEvents.splitAndGetResourceName(config['event_source_dynamodb'], environment_logical_id)
-              def stream_details = lambdaEvents.getDynamoDbStreamDetails(dynamodbTableName)
-              def event_source_dynamodb_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_dynamodb'], environment_logical_id, "_")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", event_source_dynamodb_arn, "dynamodb", config), environment_logical_id);
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", stream_details.StreamArn, "dynamodb_stream", config), environment_logical_id);
-            }
           }
 
-          def function_arn = getLambdaARN(stackName, credsId);
-          lambdaARN = function_arn.split(":(?!.*:.*)")[0]
-          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
-
-          echo "lambdaARN: ${lambdaARN}"
-
-          if (isLambdaUpdateRequired) {
-            def event_source_s3 = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], environment_logical_id, "-")
-            lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, event_source_s3, config['event_action_s3'])
-          }
-
-          if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
-            def role_name = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-            def role_arn = lambdaEvents.getRoleArn(role_name)
-            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", role_arn, "iam_role", config), environment_logical_id);
-          }
 
           // reset Credentials
           resetCredentials(credsId)
@@ -545,6 +529,30 @@ def prepareServerlessYml(aConfig, env) {
                  .collect{z -> fillFunctionElem(z[0], z[1], config, env)} // Applying the function for each [val, idx] pair generated
   }
 
+// Supplying the Outputs element to render all arns for all 'resources/Resources that got listed'
+  def smallResourcesElem = doc['resources']
+  if(smallResourcesElem) {
+    def bigResourcesElem = smallResourcesElem['Resources']
+    if(bigResourcesElem) {
+      def bigOutputsElem = smallResourcesElem['Outputs']
+      if(!bigOutputsElem) {
+        bigOutputsElem = [:]
+        smallResourcesElem['Outputs'] = bigOutputsElem
+      }
+      def resourceKeys = bigResourcesElem.collect{key, val -> key}
+
+      echo "resourceKeys => $resourceKeys"
+      /* Forming a record that extracts the arn from resulting item for each of resource key extracted from resources:
+      UsersTableArn:\n
+        Value:\n
+          \"Fn::GetAtt\": [ usersTable, Arn ]\n
+      */
+      resourceKeys.collect{name ->
+          bigOutputsElem[name+'Arn']=["Value":["Fn::GetAtt":[name, "Arn"]]]
+      }
+    }
+  }
+
   return doc
 
 }
@@ -552,14 +560,15 @@ def prepareServerlessYml(aConfig, env) {
 def servelessDeploy(env, envBucketKey){
   try {
     sh "serverless deploy --stage ${env} -v --bucket ${configLoader.AWS.S3[envBucketKey]} > output.log"
-    return "success"
+    def outputLog = readFile('output.log').trim()
+    echo "serverless deployment log $outputLog"
+    return outputLog
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
+    def outputLog = readFile('output.log').trim()
+    echo "serverless deployment log $outputLog"
+    throw ex
   }
-
-  def outputLog = readFile('output.log').trim()
-  echo "serverless deployment log $outputLog"
-  return outputLog
 }
 
 def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
