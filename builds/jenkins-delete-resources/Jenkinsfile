@@ -101,7 +101,8 @@ node {
       }
     }
    } else {
-    echo "Primary account can not be deleted this way, skipping...."
+    // Delete the Role Policy update for Accessing cross Account Metrics
+    deletePrimaryAccountPolicy(credentialId)
    }
   }
  } else {
@@ -341,6 +342,36 @@ def deletes3Bucket(bucketName) {
  } catch (ex) {
   echo "${ex.getMessage()}"
  }
+}
+
+/**
+  Function for Deleting Primary Account Role Policy
+  Accepts credentialId 
+  Check if policy exists and delete it
+**/
+def deletePrimaryAccountPolicy(credentialId){
+  try {
+    def status = true;
+    withCredentials([
+      [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialId}"]
+      ]) {
+        try {
+          sh "aws iam get-role-policy --role-name ${instance_prefix}_platform_services --policy-name ${instance_prefix}_NonPrimaryAssumePolicy"
+          } catch (ex) {
+            echo "${instance_prefix}_NonPrimaryAssumePolicy not exists"
+            status = false
+          }
+          
+          if (status) {
+            sh "aws iam delete-role-policy --role-name ${instance_prefix}_platform_services --policy-name ${instance_prefix}_NonPrimaryAssumePolicy"
+            sleep(time: 30, unit: "SECONDS")
+          } else {
+            echo "${instance_prefix}_NonPrimaryAssumePolicy not exists"
+          }
+      }
+    } catch (ex) {
+      echo "${ex.getMessage()}"
+    }
 }
 
 def getBuildModuleUrl() {
