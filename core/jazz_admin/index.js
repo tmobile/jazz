@@ -63,31 +63,27 @@ const handler = (event, context, cb) => {
       if (event && !event.body) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty")));
       }
-      exportable.getConfiguration()
-        .then((res) => exportable.addConfiguration(res, event.body))
+      exportable.validateQueryInput(event)
+        .then(() => exportable.getConfiguration())
+        .then((res) => exportable.addConfiguration(res, event))
         .then((res) => {
           return cb(null, responseObj(res, event.body));
         }).catch((error) => {
           logger.error("Failed to add admin configuration:" + JSON.stringify(error));
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to add admin configuration.")));
+          return cb(JSON.stringify(error));
         });
 
     } else if (event && event.method && event.method === 'DELETE') {
-      if (event && !event.body) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Input cannot be empty. Please give list of keys to be deleted.")));
-      }
-      if (!(event.body instanceof Array)) {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError("Please give list of keys to be deleted.")));
-      }
-      exportable.getConfiguration()
-        .then((res) => exportable.deleteConfiguration(res, event.body))
+      exportable.validateQueryInput(event)
+        .then(() => exportable.validateInputForDelete(event))
+        .then(() => exportable.getConfiguration())
+        .then((res) => exportable.deleteConfiguration(res, event))
         .then((res) => {
           return cb(null, responseObj(res, event.body));
         }).catch((error) => {
           logger.error("Failed to delete the specified admin configuration:" + JSON.stringify(error));
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Failed to delete the specified admin configuration.")));
+          return cb(JSON.stringify(error));
         });
-
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("The requested method is not supported")));
     }
@@ -109,10 +105,26 @@ const getConfiguration = () => {
   });
 }
 
-const addConfiguration = (configs, input) => {
+const addConfiguration = (configs, event) => {
   return new Promise((resolve, reject) => {
     const jeditor = new jsonEditor(configs);
-    const new_config = jeditor.editJson(input);
+    let new_config
+    if (isEmpty(event.query)) {
+      new_config = jeditor.editJson(event.body);
+    } else {
+      const input = {
+        path: event.query.path,
+        id: event.query.id,
+        value: event.query.value,
+        body: event.body
+      }
+      const res = jeditor.editJsonList(input)
+      if (!res.isError) {
+        new_config = res.data
+      } else {
+        return reject(res.error);
+      }
+    }
 
     crud.post(new_config, function (err, data) {
       if (err) {
@@ -124,10 +136,26 @@ const addConfiguration = (configs, input) => {
   });
 }
 
-const deleteConfiguration = (configs, keys) => {
+const deleteConfiguration = (configs, event) => {
   return new Promise((resolve, reject) => {
     const jeditor = new jsonEditor(configs);
-    const new_config = jeditor.removeKeys(keys);
+    let new_config
+    if (isEmpty(event.query)) {
+      new_config = jeditor.removeKeys(event.body);
+    } else {
+      const input = {
+        path: event.query.path,
+        id: event.query.id,
+        value: event.query.value
+      }
+      const res = jeditor.removeJsonList(input)
+      if (!res.isError) {
+        new_config = res.data
+      } else {
+        return reject(res.error);
+      }
+    }
+
     crud.post(new_config, function (err, data) {
       if (err) {
         return reject(err);
@@ -138,12 +166,82 @@ const deleteConfiguration = (configs, keys) => {
   });
 }
 
+const validateQueryInput = (event) => {
+  return new Promise((resolve, reject) => {
+    if (!isEmpty(event.query)) {
+      if (!event.query.path) {
+         reject({
+          errorType: "BadRequest",
+          message: "Json path is not provided in query."
+        });
+      }
+      if (!event.query.id) {
+        return reject({
+          errorType: "BadRequest",
+          message: "Unique id is not provided in query."
+        });
+      }
+      if (!event.query.value) {
+        return reject({
+          errorType: "BadRequest",
+          message: "Unique value is not provided in query."
+        });
+      }
+    }
+    return resolve({ result: "success" });
+  });
+}
+
+const validateInputForDelete = (event) => {
+  return new Promise((resolve, reject) => {
+    if (isEmpty(event.query)) {
+      if (!event.body) {
+        return reject({
+          errorType: "BadRequest",
+          message: "Input cannot be empty. Please give list of keys to be deleted."
+        });
+      }
+      if (!(event.body instanceof Array)) {
+        return reject({
+          errorType: "BadRequest",
+          message: "Please give list of keys to be deleted."
+        });
+      }
+    } else {
+      let pathList = event.query.path.split("#");
+      let idList = event.query.id.split("#");
+      let valueList = event.query.value.split("#");
+
+      if (pathList.length !== idList.length || pathList.length !== valueList.length) {
+        return reject({
+          errorType: "BadRequest",
+          message: "Please give the correct mapping in query"
+        });
+      }
+    }
+    return resolve({ result: "success" });
+  });
+}
+
+const isEmpty = (obj) => {
+  if (obj == null) return true;
+  if (obj.length > 0)    return false;
+  if (obj.length === 0)  return true;
+  if (typeof obj !== "object") return true;
+  for (var key in obj) {
+      if (hasOwnProperty.call(obj, key)) return false;
+  }
+  return true;
+}
 
 const exportable = {
   handler,
+  validateQueryInput,
   getConfiguration,
   addConfiguration,
-  deleteConfiguration
+  deleteConfiguration,
+  validateInputForDelete,
+  isEmpty
 }
 
 module.exports = exportable;
