@@ -242,7 +242,10 @@ node() {
 
           echo "serverless deploy......."
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
-          sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey);
+          if(deployOutput != 'success'){
+						handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id)						
+					}
 
           def lambdaARN = getLambdaARN(stackName, credsId);
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
@@ -1061,5 +1064,75 @@ def loadBuildModules(buildModuleUrl){
       apigeeModule.initialize(configLoader.APIGEE, events)
       echo "Apigee module loaded successfully."
     }
+  }
+}
+
+def servelessDeploy(env, envBucketKey){
+    echo "which env: $env"
+    echo "which bucket key: $envBucketKey"
+  try {
+    sh "serverless deploy --stage ${env} -v --bucket ${configLoader.AWS.S3[envBucketKey]} --force > output.log"
+    return "success"
+  } catch (ex) {
+    echo "Serverless deployment failed due to $ex"
+  }
+
+  def outputLog = readFile('output.log').trim()
+  echo "serverless deployment log $outputLog"
+  return outputLog
+}
+
+
+def isExistingLogGroup (groupName){
+	def isExistingLogGrp = false
+	def filterLogs = sh (
+		script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile cloud-api",
+		returnStdout: true
+	).trim()
+	def toJSON = new groovy.json.JsonSlurper()
+	def filterLogsJSON = toJSON.parseText(filterLogs)
+	def logGroups = filterLogsJSON.logGroups
+	echo "logGroups : $logGroups"
+	if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
+		isExistingLogGrp = true
+	}
+	return isExistingLogGrp
+}
+
+def removeLogGroup(groupName) {
+	sh "aws logs delete-log-group --log-group-name $groupName --profile cloud-api"
+	echo "successfully removed log group $groupName"
+}
+
+def handleDeploymentErrors(deployOutput, serviceName, env) {
+	if(deployOutput.contains('ROLLBACK_COMPLETE state and can not be updated')){
+		deleteAndRedeployService(env, serviceName)
+	}
+	else if (deployOutput.contains("CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"))
+	{
+		def lambda = "/aws/lambda/${serviceName}-${env}"
+		if (isExistingLogGroup(lambda)){
+			echo "Exception occured while serverless deploy : $logGroupErrString, Removing existing log group"
+			removeLogGroup(lambda)
+			deployOutput = deleteAndRedeployService(env, serviceName);
+		} else {
+			error "Unable to find existing log groups"
+		}
+	} 
+	else {
+			error "Exception occured while serverless deployment to ${env} environment"
+	}
+}
+
+/**
+Redeploying Service
+*/
+def deleteAndRedeployService(environment_logical_id, envBucketKey){
+  echoServerlessFile()
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+  if (redeployOutput != 'success') {
+    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
+    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
 }
