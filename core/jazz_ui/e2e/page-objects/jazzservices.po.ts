@@ -103,7 +103,7 @@ export class Jazz {
     return element(by.xpath('//li[@class="x caps" and contains(text(),"deployments")]'));  
   }
   getDeploymentStatusVerify() {
-    return element(by.xpath('//div[@class="column status-col"]/div[@class="green"]'));
+    return element(by.xpath('//div[contains(text(),"successful")]'));
   }
   getAssetStatusVerify() {
     return element(by.xpath('//div[@class="det-value"]'));
@@ -143,5 +143,11 @@ export class Jazz {
   }
   getYearVerify() {
     return element(by.xpath('//div[@class="row"]/div[contains(text(),"Time Range")]/b[text()="Year"]'));
+  }
+  homePageRefresh() {
+    return element(by.xpath('//span[@title="Refresh"]'));
+  }
+  serviceStatus() {
+      return element(by.xpath('//div[@class="table-body"]//div[2]//div[contains(text(),"active")]'));
   }
  }

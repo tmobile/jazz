@@ -15,6 +15,9 @@ import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 @Field def repo_credential_id
+@Field def aws_credential_id
+@Field def region
+@Field def instance_prefix
 @Field def repo_base
 @Field def repo_core
 @Field def scm_type
@@ -73,7 +76,7 @@ node  {
 							service_template = "api-template-nodejs"
 						}
 						else if (service_config['runtime'].startsWith("python")){
-							service_template = 'api-template-python'	
+							service_template = 'api-template-python'
 						}
 						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'api-template-java'
@@ -88,7 +91,7 @@ node  {
 							service_template = "lambda-template-nodejs"
 						}
 						else if (service_config['runtime'].startsWith("python")){
-							service_template = 'lambda-template-python'	
+							service_template = 'lambda-template-python'
 						}
 						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'lambda-template-java'
@@ -134,13 +137,13 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
 				def config = LoadConfiguration()
 				def roleARN
-				
+
 				if (service_config['domain'] && service_config['domain'] == "jazz") {
 					roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID
 				} else {
 					roleARN = configLoader.AWS.USERSERVICES_ROLEID
 				}
-				
+
 				def serviceMetadataJson = [
 					"securityGroupIds": configLoader.AWS.SECURITY_GROUP_IDS,
 					"subnetIds": configLoader.AWS.SUBNET_IDS,
@@ -293,7 +296,7 @@ def getAuthToken() {
 			'password': PWD
 		]
 		def payload = JsonOutput.toJson(login_json)
-		
+
 		try {
 			def token = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
@@ -424,9 +427,8 @@ def loadBuildModules(buildModuleUrl){
 				[credentialsId: repo_credential_id, url: buildModuleUrl]
 			]])
 
-		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
-		configLoader = configModule.initialize(resultJsonString)
+		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
 		echo "config loader loaded successfully."
 
 		scmModule = load "scm-module.groovy"

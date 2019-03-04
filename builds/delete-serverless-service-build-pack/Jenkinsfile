@@ -5,6 +5,9 @@ import groovy.json.JsonSlurperClassic
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 @Field def repo_credential_id
+@Field def aws_credential_id
+@Field def region
+@Field def instance_prefix
 @Field def repo_base
 @Field def repo_core
 @Field def scm_type
@@ -1196,9 +1199,8 @@ def loadBuildModules(buildModuleUrl){
 				[credentialsId: repo_credential_id, url: buildModuleUrl]
 			]])
 
-		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
-		configLoader = configModule.initialize(resultJsonString)
+		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
 		echo "config loader loaded successfully."
 
 		scmModule = load "scm-module.groovy"
