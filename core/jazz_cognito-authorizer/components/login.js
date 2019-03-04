@@ -29,12 +29,19 @@ const getAuthToken = async (config) => {
       rejectUnauthorized: false
     };
 
+    logger.error("svcPayload : " + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
-      if (response.statusCode === 200 && response.body && response.body.data && response.body.data.token) {
-        return resolve(response.body.data.token);
-      } else {
+      logger.error("getAuthToken response : " + JSON.stringify(response));
+      if(error ) {
         logger.error("Authentication failed !!! "+ JSON.stringify(response));
         return reject({ "error": "Authentication failed !!!" });
+      } else {
+        if (response.statusCode === 200 && response.body && response.body.data && response.body.data.token) {
+          return resolve(response.body.data.token);
+        } else {
+          logger.error("Authentication failed !!! "+ JSON.stringify(response));
+          return reject({ "error": "Authentication failed !!!" });
+        }
       }
     });
   });
