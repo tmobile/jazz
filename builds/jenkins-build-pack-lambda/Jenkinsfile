@@ -261,7 +261,7 @@ node() {
             } else if (config['event_source_dynamodb']) {
               handleDynamoDbStreamError(deployOutput, config, environment_logical_id, envBucketKey)
             } else {
-              handleDeploymentErrors(deployOutput, serviceName, environment)
+              handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id)
             }
           } else {
             if (config['event_source_s3']) {
