@@ -40,9 +40,9 @@ function handler(event, context, cb) {
 				logger.debug(pathString);
 				if (serviceContext && serviceContext.method && serviceContext.method === 'GET' && pathString === "codeq") {
 					logger.debug(`code quality service called with pathstring - ${pathString}`);
-
-          if (!serviceContext.headers['Jazz-Service-ID']) {
-            serviceId = serviceContext.headers['Jazz-Service-ID']
+          let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
+          if (!serviceContext.headers[header_key]) {
+            serviceId = serviceContext.headers[header_key]
             logger.error('No service id provided in  headers');
             return cb(JSON.stringify(errorHandler.throwInputValidationError('No service id provided in  headers.')));
           }
