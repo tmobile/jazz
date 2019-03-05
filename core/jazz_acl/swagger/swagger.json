@@ -1448,18 +1448,6 @@
         "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-token-authorizer-{envmnt}/invocations",
         "type": "token"
       }
-    },
-    "{envPrefix}-{domain}-cognito-admin-authorizer": {
-      "type": "apiKey",
-      "name": "Authorization",
-      "in": "header",
-      "x-amazon-apigateway-authtype": "custom",
-      "x-amazon-apigateway-authorizer": {
-        "authorizerCredentials": "{conf-role}",
-        "authorizerResultTtlInSeconds": 300,
-        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-admin-authorizer-{envmnt}/invocations",
-        "type": "token"
-      }
     }
   },
   "definitions": {
