@@ -9,7 +9,6 @@
     "test": "mocha"
   },
   "dependencies": {
-    "lodash": "*",
     "request-promise-native": "^1.0.5",
     "request": "^2.75.0"
   },
