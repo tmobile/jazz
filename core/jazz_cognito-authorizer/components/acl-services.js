@@ -34,9 +34,9 @@ const getServiceMetadata = async (config, authToken, user, serviceId) => {
       rejectUnauthorized: false
     };
 
-    logger.error("svcPayload : " + JSON.stringify(svcPayload));
+    logger.debug("svcPayload : " + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
-      logger.error("getServiceMetadata response : " + JSON.stringify(response));
+      logger.debug("getServiceMetadata response : " + JSON.stringify(response));
       if (error) {
         logger.error("Failed to fetch service data: " + JSON.stringify(error));
         return reject(error);
@@ -72,9 +72,9 @@ const checkPermissionData = async (config, authToken, user, serviceId, category,
       rejectUnauthorized: false
     };
 
-    logger.error("checkPermissionData svcPayload : " + JSON.stringify(svcPayload));
+    logger.debug("checkPermissionData svcPayload : " + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
-      logger.error("checkPermissionData response : " + JSON.stringify(response));
+      logger.debug("checkPermissionData response : " + JSON.stringify(response));
       if (error) {
         logger.error("Failed to fetch permission data: " + JSON.stringify(error));
         return reject(error);

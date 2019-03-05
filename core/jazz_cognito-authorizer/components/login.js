@@ -29,9 +29,9 @@ const getAuthToken = async (config) => {
       rejectUnauthorized: false
     };
 
-    logger.error("svcPayload : " + JSON.stringify(svcPayload));
+    logger.debug("svcPayload : " + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
-      logger.error("getAuthToken response : " + JSON.stringify(response));
+      logger.debug("getAuthToken response : " + JSON.stringify(response));
       if(error ) {
         logger.error("Authentication failed !!! "+ JSON.stringify(response));
         return reject({ "error": "Authentication failed !!!" });
