@@ -70,6 +70,8 @@ export class ServiceDetailComponent implements OnInit {
   test: any = "delete testing";
   disabled_tab: boolean = false;
   refreshTabClicked: boolean = false;
+  isAdminAccess: boolean = false;
+  currentUser: any = {}
 
 
   private sub: any;
@@ -194,13 +196,20 @@ export class ServiceDetailComponent implements OnInit {
 
   fetchService(id) {
     this.isLoadingService = true;
-    this.http.get('/jazz/services/' + id).subscribe(response => {
+    this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
       this.cache.set(id, service);
       this.onDataFetched(service);
       this.isGraphLoading = false;
       this.selectedTabComponent.refresh_env();
       this.setTabs();
+      if(service && service.policies && service.policies.length) {
+        service.policies.forEach(policy => {
+          if (policy.category === "manage" && policy.permission === "admin" && policy.userId === this.currentUser.username) {
+            this.isAdminAccess = true;
+          }
+        });
+      }
     }, (err) => {
       if (err.status == "404") {
         this.router.navigateByUrl('404');
@@ -309,7 +318,7 @@ export class ServiceDetailComponent implements OnInit {
       "id": this.service.id
     };
     this.deleteServiceStatus.emit(this.deleteServiceVal);
-    this.subscription = this.http.post('/jazz/delete-serverless-service', payload)
+    this.subscription = this.http.post('/jazz/delete-serverless-service', payload, this.service.id)
       .subscribe(
         (Response) => {
           var update = {
@@ -371,7 +380,8 @@ export class ServiceDetailComponent implements OnInit {
 
 
   onServiceNameChange() {
-    if (this.ServiceName == this.service['name']) {
+    
+    if (this.ServiceName.toLowerCase() == this.service['name']) {
       this.disblebtn = false;
     }
     else {
@@ -399,7 +409,7 @@ export class ServiceDetailComponent implements OnInit {
   }
 
   ngOnInit() {
-
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
     this.breadcrumbs = [
       {
         'name': this.service['name'],

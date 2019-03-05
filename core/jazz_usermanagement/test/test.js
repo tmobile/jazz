@@ -10,6 +10,8 @@ const scmFactory = require("../scm/scmFactory.js");
 const configModule = require("../components/config.js");
 const responseObj = require("../components/response.js");
 const rp = require('request-promise-native');
+const getList = require("../components/getList.js");
+
 
 describe('User Management', function () {
 	//Setting up default values for the aws event and context needed for handler params
@@ -135,7 +137,7 @@ describe('User Management', function () {
 
 	it("should throw a invalid or missing arguments for undefined method", function () {
 		event = {
-			"method": 'GET',
+			"method": 'PUT',
 			"stage": "test",
 			"resourcePath": "reset",
 			"body": {
@@ -225,7 +227,7 @@ describe("inside index handler", function () {
 			sinon.assert.calledOnce(forgotPassword);
 			validateResetParams.restore();
 			forgotPassword.restore();
-			expect(JSON.parse(err).error).to.eq("102");
+			expect(err).to.eq(`{"errorCode":"106","errorType":"InternalServerError","message":"Failed while resetting user password for: ${event.body.email}"}`);
 		});
 	});
 
@@ -486,4 +488,56 @@ describe("inside index handler else condition", function () {
 			rpStub.restore();
 		});
 	});
+});
+
+describe("Index handler: Users", () => {
+  beforeEach(() => {
+    event = {
+			"method": "GET",
+			"stage": "test",
+      "resourcePath": "test/service/usermanagement/users",
+      "principalId": "abc@xyz.com"
+		};
+		context = awsContext();
+		config = configModule.getConfig(event, context);
+		callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			} else {
+				return JSON.stringify(responseObj);
+			}
+		};
+  });
+
+  it("shouldindicate unauthorized", () => {
+    event.principalId = "";
+    index.handler(event, context, (err, res) => {
+      expect(err).to.include('{"errorCode":"401","errorType":"Unauthorized","message":"Unauthorized"}')
+    });
+  });
+
+  it("should indicate error while fetching the list of users", () => {
+    let error = {error: "Internal error"}
+    let stubGetList = sinon.stub(getList, "listUsers").rejects(error);
+    index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(stubGetList);
+      expect(JSON.parse(err).errorCode).to.eq("106");
+      expect(JSON.parse(err).message).to.eq('{"error":"Internal error"}');
+      stubGetList.restore();
+    });
+  });
+
+  it("Should successfully send list of users", () => {
+    let resObj = ["abc@xyz.com", "efg@uvw.com", "hij@rst.com"];
+    let stubGetList = sinon.stub(getList, "listUsers").resolves(resObj);
+    index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(stubGetList);
+      expect(res).to.have.all.keys("data", "input");
+      expect(res.data).to.have.all.keys("result", "message", "errorCode");
+      resObj.forEach(each => {
+        expect(res.data.result).to.include(each);
+      });
+      stubGetList.restore();
+    });
+  });
 });

@@ -63,6 +63,8 @@ def loadServiceConfigurationData() {
             updateConfigValue("{casbin_database}", config_loader.ACL.DATABASE.NAME)
             updateConfigValue("{casbin_type}", config_loader.ACL.DATABASE.TYPE_DB)
             updateConfigValue("{casbin_timeout}", config_loader.ACL.DATABASE.TIMEOUT)
+            updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
+            updateConfigValue("{conf-region}", region)
 
             sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/global-config.json"
             sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/global-config.json"
@@ -178,7 +180,7 @@ def loadServiceConfigurationData() {
             updateConfigValue("{conf-region}", region)
         }
 
-        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer") || (service_name.trim() == "jazz_cognito-admin-authorizer")) {
+        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer") || (service_name.trim() == "jazz_cognito-admin-authorizer") || (service_name.trim() == "jazz_token-authorizer")) {
             updateConfigValue("{conf-user-pool-id}", config_loader.AWS.COGNITO.USER_POOL_ID)
             updateConfigValue("{conf-client-id}", config_loader.AWS.COGNITO.CLIENT_ID)
             updateConfigValue("{conf-region}", region)
@@ -187,6 +189,7 @@ def loadServiceConfigurationData() {
 
         if (service_name.trim() == "jazz_cognito-authorizer") {
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/local-config.json"
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
         }
 
         if (service_name.trim() == "jazz_is-service-available") {
@@ -239,7 +242,7 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global-config.json"
         }
 
-        if (service_name.trim() == "jazz_usermanagement" || service_name.trim() == "jazz_users") {
+        if (service_name.trim() == "jazz_usermanagement") {
             updateConfigValue("{user_pool_id}", config_loader.AWS.COGNITO.USER_POOL_ID)
             updateConfigValue("{user_client_id}", config_loader.AWS.COGNITO.CLIENT_ID)
             updateConfigValue("{region}", region)

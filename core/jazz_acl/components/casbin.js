@@ -18,6 +18,8 @@ const casbin = require('casbin');
 const TypeORMAdapter = require('typeorm-adapter');
 const logger = require('./logger.js');
 const errorHandlerModule = require("./error-handler.js")();
+const getList = require("./getList.js");
+const globalConfig = require("../config/global-config.json");
 
 /* Create a connection to the DB*/
 async function dbConnection(config) {
@@ -82,9 +84,13 @@ async function checkPermissions(userId, serviceId, category, permission, config)
   let result = {};
   let conn;
   try {
-    conn = await dbConnection(config);
-    const enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
-    result.authorized = enforcer.enforce(userId, `${serviceId}_${category}`, permission);
+    if (userId === config.SERVICE_USER) {
+      result.authorized = true;
+    } else {
+      conn = await dbConnection(config);
+      const enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
+      result.authorized = enforcer.enforce(userId, `${serviceId}_${category}`, permission);
+    }
   } catch(err) {
     logger.error(err.message);
     result = {
@@ -184,48 +190,79 @@ async function addPolicy(serviceId, policies, enforcer) {
 
 /* Get the permissions for a service given a userId */
 async function getPolicyForServiceUser(serviceId, userId, config) {
-  const result = await getPolicies(serviceId, config);
-  if (result && result.error) {
-    return result;
-  }
-  let policies = formatPolicies(result);
-  let userPolicies = policies.filter(policy => policy.userId === userId);
-  userPolicies = userPolicies.map(policy => { return { permission: policy.permission, category: policy.category } });
+  if (userId === config.SERVICE_USER) {
+    const dbResult =  await getList.getSeviceIdList(config, serviceId)
+    if (dbResult && dbResult.error) {
+      return dbResult
+    }
+    let result = attachAdminPolicies(dbResult.data);
+    return result
+  } else {
+    const result = await getPolicies(serviceId, config);
+    if (result && result.error) {
+      return result;
+    }
+    let policies = formatPolicies(result);
+    let userPolicies = policies.filter(policy => policy.userId === userId);
+    userPolicies = userPolicies.map(policy => { return { permission: policy.permission, category: policy.category } });
 
-  return [{serviceId: serviceId, policies: userPolicies}];
+    return [{serviceId: serviceId, policies: userPolicies}];
+  }
+
+}
+
+/* attach admin policies */
+function attachAdminPolicies(list) {
+  let svcIdList = []
+  list.forEach(eachId => {
+    let svcIdObj = Object.assign({}, globalConfig.ADMIN_SERVICES_POLICIES);
+    svcIdObj.serviceId = eachId;
+    svcIdList.push(svcIdObj);
+  });
+  return svcIdList;
 }
 
 /* Get the policies for a userId*/
 async function getPolicyForUser(userId, config) {
-  let result = await getFilteredPolicy(0, [userId], config);
-  let serviceIdSeen = new Set();
   let policies = [];
+  if (userId === config.SERVICE_USER) {
+    const dbResult =  await getList.getSeviceIdList(config, null)
+    if (dbResult && dbResult.error) {
+      return dbResult
+    }
 
-  if (result && result.error) {
+    let result = attachAdminPolicies(dbResult.data);
     return result;
-  }
+  } else {
+    let result = await getFilteredPolicy(0, [userId], config);
+    let serviceIdSeen = new Set();
 
-  result.forEach(policy => {
-    policy.forEach(item => {
-      const serviceId = item[1].split('_')[0];
-      const policy = {
-        category: item[1].split('_')[1],
-        permission: item[2]
-      };
-      if (serviceIdSeen.has(serviceId)) {
-        const foundPolicies = policies.find(r => r.serviceId === serviceId);
-        if (foundPolicies) {
-          foundPolicies.policies.push(policy);
+    if (result && result.error) {
+      return result;
+    }
+
+    result.forEach(policy => {
+      policy.forEach(item => {
+        const serviceId = item[1].split('_')[0];
+        const policy = {
+          category: item[1].split('_')[1],
+          permission: item[2]
+        };
+        if (serviceIdSeen.has(serviceId)) {
+          const foundPolicies = policies.find(r => r.serviceId === serviceId);
+          if (foundPolicies) {
+            foundPolicies.policies.push(policy);
+          }
+        } else {
+          const policyObj = {};
+          policyObj['serviceId'] = serviceId;
+          policyObj['policies'] = [policy];
+          policies.push(policyObj);
         }
-      } else {
-        const policyObj = {};
-        policyObj['serviceId'] = serviceId;
-        policyObj['policies'] = [policy];
-        policies.push(policyObj);
-      }
-      serviceIdSeen.add(serviceId);
+        serviceIdSeen.add(serviceId);
+      });
     });
-  });
+  }
 
   return policies;
 }

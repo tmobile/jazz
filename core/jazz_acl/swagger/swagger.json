@@ -99,13 +99,15 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [{
-          "name": "userId",
-          "in": "query",
-          "description": "user",
-          "required": true,
-          "type": "string"
-        }],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "user",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "successful operation",
@@ -310,13 +312,15 @@
         "tags": [
           "CORS"
         ],
-        "parameters": [{
-          "name": "serviceId",
-          "in": "path",
-          "description": "service id",
-          "required": true,
-          "type": "string"
-        }],
+        "parameters": [
+          {
+            "name": "serviceId",
+            "in": "path",
+            "description": "service id",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "x-amazon-apigateway-integration": {
           "type": "mock",
           "requestTemplates": {
@@ -392,20 +396,22 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [{
-          "name": "userId",
-          "in": "query",
-          "description": "user",
-          "required": true,
-          "type": "string"
-        },
-        {
-          "name": "serviceId",
-          "in": "path",
-          "description": "service id",
-          "required": true,
-          "type": "string"
-        }],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "user",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "description": "service id",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "successful operation",
@@ -685,34 +691,36 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [{
-          "name": "userId",
-          "in": "query",
-          "description": "userId of the user",
-          "required": true,
-          "type": "string"
-        },
-        {
-          "name": "serviceId",
-          "in": "query",
-          "description": "service Id",
-          "required": true,
-          "type": "string"
-        },
-        {
-          "name": "permission",
-          "in": "query",
-          "description": "permission",
-          "required": true,
-          "type": "string"
-        },
-        {
-          "name": "category",
-          "in": "query",
-          "description": "service category",
-          "required": true,
-          "type": "string"
-        }],
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "query",
+            "description": "userId of the user",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "serviceId",
+            "in": "query",
+            "description": "service Id",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "permission",
+            "in": "query",
+            "description": "permission",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "description": "service category",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "successful operation",
@@ -819,7 +827,7 @@
         },
         "security": [
           {
-            "{envPrefix}-{domain}-cognito-authorizer": []
+            "{envPrefix}-{domain}-token-authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -993,15 +1001,17 @@
           "application/json",
           "application/xml"
         ],
-        "parameters": [{
-          "name": "body",
-          "in": "body",
-          "description": "serviceId, <list of policies>",
-          "required": true,
-          "schema": {
-            "$ref": "#/definitions/Policy"
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "description": "serviceId, <list of policies>",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Policy"
+            }
           }
-        }],
+        ],
         "produces": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -1201,18 +1211,20 @@
           "application/json",
           "application/xml"
         ],
-        "parameters": [{
-          "name": "serviceId",
-          "in": "query",
-          "description": "service id",
-          "required": true,
-          "type": "string"
-        }],
+        "parameters": [
+          {
+            "name": "serviceId",
+            "in": "query",
+            "description": "service id",
+            "required": true,
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Execution",
             "schema": {
-                "$ref": "#/definitions/Policy"
+              "$ref": "#/definitions/Policy"
             },
             "headers": {
               "Access-Control-Allow-Headers": {
@@ -1408,8 +1420,32 @@
       "x-amazon-apigateway-authtype": "custom",
       "x-amazon-apigateway-authorizer": {
         "authorizerCredentials": "{conf-role}",
-        "authorizerResultTtlInSeconds": 300,
+        "authorizerResultTtlInSeconds": 0,
         "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
+        "type": "request"
+      }
+    },
+    "{envPrefix}-{domain}-cognito-admin-authorizer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "custom",
+      "x-amazon-apigateway-authorizer": {
+        "authorizerCredentials": "{conf-role}",
+        "authorizerResultTtlInSeconds": 0,
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-admin-authorizer-{envmnt}/invocations",
+        "type": "token"
+      }
+    },
+    "{envPrefix}-{domain}-token-authorizer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "custom",
+      "x-amazon-apigateway-authorizer": {
+        "authorizerCredentials": "{conf-role}",
+        "authorizerResultTtlInSeconds": 0,
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-token-authorizer-{envmnt}/invocations",
         "type": "token"
       }
     },

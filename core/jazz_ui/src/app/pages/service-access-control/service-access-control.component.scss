@@ -35,7 +35,6 @@
 .groups-wrap {
   display: flex;
   margin-bottom: -4px;
-
   input[type="radio"] {
     margin: .8rem 0 0;
   }
@@ -57,7 +56,6 @@
 .header-sec {
   padding: 0;
   display: flex;
-
   h1 {
     display: inline-block;
     font-size: 1.5rem;
@@ -79,6 +77,10 @@
     padding: .66rem 1.25rem;
     font-size: 1rem;
     font-weight: 700;
+  }
+
+  /deep/ button.btn[disabled] {
+    background-color: #fff !important;
   }
 }
 
@@ -244,8 +246,6 @@ input[type="text"] {
   font-size: 15px;
 }
 
-.access-label {}
-
 .step-title-head {
   padding: 0px 0px 16px 0px;
 }
@@ -342,9 +342,16 @@ input[type="text"] {
 
   .overlay-btns {
     display: flex;
-    justify-content: center;
     padding: 0 0 2.5rem 0;
-
+    justify-content: flex-start;
+    flex-direction: row-reverse;
+    a {
+      align-self: center;
+      cursor: pointer;
+    }
+    btn-jazz-primary{
+      margin:0 3rem;
+    }
     /deep/ btn-jazz-primary button.btn {
       padding: 1rem 3.25rem
     }
