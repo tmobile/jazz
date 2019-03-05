@@ -261,7 +261,7 @@ node() {
             } else if (config['event_source_dynamodb']) {
               handleDynamoDbStreamError(deployOutput, config, environment_logical_id, envBucketKey)
             } else {
-              handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id)
+              handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)
             }
           } else {
             if (config['event_source_s3']) {
@@ -1052,16 +1052,16 @@ def getBuildModuleUrl() {
   }
 }
 
-def handleDeploymentErrors(deployOutput, serviceName, env) {
+def handleDeploymentErrors(deployOutput, serviceName, env, credsId) {
 	if(deployOutput.contains('ROLLBACK_COMPLETE state and can not be updated')){
 		deleteAndRedeployService(env, serviceName)
 	}
 	else if (deployOutput.contains("CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"))
 	{
 		def lambda = "/aws/lambda/${serviceName}-${env}"
-		if (isExistingLogGroup(lambda)){
+		if (isExistingLogGroup(lambda, credsId)){
 			echo "Exception occured while serverless deploy : $logGroupErrString, Removing existing log group"
-			removeLogGroup(lambda)
+			removeLogGroup(lambda, credsId)
 			deployOutput = deleteAndRedeployService(env, serviceName);
 		} else {
 			error "Unable to find existing log groups"
@@ -1072,25 +1072,24 @@ def handleDeploymentErrors(deployOutput, serviceName, env) {
 	}
 }
 
-def isExistingLogGroup (groupName){
+def isExistingLogGroup (groupName, credsId){
 	def isExistingLogGrp = false
 	def filterLogs = sh (
-		script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile cloud-api",
+		script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile ${credsId}",
 		returnStdout: true
 	).trim()
 	def toJSON = new groovy.json.JsonSlurper()
 	def filterLogsJSON = toJSON.parseText(filterLogs)
 	def logGroups = filterLogsJSON.logGroups
-	echo "logGroups : $logGroups"
 	if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
 		isExistingLogGrp = true
 	}
 	return isExistingLogGrp
 }
 
-def removeLogGroup(groupName) {
+def removeLogGroup(groupName, credsId) {
 	echo "Removing log group $groupName"
-	sh "aws logs delete-log-group --log-group-name $groupName --profile cloud-api"
+	sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
 	echo "successfully removed log group $groupName"
 }
 

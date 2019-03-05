@@ -244,7 +244,7 @@ node() {
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey);
           if(deployOutput != 'success'){
-						handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id)						
+						handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)						
 					}
 
           def lambdaARN = getLambdaARN(stackName, credsId);
@@ -272,9 +272,9 @@ node() {
                 awsAPIGatewayModule.addApigatewayLambdaIntegration('swagger/swagger.json');
                 updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
 
-                sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile cloud-api"
-                sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile cloud-api"
-                sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+                sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile ${credsId}"
+                sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile ${credsId}"
+                sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile ${credsId}"
                 if ("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
                   sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
                 } else {
@@ -1068,8 +1068,6 @@ def loadBuildModules(buildModuleUrl){
 }
 
 def servelessDeploy(env, envBucketKey){
-    echo "which env: $env"
-    echo "which bucket key: $envBucketKey"
   try {
     sh "serverless deploy --stage ${env} -v --bucket ${configLoader.AWS.S3[envBucketKey]} --force > output.log"
     return "success"
@@ -1078,15 +1076,14 @@ def servelessDeploy(env, envBucketKey){
   }
 
   def outputLog = readFile('output.log').trim()
-  echo "serverless deployment log $outputLog"
   return outputLog
 }
 
 
-def isExistingLogGroup (groupName){
+def isExistingLogGroup (groupName, credsId){
 	def isExistingLogGrp = false
 	def filterLogs = sh (
-		script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile cloud-api",
+		script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile ${credsId}",
 		returnStdout: true
 	).trim()
 	def toJSON = new groovy.json.JsonSlurper()
@@ -1099,21 +1096,21 @@ def isExistingLogGroup (groupName){
 	return isExistingLogGrp
 }
 
-def removeLogGroup(groupName) {
-	sh "aws logs delete-log-group --log-group-name $groupName --profile cloud-api"
+def removeLogGroup(groupName, credsId) {
+	sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
 	echo "successfully removed log group $groupName"
 }
 
-def handleDeploymentErrors(deployOutput, serviceName, env) {
+def handleDeploymentErrors(deployOutput, serviceName, env, credsId) {
 	if(deployOutput.contains('ROLLBACK_COMPLETE state and can not be updated')){
 		deleteAndRedeployService(env, serviceName)
 	}
 	else if (deployOutput.contains("CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"))
 	{
 		def lambda = "/aws/lambda/${serviceName}-${env}"
-		if (isExistingLogGroup(lambda)){
+		if (isExistingLogGroup(lambda, credsId)){
 			echo "Exception occured while serverless deploy : $logGroupErrString, Removing existing log group"
-			removeLogGroup(lambda)
+			removeLogGroup(lambda, credsId)
 			deployOutput = deleteAndRedeployService(env, serviceName);
 		} else {
 			error "Unable to find existing log groups"
