@@ -1089,7 +1089,6 @@ def isExistingLogGroup (groupName, credsId){
 	def toJSON = new groovy.json.JsonSlurper()
 	def filterLogsJSON = toJSON.parseText(filterLogs)
 	def logGroups = filterLogsJSON.logGroups
-	echo "logGroups : $logGroups"
 	if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
 		isExistingLogGrp = true
 	}
