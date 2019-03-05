@@ -223,7 +223,8 @@ async function processCognitoUserDetails(event, context, result, config) {
 async function getAuthorizationDetails(event, user, resource, config) {
   let authToken = await auth.getAuthToken(config);
   if (event.httpMethod === 'GET' && resource.indexOf("services") !== -1) {
-    let serviceData = await aclServices.getServiceMetadata(config, authToken, user, event.headers['Jazz-Service-ID'.toLowerCase()]);
+    let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
+    let serviceData = await aclServices.getServiceMetadata(config, authToken, user, event.headers[header_key]);
     logger.debug("serviceData: " + JSON.stringify(serviceData))
     return {
       allow: true,
@@ -239,7 +240,8 @@ async function getAuthorizationDetails(event, user, resource, config) {
       logger.error("Incorrect method for /acl/policies" + event.httpMethod);
       return errorHandlerModule.throwInputValidationError("Method not supported");
     }
-    let permissionData = await aclServices.checkPermissionData(config, authToken, user, event.headers['Jazz-Service-ID'.toLowerCase()], "manage", permission);
+    let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
+    let permissionData = await aclServices.checkPermissionData(config, authToken, user, event.headers[header_key], "manage", permission);
     logger.debug("acl/policies Data : " + JSON.stringify(permissionData))
     return {
       allow: permissionData.authorized
@@ -262,7 +264,8 @@ async function getAuthorizationDetails(event, user, resource, config) {
         permission = 'admin'
       }
     }
-    let permissionData = await aclServices.checkPermissionData(config, authToken, user, event.headers['Jazz-Service-ID'.toLowerCase()], category, permission);
+    let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
+    let permissionData = await aclServices.checkPermissionData(config, authToken, user, event.headers[header_key], category, permission);
     logger.debug("permissionData: " + JSON.stringify(permissionData))
     return {
       allow: permissionData.authorized
