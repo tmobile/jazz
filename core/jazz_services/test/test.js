@@ -165,6 +165,14 @@ describe('platform_services', function() {
     assert.isTrue(attemptBool);
   });
 
+  it("should indicate unauthorized error while accessing data from dynamoDB by id if 'GET' method and id are defined, but user does not have access permission", function(){
+    event.method = "GET";
+    event.services = "[]"
+    index.handler(event, context, (err, res) => {
+      expect(err).to.include('{"errorType":"Unauthorized","message":"You aren\'t authorized to access this service."}')
+    });
+  });
+
   /*
   * Given a failed attempt at fetching data from DynamoDB, handler() should inform of error
   * @param {object} event -> event.method is defined to be "GET", event.path.id is defined
@@ -267,8 +275,42 @@ describe('platform_services', function() {
   it("should attempt to get all/filtered items from dynamoDB if 'GET' method and no id are defined", function(){
     event.method = "GET";
     event.path.id = undefined;
-    var attemptBool = dynamoCheck("scan", spy);
-    assert.isTrue(attemptBool);
+    let dataObj = {
+      Items: [
+        {
+          SERVICE_ID: {S: "k!ngd0m_0f_Mewni"},
+          TIMESTAMP: {S: "qwerty"},
+          SERVICE_NAME: {S: event.query.service},
+          SERVICE_NAMESPACE: {S: event.query.domain}
+        }
+      ]
+    }
+    AWS.mock("DynamoDB", "scan", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    index.handler(event, context, (err, res) => {
+      expect(res).to.include.all.keys("data", "input");
+      expect(res.data).to.include.all.keys("count", "services");
+      let serviceList = res.data.services;
+      for (i in serviceList) {
+        expect(serviceList[i].service).to.eq(dataObj.Items[i].SERVICE_NAME.S);
+        expect(serviceList[i].namespace).to.eq(dataObj.Items[i].SERVICE_NAMESPACE.S);
+        expect(serviceList[i].id).to.eq(dataObj.Items[i].SERVICE_ID.S);
+      };
+      AWS.restore("DynamoDB");
+    });
+  });
+
+  it("should expect empty list to get from dynamoDB for 'GET' method if id is defined and user don't have access to any services", function(){
+    event.method = "GET";
+    event.path.id = undefined;
+    event.services = "[]"
+    index.handler(event, context, (err, res) => {
+      expect(res).to.include.all.keys("data", "input");
+      expect(res.data).to.include.all.keys("count", "services");
+      expect(res.data.count).to.eq(0);
+      expect(res.data.services).to.be.empty;
+    });
   });
 
   /*

@@ -56,13 +56,7 @@ module.exports = (query, servicesList, onComplete) => {
         attributeNames = {
             "#serviceId": "SERVICE_ID"
         }
-    } else {
-        return onComplete(null, {
-            count: 0,
-            services: []
-        });
     }
-
 
     if (query !== undefined && query !== null) {
 
