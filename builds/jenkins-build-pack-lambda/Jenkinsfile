@@ -684,7 +684,9 @@ def validateDeploymentConfigurations(def prop) {
 		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
 			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
 		}
-	} else {
+	} else if (config['platform'] == "azure") {
+    // we use azure default timeout
+  } else {
 		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
 	}
 
