@@ -49,356 +49,156 @@ def loadServiceConfigurationData() {
         }
 
         if ((config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_is-slack-channel-available")) {
-            sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{slack_channel_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
+            updateConfigValue("{slack_channel_token}", config_loader.SLACK.SLACK_TOKEN);
         }
 
         if (service_name.trim() == "jazz_metrics") {
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            updateCoreAPI();
+            updateConfigValue("{conf-region}", region);
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN);
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD);
+ 
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/global-config.json"
-
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
+            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
             sh "sed -i -- 's/{conf-apikey-dev}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/global-config.json"
             sh "sed -i -- 's/{conf-apikey-stg}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/global-config.json"
             sh "sed -i -- 's/{conf-apikey-prod}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/global-config.json"
-
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
-
         }
 
         if (service_name.trim() == "jazz_codeq") {
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{sonar_hostname}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{sonar_hostname}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{sonar_hostname}/${config_loader.CODE_QUALITY.SONAR.HOST_NAME}/g' ./config/prod-config.json"
+            updateCoreAPI();
+            updateConfigValue("{conf-region}", region);
+            updateConfigValue("{sonar_hostname}", config_loader.CODE_QUALITY.SONAR.HOST_NAME);
+            updateConfigValue("{key_prefix}", config_loader.CODE_QUALITY.SONAR.KEY_PREFIX);
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN);
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD);
 
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.CODE_QUALITY.SONAR.ADMIN_SONAR_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
-                sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{sonar_user}/${UNAME}/g' ./config/prod-config.json"
-
-                sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{sonar_creds}/${PWD}/g' ./config/prod-config.json"
+                updateConfigValue("{sonar_user}", UNAME);
+                updateConfigValue("{sonar_creds}", PWD);
             }
-
-            sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{key_prefix}/${config_loader.CODE_QUALITY.SONAR.KEY_PREFIX}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
         }
 
         if (service_name.trim() == "jazz_assets") {
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            updateConfigValue("{conf_stack_prefix}", config_loader.INSTANCE_PREFIX);
+            updateConfigValue("{conf-region}", region);
         }
 
         if (service_name.trim() == "jazz_deployments") {
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+            updateConfigValue("{conf_stack_prefix}", config_loader.INSTANCE_PREFIX);
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN);
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD);
         }
 
         if (service_name.trim() == "jazz_scm-webhook") {
-
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-
+            updateCoreAPI();
+            updateConfigValue("{conf-region}", region);
         }
 
         if (service_name.trim() == "jazz_environments") {
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
+            updateCoreAPI()
+            updateConfigValue("{conf-region}", region)
+            updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
         }
 
         if (service_name.trim() == "jazz_environment-event-handler") {
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+            updateCoreAPI()
+            updateConfigValue("{conf-region}", region)
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
         }
 
         if (service_name.trim() == "jazz_asset-event-handler") {
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+            updateCoreAPI()
+            updateConfigValue("{conf-region}", region)
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
 
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./event.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
-
         }
 
         if (service_name.trim() == "jazz_deployments-event-handler") {
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
+            updateCoreAPI()
+            updateConfigValue("{conf-region}", region)
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
         }
 
         if ((config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_slack-event-handler")) {
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{slack_token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
-
+            updateCoreAPI()
+            updateConfigValue("{conf-region}", region)
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+            updateConfigValue("{slack_notifier_name}", config_loader.SLACK.SLACK_USER)
+            updateConfigValue("{slack_token}", config_loader.SLACK.SLACK_TOKEN)
         }
 
         if ((service_name.trim() == "jazz_events") || (service_name.trim() == "jazz_events-handler")) {
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+            updateConfigValue("{conf_stack_prefix}", config_loader.INSTANCE_PREFIX)
 
             if (service_name.trim() == "jazz_events") {
-                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+                updateConfigValue("{conf-region}", region)
             }
         }
 
         if ((service_name.trim() == "jazz_services-handler") || (service_name.trim() == "jazz_create-serverless-service")) {
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
-
-            if(service_name.trim() == "jazz_services-handler") {
-                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-            }
-
+            updateCoreAPI()
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+            updateConfigValue("{conf-region}", region)
         }
 
-        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout")) {
-            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-
-            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-
-            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
-            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
+        if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer")) {
+            updateConfigValue("{conf-user-pool-id}", config_loader.AWS.COGNITO.USER_POOL_ID)
+            updateConfigValue("{conf-client-id}", config_loader.AWS.COGNITO.CLIENT_ID)
+            updateConfigValue("{conf-region}", region)
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
         }
 
         if (service_name.trim() == "jazz_cognito-authorizer") {
-
-            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
             sh "sed -i -- 's/{conf-region}/${region}/g' ./config/local-config.json"
-
-            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-
-            sh "sed -i -- 's/{conf-user-pool-id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
-            sh "sed -i -- 's/{conf-client-id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
         }
 
 
         if (service_name.trim() == "jazz_is-service-available") {
-            sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
+            updateConfigValue("{conf-region}", region)
         }
 
         if (service_name.trim() == "jazz_create-serverless-service") {
-            sh "sed -i -- 's/{conf-account}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-account}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-account}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/prod-config.json"
+            updateConfigValue("{conf-account}", config_loader.AWS.DEFAULTS.ACCOUNTID)
+            updateConfigValue("{conf-provider}", config_loader.AWS.DEFAULTS.PROVIDER)
             sh "sed -i -- 's/{conf-account}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./config/test-config.json"
-
-            sh "sed -i -- 's/{conf-provider}/${config_loader.JAZZ.DEFAULTS.PROVIDER}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-provider}/${config_loader.JAZZ.DEFAULTS.PROVIDER}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-provider}/${config_loader.JAZZ.DEFAULTS.PROVIDER}/g' ./config/prod-config.json"
             sh "sed -i -- 's/{conf-provider}/${config_loader.JAZZ.DEFAULTS.PROVIDER}/g' ./config/test-config.json"
         }
 
         if ((service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service")
             || (service_name.trim() == "jazz_deployments") || (service_name.trim() == "jazz_environment-event-handler")) {
-            sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-jenkins-host}/${jenkins_url}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{job_token}/${config_loader.JENKINS.JOB_AUTH_TOKEN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{api_token}/${utilModule.getApiToken()}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{api_token}/${utilModule.getApiToken()}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{api_token}/${utilModule.getApiToken()}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            updateCoreAPI()
+            updateConfigValue("{conf-jenkins-host}", jenkins_url)
+            updateConfigValue("{job_token}", config_loader.JENKINS.JOB_AUTH_TOKEN)
+            updateConfigValue("{api_token}", utilModule.getApiToken())
+            updateConfigValue("{conf-region}", region)
 
             sh "sed -i -- 's/{conf-region}/${region}/g' ./event.json"
 
             withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
-                sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{ci_user}/${UNAME}/g' ./config/prod-config.json"
+                updateConfigValue("{ci_user}", UNAME)
             }
         }
 
         if (service_name.trim() == "jazz_services") {
-
-            sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{inst_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
+            updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
         }
 
         if ((service_name.trim() == "jazz_logs") || (service_name.trim() == "jazz_cloud-logs-streamer") || (service_name.trim() == "jazz_es-kinesis-log-streamer")) {
 
-            sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{inst_elastic_search_hostname}/${config_loader.AWS.ES_HOSTNAME}/g' ./config/prod-config.json"
+            updateConfigValue("{inst_elastic_search_hostname}", config_loader.AWS.ES_HOSTNAME)
 
             if (service_name.trim() == "jazz_logs") {
-                sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{env-prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/prod-config.json"
+                updateConfigValue("{env-prefix}", config_loader.INSTANCE_PREFIX)
             }
         }
 
@@ -411,13 +211,8 @@ def loadServiceConfigurationData() {
             sh "sed -i -- 's|{splunk_endpoint}|${config_loader.SPLUNK.ENDPOINT}|g' ./config/stg-config.json"
             sh "sed -i -- 's|{splunk_endpoint}|${config_loader.SPLUNK.ENDPOINT}|g' ./config/prod-config.json"
 
-            sh "sed -i -- 's/{spunk_hec_token}/${config_loader.SPLUNK.HEC_TOKEN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{spunk_hec_token}/${config_loader.SPLUNK.HEC_TOKEN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{spunk_hec_token}/${config_loader.SPLUNK.HEC_TOKEN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{splunk_index}/${config_loader.SPLUNK.INDEX}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{splunk_index}/${config_loader.SPLUNK.INDEX}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{splunk_index}/${config_loader.SPLUNK.INDEX}/g' ./config/prod-config.json"
+            updateConfigValue("{spunk_hec_token}", config_loader.SPLUNK.HEC_TOKEN)
+            updateConfigValue("{splunk_index}", config_loader.SPLUNK.INDEX)
 
             sh "sed -i -- 's/{enable_splunk_logging_global}/${config_loader.SPLUNK.IS_ENABLED}/g' ./config/global-config.json"
             sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global-config.json"
@@ -425,56 +220,33 @@ def loadServiceConfigurationData() {
         }
 
         if (service_name.trim() == "jazz_usermanagement") {
-            sh "sed -i -- 's/{user_pool_id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{user_pool_id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{user_pool_id}/${config_loader.AWS.COGNITO.USER_POOL_ID}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{user_client_id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{user_client_id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{user_client_id}/${config_loader.AWS.COGNITO.CLIENT_ID}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{region}/${region}/g' ./config/prod-config.json"
+            updateConfigValue("{user_pool_id}", config_loader.AWS.COGNITO.USER_POOL_ID)
+            updateConfigValue("{user_client_id}", config_loader.AWS.COGNITO.CLIENT_ID)
+            updateConfigValue("{region}", region)
         }
 
         if (( service_name.trim() == "jazz_usermanagement")) {
 
-            sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/prod-config.json"
-
+            updateConfigValue("{scm_type}", config_loader.SCM.TYPE)
             sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
             sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/stg-config.json"
             sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/prod-config.json"
 
             if (config_loader.SCM.TYPE == "bitbucket") {
               withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-                  sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/dev-config.json"
-                  sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/stg-config.json"
-                  sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/prod-config.json"
-
-                  sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/dev-config.json"
-                  sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/stg-config.json"
-                  sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/prod-config.json"
+                  updateConfigValue("{bb_username}", UNAME)
+                  updateConfigValue("{bb_password}", PWD)
               }
             }
 
             if (config_loader.SCM.TYPE == "gitlab") {
-                sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/dev-config.json"
-                sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/stg-config.json"
-                sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/prod-config.json"
+                updateConfigValue("{private_token}", config_loader.SCM.PRIVATE_TOKEN)
             }
         }
 
         if (service_name.trim() == "jazz_admin") {
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+            updateConfigValue("{conf-region}", region)
 
             sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/dev-config.json"
             sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/stg-config.json"
@@ -482,49 +254,36 @@ def loadServiceConfigurationData() {
         }
 
         if (service_name.trim() == "jazz_email") {
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
+            updateConfigValue("{conf-region}", region)
         }
 
         if ((config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_slack-channel")) {
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin}/${config_loader.JAZZ.ADMIN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{slack_notifier_name}/${config_loader.SLACK.SLACK_USER}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{slack-token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{slack-token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{slack-token}/${config_loader.SLACK.SLACK_TOKEN}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{slack-workspace}/${config_loader.SLACK.SLACK_WORKSPACE}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{slack-workspace}/${config_loader.SLACK.SLACK_WORKSPACE}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{slack-workspace}/${config_loader.SLACK.SLACK_WORKSPACE}/g' ./config/prod-config.json"
-
-            sh "sed -i -- 's/{svc_acc_id}/${config_loader.SLACK.SLACK_SVC_ID}/g' ./config/dev-config.json"
-            sh "sed -i -- 's/{svc_acc_id}/${config_loader.SLACK.SLACK_SVC_ID}/g' ./config/stg-config.json"
-            sh "sed -i -- 's/{svc_acc_id}/${config_loader.SLACK.SLACK_SVC_ID}/g' ./config/prod-config.json"
+            updateCoreAPI()
+            updateConfigValue("{conf-region}", region)
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+            updateConfigValue("{slack_notifier_name}", config_loader.SLACK.SLACK_USER)
+            updateConfigValue("{slack-token}", config_loader.SLACK.SLACK_TOKEN)
+            updateConfigValue("{slack-workspace}", config_loader.SLACK.SLACK_WORKSPACE)
+            updateConfigValue("{svc_acc_id}", config_loader.SLACK.SLACK_SVC_ID)
 
         }
     } catch (e) {
         echo "error occured while loading service configuration: " + e.getMessage()
         error "error occured while loading service configuration: " + e.getMessage()
     }
+}
+
+def updateConfigValue(key, val) {
+    sh "sed -i -- 's/${key}/${val}/g' ./config/dev-config.json"
+    sh "sed -i -- 's/${key}/${val}/g' ./config/stg-config.json"
+    sh "sed -i -- 's/${key}/${val}/g' ./config/prod-config.json"
+}
+
+def updateCoreAPI() {
+    sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
+    sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
+    sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
 }
 
 def setRoleARN(roleArn){
@@ -552,7 +311,7 @@ def setKinesisStream(config){
     if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ||
         (config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler") ||
         (config['service'] == "asset-event-handler") || ((config['service'] == "slack-event-handler") && (config_loader.SLACK.ENABLE_SLACK == "true"))) {
-        def kinesisArn = "arn:aws:kinesis:$region:$role_id:stream/${config_loader.INSTANCE_PREFIX}-events-hub-${current_environment}"
+        def kinesisArn = "arn:aws:kinesis:$region:$accountId:stream/${config_loader.INSTANCE_PREFIX}-events-hub-${current_environment}"
         setEventSourceMapping(kinesisArn, config)
     } else if ((config['service'].trim() == "es-kinesis-log-streamer") || (config['service'].trim() == "splunk-kinesis-log-streamer")) {
       def kinesisArn = config_loader.AWS.KINESIS_LOGS_STREAM.PROD
@@ -568,7 +327,7 @@ def setEventSourceMapping(eventSourceArn, config) {
   ).trim()
   echo "$event_source_list"
   if (event_source_list == "[]") {
-      sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$role_id:function:$function_name --enabled --starting-position LATEST --region $region"
+      sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$accountId:function:$function_name --enabled --starting-position LATEST --region $region"
   }
 }
 
