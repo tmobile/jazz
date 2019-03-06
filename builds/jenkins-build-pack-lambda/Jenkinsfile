@@ -263,8 +263,9 @@ node() {
             try {
               def endpoint = azureDeployer.createFunction(serviceInfo)
               environmentDeploymentMetadata.setEnvironmentEndpoint(endpoint)
+              def svc_response = "Your service endpoint: $endpoint"
 
-              sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner)
+              sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response)
 
             } catch (ex) {
               handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
@@ -362,24 +363,26 @@ node() {
             serviceConfigdata.setLogStreamPermission(config)
             serviceConfigdata.setKinesisStream(config)
           }
-          def svc_response = echoServiceInfo(environment_logical_id)
-          send_status_email(config, 'COMPLETED', svc_response)
 
         } catch (ex) {
           handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
         }
         environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
-        sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner)
+        def svc_response = echoServiceInfo(environment_logical_id)
+        sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response)
       } //end of withCredentials
     } //end of deployment to an environment
   }
 }
 
 
-private void sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner) {
+private void sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response) {
 
   def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
-
+  echo "==============================================================================================="
+  echo svc_response
+  echo "==============================================================================================="
+  send_status_email(config, 'COMPLETED', svc_response)
   events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null), environment_logical_id)
   events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
   events.sendCompletedEvent('DEPLOY_TO_AWS', "Successfully deployed services to ${servicePlatform}", serviceContext, environment_logical_id)
@@ -681,7 +684,9 @@ def validateDeploymentConfigurations(def prop) {
 		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
 			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
 		}
-	} else {
+	} else if (config['platform'] == "azure") {
+    // we use azure default timeout
+  } else {
 		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
 	}
 
@@ -774,10 +779,6 @@ def echoServiceInfo(String env) {
         svc_response = "Your service endpoint: " + arn
       }
     }
-
-    echo "==============================================================================================="
-    echo svc_response
-    echo "==============================================================================================="
 
     return svc_response
 
