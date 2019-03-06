@@ -37,7 +37,7 @@ export class CreateServiceComponent implements OnInit {
   disablePlatform = true;
   selected:string = "Minutes";
   runtime:string = Object.keys(env_oss.envLists)[0];
-  webtime:string = Object.keys(env_oss.WebLists)[0];
+  webtime:string = Object.keys(env_oss.webLists)[0];
   eventSchedule:string = 'fixedRate';
   private slackSelected: boolean = false;
   private ttlSelected: boolean = false;
@@ -110,7 +110,7 @@ export class CreateServiceComponent implements OnInit {
     this.toastmessage = messageservice;
     this.runtimeObject = env_oss.envLists;
     this.runtimeKeys = Object.keys(this.runtimeObject);
-    this.webObject = env_oss.WebLists;
+    this.webObject = env_oss.webLists;
     this.webKeys = Object.keys(this.webObject);
   }
 
@@ -367,7 +367,7 @@ export class CreateServiceComponent implements OnInit {
       }
 
     } else if(this.typeOfService == 'website'){
-      payload["runtime"] = this.webtime;
+      payload["framework"] = this.webtime;
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
     }
 
