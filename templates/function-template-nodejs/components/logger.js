@@ -49,6 +49,8 @@ module.exports = function () {
   const setLevel = (level, context) => {
     // LOG_LEVEL is 'info' by default
     this.context = context;
+    this.config.requestDetails = context.invocationId;
+
     if (level && logLevels[level]) {
       // If LOG_LEVEL if explicitly specified , set it as the curLogLevel
       config.curLogLevel = level;
@@ -69,19 +71,18 @@ module.exports = function () {
   };
 
   const log = (level, message) => {
-    const timestamp = new Date().toISOString();
 
     if (logLevels[level] >= logLevels[config.curLogLevel]) {
       if (level === 'error') {
-        this.context.log.error(timestamp, 'ERROR \t', config.requestDetails, message);
+        this.context.log.error(config.requestDetails, message);
       } else if (level === 'warn') {
-        this.context.log.warn(timestamp, 'WARN  \t', config.requestDetails, message);
+        this.context.log.warn( config.requestDetails, message);
       } else if (level === 'info') {
-        this.context.log.info(timestamp, 'INFO  \t', config.requestDetails, message);
+        this.context.log.info(config.requestDetails, message);
       } else if (level === 'verbose') {
-        this.context.log.info(timestamp, 'VERBOSE  \t', config.requestDetails, message);
+        this.context.log.verbose( config.requestDetails, message);
       } else {
-        this.context.log(timestamp, level, '\t', config.requestDetails, message);
+        this.context.log(config.requestDetails, message);
       }
     }
 
