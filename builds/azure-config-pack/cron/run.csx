@@ -1,10 +1,10 @@
-#load "..\TimerHandler.csx"
+#load "..\Handler.csx"
 using System;
 
-public static void Run(TimerInfo myEvent, ILogger log)
+public static void Run(TimerInfo myEvent, ILogger log, ExecutionContext context)
 {
 
-    log.LogInformation(myEvent.ToString());
-    TimerHandler handler = new TimerHandler();
-    handler.handle(log, myEvent);
+    Handler<TimerInfo> handler = new Handler<TimerInfo>();
+    string result = handler.execute(myEvent, log, context);
+    log.LogInformation($"response: {result}");
 }

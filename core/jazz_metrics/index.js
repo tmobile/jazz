@@ -497,7 +497,8 @@ function azureMetricDetails(definitions, config, assetParam, eventBody) {
               dot.data.forEach(p => {
                 definitions[defname]["supportedAggregationTypes"].forEach(aggr=> {
                   if (aggr.toUpperCase() === statistics.toUpperCase()){
-                    point = {"Timestamp": p.timeStamp, "Unit": aggr, "Sum": p[aggr.toLowerCase()]};
+                    point = {"Timestamp": p.timeStamp, "Unit": aggr};
+                    point[statistics] = p[aggr.toLowerCase()];
                     datapoints.push(point);
                   }
                 })

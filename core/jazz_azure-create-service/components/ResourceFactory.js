@@ -385,7 +385,7 @@ module.exports = class ResourceFactory {
     let storageAccountKeys = await this.listStorageAccountKeys(data.appName);
     let storageAccountKey = storageAccountKeys.keys[0].value;
     const connectionString = await functionCreateHandler.getConnectionString(data, this.factory);
-    return await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, connectionString);
+    return await this.createFunctionApp(data.stackName, storageAccountKey, data.tags, data.appName, data.resourceGroupName, data.location, connectionString, data.runtime);
 
   }
 
