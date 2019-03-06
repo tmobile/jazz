@@ -92,20 +92,26 @@ node()  {
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
 	def environment_logical_id
-	def dataObjValues = getRequiredData();
+	def s3BucketValue = getRequiredData();
 	if (params.scm_branch == 'master') {
 		environment_logical_id = 'prod'
 		current_environment = 'PROD'
-		// s3Bucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
-		s3Bucket = dataObjValues.S3[current_environment]
+		for (item in s3BucketValue.REGIONS) {
+			if(item.REGION == service_config.region){
+				s3Bucket = item.S3[current_environment]
+			}
+		}
 	} else {
     environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
 		if (!environment_logical_id) {
 			error "The environment has not been created yet and its missing the logical Id"
 		}
 		current_environment = "DEV"
-		// s3Bucket = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
-		s3Bucket = dataObjValues.S3[current_environment]
+		for (item in s3BucketValue.REGIONS) {
+			if(item.REGION == service_config.region){
+				s3Bucket = item.S3[current_environment]
+			}
+		}
 	}
 
   environment = environment_logical_id
@@ -167,7 +173,12 @@ node()  {
 			def randomString = utilModule.generateRequestId();
 			def credsId = "jazz-${randomString}";
 			def dataObjValues = getRequiredData();
-			def s3BucketNameValue = dataObjValues.S3[current_environment];
+			def s3BucketNameValue
+			for (item in dataObjValues.REGIONS) {
+				if(item.REGION == service_config.region){
+					s3BucketNameValue = item.S3[current_environment]
+				}
+			}
 
 			def origin_access_identity_ID = dataObjValues.CLOUDFRONT.CLOUDFRONT_ORIGIN_ID.split("/");
 			origin_access_identity_ID = origin_access_identity_ID[origin_access_identity_ID.length - 1];
