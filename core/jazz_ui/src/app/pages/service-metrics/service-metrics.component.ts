@@ -223,8 +223,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         let paths = _(this.queryDataRaw.assets)
           .map('asset_name.Resource')
           .uniq().value();
-        this.filters.addField('Filter By:', 'METHOD', methods, null, 'GET');
-        this.filters.addField('Filter By:', 'PATH', paths);
+        if (this.platform != 'azure'){
+          this.filters.addField('Filter By:', 'METHOD', methods, null, 'GET');
+          this.filters.addField('Filter By:', 'PATH', paths);
+        }
         break;
       case 'website':
         let websiteAssets = _(this.queryDataRaw.assets).map('type').uniq().value();
@@ -236,11 +238,15 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   setAsset() {
     switch (this.serviceType) {
       case 'api':
-        let method = this.filters.getFieldValueOfLabel('METHOD');
-        let path = this.filters.getFieldValueOfLabel('PATH');
-        this.selectedAsset = _.find(this.queryDataRaw.assets, (asset) => {
-          return asset.asset_name.Method === method && asset.asset_name.Resource === path;
-        });
+        if (this.platform == 'azure'){
+          this.selectedAsset = this.queryDataRaw.assets[0];
+        } else {
+          let method = this.filters.getFieldValueOfLabel('METHOD');
+          let path = this.filters.getFieldValueOfLabel('PATH');
+          this.selectedAsset = _.find(this.queryDataRaw.assets, (asset) => {
+            return asset.asset_name.Method === method && asset.asset_name.Resource === path;
+          });
+        }
         break;
       case 'function':
         this.selectedAsset = this.queryDataRaw.assets[0];

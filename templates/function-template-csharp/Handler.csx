@@ -9,7 +9,7 @@ public class Handler<T> {
 
     public string execute(T myEvent, ILogger log, ExecutionContext context)
     {
-        Logger.init(log);
+        Logger.init(log, context);
         Logger.debug($"C# trigger function executed : {context.FunctionName}");
         Logger.debug($"my event: {myEvent}");
 
