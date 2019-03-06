@@ -70,7 +70,12 @@ node  {
 				switch (service_config['type']) {
 					case "api":
 						if (service_config['runtime'].startsWith("nodejs")) {
-							service_template = "api-template-nodejs"
+              if(service_config['platform'] == "azure"){
+                service_template = "azure-api-template-nodejs"
+              }
+              else {
+                service_template = "api-template-nodejs"
+              }
 						}
 						else if (service_config['runtime'].startsWith("python")){
 							service_template = 'api-template-python'	

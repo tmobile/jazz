@@ -237,27 +237,40 @@ node() {
             sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
             if (servicePlatform == 'azure') {
-                  azureDeployer.loadAzureConfig(runtime, scmModule, repo_credential_id)
-                  if(environment_logical_id == "prod")
-                  {
-                    azureRG = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
-                    AzureApim =  configLoader.AZURE.APIM["PRODUCTION"]
-                  }
-                  else if(environment_logical_id == "stg"){
-                    azureRG = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
-                    AzureApim =  configLoader.AZURE.APIM["STAGING"]
-                  }
-                  else if(environment_logical_id == "dev"){
-                    azureRG = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
-                    AzureApim =  configLoader.AZURE.APIM["DEVELOPMENT"]
-                  }
-                  endpointUrl="https://${stackName}.azure-api.net/api"
-                  swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
+              withCredentials([
+                [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
+                [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
+                [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
+                [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
+              ]) {
+                //   azureDeployer.loadAzureConfig(runtime, scmModule, repo_credential_id)
+                if (environment_logical_id == "prod") {
+                  AzureRG = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
+                  AzureApim =  configLoader.AZURE.APIM["PRODUCTION"]
+                  logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
+                }
+                else if(environment_logical_id.split('-')[1] == "stg"){
+                  AzureRG = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
+                  AzureApim =  configLoader.AZURE.APIM["STAGING"]
+                  logicalId = environment_logical_id.split('-')[0] //13 + 10
+                }
+                else if(environment_logical_id.split('-')[1] == "dev"){
+                  AzureRG = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
+                  AzureApim =  configLoader.AZURE.APIM["DEVELOPMENT"]
+                  logicalId = environment_logical_id.split('-')[0] //13 + 10
+                }
+                endpointUrl="https://${stackName}.azure-api.net/api"
+                swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
+                apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.ApiManagement/service/$AzureApim"
+                echo "oscartesthere"
+                echo apigateway
 
-                  azureDeployer.createApi(stackName)
 
-                  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", swaggerDocUrl, "swagger_url", config), environment_logical_id)
-                  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", apigateway, "apigateway", config), environment_logical_id)
+                createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name)
+
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", swaggerDocUrl, "swagger_url", config), environment_logical_id)
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", apigateway, "apigateway", config), environment_logical_id)
+              }
 
             } else {
 
@@ -272,8 +285,8 @@ node() {
 //              envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
               sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
-              def lambdaARN = getLambdaARN(stackName, credsId);
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+              def lambdaARN = getLambdaARN(stackName, credsId)
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id)
 
               if (fileExists('swagger/swagger.json')) {
                 echo "Generating swagger file for environment: ${env_key}"
@@ -997,4 +1010,66 @@ def loadBuildModules(buildModuleUrl){
     azureDeployer = load "azure-deploy-api-module.groovy"
 
   }
+}
+
+def createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name ) {
+  writeSwaggerFile(stackName)
+  sh "cd .. && rm -rf content.zip && zip -r content.zip ${repo_name} && ls -l && pwd"
+  sh "cd .. && ls -l"
+  sh "cd ${repo_name} && ls -l"
+  def zip = sh(script: 'readlink -f ../content.zip', returnStdout: true).trim()
+  def swagger = sh(script: 'readlink -f swagger/swagger.json', returnStdout: true).trim()
+  def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
+  def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
+
+  def payloadString = [
+    className : "ApiApp",
+    command   : "create",
+    data      : [
+      resourceGroupName : AzureRG,
+      storageName       : storageName,
+      appName           : stackName,
+      tags: [
+        application : configLoader.INSTANCE_PREFIX,
+        owner       : config['created_by'],
+        domain      : config['domain'],
+        STAGE       : environment_logical_id,
+        environment : environment_logical_id,
+        service     : stackName
+      ],
+      serviceName       : AzureApim,
+      apiId             : stackName,
+      tenantId          : AZURE_TENANT_ID,
+      subscriptionId    : AZURE_SUBSCRIPTION_ID,
+      clientId          : AZURE_CLIENT_ID,
+      clientSecret      : AZURE_CLIENT_SECRET,
+      zip               : zip,
+      basepath          : stackName,
+      swagger           : swagger
+    ]
+  ]
+
+  //apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.ApiManagement/service/$AzureApim"
+
+  def azure_create_service_repo_name = "jazz_azure-create-service"
+  sh 'rm -rf ' + azure_create_service_repo_name
+  sh 'mkdir ' + azure_create_service_repo_name
+
+  def repocloneUrl = scmModule.getCoreRepoCloneUrl(azure_create_service_repo_name)
+
+  dir(azure_create_service_repo_name)
+    {
+      checkout([$class: 'GitSCM', branches: [[name: '*/' + "master"]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
+      sh "npm install -s"
+      def json = JsonOutput.toJson(payloadString)
+      writeFile(file:'payload.json', text: json)
+      sh "./bin/jazz-azure-cli ./payload.json"
+    }
+
+  sh 'rm -rf ' + azure_create_service_repo_name
+
+}
+
+def writeSwaggerFile(stackName) {
+  sh "sed -i -- 's/\${domain}/${stackName}/g' swagger/swagger.json"
 }
