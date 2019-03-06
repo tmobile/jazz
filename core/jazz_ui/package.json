@@ -27,7 +27,7 @@
     "@ng-bootstrap/ng-bootstrap": "^1.0.0-alpha.26",
     "@ng-idle/core": "2.0.0-beta.12",
     "@ng-idle/keepalive": "2.0.0-beta.12",
-    "@types/lodash": "^4.14.111",
+    "@types/lodash": "4.14.111",
     "angular2-moment": "^1.6.0",
     "angular2-number-picker": "^0.8.8",
     "angular2-toaster": "^2.0.0",
