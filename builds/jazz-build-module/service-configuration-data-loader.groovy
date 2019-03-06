@@ -188,8 +188,8 @@ def loadServiceConfigurationData() {
         }
 
         if (service_name.trim() == "jazz_cognito-authorizer") {
-            sh "sed -i -- 's/{conf-region}/${region}/g' ./config/local-config.json"
-            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+           updateCoreAPI()
+           updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
         }
 
         if (service_name.trim() == "jazz_is-service-available") {

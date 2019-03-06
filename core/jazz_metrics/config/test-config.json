@@ -3,5 +3,6 @@
   "ASSETS_URL": "/test/jazz/assets",
   "TOKEN_URL": "/test/jazz/login",
   "SERVICE_USER": "xyz@abc.com",
-  "TOKEN_CREDS": "aqaqaaqaqaqaqaq"
+  "TOKEN_CREDS": "aqaqaaqaqaqaqaq",
+  "SERVICE_ID_HEADER_KEY": "Jazz-Service-ID"
 }

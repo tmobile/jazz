@@ -34,7 +34,9 @@ const getServiceMetadata = async (config, authToken, user, serviceId) => {
       rejectUnauthorized: false
     };
 
+    logger.debug("svcPayload : " + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
+      logger.debug("getServiceMetadata response : " + JSON.stringify(response));
       if (error) {
         logger.error("Failed to fetch service data: " + JSON.stringify(error));
         return reject(error);
@@ -59,10 +61,10 @@ const getServiceMetadata = async (config, authToken, user, serviceId) => {
   });
 };
 
-const checkPermissionData = async (config, authToken, user, seerviceId, category, permission) => {
+const checkPermissionData = async (config, authToken, user, serviceId, category, permission) => {
   return new Promise((resolve, reject) => {
     const svcPayload = {
-      uri: '${config.BASE_API_URL}${config.ACL_CHECKPERMISSION_API}/?userId=${user}&serviceId=${serviceId}&permission=${permission}&category=${category}',
+      uri: `${config.BASE_API_URL}${config.ACL_CHECKPERMISSION_API}/?userId=${user}&serviceId=${serviceId}&permission=${permission}&category=${category}`,
       method: 'GET',
       headers: {
         'Authorization': authToken
@@ -70,7 +72,9 @@ const checkPermissionData = async (config, authToken, user, seerviceId, category
       rejectUnauthorized: false
     };
 
+    logger.debug("checkPermissionData svcPayload : " + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
+      logger.debug("checkPermissionData response : " + JSON.stringify(response));
       if (error) {
         logger.error("Failed to fetch permission data: " + JSON.stringify(error));
         return reject(error);
@@ -82,13 +86,13 @@ const checkPermissionData = async (config, authToken, user, seerviceId, category
         } else {
           logger.error("Failed to fetch permission data: " + JSON.stringify(response));
           return reject({
-            "error": "Could not find permission for : " + queryString + " in auth database. "
+            "error": "Could not find permission for : " + serviceId + " in auth database. "
           });
         }
       } else {
         logger.error("Failed to fetch permission data: " + JSON.stringify(response));
         return reject({
-          "error": "Could not find permission for : " + queryString + " in auth database. "
+          "error": "Could not find permission for : " + serviceId + " in auth database. "
         });
       }
     });

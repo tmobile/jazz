@@ -3,5 +3,6 @@
   "ASSETS_URL": "/dev/jazz/assets",
   "TOKEN_URL": "/dev/jazz/login",
   "SERVICE_USER": "{jazz_admin}",
-  "TOKEN_CREDS": "{jazz_admin_creds}"
+  "TOKEN_CREDS": "{jazz_admin_creds}",
+  "SERVICE_ID_HEADER_KEY": "Jazz-Service-ID"
 }
