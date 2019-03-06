@@ -1108,9 +1108,8 @@ def handleDeploymentErrors(deployOutput, serviceName, env, credsId) {
 	{
 		def lambda = "/aws/lambda/${serviceName}-${env}"
 		if (isExistingLogGroup(lambda, credsId)){
-			echo "Exception occured while serverless deploy : $logGroupErrString, Removing existing log group"
 			removeLogGroup(lambda, credsId)
-			deployOutput = deleteAndRedeployService(env, serviceName);
+			deleteAndRedeployService(env, serviceName);
 		} else {
 			error "Unable to find existing log groups"
 		}
