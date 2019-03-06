@@ -33,7 +33,7 @@ describe('index', () => {
       event = {
         resourcePath: 'help',
         headers: {
-          "Jazz-Service-ID": "test-id"
+          "jazz-service-id": "test-id"
         },
         method: 'GET',
         stage: 'test',
