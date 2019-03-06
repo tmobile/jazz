@@ -207,7 +207,7 @@ export class ServiceDetailComponent implements OnInit {
       this.setTabs();
       if(service && service.policies && service.policies.length) {
         service.policies.forEach(policy => {
-          if (policy.category === "manage" && policy.permission === "admin" && policy.userId === this.currentUser.username) {
+          if (policy.category === "manage" && policy.permission === "admin") {
             this.isAdminAccess = true;
           }
         });

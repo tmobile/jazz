@@ -173,9 +173,9 @@ export class EnvironmentDetailComponent implements OnInit {
         this.isFunction = this.service.type === "function";
         if (this.service.policies && this.service.policies.length) {
           this.service.policies.forEach(policy => {
-            if(policy.category === "deploy" && policy.permission === "write" && policy.userId === this.currentUser.username) {
+            if(policy.category === "deploy" && policy.permission === "write") {
               this.isDeployAccess = true;
-            } else if (policy.category === "manage" && policy.permission === "admin" && policy.userId === this.currentUser.username) {
+            } else if (policy.category === "manage" && policy.permission === "admin") {
               this.isAdminAccess = true;
             }
           });
