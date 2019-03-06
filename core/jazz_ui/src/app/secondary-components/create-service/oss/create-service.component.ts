@@ -86,7 +86,7 @@ export class CreateServiceComponent implements OnInit {
 
   eventLabels = new EventLabels("LAMBDA","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
 
-  azureEventLabels = new EventLabels("FUNCTION APP", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Instance Name","Batch Service Bus", "Service Bus Name");
+  azureEventLabels = new EventLabels("FUNCTION APP", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Instance Name","Service Bus Queue", "Service Bus Name");
 
   amazonEventLabels = new EventLabels("LAMBDA","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
 

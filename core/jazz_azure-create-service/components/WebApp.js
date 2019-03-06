@@ -13,7 +13,7 @@ module.exports = class WebApp {
     async create(){
         await this.init().then(async () => {
             try {
-                let storageAccount = await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags);
+                let storageAccount = await this.resourceFactory.createStorageAccount(this.data.storageName, this.data.tags);
                 let storageAccountKeys = await this.resourceFactory.listStorageAccountKeys(storageAccount.name);
                 let storageAccountKey = storageAccountKeys.keys[0].value;
                 await this.resourceFactory.setBlobServicePropertiesForWebsite(storageAccountKey);

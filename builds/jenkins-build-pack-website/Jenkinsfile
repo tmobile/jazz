@@ -165,7 +165,9 @@ node()  {
             surfix = lastpart
           }
 
-          def appname=service_name + domain + surfix
+          def stackName = "${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+          def appname = stackName
+          //def appname=service_name + domain + surfix
           def resourcegroup
           def location="westus"
 
@@ -174,6 +176,7 @@ node()  {
           def webappname=appname
           def apptoupload="./app"
           def destination="\$web"
+          def logicalId
 
           if (environment_logical_id == "prod") {
             resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
@@ -199,9 +202,9 @@ node()  {
 
           createWebsite(appname, resourcegroup, storageName)
 
-          def origin_endpoint_url = "https://${appname}.azureedge.net"
+          def origin_endpoint_url = "https://${storageName}.azureedge.net"
 
-          def cdn_endpoint_url = "https://${appname}.z22.web.core.windows.net"
+          def cdn_endpoint_url = "https://${storageName}.z22.web.core.windows.net"
 
           echo "You can access the website at $cdn_endpoint_url"
 
@@ -211,7 +214,7 @@ node()  {
           send_status_email('COMPLETED', svc_status)
 
           def store_acct = "/resourceGroups/$resourcegroup/providers/Microsoft.Storage/storageAccounts/$storageaccount"
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", storageName, "storage_account", service_config),environment)
+          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", store_acct, "storage_account", service_config),environment)
 
           events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", origin_endpoint_url, "origin_endpoint_url", service_config),environment)
           def cdn_profle_detail = "name $webappname, loaction: $location, resource group: $resourcegroup"

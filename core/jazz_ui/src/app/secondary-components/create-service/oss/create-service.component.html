@@ -351,7 +351,8 @@
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkDynamodb()) && (!dynamoTable.valid && (dynamoTable.dirty || dynamoTable.touched)))">Table name must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
                                 <p class="termsConditions error-message" *ngIf="(chkDynamodb() && invalidEventName)">Table name Should not begin or end with special character.</p>
-                                <p ng-hide="typeOfPlatform == 'aws'" class="learn-more">Function would be triggered whenever a new entry is added to the table. Note that the DynamoDB table should exist already and Jazz creates a new stream for this table</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'aws'">Function would be triggered whenever a new entry is added to the table. Note that the DynamoDB table should exist already and Jazz creates a new stream for this table</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever a new entry is added or updated to the table. Note that Jazz will create the CosmosDB table</p>
                             </div>
 
                             <div class="kinesis-fields row zero-margin arrow_box hide" [class.show]="chkfrKinesis()">
@@ -370,7 +371,8 @@
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkfrKinesis()) && (!streamARN.valid && (streamARN.dirty || streamARN.touched)))">Stream name must contain only letters, numbers, hyphens, underscores or periods.</p>
                                 <p class="termsConditions error-message" *ngIf="(chkfrKinesis() && invalidEventName)">Stream name Should not begin or end with special character.</p>
-                                <p class="learn-more">Function would be triggered whenever the Lambda checkpoint has not reached the end of the Kinesis stream</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'aws'">Function would be triggered whenever the Lambda checkpoint has not reached the end of the Kinesis stream</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever respond to an event sent to an event hub event stream</p>
                             </div>
 
                             <div class="s3-fields row zero-margin arrow_box hide" [class.show]="chkS3()">
@@ -389,7 +391,8 @@
                                 <p class="termsConditions error-message" *ngIf="((chkS3()) && (!S3BucketName.valid && (S3BucketName.dirty || S3BucketName.touched)))">Bucket name must contain only lowercase letters, numbers or hyphens. Enter atleast 3 characters</p>
                                 <p class="termsConditions error-message" *ngIf="(chkS3() && invalidEventName)">Bucket name Should not begin or end with special character.</p>
 
-                                <p class="learn-more">Function would be triggered when an object is added or modified inside the bucket. Creating this lambda trigger will override any previously created triggers on this bucket for any ObjectCreated:*</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'aws'">Function would be triggered when an object is added or modified inside the bucket. Creating this lambda trigger will override any previously created triggers on this bucket for any ObjectCreated:*</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever a new or updated blob is detected. The blob contents are provided as input to the function</p>
                             </div>
 
                             <div class="sqs-fields row zero-margin arrow_box hide" [class.show]="chkSQS()">
@@ -403,7 +406,8 @@
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkSQS()) && (!SQSstreamARN.valid && (SQSstreamARN.dirty || SQSstreamARN.touched)))">Queue name must contain only letters, numbers, hyphens or underscores.</p>
                                 <p class="termsConditions error-message" *ngIf="(chkSQS() && invalidEventName)">Queue name Should not begin or end with special character.</p>
-                                <p class="learn-more">Function would be triggered whenever new messages are added to the source SQS queue</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'aws'">Function would be triggered whenever new messages are added to the source SQS queue</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever new messages are added to the source service bus queue</p>
                               </div>
 
                         </div>
