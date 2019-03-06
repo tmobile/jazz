@@ -58,7 +58,6 @@ module.exports = (query, servicesList, onComplete) => {
         }
     }
 
-
     if (query !== undefined && query !== null) {
 
         var keys_list = global.config.service_filter_params;
