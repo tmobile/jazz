@@ -117,7 +117,7 @@ async function ValidateToken(pems, event) {
   });
 }
 
-const jwtValidation = async (token, pem, cognitoUserPoolEndpoint,event, context) => {
+const jwtValidation = async (token, pem, cognitoUserPoolEndpoint, event, context) => {
   return new Promise((resolve, reject) => {
     //Verify the signature of the JWT token to ensure it's really coming from your User Pool
     //Get the kid from the token and retrieve corresponding PEM
@@ -226,8 +226,12 @@ async function getAuthorizationDetails(event, user, resource, config) {
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
     let serviceData = await aclServices.getServiceMetadata(config, authToken, user, event.headers[header_key]);
     logger.debug("serviceData: " + JSON.stringify(serviceData))
+    let allow = true;
+    if (serviceData.length === 0 && event.resource.indexOf("/services/{id}") !== -1) {
+      allow = false
+    }
     return {
-      allow: true,
+      allow: allow,
       data: serviceData
     };
   } else if (resource.indexOf("acl/policies") !== -1) {
