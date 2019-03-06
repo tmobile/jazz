@@ -23,7 +23,6 @@ import groovy.transform.Field
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 
-@Field def config
 @Field def auth_token = ''
 @Field def config
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -135,7 +134,7 @@ node() {
 
 		def internalAccess = config['require_internal_access']
 
-		def roleARN = configLoader.AWS.ROLEID.replaceAll("/", "\\\\/")
+		def roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
 		sonarModule.initialize(configLoader, config, branch)
 
@@ -255,7 +254,7 @@ node() {
 					def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
 					sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
 
-					def lambdaARN = getLambdaARN(stackName);
+					def lambdaARN = getLambdaARN(stackName, credsId);
 					events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], lambdaARN, "lambda", config), environment_logical_id);
 
 					if (fileExists('swagger/swagger.json')) {
