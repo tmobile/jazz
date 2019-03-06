@@ -66,7 +66,8 @@ module.exports = (inputs, callback) => {
 		if (inputs.METADATA) { jsonBody.metadata = inputs.METADATA }
 		if (inputs.IS_PUBLIC_ENDPOINT) { jsonBody.is_public_endpoint = inputs.IS_PUBLIC_ENDPOINT }
 		if (inputs.STATUS) { jsonBody.status = inputs.STATUS }
-
+		if (inputs.DEPLOYMENT_ACCOUNTS) { jsonBody.deployment_accounts = inputs.DEPLOYMENT_ACCOUNTS }
+		
 		return jsonBody;
 	}
 };

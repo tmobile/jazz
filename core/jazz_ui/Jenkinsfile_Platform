@@ -101,9 +101,30 @@ node ()  {
 
       sh "sed -i s!{swagger_editor}!${config_loader.JAZZ.SWAGGER.EDITOR_URL}!g ./src/environments/environment.oss.ts"
 
+      /* Getting the accounts and regions */
+      def accountMap = [:];
+      def eachAccountMap = [];
+      def regions = [];
+      for (item in config_loader.AWS.ACCOUNTS) {
+          regions = [];
+          for(data in item.REGIONS){
+              regions.push(data.REGION)
+          }
+          accountMap = [:]
+          if(item.PRIMARY){
+              accountMap.put('primary', true)
+          } else {
+              accountMap.put('primary', false)
+          }
+          accountMap.put('account', item.ACCOUNTID);
+          accountMap.put('regions', regions);
+          eachAccountMap.push(accountMap);
+      }
+      def uiAccountMap = JsonOutput.toJson(eachAccountMap)
+      sh "sed -i 's/{accountMap}/${uiAccountMap}/g' ./src/environments/environment.oss.ts"
+
       def envFile = readFile('./src/environments/environment.oss.ts');
-      echo "displaying env file :"
-      echo "$envFile";
+      echo "displaying env file : ${envFile}"
     }
   }
   stage('Building the UI - NPM build') {

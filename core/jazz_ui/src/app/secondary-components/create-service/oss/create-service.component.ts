@@ -97,6 +97,7 @@ export class CreateServiceComponent implements OnInit {
   regionList = [];
   accountSelected;
   regionSelected;
+  accountMap: any;
 
 
   constructor (
@@ -119,9 +120,14 @@ export class CreateServiceComponent implements OnInit {
   public focusSQS = new EventEmitter<boolean>();
 
   selectAccountsRegions(){
-    this.accountList = env_oss.accounts;
-    this.regionList = env_oss.regions;
-    this.accountSelected = this.accountList[0];
+    this.accountMap = env_oss.accountMap;
+    this.accountMap.map((item)=>{
+      this.accountList.push(item.account)
+      if(item.primary){
+        this.accountSelected = item.account
+      }
+    })
+    this.regionList = this.accountMap[0].regions;
     this.regionSelected = this.regionList[0];
   }
 
@@ -158,10 +164,16 @@ export class CreateServiceComponent implements OnInit {
   }
 
   onaccountSelected(event){
-
+    this.accountMap.map((item,index)=>{
+      if(item.account === event){
+        this.accountSelected = item.account
+        this.regionList = item.regions;
+        this.regionSelected = this.regionList[0];
+      }
+    })
   }
   onregionSelected(event){
-
+    this.regionSelected = event;
   }
 
 
@@ -385,6 +397,17 @@ export class CreateServiceComponent implements OnInit {
     if(this.typeOfService == 'api' && this.ttlSelected){
         payload["cache_ttl"] = this.model.ttlValue;
     }
+    
+    /* Including deployment_accounts in the payload */
+    let deployment_accounts = [
+      {
+        "accountId": this.accountSelected,
+        "region": this.regionSelected,
+        "provider":"aws",
+        "primary":true
+      }
+    ]
+    payload['deployment_accounts'] = deployment_accounts
 
     this.isLoading = true;
     this.http.post('/jazz/create-serverless-service' , payload)
@@ -399,6 +422,7 @@ export class CreateServiceComponent implements OnInit {
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
           this.resetEvents();
+          this.selectAccountsRegions();
        },
         (error) => {
           this.isLoading = false;
@@ -409,6 +433,7 @@ export class CreateServiceComponent implements OnInit {
           this.errMessage = this.toastmessage.errorMessage(error, 'createService');
           this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
           this.rateExpression.error = undefined;
+          this.selectAccountsRegions();
           try {
             this.parsedErrBody = JSON.parse(this.errBody);
             if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
@@ -433,6 +458,7 @@ export class CreateServiceComponent implements OnInit {
     this.eventExpression.type = 'awsEventsNone';
     this.runtime = this.runtimeKeys[0];
   }
+
 
   // function to navigate from success or error screen to create service screen
   backToCreateService(){
