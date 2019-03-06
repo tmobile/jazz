@@ -49,10 +49,11 @@ function handler(event, context, cb) {
 		 *    }
 		 */
     var eventBody = event.body;
-    exportable.genericValidation(event)
+    let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
+    exportable.genericValidation(event, header_key)
       .then(() => validateUtils.validateGeneralFields(eventBody))
       .then(() => exportable.getToken(config))
-      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken, event.headers['Jazz-Service-ID']))
+      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken, event.headers[header_key]))
       .then(res => exportable.validateAssets(res, eventBody))
       .then(res => exportable.getMetricsDetails(res, eventBody, config))
       .then(res => {
@@ -74,7 +75,7 @@ function handler(event, context, cb) {
 
 };
 
-function genericValidation(event) {
+function genericValidation(event, header_key) {
   return new Promise((resolve, reject) => {
     if (!event && !event.body) {
       reject({
@@ -97,7 +98,7 @@ function genericValidation(event) {
       });
     }
 
-    if (!event.headers['Jazz-Service-ID']) {
+    if (!event.headers[header_key]) {
       reject({
         result: "inputError",
         message: "No service id provided"
