@@ -233,17 +233,17 @@ node() {
       echo "starts Deployment to ${env_key} Env"
       def lambdaARN = null
       environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
-
+      def dataObjValues = getRequiredData();
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 
       withCredentials([
-        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: dataObjValues.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
         try {
           // initialize aws credentials
           def randomString = utilModule.generateRequestId();
           def credsId = "jazz-${randomString}";
-          sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+          sh "aws configure set profile.${credsId}.region ${service_config.region}"
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -253,7 +253,7 @@ node() {
           echo "Generate deployment env with domain"
 
           if (isScheduleEnabled) {
-            def eventsArns = getEventsArn(config, environment_logical_id)
+            def eventsArns = getEventsArn(config, environment_logical_id, credsId)
             for (def i = 0; i < eventsArns.size(); i++) {
               def arn = eventsArns[i]
               events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], arn, "cloudwatch_event", config), environment_logical_id);
@@ -264,7 +264,7 @@ node() {
 
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           echoServerlessFile()
-          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId, env_key)
 
           if (deployOutput != 'success') {
             if (config['event_source_s3']) {
@@ -319,7 +319,7 @@ node() {
           // reset Credentials
           resetCredentials(credsId)
           if (domain != "jazz") {
-            createSubscriptionFilters(stackName);
+            createSubscriptionFilters(stackName, env_key);
           }
 
           if (domain && domain == "jazz") {
@@ -346,6 +346,16 @@ node() {
       } //end of withCredentials
     } //end of deployment to an environment
   }
+}
+
+def getRequiredData(){
+	def dataObj = {};
+	for (item in configLoader.AWS.ACCOUNTS) {
+		if(item.ACCOUNTID == service_config.accountId){
+			dataObj = item
+		}
+	}
+	return dataObj;
 }
 
 def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld) {
@@ -450,9 +460,16 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-def servelessDeploy(env, envBucketKey){
+def servelessDeploy(env, envBucketKey, credsId, env_key){
+  def s3BucketNameValue;
+  def dataAccount = getRequiredData();
+  for (item in dataAccount.REGIONS) {
+    if(item.REGION == service_config.region){
+      s3BucketNameValue = item.S3[env_key]
+    }
+  }
   try {
-    sh "serverless deploy --stage ${env} -v --bucket ${configLoader.AWS.S3[envBucketKey]} > output.log"
+    sh "serverless deploy --stage ${env} -v --bucket ${s3BucketNameValue} --profile ${credsId} > output.log"
     return "success"
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
@@ -641,9 +658,7 @@ def validateDeploymentConfigurations(def prop) {
 	if (prop.containsKey("region")) {
 		if (prop['region'] == "") {
 			error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-		} else if (prop['region'] != configLoader.AWS.REGION) {
-			error "Wrong configuration. Value for Key 'region' should be ${region}"
-		}
+		} 
 	} else {
 		error "Wrong configuration. Key 'region' is missing in the configuration"
 	}
@@ -742,7 +757,7 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName) {
+def createSubscriptionFilters(stackName, env_key) {
   def lambda = "/aws/lambda/${stackName}"
   def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
 
@@ -752,7 +767,7 @@ def createSubscriptionFilters(stackName) {
 
   try {
     filter_json = sh(
-      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${region}",
+      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${service_config.region}",
       returnStdout: true
     ).trim()
     echo "${filter_json}"
@@ -760,20 +775,91 @@ def createSubscriptionFilters(stackName) {
     filtername = resultJson.subscriptionFilters[0].filterName
     echo "removing existing filter... $filtername"
     if (filtername != "" && !filtername.equals(lambda)) {
-      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${region}"
+      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${service_config.region}"
     }
   } catch (Exception ex) { } // ignore error if not created yet
   try {
-    sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID}"
+    //updating the policy if the deployment account is not primary
+    for (item in configLoader.AWS.ACCOUNTS) {
+      if(item.ACCOUNTID == service_config.accountId){
+        if(!item.PRIMARY){
+          def nonPrimaryAccount = getRequiredData();
+          def destARN
+          for (data in nonPrimaryAccount.REGIONS) {
+            if(data.REGION == service_config.region){
+              destARN = data.LOGS[env_key]
+            }
+          }
+          updatePolicy(env_key, destARN);
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${service_config.region}"
+        } else {
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID}"
+        }
+      }
+    }
   } catch (Exception ex) {
     echo "error occured: " + ex.getMessage()
   }
 }
 
+def updatePolicy(env, destARN){
 
+  def primaryData = getRequiredDataForPrimary();
+  def primaryRegion
+  for (item in primaryData.REGIONS) {
+		if(item.PRIMARY){
+			primaryRegion = item.REGION
+		}
+	}
+
+  withCredentials([
+        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryData.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']
+      ])  {
+            try {
+              // initialize aws credentials
+              def randomStringPrimary = utilModule.generateRequestId();
+              def primaryCredsId = "jazzprimary-${randomStringPrimary}";
+                            
+              sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
+              sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
+              sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
+
+              def destinationName = destARN;
+              def destArnArray = [];
+              destArnArray = destinationName.tokenize(":").last();
+
+              def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
+              sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
+              
+              // reset Credentials
+              resetCredentials(primaryCredsId)
+
+            } catch(ex){
+              send_status_email(config, 'FAILED', '')
+              events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
+              events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+              events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+              error ex.getMessage()
+            }
+          }
+}
+
+def getRequiredDataForPrimary(){
+  def dataObjPrimary = {};
+	for (item in configLoader.AWS.ACCOUNTS) {
+		if(item.PRIMARY){
+			dataObjPrimary = item
+		}
+	}
+	return dataObjPrimary;
+}
 
 
 def writeServerlessFile(config, env) {
+
+  def iamRoleAccount = getRequiredData();
+  def iamRoleArnValue = iamRoleAccount.IAM.USERSERVICES_ROLEID;
+
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
@@ -830,7 +916,7 @@ def writeServerlessFile(config, env) {
   if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
   } else {
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${iamRoleArnValue}|g' serverless.yml"
   }
 
 }
@@ -936,11 +1022,11 @@ def send_status_email(config, build_status, email_content) {
  *  Function to get arns of the triggers/events configured for the Lambda.
  *
  */
-def getEventsArn(config, env) {
+def getEventsArn(config, env, credsId) {
   def eventsArn = []
   try {
     def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
-    def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${config['region']} --function-name $lambdaFnName --output json", returnStdout: true)
+    def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${config['region']} --function-name $lambdaFnName --output json --profile ${credsId}", returnStdout: true)
 
     def policyLists = null
     if (lambdaPolicyTxt) {
@@ -969,7 +1055,7 @@ def getLambdaARN(stackName, credsId) {
 
   try {
     def cloudformation_resources = "";
-    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId}")
+    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId} --region ${service_config.region}")
     def parsedObject = parseJson(cloudformation_resources);
     def outputs = parsedObject.Stacks[0].Outputs;
 
