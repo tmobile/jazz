@@ -18,7 +18,6 @@
 
 const request = require("request");
 const rp = require('request-promise-native');
-const _ = require("lodash");
 
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
@@ -130,8 +129,8 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
     var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
     logger.info("event payload: " + JSON.stringify(kinesisPayload));
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
-      if (_.includes(config.EVENTS.EVENT_TYPE, kinesisPayload.Item.EVENT_TYPE.S) &&
-        _.includes(config.EVENTS.EVENT_NAMES, kinesisPayload.Item.EVENT_NAME.S)) {
+      if (config.EVENTS.EVENT_TYPE.indexOf(kinesisPayload.Item.EVENT_TYPE.S) > -1 &&
+        config.EVENTS.EVENT_NAMES.indexOf(kinesisPayload.Item.EVENT_NAME.S) > -1) {
         logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
         return resolve({
           "interested_event": true,
@@ -204,7 +203,7 @@ function processCreateAsset(eventPayload, configData, authToken) {
       "domain": svcContext.domain,
       "asset_type": svcContext.type
     };
-    if (_.includes(configData.EVENTS.EVENT_STATUS, eventPayload.EVENT_STATUS.S)) {
+    if (configData.EVENTS.EVENT_STATUS.indexOf(eventPayload.EVENT_STATUS.S) > -1) {
       assetApiPayload["status"] = configData.EVENTS.CREATE_ASSET_COMPLETED
     } else {
       logger.error("Error in creating assets. Invalid status value in the payload");
@@ -249,7 +248,7 @@ function processUpdateAsset(record, eventPayload, configData, authToken) {
       "tags": svcContext.tags,
       "asset_type": svcContext.type
     };
-    if (_.includes(configData.EVENTS.EVENT_STATUS, eventPayload.EVENT_STATUS.S)) {
+    if (configData.EVENTS.EVENT_STATUS.indexOf(eventPayload.EVENT_STATUS.S) > -1) {
       var event_status = eventPayload.EVENT_NAME.S + "_" + eventPayload.EVENT_STATUS.S
       assetApiPayload["status"] = configData.EVENTS[event_status]
     } else {

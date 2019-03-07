@@ -20,7 +20,6 @@
   @version: 1.0
 **/
 
-const _ = require("lodash");
 const rp = require('request-promise-native');
 
 const configModule = require("./components/config.js");
@@ -107,6 +106,7 @@ var processRecord = function (record, configData, authToken) {
 		var sequenceNumber = record.kinesis.sequenceNumber;
 		var encodedPayload = record.kinesis.data;
 		var payload;
+		
 		return checkInterest(encodedPayload, sequenceNumber, configData)
 			.then(result => {
 				payload = result.payload;
@@ -129,8 +129,8 @@ var checkInterest = function (encodedPayload, sequenceNumber, configData) {
 		var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 		logger.info("kinesisPayload : " + JSON.stringify(kinesisPayload));
 		if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
-			if (_.includes(configData.EVENTS.EVENT_TYPE, kinesisPayload.Item.EVENT_TYPE.S) &&
-				_.includes(configData.EVENTS.EVENT_NAME, kinesisPayload.Item.EVENT_NAME.S)) {
+			if (configData.EVENTS.EVENT_TYPE.indexOf(kinesisPayload.Item.EVENT_TYPE.S) > -1 &&
+				configData.EVENTS.EVENT_NAME.indexOf(kinesisPayload.Item.EVENT_NAME.S) > -1) {
 				logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
 				return resolve({
 					"interested_event": true,
@@ -184,7 +184,9 @@ var updateService = function (result, payload, configData, authToken) {
 			"SLACKCHANNEL": serviceContext.slackChannel,
 			"TAGS": serviceContext.tags,
 			"STATUS": statusResponse.status,
-			"METADATA": serviceContext.metadata
+			"METADATA": serviceContext.metadata,
+			"DEPLOYMENT_TARGETS": serviceContext.deployment_targets
+
 		};
 		logger.info("update input : " + JSON.stringify(inputs));
 		crud.update(inputs, function (err, results) {
@@ -294,6 +296,9 @@ var getServiceContext = function (svcContext) {
 	}
 	if (svcContext.metadata) {
 		json.metadata = svcContext.metadata;
+	}
+	if (svcContext.deployment_targets) {
+		json.deployment_targets = svcContext.deployment_targets
 	}
 
 	return json;

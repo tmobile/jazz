@@ -34,7 +34,8 @@
     "dynamodb_stream",
     "iam_role",
     "sqs",
-    "kinesis_stream"
+    "kinesis_stream",
+    "apigee_proxy"
 	],
 	"ASSET_STATUS": [
 		"active",

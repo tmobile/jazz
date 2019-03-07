@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "version": "2017-01-30T23:30:18Z",
-    "title": "metrics",
+    "title": "{api_deployment_node_title}",
     "description": "API specification for metrics service"
   },
   "host": "{api_host_name}",
