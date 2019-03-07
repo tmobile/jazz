@@ -632,7 +632,6 @@ describe('create-serverless-service', function () {
           });
       });
     });
-  });
 
     it("should return input object with deployment target when input paramter is provided with valid values for api service type ", () => {
       const authToken = "temp-auth-token";
@@ -862,3 +861,4 @@ describe('create-serverless-service', function () {
       reqStub.restore();
     });
   });
+});
