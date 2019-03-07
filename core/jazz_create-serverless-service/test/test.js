@@ -862,5 +862,3 @@ describe('create-serverless-service', function () {
       reqStub.restore();
     });
   });
-
-});
