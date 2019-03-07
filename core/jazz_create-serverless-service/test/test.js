@@ -629,7 +629,6 @@ describe('create-serverless-service', function () {
           });
       });
     });
-  });
 
   describe("createService", () => {
     let input;
@@ -813,3 +812,4 @@ describe('create-serverless-service', function () {
       reqStub.restore();
     });
   });
+});
