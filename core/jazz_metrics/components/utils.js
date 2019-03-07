@@ -240,21 +240,22 @@ function updateCloudfrontAsset(newAssetObj, relativeId) {
   return newAssetObj;
 }
 
-function getCloudWatch(tempcreds) {
+function getCloudWatch(tempcreds, region) {
   tempcreds.apiVersion = '2010-08-01';
   var cloudwatch = new AWS.CloudWatch({tempcreds});
   return cloudwatch;
 }
 
-function getCloudfrontCloudWatch(tempcreds , serviceMetaData) {
+function getCloudfrontCloudWatch(tempcreds , region) {
   tempcreds.apiVersion = '2010-08-01';
-  tempcreds.region = serviceMetaData.services.region
+  tempcreds.region = region
   var cloudwatch = new AWS.CloudWatch({tempcreds});
   return cloudwatch;
 }
-function isPrimary(accountId, jsonConfig){
-  var data = jsonConfig.AWS.ACCOUNTS;
-  index = data.findIndex(x => x.ACCOUNTID==accountId);
+function checkIsPrimary(accountId, jsonConfig){
+  console.log(jsonConfig);
+  var data = jsonConfig.config.AWS.ACCOUNTS;
+  var index = data.findIndex(x => x.ACCOUNTID==accountId);
   if(data[index].PRIMARY){
     return data[index].PRIMARY;
   }else{
@@ -263,20 +264,21 @@ function isPrimary(accountId, jsonConfig){
 }
 
 function getRolePlatformService(accountId, jsonConfig){
-  var data = jsonConfig.AWS.ACCOUNTS;
-  index = data.findIndex(x => x.ACCOUNTID==accountId);
+  var data = jsonConfig.config.AWS.ACCOUNTS;
+  var index = data.findIndex(x => x.ACCOUNTID==accountId);
   return data[index].IAM.PLATFORMSERVICES_ROLEID;
 }
 
 function AssumeRole(accountID, configJson) {
-  logger.info("Inside Assume Role")
-  var isPrimary = isPrimary(accountID , configJson);
+  console.log(configJson);
+  var isPrimary = checkIsPrimary(accountID , configJson);
   var roleArn = getRolePlatformService(accountID, configJson);
   var accessparams;
-  if(isPrimary){
-    return accessparams ={};
-  } else {
-    return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
+    if (isPrimary){
+      accessparams = {};
+      resolve(accessparams)
+    } else {
       const sts = new AWS.STS({ region: process.env.REGION });
       const params = {
         RoleArn: roleArn,
@@ -286,13 +288,13 @@ function AssumeRole(accountID, configJson) {
       };
       sts.assumeRole(params, (err, data) => {
         if (err) {
-          logger.error("Error Assuming Role with params:" + JSON.stringify(err));
+          console.log("Error Assuming Role with params:" + JSON.stringify(err));
           reject({
             "result": "serverError",
             "message": "Unknown internal error occurred"
           })
         } else {
-          logger.info("The Temporary Acces details are:" + JSON.stringify(data));
+          console.log("The Temporary Acces details are:" + JSON.stringify(data));
           accessparams = {
             accessKeyId: data.Credentials.AccessKeyId,
             secretAccessKey: data.Credentials.SecretAccessKey,
@@ -301,8 +303,8 @@ function AssumeRole(accountID, configJson) {
           resolve(accessparams)
         }
       })
-    });
-  }
+    }
+  });
 }
 
 module.exports = {

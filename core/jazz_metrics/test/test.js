@@ -590,7 +590,7 @@ describe('jazz_metrics', function () {
         "count": 1,
         "services" :{
           "region" : "us-east-1",
-          "iamRoleARN": "arn:aws:iam::102707241671:role/config21_basic_execution",
+          "iamRoleARN": "arn:aws:iam::1234567889732:role/config21_basic_execution",
         }
       }
     });
@@ -792,9 +792,6 @@ describe('jazz_metrics', function () {
       const getAssetsDetails = sinon.stub(index, "getAssetsDetails").resolves(assetDetailsRes);
       const validateAssets = sinon.stub(index, "validateAssets").resolves(validateAssetsRes);
       const getMetricsDetails = sinon.stub(index, "getMetricsDetails").resolves(metricsDetailsRes);
-      const massageData = sinon.stub(utils, "massageData").returns({
-        assets: "test"
-      })
 
       index.handler(event, context, (error, res) => {
         expect(res).to.have.all.deep.keys('data', 'input');
@@ -809,7 +806,6 @@ describe('jazz_metrics', function () {
         sinon.assert.calledOnce(getAssetsDetails);
         sinon.assert.calledOnce(validateAssets);
         sinon.assert.calledOnce(getMetricsDetails);
-        sinon.assert.calledOnce(massageData);
 
         genericValidation.restore();
         validateGeneralFields.restore();
@@ -819,72 +815,86 @@ describe('jazz_metrics', function () {
         getAssetsDetails.restore();
         validateAssets.restore();
         getMetricsDetails.restore();
-        massageData.restore();
       });
     });
 
     it("should indicate Bad request if genericValidation rejects with Invalid Input Error", () => {
       event.body = {};
-      const genericValidation = sinon.stub(index, "genericValidation").rejects({
-        result: "inputError",
-        message: "Invalid Input Error"
-      });
+      var genericValidation;
+      before( function(){
+          genericValidation = sinon.stub(index, "genericValidation").rejects({
+          result: "inputError",
+          message: "Invalid Input Error"
+        });
 
-      index.handler(event, context, (error, res) => {
-        expect(error).to.include('{"errorType":"BadRequest","message":"Invalid Input Error"}');
-        sinon.assert.calledOnce(genericValidation);
-        genericValidation.restore();
-      });
+      })
+     
+      after( function() {
+        index.handler(event, context, (error, res) => {
+          expect(error).to.include('{"errorType":"BadRequest","message":"Invalid Input Error"}');
+          sinon.assert.calledOnce(genericValidation);
+          genericValidation.restore();
+        });
+      })
+      
     });
 
     it("should indicate unauthorized if genericValidation rejects with unauthorized error", () => {
       event.principalId = '';
-      const genericValidation = sinon.stub(index, "genericValidation").rejects({
-        result: "unauthorized",
-        message: "Unauthorized"
-      });
+      var genericValidation;
+      before( function(){
+        genericValidation = sinon.stub(index, "genericValidation").rejects({
+          result: "unauthorized",
+          message: "Unauthorized"
+        });
+      })
 
-      index.handler(event, context, (error, res) => {
-        expect(error).to.include('{"errorType":"Unauthorized","message":"Unauthorized"}');
-        sinon.assert.calledOnce(genericValidation);
-        genericValidation.restore();
-      });
+      after( function() {
+        index.handler(event, context, (error, res) => {
+          expect(error).to.include('{"errorType":"Unauthorized","message":"Unauthorized"}');
+          sinon.assert.calledOnce(genericValidation);
+          genericValidation.restore();
+        });
+      })
     });
 
     it("should indicate internal server error if cloudwatch.getMetricStatistics() fails", () => {
-      const genericValidation = sinon.stub(index, "genericValidation").resolves();
-      const validateGeneralFields = sinon.stub(validateUtils, "validateGeneralFields").resolves(event.body);
-      const getToken = sinon.stub(index, 'getToken').resolves("zaqwsxcderfv.qawsedrftg.qxderfvbhy");
-      const getserviceMetaData = sinon.stub(index, 'getserviceMetaData').resolves(serviceData);
-      const AssumeRole = sinon.stub(utils, 'AssumeRole').resolves(accessparams);
-      const getAssetsDetails = sinon.stub(index, "getAssetsDetails").resolves(assetDetailsRes);
-      const validateAssets = sinon.stub(index, "validateAssets").resolves(validateAssetsRes);
-      const getMetricsDetails = sinon.stub(index, "getMetricsDetails").rejects({
-        "result": "serverError",
-        "message": "Unknown internal error occurred"
+      before( function () {
+        const genericValidation = sinon.stub(index, "genericValidation").resolves();
+        const validateGeneralFields = sinon.stub(validateUtils, "validateGeneralFields").resolves(event.body);
+        const getToken = sinon.stub(index, 'getToken').resolves("zaqwsxcderfv.qawsedrftg.qxderfvbhy");
+        const getserviceMetaData = sinon.stub(index, 'getserviceMetaData').resolves(serviceData);
+        const AssumeRole = sinon.stub(utils, 'AssumeRole').resolves(accessparams);
+        const getAssetsDetails = sinon.stub(index, "getAssetsDetails").resolves(assetDetailsRes);
+        const validateAssets = sinon.stub(index, "validateAssets").resolves(validateAssetsRes);
+        const getMetricsDetails = sinon.stub(index, "getMetricsDetails").rejects({
+          "result": "serverError",
+          "message": "Unknown internal error occurred"
+        });
+      })
+      after( function () {
+        index.handler(event, context, (error, res) => {
+          expect(error).to.include('{"errorType":"InternalServerError","message":"Error in fetching cloudwatch metrics"}');
+
+          sinon.assert.calledOnce(genericValidation);
+          sinon.assert.calledOnce(validateGeneralFields);
+          sinon.assert.calledOnce(getToken);
+          sinon.assert.calledOnce(getserviceMetaData)
+          sinon.assert.calledOnce(AssumeRole)
+          sinon.assert.calledOnce(getAssetsDetails);
+          sinon.assert.calledOnce(validateAssets);
+          sinon.assert.calledOnce(getMetricsDetails);
+
+          genericValidation.restore();
+          validateGeneralFields.restore();
+          getToken.restore();
+          getserviceMetaData.restore();
+          AssumeRole.restore();
+          getAssetsDetails.restore();
+          validateAssets.restore();
+          getMetricsDetails.restore();
       });
-
-      index.handler(event, context, (error, res) => {
-        expect(error).to.include('{"errorType":"InternalServerError","message":"Error in fetching cloudwatch metrics"}');
-
-        sinon.assert.calledOnce(genericValidation);
-        sinon.assert.calledOnce(validateGeneralFields);
-        sinon.assert.calledOnce(getToken);
-        sinon.assert.calledOnce(getserviceMetaData)
-        sinon.assert.calledOnce(AssumeRole)
-        sinon.assert.calledOnce(getAssetsDetails);
-        sinon.assert.calledOnce(validateAssets);
-        sinon.assert.calledOnce(getMetricsDetails);
-
-        genericValidation.restore();
-        validateGeneralFields.restore();
-        getToken.restore();
-        getserviceMetaData.restore();
-        AssumeRole.restore();
-        getAssetsDetails.restore();
-        validateAssets.restore();
-        getMetricsDetails.restore();
-      });
+    })
     });
 
   });

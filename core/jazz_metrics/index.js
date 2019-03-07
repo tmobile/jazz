@@ -46,50 +46,49 @@ function handler(event, context, cb) {
 		 *    }
 		 */
     var eventBody = event.body;
-    var metricsResponse ;
-    var configJson = exportable.getConfigJson(config,eventBody)
+    var metricsResponse=[];
     var genValidation = exportable.genericValidation(event);
     var token = exportable.getToken(config);
     var valGenFields = validateUtils.validateGeneralFields(eventBody);
     Promise.all([genValidation, token, valGenFields])
     .then((results) => {
-      logger.info(results);
       const authToken = results[1];
+      exportable.getConfigJson(config, authToken).then((configobject) => {
+      const configJson = configobject;
       exportable.getserviceMetaData(config, eventBody, authToken)
       .then((serviceMetaData) => {
         const serviceData = serviceMetaData;
-        // foreach serviceData 
         exportable.getAssetsDetails(config, eventBody, authToken)
         .then((res) => exportable.validateAssets(res, eventBody))
         .then((res) => {
-          const deploymentAccounts = serviceData.services.SERVICE_DEPLOYMENT_ACCOUNTS
+          const deploymentAccounts = serviceData.data.services[0].deployment_accounts
+          var promiseCollection = [];
           deploymentAccounts.forEach(function (item) {
             const accountId = item.accountId;
             const region = item.region;
-            utils.AssumeRole(accountId, configJson)
-            .then((creds) => {
-              exportable.getMetricsDetails(res,creds,region)
-              .then((res) => {
+            var getpromise = utils.AssumeRole(accountId, configJson)
+            .then((creds) => exportable.getMetricsDetails(res,creds,region))
+            .then((res) => {
                 var finalObj = utils.massageData(res, eventBody);
-                // This return will go after foreach
-                metricsResponse[item.accountId] = finalObj
-                //return cb(null, responseObj(finalObj, eventBody));
+                metricsResponse.push(finalObj);
               })
-            })
+            promiseCollection.push(getpromise);
           })
-          return cb(null, responseObj(metricsResponse, eventBody))
+          Promise.all(promiseCollection).then(() => {
+            return cb(null, responseObj(metricsResponse, eventBody))
+          })
         })
       })
     })
-      .catch(error => {
-        if (error.result === "inputError") {
-          return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-        } else if (error.result === "unauthorized") {
-          return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
-        } else {
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
-        }
-      });
+  }).catch(error => {
+      if (error.result === "inputError") {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+      } else if (error.result === "unauthorized") {
+        return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
+      } else {
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
+      }
+    });
   } catch (e) {
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
   }
@@ -154,13 +153,13 @@ function getToken(config) {
   });
 }
 
-function getConfigJson(config, eventBody) {
+function getConfigJson(config, token) {
   return new Promise((resolve, reject) => {
     var config_json_api_options = {
       url : config.SERVICE_API_URL + "/jazz/admin/config",
       headers : {
         "Content-Type" : "application/json",
-        "Authorization" : getToken(config)
+        "Authorization" : token
       },
       method: "GET",
       rejectUnauthorized:false,
@@ -176,7 +175,7 @@ function getConfigJson(config, eventBody) {
           var responseBody = JSON.parse(body);
           resolve(responseBody.data)
         }else{
-          logger.info("Service not found for this service, domain, environment. ", JSON.stringify(service_api_options));
+          logger.info("Service not found for this service, domain, environment. ", JSON.stringify(config_json_api_options));
           resolve([])
         }
       }
@@ -204,9 +203,7 @@ function getserviceMetaData(config, eventBody, authToken){
       } else {
         if (response.statusCode && response.statusCode === 200) {
           var responseBody = JSON.parse(body);
-          //var iamroleARN = responseBody.data.services.metadata.iamRoleARN
-          //var AccountId = iamroleARN.split(':')[4];
-          resolve(responseBody.data)
+          resolve(responseBody)
         }else{
           logger.info("Service not found for this service, domain, environment. ", JSON.stringify(service_api_options));
           resolve([])
@@ -373,12 +370,12 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
   });
 }
 
-function getMetricsDetails(newAssetArray,tempCreds,serviceMetaData) {
+function getMetricsDetails(newAssetArray,tempCreds,region) {
   return new Promise((resolve, reject) => {
     logger.debug("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
-      exportable.cloudWatchDetails(assetParam,tempCreds,serviceMetaData)
+      exportable.cloudWatchDetails(assetParam,tempCreds,region)
         .then(res => {
           metricsStatsArray.push(res);
           if (metricsStatsArray.length === newAssetArray.length) {
@@ -392,12 +389,12 @@ function getMetricsDetails(newAssetArray,tempCreds,serviceMetaData) {
   });
 }
 
-function cloudWatchDetails(assetParam,tempCreds,serviceMetaData) {
+function cloudWatchDetails(assetParam,tempCreds,region) {
   logger.debug("Inside cloudWatchDetails");
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
-      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch(tempCreds,serviceMetaData) : utils.getCloudWatch(tempCreds);
+      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch(tempCreds,region) : utils.getCloudWatch(tempCreds, region);
 
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
@@ -424,10 +421,6 @@ function cloudWatchDetails(assetParam,tempCreds,serviceMetaData) {
   });
 }
 
-function isAccountPrimary(accountId , configJson) {
-
-}
-
 
 
 const exportable = {
@@ -435,6 +428,7 @@ const exportable = {
   genericValidation,
   getToken,
   getserviceMetaData,
+  getConfigJson,
   getAssetsDetails,
   validateAssets,
   getActualParam,
