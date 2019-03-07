@@ -1052,16 +1052,18 @@ def getBuildModuleUrl() {
   }
 }
 
-def handleDeploymentErrors(deployOutput, serviceName, env, credsId) {
-	if(deployOutput.contains('ROLLBACK_COMPLETE state and can not be updated')){
-		deleteAndRedeployService(env, serviceName)
+def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId) {
+  def rollbackErrorMessage = "ROLLBACK_COMPLETE state and can not be updated"
+  def logGroupErrorMessage = "CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"
+	if(deployOutput.contains(rollbackErrorMessage)){
+		deleteAndRedeployService(env, envBucketKey)
 	}
-	else if (deployOutput.contains("CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"))
+	else if (deployOutput.contains(logGroupErrorMessage))
 	{
-		def lambda = "/aws/lambda/${serviceName}-${env}"
+		def lambda = "/aws/lambda/${envBucketKey}-${env}"
 		if (isExistingLogGroup(lambda, credsId)){
 			removeLogGroup(lambda, credsId)
-			deleteAndRedeployService(env, serviceName);
+			deleteAndRedeployService(env, envBucketKey);
 		} else {
 			error "Unable to find existing log groups"
 		}
