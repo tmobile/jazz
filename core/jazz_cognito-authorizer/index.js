@@ -227,8 +227,13 @@ async function getAuthorizationDetails(event, user, resource, config) {
     let serviceData = await aclServices.getServiceMetadata(config, authToken, user, event.headers[header_key]);
     logger.debug("serviceData: " + JSON.stringify(serviceData))
     let allow = true;
-    if (serviceData.length === 0 && event.resource.indexOf("/services/{id}") !== -1) {
+    if (event.resource.indexOf("/services/{id}") !== -1) {
+      let serviceId = event.path.split('/')[3];
       allow = false
+      if (serviceId && serviceData.length > 0) {
+        let servicePolicies = serviceData.find(service => service.serviceId === serviceId);
+        allow = servicePolicies.policies.length > 0 ? true : false;
+      }
     }
     return {
       allow: allow,
