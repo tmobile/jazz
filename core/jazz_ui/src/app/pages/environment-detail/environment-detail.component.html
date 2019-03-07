@@ -64,7 +64,7 @@
         </section>
 
         <section class="page-content" *ngIf="selectedTab == 3">
-          <service-metrics [service]="service"></service-metrics>
+          <service-metrics #selectedTabComponent [service]="service"></service-metrics>
         </section>
 
         <section class="page-content" *ngIf="selectedTab == 4">

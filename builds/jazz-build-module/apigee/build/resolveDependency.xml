@@ -1,0 +1,96 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+ 
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>apigee</groupId>
+    <artifactId>process-fragments-and-copy-to-deployables</artifactId>
+    <version>1.0</version>
+    <name>process-fragments-and-copy-to-deployables</name>
+    <packaging>pom</packaging>
+    
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>io.apigee.build-tools.enterprise4g</groupId>
+                <artifactId>proxy-dependency-maven-plugin</artifactId>
+                <version>2.1.0</version>
+                <executions>
+                    <execution>
+						<id>resolve${proxyName}</id>
+						<phase>generate-sources</phase>
+                        <goals>
+                            <goal>resolve</goal>
+                        </goals>
+                        <configuration>
+							<proxySrcDir>./temp</proxySrcDir>
+							<proxyDestDir>../Deployable</proxyDestDir>
+                            <proxyRefs>
+								<proxyRef>targets</proxyRef>
+                            </proxyRefs>
+                        </configuration>
+                    </execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<execution>
+						<id>copy-${proxyName}-proxies-to-target</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<overwrite>true</overwrite>
+							<includeEmptyDirs>true</includeEmptyDirs>
+							<outputDirectory>../Deployable/apiproxy/resources/xsd</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/temp/apiproxy/resources/xsd</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-${proxyName}-proxies1-to-target1</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<overwrite>true</overwrite>
+							<includeEmptyDirs>true</includeEmptyDirs>
+							<outputDirectory>../Deployable/apiproxy/resources/jsc</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/temp/apiproxy/resources/jsc</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+					<execution>
+						<id>copy-${proxyName}-proxies2-to-target2</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<overwrite>true</overwrite>
+							<includeEmptyDirs>true</includeEmptyDirs>
+							<outputDirectory>../Deployable/apiproxy/resources/xsl</outputDirectory>
+							<resources>
+								<resource>
+									<directory>${basedir}/temp/apiproxy/resources/xsl</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+                </executions>
+            </plugin> 
+
+        </plugins>
+    </build>
+
+</project>

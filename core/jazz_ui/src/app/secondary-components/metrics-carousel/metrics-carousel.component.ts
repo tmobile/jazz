@@ -90,7 +90,8 @@ export class MetricsCarouselComponent implements OnInit {
 
   getRecentValue(metric) {
     if (!metric[this.options.listProperty].length) return;
-    let _metric = metric[this.options.listProperty].slice(-1).pop()[this.options.valueProperty];
+    let _metricObj = metric[this.options.listProperty].slice(-1).pop();
+    let _metric = _metricObj[this.options.valueProperty.toLocaleLowerCase()] || _metricObj[this.options.valueProperty]
     if (_metric && typeof _metric === 'string') {
       return _metric;
     } else if (_metric && typeof _metric === 'number') {
