@@ -173,12 +173,6 @@ node()  {
 			def randomString = utilModule.generateRequestId();
 			def credsId = "jazz-${randomString}";
 			def dataObjValues = getRequiredData();
-			def s3BucketNameValue
-			for (item in dataObjValues.REGIONS) {
-				if(item.REGION == service_config.region){
-					s3BucketNameValue = item.S3[current_environment]
-				}
-			}
 
 			def origin_access_identity_ID = dataObjValues.CLOUDFRONT.CLOUDFRONT_ORIGIN_ID.split("/");
 			origin_access_identity_ID = origin_access_identity_ID[origin_access_identity_ID.length - 1];
@@ -196,10 +190,10 @@ node()  {
 
 				echo "Checking if the website already exists.."
 				if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
-					def isBucketExists = checkIfBucketExists(s3BucketNameValue, credsId)
+					def isBucketExists = checkIfBucketExists(s3Bucket, credsId)
 					if (!isBucketExists) {
-						echo "creating a new website with name $s3BucketNameValue"
-						sh "aws s3 mb s3://$s3BucketNameValue --profile ${credsId}"
+						echo "creating a new website with name $s3Bucket"
+						sh "aws s3 mb s3://$s3Bucket --profile ${credsId}"
 					}
 				}
 				def isBucketwithEnvExists = checkIfBucketExists(asset_info, credsId)
