@@ -92,7 +92,7 @@ node()  {
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
 	def environment_logical_id
-	def s3BucketValue = getRequiredData();
+	def s3BucketValue = utilModule.getRequiredData(service_config);
 	if (params.scm_branch == 'master') {
 		environment_logical_id = 'prod'
 		current_environment = 'PROD'
@@ -172,7 +172,7 @@ node()  {
 		stage("Deployment to ${current_environment} Env"){
 			def randomString = utilModule.generateRequestId();
 			def credsId = "jazz-${randomString}";
-			def dataObjValues = getRequiredData();
+			def dataObjValues = utilModule.getRequiredData(service_config);
 
 			def origin_access_identity_ID = dataObjValues.CLOUDFRONT.CLOUDFRONT_ORIGIN_ID.split("/");
 			origin_access_identity_ID = origin_access_identity_ID[origin_access_identity_ID.length - 1];
@@ -258,16 +258,6 @@ node()  {
 			resetCredentials(credsId)
 		}
 	}
-}
-
-def getRequiredData(){
-	def dataObj = {};
-	for (item in configLoader.AWS.ACCOUNTS) {
-		if(item.ACCOUNTID == service_config.accountId){
-			dataObj = item
-		}
-	}
-	return dataObj;
 }
 
 def generateAssetUrl(){
@@ -684,13 +674,13 @@ def resetCredentials(credsId) {
 /**
 	Generate the distribution service_config file
 */
-def generateDistributionConfig(OAI) {
-	def CFOAI = "origin-access-identity/cloudfront/"+OAI
+def generateDistributionConfig(originAccessIdentity) {
+	def cloudFrontOriginAccessIdentity = "origin-access-identity/cloudfront/"+originAccessIdentity
 	sh "sed -i -- 's/{service_name}/${service_config['domain']}-${service_config['service']}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{env}/${environment}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_s3bucketname}/${s3Bucket}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' distribution_config_with_tags.json"
-	sh "sed -i -- 's:{conf_origin_id}:${CFOAI}:g' distribution_config_with_tags.json"
+	sh "sed -i -- 's:{conf_origin_id}:${cloudFrontOriginAccessIdentity}:g' distribution_config_with_tags.json"
 	if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
 		sh "sed -i -- 's/{origin_path}/${environment}/g' distribution_config_with_tags.json"
 	} else {

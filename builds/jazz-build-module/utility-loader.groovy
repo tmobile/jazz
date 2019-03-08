@@ -171,4 +171,17 @@ def isReplayedBuild() {
   currentBuild.rawBuild.getCauses().any{ cause -> cause.toString().contains(replayClassName) }
 }
 
+/*
+* Getting the required account
+*/
+def getRequiredData(service_config){
+	def dataObj = {};
+	for (item in configLoader.AWS.ACCOUNTS) {
+		if(item.ACCOUNTID == service_config.accountId){
+			dataObj = item
+		}
+	}
+	return dataObj;
+}
+
 return this
