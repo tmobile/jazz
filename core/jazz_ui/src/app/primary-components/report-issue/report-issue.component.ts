@@ -19,6 +19,7 @@ export class ReportIssueComponent implements OnInit {
   public errorMessage;
   public jsonDataString;
   public submitFeedbackPayload;
+  displayMassage:string ="";
 
   constructor(
     private authenticationService: AuthenticationService,
@@ -27,6 +28,10 @@ export class ReportIssueComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.displayMassage = "Something went wrong while fetching your data";
+    if (this.response) {
+      this.displayMassage = JSON.parse(this.response._body).message || this.displayMassage;
+    }
     const userId = this.authenticationService.getUserId();
     this.reportIssueForm = {
       userFeedback: '',

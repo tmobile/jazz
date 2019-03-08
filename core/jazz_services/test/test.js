@@ -1016,14 +1016,31 @@ describe('platform_services', function() {
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   * @returns {string} callback response containing error message with details
   */
-  it("should indicate that input data is missing given a POST with an event.body missing required fields", ()=>{
+  it("should indicate that input data is invalid given a POST with an event.body with wrong required fields", ()=>{
     //query has all required fields, cloning these properties will get us past first check
+    event.body.deployment_targets = {"invalid": "gcp_apigee"};
     Object.assign(event.body, event.query);
     event.body.newProperty = "Ludo!";
     event.method = "POST";
     event.path.id = undefined;
     errType = "inputError";
-    errMessage = "Following fields are invalid :  ";
+    errMessage = "Following fields are invalid : ";
+    //wrap the logger responses
+    stub = sinon.stub(logger, "error", spy);
+    //trigger stub/spy by calling handler
+    var callfunction = index.handler(event, context, callback);
+    var cbMessage = JSON.stringify(spy.args[0][0]);
+    var cbCheck = cbMessage.includes(errType) && cbMessage.includes(errMessage);
+    stub.restore();
+    assert.isTrue(cbCheck);
+  });
+
+  it("should indicate that input data is missing given a POST with an event.body missing required fields", ()=>{
+    //do NOT assign required fields from event.query to event.body
+    event.method = "POST";
+    event.path.id = undefined;
+    errType = "inputError";
+    errMessage = "Following field(s) are required ";
     //wrap the logger responses
     stub = sinon.stub(logger, "error", spy);
     //trigger stub/spy by calling handler
@@ -1042,12 +1059,21 @@ describe('platform_services', function() {
   */
   it("should attempt dynamoDB scan for matching services given a POST with valid body data", ()=>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = {"api": "apigee"}
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     var attemptBool = dynamoCheck("scan",spy);
     assert.isTrue(attemptBool);
+  });
+
+  it("should attempt dynamoDB scan and fail given a POST with valid missing required body data", ()=>{
+    //do NOT assign required fields from event.query to event.body
+    event.method = "POST";
+    event.path.id = undefined;
+    var attemptBool = dynamoCheck("scan",spy);
+    assert.isFalse(attemptBool);
   });
 
   /*
@@ -1058,6 +1084,7 @@ describe('platform_services', function() {
   */
   it("should indicate an InternalServerError occured if DynamoDB.scan fails during POST", ()=>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
@@ -1094,6 +1121,7 @@ describe('platform_services', function() {
   */
   it("should indicate service already exists if return obj from dynamoDB scan is non-empty", ()=>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
@@ -1132,6 +1160,7 @@ describe('platform_services', function() {
   */
   it("should attempt to add service in dynamo for successful POST", function(){
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
@@ -1153,6 +1182,7 @@ describe('platform_services', function() {
   */
   it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.put fails", () =>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
