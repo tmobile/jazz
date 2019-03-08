@@ -1045,6 +1045,7 @@ def loadBuildModules(buildModuleUrl) {
     echo "Sonar module loaded successfully."
 
     whiteListModule = load "whitelist-validator-module.groovy"
+    whiteListModule.initialize()
     echo "whitelist-validator-module module loaded successfully"
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
