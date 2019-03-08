@@ -65,6 +65,18 @@
                 </div>
             </div>
         </section>
+        <section *ngIf="deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature" class="form-row deployment-targets">
+          <div class="row">
+            <div class="col-lg-4 col-md-4">
+              <p class="step-title">Choose your API deployment target<span>*</span></p>
+            </div>
+            <radio-checkbox
+              [options]="deploymentTargets[typeOfService.toUpperCase()].options"
+            [(selected)]="selectedDeploymentTarget"></radio-checkbox>
+          </div>
+        </section>
+
+
         <section class="each-step-wrap run-time" *ngIf="typeOfService != 'website'">
             <div class="row">
                 <div class="col-lg-4 col-md-4">
