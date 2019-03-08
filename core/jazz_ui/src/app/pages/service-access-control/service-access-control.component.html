@@ -13,6 +13,27 @@
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title step-title-head">Management Access</p>
                     <p class="step-details">Users who can access/manage the service through Jazz, typically team members with admin role.</p>
+                    <div class="role-description">
+                      <div>Suggested Role: </div>
+                      <div class="popupcopy">
+                          <span class='roleName'>Admin
+                            <span class="relative">
+                              <div class="tooltip-content" >
+                                  <span id="copyPopup">Administer the service in Jazz UI. Users in this role will have ALL permissions on this service. They can also approve production deployments for the service.</span>
+                              </div>
+                            </span>
+                          </span>
+                      </div>
+                      <div class="popupcopy">
+                          <span class='roleName'>Write
+                            <span class="relative">
+                              <div class="tooltip-content" >
+                                  <span>Read-only permissions on the service in Jazz UI. Adding users to other sections in this page would automatically add them to this role.</span>
+                              </div>
+                            </span>
+                          </span>
+                      </div>
+                    </div>
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <div class="groups-wrap">
@@ -82,7 +103,28 @@
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title step-title-head">Code Access</p>
                     <p class="step-details">Users who can access source code repository, typically team members with developer role</p>
-                </div>
+                    <div class="role-description">
+                        <div>Suggested Role: </div>
+                        <div class="popupcopy">
+                            <span class='roleName'>Write
+                              <span class="relative">
+                                <div class="tooltip-content" >
+                                    <span>Users in this role get read-write permissions to the code.</span>
+                                </div>
+                              </span>
+                            </span>
+                        </div>
+                        <div class="popupcopy">
+                            <span class='roleName'>Read
+                              <span class="relative">
+                                <div class="tooltip-content" >
+                                    <span>Users in this role get read-only permissions to the code.</span>
+                                </div>
+                              </span>
+                            </span>
+                        </div>
+                      </div>
+                  </div>
                    <div class="col-lg-8 col-md-8">
                     <div class="groups-wrap">
                         <div class="groups-input toggle-class">
@@ -151,7 +193,28 @@
                 <div class="col-lg-4 col-md-4">
                     <p class="step-title step-title-head">Deployment Access</p>
                     <p class="step-details">Users who can manage deployments for the service, typically team members with devops role</p>
-                </div>
+                    <div class="role-description">
+                        <div>Suggested Role: </div>
+                        <div class="popupcopy">
+                            <span class='roleName'>Write
+                                <span class="relative">
+                                <div class="tooltip-content" >
+                                    <span>Users in this role get access to trigger deployments to this service in Jazz UI.</span>
+                                </div>
+                                </span>
+                            </span>
+                        </div>
+                        <div class="popupcopy">
+                            <span class='roleName'>Read
+                                <span class="relative">
+                                <div class="tooltip-content" >
+                                    <span>Users in this role get read-only access to deployment logs for this service.</span>
+                                </div>
+                                </span>
+                            </span>
+                        </div>
+                    </div>
+                  </div>
                 <div class="col-lg-8 col-md-8">
                   <div class="groups-wrap">
                       <div class="groups-input toggle-class">
@@ -218,11 +281,11 @@
         </section>
         <div class='confirm-overlay' *ngIf='saveClicked || removeUser || deleteManageRule || adminAccessRule' (click)="outSidePopup()">
           <div class='confirm-overlay-inner-wrap' (click)="$event.stopPropagation()">
+              <a class="icon-icon-close" (click)='outSidePopup()'></a>
               <div class='overlay-header'>{{confirmationHeader}}</div>
               <div *ngIf="!isPUTLoading" class='overlay-body'>{{confirmationText}} </div>
               <div class='overlay-btns'>
                 <btn-jazz-primary text="OK" (click)='onCompleteClick()'></btn-jazz-primary>
-                <a *ngIf="!removeUser" (click)='outSidePopup()'>CANCEL</a>
               </div>
           </div>
         </div>

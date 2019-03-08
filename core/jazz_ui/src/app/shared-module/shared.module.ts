@@ -1,5 +1,6 @@
 import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import { CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA } from '@angular/core';
 import {NavigationBarComponent} from '../secondary-components/navigation-bar/navigation-bar.component';
 import {SearchBoxComponent} from '../primary-components/search-box/search-box.component';
 import {JazzToasterComponent} from '../secondary-components/jazz-toaster/jazz-toaster.component';
@@ -56,6 +57,7 @@ import {FilterModalComponent} from "../secondary-components/filter-modal/filter-
 import {ServiceMetricsComponent} from "../pages/service-metrics/service-metrics.component";
 import {MetricsCarouselComponent} from "../secondary-components/metrics-carousel/metrics-carousel.component";
 import {RouterModule} from "@angular/router";
+import { Error403Component } from "../pages/error403/error403.component";
 
 let specificComponents:any
 let specificModules: any;
@@ -128,6 +130,7 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    Error403Component,
     ...declarationsArray,
 
 
@@ -172,6 +175,7 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    Error403Component,
     ...declarationsArray
 
   ],
@@ -179,7 +183,7 @@ for (let i in specificComponents) {
     AdvancedFiltersComponentOSS,
     AdvancedFiltersComponent
   ],
-
+  schemas: [CUSTOM_ELEMENTS_SCHEMA, NO_ERRORS_SCHEMA]
 })
 export class SharedModule {
 }

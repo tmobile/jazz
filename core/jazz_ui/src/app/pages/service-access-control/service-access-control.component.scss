@@ -7,6 +7,18 @@
   box-shadow: 0 2px 4px 0 rgba(180, 180, 211, 0.4);
   border-radius: 3px;
 
+  .role-description{
+    display: flex;
+    margin: 0.5rem 0;
+    font-size: 1rem;
+    .roleName{
+      margin: 0px 5px;
+      text-decoration: underline;
+      color: #ed008c;
+      cursor: pointer;
+    }
+  }
+
   .each-step-wrap {
     padding: 30px 0 20px 0;
 
@@ -323,6 +335,13 @@ input[type="text"] {
   .confirm-overlay-inner-wrap {
     align-self: center;
     background: white;
+    position: relative;
+    .icon-icon-close{
+      padding: 1rem;
+      position: absolute;
+      right: 0;
+      cursor: pointer;
+    }
   }
 
   .overlay-header {
@@ -343,7 +362,7 @@ input[type="text"] {
   .overlay-btns {
     display: flex;
     padding: 0 0 2.5rem 0;
-    justify-content: flex-start;
+    justify-content: center;
     flex-direction: row-reverse;
     a {
       align-self: center;
@@ -381,4 +400,37 @@ input[type="text"] {
   border-color: brown;
   border-bottom-left-radius: 0 !important;
   border-bottom-right-radius: 0 !important;
+}
+
+.popupcopy .tooltip-content {
+  visibility: hidden;
+  width: 185px;
+  background-color: #D5D7D9;
+  color: #4a4a4a;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  bottom: 20px;
+  left: 0%;
+  margin-left: -75px;
+  font-size: 12px;
+}
+
+.popupcopy .tooltip-content::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #D5D7D9 transparent transparent transparent;
+}
+
+.popupcopy:hover .tooltip-content {
+  visibility: visible;
+  -webkit-animation: fadeIn 2s;
+  animation: fadeIn 2s;
 }

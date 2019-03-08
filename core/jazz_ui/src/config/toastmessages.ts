@@ -180,9 +180,10 @@ export const toastMessage = {
     "aclConfirmation": {
         "finalConfirmationMsg": "Are you sure you want to make this edit?",
         "finalConfirmationHeader": "CONFIRMATION",
+        "acknowledgementHeader": "ACKNOWLEDGE",
         "errorIndicationHeader": "Unable to Remove User",
         "errorIndicationMsg": "There must be at least one user delegated under each category. To add additional users, select \"Add User\" from the options below.",
-        "removeAdminRule": "User access will be revoked for Code and Deploy. Do you want to remove user?",
-        "addAdminRule": "User will be provided with Code(write) and Deploy(write) permissions. Do you want to continue?"
+        "removeAdminRule": "When saved, user will lose all kinds of access to this service. Do you want to proceed?",
+        "addAdminRule": "When saved, user will be an administrator to this service. Do you want to proceed?"
     }
 };

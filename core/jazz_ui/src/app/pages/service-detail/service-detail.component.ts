@@ -14,6 +14,8 @@ import { BarGraphComponent } from '../../secondary-components/bar-graph/bar-grap
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
 import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
 import { environment } from './../../../environments/environment';
+import { Error403Component } from '../error403/error403.component';
+
 
 @Component({
   selector: 'service-detail',
@@ -72,6 +74,7 @@ export class ServiceDetailComponent implements OnInit {
   refreshTabClicked: boolean = false;
   isAdminAccess: boolean = false;
   currentUser: any = {}
+  isError403: boolean = false;
 
 
   private sub: any;
@@ -79,7 +82,7 @@ export class ServiceDetailComponent implements OnInit {
   private toastmessage: any;
 
   statusData = ['All', 'Active', 'Pending', 'Stopped'];
-  tabData = ['overview', 'access control', 'metrics', 'logs', 'cost'];
+  tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
 
   breadcrumbs = []
 
@@ -213,6 +216,8 @@ export class ServiceDetailComponent implements OnInit {
     }, (err) => {
       if (err.status == "404") {
         this.router.navigateByUrl('404');
+      } else if (err.status == "403" || err.type === 3) {
+        this.isError403 = true;
       }
       this.isLoadingService = false;
       let errorMessage = 'OOPS! something went wrong while fetching data';

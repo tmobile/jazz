@@ -7,8 +7,8 @@
         <div class="services-content-wrp">
 <jazz-mob-header [icon]="'notification'" [headText]="service.name" [status]="'green'"></jazz-mob-header>
 <section class="page-container">
-    <navigation-bar [links]="breadcrumbs" [data]="friendly_name"></navigation-bar>
-    <div class="content">
+    <navigation-bar *ngIf='!isError403' [links]="breadcrumbs" [data]="friendly_name"></navigation-bar>
+    <div *ngIf='!isError403' class="content">
         <div class="page-title-wrap hide-for-mobile">
             <div class="servie-details-container">
                 <h1 class="page-hdr bold-title relative">{{friendly_name}}
@@ -23,7 +23,7 @@
                 <span class="page-sub-title">{{service.name}}</span><br>
             </div>
             <btn-jazz-secondary *ngIf="service.serviceType=='api'" [disablebtn]='disablingApiButton' class="testApiBtn" text="TEST API" (click)="testService('api')"></btn-jazz-secondary>
-            <btn-jazz-secondary *ngIf="service.serviceType=='function'" [disablebtn]='disablingFunctionButton' class="testApiBtn" text="TEST FUNCTION" (click)="testService('function')"></btn-jazz-secondary>
+            <btn-jazz-secondary *ngIf="service.serviceType=='function'" [disablebtn]='disablingFunctionButton || !isAdminAccess' class="testApiBtn" text="TEST FUNCTION" (click)="testService('function')"></btn-jazz-secondary>
             <btn-jazz-secondary *ngIf="service.serviceType=='website'"  [disablebtn]='disablingApiButton' class="testApiBtn" text="GO TO WEBSITE" (click)="testService('website')"></btn-jazz-secondary>
             <div  *ngIf="swagger_error" class='right swagger-err'>Swagger file not found</div>
             <!-- <btn-jazz-secondary *ngIf="selectedTab == 3" [disablebtn]='false' class="testApiBtn" text="SONAR PROJECT"></btn-jazz-secondary>  -->
@@ -39,43 +39,46 @@
 
         </div> -->
 
-    <div *ngIf='status_val > 4' class="alert alert-warning" role="alert">
-            Looks like this environment is inactive, related assets might not be available during this time.
+        <div *ngIf='status_val > 4' class="alert alert-warning" role="alert">
+                Looks like this environment is inactive, related assets might not be available during this time.
+        </div>
+        <div class="tab-component">
+        <div class="refresh-button" (click)="refreshTab()">
+            <span class="icon-icon-refresh"></span>
+            <span>Refresh</span>
+        </div>
+            <tabs [beforeEnv]= "!isENVavailable" [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" [isAdminAccess]="isAdminAccess" (onSelected)="onSelectedDr($event)"></tabs>
+
+
+            <section class="page-content" *ngIf="selectedTab == 0">
+                <env-overview-section #selectedTabComponent #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service" [isAdminAccess]="isAdminAccess"></env-overview-section>
+            </section>
+
+
+            <section class="page-content" *ngIf="selectedTab == 1">
+                <env-deployments-section #selectedTabComponent #envdeployments [service]="service" [isDeployAccess]="isDeployAccess"></env-deployments-section>
+            </section>
+
+            <section class="page-content" *ngIf="selectedTab == 2">
+                <env-assets-section #selectedTabComponent [service]="service"></env-assets-section>
+            </section>
+
+            <section class="page-content" *ngIf="selectedTab == 3">
+            <service-metrics [service]="service"></service-metrics>
+            </section>
+
+            <section class="page-content" *ngIf="selectedTab == 4">
+            <env-codequality-section #selectedTabComponent [service]="service"></env-codequality-section>
+            </section>
+
+            <section class="page-content" *ngIf="selectedTab == 5">
+                <env-logs-section #selectedTabComponent [service]="service"></env-logs-section>
+            </section>
+        </div>
     </div>
-    <div class="tab-component">
-      <div class="refresh-button" (click)="refreshTab()">
-        <span class="icon-icon-refresh"></span>
-        <span>Refresh</span>
-      </div>
-        <tabs [beforeEnv]= "!isENVavailable" [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" [isAdminAccess]="isAdminAccess" (onSelected)="onSelectedDr($event)"></tabs>
-
-
-        <section class="page-content" *ngIf="selectedTab == 0">
-            <env-overview-section #selectedTabComponent #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service" [isAdminAccess]="isAdminAccess"></env-overview-section>
-        </section>
-
-
-        <section class="page-content" *ngIf="selectedTab == 1">
-            <env-deployments-section #selectedTabComponent #envdeployments [service]="service" [isDeployAccess]="isDeployAccess"></env-deployments-section>
-        </section>
-
-        <section class="page-content" *ngIf="selectedTab == 2">
-            <env-assets-section #selectedTabComponent [service]="service"></env-assets-section>
-        </section>
-
-        <section class="page-content" *ngIf="selectedTab == 3">
-          <service-metrics [service]="service"></service-metrics>
-        </section>
-
-        <section class="page-content" *ngIf="selectedTab == 4">
-          <env-codequality-section #selectedTabComponent [service]="service"></env-codequality-section>
-        </section>
-
-        <section class="page-content" *ngIf="selectedTab == 5">
-            <env-logs-section #selectedTabComponent [service]="service"></env-logs-section>
-        </section>
-</div>
-</div>
+    <section *ngIf='isError403'>
+        <error403></error403>
+    </section>
 </section>
 <section class='overview-sidebar'>
     <sidebar [show]="sidebar === 'overview'" (onClose)="setSidebar()">
