@@ -171,4 +171,30 @@ def isReplayedBuild() {
   currentBuild.rawBuild.getCauses().any{ cause -> cause.toString().contains(replayClassName) }
 }
 
+/*
+* Get the required account
+*/
+def getRequiredData(service_config){
+	def dataObj = {};
+	for (item in configLoader.AWS.ACCOUNTS) {
+		if(item.ACCOUNTID == service_config.accountId){
+			dataObj = item
+		}
+	}
+	return dataObj;
+}
+
+/*
+* Get the primary account
+*/
+def getRequiredDataForPrimary(){
+  def dataObjPrimary = {};
+	for (item in configLoader.AWS.ACCOUNTS) {
+		if(item.PRIMARY){
+			dataObjPrimary = item
+		}
+	}
+	return dataObjPrimary;
+}
+
 return this

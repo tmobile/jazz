@@ -233,7 +233,7 @@ node() {
       echo "starts Deployment to ${env_key} Env"
       def lambdaARN = null
       environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
-      def dataObjValues = getRequiredData();
+      def dataObjValues = utilModule.getRequiredData(service_config);
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 
       withCredentials([
@@ -348,15 +348,6 @@ node() {
   }
 }
 
-def getRequiredData(){
-	def dataObj = {};
-	for (item in configLoader.AWS.ACCOUNTS) {
-		if(item.ACCOUNTID == service_config.accountId){
-			dataObj = item
-		}
-	}
-	return dataObj;
-}
 
 def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld) {
   def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
@@ -462,7 +453,7 @@ def echoServerlessFile() {
 
 def servelessDeploy(env, envBucketKey, credsId, env_key){
   def s3BucketNameValue;
-  def dataAccount = getRequiredData();
+  def dataAccount = utilModule.getRequiredData(service_config);
   for (item in dataAccount.REGIONS) {
     if(item.REGION == service_config.region){
       s3BucketNameValue = item.S3[env_key]
@@ -783,7 +774,7 @@ def createSubscriptionFilters(stackName, env_key, credsId) {
     for (item in configLoader.AWS.ACCOUNTS) {
       if(item.ACCOUNTID == service_config.accountId){
         if(!item.PRIMARY){
-          def nonPrimaryAccount = getRequiredData();
+          def nonPrimaryAccount = utilModule.getRequiredData(service_config);
           def destARN
           for (data in nonPrimaryAccount.REGIONS) {
             if(data.REGION == service_config.region){
@@ -804,7 +795,7 @@ def createSubscriptionFilters(stackName, env_key, credsId) {
 
 def updatePolicy(env, destARN){
 
-  def primaryData = getRequiredDataForPrimary();
+  def primaryData = utilModule.getRequiredDataForPrimary();
   def primaryRegion
   for (item in primaryData.REGIONS) {
 		if(item.PRIMARY){
@@ -844,20 +835,10 @@ def updatePolicy(env, destARN){
           }
 }
 
-def getRequiredDataForPrimary(){
-  def dataObjPrimary = {};
-	for (item in configLoader.AWS.ACCOUNTS) {
-		if(item.PRIMARY){
-			dataObjPrimary = item
-		}
-	}
-	return dataObjPrimary;
-}
-
 
 def writeServerlessFile(config, env) {
 
-  def iamRoleAccount = getRequiredData();
+  def iamRoleAccount = utilModule.getRequiredData(service_config);
   def iamRoleArnValue = iamRoleAccount.IAM.USERSERVICES_ROLEID;
 
   sh "pwd"
