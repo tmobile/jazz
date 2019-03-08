@@ -319,7 +319,7 @@ node() {
           // reset Credentials
           resetCredentials(credsId)
           if (domain != "jazz") {
-            createSubscriptionFilters(stackName, env_key);
+            createSubscriptionFilters(stackName, env_key, credsId);
           }
 
           if (domain && domain == "jazz") {
@@ -757,7 +757,7 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, env_key) {
+def createSubscriptionFilters(stackName, env_key, credsId) {
   def lambda = "/aws/lambda/${stackName}"
   def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
 
@@ -767,7 +767,7 @@ def createSubscriptionFilters(stackName, env_key) {
 
   try {
     filter_json = sh(
-      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${service_config.region}",
+      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${service_config.region} --profile ${credsId}",
       returnStdout: true
     ).trim()
     echo "${filter_json}"
@@ -775,7 +775,7 @@ def createSubscriptionFilters(stackName, env_key) {
     filtername = resultJson.subscriptionFilters[0].filterName
     echo "removing existing filter... $filtername"
     if (filtername != "" && !filtername.equals(lambda)) {
-      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${service_config.region}"
+      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${service_config.region} --profile ${credsId}"
     }
   } catch (Exception ex) { } // ignore error if not created yet
   try {
@@ -791,9 +791,9 @@ def createSubscriptionFilters(stackName, env_key) {
             }
           }
           updatePolicy(env_key, destARN);
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${service_config.region}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${service_config.region} --profile ${credsId}"
         } else {
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
         }
       }
     }
