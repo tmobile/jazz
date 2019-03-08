@@ -13,7 +13,8 @@
 		"lines-of-code": "ncloc",
 		"files": "files",
 		"vulnerabilities": "high_severity_vulns"
-	},
+  },
+  "SERVICE_ID_HEADER_KEY": "Jazz-Service-ID",
 	"REQUIRED_PARAMS": ["domain", "service", "environment"],
 	"TOKEN_URL": "/prod/jazz/login",
 	"SERVICE_USER": "{jazz_admin}",

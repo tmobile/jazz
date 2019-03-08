@@ -58,6 +58,7 @@ import {ServiceMetricsComponent} from "../pages/service-metrics/service-metrics.
 import {MetricsCarouselComponent} from "../secondary-components/metrics-carousel/metrics-carousel.component";
 import {RouterModule} from "@angular/router";
 import { Error403Component } from "../pages/error403/error403.component";
+import {RadioCheckboxComponent} from "../primary-components/radio-checkbox/radio-checkbox.component";
 
 let specificComponents:any
 let specificModules: any;
@@ -131,6 +132,7 @@ for (let i in specificComponents) {
     FilterModalComponent,
     ServiceMetricsComponent,
     Error403Component,
+    RadioCheckboxComponent,
     ...declarationsArray,
 
 
@@ -176,6 +178,7 @@ for (let i in specificComponents) {
     FilterModalComponent,
     ServiceMetricsComponent,
     Error403Component,
+    RadioCheckboxComponent,
     ...declarationsArray
 
   ],

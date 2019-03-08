@@ -550,6 +550,12 @@
             "in": "query",
             "required": true,
             "type": "string"
+          },
+          {
+            "name": "Jazz-Service-ID",
+            "in": "header",
+            "required": true,
+            "type": "string"
           }
         ],
         "tags": [
