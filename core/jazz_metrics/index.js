@@ -175,7 +175,7 @@ function getConfigJson(config, token) {
           var responseBody = JSON.parse(body);
           resolve(responseBody.data)
         }else{
-          logger.info("Service not found for this service, domain, environment. ", JSON.stringify(config_json_api_options));
+          logger.debug("Service not found for this service, domain, environment. ", JSON.stringify(config_json_api_options));
           resolve([])
         }
       }
@@ -205,7 +205,7 @@ function getserviceMetaData(config, eventBody, authToken){
           var responseBody = JSON.parse(body);
           resolve(responseBody)
         }else{
-          logger.info("Service not found for this service, domain, environment. ", JSON.stringify(service_api_options));
+          logger.debug("Service not found for this service, domain, environment. ", JSON.stringify(service_api_options));
           resolve([])
         }
       }
@@ -245,7 +245,7 @@ function getAssetsDetails(config, eventBody, authToken) {
           var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
           resolve(assetsArray);
         } else {
-          logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
+          logger.debug("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
           resolve([]);
         }
       }

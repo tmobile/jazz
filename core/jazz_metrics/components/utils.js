@@ -253,7 +253,6 @@ function getCloudfrontCloudWatch(tempcreds , region) {
   return cloudwatch;
 }
 function checkIsPrimary(accountId, jsonConfig){
-  console.log(jsonConfig);
   var data = jsonConfig.config.AWS.ACCOUNTS;
   var index = data.findIndex(x => x.ACCOUNTID==accountId);
   if(data[index].PRIMARY){
@@ -270,7 +269,6 @@ function getRolePlatformService(accountId, jsonConfig){
 }
 
 function AssumeRole(accountID, configJson) {
-  console.log(configJson);
   var isPrimary = checkIsPrimary(accountID , configJson);
   var roleArn = getRolePlatformService(accountID, configJson);
   var accessparams;
