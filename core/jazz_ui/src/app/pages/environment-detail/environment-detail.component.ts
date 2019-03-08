@@ -187,7 +187,7 @@ export class EnvironmentDetailComponent implements OnInit {
 
       },
       err => {
-        if(err.status === "403" || err.type === 3) {
+        if(err.status === 403) {
           this.isError403 = true;
         }
         this.isLoadingService = false;
