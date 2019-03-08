@@ -156,7 +156,7 @@ function getToken(config) {
 function getConfigJson(config, token) {
   return new Promise((resolve, reject) => {
     var config_json_api_options = {
-      url : config.SERVICE_API_URL + "/jazz/admin/config",
+      url : `${config.SERVICE_API_URL}${config.CONFIG_URL}`,
       headers : {
         "Content-Type" : "application/json",
         "Authorization" : token
@@ -186,7 +186,7 @@ function getConfigJson(config, token) {
 function getserviceMetaData(config, eventBody, authToken){
   return new Promise((resolve, reject) =>  {
     var service_api_options = {
-      url: config.SERVICE_API_URL + config.SERVICE_URL + "?domain=" + eventBody.domain + "&service=" + eventBody.service + "&environment=" + eventBody.environment,
+      url: `${config.SERVICE_API_URL}${config.SERVICE_URL}?domain=${eventBody.domain}&service=${eventBody.service}&environment=${eventBody.environment}`,
       headers: {
         "Content-Type": "application/json",
         "Authorization": authToken
@@ -216,7 +216,7 @@ function getserviceMetaData(config, eventBody, authToken){
 function getAssetsDetails(config, eventBody, authToken) {
   return new Promise((resolve, reject) => {
     var asset_api_options = {
-      url: config.SERVICE_API_URL + config.ASSETS_URL + "?domain=" + eventBody.domain + "&service=" + eventBody.service + "&environment=" + eventBody.environment,
+      url: `${config.SERVICE_API_URL}${config.ASSETS_URL}?domain=${eventBody.domain}&service=${eventBody.service}&environment=${eventBody.environment}`,
       headers: {
         "Content-Type": "application/json",
         "Authorization": authToken

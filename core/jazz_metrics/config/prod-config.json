@@ -2,6 +2,7 @@
   "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod",
   "ASSETS_URL": "/jazz/assets",
   "SERVICE_URL": "/jazz/services",
+  "CONFIG_URL": "/jazz/admin/config",
   "TOKEN_URL": "/jazz/login",
   "SERVICE_USER": "{jazz_admin}",
   "TOKEN_CREDS": "{jazz_admin_creds}"
