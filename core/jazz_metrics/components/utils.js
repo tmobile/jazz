@@ -242,14 +242,15 @@ function updateCloudfrontAsset(newAssetObj, relativeId) {
 
 function getCloudWatch(tempcreds, region) {
   tempcreds.apiVersion = '2010-08-01';
-  var cloudwatch = new AWS.CloudWatch({tempcreds});
+  tempcreds.region = region;
+  var cloudwatch = new AWS.CloudWatch(tempcreds);
   return cloudwatch;
 }
 
 function getCloudfrontCloudWatch(tempcreds , region) {
   tempcreds.apiVersion = '2010-08-01';
   tempcreds.region = region
-  var cloudwatch = new AWS.CloudWatch({tempcreds});
+  var cloudwatch = new AWS.CloudWatch(tempcreds);
   return cloudwatch;
 }
 function checkIsPrimary(accountId, jsonConfig){
