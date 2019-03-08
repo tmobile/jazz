@@ -288,13 +288,11 @@ function AssumeRole(accountID, configJson) {
       };
       sts.assumeRole(params, (err, data) => {
         if (err) {
-          console.log("Error Assuming Role with params:" + JSON.stringify(err));
           reject({
             "result": "serverError",
             "message": "Unknown internal error occurred"
           })
         } else {
-          console.log("The Temporary Acces details are:" + JSON.stringify(data));
           accessparams = {
             accessKeyId: data.Credentials.AccessKeyId,
             secretAccessKey: data.Credentials.SecretAccessKey,
