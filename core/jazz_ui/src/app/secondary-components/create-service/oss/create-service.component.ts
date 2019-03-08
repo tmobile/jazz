@@ -121,6 +121,8 @@ export class CreateServiceComponent implements OnInit {
 
   selectAccountsRegions(){
     this.accountMap = env_oss.accountMap;
+    this.accountList = [];
+    this.regionList = [];
     this.accountMap.map((item)=>{
       this.accountList.push(item.account)
       if(item.primary){
