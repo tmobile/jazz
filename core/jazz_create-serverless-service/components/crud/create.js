@@ -67,6 +67,7 @@ module.exports = (inputs, callback) => {
 		if (inputs.IS_PUBLIC_ENDPOINT) { jsonBody.is_public_endpoint = inputs.IS_PUBLIC_ENDPOINT }
 		if (inputs.STATUS) { jsonBody.status = inputs.STATUS }
 		if (inputs.DEPLOYMENT_DESCRIPTOR) { jsonBody.deployment_descriptor = inputs.DEPLOYMENT_DESCRIPTOR }
+		if (inputs.DEPLOYMENT_TARGETS) { jsonBody.deployment_targets = inputs.DEPLOYMENT_TARGETS }
 
 		return jsonBody;
 	}

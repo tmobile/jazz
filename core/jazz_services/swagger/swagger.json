@@ -1431,7 +1431,7 @@
                     "type": "string",
                     "description": "Slack channel to which all the service notifications should be sent to"
                 },
-				"metadata":{
+				        "metadata":{
                     "type": "string",
                     "description": "Service metadata imformation"
                 },
@@ -1449,6 +1449,24 @@
                 "deployment_descriptor": {
                     "type": "string",
                     "description": "Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
+                },
+                "deployment_targets": {
+                    "type": "object",
+                    "description": "Deployment targets list for the service",
+                    "properties": {
+                        "api": {
+                            "type": "string",
+                            "enum": ["aws_apigateway", "gcp_apigee"]
+                        },
+                        "function": {
+                            "type": "string",
+                            "enum": ["aws_lambda"]
+                        },
+                        "website": {
+                            "type": "string",
+                            "enum": ["aws_s3", "aws_cloudfront"]
+                        }
+                    }
                 }
             }
         },
@@ -1518,7 +1536,7 @@
                     "type": "string",
                     "description": "Slack channel to which all the service notifications should be sent to"
                 },
-				"metadata":{
+				        "metadata":{
                     "type": "string",
                     "description": "Service metadata imformation"
                 },
@@ -1532,6 +1550,24 @@
                         "type": "string"
                     },
                     "description": "Tags for the service"
+                },
+                "deployment_targets": {
+                    "type": "object",
+                    "description": "Deployment targets list for the service",
+                    "properties": {
+                        "api": {
+                            "type": "string",
+                            "enum": ["aws_apigateway", "gcp_apigee"]
+                        },
+                        "function": {
+                            "type": "string",
+                            "enum": ["aws_lambda"]
+                        },
+                        "website": {
+                            "type": "string",
+                            "enum": ["aws_s3", "aws_cloudfront"]
+                        }
+                    }
                 },
                 "deployment_descriptor": {
                     "type": "string",

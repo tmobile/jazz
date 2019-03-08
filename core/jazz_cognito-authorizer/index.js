@@ -23,7 +23,6 @@ const jwt = require("jsonwebtoken");
 const request = require('request');
 const jwkToPem = require('jwk-to-pem');
 const AWS = require('aws-sdk');
-const _ = require('lodash');
 
 var pems;
 var cognitoUserPoolEndpoint;
@@ -150,7 +149,7 @@ module.exports.handler = function (event, context, cb) {
                         logger.error(JSON.stringify(err));
                         return cb("Unauthorized");
                     } else {
-                        var emailAddress = _.find(data.UserAttributes, { "Name": "email" });
+                        var emailAddress = data.UserAttributes.find(ua => ua.Name == 'email');
                         //Get AWS AccountId and API Options
                         var apiOptions = {};
                         var tmp = event.methodArn.split(':');

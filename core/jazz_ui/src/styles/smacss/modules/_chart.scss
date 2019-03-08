@@ -6,7 +6,8 @@ $gutter: .5rem;
   background-color: #f9f9f9;
   border: solid 1px #9b9b9b;
   padding: 2.5rem $gutter;
-  height: calc(100% - (120rem / 12));
+  height: calc(100% - 13rem);
+  margin-bottom: 0.8rem;
 }
 .jz-chart-header {
   display: flex;

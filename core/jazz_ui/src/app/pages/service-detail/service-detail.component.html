@@ -13,8 +13,6 @@
         </div>
         <div class='tab-component'>
             <div class="refresh-button" (click)="refreshTab()">
-                <span class="icon-icon-refresh"></span>
-                <span>Refresh</span>
             </div>
             <tabs [beforeEnv]= "!isENVavailable" [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
 

@@ -477,7 +477,7 @@ public goToAbout(hash){
       case 'endpoint_url':
         return 'URL';
       default:
-        return 'ARN';
+        return 'Provider ID';
     }
   }
 
