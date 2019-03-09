@@ -19,7 +19,6 @@ import {DaterangePickerComponent} from '../primary-components/daterange-picker/d
 import {FiltersComponent} from '../secondary-components/filters/filters.component';
 import {FilterTagsComponent} from '../secondary-components/filter-tags/filter-tags.component';
 import {FilterTagsServicesComponent} from '../secondary-components/filter-tags-services/filter-tags-services.component';
-//import {AdvancedFiltersComponent} from './../secondary-components/advanced-filters/advanced-filters.component';
 import {TabsComponent} from '../primary-components/tabs/tabs.component';
 import {JenkinsStatusComponent} from '../pages/jenkins-status/jenkins-status.component';
 import {FocusDirective} from '../secondary-components/create-service/focus.directive';
@@ -33,7 +32,6 @@ import {BrowserModule} from '@angular/platform-browser';
 // import {ToasterModule} from 'angular2-toaster';
 import {DatePickerModule} from '../primary-components/daterange-picker/ng2-datepicker';
 import {MomentModule} from 'angular2-moment';
-import {IonRangeSliderModule} from 'ng2-ion-range-slider';
 
 // Importing The Required Components via Barrel
 // import * as CommonServiceComponents from './shared.module.declarations.common';
@@ -58,6 +56,7 @@ import {FilterModalComponent} from "../secondary-components/filter-modal/filter-
 import {ServiceMetricsComponent} from "../pages/service-metrics/service-metrics.component";
 import {MetricsCarouselComponent} from "../secondary-components/metrics-carousel/metrics-carousel.component";
 import {RouterModule} from "@angular/router";
+import {RadioCheckboxComponent} from "../primary-components/radio-checkbox/radio-checkbox.component";
 
 let specificComponents:any
 let specificModules: any;
@@ -88,8 +87,7 @@ for (let i in specificComponents) {
     MomentModule,
     // ToasterModule,
     PopoverModule,
-    ChartsModule,
-    IonRangeSliderModule,
+    ChartsModule
   ],
   declarations: [
     BtnJazzPrimaryComponent,
@@ -131,6 +129,7 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    RadioCheckboxComponent,
     ...declarationsArray,
 
 
@@ -175,6 +174,7 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    RadioCheckboxComponent,
     ...declarationsArray
 
   ],

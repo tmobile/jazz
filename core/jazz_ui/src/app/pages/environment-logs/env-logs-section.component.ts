@@ -194,15 +194,19 @@ export class EnvLogsSectionComponent implements OnInit {
 	}
 
 	onRowClicked(row, index) {
-		for (var i = 0; i < this.logs.length; i++) {
-			var rowData = this.logs[i]
-
-			if (i == index) {
-				rowData['expanded'] = !rowData['expanded'];
-			} else {
-				rowData['expanded'] = false;
+		var rowData = this.logs[index];
+		if (rowData) {
+			rowData['expanded'] = !rowData['expanded'];
+			this.expandText = 'Collapse all';
+			for (var i = 0; i < this.logs.length; i++) {
+				var rowData = this.logs[i];
+				if (rowData['expanded'] == false) {
+					this.expandText = 'Expand all';
+					break;
+				}
 			}
 		}
+
 	}
 
 	onFilter(column) {
@@ -278,21 +282,6 @@ export class EnvLogsSectionComponent implements OnInit {
 		this.resetPayload();
 	}
 
-	onClickFilter() {
-
-		//ng2-ion-range-slider
-
-		var slider = document.getElementById('sliderElement');
-
-		slider.getElementsByClassName('irs-line-mid')[0].setAttribute('style', 'border-radius:10px;')
-		slider.getElementsByClassName('irs-bar-edge')[0].setAttribute('style', ' background: none;background-color: #ed008c;border-bottom-left-radius:10px;border-top-left-radius:10px;width: 10px;');
-		slider.getElementsByClassName('irs-single')[0].setAttribute('style', ' background: none;background-color: #ed008c;left:' + this.sliderPercentFrom + '%');
-		slider.getElementsByClassName('irs-bar')[0].setAttribute('style', ' background: none;left:10px;background-color: #ed008c;width:' + this.sliderPercentFrom + '%');
-		slider.getElementsByClassName('irs-slider single')[0].setAttribute('style', 'width: 20px;cursor:pointer;top: 20px;height: 20px;border-radius: 50%; background: none; background-color: #fff;left:' + this.sliderPercentFrom + '%');
-
-		slider.getElementsByClassName('irs-max')[0].setAttribute('style', 'background: none');
-		slider.getElementsByClassName('irs-min')[0].setAttribute('style', 'background: none');
-	}
 	getRange(e) {
 		this.sliderFrom = e.from;
 		this.sliderPercentFrom = e.from_percent;

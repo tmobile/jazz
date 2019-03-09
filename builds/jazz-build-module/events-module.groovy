@@ -54,7 +54,13 @@ echo "Events module loaded successfully"
 	'UPDATE_DEPLOYMENT': 'UPDATE_DEPLOYMENT',
 	'UPDATE_ENVIRONMENT': 'UPDATE_ENVIRONMENT',
 	'DELETE_ENVIRONMENT': 'DELETE_ENVIRONMENT',
-	'CODE_QUALITY_CHECK': 'CODE_QUALITY_CHECK'
+	'CODE_QUALITY_CHECK': 'CODE_QUALITY_CHECK',
+	'APIGEE_API_PROXY_GEN': 'APIGEE_API_PROXY_GEN',
+	'APIGEE_API_PROXY_BUILD': 'APIGEE_API_PROXY_BUILD',
+	'APIGEE_API_PROXY_DEPLOY': 'APIGEE_API_PROXY_DEPLOY',
+	'APIGEE_API_PROXY_DELETE': 'APIGEE_API_PROXY_DELETE',
+	'DEPLOY_TO_AWS_APIGATEWAY': 'DEPLOY_TO_AWS_APIGATEWAY',
+	'DEPLOY_TO_GCP_APIGEE': 'DEPLOY_TO_GCP_APIGEE'
 ]
 
 /**
@@ -209,7 +215,7 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 		'branch': g_branch,
 		'runtime': service_metadata['runtime'],
 		'domain': service_metadata['domain'],
-		'iam_role': config_loader.AWS.ROLEID,
+		'iam_role': service_metadata['iamRoleARN'],
 		'environment': g_environment,
 		'region': config_loader.AWS.REGION,
 		'message': message

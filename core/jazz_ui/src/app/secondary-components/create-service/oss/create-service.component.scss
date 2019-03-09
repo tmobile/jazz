@@ -274,7 +274,7 @@
 
 .zero-padding {
   padding: 0 !important;
-  background-color: transparent;
+  background-color: transparent !important;
 }
 
 .arrow_box {
@@ -440,6 +440,10 @@
 .zero-margin.row {
   margin-left: 0;
   margin-right: 0;
+}
+
+.each-step-wrap.aws-events input[type="radio"] + label span.background{
+  top: 5px;
 }
 
 .event-schedule-radio {
@@ -798,6 +802,14 @@ p.learn-more {
   }
 }
 
+.radio-label {
+  display: inline-flex;
+}
+
+.runtime-option {
+  padding:0 20px 0 0;
+}
+
 .padding-right-0 {
   padding-right: 0;
 }
@@ -805,6 +817,21 @@ p.learn-more {
 .disble {
   border-color: #ddd !important;
   opacity: 0.5 !important;
+}
+
+.form-row {
+  padding: 20px 0;
+  border-bottom: solid 1px #ccc;
+}
+
+.radio-options {
+  display:flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-direction: row;
+  .radio-container {
+    margin-right: 15px;
+  }
 }
 .events-radio{
   margin: 0 0.5rem;
@@ -819,4 +846,7 @@ p.learn-more {
 }
 .aw-events-s3{
   width:32.5rem;
+}
+.runtime-aln{
+  display: flex;
 }

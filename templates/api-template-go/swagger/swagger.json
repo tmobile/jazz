@@ -1,0 +1,431 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "2017-01-30T23:30:18Z",
+    "title": "{api_deployment_node_title}",
+    "description": "API specification for Go template service"
+  },
+  "host": "{api_host_name}",
+  "basePath": "/{domain}",
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/{service_name}": {
+      "options": {
+        "operationId": "{operationId}",
+        "description": "CORS Support",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "CORS"
+        ],
+        "responses": {
+          "200": {
+            "description": "Default response for CORS method",
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/400ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401ErrorResponse"
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "$ref": "#/definitions/403ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/404ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/500ErrorResponse"
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "{operationId}",
+        "description": "Node Js template service Get Method",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "a",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "b",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Execution",
+            "schema": {
+              "$ref": "#/definitions/200SuccessResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/400ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "$ref": "#/definitions/403ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/404ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/500ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "{operationId}",
+        "description": "Post method swagger for Node template",
+        "parameters": [
+          {
+            "name": "param",
+            "in": "body",
+            "description": "post body parameter.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InputObj"
+            }
+          }
+        ],
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Execution",
+            "schema": {
+              "$ref": "#/definitions/200SuccessResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/400ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "$ref": "#/definitions/403ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/404ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/500ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "200SuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/OutputObj"
+        },
+        "input": {
+          "$ref": "#/definitions/InputObj"
+        }
+      },
+      "title": "Success Response"
+    },
+    "400ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error_type": {
+          "type": "string",
+          "default": "Bad Request format"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "401ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "errorType": {
+          "type": "string",
+          "default": "Unauthorized"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "403ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "errorType": {
+          "type": "string",
+          "default": "Forbidden"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "404ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error_type": {
+          "type": "string",
+          "default": "Resource Not Found"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "500ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "error_type": {
+          "type": "string",
+          "default": "Internal Server Error"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "InputObj": {
+      "type": "object",
+      "properties": {
+        "a": {
+          "type": "string",
+          "description": "Sample key in the input object"
+        },
+        "b": {
+          "type": "string",
+          "description": "Sample key in the input object"
+        }
+      }
+    },
+    "OutputObj": {
+      "type": "object",
+      "properties": {
+        "foo": {
+          "type": "string",
+          "description": "Sample key in the output object"
+        },
+        "bar": {
+          "type": "string",
+          "description": "Sample key in the output object"
+        }
+      }
+    }
+  }
+}

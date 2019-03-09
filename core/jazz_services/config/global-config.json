@@ -97,6 +97,13 @@
             "editable": true,
             "isEmptyAllowed": false,
             "type": "Object"
+        },
+        {
+            "key": "deployment_targets",
+            "required": true,
+            "editable": false,
+            "isEmptyAllowed": false,
+            "type": "Object"
         }       
     ],
     "SERVICE_STATUS": [
@@ -109,7 +116,7 @@
         "active",
         "inactive"
     ],
-    "SERVICE_RUNTIMES": ["nodejs", "python", "java", "c#"],
+    "SERVICE_RUNTIMES": ["nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"],
     "TYPE_FIELD_KEY": "type",
     "SERVICE_INTER_DEPENDENT_FIELDS_MAP": [
         {

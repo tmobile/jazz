@@ -68,7 +68,7 @@ describe('platform_services', function() {
         "domain" : "k!ngd0m",
         "region" : "mewni",
         "type" : "api",
-        "runtime" : "nodejs",
+        "runtime" : "nodejs8.10",
         "created_by" : "g10$saryck",
         "status" : "active"
       },
@@ -623,6 +623,114 @@ describe('platform_services', function() {
   });
 
   /*
+  * Given a successful attempt at a dynamo service update, handler() should indicate update success
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should indicate that service was updated upon successful documentClient.update()", () =>{
+    event.method = "PUT";
+    logMessage = "Updated service";
+    //mocking DocumentClient from DynamoDB, get is mocked with successful return, update returns error
+    AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    AWS.mock("DynamoDB.DocumentClient", "update", (params, cb) => {
+      dataObj.updateServiceByID = "heckAp00";
+      return cb(null, dataObj);
+    });
+    //wrapping the logger to check for response messages
+    logStub = sinon.stub(logger,"info",spy);
+    //trigger the mocked logic by calling handler()
+    var callFunction = index.handler(event, context, callbackObj.callback);
+    var logResponse = logStub.args[9][0];
+    var logCheck = logResponse.includes(logMessage);
+    AWS.restore("DynamoDB.DocumentClient");
+    sinon.assert.called(stub);
+    sinon.assert.called(logStub);
+    logStub.restore();
+    assert.isTrue(logCheck);
+});
+
+  /* 
+  * Given a successful attempt at a dynamo service update, handler() should indicate metadata updated successfully
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should indicate that metadata was updated upon successful documentClient.update()", () => {
+  event.method = "PUT";
+  logMessage = "Metadata updated";
+  event.body = {
+    metadata: {
+      a: "updated data"
+    }
+  }
+  //mocking DocumentClient from DynamoDB, get and  update are mocked with successful return
+  AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+    //injecting metadata
+    dataObj.Item.metadata = {
+      a: "dummy data"
+    }
+    return cb(null, dataObj);
+  })
+
+  AWS.mock("DynamoDB.DocumentClient", "update", (params, cb) => {
+    dataObj.updateServiceByID = "heckAp00";
+    return cb(null, dataObj);
+  })
+  //wrapping the logger to check for response messages
+  logStub = sinon.stub(logger, "info", spy);
+  //trigger the mocked logic by calling handler()
+  var callFunction = index.handler(event, context, callbackObj.callback);
+  var logResponse = logStub.args[9][0];
+  var logCheck = logResponse.includes(logMessage);
+  AWS.restore("DynamoDB.DocumentClient");
+  sinon.assert.called(stub);
+  sinon.assert.called(logStub);
+  logStub.restore();
+  assert.isTrue(logCheck);
+  });
+
+  /* 
+  * Given a successful attempt at a dynamo service update, handler() should indicate array updated successfully
+  * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should indicate that array was updated upon successful documentClient.update()", () => {
+  event.method = "PUT";
+  logMessage = "Array data updated";
+  event.body = {
+  tags : [
+    "pending"
+  ]
+  }
+
+  //mocking DocumentClient from DynamoDB, get and  update are mocked with successful return
+  AWS.mock("DynamoDB.DocumentClient", "get", (params, cb) => {
+  //injecting metadata
+  dataObj.Item.tags = [
+    "active"
+  ];
+  return cb(null, dataObj);
+  })
+
+  AWS.mock("DynamoDB.DocumentClient", "update", (params, cb) => {
+  dataObj.updateServiceByID = "heckAp00";
+  return cb(null, dataObj);
+  })
+  //wrapping the logger to check for response messages
+  logStub = sinon.stub(logger, "info", spy);
+  //trigger the mocked logic by calling handler()
+  var callFunction = index.handler(event, context, callbackObj.callback);
+  var logResponse = logStub.args[9][0];
+  var logCheck = logResponse.includes(logMessage);
+  AWS.restore("DynamoDB.DocumentClient");
+  sinon.assert.called(stub);
+  sinon.assert.called(logStub);
+  logStub.restore();
+  assert.isTrue(logCheck);
+  })
+
+  /*
   * Given a failed attempt at a dynamo service update, handler() should inform of error
   * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
@@ -908,14 +1016,31 @@ describe('platform_services', function() {
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   * @returns {string} callback response containing error message with details
   */
-  it("should indicate that input data is missing given a POST with an event.body missing required fields", ()=>{
+  it("should indicate that input data is invalid given a POST with an event.body with wrong required fields", ()=>{
     //query has all required fields, cloning these properties will get us past first check
+    event.body.deployment_targets = {"invalid": "gcp_apigee"};
     Object.assign(event.body, event.query);
     event.body.newProperty = "Ludo!";
     event.method = "POST";
     event.path.id = undefined;
     errType = "inputError";
-    errMessage = "Following fields are invalid :  ";
+    errMessage = "Following fields are invalid : ";
+    //wrap the logger responses
+    stub = sinon.stub(logger, "error", spy);
+    //trigger stub/spy by calling handler
+    var callfunction = index.handler(event, context, callback);
+    var cbMessage = JSON.stringify(spy.args[0][0]);
+    var cbCheck = cbMessage.includes(errType) && cbMessage.includes(errMessage);
+    stub.restore();
+    assert.isTrue(cbCheck);
+  });
+
+  it("should indicate that input data is missing given a POST with an event.body missing required fields", ()=>{
+    //do NOT assign required fields from event.query to event.body
+    event.method = "POST";
+    event.path.id = undefined;
+    errType = "inputError";
+    errMessage = "Following field(s) are required ";
     //wrap the logger responses
     stub = sinon.stub(logger, "error", spy);
     //trigger stub/spy by calling handler
@@ -934,12 +1059,21 @@ describe('platform_services', function() {
   */
   it("should attempt dynamoDB scan for matching services given a POST with valid body data", ()=>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = {"api": "apigee"}
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     var attemptBool = dynamoCheck("scan",spy);
     assert.isTrue(attemptBool);
+  });
+
+  it("should attempt dynamoDB scan and fail given a POST with valid missing required body data", ()=>{
+    //do NOT assign required fields from event.query to event.body
+    event.method = "POST";
+    event.path.id = undefined;
+    var attemptBool = dynamoCheck("scan",spy);
+    assert.isFalse(attemptBool);
   });
 
   /*
@@ -950,6 +1084,7 @@ describe('platform_services', function() {
   */
   it("should indicate an InternalServerError occured if DynamoDB.scan fails during POST", ()=>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
@@ -986,6 +1121,7 @@ describe('platform_services', function() {
   */
   it("should indicate service already exists if return obj from dynamoDB scan is non-empty", ()=>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
@@ -1024,6 +1160,7 @@ describe('platform_services', function() {
   */
   it("should attempt to add service in dynamo for successful POST", function(){
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
@@ -1045,6 +1182,7 @@ describe('platform_services', function() {
   */
   it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.put fails", () =>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";

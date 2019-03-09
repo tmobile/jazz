@@ -166,4 +166,9 @@ def getApiToken(){
 	}
 }
 
+def isReplayedBuild() {
+  def replayClassName = "org.jenkinsci.plugins.workflow.cps.replay.ReplayCause"
+  currentBuild.rawBuild.getCauses().any{ cause -> cause.toString().contains(replayClassName) }
+}
+
 return this
