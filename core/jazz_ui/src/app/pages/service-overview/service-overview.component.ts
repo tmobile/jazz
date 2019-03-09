@@ -374,6 +374,16 @@ export class ServiceOverviewComponent implements OnInit {
 
   onCompleteClick() {
     this.isPUTLoading = true;
+    if(this.rateExpression.type === "none"){
+      this.rateExpression.duration = "5";
+      this.rateExpression.interval = "Minutes";
+      this.cronObj.minutes = "0/5";
+      this.cronObj.hours = "*";
+      this.cronObj.dayOfMonth = "*";
+      this.cronObj.month = "*";
+      this.cronObj.dayOfWeek = "?";
+      this.cronObj.year = "*";
+    }
     this.http.put('/jazz/services/' + this.service.id, this.PutPayload, this.service.id)
       .subscribe(
         (Response) => {

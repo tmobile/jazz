@@ -630,6 +630,36 @@ describe('create-serverless-service', function () {
       });
     });
 
+    it("should return input object with deployment target when input paramter is provided with valid values for api service type ", () => {
+      const authToken = "temp-auth-token";
+      let bool = false;
+      service_creation_data["service_type"] = "api";
+      service_creation_data["deployment_targets"] = {"api": "gcp_apigee"};
+      const config = configModule.getConfig(event, context);
+      index.getServiceData(service_creation_data, authToken, config, {"api": "gcp_apigee"})
+      .then(input => {
+        if (input.DEPLOYMENT_TARGETS["api"] === "gcp_apigee") {
+          bool = true;
+        }
+        assert.isTrue(bool);
+      });
+    });
+
+    it("should return input object with deployment target when input paramter is provided with valid values for function service type ", () => {
+      const authToken = "temp-auth-token";
+      let bool = false;
+      service_creation_data["service_type"] = "function";
+      service_creation_data["deployment_targets"] = {"function": "aws_lambda"};
+      const config = configModule.getConfig(event, context);
+      index.getServiceData(service_creation_data, authToken, config, {"function": "aws_lambda"})
+      .then(input => {
+        if (input.DEPLOYMENT_TARGETS["function"] === "aws_lambda") {
+          bool = true;
+        }
+        assert.isTrue(bool);
+      });
+    });
+
   describe("createService", () => {
     let input;
     beforeEach(() => {
