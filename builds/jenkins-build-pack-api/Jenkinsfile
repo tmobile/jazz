@@ -242,7 +242,10 @@ node() {
 
           echo "serverless deploy......."
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
-          sh "serverless deploy --stage ${environment_logical_id} -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey);
+          if(deployOutput != 'success'){
+						handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)						
+					}
 
           def lambdaARN = getLambdaARN(stackName, credsId);
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
@@ -269,9 +272,9 @@ node() {
                 awsAPIGatewayModule.addApigatewayLambdaIntegration('swagger/swagger.json');
                 updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
 
-                sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile cloud-api"
-                sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile cloud-api"
-                sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile cloud-api"
+                sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile ${credsId}"
+                sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile ${credsId}"
+                sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile ${credsId}"
                 if ("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
                   sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
                 } else {
@@ -1061,5 +1064,72 @@ def loadBuildModules(buildModuleUrl){
       apigeeModule.initialize(configLoader.APIGEE, events)
       echo "Apigee module loaded successfully."
     }
+  }
+}
+
+def servelessDeploy(env, envBucketKey){
+  try {
+    sh "serverless deploy --stage ${env} -v --bucket ${configLoader.AWS.S3[envBucketKey]} --force > output.log"
+    return "success"
+  } catch (ex) {
+    echo "Serverless deployment failed due to $ex"
+  }
+
+  def outputLog = readFile('output.log').trim()
+  return outputLog
+}
+
+
+def isExistingLogGroup (groupName, credsId){
+	def isExistingLogGrp = false
+	def filterLogs = sh (
+		script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile ${credsId}",
+		returnStdout: true
+	).trim()
+	def toJSON = new groovy.json.JsonSlurper()
+	def filterLogsJSON = toJSON.parseText(filterLogs)
+	def logGroups = filterLogsJSON.logGroups
+	if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
+		isExistingLogGrp = true
+	}
+	return isExistingLogGrp
+}
+
+def removeLogGroup(groupName, credsId) {
+	sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
+	echo "successfully removed log group $groupName"
+}
+
+def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId) {
+  def rollbackErrorMessage = "ROLLBACK_COMPLETE state and can not be updated"
+  def logGroupErrorMessage = "CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"
+	if(deployOutput.contains(rollbackErrorMessage)){
+		deleteAndRedeployService(env, envBucketKey)
+	}
+	else if (deployOutput.contains(logGroupErrorMessage))
+	{
+		def lambda = "/aws/lambda/${envBucketKey}-${env}"
+		if (isExistingLogGroup(lambda, credsId)){
+			removeLogGroup(lambda, credsId)
+			deleteAndRedeployService(env, envBucketKey);
+		} else {
+			error "Unable to find existing log groups"
+		}
+	} 
+	else {
+			error "Exception occured while serverless deployment to ${env} environment"
+	}
+}
+
+/**
+Redeploying Service
+*/
+def deleteAndRedeployService(environment_logical_id, envBucketKey){
+  echoServerlessFile()
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+  if (redeployOutput != 'success') {
+    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
+    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
 }
