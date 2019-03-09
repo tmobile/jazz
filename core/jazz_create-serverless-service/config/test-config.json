@@ -9,7 +9,6 @@
       "function": ["{conf_deployment_targets_function}"],
       "website": ["{conf_deployment_targets_website}"]
     },
-    "SERVICE_API_URL": "https://test.execute-api.test-region.amazonaws.com",
     "EVENT_SOURCE_NAME": {
       "s3": {
           "minLength": 3,

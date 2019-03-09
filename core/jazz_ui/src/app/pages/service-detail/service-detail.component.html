@@ -1,17 +1,17 @@
 <jazz-mob-header [icon]="'notification'" [headText]="service.name" [status]="'green'"></jazz-mob-header>
 <section class="page-container service-detail-page">
-    <navigation-bar [links]="breadcrumbs"></navigation-bar>
+    <navigation-bar *ngIf='!isError403' [links]="breadcrumbs"></navigation-bar>
 
     <div class="content relative" [class.non-clickable] = 'service.status == "deletion started" || service.status == "deletion completed"'>
                         <span  class="reduxC" *ngIf='service.status == "deletion completed"'></span>
                         <span  class="reduxS" *ngIf='service.status == "deletion started"'></span>
 
-        <div class="page-title-wrap hide-for-mobile">
+        <div *ngIf='!isError403' class="page-title-wrap hide-for-mobile">
             <h1 class="page-hdr bold-title">{{service.name}}</h1>
             <span class="page-sub-title"><span class="service-type">{{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
             <btn-jazz-secondary class="delete-service-btn" text="DELETE SERVICE" [disablebtn]="!canDelete || !isAdminAccess" (click)="deleteService(true)"></btn-jazz-secondary>
         </div>
-        <div class='tab-component'>
+        <div *ngIf='!isError403' class='tab-component'>
             <div class="refresh-button" (click)="refreshTab()">
             </div>
             <tabs [beforeEnv]= "!isENVavailable" [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [isAdminAccess]= "isAdminAccess" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
@@ -37,16 +37,18 @@
           </section>
         </div>
         <div *ngIf='err_flag' class='err-wrp'>
-
-                <div class="empty-row with-refresh relative">
-                        <div class="loading-row" [class.show]="isLoadingService">
-                                <div class="loading-circle"></div>
-                        </div>
-                        <img src="assets/images/refresh.png" alt="errorimg" width="100">
-                        <div class='oops'>Oops!</div>
-                        <div>{{errMessage}}<br><a (click)="refreshServ()">REFRESH</a> to give it another try.</div>
-                        <br><div class='ctc-us'>If the problem persists, <a (click)='goToAbout("about")'> contact us</a>.</div>
+            <section *ngIf='isError403'>
+                <error403></error403>
+            </section>
+            <div *ngIf='!isError403' class="empty-row with-refresh relative">
+                <div class="loading-row" [class.show]="isLoadingService">
+                        <div class="loading-circle"></div>
                 </div>
+                <img src="assets/images/refresh.png" alt="errorimg" width="100">
+                <div class='oops'>Oops!</div>
+                <div>{{errMessage}}<br><a (click)="refreshServ()">REFRESH</a> to give it another try.</div>
+                <br><div class='ctc-us'>If the problem persists, <a (click)='goToAbout("about")'> contact us</a>.</div>
+            </div>
         </div>
     </div>
 </section>

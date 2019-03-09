@@ -166,7 +166,7 @@ export class RequestService {
     }
     private handleError(error: any, router:any) {
         console.log(error);
-       if(error.status === 401 || error.status === 403){
+       if(error.status === 401){
             if (router) {
                router.navigateByUrl('');//route to landing page
                this.authenticationService.logout();

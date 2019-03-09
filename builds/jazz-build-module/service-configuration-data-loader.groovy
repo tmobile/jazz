@@ -218,12 +218,7 @@ def loadServiceConfigurationData() {
       updateCoreAPI()
       updateConfigValue("{conf-region}", region)
 
-        if (service_name.trim() == "jazz_environment-event-handler") {
-            updateCoreAPI()
-            updateConfigValue("{conf-region}", region)
-            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
-            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
-        }
+      sh "sed -i -- 's/{conf-region}/${region}/g' ./event.json"
 
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.JENKINS.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
         updateConfigValue("{ci_user}", UNAME)
@@ -243,14 +238,20 @@ def loadServiceConfigurationData() {
       }
     }
 
-    if (service_name.trim() == "jazz_cognito-authorizer") {
-           updateCoreAPI()
-           updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+    if ((service_name.trim() == "jazz_es-kinesis-log-streamer")) {
+      sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global_config.json"
     }
 
-    if (service_name.trim() == "jazz_is-service-available") {
-            updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
-            updateConfigValue("{conf-region}", region)
+    if (service_name.trim() == "jazz_splunk-kinesis-log-streamer") {
+      sh "sed -i -- 's|{splunk_endpoint}|${config_loader.SPLUNK.ENDPOINT}|g' ./config/dev-config.json"
+      sh "sed -i -- 's|{splunk_endpoint}|${config_loader.SPLUNK.ENDPOINT}|g' ./config/stg-config.json"
+      sh "sed -i -- 's|{splunk_endpoint}|${config_loader.SPLUNK.ENDPOINT}|g' ./config/prod-config.json"
+
+      updateConfigValue("{spunk_hec_token}", config_loader.SPLUNK.HEC_TOKEN)
+      updateConfigValue("{splunk_index}", config_loader.SPLUNK.INDEX)
+
+      sh "sed -i -- 's/{enable_splunk_logging_global}/${config_loader.SPLUNK.IS_ENABLED}/g' ./config/global-config.json"
+      sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global-config.json"
     }
 
     if (service_name.trim() == "jazz_usermanagement") {
@@ -271,6 +272,7 @@ def loadServiceConfigurationData() {
           updateConfigValue("{bb_username}", UNAME)
           updateConfigValue("{bb_password}", PWD)
         }
+      }
 
       if (config_loader.SCM.TYPE == "gitlab") {
         updateConfigValue("{private_token}", config_loader.SCM.PRIVATE_TOKEN)

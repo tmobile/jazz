@@ -1240,9 +1240,9 @@ def loadBuildModules(buildModuleUrl){
 			echo "Apigee module loaded successfully."
 		}
 
-		lambdaEvents = load "aws-lambda-events-module.groovy"
-		lambdaEvents.initialize(configLoader, utilModule)
-		echo "Lambda event module loaded successfully."
+    lambdaEvents = load "aws-lambda-events-module.groovy"
+    lambdaEvents.initialize(configLoader, utilModule)
+    echo "Lambda event module loaded successfully."
 
 		aclModule = load "acl-module.groovy"
 		echo "ACL module loaded successfully."

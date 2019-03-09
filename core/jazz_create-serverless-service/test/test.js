@@ -354,8 +354,11 @@ describe('create-serverless-service', function () {
 
       //trigger the spy wrapping the logger by calling handler() with valid params
       index.handler(event, context, (err, res) => {
-        reqStub.restore();
+        sinon.assert.calledTwice(configstub);
+        configstub.restore();
+        reqStub.restore()
         expect(res.data).to.be.equal("Successfully created your service.");
+
       });
     });
 
@@ -659,6 +662,22 @@ describe('create-serverless-service', function () {
         assert.isTrue(bool);
       });
     });
+
+    it("should return input object with deployment target when input paramter is provided with valid values for website service type ", () => {
+      const authToken = "temp-auth-token";
+      let bool = false;
+      service_creation_data["service_type"] = "website";
+      service_creation_data["deployment_targets"] = {"website": "aws_cloudfront"};
+      const config = configModule.getConfig(event, context);
+      index.getServiceData(service_creation_data, authToken, config, {"website": "aws_cloudfront"})
+      .then(input => {
+        if (input.DEPLOYMENT_TARGETS["website"] === "aws_cloudfront") {
+          bool = true;
+        }
+        assert.isTrue(bool);
+      });
+    });
+  });
 
   describe("createService", () => {
     let input;

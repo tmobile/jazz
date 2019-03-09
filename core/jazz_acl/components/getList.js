@@ -38,6 +38,7 @@ async function scanExecute(dynamodb, scanparams, items_formatted) {
       error: "No data available"
     };
   }
+
   return scanResult
 }
 
@@ -55,17 +56,17 @@ async function getSeviceIdList(config, serviceId) {
     "TableName": config.SERVICES_TABLE_NAME,
     "ProjectionExpression": "SERVICE_ID",
     "ReturnConsumedCapacity": "TOTAL",
-    "Limit": "10"
+    "Limit": "500"
   };
-
   if(serviceId) {
-    scanparams.FilterExpression = "SERVICE_ID = :SERVICE_ID";
+    scanparams.FilterExpression = "SERVICE_ID = :service_id";
     scanparams.ExpressionAttributeValues = {
-      ":SERVICE_ID": {
+      ":service_id": {
         "S": serviceId
       }
     }
   }
+
   const dbResult = await scanExecute(dynamodb, scanparams, items_formatted);
   return dbResult;
 

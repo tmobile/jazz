@@ -39,7 +39,8 @@ export class TabsComponent implements OnInit {
     this.selectedTab = index;
   }
   disabletabs(){
-    var tabs = environment.serviceTabs;
+    var tabs;
+    tabs=environment.serviceTabs;
     for(var i=0;i<tabs.length;i++){
       if(tabs[i] == 'overview') this.disableobj['overview']=false;
       if(tabs[i] == 'access control') this.disableobj['access control']=false;

@@ -15,6 +15,7 @@ import { RequestService, DataCacheService, MessageService, AuthenticationService
 import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
 import { environment } from './../../../environments/environment';
 
+
 @Component({
   selector: 'service-detail',
   templateUrl: './service-detail.component.html',
@@ -72,6 +73,7 @@ export class ServiceDetailComponent implements OnInit {
   refreshTabClicked: boolean = false;
   isAdminAccess: boolean = false;
   currentUser: any = {}
+  isError403: boolean = false;
 
 
   private sub: any;
@@ -79,7 +81,7 @@ export class ServiceDetailComponent implements OnInit {
   private toastmessage: any;
 
   statusData = ['All', 'Active', 'Pending', 'Stopped'];
-  tabData = ['overview', 'access control', 'metrics', 'logs', 'cost'];
+  tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
 
   breadcrumbs = []
 
@@ -213,8 +215,11 @@ export class ServiceDetailComponent implements OnInit {
         });
       }
     }, (err) => {
-      if (err.status == "404") {
+      console.log("error here: ", err);
+      if (err.status === 404) {
         this.router.navigateByUrl('404');
+      } else if (err.status === 403) {
+        this.isError403 = true;
       }
       this.isLoadingService = false;
       let errorMessage = 'OOPS! something went wrong while fetching data';
@@ -382,7 +387,7 @@ export class ServiceDetailComponent implements OnInit {
 
 
   onServiceNameChange() {
-    
+
     if (this.ServiceName.toLowerCase() == this.service['name']) {
       this.disblebtn = false;
     }
