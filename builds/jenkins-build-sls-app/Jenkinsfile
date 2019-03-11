@@ -28,7 +28,6 @@ import groovy.transform.Field
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def current_environment = ''
-@Field def isLambdaUpdateRequired = false
 
 node() {
 
