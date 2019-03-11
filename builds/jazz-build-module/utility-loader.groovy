@@ -174,7 +174,7 @@ def isReplayedBuild() {
 /*
 * Get the required account
 */
-def getRequiredData(service_config){
+def getAccountInfo(service_config){
 	def dataObj = {};
 	for (item in configLoader.AWS.ACCOUNTS) {
 		if(item.ACCOUNTID == service_config.accountId){
@@ -187,7 +187,7 @@ def getRequiredData(service_config){
 /*
 * Get the primary account
 */
-def getRequiredDataForPrimary(){
+def getAccountInfoPrimary(){
   def dataObjPrimary = {};
 	for (item in configLoader.AWS.ACCOUNTS) {
 		if(item.PRIMARY){

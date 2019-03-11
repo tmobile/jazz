@@ -91,7 +91,7 @@ node() {
     }
   }
 
-  dataObjValues = utilModule.getRequiredData(config);
+  dataObjValues = utilModule.getAccountInfo(config);
 
   if (!config) {
     error "Failed to fetch service metadata from catalog"
@@ -795,7 +795,7 @@ def createSubscriptionFilters(stackName, env_key, credsId, dataObjValues) {
 
 def updatePolicy(env, destARN){
 
-  def primaryData = utilModule.getRequiredDataForPrimary();
+  def primaryData = utilModule.getAccountInfoPrimary();
   def primaryRegion
   for (item in primaryData.REGIONS) {
 		if(item.PRIMARY){
