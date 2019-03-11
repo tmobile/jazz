@@ -86,6 +86,11 @@ node  {
 						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'api-template-go'
 						}
+            else if(service_config['runtime'].startsWith("c#")){
+              if(service_config['platform'] == "azure"){
+                service_template = 'azure-api-template-csharp'
+              }
+            }
 						break
 
 					case "function":

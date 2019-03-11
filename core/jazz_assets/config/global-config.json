@@ -36,6 +36,7 @@
     "sqs",
     "kinesis_stream",
     "cdn_endpoint_url",
+    "cdn_endpoint",
     "origin_endpoint_url",
     "cdn_profile",
     "storage_account",
