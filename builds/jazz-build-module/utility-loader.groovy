@@ -172,7 +172,7 @@ def isReplayedBuild() {
 }
 
 /*
-* Getting the required account
+* Get the required account
 */
 def getAccountInfo(service_config){
 	def dataObj = {};
