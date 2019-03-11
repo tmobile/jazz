@@ -954,27 +954,6 @@ def getEventsArn(config, env) {
   }
 }
 
-def getLambdaARN(stackName, credsId) {
-  def ARN = "";
-
-  try {
-    def cloudformation_resources = "";
-    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId}")
-    def parsedObject = parseJson(cloudformation_resources);
-    def outputs = parsedObject.Stacks[0].Outputs;
-
-    for (output in outputs) {
-      if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
-        ARN = output.OutputValue
-      }
-    }
-  } catch (ex) {
-    error ex.getMessage();
-  }
-
-  return ARN;
-}
-
 /** Run validation based on runtime
  */
 def runValidation(String runtime) {
