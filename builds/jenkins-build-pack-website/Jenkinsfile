@@ -159,34 +159,27 @@ node()  {
 
 
           def lastpart = sh(script:"echo $branch | rev | cut -d- -f1 | rev", returnStdout:true).trim()
-          def surfix = ''
+//          def surfix = ''
 
-          if (lastpart != 'master') {
-            surfix = lastpart
-          }
+//          if (lastpart != 'master') {
+//            surfix = lastpart
+//          }
 
           def stackName = "${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
           def appname = stackName
-          //def appname=service_name + domain + surfix
           def resourcegroup
-          def location="westus"
-
           def storageaccount=appname
-          def containername=appname
-          def webappname=appname
-          def apptoupload="./app"
-          def destination="\$web"
           def logicalId
 
           if (environment_logical_id == "prod") {
             resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
             logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
           }
-          else if(environment_logical_id == "stg"){
+          else if(environment_logical_id.split('-')[1] == "stg"){
             resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
             logicalId = environment_logical_id.split('-')[0] //13 + 10
           }
-          else if(environment_logical_id == "dev"){
+          else if(environment_logical_id.split('-')[1] == "dev"){
             resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
             logicalId = environment_logical_id.split('-')[0] //13 + 10
           }
@@ -196,32 +189,25 @@ node()  {
           asset_event = 'CREATE_ASSET'
           asset_event_message = 'create'
 
-
           events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
           events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
 
           createWebsite(appname, resourcegroup, storageName)
 
           def origin_endpoint_url = "https://${storageName}.azureedge.net"
-
           def cdn_endpoint_url = "https://${storageName}.z22.web.core.windows.net"
-
-          echo "You can access the website at $cdn_endpoint_url"
-
+          def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.Storage/storageAccounts/$storageaccount"
+          def cnd_profile = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.Cdn/profiles/$storageaccount"
+          def cdn_endpoint = cnd_profile + "/endpoints/" + storageaccount
           def svc_status = "You can access your website using following link: ${cdn_endpoint_url}"
-          echo svc_status
           environmentDeploymentMetadata.setEnvironmentEndpoint(cdn_endpoint_url)
           send_status_email('COMPLETED', svc_status)
 
-          def store_acct = "/resourceGroups/$resourcegroup/providers/Microsoft.Storage/storageAccounts/$storageaccount"
           events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", store_acct, "storage_account", service_config),environment)
-
           events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", origin_endpoint_url, "origin_endpoint_url", service_config),environment)
-          def cdn_profle_detail = "name $webappname, loaction: $location, resource group: $resourcegroup"
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_profle_detail, "cdn_profile", service_config),environment)
-
+          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cnd_profile, "cdn_profile", service_config),environment)
           events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_endpoint_url, "cdn_endpoint_url", service_config),environment)
-
+          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_endpoint, "cdn_endpoint", service_config),environment)
           events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
           events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
           events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)

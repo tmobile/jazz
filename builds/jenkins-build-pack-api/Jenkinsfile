@@ -243,7 +243,6 @@ node() {
                 [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
                 [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
               ]) {
-                //   azureDeployer.loadAzureConfig(runtime, scmModule, repo_credential_id)
                 if (environment_logical_id == "prod") {
                   AzureRG = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
                   AzureApim =  configLoader.AZURE.APIM["PRODUCTION"]
@@ -262,14 +261,18 @@ node() {
                 endpointUrl="https://${stackName}.azure-api.net/api"
                 swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
                 apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.ApiManagement/service/$AzureApim"
-                echo "oscartesthere"
-                echo apigateway
+                def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
+                def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
+                def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Storage/storageAccounts/$storageName"
+                def function_app = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Web/sites/$stackName"
 
-
-                createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name)
+                createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name, storageName)
 
                 events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", swaggerDocUrl, "swagger_url", config), environment_logical_id)
                 events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", apigateway, "apigateway", config), environment_logical_id)
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", store_acct, "storage_account", config), environment_logical_id)
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", function_app, "functionapp", config), environment_logical_id)
+
               }
 
             } else {
@@ -1006,21 +1009,16 @@ def loadBuildModules(buildModuleUrl){
 
     sonarModule = load "sonar-module.groovy"
     echo "Sonar module loaded successfully."
-
-    azureDeployer = load "azure-deploy-api-module.groovy"
-
   }
 }
 
-def createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name ) {
-  writeSwaggerFile(stackName)
-  sh "cd .. && rm -rf content.zip && zip -r content.zip ${repo_name} && ls -l && pwd"
+def createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name, storageName  ) {
+  writeSwaggerFileForAzure(stackName)
+  sh "cd .. && rm -rf content.zip && zip -qr content.zip ${repo_name}"
   sh "cd .. && ls -l"
   sh "cd ${repo_name} && ls -l"
   def zip = sh(script: 'readlink -f ../content.zip', returnStdout: true).trim()
   def swagger = sh(script: 'readlink -f swagger/swagger.json', returnStdout: true).trim()
-  def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
-  def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
 
   def payloadString = [
     className : "ApiApp",
@@ -1049,8 +1047,6 @@ def createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name
     ]
   ]
 
-  //apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.ApiManagement/service/$AzureApim"
-
   def azure_create_service_repo_name = "jazz_azure-create-service"
   sh 'rm -rf ' + azure_create_service_repo_name
   sh 'mkdir ' + azure_create_service_repo_name
@@ -1070,6 +1066,6 @@ def createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name
 
 }
 
-def writeSwaggerFile(stackName) {
+def writeSwaggerFileForAzure(stackName) {
   sh "sed -i -- 's/\${domain}/${stackName}/g' swagger/swagger.json"
 }
