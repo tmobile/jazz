@@ -50,37 +50,37 @@ async function handler(event, context, cb) {
       //Download the JWKs and save it as PEM
       let res = await wrapper(getPemDetails(cognitoUserPoolEndpoint));
       if (res.error) {
-        context.fail("AuthorizationFailure");
+        logger.error("PEM retrieval failed. " + JSON.stringify(resp));
+        throw ("Unauthorized");
       }
       pems = res.data;
-
     }
+
     //PEMs are already downloaded, continue with validating the token
     let resp = await wrapper(ValidateToken(pems, event));
     if (resp.error) {
-      logger.error("Token validation failed. " + JSON.stringify(error));
-      context.fail("AuthorizationFailure");
-      return cb("Unauthorized");
+      logger.error("Token validation failed. " + JSON.stringify(resp));
+      throw ("Unauthorized");
     }
 
     var token = event.headers.Authorization;
     let result = await wrapper(jwtValidation(token, resp.data, cognitoUserPoolEndpoint, event, context));
     if (result.error) {
-      logger.error("jwtValidation validation failed. " + JSON.stringify(error));
-      return cb("Unauthorized");
+      logger.error("jwtValidation validation failed. " + JSON.stringify(result));
+      throw ("Unauthorized");
     }
 
     result = await wrapper(validateCognitoUser(token, config, event, cb));
     if (result.error) {
-      logger.error("validateCognitoUser failed. " + JSON.stringify(error));
-      return cb("Unauthorized");
+      logger.error("validateCognitoUser failed. " + JSON.stringify(result));
+      throw ("Unauthorized");
     }
 
     await processCognitoUserDetails(event, context, result.data, config);
 
   } catch (exception) {
-    logger.error("Unexpected error ocured. " + JSON.stringify(exception));
-    context.fail("AuthorizationFailure");
+    logger.error("Error occurred. " + JSON.stringify(exception));
+    return cb(exception); //any errors faced in token/user validation ends in 401 error
   }
 };
 
@@ -124,32 +124,7 @@ const jwtValidation = async (token, pem, cognitoUserPoolEndpoint, event, context
 
     jwt.verify(token, pem, { issuer: cognitoUserPoolEndpoint }, (err, payload) => {
       if (err) {
-
-        // Authorizer cannot send options headers, so we will fake that auth succeeded to lambda's w/o principal id
-        // which will then send back unauthorized error to user
-
-        if (err && err.name && err.name === 'TokenExpiredError') {
-          logger.error("TokenExpiredError ");
-          //Get AWS AccountId and API Options
-          var apiOptions = {};
-          var tmp = event.methodArn.split(':');
-          var apiGatewayArnTmp = tmp[5].split('/');
-          var awsAccountId = tmp[4];
-          apiOptions.region = tmp[3];
-          apiOptions.restApiId = apiGatewayArnTmp[0];
-          apiOptions.stage = apiGatewayArnTmp[1];
-          var method = apiGatewayArnTmp[2];
-          var resource = '/'; // root resource
-          if (apiGatewayArnTmp[3]) {
-            resource += apiGatewayArnTmp[3];
-          }
-          //fake that auth succeeded to lambda's w/o principal id
-          var policy = new AuthPolicy("", awsAccountId, apiOptions);
-          policy.allowAllMethods();
-          context.succeed(policy.build());
-        } else {
-          return reject("Unauthorized");
-        }
+        return reject("Authorization Failure");
       } else {
         logger.debug("valid token : ");
         //Valid token. Generate the API Gateway policy for the user
@@ -197,18 +172,22 @@ async function validateCognitoUser(token, config, event, cb) {
 async function processCognitoUserDetails(event, context, result, config) {
   //For more information on specifics of generating policy, refer to blueprint for API Gateway's Custom authorizer in Lambda console
   var policy = new AuthPolicy(result.emailAddress[0].Value, result.awsAccountId, result.apiOptions);
-
-  const authResult = await getAuthorizationDetails(event, result.emailAddress[0].Value, event.path, config);
-  logger.debug("authResult: " + JSON.stringify(authResult));
-  if (authResult && authResult.allow) {
-    policy.allowMethod(result.method, event.path);
-  }
-  else {
-    policy.denyMethod(result.method, event.path);
+  let authResult;
+  try {
+    authResult = await getAuthorizationDetails(event, result.emailAddress[0].Value, event.path, config);
+    logger.debug("authResult: " + JSON.stringify(authResult));
+    if (authResult && authResult.allow) {
+      policy.allowMethod(result.method, event.path);
+    }
+    else {
+      policy.denyMethod(result.method, event.path);
+    }
+  } catch (exception) {
+    logger.error("Unexpected error occurred while accessing acl APIs: " + JSON.stringify(exception));
+    policy.denyMethod(result.method, event.path); //user is authorized but is forbidden to access resource due to errors
   }
 
   let authResponse = policy.build();
-
   if (authResult && authResult.data) {
     logger.debug("attaching service to auth response context : ")
     authResponse.context = {
@@ -226,14 +205,15 @@ async function getAuthorizationDetails(event, user, resource, config) {
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
     let serviceData = await aclServices.getServiceMetadata(config, authToken, user, event.headers[header_key]);
     logger.debug("serviceData: " + JSON.stringify(serviceData))
-    let allow = true;
+    let allow = false;
     if (event.resource.indexOf("/services/{id}") !== -1) {
-      let serviceId = event.path.split('/')[3];
-      allow = false
+      let serviceId = event.headers[header_key];
       if (serviceId && serviceData.length > 0) {
         let servicePolicies = serviceData.find(service => service.serviceId === serviceId);
         allow = servicePolicies.policies.length > 0 ? true : false;
       }
+    } else {
+      allow = true; //serviceData can be empty for call to /services unlike a call to /services{id}
     }
     return {
       allow: allow,
@@ -278,7 +258,7 @@ async function getAuthorizationDetails(event, user, resource, config) {
     logger.debug("permissionData: " + JSON.stringify(permissionData))
     return {
       allow: permissionData.authorized
-    }
+    };
   }
 }
 
@@ -307,7 +287,7 @@ const getPemDetails = async (cognitoUserPoolEndpoint) => {
       } else {
         //Unable to download JWKs, fail the call
         logger.error("getPemDetails failed")
-        return reject({ "error": "AuthorizationFailure" });
+        return reject("Authorization Failed");
       }
     });
   });
