@@ -23,7 +23,7 @@
                 <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isAdminAccess]= "isAdminAccess" [isLoadingService]="isLoadingService"></service-overview>
             </section>
             <section class="page-content" *ngIf="selectedTab == 1">
-                <service-access-control #selectedTabComponent [service]="service" [isAdminAccess]= "isAdminAccess" ></service-access-control>
+                <service-access-control #selectedTabComponent [service]="service" (updateAdminAccess)='setAdminAccess($event)' [isAdminAccess]= "isAdminAccess" ></service-access-control>
             </section>
             <section class="page-content" *ngIf="selectedTab == 2">
                 <service-metrics #selectedTabComponent [service]="service" #metric></service-metrics>

@@ -208,7 +208,7 @@ export class ServiceDetailComponent implements OnInit {
       if(service && service.policies && service.policies.length) {
         service.policies.forEach(policy => {
           if (policy.category === "manage" && policy.permission === "admin") {
-            this.isAdminAccess = true;
+            this.setAdminAccess(true);
           }
         });
       }
@@ -413,6 +413,10 @@ export class ServiceDetailComponent implements OnInit {
     }, 3000);
   }
 
+  setAdminAccess(access) {
+    this.isAdminAccess = access;
+  }
+
   ngOnInit() {
     this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
     this.breadcrumbs = [
@@ -428,6 +432,5 @@ export class ServiceDetailComponent implements OnInit {
   }
 
   ngOnChanges(x: any) {
-
   }
 }

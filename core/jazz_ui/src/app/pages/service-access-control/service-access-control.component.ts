@@ -4,7 +4,7 @@
  * @author
 */
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, EventEmitter, Output} from '@angular/core';
 import { ToasterService } from 'angular2-toaster';
 import { RequestService, MessageService } from '../../core/services';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -19,6 +19,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 export class ServiceAccessControlComponent implements OnInit {
  @Input() service: any = {};
  @Input() isAdminAccess: boolean = false;
+
+ @Output() updateAdminAccess:EventEmitter<any> = new EventEmitter<any>();
 
  accessGranted:Boolean = false;
  i: number = 0;
@@ -62,6 +64,7 @@ export class ServiceAccessControlComponent implements OnInit {
  addAsAdmin: any = {};
  categoryArray: any = ['manage', 'code', 'deploy'];
  selectedServiceId: string = "";
+ currentUser: string = "";
 
  constructor(
    private request: RequestService,
@@ -184,19 +187,18 @@ addgroup(category){
    this.confirmationText = this.toastmessage.customMessage("finalConfirmationMsg", "aclConfirmation");
  }
 
- //on cancel restore the changes
- onCancelClick(){
-   if (this.isAddOrDelete) {
-     this.originalAccess.manage.map((item,index)=>{
-       item.permission = this.manageAccess[index].permission
-     })
-     let policies = Object.keys(this.originalAccess).map(eachcat => (this.originalAccess[eachcat]));
-     policies = [].concat.apply([], policies);
-     this.access = this.restructureRes(policies);
-     this.getUsersList()
-   }
-   this.showDisplay = true;
-   this.isAddOrDelete = false;
+  //on cancel restore the changes
+  onCancelClick(){
+    if (this.isAddOrDelete) {
+      let res = JSON.parse(JSON.stringify(this.originalAccessDetails));
+      let policyDetails = this.restructureRes(res)
+      let policies = Object.keys(policyDetails).map(eachcat => (policyDetails[eachcat]));
+      policies = [].concat.apply([], policies);
+      this.access = this.restructureRes(policies);
+      this.getUsersList()
+    }
+    this.showDisplay = true;
+    this.isAddOrDelete = false;
  }
 
  // on complete send request to updateAclPolicies()
@@ -238,6 +240,7 @@ addgroup(category){
      })
      this.isAddOrDelete = true;
      this.adminAccessRule = false;
+     this.addAsAdmin = {}
    }
 
  }
@@ -314,6 +317,7 @@ addgroup(category){
   this.route.params.subscribe(params => {
     this.selectedServiceId = params['id'];
   });
+  this.currentUser = JSON.parse(localStorage.getItem("currentUser")).username;
    this.getUsersList()
    this.getAclPolicies(this.selectedServiceId);
    this.isValidData();
@@ -349,6 +353,13 @@ addgroup(category){
          let accessData = JSON.parse(JSON.stringify(response.data.policies));
          this.access = this.restructureRes(accessData);
          this.manageAccess = JSON.parse(JSON.stringify(this.access.manage));
+         for(let eachUser of this.access.manage) {
+           if(eachUser.userId === this.currentUser && eachUser.permission !== "admin") {
+             this.isAdminAccess = false;
+             this.updateAdminAccess.emit(this.isAdminAccess);
+             break;
+           }
+         }
          this.removeExistingUser(this.originalAccessDetails);
        } else {
          this.isDataNotAvailable = true;
