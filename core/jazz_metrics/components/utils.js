@@ -26,9 +26,11 @@ const metricConfig = require("./metrics.json");
 const global_config = require("../config/global-config.json");
 const AWS = require("aws-sdk");
 
-function massageData(assetResults, eventBody) {
+function massageData(assetResults, eventBody, account) {
   var output_obj = {};
   output_obj = {
+    "accountId" : account.accountId,
+    "region" : account.region,
     "domain": eventBody.domain,
     "service": eventBody.service,
     "environment": eventBody.environment,

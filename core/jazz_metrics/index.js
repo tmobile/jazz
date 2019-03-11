@@ -69,7 +69,7 @@ function handler(event, context, cb) {
             var getpromise = utils.AssumeRole(accountId, configJson)
             .then((creds) => exportable.getMetricsDetails(res,creds,region))
             .then((res) => {
-                var finalObj = utils.massageData(res, eventBody);
+                var finalObj = utils.massageData(res, eventBody, item);
                 metricsResponse.push(finalObj);
               })
             promiseCollection.push(getpromise);
