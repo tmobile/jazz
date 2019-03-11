@@ -43,8 +43,7 @@ def createFunction(serviceInfo){
   def masterKey = invokeAzureCreation(serviceInfo, assetList)
   sendAssetCompletedEvent(serviceInfo, assetList)
 
-  def functionName = serviceInfo.serviceCatalog['service']
-  def endpoint = "https://${serviceInfo.stackName}.azurewebsites.net/admin/functions/$functionName?code=$masterKey"
+  def endpoint = "https://${serviceInfo.stackName}.azurewebsites.net/admin/functions/${serviceInfo.stackName}?code=$masterKey"
   return endpoint
 
 }
@@ -100,7 +99,7 @@ def invokeAzureCreation(serviceInfo, assetList){
           if (type) {
             item = createEventResource(data, type)
             if (item) {
-              assetList.add(item)
+              assetList.addAll(item)
             }
           }
 
@@ -116,8 +115,8 @@ def invokeAzureCreation(serviceInfo, assetList){
           error "Failed creating azure function $ex"
         } finally {
           echo "cleanup ...."
-          sh "rm -rf content.zip"
-          sh "rm -rf $repo_name"
+          sh "rm -rf ../content.zip"
+          sh "rm -rf ../$repo_name"
 
         }
       }
@@ -134,7 +133,7 @@ def deleteResourceByTag(serviceInfo) {
 
 def createFunctionApp(data) {
   def output = azureUtil.invokeAzureService(data, "createfunction")
-  return getAssetDetails(output.data.result.id, data.stackName, "functionapp","Microsoft.Web/sites")
+  return getAssetDetails(output.data.result.id, "functionapp")
 
 }
 def deployFunction(data, zip, type) {
@@ -148,33 +147,39 @@ def deployFunction(data, zip, type) {
   }
 
 }
+
 def createStorageAccount(data) {
 
   def output = azureUtil.invokeAzureService(data, "createStorage")
-  return getAssetDetails(output.data.result.id, data.appName, "storage_account","Microsoft.Storage/storageAccounts")
+  getAssetDetails(output.data.result.id, "storage_account")
 
 }
+
 def createEventResource(data, type) {
 
   data.eventSourceType = type
   def output = azureUtil.invokeAzureService(data, "createEventResource")
-  def item
+  def items =[]
   if (type == 'CosmosDB') {
 
     output = azureUtil.invokeAzureService(data, "createDatabase")
-    item = getAssetDetails(output.data.result.id, data.appName, "cosmosdb","Microsoft.DocumentDB/databaseAccounts")
-
+    items.add(getAssetDetails(output.data.result.id, "cosmosdb_account"))
+    items.add(getAssetDetails(data.resourceName, "cosmosdb_database"))
+    items.add(getAssetDetails(data.resourceName, "cosmosdb_collection"))
   } else if (type == 'ServiceBus') {
-    item = getAssetDetails(output.data.result.id, data.appName, "servicebus_namespace","Microsoft.ServiceBus/namespaces")
-
+    items.add(getAssetDetails(output.data.result.id, "servicebus_namespace"))
+    items.add(getAssetDetails(data.resourceName, "servicebus_queue"))
   } else if (type == 'EventHubs') {
-    item = getAssetDetails(output.data.result.id, data.appName, "eventhubs_namespace","Microsoft.EventHub/namespaces")
+    items.add(getAssetDetails(output.data.result.id, "eventhubs_namespace"))
+    items.add(getAssetDetails(data.resourceName, "eventhubs_eventhub"))
+  } else if (type == 'Storage') {
+    items.add(getAssetDetails(data.resourceName, "storage_blob_container"))
   }
 
-  return item
-
+  return items
 
 }
+
 def loadAzureConfig(serviceInfo) {
   checkoutConfigRepo(serviceInfo.repoCredentialId)
   selectConfig(serviceInfo)
@@ -272,8 +277,6 @@ def getAssetDetails(id, name, assetType, resourceType) {
 
   def assetItem = [
     type: assetType,
-    azureResourceType: resourceType,
-    azureResourceName: name,
     azureResourceId: id
   ]
 

@@ -80,7 +80,7 @@ def loadServiceConfigurationData() {
                sed -i -- 's/{jazz_admin_creds}/${config_loader.JAZZ.PASSWD}/g' ./config/prod-config.json
             """
 
-            if (config_loader.AZURE.PASSWORD) {
+            if (config_loader.AZURE) {
                 withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'PASS', usernameVariable: 'USER']]){
                     sh """
                        sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/dev-config.json
