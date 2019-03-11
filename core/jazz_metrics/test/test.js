@@ -901,7 +901,11 @@ describe('jazz_metrics', function () {
 
   describe("utils", () => {
     it("should massage data for provided input params", () => {
-      var resObj = utils.massageData("assetData", event.body)
+      var Testaccount = {
+        "accountId" : "12434xxxxxx",
+        "region"    : "us-west-2"
+      }
+      var resObj = utils.massageData("assetData", event.body, Testaccount)
       expect(resObj).to.have.all.keys('service', 'domain', 'environment', 'start_time', 'end_time', 'assets', 'interval', 'statistics');
       expect(resObj.assets).to.eq("assetData");
     });
