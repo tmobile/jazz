@@ -93,7 +93,7 @@ node()  {
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
 	def environment_logical_id
-	dataObjValues = utilModule.getRequiredData(service_config);
+	dataObjValues = utilModule.getAccountInfo(service_config);
 	if (params.scm_branch == 'master') {
 		environment_logical_id = 'prod'
 		current_environment = 'PROD'
@@ -468,13 +468,13 @@ def updateBucketPolicy(isCloudfront, existingPolicyObj, credsId, origin_access_i
 		def stmtCfList = '{"Sid":"","Effect":"Allow","Principal":{"AWS":""},"Action":"s3:ListBucket","Resource":"arn:aws:s3:::"}'
 		def existingStmts = policyObj.Statement
 		def cleanupIndex = -1
-		def CFOAI
+		def accessIdentityValue
 
 		if(origin_access_identity_ID){
-			CFOAI = origin_access_identity_ID
+			accessIdentityValue = origin_access_identity_ID
 		} else {
 			try {
-				CFOAI = sh(
+				accessIdentityValue = sh(
 					script: "aws cloudfront list-cloud-front-origin-access-identities --output text \
 				--query \"CloudFrontOriginAccessIdentityList.Items[?Comment=='${configLoader.INSTANCE_PREFIX}-origin_access_identity'].{j: Id}\" --profile ${credsId}",
 					returnStdout: true
@@ -494,7 +494,7 @@ def updateBucketPolicy(isCloudfront, existingPolicyObj, credsId, origin_access_i
 		policyObj.Statement.removeAll([null])
 		def newStmtObj
 		if (isCloudfront) {
-			def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $CFOAI"]
+			def principal = ["AWS": "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity $accessIdentityValue"]
 			newStmtObj = jsonParse(stmtCf)
 			newStmtObj.Sid = "list-$asset_name"
 			newStmtObj.Principal = principal
