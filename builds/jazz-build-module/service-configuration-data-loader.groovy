@@ -297,6 +297,46 @@ def loadServiceConfigurationData() {
       updateConfigValue("{slack-workspace}", config_loader.SLACK.SLACK_WORKSPACE)
       updateConfigValue("{svc_acc_id}", config_loader.SLACK.SLACK_SVC_ID)
     }
+
+    if (service_name.trim() == "jazz_create-serverless-service") {
+      def apiOptions = ""
+      def functionOptions = ""
+      def websiteOptions = ""
+
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.API) {
+        apiOptions += '"' + item + '",'
+      }
+      apiOptions = apiOptions.substring(0, apiOptions.length() - 1)
+
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.FUNCTION) {
+        functionOptions += '"' + item + '",'
+      }
+      functionOptions = functionOptions.substring(0, functionOptions.length() - 1)
+
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.WEBSITE) {
+        websiteOptions += '"' + item + '",'
+      }
+      websiteOptions = websiteOptions.substring(0, websiteOptions.length() - 1)
+
+      updateConfigValue("{api_token}", utilModule.getApiToken())
+      updateConfigValue("{api_token}", utilModule.getApiToken())
+      updateConfigValue("{api_token}", utilModule.getApiToken())  
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/test-config.json"
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_function}\"/$functionOptions/g' ./config/test-config.json"
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/test-config.json"
+    }
   } catch (e) {
     echo "error occured while loading service configuration: " + e.getMessage()
     error "error occured while loading service configuration: " + e.getMessage()
