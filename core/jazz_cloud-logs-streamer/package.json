@@ -9,9 +9,8 @@
         "test": "mocha"
     },
     "dependencies": {
-        "unicode-byte-truncate": "*",
-        "lodash": "*"
-	},
+        "unicode-byte-truncate": "*"
+    },
     "devDependencies": {
         "chai": "^3.5.0",
         "mocha": "^v3.0.0"		
