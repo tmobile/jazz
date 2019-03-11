@@ -46,25 +46,49 @@ function handler(event, context, cb) {
 		 *    }
 		 */
     var eventBody = event.body;
-    exportable.genericValidation(event)
-      .then(() => validateUtils.validateGeneralFields(eventBody))
-      .then(() => exportable.getToken(config))
-      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
-      .then(res => exportable.validateAssets(res, eventBody))
-      .then(res => exportable.getMetricsDetails(res))
-      .then(res => {
-        var finalObj = utils.massageData(res, eventBody);
-        return cb(null, responseObj(finalObj, eventBody));
+    var metricsResponse=[];
+    var genValidation = exportable.genericValidation(event);
+    var token = exportable.getToken(config);
+    var valGenFields = validateUtils.validateGeneralFields(eventBody);
+    Promise.all([genValidation, token, valGenFields])
+    .then((results) => {
+      const authToken = results[1];
+      exportable.getConfigJson(config, authToken).then((configobject) => {
+      const configJson = configobject;
+      exportable.getserviceMetaData(config, eventBody, authToken)
+      .then((serviceMetaData) => {
+        const serviceData = serviceMetaData;
+        exportable.getAssetsDetails(config, eventBody, authToken)
+        .then((res) => exportable.validateAssets(res, eventBody))
+        .then((res) => {
+          const deploymentAccounts = serviceData.data.services[0].deployment_accounts
+          var promiseCollection = [];
+          deploymentAccounts.forEach(function (item) {
+            const accountId = item.accountId;
+            const region = item.region;
+            var getpromise = utils.AssumeRole(accountId, configJson)
+            .then((creds) => exportable.getMetricsDetails(res,creds,region))
+            .then((res) => {
+                var finalObj = utils.massageData(res, eventBody);
+                metricsResponse.push(finalObj);
+              })
+            promiseCollection.push(getpromise);
+          })
+          Promise.all(promiseCollection).then(() => {
+            return cb(null, responseObj(metricsResponse, eventBody))
+          })
+        })
       })
-      .catch(error => {
-        if (error.result === "inputError") {
-          return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-        } else if (error.result === "unauthorized") {
-          return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
-        } else {
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
-        }
-      });
+    })
+  }).catch(error => {
+      if (error.result === "inputError") {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+      } else if (error.result === "unauthorized") {
+        return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
+      } else {
+        return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
+      }
+    });
   } catch (e) {
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
   }
@@ -129,10 +153,70 @@ function getToken(config) {
   });
 }
 
+function getConfigJson(config, token) {
+  return new Promise((resolve, reject) => {
+    var config_json_api_options = {
+      url : `${config.SERVICE_API_URL}${config.CONFIG_URL}`,
+      headers : {
+        "Content-Type" : "application/json",
+        "Authorization" : token
+      },
+      method: "GET",
+      rejectUnauthorized:false,
+      requestCert: true,
+      async: true
+    };
+
+    request(config_json_api_options, (error, response, body) => {
+      if (error) {
+        reject(error)
+      } else {
+        if (response.statusCode && response.statusCode === 200) {
+          var responseBody = JSON.parse(body);
+          resolve(responseBody.data)
+        }else{
+          logger.debug("Service not found for this service, domain, environment. ", JSON.stringify(config_json_api_options));
+          resolve([])
+        }
+      }
+    })
+  })
+}
+
+function getserviceMetaData(config, eventBody, authToken){
+  return new Promise((resolve, reject) =>  {
+    var service_api_options = {
+      url: `${config.SERVICE_API_URL}${config.SERVICE_URL}?domain=${eventBody.domain}&service=${eventBody.service}&environment=${eventBody.environment}`,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": authToken
+      },
+      method: "GET",
+      rejectUnauthorized: false,
+      requestCert: true,
+      async: true
+    };
+
+    request(service_api_options, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else {
+        if (response.statusCode && response.statusCode === 200) {
+          var responseBody = JSON.parse(body);
+          resolve(responseBody)
+        }else{
+          logger.debug("Service not found for this service, domain, environment. ", JSON.stringify(service_api_options));
+          resolve([])
+        }
+      }
+    })
+  });
+}
+
 function getAssetsDetails(config, eventBody, authToken) {
   return new Promise((resolve, reject) => {
     var asset_api_options = {
-      url: config.SERVICE_API_URL + config.ASSETS_URL + "?domain=" + eventBody.domain + "&service=" + eventBody.service + "&environment=" + eventBody.environment,
+      url: `${config.SERVICE_API_URL}${config.ASSETS_URL}?domain=${eventBody.domain}&service=${eventBody.service}&environment=${eventBody.environment}`,
       headers: {
         "Content-Type": "application/json",
         "Authorization": authToken
@@ -161,7 +245,7 @@ function getAssetsDetails(config, eventBody, authToken) {
           var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
           resolve(assetsArray);
         } else {
-          logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
+          logger.debug("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
           resolve([]);
         }
       }
@@ -286,12 +370,12 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
   });
 }
 
-function getMetricsDetails(newAssetArray) {
+function getMetricsDetails(newAssetArray,tempCreds,region) {
   return new Promise((resolve, reject) => {
     logger.debug("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
-      exportable.cloudWatchDetails(assetParam)
+      exportable.cloudWatchDetails(assetParam,tempCreds,region)
         .then(res => {
           metricsStatsArray.push(res);
           if (metricsStatsArray.length === newAssetArray.length) {
@@ -305,12 +389,12 @@ function getMetricsDetails(newAssetArray) {
   });
 }
 
-function cloudWatchDetails(assetParam) {
+function cloudWatchDetails(assetParam,tempCreds,region) {
   logger.debug("Inside cloudWatchDetails");
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
-      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch() : utils.getCloudWatch();
+      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch(tempCreds,region) : utils.getCloudWatch(tempCreds, region);
 
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
@@ -337,10 +421,14 @@ function cloudWatchDetails(assetParam) {
   });
 }
 
+
+
 const exportable = {
   handler,
   genericValidation,
   getToken,
+  getserviceMetaData,
+  getConfigJson,
   getAssetsDetails,
   validateAssets,
   getActualParam,

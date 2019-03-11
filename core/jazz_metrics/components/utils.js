@@ -240,19 +240,68 @@ function updateCloudfrontAsset(newAssetObj, relativeId) {
   return newAssetObj;
 }
 
-function getCloudWatch() {
-  var cloudwatch = new AWS.CloudWatch({
-    apiVersion: '2010-08-01'
-  });
+function getCloudWatch(tempcreds, region) {
+  tempcreds.apiVersion = '2010-08-01';
+  tempcreds.region = region;
+  var cloudwatch = new AWS.CloudWatch(tempcreds);
   return cloudwatch;
 }
 
-function getCloudfrontCloudWatch() {
-  var cloudwatch = new AWS.CloudWatch({
-    apiVersion: '2010-08-01',
-    region: global_config.CF_REGION
-  });
+function getCloudfrontCloudWatch(tempcreds , region) {
+  tempcreds.apiVersion = '2010-08-01';
+  tempcreds.region = region
+  var cloudwatch = new AWS.CloudWatch(tempcreds);
   return cloudwatch;
+}
+function checkIsPrimary(accountId, jsonConfig){
+  var data = jsonConfig.config.AWS.ACCOUNTS;
+  var index = data.findIndex(x => x.ACCOUNTID==accountId);
+  if(data[index].PRIMARY){
+    return data[index].PRIMARY;
+  }else{
+    return false;
+  }
+}
+
+function getRolePlatformService(accountId, jsonConfig){
+  var data = jsonConfig.config.AWS.ACCOUNTS;
+  var index = data.findIndex(x => x.ACCOUNTID==accountId);
+  return data[index].IAM.PLATFORMSERVICES_ROLEID;
+}
+
+function AssumeRole(accountID, configJson) {
+  var isPrimary = checkIsPrimary(accountID , configJson);
+  var roleArn = getRolePlatformService(accountID, configJson);
+  var accessparams;
+  return new Promise((resolve, reject) => {
+    if (isPrimary){
+      accessparams = {};
+      resolve(accessparams)
+    } else {
+      const sts = new AWS.STS({ region: process.env.REGION });
+      const params = {
+        RoleArn: roleArn,
+        RoleSessionName: 'CrossAccountCredentials',
+        ExternalId: '1234567-1234-1234-1234-123456789012',
+        DurationSeconds: 3600,
+      };
+      sts.assumeRole(params, (err, data) => {
+        if (err) {
+          reject({
+            "result": "serverError",
+            "message": "Unknown internal error occurred"
+          })
+        } else {
+          accessparams = {
+            accessKeyId: data.Credentials.AccessKeyId,
+            secretAccessKey: data.Credentials.SecretAccessKey,
+            sessionToken: data.Credentials.SessionToken,
+          };
+          resolve(accessparams)
+        }
+      })
+    }
+  });
 }
 
 module.exports = {
@@ -261,5 +310,6 @@ module.exports = {
   getNameSpaceAndMetricDimensons,
   getAssetsObj,
   getCloudWatch,
-  getCloudfrontCloudWatch
+  getCloudfrontCloudWatch,
+  AssumeRole
 };
