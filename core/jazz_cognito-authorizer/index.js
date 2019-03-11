@@ -207,7 +207,7 @@ async function getAuthorizationDetails(event, user, resource, config) {
     logger.debug("serviceData: " + JSON.stringify(serviceData))
     let allow = false;
     if (event.resource.indexOf("/services/{id}") !== -1) {
-      let serviceId = event.headers[header_key];
+      let serviceId = event.path.split('/')[3];
       if (serviceId && serviceData.length > 0) {
         let servicePolicies = serviceData.find(service => service.serviceId === serviceId);
         allow = servicePolicies.policies.length > 0 ? true : false;
