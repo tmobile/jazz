@@ -51,10 +51,10 @@ def loadServiceMetadata(service_id){
 			metadata['runtime'] = service_data.Item.SERVICE_RUNTIME.S
 			if(service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS){
 			    metadata['accountId'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.accountId.S
-                metadata['region'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.region.S
+          metadata['region'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.region.S
 			} else {
 			    metadata['accountId'] = configLoader.AWS.DEFAULTS.ACCOUNTID
-                metadata['region'] = configLoader.AWS.DEFAULTS.REGION
+          metadata['region'] = configLoader.AWS.DEFAULTS.REGION
 			}
 			metadata['catalog_metadata'] = catalog_metadata
 			if(service_data.Item.SERVICE_SLACK_CHANNEL)
