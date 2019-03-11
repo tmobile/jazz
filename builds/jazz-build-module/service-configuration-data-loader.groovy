@@ -400,7 +400,7 @@ def setEventSourceMapping(eventSourceArn, config) {
   }
 }
 
-def setLogStreamPermission(config){
+def setLogStreamPermission(config) {
   if (config['service'] == "cloud-logs-streamer") {
     def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
     echo "set permission for cloud-logs-streamer"
