@@ -906,7 +906,7 @@ describe('jazz_metrics', function () {
         "region"    : "us-west-2"
       }
       var resObj = utils.massageData("assetData", event.body, Testaccount)
-      expect(resObj).to.have.all.keys('service', 'domain', 'environment', 'start_time', 'end_time', 'assets', 'interval', 'statistics');
+      expect(resObj).to.have.all.keys('service', 'domain', 'environment', 'start_time', 'end_time', 'assets', 'interval', 'statistics', 'accountId', 'region');
       expect(resObj.assets).to.eq("assetData");
     });
 
