@@ -49,7 +49,8 @@ def loadServiceMetadata(service_id){
 			metadata['created_by'] = service_data.Item.SERVICE_CREATED_BY.S
 			metadata['type'] = service_data.Item.SERVICE_TYPE.S
 			metadata['runtime'] = service_data.Item.SERVICE_RUNTIME.S
-			metadata['region'] = configLoader.AWS.REGION
+			metadata['accountId'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.accountId.S
+      metadata['region'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.region.S
 			metadata['catalog_metadata'] = catalog_metadata
 			if(service_data.Item.SERVICE_SLACK_CHANNEL)
 				metadata['slack_channel'] = service_data.Item.SERVICE_SLACK_CHANNEL.S
