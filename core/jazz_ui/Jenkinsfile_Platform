@@ -108,7 +108,7 @@ node ()  {
       sh importUICommand
 
       if (config_loader.APIGEE.ENABLE_APIGEE || config_loader.APIGEE.ENABLE_APIGEE == "true") sh "sed -i 's/{apigee_support}/true/g' ./src/environments/environment.oss.ts"
-      else "sed -i 's/{apigee_support}/false/g' ./src/environments/environment.oss.ts"
+      else sh "sed -i 's/{apigee_support}/false/g' ./src/environments/environment.oss.ts"
 
       def envFile = readFile('./src/environments/environment.oss.ts');
       echo "displaying env file :"
