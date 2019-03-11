@@ -197,7 +197,7 @@ node() {
     stage('Build') {
       events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
       try {
-        buildLambda(runtime, repo_name)
+        buildSlsApp(runtime, repo_name)
       } catch (ex) {
         events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -650,7 +650,7 @@ def LoadConfiguration() {
 
 /**	Build project based on runtime
  */
-def buildLambda(String runtime, String repo_name) {
+def buildSlsApp(String runtime, String repo_name) {
   echo "installing dependencies for $runtime"
   if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
