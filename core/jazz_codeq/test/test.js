@@ -56,7 +56,7 @@ describe('index', () => {
     it('should return error message when header does not have service id', () => {
       event.method = 'GET';
       event.resourcePath = "codeq"
-      event.headers = {"Auth": "fsfsd"}
+      event.headers = { "Auth": "fsfsd" }
       index.handler(event, {}, (err, res) => {
         expect(JSON.parse(err).message).to.equal("No service id provided in  headers.");
       });
