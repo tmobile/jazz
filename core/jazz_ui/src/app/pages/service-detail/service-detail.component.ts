@@ -210,8 +210,7 @@ export class ServiceDetailComponent implements OnInit {
       if(service && service.policies && service.policies.length) {
         service.policies.forEach(policy => {
           if (policy.category === "manage" && policy.permission === "admin") {
-            this.isAdminAccess = true;
-            this.setAdminAccess(this.isAdminAccess);
+            this.setAdminAccess(true);
           }
         });
       }
