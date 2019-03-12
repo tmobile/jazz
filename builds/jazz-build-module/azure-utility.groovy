@@ -16,7 +16,7 @@ def initialize(configData, resourceUtility){
 
 
 def setAzureVar(serviceInfo) {
-  if (serviceInfo.serviceCatalog['event_source_resource_group']) {
+  if (serviceInfo.serviceCatalog['event_source_resource_group'] && serviceInfo.envId == 'prod') {
     configLoader.AZURE.RESOURCE_GROUP = resourceUtil.getResourceName(serviceInfo.serviceCatalog['event_source_resource_group'], serviceInfo.envId)
   } else {
     if (configLoader.AZURE && configLoader.AZURE.RESOURCE_GROUPS) {
