@@ -118,7 +118,8 @@ export class ServiceDetailComponent implements OnInit {
         tags: service.tags,
         endpoints: service.endpoints,
         is_public_endpoint: service.is_public_endpoint,
-        created_by: service.created_by
+        created_by: service.created_by,
+        deployment_targets: service.deployment_targets
       }
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
@@ -208,7 +209,8 @@ export class ServiceDetailComponent implements OnInit {
       if(service && service.policies && service.policies.length) {
         service.policies.forEach(policy => {
           if (policy.category === "manage" && policy.permission === "admin") {
-            this.setAdminAccess(true);
+            this.isAdminAccess = true;
+            this.setAdminAccess(this.isAdminAccess);
           }
         });
       }

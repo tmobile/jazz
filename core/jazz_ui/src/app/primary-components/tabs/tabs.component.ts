@@ -20,7 +20,7 @@ export class TabsComponent implements OnInit {
   @Input() public tabChanged: Function;
   @Output() onSelected:EventEmitter<boolean> = new EventEmitter<boolean>();
   @Input() beforeEnv: boolean = true;
-  @Input() isAdminAccess: boolean = false;
+  @Input() isAdminAccess: boolean;
   disableobj:any= {
     'overview':true,
     'access control':true,
@@ -45,7 +45,11 @@ export class TabsComponent implements OnInit {
       if(tabs[i] == 'overview') this.disableobj['overview']=false;
       if(tabs[i] == 'access control') this.disableobj['access control']=false;
       if(tabs[i] == 'cost' && this.isAdminAccess) this.disableobj['cost']=false;
-      if(tabs[i] == 'metrics' && this.isAdminAccess) this.disableobj['metrics']=false;
+      if(tabs[i] == 'metrics' && this.isAdminAccess) {
+        this.disableobj['metrics'] = false
+      } else if(tabs[i] == 'metrics'){
+        this.disableobj['metrics'] = true;
+      }
       if(tabs[i] == 'logs') this.disableobj['logs']=false;
     }
   }
@@ -57,7 +61,11 @@ export class TabsComponent implements OnInit {
       if(tabs[i] == 'overview') this.disableobj['overview']=false;
       if(tabs[i] == 'deployments') this.disableobj['deployments']=false;
       if(tabs[i] == 'code quality') this.disableobj['code quality']=false;
-      if(tabs[i] == 'metrics' && this.isAdminAccess) this.disableobj['metrics']=false;
+      if(tabs[i] == 'metrics' && this.isAdminAccess) {
+        this.disableobj['metrics'] = false
+      } else if(tabs[i] == 'metrics') {
+        this.disableobj['metrics'] = true;
+      }
       if(tabs[i] == 'assets') this.disableobj['assets']=false;
       if(tabs[i] == 'logs') this.disableobj['logs']=false;
     }
@@ -69,6 +77,7 @@ export class TabsComponent implements OnInit {
   }
 
   ngOnChanges(x:any) {
+    // console.log("admin access:", this.isAdminAccess);
     this.disabletabs();
     this.disableENVtabs();
   }

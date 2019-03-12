@@ -235,8 +235,10 @@ addgroup(category){
    if (this.adminAccessRule && Object.keys(this.addAsAdmin).length) {
      this.access[this.addAsAdmin.category][this.addAsAdmin.index].permission = this.addAsAdmin.value;
      this.originalAccess = JSON.parse(JSON.stringify(this.access));
-     this.manageValue.map((item)=>{
-       this.originalAccess[item.category][item.index].permission = item.value
+     this.manageValue.map((item) => {
+       if (this.originalAccess[item.category][item.index]){
+        this.originalAccess[item.category][item.index].permission = item.value
+       }
      })
      this.isAddOrDelete = true;
      this.adminAccessRule = false;
@@ -292,7 +294,9 @@ addgroup(category){
        this.access[category][index].permission = value;
        this.manageValue = this.removeDuplicateIndex(this.manageValue);
        this.manageValue.map((item)=>{
-         this.originalAccess[item.category][item.index].permission = item.value
+         if (this.originalAccess[item.category][item.index]) {
+          this.originalAccess[item.category][item.index].permission = item.value
+         }
        })
      } else {
        this.access[category][index].permission = value;

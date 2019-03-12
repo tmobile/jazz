@@ -283,7 +283,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   filterAssetType(data) {
     return data.assets.filter((asset) => {
       if (this.serviceType === 'api') {
-        if (this.service.deployment_targets === "gcp_apigee") {
+        if (this.service.deployment_targets.api === "gcp_apigee") {
           return asset.type === 'apigee_proxy';
         }else{
           return asset.type === 'apigateway';
