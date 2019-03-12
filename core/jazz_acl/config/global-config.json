@@ -64,16 +64,20 @@
     }
   },
   "ADMIN_SERVICES_POLICIES": {
-    "serviceId":"",
-    "policies":[{
-      "category": "manage",
-      "permission": "admin"
-    }, {
-      "category": "code",
-      "permission": "write"
-    }, {
-      "category": "deploy",
-      "permission": "write"
-    }]
+    "serviceId": "",
+    "policies": [
+      {
+        "category": "manage",
+        "permission": "admin"
+      },
+      {
+        "category": "code",
+        "permission": "write"
+      },
+      {
+        "category": "deploy",
+        "permission": "write"
+      }
+    ]
   }
 }

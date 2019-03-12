@@ -31,11 +31,11 @@
 		"cloudwatch_event",
 		"swagger_url",
 		"endpoint_url",
-    "dynamodb_stream",
-    "iam_role",
-    "sqs",
-    "kinesis_stream",
-    "apigee_proxy"
+		"dynamodb_stream",
+		"iam_role",
+		"sqs",
+		"kinesis_stream",
+		"apigee_proxy"
 	],
 	"ASSET_STATUS": [
 		"active",
