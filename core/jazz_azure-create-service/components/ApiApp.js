@@ -20,6 +20,7 @@ module.exports = class ApiApp {
                 await this.resourceFactory.createFunctionApp(this.data.appName, storageAccountKey, this.data.tags);
                 await this.resourceFactory.uploadZipToKudu(this.data.appName, this.data.zip);
                 await this.resourceFactory.createOrUpdateApiGatewayWithSwaggerJson(this.data.serviceName, this.data.apiId, this.data.swagger, this.data.basepath);
+                await this.resourceFactory.setSubscriptionForProduct(this.data.serviceName, "starter");
                 await this.resourceFactory.addApiToProduct(this.data.serviceName, "starter", this.data.apiId);
 
             }catch (exception) {

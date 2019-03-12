@@ -251,6 +251,16 @@ module.exports = class ResourceFactory {
   }
 
 
+  async setSubscriptionForProduct(serviceName, productId, subscriptionRequired =false, resourceGroupName = this.resourceGroupName){
+    let client = await this.factory.getResource("ApiManagementClient");
+    let parameters = {
+      "subscriptionRequired" : subscriptionRequired
+    }
+    let result = await client.product.update(resourceGroupName,serviceName,productId,parameters, "*", null);
+    return result;
+  }
+
+
   async createCdnProfile(tags = {}, storageName = this.storageAccountName, resourceGroupName = this.resourceGroupName, location = "West US", skuName = "Standard_Akamai") {
     let standardCreateParameters = {
       location: location,
